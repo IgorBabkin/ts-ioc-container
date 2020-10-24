@@ -8,10 +8,6 @@ export class SimpleServiceLocatorStrategy implements IServiceLocatorStrategy {
         return new value(this.locator, ...deps);
     }
 
-    public setLocator(locator: IServiceLocator): IServiceLocator {
-        return (this.locator = locator);
-    }
-
     public dispose(): void {
         this.locator = undefined;
     }

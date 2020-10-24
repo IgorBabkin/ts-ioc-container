@@ -21,10 +21,6 @@ export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
         }
     }
 
-    public setLocator(locator: IServiceLocator): IServiceLocator {
-        return (this.locator = locator);
-    }
-
     public dispose(): void {
         this.locator = undefined;
     }
