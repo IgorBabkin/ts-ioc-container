@@ -1,5 +1,5 @@
 {
-  "name": "unit-test-service-locator",
+  "name": "unit-test-ts-ioc-container",
   "version": "1.3.0",
   "description": "> TODO: description",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "moq.ts": "^6.4.0",
-    "service-locator": "^1.3.0"
+    "ts-ioc-container": "^1.3.0"
   },
   "devDependencies": {
     "@types/faker": "^5.1.3",
@@ -46,5 +46,6 @@
     "rimraf": "^3.0.2",
     "ts-jest": "^26.4.2",
     "typescript": "^4.0.3"
-  }
+  },
+  "gitHead": "e81ee0e14def051fa47d1a12b1c9f01cf1e512e8"
 }

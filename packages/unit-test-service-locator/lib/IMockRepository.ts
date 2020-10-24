@@ -1,4 +1,4 @@
-import { RegistrationKey } from 'service-locator';
+import { RegistrationKey } from 'ts-ioc-container';
 import { IMockAdapter } from './IMockAdapter';
 
 export interface IMockRepository<GMock> {

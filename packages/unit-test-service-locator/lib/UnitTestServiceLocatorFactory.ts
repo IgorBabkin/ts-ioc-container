@@ -1,5 +1,5 @@
 import { IMockAdapter } from './IMockAdapter';
-import { IServiceLocator } from 'service-locator';
+import { IServiceLocator } from 'ts-ioc-container';
 import { IUnitTestServiceLocator } from './IUnitTestServiceLocator';
 import { UnitTestServiceLocator } from './UnitTestServiceLocator';
 import { MockRepository } from './MockRepository';

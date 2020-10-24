@@ -1,5 +1,5 @@
 import { IUnitTestServiceLocator } from './IUnitTestServiceLocator';
-import { ServiceLocatorDecorator, RegistrationKey, IServiceLocator } from 'service-locator';
+import { ServiceLocatorDecorator, RegistrationKey, IServiceLocator } from 'ts-ioc-container';
 import { IMockRepository } from './IMockRepository';
 
 export class UnitTestServiceLocator<GMock> extends ServiceLocatorDecorator implements IUnitTestServiceLocator<GMock> {

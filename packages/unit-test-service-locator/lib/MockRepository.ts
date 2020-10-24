@@ -1,5 +1,5 @@
 import { IMockRepository } from './IMockRepository';
-import { RegistrationKey } from 'service-locator';
+import { RegistrationKey } from 'ts-ioc-container';
 import { IMockAdapter } from './IMockAdapter';
 
 export class MockRepository<GMock> implements IMockRepository<GMock> {
