@@ -1,4 +1,4 @@
-import { ServiceLocatorFactory } from 'service-locator';
+import { ServiceLocatorFactory } from 'ts-ioc-container';
 import { IUnitTestServiceLocator, MoqAdapter, UnitTestServiceLocatorFactory } from '../lib';
 import { Mock } from 'moq.ts';
 
