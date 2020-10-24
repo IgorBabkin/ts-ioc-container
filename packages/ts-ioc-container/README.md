@@ -1,11 +1,3 @@
-# `service-locator`
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/ts-ioc-container)
 
-> TODO: description
-
-## Usage
-
-```
-const serviceLocator = require('service-locator');
-
-// TODO: DEMONSTRATE API
-```
+# TS IoContainer

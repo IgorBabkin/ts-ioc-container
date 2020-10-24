@@ -1,11 +1,3 @@
-# `unit-test-service-locator`
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/unit-test-ts-ioc-container)
 
-> TODO: description
-
-## Usage
-
-```
-const unitTestServiceLocator = require('unit-test-service-locator');
-
-// TODO: DEMONSTRATE API
-```
+# UnitTest TS IoContainer
