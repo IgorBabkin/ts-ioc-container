@@ -28,7 +28,8 @@
     "test": "jest --config jest.config.js --coverage test",
     "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
     "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
-    "build": "npm-run-all -p build:**"
+    "build": "npm-run-all -p build:**",
+    "prepublish": "yarn build"
   },
   "dependencies": {
     "reflect-metadata": "^0.1.13"
