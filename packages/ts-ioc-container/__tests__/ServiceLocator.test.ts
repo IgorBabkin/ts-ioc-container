@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { IServiceLocator } from '../lib/IServiceLocator';
-import { Group } from '../lib/fixtures/Group';
-import { SubGroup3 } from '../lib/fixtures/SubGroup3';
+import { Group } from './fixtures/Group';
+import { SubGroup3 } from './fixtures/SubGroup3';
 import { ServiceLocatorFactory } from '../lib/ServiceLocatorFactory';
 import { IInjectable } from '../lib/instanceHooks/IInjectable';
-import { FakeGenerator } from '../lib/fixtures/FakeGenerator';
+import { FakeGenerator } from './fixtures/FakeGenerator';
 
 describe('ServiceLocator', () => {
     const locatorFactory = new ServiceLocatorFactory();

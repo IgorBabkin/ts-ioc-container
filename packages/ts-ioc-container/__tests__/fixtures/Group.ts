@@ -1,4 +1,4 @@
-import { Factory, inject } from '../strategy/ioc/decorators';
+import { Factory, inject } from '../../lib/strategy/ioc/decorators';
 import { SubGroup } from './SubGroup';
 import { SubGroup2 } from './SubGroup2';
 import { SubGroup3 } from './SubGroup3';
