@@ -4,7 +4,6 @@ module.exports = {
     transform: {
         '^.+\\.tsx?$': 'ts-jest',
     },
-    modulePathIgnorePatterns: ['<rootDir>/node_modules/'],
     collectCoverage: true,
-    coveragePathIgnorePatterns: ['/node_modules/', '/fixtures/'],
+    coveragePathIgnorePatterns: ['/node_modules/', '/fixtures/', '/cjm/', '/esm/'],
 };
