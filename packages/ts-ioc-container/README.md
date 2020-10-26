@@ -134,8 +134,8 @@ import {ServiceLocatorFactory} from 'ts-ioc-container';
 import {UnitTestServiceLocatorFactory, MoqAdapter, MoqAdapter} from 'unit-test-ts-ioc-container';
 
 const container = new ServiceLocatorFactory().createIoCLocator();
-const unitTestContainer = new UnitTestServiceLocatorFactory(() => new MoqAdapter(new Mock()))
-    .create(unitTestContainer);
+const mockFactory = () => new MoqAdapter(new Mock());
+const unitTestContainer = new UnitTestServiceLocatorFactory(mockFactory).create(container);
 
 const stickerMock = unitTestContainer.resolveMock('ISticker');
 stickerMock.setup(i => i.title).return('Sticker title');
