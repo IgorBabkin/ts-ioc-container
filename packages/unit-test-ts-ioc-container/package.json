@@ -31,10 +31,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IgorBabkin/ServiceLocator.git"
+    "url": "git+https://github.com/IgorBabkin/service-locator"
   },
   "bugs": {
-    "url": "https://github.com/IgorBabkin/ServiceLocator/issues"
+    "url": "https://github.com/IgorBabkin/service-locator/issues"
   },
   "scripts": {
     "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
