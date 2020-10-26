@@ -127,7 +127,7 @@ const container = new ServiceLocatorFactory().createIoCLocator();
 ```
 
 ### Tests
-Use `unit-test-ts-ioc-container`
+Use [unit-test-ts-ioc-container](https://github.com/IgorBabkin/service-locator/tree/master/packages/unit-test-ts-ioc-container)
 ```typescript
 import {Mock} from 'moq.ts';
 import {ServiceLocatorFactory} from 'ts-ioc-container';
