@@ -17,6 +17,7 @@
   ],
   "directories": {
     "lib": "lib",
+    "docs": "docs",
     "test": "__tests__"
   },
   "files": [
