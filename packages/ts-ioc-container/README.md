@@ -14,7 +14,7 @@
 - can be used with `unit-test-ts-ioc-container`
 
 ## Architecture
-![image info](./diagram.png)
+![image info](docs/diagram.png)
 
 ## Install
 ```shell script

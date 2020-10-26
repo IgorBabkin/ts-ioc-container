@@ -21,7 +21,8 @@
   },
   "files": [
     "cjm/**/*",
-    "esm/**/*"
+    "esm/**/*",
+    "docs/**/*"
   ],
   "repository": {
     "type": "git",
