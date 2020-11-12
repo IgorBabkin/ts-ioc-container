@@ -5,6 +5,10 @@ import { SubGroup3 } from './fixtures/SubGroup3';
 import { ServiceLocatorFactory } from '../lib/ServiceLocatorFactory';
 import { IInjectable } from '../lib/instanceHooks/IInjectable';
 
+class TestClass {
+    constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
+}
+
 describe('ServiceLocator', () => {
     const locatorFactory = new ServiceLocatorFactory();
 
@@ -14,6 +18,14 @@ describe('ServiceLocator', () => {
         const locator = locatorFactory.createIoCLocator().registerInstance('key1', expectedInstance);
 
         expect(locator.resolve('key1')).toBe(expectedInstance);
+    });
+
+    it('should pass dependencies', () => {
+        const locator = locatorFactory.createSimpleLocator().registerConstructor('key1', TestClass);
+        const testClass = locator.resolve<TestClass>('key1', 'a', 3);
+
+        expect(testClass.dep1).toBe('a');
+        expect(testClass.dep2).toBe(3);
     });
 
     it('should create an instanse', () => {

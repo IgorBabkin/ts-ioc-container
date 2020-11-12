@@ -1,4 +1,3 @@
-/* eslint-disable */
 module.exports = {
     testMatch: ['**/?(*.)+(spec|test).+(ts)'],
     transform: {

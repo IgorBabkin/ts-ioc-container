@@ -61,7 +61,7 @@ export class ServiceLocator implements IServiceLocator {
         value: constructor<T>,
         options: IProviderOptions = { resolving: 'perRequest' },
     ): this {
-        this.registerFunction(key, (l) => l.resolve(value), options);
+        this.registerFunction(key, (l, ...deps: any[]) => l.resolve(value, ...deps), options);
         return this;
     }
 
