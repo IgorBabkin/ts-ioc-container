@@ -1,13 +1,20 @@
-import { IMockAdapter } from './IMockAdapter';
-import { IServiceLocator } from 'ts-ioc-container';
 import { IUnitTestServiceLocator } from './IUnitTestServiceLocator';
 import { UnitTestServiceLocator } from './UnitTestServiceLocator';
-import { MockRepository } from './MockRepository';
+import { IMockFactory } from './IMockFactory';
+import { IocServiceLocatorStrategyFactory, InstanceHook, SimpleServiceLocatorStrategyFactory } from 'ts-ioc-container';
 
 export class UnitTestServiceLocatorFactory<GMock> {
-    constructor(private mockFactory: (...args: any[]) => IMockAdapter<GMock, any>) {}
+    constructor(private mockFactory: IMockFactory<GMock>) {}
 
-    public create(locator: IServiceLocator): IUnitTestServiceLocator<GMock> {
-        return new UnitTestServiceLocator(locator, new MockRepository((...args) => this.mockFactory(...args)));
+    public createIoCLocator(): IUnitTestServiceLocator<GMock> {
+        return new UnitTestServiceLocator(new IocServiceLocatorStrategyFactory(), new InstanceHook(), this.mockFactory);
+    }
+
+    public createSimpleLocator(): IUnitTestServiceLocator<GMock> {
+        return new UnitTestServiceLocator(
+            new SimpleServiceLocatorStrategyFactory(),
+            new InstanceHook(),
+            this.mockFactory,
+        );
     }
 }

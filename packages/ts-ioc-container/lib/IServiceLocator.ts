@@ -12,8 +12,6 @@ export interface IServiceLocator {
 
     resolve<T>(c: InjectionToken<T>, ...deps: any[]): T;
 
-    has(key: RegistrationKey): boolean;
-
     registerConstructor<T>(key: RegistrationKey, value: constructor<T>, options?: IProviderOptions): this;
 
     registerInstance<T>(key: RegistrationKey, value: T): this;
