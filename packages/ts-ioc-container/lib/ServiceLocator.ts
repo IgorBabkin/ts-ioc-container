@@ -15,11 +15,15 @@ export class ServiceLocator implements IServiceLocator {
         this.strategy = strategyFactory.create(this);
     }
 
-    public resolve<T>(c: InjectionToken<T>, ...deps: any[]): T {
-        if (typeof c === 'string' || typeof c === 'symbol') {
-            return this.resolveByKey(c, ...deps);
+    public resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
+        if (typeof key === 'string' || typeof key === 'symbol') {
+            const instance = this.resolveLocally<T>(key, ...deps) || this.parent?.resolve<T>(key, ...deps);
+            if (!instance) {
+                throw new Error(`ServiceLocator: cannot find ${key.toString()}`);
+            }
+            return instance;
         }
-        return this.resolveConstructor(c, ...deps);
+        return this.resolveConstructor(key, ...deps);
     }
 
     public createContainer(): IServiceLocator {
@@ -48,15 +52,6 @@ export class ServiceLocator implements IServiceLocator {
         return this;
     }
 
-    public has(key: RegistrationKey): boolean {
-        for (const registrationKey of this.registrations.keys()) {
-            if (registrationKey === key) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public registerConstructor<T>(
         key: RegistrationKey,
         value: constructor<T>,
@@ -83,23 +78,6 @@ export class ServiceLocator implements IServiceLocator {
         return this;
     }
 
-    private resolveByKey<GInstance>(key: RegistrationKey, ...deps: any[]): GInstance {
-        const instance = this.resolveLocally<GInstance>(key, ...deps) || this.parent?.resolve<GInstance>(key, ...deps);
-        if (!instance) {
-            throw new Error(`ServiceLocator: cannot find ${key.toString()}`);
-        }
-        return instance;
-    }
-
-    private resolveSingleton<T>(key: RegistrationKey, value: RegistrationFn<T>, ...deps: any[]): T {
-        if (!this.instances.has(key)) {
-            const instance = this.resolveFn(value, ...deps);
-            this.instances.set(key, instance);
-        }
-
-        return this.instances.get(key) as T;
-    }
-
     private resolveLocally<T>(key: RegistrationKey, ...deps: any[]): T {
         const registration = this.registrations.get(key);
         if (registration) {
@@ -117,6 +95,15 @@ export class ServiceLocator implements IServiceLocator {
         const instance = fn(this, ...deps);
         this.hooks.onCreateInstance(instance);
         return instance;
+    }
+
+    private resolveSingleton<T>(key: RegistrationKey, value: RegistrationFn<T>, ...deps: any[]): T {
+        if (!this.instances.has(key)) {
+            const instance = this.resolveFn(value, ...deps);
+            this.instances.set(key, instance);
+        }
+
+        return this.instances.get(key) as T;
     }
 
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
