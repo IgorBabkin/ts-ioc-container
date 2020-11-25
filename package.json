@@ -45,5 +45,6 @@
     "lerna": "3.22.1",
     "lint-staged": "10.5.1",
     "prettier": "2.1.2"
-  }
+  },
+  "version": "0.0.0"
 }
