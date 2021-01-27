@@ -5,11 +5,11 @@ import { IocServiceLocatorStrategyFactory } from './strategy/IocServiceLocatorSt
 import { SimpleServiceLocatorStrategyFactory } from './strategy/SimpleServiceLocatorStrategyFactory';
 
 export class ServiceLocatorFactory {
-    public createIoCLocator(): IServiceLocator {
-        return new ServiceLocator(new IocServiceLocatorStrategyFactory(), new InstanceHook());
+    public createIoCLocator<GContext>(context?: GContext): IServiceLocator<GContext> {
+        return new ServiceLocator(new IocServiceLocatorStrategyFactory(), new InstanceHook(), context);
     }
 
-    public createSimpleLocator(): IServiceLocator {
-        return new ServiceLocator(new SimpleServiceLocatorStrategyFactory(), new InstanceHook());
+    public createSimpleLocator<GContext>(context?: GContext): IServiceLocator<GContext> {
+        return new ServiceLocator(new SimpleServiceLocatorStrategyFactory(), new InstanceHook(), context);
     }
 }

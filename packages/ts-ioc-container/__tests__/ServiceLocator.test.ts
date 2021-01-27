@@ -195,5 +195,19 @@ describe('ServiceLocator', () => {
 
             child2.remove();
         });
+
+        it('conditional resolving', () => {
+            const locator = locatorFactory
+                .createSimpleLocator()
+                .registerFunction('key1', (l: IServiceLocator<string>) => (l.context === 'a' ? 'good' : 'bad'), {
+                    resolving: 'perScope',
+                });
+
+            const child1 = locator.createContainer('a');
+            const child2 = locator.createContainer('b');
+
+            expect(child1.resolve('key1')).toEqual('good');
+            expect(child2.resolve('key1')).toEqual('bad');
+        });
     });
 });

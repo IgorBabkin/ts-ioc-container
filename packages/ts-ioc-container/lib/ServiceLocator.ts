@@ -5,13 +5,13 @@ import { IProviderOptions, IRegistration, RegistrationFn, RegistrationKey } from
 import { IInstanceHook } from './instanceHooks/IInstanceHook';
 import { IStrategyFactory } from './strategy/IStrategyFactory';
 
-export class ServiceLocator implements IServiceLocator {
+export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private registrations: Map<RegistrationKey, IRegistration<any>> = new Map();
     private instances: Map<RegistrationKey, any> = new Map();
-    private parent: ServiceLocator;
+    private parent: ServiceLocator<unknown>;
     private strategy: IServiceLocatorStrategy;
 
-    constructor(private strategyFactory: IStrategyFactory, private hooks: IInstanceHook) {
+    constructor(private strategyFactory: IStrategyFactory, private hooks: IInstanceHook, public context?: GContext) {
         this.strategy = strategyFactory.create(this);
     }
 
@@ -26,8 +26,8 @@ export class ServiceLocator implements IServiceLocator {
         return this.resolveConstructor(key, ...deps);
     }
 
-    public createContainer(): IServiceLocator {
-        const locator = new ServiceLocator(this.strategyFactory, this.hooks);
+    public createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext> {
+        const locator = new ServiceLocator(this.strategyFactory, this.hooks, context);
         locator.addTo(this);
         for (const [key, { options, fn }] of this.registrations.entries()) {
             if (options?.resolving === 'perScope') {
@@ -47,7 +47,7 @@ export class ServiceLocator implements IServiceLocator {
         this.strategy.dispose();
     }
 
-    public addTo(locator: ServiceLocator): this {
+    public addTo(locator: ServiceLocator<unknown>): this {
         this.parent = locator;
         return this;
     }

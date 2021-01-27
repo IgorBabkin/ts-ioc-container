@@ -5,8 +5,10 @@ export type constructor<T> = new (...args: any[]) => T;
 
 export type Factory<T> = (...args: any[]) => T;
 
-export interface IServiceLocator {
-    createContainer(): IServiceLocator;
+export interface IServiceLocator<GContext = any> {
+    context?: GContext;
+
+    createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext>;
 
     remove(): void;
 
