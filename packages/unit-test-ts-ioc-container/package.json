@@ -44,7 +44,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "moq.ts": "^6.4.0",
+    "moq.ts": "^7.0.0",
     "ts-ioc-container": "^1.6.1"
   },
   "devDependencies": {
