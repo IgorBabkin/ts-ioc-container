@@ -17,7 +17,7 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
 
     constructor(
         private strategyFactory: IStrategyFactory,
-        private hooks: IInstanceHook,
+        private hooks: IInstanceHook[],
         private mockFactory: IMockFactory<GMock>,
     ) {
         this.strategy = strategyFactory.create(this);
@@ -57,7 +57,9 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
 
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
         const instance = this.strategy.resolveConstructor(c, ...deps);
-        this.hooks.onCreateInstance(instance);
+        for (const hook of this.hooks) {
+            hook.onCreateInstance(instance);
+        }
         return instance;
     }
 

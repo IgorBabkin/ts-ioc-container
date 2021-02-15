@@ -1,4 +1,4 @@
-import { MockAdapter } from '../MockAdapter';
+import { MockAdapter } from '../../lib/MockAdapter';
 import { Mock } from 'moq.ts';
 
 export class MoqAdapter<GInstance> extends MockAdapter<Mock<GInstance>, GInstance> {

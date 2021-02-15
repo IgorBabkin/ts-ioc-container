@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { MoqFactory, UnitTestServiceLocatorFactory } from '../lib';
-import { inject } from 'ts-ioc-container';
+import { MoqFactory, UnitTestServiceLocator } from '../lib';
+import { inject, IocServiceLocatorStrategyFactory, metadataCollector } from 'ts-ioc-container';
 import { Mock } from 'moq.ts';
 
 interface ISubClass {
@@ -12,10 +12,16 @@ class TestClass1 {
 }
 
 describe('UnitTestIoCLocator', () => {
-    const locatorFactory = new UnitTestServiceLocatorFactory(new MoqFactory());
+    function createIoCLocator() {
+        return new UnitTestServiceLocator(
+            new IocServiceLocatorStrategyFactory(metadataCollector),
+            [],
+            new MoqFactory(),
+        );
+    }
 
     it('ioc', () => {
-        const locator = locatorFactory.createIoCLocator();
+        const locator = createIoCLocator();
 
         const mock = locator.resolveMock('key1') as Mock<ISubClass>;
         mock.setup((i) => i.greeting()).returns('hello');

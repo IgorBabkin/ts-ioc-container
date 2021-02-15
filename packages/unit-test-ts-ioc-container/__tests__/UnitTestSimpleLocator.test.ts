@@ -1,5 +1,5 @@
-import { IServiceLocator } from 'ts-ioc-container';
-import { MoqFactory, UnitTestServiceLocatorFactory } from '../lib';
+import { IServiceLocator, SimpleServiceLocatorStrategyFactory } from 'ts-ioc-container';
+import { MoqFactory, UnitTestServiceLocator } from '../lib';
 import { Mock } from 'moq.ts';
 
 interface IDepClass {
@@ -15,10 +15,12 @@ class TestClass {
 }
 
 describe('UnitTestSimpleLocator', () => {
-    const locatorFactory = new UnitTestServiceLocatorFactory(new MoqFactory());
+    function createSimpleLocator() {
+        return new UnitTestServiceLocator(new SimpleServiceLocatorStrategyFactory(), [], new MoqFactory());
+    }
 
     it('hey', () => {
-        const locator = locatorFactory.createSimpleLocator();
+        const locator = createSimpleLocator();
 
         const mock = locator.resolveMock('key1') as Mock<IDepClass>;
         mock.setup((i) => i.greeting()).returns('hello');

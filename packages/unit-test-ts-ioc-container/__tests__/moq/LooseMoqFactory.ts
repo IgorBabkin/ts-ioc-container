@@ -1,6 +1,6 @@
-import { IMockFactory } from '../IMockFactory';
+import { IMockFactory } from '../../lib/IMockFactory';
 import { GetPropertyInteraction, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
-import { IMockAdapter } from '../IMockAdapter';
+import { IMockAdapter } from '../../lib/IMockAdapter';
 import { MoqAdapter } from './MoqAdapter';
 
 export class LooseMoqFactory implements IMockFactory<Mock<any>> {
