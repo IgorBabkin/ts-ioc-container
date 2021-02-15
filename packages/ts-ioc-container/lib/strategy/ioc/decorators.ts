@@ -1,8 +1,8 @@
-import 'reflect-metadata';
-import { InjectionItem, MetadataCollector } from './MetadataCollector';
+import { InjectionItem, InjectMetadataCollector } from './InjectMetadataCollector';
+import { IFieldDecorator } from '../../IFieldDecorator';
 
 export type constructor<T> = new (...args: any[]) => T;
-export const metadataCollector = new MetadataCollector();
+export const metadataCollector = new InjectMetadataCollector();
 
 export function Factory<T>(token: InjectionToken<T>): InjectionItem<T> {
     return {
@@ -20,10 +20,10 @@ export function Instance<T>(token: InjectionToken): InjectionItem<T> {
 
 export type InjectionToken<T = any> = constructor<T> | string | symbol;
 
-export function inject<T>(
-    item: InjectionToken | InjectionItem<T>,
-): (target: any, propertyKey: string | symbol, parameterIndex: number) => void {
-    return (target: any, _propertyKey: string | symbol, parameterIndex: number): void => {
+export function inject<T>(item: InjectionToken | InjectionItem<T>): IFieldDecorator {
+    console.log('inject: root');
+    return (target, _propertyKey, parameterIndex) => {
+        console.log('inject: child');
         if (typeof item === 'object') {
             metadataCollector.injectMetadata(target, parameterIndex, item);
         } else {
@@ -33,4 +33,8 @@ export function inject<T>(
             });
         }
     };
+}
+
+export function injectable<T>(target: T): void {
+    console.log('injectable', target);
 }

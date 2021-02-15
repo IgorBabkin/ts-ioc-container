@@ -9,7 +9,7 @@
 - supports scopes
 - can be used with decorators `@inject`
 - provides auto-factories
-- supports `postConstruct` and `dispose` instance hooks
+- supports `onConstruct` and `dispose` instance hooks
 - composable and open to extend
 - can be used with `unit-test-ts-ioc-container`
 
@@ -99,14 +99,14 @@ By implementing `IInjectable` interface
 ```typescript
 export interface IInjectable {
     dispose?(): void;
-    postConstruct?(): void;
+    onConstruct?(): void;
 }
 ```
 ```typescript
 import {IInjectable} from 'ts-ioc-container';
 
 class Logger implements IInjectable {
-    postConstruct(): void {
+    onConstruct(): void {
         console.log('initialized');
     }
 

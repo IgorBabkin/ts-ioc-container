@@ -1,9 +1,10 @@
-import { constructor, IServiceLocator } from './IServiceLocator';
+import { IServiceLocator } from './IServiceLocator';
 import { InjectionToken } from './strategy/ioc/decorators';
 import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 import { IProviderOptions, IRegistration, RegistrationFn, RegistrationKey } from './IRegistration';
 import { IInstanceHook } from './instanceHooks/IInstanceHook';
 import { IStrategyFactory } from './strategy/IStrategyFactory';
+import { constructor } from './types';
 
 export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private registrations: Map<RegistrationKey, IRegistration<any>> = new Map();
@@ -11,7 +12,11 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private parent: ServiceLocator<unknown>;
     private strategy: IServiceLocatorStrategy;
 
-    constructor(private strategyFactory: IStrategyFactory, private hooks: IInstanceHook, public context?: GContext) {
+    constructor(
+        private strategyFactory: IStrategyFactory,
+        public hooks: IInstanceHook[] = [],
+        public context?: GContext,
+    ) {
         this.strategy = strategyFactory.create(this);
     }
 
@@ -33,15 +38,19 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
             if (options?.resolving === 'perScope') {
                 locator.registerFunction(key, fn, { resolving: 'singleton' });
             }
+            switch (options?.resolving) {
+                case 'perScope':
+                    locator.registerFunction(key, fn, { resolving: 'singleton' });
+                    break;
+                case 'perRequest':
+                    locator.registerFunction(key, fn, options);
+            }
         }
         return locator;
     }
 
     public remove(): void {
         this.parent = null;
-        for (const instance of this.instances.values()) {
-            this.hooks.onRemoveInstance(instance);
-        }
         this.instances = new Map();
         this.registrations = new Map();
         this.strategy.dispose();
@@ -93,7 +102,9 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
 
     private resolveFn<T>(fn: RegistrationFn<T>, ...deps: any[]): T {
         const instance = fn(this, ...deps);
-        this.hooks.onCreateInstance(instance);
+        for (const hook of this.hooks) {
+            hook.onCreateInstance(instance);
+        }
         return instance;
     }
 
@@ -107,8 +118,10 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     }
 
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
-        const instance = this.strategy.resolveConstructor(c, ...deps);
-        this.hooks.onCreateInstance(instance);
+        const instance = this.strategy.resolveConstructor<T>(c, ...deps);
+        for (const hook of this.hooks) {
+            hook.onCreateInstance(instance);
+        }
         return instance;
     }
 }

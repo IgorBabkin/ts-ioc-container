@@ -1,9 +1,6 @@
 import { InjectionToken } from './strategy/ioc/decorators';
 import { IProviderOptions, RegistrationFn, RegistrationKey } from './IRegistration';
-
-export type constructor<T> = new (...args: any[]) => T;
-
-export type Factory<T> = (...args: any[]) => T;
+import { constructor } from './types';
 
 export interface IServiceLocator<GContext = any> {
     context?: GContext;

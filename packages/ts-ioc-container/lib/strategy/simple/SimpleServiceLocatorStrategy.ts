@@ -1,5 +1,6 @@
-import { constructor, IServiceLocator } from '../IServiceLocator';
-import { IServiceLocatorStrategy } from './IServiceLocatorStrategy';
+import { constructor } from '../../types';
+import { IServiceLocator } from '../../IServiceLocator';
+import { IServiceLocatorStrategy } from '../IServiceLocatorStrategy';
 
 export class SimpleServiceLocatorStrategy implements IServiceLocatorStrategy {
     constructor(private locator: IServiceLocator) {}

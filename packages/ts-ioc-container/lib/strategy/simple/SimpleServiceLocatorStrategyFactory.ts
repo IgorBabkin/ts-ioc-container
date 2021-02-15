@@ -1,6 +1,6 @@
-import { IServiceLocator } from '../IServiceLocator';
-import { IServiceLocatorStrategy } from './IServiceLocatorStrategy';
-import { IStrategyFactory } from './IStrategyFactory';
+import { IServiceLocator } from '../../IServiceLocator';
+import { IServiceLocatorStrategy } from '../IServiceLocatorStrategy';
+import { IStrategyFactory } from '../IStrategyFactory';
 import { SimpleServiceLocatorStrategy } from './SimpleServiceLocatorStrategy';
 
 export class SimpleServiceLocatorStrategyFactory implements IStrategyFactory {

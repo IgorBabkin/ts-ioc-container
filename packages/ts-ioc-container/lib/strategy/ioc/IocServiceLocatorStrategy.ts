@@ -1,10 +1,11 @@
-import { constructor, IServiceLocator } from '../../IServiceLocator';
+import { constructor } from '../../types';
+import { IServiceLocator } from '../../IServiceLocator';
 import { IServiceLocatorStrategy } from '../IServiceLocatorStrategy';
-import { IMetadataCollector } from './IMetadataCollector';
-import { InjectionItem } from './MetadataCollector';
+import { IInjectMetadataCollector } from './IInjectMetadataCollector';
+import { InjectionItem } from './InjectMetadataCollector';
 
 export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
-    constructor(private locator: IServiceLocator, private metadataCollector: IMetadataCollector) {}
+    constructor(private locator: IServiceLocator, private metadataCollector: IInjectMetadataCollector) {}
 
     public resolveConstructor<T>(value: constructor<T>, ...deps: any[]): T {
         const injectionItems = this.metadataCollector.getMetadata(value);

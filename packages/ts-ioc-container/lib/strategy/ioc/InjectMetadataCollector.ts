@@ -1,6 +1,7 @@
+import 'reflect-metadata';
 import { InjectionToken } from './decorators';
-import { constructor } from '../../IServiceLocator';
-import { IMetadataCollector } from './IMetadataCollector';
+import { IInjectMetadataCollector } from './IInjectMetadataCollector';
+import { constructor } from '../../types';
 
 export const INJECTION_TOKEN_METADATA_KEY = 'injectionTokens';
 export type InjectionItem<T> = {
@@ -8,7 +9,7 @@ export type InjectionItem<T> = {
     type: 'factory' | 'instance';
 };
 
-export class MetadataCollector implements IMetadataCollector {
+export class InjectMetadataCollector implements IInjectMetadataCollector {
     public injectMetadata(target: any, parameterIndex: number, injectionItem: InjectionItem<any>): void {
         const injectionTokens = Reflect.getOwnMetadata(INJECTION_TOKEN_METADATA_KEY, target) || [];
         injectionTokens[parameterIndex] = injectionItem;
