@@ -7,6 +7,7 @@ export const INJECTION_TOKEN_METADATA_KEY = 'injectionTokens';
 export type InjectionItem<T> = {
     token: InjectionToken<T>;
     type: 'factory' | 'instance';
+    args: any[];
 };
 
 export class InjectMetadataCollector implements IInjectMetadataCollector {

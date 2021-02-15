@@ -9,7 +9,7 @@ import {
     ServiceLocator,
     SimpleServiceLocatorStrategyFactory,
 } from '../lib';
-import { OnConstructImpl } from './fixtures/OnConstructImpl';
+import { App, App2, Logger, Logger2, OnConstructImpl } from './fixtures/OnConstructImpl';
 import { SubGroup3 } from './fixtures/SubGroup3';
 import { Group } from './fixtures/Group';
 
@@ -205,6 +205,24 @@ describe('ServiceLocator', () => {
             const group = decorated.resolve(OnConstructImpl);
 
             expect(group.isConstructed).toBeTruthy();
+        });
+
+        it('passes params to constructor(instance) in decorator', () => {
+            const decorated = createIoCLocator();
+
+            decorated.registerConstructor('logger', Logger);
+            const app = decorated.resolve(App);
+
+            expect(app.run()).toBe('super');
+        });
+
+        it('passes params to constructor(autofactory) in decorator', () => {
+            const decorated = createIoCLocator();
+
+            decorated.registerConstructor('logger', Logger2);
+            const app = decorated.resolve(App2);
+
+            expect(app.run()).toBe('superduper');
         });
     });
 });

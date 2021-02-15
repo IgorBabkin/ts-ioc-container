@@ -12,13 +12,13 @@ export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
         return new value(...injectionItems.map((item) => this.resolveItem(item)), ...deps);
     }
 
-    private resolveItem({ token, type }: InjectionItem<any>): any {
+    private resolveItem({ token, type, args }: InjectionItem<any>): any {
         switch (type) {
             case 'instance':
-                return this.locator.resolve(token);
+                return this.locator.resolve(token, ...args);
 
             case 'factory':
-                return (...args: any[]) => this.locator.resolve(token, ...args);
+                return (...args2: any[]) => this.locator.resolve(token, ...args, ...args2);
         }
     }
 
