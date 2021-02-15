@@ -4,6 +4,7 @@ export { ServiceLocator } from './ServiceLocator';
 export * from './IRegistration';
 export { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 export { SimpleServiceLocatorStrategy } from './strategy/simple/SimpleServiceLocatorStrategy';
+export { IStrategyFactory } from './strategy/IStrategyFactory';
 export { IocServiceLocatorStrategyFactory } from './strategy/ioc/IocServiceLocatorStrategyFactory';
 export { SimpleServiceLocatorStrategyFactory } from './strategy/simple/SimpleServiceLocatorStrategyFactory';
 export { IocServiceLocatorStrategy } from './strategy/ioc/IocServiceLocatorStrategy';
