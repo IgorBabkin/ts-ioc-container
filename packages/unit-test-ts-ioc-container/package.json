@@ -1,6 +1,6 @@
 {
   "name": "unit-test-ts-ioc-container",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Unit test decorator for Typescript IoC container",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
   "homepage": "https://github.com/IgorBabkin/service-locator/tree/master/packages/unit-test-ts-ioc-container",
