@@ -6,9 +6,9 @@
   "homepage": "https://github.com/IgorBabkin/service-locator/tree/master/packages/unit-test-ts-ioc-container",
   "license": "ISC",
   "sideEffects": false,
-  "main": "cjm/index.js",
-  "types": "esm/index.d.ts",
-  "module": "esm/index.js",
+  "main": "cjm/lib/index.js",
+  "types": "esm/lib/index.d.ts",
+  "module": "esm/lib/index.js",
   "directories": {
     "lib": "lib",
     "test": "__tests__"
