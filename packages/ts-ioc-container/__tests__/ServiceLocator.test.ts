@@ -9,9 +9,10 @@ import {
     ServiceLocator,
     SimpleServiceLocatorStrategyFactory,
 } from '../lib';
-import { App, App2, Logger, Logger2, OnConstructImpl } from './fixtures/OnConstructImpl';
+import { App, App2, App3, Logger, Logger2, Logger3, OnConstructImpl } from './fixtures/OnConstructImpl';
 import { SubGroup3 } from './fixtures/SubGroup3';
 import { Group } from './fixtures/Group';
+import { args } from '../lib/helpers';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -219,8 +220,17 @@ describe('ServiceLocator', () => {
         it('passes params to constructor(autofactory) in decorator', () => {
             const decorated = createIoCLocator();
 
-            decorated.registerConstructor('logger', Logger2);
+            decorated.registerConstructor('logger2', Logger2);
             const app = decorated.resolve(App2);
+
+            expect(app.run()).toBe('superduper18');
+        });
+
+        it('passes arguments on registering', () => {
+            const decorated = createIoCLocator();
+
+            decorated.registerConstructor('logger3', Logger3, { argsFn: args('duper') });
+            const app = decorated.resolve(App3);
 
             expect(app.run()).toBe('superduper');
         });

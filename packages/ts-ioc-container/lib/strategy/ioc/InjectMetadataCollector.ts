@@ -2,12 +2,13 @@ import 'reflect-metadata';
 import { InjectionToken } from './decorators';
 import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 import { constructor } from '../../types';
+import { ArgsFn } from '../../IRegistration';
 
 export const INJECTION_TOKEN_METADATA_KEY = 'injectionTokens';
 export type InjectionItem<T> = {
     token: InjectionToken<T>;
     type: 'factory' | 'instance';
-    args: any[];
+    argsFn: ArgsFn;
 };
 
 export class InjectMetadataCollector implements IInjectMetadataCollector {

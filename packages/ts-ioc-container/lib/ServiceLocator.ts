@@ -64,7 +64,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     public registerConstructor<T>(
         key: RegistrationKey,
         value: constructor<T>,
-        options: IProviderOptions = { resolving: 'perRequest' },
+        options?: Partial<IProviderOptions>,
     ): this {
         this.registerFunction(key, (l, ...deps: any[]) => l.resolve(value, ...deps), options);
         return this;
@@ -78,11 +78,11 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     public registerFunction<T>(
         key: RegistrationKey,
         resolveFn: RegistrationFn<T>,
-        options: IProviderOptions = { resolving: 'perRequest' },
+        { resolving = 'perRequest', argsFn = () => [] }: Partial<IProviderOptions> = {},
     ): this {
         this.registrations.set(key, {
             fn: resolveFn,
-            options,
+            options: { resolving, argsFn },
         });
         return this;
     }
@@ -90,11 +90,12 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private resolveLocally<T>(key: RegistrationKey, ...deps: any[]): T {
         const registration = this.registrations.get(key);
         if (registration) {
-            switch (registration.options.resolving) {
+            const { resolving, argsFn } = registration.options;
+            switch (resolving) {
                 case 'perRequest':
-                    return this.resolveFn(registration.fn, ...deps);
+                    return this.resolveFn(registration.fn, ...deps, ...argsFn(this));
                 case 'singleton':
-                    return this.resolveSingleton(key, registration.fn, ...deps);
+                    return this.resolveSingleton(key, registration.fn, ...deps, ...argsFn(this));
             }
         }
         return undefined;
