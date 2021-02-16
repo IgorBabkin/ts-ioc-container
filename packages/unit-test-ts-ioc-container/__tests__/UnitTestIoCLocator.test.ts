@@ -1,7 +1,8 @@
 import 'reflect-metadata';
-import { MoqFactory, UnitTestServiceLocator } from '../lib';
+import { UnitTestServiceLocator } from '../lib';
 import { inject, IocServiceLocatorStrategyFactory, metadataCollector } from 'ts-ioc-container';
 import { Mock } from 'moq.ts';
+import { MoqFactory } from './moq/MoqFactory';
 
 interface ISubClass {
     greeting(): string;

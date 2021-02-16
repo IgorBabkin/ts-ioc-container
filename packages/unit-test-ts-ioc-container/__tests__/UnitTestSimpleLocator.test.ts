@@ -1,6 +1,7 @@
 import { IServiceLocator, SimpleServiceLocatorStrategyFactory } from 'ts-ioc-container';
-import { MoqFactory, UnitTestServiceLocator } from '../lib';
+import { UnitTestServiceLocator } from '../lib';
 import { Mock } from 'moq.ts';
+import { MoqFactory } from './moq/MoqFactory';
 
 interface IDepClass {
     greeting(): string;
