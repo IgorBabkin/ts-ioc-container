@@ -1,15 +1,15 @@
 import { IServiceLocator } from './IServiceLocator';
 import { InjectionToken } from './strategy/ioc/decorators';
 import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
-import { IProviderOptions, IRegistration, RegistrationFn, RegistrationKey } from './IRegistration';
+import { IProvider, ProviderFn, ProviderKey } from './IProvider';
 import { IInstanceHook } from './instanceHooks/IInstanceHook';
 import { IStrategyFactory } from './strategy/IStrategyFactory';
 import { constructor } from './types';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 
 export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
-    private registrations: Map<RegistrationKey, IRegistration<any>> = new Map();
-    private instances: Map<RegistrationKey, any> = new Map();
+    private providers: Map<ProviderKey, IProvider<any>> = new Map();
+    private instances: Map<ProviderKey, any> = new Map();
     private parent: ServiceLocator<unknown>;
     private strategy: IServiceLocatorStrategy;
 
@@ -35,16 +35,13 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     public createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext> {
         const locator = new ServiceLocator(this.strategyFactory, this.hooks, context);
         locator.addTo(this);
-        for (const [key, { options, fn }] of this.registrations.entries()) {
-            if (options?.resolving === 'perScope') {
-                locator.registerFunction(key, fn, { resolving: 'singleton' });
-            }
-            switch (options?.resolving) {
+        for (const [key, registration] of this.providers.entries()) {
+            switch (registration.options.resolving) {
                 case 'perScope':
-                    locator.registerFunction(key, fn, { resolving: 'singleton' });
+                    locator.register(key, registration.clone({ resolving: 'singleton' }));
                     break;
                 case 'perRequest':
-                    locator.registerFunction(key, fn, options);
+                    locator.register(key, registration.clone());
             }
         }
         return locator;
@@ -53,7 +50,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     public remove(): void {
         this.parent = null;
         this.instances = new Map();
-        this.registrations = new Map();
+        this.providers = new Map();
         this.strategy.dispose();
     }
 
@@ -62,47 +59,26 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         return this;
     }
 
-    public registerConstructor<T>(
-        key: RegistrationKey,
-        value: constructor<T>,
-        options?: Partial<IProviderOptions>,
-    ): this {
-        this.registerFunction(key, (l, ...deps: any[]) => l.resolve(value, ...deps), options);
+    public register(key: ProviderKey, registration: IProvider<unknown>): this {
+        this.providers.set(key, registration);
         return this;
     }
 
-    public registerInstance<T>(key: RegistrationKey, value: T): this {
-        this.registerFunction(key, () => value);
-        return this;
-    }
-
-    public registerFunction<T>(
-        key: RegistrationKey,
-        resolveFn: RegistrationFn<T>,
-        { resolving = 'perRequest', argsFn = () => [] }: Partial<IProviderOptions> = {},
-    ): this {
-        this.registrations.set(key, {
-            fn: resolveFn,
-            options: { resolving, argsFn },
-        });
-        return this;
-    }
-
-    private resolveLocally<T>(key: RegistrationKey, ...deps: any[]): T {
-        const registration = this.registrations.get(key);
-        if (registration) {
-            const { resolving, argsFn } = registration.options;
+    private resolveLocally<T>(key: ProviderKey, ...deps: any[]): T {
+        const provider = this.providers.get(key);
+        if (provider) {
+            const { resolving, argsFn } = provider.options;
             switch (resolving) {
                 case 'perRequest':
-                    return this.resolveFn(registration.fn, ...deps, ...argsFn(this));
+                    return this.resolveFn(provider.fn, ...deps, ...argsFn(this));
                 case 'singleton':
-                    return this.resolveSingleton(key, registration.fn, ...deps, ...argsFn(this));
+                    return this.resolveSingleton(key, provider.fn, ...deps, ...argsFn(this));
             }
         }
         return undefined;
     }
 
-    private resolveFn<T>(fn: RegistrationFn<T>, ...deps: any[]): T {
+    private resolveFn<T>(fn: ProviderFn<T>, ...deps: any[]): T {
         const instance = fn(this, ...deps);
         for (const hook of this.hooks) {
             hook.onCreateInstance(instance);
@@ -110,7 +86,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         return instance;
     }
 
-    private resolveSingleton<T>(key: RegistrationKey, value: RegistrationFn<T>, ...deps: any[]): T {
+    private resolveSingleton<T>(key: ProviderKey, value: ProviderFn<T>, ...deps: any[]): T {
         if (!this.instances.has(key)) {
             const instance = this.resolveFn(value, ...deps);
             this.instances.set(key, instance);

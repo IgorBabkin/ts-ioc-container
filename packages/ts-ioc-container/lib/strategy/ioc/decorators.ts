@@ -1,6 +1,6 @@
 import { InjectionItem, InjectMetadataCollector } from './InjectMetadataCollector';
 import { IFieldDecorator } from '../../IFieldDecorator';
-import { ArgsFn } from '../../IRegistration';
+import { ArgsFn } from '../../IProvider';
 
 export type constructor<T> = new (...args: any[]) => T;
 export const metadataCollector = new InjectMetadataCollector();

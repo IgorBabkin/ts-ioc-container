@@ -1,7 +1,7 @@
 export { IServiceLocator } from './IServiceLocator';
 export { constructor } from './types';
 export { ServiceLocator } from './ServiceLocator';
-export * from './IRegistration';
+export * from './IProvider';
 export { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 export { SimpleServiceLocatorStrategy } from './strategy/simple/SimpleServiceLocatorStrategy';
 export { IStrategyFactory } from './strategy/IStrategyFactory';
@@ -12,4 +12,4 @@ export { inject, Factory, Instance, InjectionToken, metadataCollector } from './
 export { IInstanceHook } from './instanceHooks/IInstanceHook';
 export { OnConstructHook } from './instanceHooks/ioc/OnConstructHook';
 export { onConstruct } from './instanceHooks/ioc/decorators';
-export * from './IRegistration';
+export * from './IProvider';

@@ -6,7 +6,7 @@ import {
     IServiceLocator,
     IServiceLocatorStrategy,
     IStrategyFactory,
-    RegistrationKey,
+    ProviderKey,
 } from 'ts-ioc-container';
 import { IMockAdapter } from './IMockAdapter';
 import { IMockFactory } from './IMockFactory';
@@ -23,7 +23,7 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         this.strategy = strategyFactory.create(this);
     }
 
-    public resolveMock(key: RegistrationKey): GMock {
+    public resolveMock(key: ProviderKey): GMock {
         return this.findMock(key).getMock();
     }
 
@@ -43,15 +43,7 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         this.mocks = new Map();
     }
 
-    public registerConstructor(...args: any[]): this {
-        throw new Error('Not implemented');
-    }
-
-    public registerFunction(...args: any[]): this {
-        throw new Error('Not implemented');
-    }
-
-    public registerInstance(...args: any[]): this {
+    public register(...args: any[]): this {
         throw new Error('Not implemented');
     }
 
