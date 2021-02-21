@@ -1,10 +1,10 @@
 import { IServiceLocator } from './IServiceLocator';
 import { InjectionToken } from './strategy/ioc/decorators';
 import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
-import { IProvider, ProviderFn, ProviderKey } from './IProvider';
-import { IInstanceHook } from './instanceHooks/IInstanceHook';
+import { IProvider, ProviderFn, ProviderKey } from './provider/IProvider';
+import { IInstanceHook } from './hooks/IInstanceHook';
 import { IStrategyFactory } from './strategy/IStrategyFactory';
-import { constructor } from './types';
+import { constructor } from './helpers/types';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 
 export class ServiceLocator<GContext> implements IServiceLocator<GContext> {

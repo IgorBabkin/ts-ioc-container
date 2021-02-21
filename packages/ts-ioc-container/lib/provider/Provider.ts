@@ -1,25 +1,19 @@
-import { ArgsFn, IProviderOptions, IProvider, ProviderFn, Resolving } from './IProvider';
-import { constructor } from './types';
+import { ArgsFn, IProvider, IProviderOptions, ProviderFn, Resolving } from './IProvider';
+import { constructor } from '../helpers/types';
 
 export class Provider<T> implements IProvider<T> {
     private resolving?: Resolving;
     private argsFn?: ArgsFn;
 
-    static fromConstructor<GReturn>(
-        value: constructor<GReturn>,
-        options?: Partial<IProviderOptions>,
-    ): Provider<GReturn> {
-        return new Provider((l, ...deps: any[]) => l.resolve(value, ...deps), options);
+    static fromConstructor<GReturn>(value: constructor<GReturn>): Provider<GReturn> {
+        return new Provider((l, ...deps: any[]) => l.resolve(value, ...deps));
     }
 
     static fromInstance<GReturn>(value: GReturn): Provider<GReturn> {
         return new Provider(() => value);
     }
 
-    constructor(public fn: ProviderFn<T>, options: Partial<IProviderOptions> = {}) {
-        this.resolving = options.resolving;
-        this.argsFn = options.argsFn;
-    }
+    constructor(public fn: ProviderFn<T>) {}
 
     get options(): IProviderOptions {
         return {
@@ -43,8 +37,14 @@ export class Provider<T> implements IProvider<T> {
         return this;
     }
 
+    withOptions(options: Partial<IProviderOptions> = {}): this {
+        this.resolving = options.resolving;
+        this.argsFn = options.argsFn;
+        return this;
+    }
+
     clone(options: Partial<IProviderOptions> = {}): IProvider<T> {
-        return new Provider(this.fn, {
+        return new Provider(this.fn).withOptions({
             argsFn: this.argsFn,
             resolving: this.resolving,
             ...options,

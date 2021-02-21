@@ -1,4 +1,4 @@
-import { IServiceLocator } from './IServiceLocator';
+import { IServiceLocator } from '../IServiceLocator';
 
 export type Resolving = 'singleton' | 'perScope' | 'perRequest';
 
@@ -12,8 +12,8 @@ export interface IProviderOptions {
 export type ProviderFn<T> = (locator: IServiceLocator, ...args: any[]) => T;
 
 export interface IProvider<T> {
-    fn: ProviderFn<T>;
-    options: IProviderOptions;
+    readonly fn: ProviderFn<T>;
+    readonly options: IProviderOptions;
 
     clone(options?: Partial<IProviderOptions>): IProvider<T>;
 }

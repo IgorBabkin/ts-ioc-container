@@ -1,5 +1,5 @@
 import { InjectionToken } from './strategy/ioc/decorators';
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey } from './provider/IProvider';
 
 export interface IServiceLocator<GContext = any> {
     readonly context?: GContext;

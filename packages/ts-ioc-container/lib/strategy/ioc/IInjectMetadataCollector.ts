@@ -1,5 +1,5 @@
 import { InjectionItem } from './InjectMetadataCollector';
-import { constructor } from '../../types';
+import { constructor } from '../../helpers/types';
 
 export interface IInjectMetadataCollector {
     injectMetadata(target: any, parameterIndex: number, injectionItem: InjectionItem<any>): void;

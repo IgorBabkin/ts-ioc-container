@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { hooksMetadataCollector } from '../lib/instanceHooks/ioc/decorators';
+import { hooksMetadataCollector } from '../lib/hooks/ioc/decorators';
 import { metadataCollector } from '../lib/strategy/ioc/decorators';
 import { IServiceLocator } from '../lib/IServiceLocator';
 import {
@@ -12,7 +12,7 @@ import {
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './fixtures/OnConstructImpl';
 import { SubGroup3 } from './fixtures/SubGroup3';
 import { Group } from './fixtures/Group';
-import { Provider } from '../lib/Provider';
+import { Provider } from '../lib/provider/Provider';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}

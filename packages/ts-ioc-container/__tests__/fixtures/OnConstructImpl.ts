@@ -1,5 +1,5 @@
 import { Factory, inject, IServiceLocator, onConstruct } from '../../lib';
-import { args } from '../../lib/helpers';
+import { args } from '../../lib/helpers/helpers';
 
 export class OnConstructImpl {
     public isConstructed = false;

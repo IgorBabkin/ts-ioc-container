@@ -1,4 +1,4 @@
-import { constructor } from '../../types';
+import { constructor } from '../../helpers/types';
 import { IServiceLocator } from '../../IServiceLocator';
 import { IServiceLocatorStrategy } from '../IServiceLocatorStrategy';
 
