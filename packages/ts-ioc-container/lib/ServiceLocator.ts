@@ -21,6 +21,11 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         this.strategy = strategyFactory.create(this);
     }
 
+    public register(key: ProviderKey, registration: IProvider<unknown>): this {
+        this.providers.set(key, registration);
+        return this;
+    }
+
     public resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
         if (typeof key === 'string' || typeof key === 'symbol') {
             const instance = this.resolveLocally<T>(key, ...deps) || this.parent?.resolve<T>(key, ...deps);
@@ -56,11 +61,6 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
 
     public addTo(locator: ServiceLocator<unknown>): this {
         this.parent = locator;
-        return this;
-    }
-
-    public register(key: ProviderKey, registration: IProvider<unknown>): this {
-        this.providers.set(key, registration);
         return this;
     }
 
