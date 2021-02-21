@@ -1,5 +1,6 @@
 export { IServiceLocator } from './IServiceLocator';
 export { constructor } from './helpers/types';
+export { args } from './helpers/helpers';
 export { ServiceLocator } from './ServiceLocator';
 export { Resolving, ArgsFn, ProviderKey, IProviderOptions, IProvider, ProviderFn } from './provider/IProvider';
 export { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
