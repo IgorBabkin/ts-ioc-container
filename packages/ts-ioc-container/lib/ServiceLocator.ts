@@ -40,13 +40,13 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     public createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext> {
         const locator = new ServiceLocator(this.strategyFactory, this.hooks, context);
         locator.addTo(this);
-        for (const [key, registration] of this.providers.entries()) {
-            switch (registration.options.resolving) {
+        for (const [key, provider] of this.providers.entries()) {
+            switch (provider.options.resolving) {
                 case 'perScope':
-                    locator.register(key, registration.clone({ resolving: 'singleton' }));
+                    locator.register(key, provider.clone({ resolving: 'singleton' }));
                     break;
                 case 'perRequest':
-                    locator.register(key, registration.clone());
+                    locator.register(key, provider.clone());
             }
         }
         return locator;
