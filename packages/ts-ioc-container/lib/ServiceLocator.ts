@@ -5,6 +5,7 @@ import { IProviderOptions, IRegistration, RegistrationFn, RegistrationKey } from
 import { IInstanceHook } from './instanceHooks/IInstanceHook';
 import { IStrategyFactory } from './strategy/IStrategyFactory';
 import { constructor } from './types';
+import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 
 export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private registrations: Map<RegistrationKey, IRegistration<any>> = new Map();
@@ -24,7 +25,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         if (typeof key === 'string' || typeof key === 'symbol') {
             const instance = this.resolveLocally<T>(key, ...deps) || this.parent?.resolve<T>(key, ...deps);
             if (!instance) {
-                throw new Error(`ServiceLocator: cannot find ${key.toString()}`);
+                throw new DependencyNotFoundError(key.toString());
             }
             return instance;
         }

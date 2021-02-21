@@ -9,7 +9,7 @@ export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
 
     public resolveConstructor<T>(value: constructor<T>, ...deps: any[]): T {
         const injectionItems = this.metadataCollector.getMetadata(value);
-        return new value(...injectionItems.map((item) => this.resolveItem(item)), ...deps);
+        return new value(...injectionItems.map((item) => this.resolveItem(item)), ...deps, this.locator);
     }
 
     private resolveItem({ token, type, argsFn }: InjectionItem<any>): any {

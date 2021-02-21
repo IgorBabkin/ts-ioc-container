@@ -9,7 +9,7 @@ import {
     ServiceLocator,
     SimpleServiceLocatorStrategyFactory,
 } from '../lib';
-import { App, App2, App3, Logger, Logger2, Logger3, OnConstructImpl } from './fixtures/OnConstructImpl';
+import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './fixtures/OnConstructImpl';
 import { SubGroup3 } from './fixtures/SubGroup3';
 import { Group } from './fixtures/Group';
 import { args } from '../lib/helpers';
@@ -233,6 +233,16 @@ describe('ServiceLocator', () => {
             const app = decorated.resolve(App3);
 
             expect(app.run()).toBe('superduper');
+        });
+
+        it('passes locator as last dep', () => {
+            const decorated = createIoCLocator();
+
+            decorated.registerInstance('dep1', 'dep1');
+            decorated.registerInstance('dep2', 'dep2');
+            const app = decorated.resolve(App4);
+
+            expect(app.run()).toBe('dep1dep2');
         });
     });
 });

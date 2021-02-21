@@ -1,4 +1,4 @@
-import { Factory, inject, onConstruct } from '../../lib';
+import { Factory, inject, IServiceLocator, onConstruct } from '../../lib';
 import { args } from '../../lib/helpers';
 
 export class OnConstructImpl {
@@ -61,5 +61,13 @@ export class App3 {
 
     public run(): string {
         return this.logger.log();
+    }
+}
+
+export class App4 {
+    constructor(@inject('dep1') private dep1: string, private locator: IServiceLocator) {}
+
+    public run(): string {
+        return `${this.dep1}${this.locator.resolve('dep2')}`;
     }
 }
