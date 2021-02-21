@@ -21,8 +21,8 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         this.strategy = strategyFactory.create(this);
     }
 
-    public register(key: ProviderKey, registration: IProvider<unknown>): this {
-        this.providers.set(key, registration);
+    public register(key: ProviderKey, provider: IProvider<unknown>): this {
+        this.providers.set(key, provider);
         return this;
     }
 
