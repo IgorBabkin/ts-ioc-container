@@ -5,9 +5,11 @@ import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 import { InjectionItem } from './InjectMetadataCollector';
 
 export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
-    constructor(private locator: IServiceLocator, private metadataCollector: IInjectMetadataCollector) {}
+    private locator: IServiceLocator;
 
-    public resolveConstructor<T>(value: constructor<T>, ...deps: any[]): T {
+    constructor(private metadataCollector: IInjectMetadataCollector) {}
+
+    resolveConstructor<T>(value: constructor<T>, ...deps: any[]): T {
         const injectionItems = this.metadataCollector.getMetadata(value);
         return new value(...injectionItems.map((item) => this.resolveItem(item)), ...deps, this.locator);
     }
@@ -22,7 +24,15 @@ export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
         }
     }
 
-    public dispose(): void {
+    dispose(): void {
         this.locator = undefined;
+    }
+
+    bindTo(locator: IServiceLocator): void {
+        this.locator = locator;
+    }
+
+    clone(): IServiceLocatorStrategy {
+        return new IocServiceLocatorStrategy(this.metadataCollector);
     }
 }

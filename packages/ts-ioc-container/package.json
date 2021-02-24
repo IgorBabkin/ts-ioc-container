@@ -47,7 +47,7 @@
     "ts-jest": "26.4.3",
     "typescript": "4.0.5"
   },
-  "gitHead": "837247e62d14c487620970b3e1b1d34579e53ed6",
+  "gitHead": "3afa947f9de5e5441f3feebb725d092fc0437693",
   "peerDependencies": {
     "reflect-metadata": "^0.1.13"
   }

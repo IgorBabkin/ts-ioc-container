@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { UnitTestServiceLocator } from '../lib';
-import { inject, IocServiceLocatorStrategyFactory, metadataCollector } from 'ts-ioc-container';
+import { Hook, inject, IocServiceLocatorStrategy, metadataCollector } from 'ts-ioc-container';
 import { Mock } from 'moq.ts';
 import { MoqFactory } from './moq/MoqFactory';
 
@@ -15,8 +15,8 @@ class TestClass1 {
 describe('UnitTestIoCLocator', () => {
     function createIoCLocator() {
         return new UnitTestServiceLocator(
-            new IocServiceLocatorStrategyFactory(metadataCollector),
-            [],
+            new IocServiceLocatorStrategy(metadataCollector),
+            new Hook(),
             new MoqFactory(),
         );
     }

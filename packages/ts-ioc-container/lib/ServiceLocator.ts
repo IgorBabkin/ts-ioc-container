@@ -2,24 +2,22 @@ import { IServiceLocator } from './IServiceLocator';
 import { InjectionToken } from './strategy/ioc/decorators';
 import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 import { IProvider, ProviderFn, ProviderKey } from './provider/IProvider';
-import { IInstanceHook } from './hooks/IInstanceHook';
-import { IStrategyFactory } from './strategy/IStrategyFactory';
-import { constructor, Fn } from './helpers/types';
+import { constructor } from './helpers/types';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
+import { IHook } from './hooks/IHook';
+import { Hook } from './hooks/Hook';
 
 export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private providers: Map<ProviderKey, IProvider<any>> = new Map();
     private instances: Map<ProviderKey, any> = new Map();
     private parent: ServiceLocator<unknown>;
-    private strategy: IServiceLocatorStrategy;
-    private disposeHooks: Fn[] = [];
 
     constructor(
-        private strategyFactory: IStrategyFactory,
-        public hooks: IInstanceHook[] = [],
+        private strategy: IServiceLocatorStrategy,
+        private hook: IHook = new Hook([]),
         public context?: GContext,
     ) {
-        this.strategy = strategyFactory.create(this);
+        this.strategy.bindTo(this);
     }
 
     public register(key: ProviderKey, provider: IProvider<unknown>): this {
@@ -39,7 +37,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     }
 
     public createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext> {
-        const locator = new ServiceLocator(this.strategyFactory, this.hooks, context);
+        const locator = new ServiceLocator(this.strategy.clone(), this.hook.clone(), context);
         locator.addTo(this);
         for (const [key, provider] of this.providers.entries()) {
             switch (provider.options.resolving) {
@@ -54,11 +52,11 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     }
 
     public remove(): void {
+        this.hook.onContainerRemove();
         this.parent = null;
         this.instances = new Map();
         this.providers = new Map();
-        this.disposeHooks.forEach((h) => h());
-        this.disposeHooks = [];
+        this.hook.dispose();
         this.strategy.dispose();
     }
 
@@ -83,10 +81,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
 
     private resolveFn<T>(fn: ProviderFn<T>, ...deps: any[]): T {
         const instance = fn(this, ...deps);
-        for (const hook of this.hooks) {
-            hook.onCreate?.(instance);
-        }
-        this.disposeHooks.push(() => this.hooks.forEach((h) => h.onDispose?.(instance)));
+        this.hook.onInstanceCreate(instance);
         return instance;
     }
 
@@ -101,10 +96,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
 
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
         const instance = this.strategy.resolveConstructor<T>(c, ...deps);
-        for (const hook of this.hooks) {
-            hook.onCreate?.(instance);
-        }
-        this.disposeHooks.push(() => this.hooks.forEach((h) => h.onDispose?.(instance)));
+        this.hook.onInstanceCreate(instance);
         return instance;
     }
 }

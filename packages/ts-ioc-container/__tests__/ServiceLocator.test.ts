@@ -3,10 +3,10 @@ import { metadataCollector } from '../lib/strategy/ioc/decorators';
 import { IServiceLocator } from '../lib/IServiceLocator';
 import {
     IInstanceHook,
-    IocServiceLocatorStrategyFactory,
+    IocServiceLocatorStrategy,
     OnConstructHook,
     ServiceLocator,
-    SimpleServiceLocatorStrategyFactory,
+    SimpleServiceLocatorStrategy,
 } from '../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './fixtures/OnConstructImpl';
 import { SubGroup3 } from './fixtures/SubGroup3';
@@ -15,6 +15,7 @@ import { Provider } from '../lib/provider/Provider';
 import { OnDisposeHook } from '../lib/hooks/ioc/onDispose/OnDisposeHook';
 import { OnDisposeImpl } from './fixtures/OnDisposeImpl';
 import { hooksMetadataCollector } from '../lib/hooks/ioc/HooksMetadataCollector';
+import { Hook } from '../lib/hooks/Hook';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -22,9 +23,9 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook[] = []) =>
-        new ServiceLocator(new SimpleServiceLocatorStrategyFactory(), hooks);
+        new ServiceLocator(new SimpleServiceLocatorStrategy(), new Hook(hooks));
     const createIoCLocator = (hooks: IInstanceHook[] = []) =>
-        new ServiceLocator(new IocServiceLocatorStrategyFactory(metadataCollector), hooks);
+        new ServiceLocator(new IocServiceLocatorStrategy(metadataCollector), new Hook(hooks));
 
     it('should create an instance', () => {
         const expectedInstance = {};

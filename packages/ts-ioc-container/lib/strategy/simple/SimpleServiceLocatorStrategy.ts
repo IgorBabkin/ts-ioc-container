@@ -3,7 +3,7 @@ import { IServiceLocator } from '../../IServiceLocator';
 import { IServiceLocatorStrategy } from '../IServiceLocatorStrategy';
 
 export class SimpleServiceLocatorStrategy implements IServiceLocatorStrategy {
-    constructor(private locator: IServiceLocator) {}
+    private locator: IServiceLocator;
 
     public resolveConstructor<T>(value: constructor<T>, ...deps: any[]): T {
         return new value(this.locator, ...deps);
@@ -11,5 +11,13 @@ export class SimpleServiceLocatorStrategy implements IServiceLocatorStrategy {
 
     public dispose(): void {
         this.locator = undefined;
+    }
+
+    bindTo(locator: IServiceLocator): void {
+        this.locator = locator;
+    }
+
+    clone(): IServiceLocatorStrategy {
+        return new SimpleServiceLocatorStrategy();
     }
 }
