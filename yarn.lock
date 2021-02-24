@@ -7968,6 +7968,11 @@ trim-off-newlines@^1.0.0:
   resolved "https://registry.yarnpkg.com/trim-off-newlines/-/trim-off-newlines-1.0.1.tgz#9f9ba9d9efa8764c387698bcbfeb2c848f11adb3"
   integrity sha1-n5up2e+odkw4dpi8v+sshI8RrbM=
 
+ts-ioc-container@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/ts-ioc-container/-/ts-ioc-container-3.1.2.tgz#7fb8dd2544627df6bba594e79b73de40e85d28a7"
+  integrity sha512-5GGgpRwn19ygdxeNCHt+wy/Sf1iqrpY8q2IJzf4kJKv7MLKVQNhKUlSmNogHRZPiY0x5vhjjC47yXopHKhJ6+w==
+
 ts-jest@26.4.3:
   version "26.4.3"
   resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-26.4.3.tgz#d153a616033e7ec8544b97ddbe2638cbe38d53db"
