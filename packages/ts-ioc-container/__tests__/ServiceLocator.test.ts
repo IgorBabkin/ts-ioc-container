@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import { hooksMetadataCollector } from '../lib/hooks/ioc/decorators';
 import { metadataCollector } from '../lib/strategy/ioc/decorators';
 import { IServiceLocator } from '../lib/IServiceLocator';
 import {
@@ -13,6 +12,9 @@ import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from
 import { SubGroup3 } from './fixtures/SubGroup3';
 import { Group } from './fixtures/Group';
 import { Provider } from '../lib/provider/Provider';
+import { OnDisposeHook } from '../lib/hooks/ioc/onDispose/OnDisposeHook';
+import { OnDisposeImpl } from './fixtures/OnDisposeImpl';
+import { hooksMetadataCollector } from '../lib/hooks/ioc/HooksMetadataCollector';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -109,7 +111,7 @@ describe('ServiceLocator', () => {
             let isPostConstructed = false;
             const locator = createSimpleLocator([
                 {
-                    onCreateInstance: (instance) => instance.postConstruct(),
+                    onCreate: (instance) => instance.postConstruct(),
                 },
             ]);
             const disposable = {
@@ -122,9 +124,29 @@ describe('ServiceLocator', () => {
 
             child.resolve('key1');
 
+            expect(isPostConstructed).toBeTruthy();
+        });
+
+        it('should invokes onDispose', () => {
+            let isDisposed = false;
+            const locator = createSimpleLocator([
+                {
+                    onDispose: (instance) => instance.dispose(),
+                },
+            ]);
+            const disposable = {
+                dispose: () => {
+                    isDisposed = true;
+                },
+            };
+
+            const child = locator.createContainer().register('key1', Provider.fromInstance(disposable));
+
+            child.resolve('key1');
+
             child.remove();
 
-            expect(isPostConstructed).toBeTruthy();
+            expect(isDisposed).toBeTruthy();
         });
 
         it('should remove sub-sub-child', () => {
@@ -203,6 +225,16 @@ describe('ServiceLocator', () => {
             const group = decorated.resolve(OnConstructImpl);
 
             expect(group.isConstructed).toBeTruthy();
+        });
+
+        it('ios: onDisposeHook', () => {
+            const decorated = createIoCLocator([new OnDisposeHook(hooksMetadataCollector)]);
+
+            const group = decorated.resolve(OnDisposeImpl);
+
+            decorated.remove();
+
+            expect(group.isDisposed).toBeTruthy();
         });
 
         it('passes params to constructor(instance) in decorator', () => {

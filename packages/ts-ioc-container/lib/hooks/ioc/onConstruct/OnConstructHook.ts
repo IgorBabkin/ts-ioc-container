@@ -1,12 +1,12 @@
-import { IHooksMetadataCollector } from './IHooksMetadataCollector';
-import { IInstanceHook } from '../IInstanceHook';
+import { IHooksMetadataCollector } from '../IHooksMetadataCollector';
+import { IInstanceHook } from '../../IInstanceHook';
 
 export const ON_CONSTRUCT_HOOK_KEY = Symbol('ON_CONSTRUCT_HOOK_KEY');
 
 export class OnConstructHook implements IInstanceHook {
     constructor(private metadata: IHooksMetadataCollector) {}
 
-    public onCreateInstance(instance: any): void {
+    public onCreate(instance: any): void {
         if (!(instance instanceof Object)) {
             return;
         }

@@ -4,7 +4,7 @@ import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 import { IProvider, ProviderFn, ProviderKey } from './provider/IProvider';
 import { IInstanceHook } from './hooks/IInstanceHook';
 import { IStrategyFactory } from './strategy/IStrategyFactory';
-import { constructor } from './helpers/types';
+import { constructor, Fn } from './helpers/types';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 
 export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
@@ -12,6 +12,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private instances: Map<ProviderKey, any> = new Map();
     private parent: ServiceLocator<unknown>;
     private strategy: IServiceLocatorStrategy;
+    private disposeHooks: Fn[] = [];
 
     constructor(
         private strategyFactory: IStrategyFactory,
@@ -56,6 +57,8 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         this.parent = null;
         this.instances = new Map();
         this.providers = new Map();
+        this.disposeHooks.forEach((h) => h());
+        this.disposeHooks = [];
         this.strategy.dispose();
     }
 
@@ -81,8 +84,9 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private resolveFn<T>(fn: ProviderFn<T>, ...deps: any[]): T {
         const instance = fn(this, ...deps);
         for (const hook of this.hooks) {
-            hook.onCreateInstance(instance);
+            hook.onCreate?.(instance);
         }
+        this.disposeHooks.push(() => this.hooks.forEach((h) => h.onDispose?.(instance)));
         return instance;
     }
 
@@ -98,8 +102,9 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
         const instance = this.strategy.resolveConstructor<T>(c, ...deps);
         for (const hook of this.hooks) {
-            hook.onCreateInstance(instance);
+            hook.onCreate?.(instance);
         }
+        this.disposeHooks.push(() => this.hooks.forEach((h) => h.onDispose?.(instance)));
         return instance;
     }
 }

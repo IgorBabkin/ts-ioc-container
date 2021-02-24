@@ -11,6 +11,6 @@ export { SimpleServiceLocatorStrategyFactory } from './strategy/simple/SimpleSer
 export { IocServiceLocatorStrategy } from './strategy/ioc/IocServiceLocatorStrategy';
 export { inject, Factory, Instance, InjectionToken, metadataCollector } from './strategy/ioc/decorators';
 export { IInstanceHook } from './hooks/IInstanceHook';
-export { OnConstructHook } from './hooks/ioc/OnConstructHook';
-export { onConstruct } from './hooks/ioc/decorators';
+export { OnConstructHook } from './hooks/ioc/onConstruct/OnConstructHook';
+export { onConstruct } from './hooks/ioc/onConstruct/decorators';
 export { Provider } from './provider/Provider';

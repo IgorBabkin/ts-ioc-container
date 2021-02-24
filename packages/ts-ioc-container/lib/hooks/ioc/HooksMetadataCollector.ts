@@ -15,3 +15,5 @@ export class HooksMetadataCollector implements IHooksMetadataCollector {
         return Reflect.hasMetadata(hookKey, target) ? Reflect.getMetadata(hookKey, target) : [];
     }
 }
+
+export const hooksMetadataCollector = new HooksMetadataCollector();
