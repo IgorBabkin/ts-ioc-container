@@ -113,6 +113,7 @@ describe('ServiceLocator', () => {
             const locator = createSimpleLocator([
                 {
                     onCreate: (instance) => instance.postConstruct(),
+                    onDispose(instance: any) {},
                 },
             ]);
             const disposable = {
@@ -132,7 +133,10 @@ describe('ServiceLocator', () => {
             let isDisposed = false;
             const locator = createSimpleLocator([
                 {
-                    onDispose: (instance) => instance.dispose(),
+                    onCreate(instance: any) {},
+                    onDispose(instance) {
+                        instance.dispose();
+                    },
                 },
             ]);
             const disposable = {

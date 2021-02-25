@@ -14,4 +14,6 @@ export class OnConstructHook implements IInstanceHook {
             typeof instance[hookKey] === 'function' && instance[hookKey]();
         }
     }
+
+    onDispose(instance: any): void {}
 }
