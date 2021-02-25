@@ -1,16 +1,16 @@
 import { IHooksMetadataCollector } from '../IHooksMetadataCollector';
 import { IInstanceHook } from '../../IInstanceHook';
 
-export const ON_CONSTRUCT_HOOK_KEY = Symbol('ON_CONSTRUCT_HOOK_KEY');
-
 export class OnConstructHook implements IInstanceHook {
+    public static HOOK_KEY = Symbol('ON_CONSTRUCT_HOOK_KEY');
+
     constructor(private metadata: IHooksMetadataCollector) {}
 
     public onCreate(instance: any): void {
         if (!(instance instanceof Object)) {
             return;
         }
-        for (const hookKey of this.metadata.getHookMethods(ON_CONSTRUCT_HOOK_KEY, instance)) {
+        for (const hookKey of this.metadata.getHookMethods(OnConstructHook.HOOK_KEY, instance)) {
             typeof instance[hookKey] === 'function' && instance[hookKey]();
         }
     }
