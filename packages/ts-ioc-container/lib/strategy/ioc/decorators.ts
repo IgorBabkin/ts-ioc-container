@@ -1,7 +1,7 @@
 import { InjectionItem, InjectMetadataCollector } from './InjectMetadataCollector';
 import { ArgsFn } from '../../provider/IProvider';
+import { constructor } from '../../helpers/types';
 
-export type constructor<T> = new (...args: any[]) => T;
 export const metadataCollector = new InjectMetadataCollector();
 
 export function Factory<T>(token: InjectionToken<T>): InjectionItem<T> {
