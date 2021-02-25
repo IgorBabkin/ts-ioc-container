@@ -5,7 +5,6 @@ export { ServiceLocator } from './ServiceLocator';
 export { Resolving, ArgsFn, ProviderKey, IProviderOptions, IProvider, ProviderFn } from './provider/IProvider';
 export { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 export { SimpleServiceLocatorStrategy } from './strategy/simple/SimpleServiceLocatorStrategy';
-export { IStrategyFactory } from './strategy/IStrategyFactory';
 export { IocServiceLocatorStrategy } from './strategy/ioc/IocServiceLocatorStrategy';
 export { inject, Factory, Instance, InjectionToken, metadataCollector } from './strategy/ioc/decorators';
 export { IInstanceHook } from './hooks/IInstanceHook';

@@ -233,8 +233,8 @@ describe('ServiceLocator', () => {
 
             const group = decorated.resolve(OnDisposeImpl);
 
+            expect(group.isDisposed).toBeFalsy();
             decorated.remove();
-
             expect(group.isDisposed).toBeTruthy();
         });
 
