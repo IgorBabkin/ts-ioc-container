@@ -1,29 +1,28 @@
 import { InjectionItem, InjectMetadataCollector } from './InjectMetadataCollector';
-import { IFieldDecorator } from '../../helpers/IFieldDecorator';
 import { ArgsFn } from '../../provider/IProvider';
 
 export type constructor<T> = new (...args: any[]) => T;
 export const metadataCollector = new InjectMetadataCollector();
 
-export function Factory<T>(token: InjectionToken<T>, argsFn: ArgsFn = () => []): InjectionItem<T> {
+export function Factory<T>(token: InjectionToken<T>): InjectionItem<T> {
     return {
         token,
         type: 'factory',
-        argsFn,
+        argsFn: () => [],
     };
 }
 
-export function Instance<T>(token: InjectionToken, argsFn: ArgsFn = () => []): InjectionItem<T> {
+export function Instance<T>(token: InjectionToken): InjectionItem<T> {
     return {
         token,
         type: 'instance',
-        argsFn,
+        argsFn: () => [],
     };
 }
 
 export type InjectionToken<T = any> = constructor<T> | string | symbol;
 
-export function inject<T>(item: InjectionToken | InjectionItem<T>, argsFn: ArgsFn = () => []): IFieldDecorator {
+export function inject<T>(item: InjectionToken | InjectionItem<T>, argsFn: ArgsFn = () => []): ParameterDecorator {
     return (target, _propertyKey, parameterIndex) => {
         metadataCollector.injectMetadata(
             target,
@@ -31,9 +30,13 @@ export function inject<T>(item: InjectionToken | InjectionItem<T>, argsFn: ArgsF
             typeof item === 'object'
                 ? {
                       ...item,
-                      argsFn: (l) => [...item.argsFn(l), ...argsFn(l)],
+                      argsFn,
                   }
-                : Instance(item, argsFn),
+                : {
+                      token: item,
+                      type: 'instance',
+                      argsFn,
+                  },
         );
     };
 }

@@ -257,13 +257,13 @@ describe('ServiceLocator', () => {
             decorated.register('logger2', Provider.fromConstructor(Logger2));
             const app = decorated.resolve(App2);
 
-            expect(app.run()).toBe('superduper18');
+            expect(app.run()).toBe('superduper');
         });
 
         it('passes arguments on registering', () => {
             const decorated = createIoCLocator();
 
-            decorated.register('logger3', Provider.fromConstructor(Logger3).withArgs('duper'));
+            decorated.register('logger3', Provider.fromConstructor(Logger3).withArgs('super'));
             const app = decorated.resolve(App3);
 
             expect(app.run()).toBe('superduper');

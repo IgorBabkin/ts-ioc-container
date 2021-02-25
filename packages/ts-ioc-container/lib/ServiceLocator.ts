@@ -71,9 +71,9 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
             const { resolving, argsFn } = provider.options;
             switch (resolving) {
                 case 'perRequest':
-                    return this.resolveFn(provider.fn, ...deps, ...argsFn(this));
+                    return this.resolveFn(provider.fn, ...argsFn(this), ...deps);
                 case 'singleton':
-                    return this.resolveSingleton(key, provider.fn, ...deps, ...argsFn(this));
+                    return this.resolveSingleton(key, provider.fn, ...argsFn(this), ...deps);
             }
         }
         return undefined;

@@ -14,7 +14,13 @@ export class Hook implements IHook {
     onInstanceCreate<GInstance>(instance: GInstance): void {
         for (const hook of this.hooks) {
             hook.onCreate(instance);
-            this.disposeHooks.push(() => hook.onDispose(instance));
+        }
+        this.disposeHooks.push(() => this.onInstanceDispose(instance));
+    }
+
+    onInstanceDispose<GInstance>(instance: GInstance): void {
+        for (const hook of this.hooks) {
+            hook.onDispose(instance);
         }
     }
 

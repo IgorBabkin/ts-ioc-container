@@ -4,7 +4,7 @@
 
 ## Advantages
 - written on typescript
-- simple and lightweight (roughly it's just one file of **~120 lines**) :heart:
+- simple and lightweight (roughly it's just one file of **~100 lines**) :heart:
 - clean API
 - supports scopes
 - can be used with decorators `@inject`
@@ -23,7 +23,7 @@ npm install ts-ioc-container
 ```shell script
 yarn add ts-ioc-container
 ```
-Add `reflect-metadata` if you want to use decorators
+Add `reflect-metadata` for IoC
 ```shell script
 npm install reflect-metadata
 ```
@@ -32,31 +32,42 @@ yarn add reflect-metadata
 ```
 
 ## Usage
-How to create new container
+
+How to create new simple locator
 ```typescript
-import {ServiceLocatorFactory} from 'ts-ioc-container';
+import {ServiceLocatorFactory, SimpleServiceLocatorStrategy} from 'ts-ioc-container';
 
-const container = new ServiceLocatorFactory().createIoCLocator();
-container.registerConstructor('ILogger', Logger, {resolving: 'singleton'});
-container.registerConstructor('ISticker', Sticker);
+const container = new ServiceLocatorFactory(new SimpleServiceLocatorStrategy());
+```
+How to create new IoC locator
+```typescript
+import 'reflect-metadata';
+import {ServiceLocatorFactory, IocServiceLocatorStrategy, metadataCollector} from 'ts-ioc-container';
 
-const repository = container.resolve(StickerRepository);
-repository.addSticker('Go to shop', 'Buy milk, tea and watermelon');
+const container = new ServiceLocatorFactory(new IocServiceLocatorStrategy(metadataCollector));
+```
+How to register dependencies
+```typescript
+locator.register('ILogger', Provider.fromConstructor(Logger));
+```
+How to resolve dependencies
+```typescript
+const logger = locator.resolve('ILogger', 'loggerPrefix');
 ```
 How to destroy container
 ```typescript
 container.remove();
 ```
-How to inject dependencies
+How to inject dependencies from IoC
 ```typescript
-import {inject, Factory} from 'ts-ioc-container';
+import {inject, Factory, args} from 'ts-ioc-container';
 
 class StickerRepository {
   private stickers: ISticker;
 
   constructor(
-    @inject('ILogger') private logger: ILogger,
-    @inject(Factory('ISticker')) private stickerFactory: (...args: any[]) => ISticker, // auto-factory (no need to register it)
+    @inject('ILogger', args('loggerPrefix')) private logger: ILogger,
+    @inject(Factory('ISticker'), args(...['arg1'])) private stickerFactory: (...args: any[]) => ISticker, // auto-factory (no need to register it)
   ) {}
 
   createSticker(title: string, body: string) {
@@ -64,30 +75,22 @@ class StickerRepository {
   }
 }
 ```
-How to register dependency
+Provider
 ```typescript
-container.registerConstructor('ILogger', Logger, {resolving: 'singleton'});
-container.registerInstance('IConfig', {itemsMaxCount: 20});
-container.registerFunction('IStickerFactory', (l, title, body, ...args: any[]) => l.resolve('ISticker', title, body, ...args));
+locator.register('ILogger', new Provider((l, ...args) => new Logger(...args)));
+locator.register('ILogger', Provider.fromConstructor(Logger));
+locator.register('ILogger', Provider.fromInstance(new Logger));
+```
 
-// to override just register again
-container.registerInstance('IConfig', {itemsMaxCount: 22});
-```
-How to resolve dependency
+Singleton
 ```typescript
-container.resolve('ISticker', ...['Go to shop', 'Buy milk, tea and watermelon'])
-```
-How to check dependency for existence
-```typescript
-container.has('ISticker');
+const provider = new Provider.fromConstructor(Logger).asSingleton();
 ```
 
 ### Scoped containers
 ```typescript
-import {ServiceLocatorFactory} from 'ts-ioc-container';
-
 const container = new ServiceLocatorFactory().createIoCLocator();
-container.registerConstructor('ILogger', Logger, {resolving: 'perScope'});
+container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
 const scopedContainer = container.createContainer();
 const logger = scopedContainer.resolve('ILogger');
 logger.log('Hello');
