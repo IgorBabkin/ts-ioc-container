@@ -44,7 +44,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "ts-ioc-container": "^4.0.1"
+    "ts-ioc-container": "^4.0.0"
   },
   "devDependencies": {
     "@types/jest": "26.0.15",
