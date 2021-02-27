@@ -20,12 +20,12 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         this.strategy.bindTo(this);
     }
 
-    public register(key: ProviderKey, provider: IProvider<unknown>): this {
+    register(key: ProviderKey, provider: IProvider<unknown>): this {
         this.providers.set(key, provider);
         return this;
     }
 
-    public resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
+    resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
         if (typeof key === 'string' || typeof key === 'symbol') {
             const instance = this.resolveLocally<T>(key, ...deps) || this.parent?.resolve<T>(key, ...deps);
             if (!instance) {
@@ -36,7 +36,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         return this.resolveConstructor(key, ...deps);
     }
 
-    public createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext> {
+    createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext> {
         const locator = new ServiceLocator(this.strategy.clone(), this.hook.clone(), context);
         locator.addTo(this);
         for (const [key, provider] of this.providers.entries()) {
@@ -51,7 +51,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         return locator;
     }
 
-    public remove(): void {
+    remove(): void {
         this.hook.onContainerRemove();
         this.parent = null;
         this.instances = new Map();
@@ -60,7 +60,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         this.strategy.dispose();
     }
 
-    public addTo(locator: ServiceLocator<unknown>): this {
+    addTo(locator: ServiceLocator<unknown>): this {
         this.parent = locator;
         return this;
     }

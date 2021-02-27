@@ -10,7 +10,7 @@
   "scripts": {
     "commit": "git-cz",
     "format": "prettier --write packages/**/*.ts",
-    "lint": "eslint",
+    "lint": "eslint packages/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "test": "lerna run test --stream",
     "build": "lerna run build --stream"
@@ -28,8 +28,8 @@
   },
   "lint-staged": {
     "*.{js,ts}": [
-      "yarn format",
-      "yarn lint:fix"
+      "eslint --fix",
+      "prettier --write"
     ]
   },
   "devDependencies": {

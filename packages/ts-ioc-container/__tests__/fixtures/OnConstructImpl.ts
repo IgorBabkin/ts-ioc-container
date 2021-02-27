@@ -2,10 +2,10 @@ import { Factory, inject, IServiceLocator, onConstruct } from '../../lib';
 import { args } from '../../lib/helpers/helpers';
 
 export class OnConstructImpl {
-    public isConstructed = false;
+    isConstructed = false;
 
     @onConstruct
-    public onInit(): void {
+    onInit(): void {
         this.isConstructed = true;
     }
 }
@@ -21,7 +21,7 @@ export class Logger {
 export class App {
     constructor(@inject('logger', args('super')) private logger: Logger) {}
 
-    public run(): string {
+    run(): string {
         return this.logger.log();
     }
 }
@@ -41,7 +41,7 @@ export class App2 {
         this.logger = loggerFactory('duper');
     }
 
-    public run(): string {
+    run(): string {
         return this.logger.log();
     }
 }
@@ -57,7 +57,7 @@ export class Logger3 {
 export class App3 {
     constructor(@inject('logger3', args('duper')) private logger: Logger3) {}
 
-    public run(): string {
+    run(): string {
         return this.logger.log();
     }
 }
@@ -65,7 +65,7 @@ export class App3 {
 export class App4 {
     constructor(@inject('dep1') private dep1: string, private locator: IServiceLocator) {}
 
-    public run(): string {
+    run(): string {
         return `${this.dep1}${this.locator.resolve('dep2')}`;
     }
 }

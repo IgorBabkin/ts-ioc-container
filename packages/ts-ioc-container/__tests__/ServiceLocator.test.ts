@@ -83,7 +83,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator();
 
-            const child = locator.createContainer().register('key1', Provider.fromInstance(expectedInstance1));
+            locator.createContainer().register('key1', Provider.fromInstance(expectedInstance1));
 
             expect(() => locator.resolve('key1')).toThrow();
         });
@@ -113,7 +113,7 @@ describe('ServiceLocator', () => {
             const locator = createSimpleLocator([
                 {
                     onCreate: (instance) => instance.postConstruct(),
-                    onDispose(instance: any) {},
+                    onDispose() {},
                 },
             ]);
             const disposable = {
@@ -133,7 +133,7 @@ describe('ServiceLocator', () => {
             let isDisposed = false;
             const locator = createSimpleLocator([
                 {
-                    onCreate(instance: any) {},
+                    onCreate() {},
                     onDispose(instance) {
                         instance.dispose();
                     },

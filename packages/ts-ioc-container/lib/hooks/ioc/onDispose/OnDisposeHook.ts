@@ -2,11 +2,11 @@ import { IHooksMetadataCollector } from '../IHooksMetadataCollector';
 import { IInstanceHook } from '../../IInstanceHook';
 
 export class OnDisposeHook implements IInstanceHook {
-    public static HOOK_KEY = Symbol('ON_DISPOSE_HOOK_KEY');
+    static HOOK_KEY = Symbol('ON_DISPOSE_HOOK_KEY');
 
     constructor(private metadata: IHooksMetadataCollector) {}
 
-    public onDispose(instance: any): void {
+    onDispose(instance: unknown): void {
         if (!(instance instanceof Object)) {
             return;
         }
@@ -15,5 +15,5 @@ export class OnDisposeHook implements IInstanceHook {
         }
     }
 
-    onCreate(instance: any): void {}
+    onCreate(): void {}
 }

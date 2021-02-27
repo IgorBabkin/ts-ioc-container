@@ -21,11 +21,11 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         this.strategy.bindTo(this);
     }
 
-    public resolveMock(key: ProviderKey): GMock {
+    resolveMock(key: ProviderKey): GMock {
         return this.findMock(key).getMock();
     }
 
-    public resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
+    resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
         if (typeof key === 'string' || typeof key === 'symbol') {
             const mock = this.findMock(key);
             return mock.getInstance();
@@ -33,18 +33,18 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         return this.resolveConstructor(key, ...deps);
     }
 
-    public createContainer(): IServiceLocator {
+    createContainer(): IServiceLocator {
         throw new Error('Not implemented');
     }
 
-    public remove(): void {
+    remove(): void {
         this.mocks = new Map();
         this.hook.onContainerRemove();
         this.hook.dispose();
         this.strategy.dispose();
     }
 
-    public register(...args: any[]): this {
+    register(): this {
         throw new Error('Not implemented');
     }
 

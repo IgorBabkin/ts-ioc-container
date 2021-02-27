@@ -8,7 +8,7 @@ interface IDepClass {
 }
 
 class TestClass {
-    public dep1: IDepClass;
+    dep1: IDepClass;
 
     constructor(l: IServiceLocator) {
         this.dep1 = l.resolve('key1');
