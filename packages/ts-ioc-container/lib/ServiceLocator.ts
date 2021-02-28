@@ -7,16 +7,12 @@ import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 import { IHook } from './hooks/IHook';
 import { Hook } from './hooks/Hook';
 
-export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
+export class ServiceLocator implements IServiceLocator {
     private providers: Map<ProviderKey, IProvider<any>> = new Map();
     private instances: Map<ProviderKey, any> = new Map();
-    private parent: ServiceLocator<unknown>;
+    private parent: ServiceLocator;
 
-    constructor(
-        private strategy: IServiceLocatorStrategy,
-        private hook: IHook = new Hook([]),
-        public context?: GContext,
-    ) {
+    constructor(private strategy: IServiceLocatorStrategy, private hook: IHook = new Hook([])) {
         this.strategy.bindTo(this);
     }
 
@@ -36,8 +32,8 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         return this.resolveConstructor(key, ...deps);
     }
 
-    createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext> {
-        const locator = new ServiceLocator(this.strategy.clone(), this.hook.clone(), context);
+    createContainer(): IServiceLocator {
+        const locator = new ServiceLocator(this.strategy.clone(), this.hook.clone());
         locator.addTo(this);
         for (const [key, provider] of this.providers.entries()) {
             switch (provider.options.resolving) {
@@ -60,7 +56,7 @@ export class ServiceLocator<GContext> implements IServiceLocator<GContext> {
         this.strategy.dispose();
     }
 
-    addTo(locator: ServiceLocator<unknown>): this {
+    addTo(locator: ServiceLocator): this {
         this.parent = locator;
         return this;
     }

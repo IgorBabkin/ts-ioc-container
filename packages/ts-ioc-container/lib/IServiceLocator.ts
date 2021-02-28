@@ -1,10 +1,8 @@
 import { InjectionToken } from './strategy/ioc/decorators';
 import { IProvider, ProviderKey } from './provider/IProvider';
 
-export interface IServiceLocator<GContext = any> {
-    readonly context?: GContext;
-
-    createContainer<GChildContext>(context?: GChildContext): IServiceLocator<GChildContext>;
+export interface IServiceLocator {
+    createContainer(): IServiceLocator;
 
     remove(): void;
 

@@ -214,11 +214,11 @@ describe('ServiceLocator', () => {
         it('conditional resolving', () => {
             const locator = createSimpleLocator().register(
                 'key1',
-                new Provider((l: IServiceLocator<string>) => (l.context === 'a' ? 'good' : 'bad')).asScoped(),
+                new Provider((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad')).asScoped(),
             );
 
-            const child1 = locator.createContainer('a');
-            const child2 = locator.createContainer('b');
+            const child1 = locator.createContainer().register('context', Provider.fromInstance('a'));
+            const child2 = locator.createContainer().register('context', Provider.fromInstance('b'));
 
             expect(child1.resolve('key1')).toEqual('good');
             expect(child2.resolve('key1')).toEqual('bad');
