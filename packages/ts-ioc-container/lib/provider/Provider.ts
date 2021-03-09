@@ -1,9 +1,10 @@
 import { ArgsFn, IProvider, IProviderOptions, ProviderFn, Resolving } from './IProvider';
 import { constructor } from '../helpers/types';
+import { IServiceLocator } from '../IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
-    private resolving?: Resolving;
-    private argsFn?: ArgsFn;
+    resolving: Resolving = 'perRequest';
+    private argsFn: ArgsFn = () => [];
 
     static fromConstructor<GReturn>(value: constructor<GReturn>): Provider<GReturn> {
         return new Provider((l, ...deps: any[]) => l.resolve(value, ...deps));
@@ -14,13 +15,6 @@ export class Provider<T> implements IProvider<T> {
     }
 
     constructor(public fn: ProviderFn<T>) {}
-
-    get options(): IProviderOptions {
-        return {
-            argsFn: this.argsFn || (() => []),
-            resolving: this.resolving || 'perRequest',
-        };
-    }
 
     asSingleton(): this {
         this.resolving = 'singleton';
@@ -37,7 +31,7 @@ export class Provider<T> implements IProvider<T> {
         return this;
     }
 
-    withOptions(options: Partial<IProviderOptions> = {}): this {
+    withOptions(options: Partial<IProviderOptions> = { resolving: this.resolving, argsFn: this.argsFn }): this {
         this.resolving = options.resolving;
         this.argsFn = options.argsFn;
         return this;
@@ -49,5 +43,9 @@ export class Provider<T> implements IProvider<T> {
             resolving: this.resolving,
             ...options,
         });
+    }
+
+    resolve(locator: IServiceLocator, ...args: any[]): T {
+        return this.fn(locator, ...this.argsFn(locator), ...args);
     }
 }

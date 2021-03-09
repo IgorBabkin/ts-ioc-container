@@ -12,10 +12,11 @@ export interface IProviderOptions {
 export type ProviderFn<T> = (locator: IServiceLocator, ...args: any[]) => T;
 
 export interface IProvider<T> {
-    readonly fn: ProviderFn<T>;
-    readonly options: IProviderOptions;
+    readonly resolving: Resolving;
 
     clone(options?: Partial<IProviderOptions>): IProvider<T>;
+
+    resolve(locator: IServiceLocator, ...args: any[]): T;
 }
 
 export type ProviderKey = string | symbol;

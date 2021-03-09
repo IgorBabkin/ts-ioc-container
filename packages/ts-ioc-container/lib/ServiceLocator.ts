@@ -1,7 +1,7 @@
 import { IServiceLocator } from './IServiceLocator';
 import { InjectionToken } from './strategy/ioc/decorators';
 import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
-import { IProvider, ProviderFn, ProviderKey } from './provider/IProvider';
+import { IProvider, ProviderKey } from './provider/IProvider';
 import { constructor } from './helpers/types';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 import { IHook } from './hooks/IHook';
@@ -36,7 +36,7 @@ export class ServiceLocator implements IServiceLocator {
         const locator = new ServiceLocator(this.strategy.clone(), this.hook.clone());
         locator.addTo(this);
         for (const [key, provider] of this.providers.entries()) {
-            switch (provider.options.resolving) {
+            switch (provider.resolving) {
                 case 'perScope':
                     locator.register(key, provider.clone({ resolving: 'singleton' }));
                     break;
@@ -64,26 +64,25 @@ export class ServiceLocator implements IServiceLocator {
     private resolveLocally<T>(key: ProviderKey, ...deps: any[]): T {
         const provider = this.providers.get(key);
         if (provider) {
-            const { resolving, argsFn } = provider.options;
-            switch (resolving) {
+            switch (provider.resolving) {
                 case 'perRequest':
-                    return this.resolveFn(provider.fn, ...argsFn(this), ...deps);
+                    return this.resolvePerRequest(provider, ...deps);
                 case 'singleton':
-                    return this.resolveSingleton(key, provider.fn, ...argsFn(this), ...deps);
+                    return this.resolveSingleton(key, provider, ...deps);
             }
         }
         return undefined;
     }
 
-    private resolveFn<T>(fn: ProviderFn<T>, ...deps: any[]): T {
-        const instance = fn(this, ...deps);
+    private resolvePerRequest<T>(provider: IProvider<T>, ...deps: any[]): T {
+        const instance = provider.resolve(this, ...deps);
         this.hook.onInstanceCreate(instance);
         return instance;
     }
 
-    private resolveSingleton<T>(key: ProviderKey, value: ProviderFn<T>, ...deps: any[]): T {
+    private resolveSingleton<T>(key: ProviderKey, value: IProvider<T>, ...deps: any[]): T {
         if (!this.instances.has(key)) {
-            const instance = this.resolveFn(value, ...deps);
+            const instance = this.resolvePerRequest(value, ...deps);
             this.instances.set(key, instance);
         }
 
