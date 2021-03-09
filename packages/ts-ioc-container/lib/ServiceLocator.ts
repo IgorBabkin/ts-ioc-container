@@ -23,7 +23,7 @@ export class ServiceLocator implements IServiceLocator {
     resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
         if (typeof key === 'string' || typeof key === 'symbol') {
             const instance = this.resolveLocally<T>(key, ...deps) || this.parent?.resolve<T>(key, ...deps);
-            if (!instance) {
+            if (instance === undefined) {
                 throw new DependencyNotFoundError(key.toString());
             }
             return instance;
