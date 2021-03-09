@@ -50,8 +50,8 @@ export class ServiceLocator implements IServiceLocator {
     remove(): void {
         this.hook.onContainerRemove();
         this.parent = null;
-        this.instances = new Map();
-        this.providers = new Map();
+        this.instances.clear();
+        this.providers.clear();
         this.hook.dispose();
         this.strategy.dispose();
     }
