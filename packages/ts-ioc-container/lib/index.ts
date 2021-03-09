@@ -6,7 +6,7 @@ export { Resolving, ArgsFn, ProviderKey, IProviderOptions, IProvider, ProviderFn
 export { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 export { SimpleServiceLocatorStrategy } from './strategy/simple/SimpleServiceLocatorStrategy';
 export { IocServiceLocatorStrategy } from './strategy/ioc/IocServiceLocatorStrategy';
-export { inject, Factory, Instance, InjectionToken, metadataCollector } from './strategy/ioc/decorators';
+export { inject, Factory, Instance, metadataCollector } from './strategy/ioc/decorators';
 export { IInstanceHook } from './hooks/IInstanceHook';
 export { OnConstructHook } from './hooks/ioc/onConstruct/OnConstructHook';
 export { onDispose } from './hooks/ioc/onDispose/decorators';
@@ -15,3 +15,4 @@ export { onConstruct } from './hooks/ioc/onConstruct/decorators';
 export { Provider } from './provider/Provider';
 export { IHook } from './hooks/IHook';
 export { Hook } from './hooks/Hook';
+export { InjectionToken } from './IServiceLocator';

@@ -1,5 +1,4 @@
-import { IServiceLocator } from './IServiceLocator';
-import { InjectionToken } from './strategy/ioc/decorators';
+import { InjectionToken, IServiceLocator } from './IServiceLocator';
 import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 import { IProvider, ProviderKey } from './provider/IProvider';
 import { constructor } from './helpers/types';

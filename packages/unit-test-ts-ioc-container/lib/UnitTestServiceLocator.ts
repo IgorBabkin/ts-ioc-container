@@ -11,7 +11,7 @@ import { IMockAdapter } from './IMockAdapter';
 import { IMockFactory } from './IMockFactory';
 
 export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GMock> {
-    private mocks: Map<string | symbol, IMockAdapter<GMock, any>> = new Map();
+    private mocks: Map<ProviderKey, IMockAdapter<GMock, any>> = new Map();
 
     constructor(
         private strategy: IServiceLocatorStrategy,
@@ -54,7 +54,7 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         return instance;
     }
 
-    private findMock(key: string | symbol): IMockAdapter<GMock, any> {
+    private findMock(key: ProviderKey): IMockAdapter<GMock, any> {
         if (!this.mocks.has(key)) {
             this.mocks.set(key, this.mockFactory.create());
         }

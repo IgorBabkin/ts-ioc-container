@@ -1,5 +1,7 @@
-import { InjectionToken } from './strategy/ioc/decorators';
 import { IProvider, ProviderKey } from './provider/IProvider';
+import { constructor } from './helpers/types';
+
+export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 
 export interface IServiceLocator {
     createContainer(): IServiceLocator;

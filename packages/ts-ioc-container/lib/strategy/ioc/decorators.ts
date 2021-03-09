@@ -1,6 +1,6 @@
 import { InjectionItem, InjectMetadataCollector } from './InjectMetadataCollector';
 import { ArgsFn } from '../../provider/IProvider';
-import { constructor } from '../../helpers/types';
+import { InjectionToken } from '../../IServiceLocator';
 
 export const metadataCollector = new InjectMetadataCollector();
 
@@ -19,8 +19,6 @@ export function Instance<T>(token: InjectionToken): InjectionItem<T> {
         argsFn: () => [],
     };
 }
-
-export type InjectionToken<T = any> = constructor<T> | string | symbol;
 
 export function inject<T>(item: InjectionToken | InjectionItem<T>, argsFn: ArgsFn = () => []): ParameterDecorator {
     return (target, _propertyKey, parameterIndex) => {

@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { InjectionToken } from './decorators';
 import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 import { constructor } from '../../helpers/types';
 import { ArgsFn } from '../../provider/IProvider';
+import { InjectionToken } from '../../IServiceLocator';
 
 export const INJECTION_TOKEN_METADATA_KEY = 'injectionTokens';
 export type InjectionItem<T> = {
