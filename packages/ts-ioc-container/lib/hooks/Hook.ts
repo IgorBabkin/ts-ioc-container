@@ -5,7 +5,7 @@ import { IInstanceHook } from './IInstanceHook';
 export class Hook implements IHook {
     private disposeHooks: Fn[] = [];
 
-    constructor(public hooks: IInstanceHook[] = []) {}
+    constructor(private hooks: IInstanceHook[] = []) {}
 
     onContainerRemove(): void {
         this.disposeHooks.forEach((h) => h());
