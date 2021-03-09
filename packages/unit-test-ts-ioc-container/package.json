@@ -1,6 +1,6 @@
 {
   "name": "unit-test-ts-ioc-container",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "Unit test decorator for Typescript IoC container",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
   "homepage": "https://github.com/IgorBabkin/service-locator/tree/master/packages/unit-test-ts-ioc-container",
@@ -44,7 +44,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "ts-ioc-container": "^4.2.0"
+    "ts-ioc-container": "^4.2.1"
   },
   "devDependencies": {
     "@types/jest": "26.0.15",
