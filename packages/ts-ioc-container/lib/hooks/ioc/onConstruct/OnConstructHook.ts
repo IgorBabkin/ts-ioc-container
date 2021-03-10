@@ -12,7 +12,7 @@ export class OnConstructHook implements IInstanceHook {
             return;
         }
         for (const method of this.metadata.getHookMethods(OnConstructHook.HOOK_KEY, instance)) {
-            method();
+            instance[method]();
         }
     }
 

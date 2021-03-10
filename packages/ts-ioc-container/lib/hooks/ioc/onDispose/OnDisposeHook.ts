@@ -11,7 +11,7 @@ export class OnDisposeHook implements IInstanceHook {
             return;
         }
         for (const method of this.metadata.getHookMethods(OnDisposeHook.HOOK_KEY, instance)) {
-            method();
+            instance[method]();
         }
     }
 
