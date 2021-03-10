@@ -1,4 +1,4 @@
-import { InjectionToken, IServiceLocator } from './IServiceLocator';
+import { InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
 import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
 import { IProvider, ProviderKey } from './provider/IProvider';
 import { constructor } from './helpers/types';
@@ -20,15 +20,8 @@ export class ServiceLocator implements IServiceLocator {
         return this;
     }
 
-    resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
-        if (typeof key === 'string' || typeof key === 'symbol') {
-            const instance = this.resolveLocally<T>(key, ...deps) || this.parent?.resolve<T>(key, ...deps);
-            if (instance === undefined) {
-                throw new DependencyNotFoundError(key.toString());
-            }
-            return instance;
-        }
-        return this.resolveConstructor(key, ...deps);
+    resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
+        return isProviderKey(key) ? this.resolveProvider(key, ...args) : this.resolveConstructor(key, ...args);
     }
 
     createContainer(): IServiceLocator {
@@ -60,36 +53,44 @@ export class ServiceLocator implements IServiceLocator {
         return this;
     }
 
-    private resolveLocally<T>(key: ProviderKey, ...deps: any[]): T {
+    private resolveProvider<T>(key: ProviderKey, ...args: any[]): T {
+        const instance = this.resolveLocally<T>(key, ...args) || this.parent?.resolve<T>(key, ...args);
+        if (instance === undefined) {
+            throw new DependencyNotFoundError(key.toString());
+        }
+        return instance;
+    }
+
+    private resolveLocally<T>(key: ProviderKey, ...args: any[]): T {
         const provider = this.providers.get(key);
         if (provider) {
             switch (provider.resolving) {
                 case 'perRequest':
-                    return this.resolvePerRequest(provider, ...deps);
+                    return this.resolvePerRequest(provider, ...args);
                 case 'singleton':
-                    return this.resolveSingleton(key, provider, ...deps);
+                    return this.resolveSingleton(key, provider, ...args);
             }
         }
         return undefined;
     }
 
-    private resolvePerRequest<T>(provider: IProvider<T>, ...deps: any[]): T {
-        const instance = provider.resolve(this, ...deps);
+    private resolvePerRequest<T>(provider: IProvider<T>, ...args: any[]): T {
+        const instance = provider.resolve(this, ...args);
         this.hook.onInstanceCreate(instance);
         return instance;
     }
 
-    private resolveSingleton<T>(key: ProviderKey, value: IProvider<T>, ...deps: any[]): T {
+    private resolveSingleton<T>(key: ProviderKey, value: IProvider<T>, ...args: any[]): T {
         if (!this.instances.has(key)) {
-            const instance = this.resolvePerRequest(value, ...deps);
+            const instance = this.resolvePerRequest(value, ...args);
             this.instances.set(key, instance);
         }
 
         return this.instances.get(key) as T;
     }
 
-    private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
-        const instance = this.strategy.resolveConstructor<T>(c, ...deps);
+    private resolveConstructor<T>(c: constructor<T>, ...args: any[]): T {
+        const instance = this.strategy.resolveConstructor<T>(c, ...args);
         this.hook.onInstanceCreate(instance);
         return instance;
     }

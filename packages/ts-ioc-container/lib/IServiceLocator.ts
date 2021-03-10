@@ -12,3 +12,7 @@ export interface IServiceLocator {
 
     register<T>(key: ProviderKey, registration: IProvider<T>): this;
 }
+
+export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {
+    return typeof token === 'string' || typeof token === 'symbol';
+}

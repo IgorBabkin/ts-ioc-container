@@ -12,7 +12,7 @@ export type InjectionItem<T> = {
 };
 
 export class InjectMetadataCollector implements IInjectMetadataCollector {
-    injectMetadata(target: unknown, parameterIndex: number, injectionItem: InjectionItem<any>): void {
+    addMetadata(target: unknown, parameterIndex: number, injectionItem: InjectionItem<any>): void {
         const injectionTokens = Reflect.getOwnMetadata(INJECTION_TOKEN_METADATA_KEY, target) || [];
         injectionTokens[parameterIndex] = injectionItem;
         Reflect.defineMetadata(INJECTION_TOKEN_METADATA_KEY, injectionTokens, target);

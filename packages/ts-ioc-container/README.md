@@ -89,7 +89,7 @@ const provider = new Provider.fromConstructor(Logger).asSingleton();
 
 ### Scoped containers
 ```typescript
-const container = new ServiceLocatorFactory().createIoCLocator();
+const container = new ServiceLocator(new SimpleServiceLocatorStrategy());
 container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
 const scopedContainer = container.createContainer();
 const logger = scopedContainer.resolve('ILogger');
@@ -98,21 +98,25 @@ scopedContainer.remove();
 ```
 
 ### Instance hooks
-By implementing `IInjectable` interface
+OnConstructHook
 ```typescript
-export interface IInjectable {
-    dispose?(): void;
-    onConstruct?(): void;
-}
-```
-```typescript
-import {IInjectable} from 'ts-ioc-container';
-
-class Logger implements IInjectable {
-    onConstruct(): void {
+const container = new ServiceLocator(new SimpleServiceLocatorStrategy(), new Hook([new OnConstructHook(hooksMetadataCollector)]));
+class Logger {
+    @onConstruct
+    init(): void {
         console.log('initialized');
     }
 
+    dispose(): void {
+        console.log('destroyed');
+    }
+}
+```
+OnDisposeHook
+```typescript
+const container = new ServiceLocator(new SimpleServiceLocatorStrategy(), new Hook([new OnDisposeHook(hooksMetadataCollector)]));
+class Logger {
+    @onDispose
     dispose(): void {
         console.log('destroyed');
     }
@@ -122,11 +126,11 @@ class Logger implements IInjectable {
 ### Types of containers
 SimpleLocator (cannot be used with decorators)
 ```typescript
-const container = new ServiceLocatorFactory().createSimpleLocator();
+const container = new ServiceLocator(new SimpleServiceLocatorStrategy());
 ```
 IoC container (work based on decorators)
 ```typescript
-const container = new ServiceLocatorFactory().createIoCLocator();
+const container = new ServiceLocator(new IocServiceLocatorStrategy(metadataCollector));
 ```
 
 ### Tests
@@ -136,9 +140,11 @@ import {Mock} from 'moq.ts';
 import {ServiceLocatorFactory} from 'ts-ioc-container';
 import {UnitTestServiceLocatorFactory, MoqAdapter, MoqAdapter} from 'unit-test-ts-ioc-container';
 
-const container = new ServiceLocatorFactory().createIoCLocator();
-const mockFactory = () => new MoqAdapter(new Mock());
-const unitTestContainer = new UnitTestServiceLocatorFactory(mockFactory).create(container);
+const container = new UnitTestServiceLocator(
+  new IocServiceLocatorStrategy(metadataCollector),
+  new Hook(),
+  new MoqFactory(),
+);
 
 const stickerMock = unitTestContainer.resolveMock('ISticker');
 stickerMock.setup(i => i.title).return('Sticker title');

@@ -22,7 +22,7 @@ export function Instance<T>(token: InjectionToken): InjectionItem<T> {
 
 export function inject<T>(item: InjectionToken | InjectionItem<T>, argsFn: ArgsFn = () => []): ParameterDecorator {
     return (target, _propertyKey, parameterIndex) => {
-        metadataCollector.injectMetadata(
+        metadataCollector.addMetadata(
             target,
             parameterIndex,
             typeof item === 'object'
