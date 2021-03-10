@@ -2,7 +2,7 @@ import { IHooksMetadataCollector } from '../IHooksMetadataCollector';
 import { IInstanceHook } from '../../IInstanceHook';
 
 export class OnDisposeHook implements IInstanceHook {
-    static HOOK_KEY = Symbol('ON_DISPOSE_HOOK_KEY');
+    static HOOK_KEY = Symbol('ON_DISPOSE_HOOK');
 
     constructor(private metadata: IHooksMetadataCollector) {}
 

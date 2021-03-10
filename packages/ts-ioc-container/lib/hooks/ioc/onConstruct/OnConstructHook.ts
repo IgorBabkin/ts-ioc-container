@@ -3,7 +3,7 @@ import { IInstanceHook } from '../../IInstanceHook';
 import { Fn } from '../../../helpers/types';
 
 export class OnConstructHook implements IInstanceHook {
-    static HOOK_KEY = Symbol('ON_CONSTRUCT_HOOK_KEY');
+    static HOOK_KEY = Symbol('ON_CONSTRUCT_HOOK');
 
     constructor(private metadata: IHooksMetadataCollector) {}
 
