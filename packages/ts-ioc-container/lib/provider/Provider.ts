@@ -1,11 +1,8 @@
-import { ArgsFn, IProvider, IProviderOptions, ProviderFn, Resolving } from './IProvider';
+import { IProvider, IProviderOptions, ProviderFn, Resolving } from './IProvider';
 import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
-    resolving: Resolving = 'perRequest';
-    private argsFn: ArgsFn = () => [];
-
     static fromConstructor<GReturn>(value: constructor<GReturn>): Provider<GReturn> {
         return new Provider((l, ...deps: any[]) => l.resolve(value, ...deps));
     }
@@ -14,38 +11,35 @@ export class Provider<T> implements IProvider<T> {
         return new Provider(() => value);
     }
 
-    constructor(public fn: ProviderFn<T>) {}
+    constructor(
+        public fn: ProviderFn<T>,
+        private options: Partial<IProviderOptions> = { resolving: 'perRequest', argsFn: () => [] },
+    ) {}
+
+    get resolving(): Resolving {
+        return this.options.resolving;
+    }
 
     asSingleton(): this {
-        this.resolving = 'singleton';
+        this.options.resolving = 'singleton';
         return this;
     }
 
     asScoped(): this {
-        this.resolving = 'perScope';
+        this.options.resolving = 'perScope';
         return this;
     }
 
     withArgs(...deps: any[]): this {
-        this.argsFn = () => deps;
-        return this;
-    }
-
-    withOptions(options: Partial<IProviderOptions> = { resolving: this.resolving, argsFn: this.argsFn }): this {
-        this.resolving = options.resolving;
-        this.argsFn = options.argsFn;
+        this.options.argsFn = () => deps;
         return this;
     }
 
     clone(options: Partial<IProviderOptions> = {}): IProvider<T> {
-        return new Provider(this.fn).withOptions({
-            argsFn: this.argsFn,
-            resolving: this.resolving,
-            ...options,
-        });
+        return new Provider(this.fn, { ...this.options, ...options });
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
-        return this.fn(locator, ...this.argsFn(locator), ...args);
+        return this.fn(locator, ...this.options.argsFn(locator), ...args);
     }
 }
