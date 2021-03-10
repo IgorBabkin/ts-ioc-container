@@ -11,10 +11,12 @@ export class Provider<T> implements IProvider<T> {
         return new Provider(() => value);
     }
 
-    constructor(
-        public fn: ProviderFn<T>,
-        private options: Partial<IProviderOptions> = { resolving: 'perRequest', argsFn: () => [] },
-    ) {}
+    private readonly options: IProviderOptions;
+
+    constructor(public fn: ProviderFn<T>, options: Partial<IProviderOptions> = {}) {
+        const defaultOptions: IProviderOptions = { resolving: 'perRequest', argsFn: () => [] };
+        this.options = { ...defaultOptions, ...options };
+    }
 
     get resolving(): Resolving {
         return this.options.resolving;
