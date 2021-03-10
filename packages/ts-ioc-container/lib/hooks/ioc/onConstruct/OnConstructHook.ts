@@ -1,5 +1,6 @@
 import { IHooksMetadataCollector } from '../IHooksMetadataCollector';
 import { IInstanceHook } from '../../IInstanceHook';
+import { Fn } from '../../../helpers/types';
 
 export class OnConstructHook implements IInstanceHook {
     static HOOK_KEY = Symbol('ON_CONSTRUCT_HOOK_KEY');
@@ -10,8 +11,8 @@ export class OnConstructHook implements IInstanceHook {
         if (!(instance instanceof Object)) {
             return;
         }
-        for (const hookKey of this.metadata.getHookMethods(OnConstructHook.HOOK_KEY, instance)) {
-            typeof instance[hookKey] === 'function' && instance[hookKey]();
+        for (const method of this.metadata.getHookMethods(OnConstructHook.HOOK_KEY, instance)) {
+            method();
         }
     }
 

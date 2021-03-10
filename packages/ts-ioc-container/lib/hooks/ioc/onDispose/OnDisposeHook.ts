@@ -10,8 +10,8 @@ export class OnDisposeHook implements IInstanceHook {
         if (!(instance instanceof Object)) {
             return;
         }
-        for (const hookKey of this.metadata.getHookMethods(OnDisposeHook.HOOK_KEY, instance)) {
-            typeof instance[hookKey] === 'function' && instance[hookKey]();
+        for (const method of this.metadata.getHookMethods(OnDisposeHook.HOOK_KEY, instance)) {
+            method();
         }
     }
 
