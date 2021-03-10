@@ -4,14 +4,23 @@ import { IServiceLocatorStrategy } from '../IServiceLocatorStrategy';
 import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 import { InjectionItem } from './InjectMetadataCollector';
 
+export type IocServiceLocatorStrategyOptions = { simpleStrategyCompatible?: boolean };
+
 export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
     private locator: IServiceLocator;
 
-    constructor(private metadataCollector: IInjectMetadataCollector) {}
+    constructor(
+        private metadataCollector: IInjectMetadataCollector,
+        private options: IocServiceLocatorStrategyOptions = {},
+    ) {}
 
     resolveConstructor<T>(value: constructor<T>, ...deps: any[]): T {
         const injectionItems = this.metadataCollector.getMetadata(value);
-        return new value(...injectionItems.map((item) => this.resolveItem(item)), ...deps, this.locator);
+        return new value(
+            ...injectionItems.map((item) => this.resolveItem(item)),
+            ...deps,
+            this.options.simpleStrategyCompatible ? this.locator : undefined,
+        );
     }
 
     private resolveItem({ token, type, argsFn }: InjectionItem<any>): any {

@@ -16,6 +16,7 @@ import { OnDisposeHook } from '../lib/hooks/ioc/onDispose/OnDisposeHook';
 import { OnDisposeImpl } from './fixtures/OnDisposeImpl';
 import { hooksMetadataCollector } from '../lib/hooks/ioc/HooksMetadataCollector';
 import { Hook } from '../lib/hooks/Hook';
+import { IocServiceLocatorStrategyOptions } from '../lib/strategy/ioc/IocServiceLocatorStrategy';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -24,8 +25,8 @@ class TestClass {
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook[] = []) =>
         new ServiceLocator(new SimpleServiceLocatorStrategy(), new Hook(hooks));
-    const createIoCLocator = (hooks: IInstanceHook[] = []) =>
-        new ServiceLocator(new IocServiceLocatorStrategy(metadataCollector), new Hook(hooks));
+    const createIoCLocator = (hooks: IInstanceHook[] = [], options?: IocServiceLocatorStrategyOptions) =>
+        new ServiceLocator(new IocServiceLocatorStrategy(metadataCollector, options), new Hook(hooks));
 
     it('should create an instance', () => {
         const expectedInstance = {};
@@ -270,7 +271,7 @@ describe('ServiceLocator', () => {
         });
 
         it('passes locator as last dep', () => {
-            const decorated = createIoCLocator();
+            const decorated = createIoCLocator([], { simpleStrategyCompatible: true });
 
             decorated.register('dep1', Provider.fromInstance('dep1'));
             decorated.register('dep2', Provider.fromInstance('dep2'));
