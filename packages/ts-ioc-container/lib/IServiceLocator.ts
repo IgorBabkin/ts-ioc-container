@@ -14,5 +14,6 @@ export interface IServiceLocator {
 }
 
 export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {
-    return typeof token === 'string' || typeof token === 'symbol';
+    const tokenType = typeof token;
+    return tokenType === 'string' || tokenType === 'symbol';
 }
