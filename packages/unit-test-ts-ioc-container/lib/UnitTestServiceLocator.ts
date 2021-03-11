@@ -17,9 +17,7 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         private strategy: IServiceLocatorStrategy,
         private hook: IHook,
         private mockFactory: IMockFactory<GMock>,
-    ) {
-        this.strategy.bindTo(this);
-    }
+    ) {}
 
     resolveMock(key: ProviderKey): GMock {
         return this.findMock(key).getMock();
@@ -41,7 +39,6 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         this.mocks = new Map();
         this.hook.onContainerRemove();
         this.hook.dispose();
-        this.strategy.dispose();
     }
 
     register(): this {
@@ -49,7 +46,7 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
     }
 
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
-        const instance = this.strategy.resolveConstructor(c, ...deps);
+        const instance = this.strategy.resolveConstructor(this, c, ...deps);
         this.hook.onInstanceCreate(instance);
         return instance;
     }
