@@ -7,41 +7,27 @@ import { InjectionItem } from './InjectMetadataCollector';
 export type IocServiceLocatorStrategyOptions = { simpleStrategyCompatible?: boolean };
 
 export class IocServiceLocatorStrategy implements IServiceLocatorStrategy {
-    private locator: IServiceLocator;
-
     constructor(
         private metadataCollector: IInjectMetadataCollector,
         private options: IocServiceLocatorStrategyOptions = {},
     ) {}
 
-    resolveConstructor<T>(value: constructor<T>, ...deps: any[]): T {
+    resolveConstructor<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
         const injectionItems = this.metadataCollector.getMetadata(value);
         return new value(
-            ...injectionItems.map((item) => this.resolveItem(item)),
+            ...injectionItems.map((item) => this.resolveItem(locator, item)),
             ...deps,
-            this.options.simpleStrategyCompatible ? this.locator : undefined,
+            this.options.simpleStrategyCompatible ? locator : undefined,
         );
     }
 
-    private resolveItem({ token, type, argsFn }: InjectionItem<any>): any {
+    private resolveItem(locator: IServiceLocator, { token, type, argsFn }: InjectionItem<any>): any {
         switch (type) {
             case 'instance':
-                return this.locator.resolve(token, ...argsFn(this.locator));
+                return locator.resolve(token, ...argsFn(locator));
 
             case 'factory':
-                return (...args2: any[]) => this.locator.resolve(token, ...argsFn(this.locator), ...args2);
+                return (...args2: any[]) => locator.resolve(token, ...argsFn(locator), ...args2);
         }
-    }
-
-    dispose(): void {
-        this.locator = undefined;
-    }
-
-    bindTo(locator: IServiceLocator): void {
-        this.locator = locator;
-    }
-
-    clone(): IServiceLocatorStrategy {
-        return new IocServiceLocatorStrategy(this.metadataCollector);
     }
 }

@@ -11,9 +11,7 @@ export class ServiceLocator implements IServiceLocator {
     private instances: Map<ProviderKey, any> = new Map();
     private parent: ServiceLocator;
 
-    constructor(private strategy: IServiceLocatorStrategy, private hook: IHook = new Hook([])) {
-        this.strategy.bindTo(this);
-    }
+    constructor(private strategy: IServiceLocatorStrategy, private hook: IHook = new Hook([])) {}
 
     register(key: ProviderKey, provider: IProvider<unknown>): this {
         this.providers.set(key, provider);
@@ -25,7 +23,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createContainer(): IServiceLocator {
-        const locator = new ServiceLocator(this.strategy.clone(), this.hook.clone());
+        const locator = new ServiceLocator(this.strategy, this.hook.clone());
         locator.addTo(this);
         for (const [key, provider] of this.providers.entries()) {
             switch (provider.resolving) {
@@ -45,7 +43,6 @@ export class ServiceLocator implements IServiceLocator {
         this.instances.clear();
         this.providers.clear();
         this.hook.dispose();
-        this.strategy.dispose();
     }
 
     addTo(locator: ServiceLocator): this {
@@ -90,7 +87,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     private resolveConstructor<T>(c: constructor<T>, ...args: any[]): T {
-        const instance = this.strategy.resolveConstructor<T>(c, ...args);
+        const instance = this.strategy.resolveConstructor<T>(this, c, ...args);
         this.hook.onInstanceCreate(instance);
         return instance;
     }
