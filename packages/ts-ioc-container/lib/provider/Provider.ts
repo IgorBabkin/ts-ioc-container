@@ -11,7 +11,7 @@ export class Provider<T> implements IProvider<T> {
         return new Provider(() => value);
     }
 
-    private readonly options: IProviderOptions;
+    private options: IProviderOptions;
 
     constructor(public fn: ProviderFn<T>, options: Partial<IProviderOptions> = {}) {
         const defaultOptions: IProviderOptions = { resolving: 'perRequest', argsFn: () => [] };
@@ -34,6 +34,11 @@ export class Provider<T> implements IProvider<T> {
 
     withArgs(...deps: any[]): this {
         this.options.argsFn = () => deps;
+        return this;
+    }
+
+    withOptions(options: Partial<IProviderOptions> = {}): this {
+        this.options = { ...this.options, ...options };
         return this;
     }
 
