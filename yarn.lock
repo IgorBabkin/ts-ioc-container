@@ -5841,7 +5841,7 @@ modify-values@^1.0.0:
   resolved "https://registry.yarnpkg.com/modify-values/-/modify-values-1.0.1.tgz#b3939fa605546474e3e3e3c63d64bd43b4ee6022"
   integrity sha512-xV2bxeN6F7oYjZWTe/YPAy6MN2M+sL4u/Rlm2AHCIVGfo2p1yGmBHQ6vHehl4bRTZBdHu3TSkWdYgkwpYzAGSw==
 
-moq.ts@^6.4.0:
+moq.ts@6.5.0:
   version "6.5.0"
   resolved "https://registry.yarnpkg.com/moq.ts/-/moq.ts-6.5.0.tgz#e68699e2e4a38d01e0f53d0b09061140103eaee1"
   integrity sha512-F5/U5pa59wHWePCypb3LsnWbQHkfM4a/krblPMemhKCqajD95V7+W7C0cy29qms7qFigClsI2WOqA0tPYNCR5Q==
@@ -6906,7 +6906,7 @@ redent@^3.0.0:
     indent-string "^4.0.0"
     strip-indent "^3.0.0"
 
-reflect-metadata@^0.1.13:
+reflect-metadata@0.1.13:
   version "0.1.13"
   resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.1.13.tgz#67ae3ca57c972a2aa1642b10fe363fe32d49dc08"
   integrity sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
