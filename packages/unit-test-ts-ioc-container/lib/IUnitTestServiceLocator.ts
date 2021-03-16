@@ -1,5 +1,5 @@
-import { IServiceLocator, RegistrationKey } from 'ts-ioc-container';
+import { IServiceLocator, ProviderKey } from 'ts-ioc-container';
 
 export interface IUnitTestServiceLocator<GMock> extends IServiceLocator {
-    resolveMock(key: RegistrationKey): GMock;
+    resolveMock(key: ProviderKey): GMock;
 }

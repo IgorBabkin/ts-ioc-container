@@ -1,33 +1,29 @@
 import { IUnitTestServiceLocator } from './IUnitTestServiceLocator';
 import {
     constructor,
-    IInstanceHook,
+    IHook,
     InjectionToken,
     IServiceLocator,
     IServiceLocatorStrategy,
-    IStrategyFactory,
-    RegistrationKey,
+    ProviderKey,
 } from 'ts-ioc-container';
 import { IMockAdapter } from './IMockAdapter';
 import { IMockFactory } from './IMockFactory';
 
 export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GMock> {
-    private strategy: IServiceLocatorStrategy;
-    private mocks: Map<string | symbol, IMockAdapter<GMock, any>> = new Map();
+    private mocks: Map<ProviderKey, IMockAdapter<GMock, any>> = new Map();
 
     constructor(
-        private strategyFactory: IStrategyFactory,
-        private hooks: IInstanceHook,
+        private strategy: IServiceLocatorStrategy,
+        private hook: IHook,
         private mockFactory: IMockFactory<GMock>,
-    ) {
-        this.strategy = strategyFactory.create(this);
-    }
+    ) {}
 
-    public resolveMock(key: RegistrationKey): GMock {
+    resolveMock(key: ProviderKey): GMock {
         return this.findMock(key).getMock();
     }
 
-    public resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
+    resolve<T>(key: InjectionToken<T>, ...deps: any[]): T {
         if (typeof key === 'string' || typeof key === 'symbol') {
             const mock = this.findMock(key);
             return mock.getInstance();
@@ -35,33 +31,27 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
         return this.resolveConstructor(key, ...deps);
     }
 
-    public createContainer(): IServiceLocator {
+    createContainer(): IServiceLocator {
         throw new Error('Not implemented');
     }
 
-    public remove(): void {
+    remove(): void {
         this.mocks = new Map();
+        this.hook.onContainerRemove();
+        this.hook.dispose();
     }
 
-    public registerConstructor(...args: any[]): this {
-        throw new Error('Not implemented');
-    }
-
-    public registerFunction(...args: any[]): this {
-        throw new Error('Not implemented');
-    }
-
-    public registerInstance(...args: any[]): this {
+    register(): this {
         throw new Error('Not implemented');
     }
 
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
-        const instance = this.strategy.resolveConstructor(c, ...deps);
-        this.hooks.onCreateInstance(instance);
+        const instance = this.strategy.resolveConstructor(this, c, ...deps);
+        this.hook.onInstanceCreate(instance);
         return instance;
     }
 
-    private findMock(key: string | symbol): IMockAdapter<GMock, any> {
+    private findMock(key: ProviderKey): IMockAdapter<GMock, any> {
         if (!this.mocks.has(key)) {
             this.mocks.set(key, this.mockFactory.create());
         }

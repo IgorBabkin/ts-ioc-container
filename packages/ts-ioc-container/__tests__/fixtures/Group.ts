@@ -13,7 +13,7 @@ export class Group {
         private p3: string,
     ) {}
 
-    public privet(): string[] {
+    privet(): string[] {
         const subGroup1 = this.factory(1);
         const subGroup2 = this.factory(2);
         return [

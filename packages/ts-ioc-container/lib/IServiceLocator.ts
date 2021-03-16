@@ -1,9 +1,7 @@
-import { InjectionToken } from './strategy/ioc/decorators';
-import { IProviderOptions, RegistrationFn, RegistrationKey } from './IRegistration';
+import { IProvider, ProviderKey } from './provider/IProvider';
+import { constructor } from './helpers/types';
 
-export type constructor<T> = new (...args: any[]) => T;
-
-export type Factory<T> = (...args: any[]) => T;
+export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 
 export interface IServiceLocator {
     createContainer(): IServiceLocator;
@@ -12,9 +10,10 @@ export interface IServiceLocator {
 
     resolve<T>(c: InjectionToken<T>, ...deps: any[]): T;
 
-    registerConstructor<T>(key: RegistrationKey, value: constructor<T>, options?: IProviderOptions): this;
+    register<T>(key: ProviderKey, registration: IProvider<T>): this;
+}
 
-    registerInstance<T>(key: RegistrationKey, value: T): this;
-
-    registerFunction<T>(key: RegistrationKey, resolveFn: RegistrationFn<T>, options?: IProviderOptions): this;
+export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {
+    const tokenType = typeof token;
+    return tokenType === 'string' || tokenType === 'symbol';
 }

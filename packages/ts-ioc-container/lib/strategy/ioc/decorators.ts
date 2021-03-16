@@ -1,13 +1,14 @@
-import 'reflect-metadata';
-import { InjectionItem, MetadataCollector } from './MetadataCollector';
+import { InjectionItem, InjectMetadataCollector } from './InjectMetadataCollector';
+import { ArgsFn } from '../../provider/IProvider';
+import { InjectionToken } from '../../IServiceLocator';
 
-export type constructor<T> = new (...args: any[]) => T;
-export const metadataCollector = new MetadataCollector();
+export const metadataCollector = new InjectMetadataCollector();
 
 export function Factory<T>(token: InjectionToken<T>): InjectionItem<T> {
     return {
         token,
         type: 'factory',
+        argsFn: () => [],
     };
 }
 
@@ -15,22 +16,25 @@ export function Instance<T>(token: InjectionToken): InjectionItem<T> {
     return {
         token,
         type: 'instance',
+        argsFn: () => [],
     };
 }
 
-export type InjectionToken<T = any> = constructor<T> | string | symbol;
-
-export function inject<T>(
-    item: InjectionToken | InjectionItem<T>,
-): (target: any, propertyKey: string | symbol, parameterIndex: number) => void {
-    return (target: any, _propertyKey: string | symbol, parameterIndex: number): void => {
-        if (typeof item === 'object') {
-            metadataCollector.injectMetadata(target, parameterIndex, item);
-        } else {
-            metadataCollector.injectMetadata(target, parameterIndex, {
-                token: item,
-                type: 'instance',
-            });
-        }
+export function inject<T>(item: InjectionToken | InjectionItem<T>, argsFn: ArgsFn = () => []): ParameterDecorator {
+    return (target, _propertyKey, parameterIndex) => {
+        metadataCollector.addMetadata(
+            target,
+            parameterIndex,
+            typeof item === 'object'
+                ? {
+                      ...item,
+                      argsFn,
+                  }
+                : {
+                      token: item,
+                      type: 'instance',
+                      argsFn,
+                  },
+        );
     };
 }

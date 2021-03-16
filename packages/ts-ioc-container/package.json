@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "1.5.1",
+  "version": "4.4.4",
   "description": "Typescript IoC container",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
   "homepage": "https://github.com/IgorBabkin/service-locator/tree/master/packages/ts-ioc-container",
@@ -39,9 +39,6 @@
     "prepublish": "yarn build",
     "test": "jest"
   },
-  "dependencies": {
-    "reflect-metadata": "^0.1.13"
-  },
   "devDependencies": {
     "@types/jest": "26.0.15",
     "jest": "26.6.3",
@@ -50,5 +47,8 @@
     "ts-jest": "26.4.3",
     "typescript": "4.0.5"
   },
-  "gitHead": "e81ee0e14def051fa47d1a12b1c9f01cf1e512e8"
+  "gitHead": "ed54cf87295afcf6da383ac8f9ecdca358db17eb",
+  "peerDependencies": {
+    "reflect-metadata": "^0.1.13"
+  }
 }

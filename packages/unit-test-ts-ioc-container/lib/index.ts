@@ -1,8 +1,4 @@
-export * from './UnitTestServiceLocator';
-export * from './IUnitTestServiceLocator';
-export { MoqAdapter } from './moq/MoqAdapter';
-export { MoqFactory } from './moq/MoqFactory';
-export { LooseMoqFactory } from './moq/LooseMoqFactory';
+export { UnitTestServiceLocator } from './UnitTestServiceLocator';
+export { IUnitTestServiceLocator } from './IUnitTestServiceLocator';
 export { IMockAdapter } from './IMockAdapter';
 export { MockAdapter } from './MockAdapter';
-export { UnitTestServiceLocatorFactory } from './UnitTestServiceLocatorFactory';
