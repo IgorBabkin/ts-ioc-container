@@ -1,24 +1,23 @@
 import 'reflect-metadata';
-import { IInjectMetadataCollector } from './IInjectMetadataCollector';
-import { constructor } from '../../helpers/types';
-import { ArgsFn } from '../../provider/IProvider';
-import { InjectionToken } from '../../IServiceLocator';
 
-export const INJECTION_TOKEN_METADATA_KEY = 'injectionTokens';
-export type InjectionItem<T> = {
-    token: InjectionToken<T>;
-    type: 'factory' | 'instance';
-    argsFn: ArgsFn;
-};
+export const CONSTRUCTOR_INJECTION_METADATA_KEY = 'CONSTRUCTOR_INJECTION_METADATA_KEY';
+
+export interface IInjectMetadataCollector {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    setMetadata<T>(target: Object, key: string | symbol, value: T): void;
+
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    getMetadata<T>(target: Object, key: string | symbol): T;
+}
 
 export class InjectMetadataCollector implements IInjectMetadataCollector {
-    addMetadata(target: unknown, parameterIndex: number, injectionItem: InjectionItem<any>): void {
-        const injectionTokens = Reflect.getOwnMetadata(INJECTION_TOKEN_METADATA_KEY, target) || [];
-        injectionTokens[parameterIndex] = injectionItem;
-        Reflect.defineMetadata(INJECTION_TOKEN_METADATA_KEY, injectionTokens, target);
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    setMetadata<T>(target: Object, key: string | symbol, value: T): void {
+        Reflect.defineMetadata(key, value, target);
     }
 
-    getMetadata<T>(target: constructor<T>): InjectionItem<any>[] {
-        return Reflect.getOwnMetadata(INJECTION_TOKEN_METADATA_KEY, target) || [];
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    getMetadata<T>(target: Object, key: string | symbol): T {
+        return Reflect.getOwnMetadata(key, target);
     }
 }
