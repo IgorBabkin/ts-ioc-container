@@ -1,5 +1,5 @@
 import { InjectionToken, IServiceLocator } from '../../IServiceLocator';
-import { ArgsFn } from '../..';
+import { ArgsFn } from '../../provider/IProvider';
 
 export interface InjectorOptions {
     type: 'factory' | 'instance';
@@ -8,11 +8,11 @@ export interface InjectorOptions {
 
 export type Factory<T> = (...args: any[]) => T;
 
-export interface IInjector<T> {
+export interface IInjectionItem<T> {
     resolve(locator: IServiceLocator): T | Factory<T>;
 }
 
-export class Injector<T> implements IInjector<T> {
+export class InjectionItem<T> implements IInjectionItem<T> {
     private readonly options: InjectorOptions;
 
     constructor(private token: InjectionToken<T>, options: Partial<InjectorOptions> = {}) {
@@ -37,7 +37,7 @@ export class Injector<T> implements IInjector<T> {
     }
 }
 
-export class InstanceInjector<T> implements IInjector<T> {
+export class InstanceInjectionItem<T> implements IInjectionItem<T> {
     constructor(private value: T) {}
 
     resolve(locator: IServiceLocator): Factory<T> | T {

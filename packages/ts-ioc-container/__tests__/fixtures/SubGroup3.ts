@@ -1,7 +1,7 @@
-import { inject } from '../../lib/strategy/ioc/decorators';
+import { injectParam } from '../../lib';
 
 export class SubGroup3 {
-    constructor(@inject('key1') private p1: string, @inject('key2') private p2: string) {}
+    constructor(@injectParam('key1') private p1: string, @injectParam('key2') private p2: string) {}
 
     privet(): string[] {
         return [this.p1, this.p2];

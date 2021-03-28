@@ -1,4 +1,4 @@
-import { onDispose } from '../../lib/hooks/ioc/onDispose/decorators';
+import { onDispose } from '../../lib';
 
 export class OnDisposeImpl {
     isDisposed = false;

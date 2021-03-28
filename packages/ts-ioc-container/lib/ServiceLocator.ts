@@ -1,5 +1,5 @@
 import { InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
-import { IServiceLocatorStrategy } from './strategy/IServiceLocatorStrategy';
+import { IInjector } from './injector/IInjector';
 import { IProvider, ProviderKey } from './provider/IProvider';
 import { constructor } from './helpers/types';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
@@ -11,7 +11,7 @@ export class ServiceLocator implements IServiceLocator {
     private instances: Map<ProviderKey, any> = new Map();
     private parent: ServiceLocator;
 
-    constructor(private strategy: IServiceLocatorStrategy, private hook: IHook = new Hook([])) {}
+    constructor(private injector: IInjector, private hook: IHook = new Hook([])) {}
 
     register(key: ProviderKey, provider: IProvider<unknown>): this {
         this.providers.set(key, provider);
@@ -23,7 +23,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createContainer(): IServiceLocator {
-        const locator = new ServiceLocator(this.strategy, this.hook.clone());
+        const locator = new ServiceLocator(this.injector, this.hook.clone());
         locator.addTo(this);
         for (const [key, provider] of this.providers.entries()) {
             switch (provider.resolving) {
@@ -87,7 +87,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     private resolveConstructor<T>(c: constructor<T>, ...args: any[]): T {
-        const instance = this.strategy.resolveConstructor<T>(this, c, ...args);
+        const instance = this.injector.resolveConstructor<T>(this, c, ...args);
         this.hook.onInstanceCreate(instance);
         return instance;
     }

@@ -9,14 +9,14 @@ class Logger {
 }
 
 class App {
-    constructor(@injectParam(Logger, args('super')) private logger: Logger) {}
+    constructor(private value: string, @injectParam(Logger, args('super')) private logger: Logger) {}
 
-    run(value: string): string {
-        return this.logger.log(value);
+    run(): string {
+        return this.logger.log(this.value);
     }
 }
 
-describe('case1', () => {
+describe('case3', () => {
     let locator: IServiceLocator;
 
     beforeEach(() => {
@@ -24,7 +24,7 @@ describe('case1', () => {
     });
 
     it('tee', () => {
-        const app = locator.resolve(App);
-        expect(app.run('duper')).toBe('superduper');
+        const app = locator.resolve(App, 'duper');
+        expect(app.run()).toBe('superduper');
     });
 });

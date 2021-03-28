@@ -1,13 +1,5 @@
 import 'reflect-metadata';
-import {
-    args,
-    Hook,
-    inject,
-    IocServiceLocatorStrategy,
-    IServiceLocator,
-    metadataCollector,
-    ServiceLocator,
-} from '../lib';
+import { args, Hook, injectProp, IocInjector, IServiceLocator, metadataCollector, ServiceLocator } from '../lib';
 
 class Logger {
     constructor(private prefix: string) {}
@@ -17,7 +9,7 @@ class Logger {
 }
 
 class App {
-    @inject(Logger, args('super')) private logger: Logger;
+    @injectProp(Logger, args('super')) private logger: Logger;
 
     run(value: string): string {
         return this.logger.log(value);
@@ -28,7 +20,7 @@ describe('case1', () => {
     let locator: IServiceLocator;
 
     beforeEach(() => {
-        locator = new ServiceLocator(new IocServiceLocatorStrategy(metadataCollector), new Hook([]));
+        locator = new ServiceLocator(new IocInjector(metadataCollector), new Hook([]));
     });
 
     it('tee', () => {

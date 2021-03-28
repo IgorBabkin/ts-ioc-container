@@ -1,13 +1,7 @@
 import 'reflect-metadata';
-import { metadataCollector } from '../lib/strategy/ioc/decorators';
+import { metadataCollector } from '../lib/injector/ioc/decorators';
 import { IServiceLocator } from '../lib/IServiceLocator';
-import {
-    IInstanceHook,
-    IocServiceLocatorStrategy,
-    OnConstructHook,
-    ServiceLocator,
-    SimpleServiceLocatorStrategy,
-} from '../lib';
+import { IInstanceHook, IocInjector, OnConstructHook, ServiceLocator, SimpleInjector } from '../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './fixtures/OnConstructImpl';
 import { SubGroup3 } from './fixtures/SubGroup3';
 import { Group } from './fixtures/Group';
@@ -16,7 +10,7 @@ import { OnDisposeHook } from '../lib/hooks/ioc/onDispose/OnDisposeHook';
 import { OnDisposeImpl } from './fixtures/OnDisposeImpl';
 import { hooksMetadataCollector } from '../lib/hooks/ioc/HooksMetadataCollector';
 import { Hook } from '../lib/hooks/Hook';
-import { IocServiceLocatorStrategyOptions } from '../lib/strategy/ioc/IocServiceLocatorStrategy';
+import { IocServiceLocatorStrategyOptions } from '../lib/injector/ioc/IocInjector';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -24,9 +18,9 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook[] = []) =>
-        new ServiceLocator(new SimpleServiceLocatorStrategy(), new Hook(hooks));
+        new ServiceLocator(new SimpleInjector(), new Hook(hooks));
     const createIoCLocator = (hooks: IInstanceHook[] = [], options?: IocServiceLocatorStrategyOptions) =>
-        new ServiceLocator(new IocServiceLocatorStrategy(metadataCollector, options), new Hook(hooks));
+        new ServiceLocator(new IocInjector(metadataCollector, options), new Hook(hooks));
 
     it('should create an instance', () => {
         const expectedInstance = {};
@@ -271,7 +265,7 @@ describe('ServiceLocator', () => {
         });
 
         it('passes locator as last dep', () => {
-            const decorated = createIoCLocator([], { simpleStrategyCompatible: true });
+            const decorated = createIoCLocator([], { simpleInjectionCompatible: true });
 
             decorated.register('dep1', Provider.fromInstance('dep1'));
             decorated.register('dep2', Provider.fromInstance('dep2'));

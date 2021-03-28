@@ -35,16 +35,16 @@ yarn add reflect-metadata
 
 How to create new simple locator
 ```typescript
-import {ServiceLocatorFactory, SimpleServiceLocatorStrategy} from 'ts-ioc-container';
+import {ServiceLocatorFactory, SimpleInjector} from 'ts-ioc-container';
 
-const container = new ServiceLocatorFactory(new SimpleServiceLocatorStrategy());
+const container = new ServiceLocatorFactory(new SimpleInjector());
 ```
 How to create new IoC locator
 ```typescript
 import 'reflect-metadata';
-import {ServiceLocatorFactory, IocServiceLocatorStrategy, metadataCollector} from 'ts-ioc-container';
+import {ServiceLocatorFactory, IocInjector, metadataCollector} from 'ts-ioc-container';
 
-const container = new ServiceLocatorFactory(new IocServiceLocatorStrategy(metadataCollector));
+const container = new ServiceLocatorFactory(new IocInjector(metadataCollector));
 ```
 How to register dependencies
 ```typescript
@@ -89,7 +89,7 @@ const provider = new Provider.fromConstructor(Logger).asSingleton();
 
 ### Scoped containers
 ```typescript
-const container = new ServiceLocator(new SimpleServiceLocatorStrategy());
+const container = new ServiceLocator(new SimpleInjector());
 container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
 const scopedContainer = container.createContainer();
 const logger = scopedContainer.resolve('ILogger');
@@ -100,7 +100,7 @@ scopedContainer.remove();
 ### Instance hooks
 OnConstructHook
 ```typescript
-const container = new ServiceLocator(new SimpleServiceLocatorStrategy(), new Hook([new OnConstructHook(hooksMetadataCollector)]));
+const container = new ServiceLocator(new SimpleInjector(), new Hook([new OnConstructHook(hooksMetadataCollector)]));
 class Logger {
     @onConstruct
     init(): void {
@@ -114,7 +114,7 @@ class Logger {
 ```
 OnDisposeHook
 ```typescript
-const container = new ServiceLocator(new SimpleServiceLocatorStrategy(), new Hook([new OnDisposeHook(hooksMetadataCollector)]));
+const container = new ServiceLocator(new SimpleInjector(), new Hook([new OnDisposeHook(hooksMetadataCollector)]));
 class Logger {
     @onDispose
     dispose(): void {
@@ -126,11 +126,11 @@ class Logger {
 ### Types of containers
 SimpleLocator (cannot be used with decorators)
 ```typescript
-const container = new ServiceLocator(new SimpleServiceLocatorStrategy());
+const container = new ServiceLocator(new SimpleInjector());
 ```
 IoC container (work based on decorators)
 ```typescript
-const container = new ServiceLocator(new IocServiceLocatorStrategy(metadataCollector));
+const container = new ServiceLocator(new IocInjector(metadataCollector));
 ```
 
 ### Tests
@@ -141,7 +141,7 @@ import {ServiceLocatorFactory} from 'ts-ioc-container';
 import {UnitTestServiceLocatorFactory, MoqAdapter, MoqAdapter} from 'unit-test-ts-ioc-container';
 
 const container = new UnitTestServiceLocator(
-  new IocServiceLocatorStrategy(metadataCollector),
+  new IocInjector(metadataCollector),
   new Hook(),
   new MoqFactory(),
 );

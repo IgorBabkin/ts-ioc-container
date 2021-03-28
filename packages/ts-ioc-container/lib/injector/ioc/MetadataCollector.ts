@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 
-export const CONSTRUCTOR_INJECTION_METADATA_KEY = 'CONSTRUCTOR_INJECTION_METADATA_KEY';
+export const CONSTRUCTOR_METADATA_KEY = 'CONSTRUCTOR_METADATA_KEY';
 
-export interface IInjectMetadataCollector {
+export interface IMetadataCollector {
     // eslint-disable-next-line @typescript-eslint/ban-types
     setMetadata<T>(target: Object, key: string | symbol, value: T): void;
 
@@ -10,7 +10,7 @@ export interface IInjectMetadataCollector {
     getMetadata<T>(target: Object, key: string | symbol): T;
 }
 
-export class InjectMetadataCollector implements IInjectMetadataCollector {
+export class MetadataCollector implements IMetadataCollector {
     // eslint-disable-next-line @typescript-eslint/ban-types
     setMetadata<T>(target: Object, key: string | symbol, value: T): void {
         Reflect.defineMetadata(key, value, target);
