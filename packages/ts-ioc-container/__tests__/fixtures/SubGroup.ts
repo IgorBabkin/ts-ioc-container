@@ -1,7 +1,7 @@
-import { injectParam } from '../../lib';
+import { inject } from '../../lib';
 
 export class SubGroup {
-    constructor(@injectParam('key2') private hey: string) {}
+    constructor(@inject('key2') private hey: string) {}
 
     privet(): string[] {
         return [this.hey];

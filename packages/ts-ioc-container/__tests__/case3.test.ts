@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { args, Hook, injectParam, IocInjector, IServiceLocator, metadataCollector, ServiceLocator } from '../lib';
+import { args, Hook, inject, IocInjector, IServiceLocator, metadataCollector, ServiceLocator } from '../lib';
 
 class Logger {
     constructor(private prefix: string) {}
@@ -9,7 +9,7 @@ class Logger {
 }
 
 class App {
-    constructor(private value: string, @injectParam(Logger, args('super')) private logger: Logger) {}
+    constructor(private value: string, @inject(Logger, args('super')) private logger: Logger) {}
 
     run(): string {
         return this.logger.log(this.value);

@@ -6,7 +6,7 @@ export { Resolving, ArgsFn, ProviderKey, IProviderOptions, IProvider, ProviderFn
 export { IInjector } from './injector/IInjector';
 export { SimpleInjector } from './injector/simple/SimpleInjector';
 export { IocInjector } from './injector/ioc/IocInjector';
-export { injectParam, injectProp, Factory, metadataCollector } from './injector/ioc/decorators';
+export { inject, Factory, metadataCollector } from './injector/ioc/decorators';
 export { IInstanceHook } from './hooks/IInstanceHook';
 export { OnConstructHook } from './hooks/ioc/onConstruct/OnConstructHook';
 export { onDispose } from './hooks/ioc/onDispose/decorators';

@@ -1,14 +1,14 @@
-import { Factory, injectParam } from '../../lib/injector/ioc/decorators';
+import { Factory, inject } from '../../lib/injector/ioc/decorators';
 import { SubGroup } from './SubGroup';
 import { SubGroup2 } from './SubGroup2';
 import { SubGroup3 } from './SubGroup3';
 
 export class Group {
     constructor(
-        @injectParam('key1') private p1: string,
-        @injectParam(SubGroup) private subGroup: SubGroup,
-        @injectParam(Factory(SubGroup2)) private factory: (v: number) => SubGroup2,
-        @injectParam('key3') private group3: SubGroup3,
+        @inject('key1') private p1: string,
+        @inject(SubGroup) private subGroup: SubGroup,
+        @inject(Factory(SubGroup2)) private factory: (v: number) => SubGroup2,
+        @inject('key3') private group3: SubGroup3,
         private p2: string,
         private p3: string,
     ) {}

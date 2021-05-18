@@ -1,4 +1,4 @@
-import { args, Factory, injectParam, IServiceLocator, onConstruct } from '../../lib';
+import { args, Factory, inject, IServiceLocator, onConstruct } from '../../lib';
 
 export class OnConstructImpl {
     isConstructed = false;
@@ -18,7 +18,7 @@ export class Logger {
 }
 
 export class App {
-    constructor(@injectParam('logger', args('super')) private logger: Logger) {}
+    constructor(@inject('logger', args('super')) private logger: Logger) {}
 
     run(): string {
         return this.logger.log();
@@ -36,7 +36,7 @@ export class Logger2 {
 export class App2 {
     private logger: Logger2;
 
-    constructor(@injectParam(Factory('logger2'), args('super')) private loggerFactory: (prefix2: string) => Logger2) {
+    constructor(@inject(Factory('logger2'), args('super')) private loggerFactory: (prefix2: string) => Logger2) {
         this.logger = loggerFactory('duper');
     }
 
@@ -54,7 +54,7 @@ export class Logger3 {
 }
 
 export class App3 {
-    constructor(@injectParam('logger3', args('duper')) private logger: Logger3) {}
+    constructor(@inject('logger3', args('duper')) private logger: Logger3) {}
 
     run(): string {
         return this.logger.log();
@@ -62,7 +62,7 @@ export class App3 {
 }
 
 export class App4 {
-    constructor(@injectParam('dep1') private dep1: string, private locator: IServiceLocator) {}
+    constructor(@inject('dep1') private dep1: string, private locator: IServiceLocator) {}
 
     run(): string {
         return `${this.dep1}${this.locator.resolve('dep2')}`;
