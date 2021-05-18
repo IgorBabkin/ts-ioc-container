@@ -15,4 +15,6 @@ export { onConstruct } from './hooks/ioc/onConstruct/decorators';
 export { Provider } from './provider/Provider';
 export { IHook } from './hooks/IHook';
 export { Hook } from './hooks/Hook';
+export { IHooksMetadataCollector } from './hooks/ioc/IHooksMetadataCollector';
+export { hooksMetadataCollector } from './hooks/ioc/HooksMetadataCollector';
 export { InjectionToken } from './IServiceLocator';
