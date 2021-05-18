@@ -10,19 +10,20 @@ export type IocServiceLocatorStrategyOptions = { simpleInjectionCompatible?: boo
 
 export class IocInjector implements IInjector {
     constructor(
+        private locator: IServiceLocator,
         private metadataCollector: IMetadataCollector,
         private options: IocServiceLocatorStrategyOptions = {},
     ) {}
 
-    resolveConstructor<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
+    resolve<T>(value: constructor<T>, ...deps: any[]): T {
         const injectionItems =
             this.metadataCollector.getMetadata<IInjectionItem<any>[]>(value, CONSTRUCTOR_METADATA_KEY) || [];
         return new value(
             ...merge(
                 injectionItems,
                 deps.map((d) => new InstanceInjectionItem(d)),
-            ).map((i) => i.resolve(locator)),
-            this.options.simpleInjectionCompatible ? locator : undefined,
+            ).map((i) => i.resolve(this.locator)),
+            this.options.simpleInjectionCompatible ? this.locator : undefined,
         );
     }
 }

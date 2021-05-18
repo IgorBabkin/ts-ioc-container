@@ -27,8 +27,4 @@ export class Hook implements IHook {
     dispose(): void {
         this.disposeHooks = [];
     }
-
-    clone(): Hook {
-        return new Hook(this.hooks);
-    }
 }

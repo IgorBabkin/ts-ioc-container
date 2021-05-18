@@ -4,6 +4,4 @@ export interface IHook {
     onInstanceCreate<GInstance>(instance: GInstance): void;
 
     dispose(): void;
-
-    clone(): IHook;
 }
