@@ -1,4 +1,4 @@
-import { Hook, IServiceLocator, SimpleServiceLocatorStrategy } from 'ts-ioc-container';
+import { Hook, IServiceLocator, SimpleInjector } from 'ts-ioc-container';
 import { UnitTestServiceLocator } from '../lib';
 import { Mock } from 'moq.ts';
 import { MoqFactory } from './moq/MoqFactory';
@@ -17,7 +17,7 @@ class TestClass {
 
 describe('UnitTestSimpleLocator', () => {
     function createSimpleLocator() {
-        return new UnitTestServiceLocator(new SimpleServiceLocatorStrategy(), new Hook(), new MoqFactory());
+        return new UnitTestServiceLocator(new SimpleInjector(), new Hook(), new MoqFactory());
     }
 
     it('hey', () => {

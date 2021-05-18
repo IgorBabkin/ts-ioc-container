@@ -18,3 +18,6 @@ export { Hook } from './hooks/Hook';
 export { IHooksMetadataCollector } from './hooks/ioc/IHooksMetadataCollector';
 export { hooksMetadataCollector } from './hooks/ioc/HooksMetadataCollector';
 export { InjectionToken } from './IServiceLocator';
+export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
+export { UnknownResolvingTypeError } from './errors/UnknownResolvingTypeError';
+export { UnknownInjectionTypeError } from './errors/UnknownInjectionTypeError';

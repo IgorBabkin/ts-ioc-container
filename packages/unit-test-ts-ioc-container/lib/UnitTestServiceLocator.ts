@@ -1,23 +1,12 @@
 import { IUnitTestServiceLocator } from './IUnitTestServiceLocator';
-import {
-    constructor,
-    IHook,
-    InjectionToken,
-    IServiceLocator,
-    IServiceLocatorStrategy,
-    ProviderKey,
-} from 'ts-ioc-container';
+import { constructor, IHook, InjectionToken, IServiceLocator, IInjector, ProviderKey } from 'ts-ioc-container';
 import { IMockAdapter } from './IMockAdapter';
 import { IMockFactory } from './IMockFactory';
 
 export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GMock> {
     private mocks: Map<ProviderKey, IMockAdapter<GMock, any>> = new Map();
 
-    constructor(
-        private strategy: IServiceLocatorStrategy,
-        private hook: IHook,
-        private mockFactory: IMockFactory<GMock>,
-    ) {}
+    constructor(private strategy: IInjector, private hook: IHook, private mockFactory: IMockFactory<GMock>) {}
 
     resolveMock(key: ProviderKey): GMock {
         return this.findMock(key).getMock();

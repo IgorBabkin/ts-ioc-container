@@ -2,8 +2,9 @@ import { constructor } from '../../helpers/types';
 import { IServiceLocator } from '../../IServiceLocator';
 import { IInjector } from '../IInjector';
 import { CONSTRUCTOR_METADATA_KEY, IMetadataCollector } from './MetadataCollector';
-import { IInjectionItem, InstanceInjectionItem } from './InjectionItem';
 import { merge } from '../../helpers/helpers';
+import { InstanceInjectionItem } from './item/InstanceInjectionItem';
+import { IInjectionItem } from './item/IInjectionItem';
 
 export type IocServiceLocatorStrategyOptions = { simpleInjectionCompatible?: boolean };
 

@@ -5,6 +5,7 @@ import { constructor } from './helpers/types';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 import { IHook } from './hooks/IHook';
 import { Hook } from './hooks/Hook';
+import { UnknownResolvingTypeError } from './errors/UnknownResolvingTypeError';
 
 export class ServiceLocator implements IServiceLocator {
     private providers: Map<ProviderKey, IProvider<any>> = new Map();
@@ -59,16 +60,19 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     private resolveLocally<T>(key: ProviderKey, ...args: any[]): T {
-        const provider = this.providers.get(key);
-        if (provider) {
-            switch (provider.resolving) {
-                case 'perRequest':
-                    return this.resolvePerRequest(provider, ...args);
-                case 'singleton':
-                    return this.resolveSingleton(key, provider, ...args);
-            }
+        if (!this.providers.has(key)) {
+            return undefined;
         }
-        return undefined;
+
+        const provider = this.providers.get(key);
+        switch (provider.resolving) {
+            case 'perRequest':
+                return this.resolvePerRequest(provider, ...args);
+            case 'singleton':
+                return this.resolveSingleton(key, provider, ...args);
+            default:
+                throw new UnknownResolvingTypeError(provider.resolving);
+        }
     }
 
     private resolvePerRequest<T>(provider: IProvider<T>, ...args: any[]): T {
@@ -79,8 +83,7 @@ export class ServiceLocator implements IServiceLocator {
 
     private resolveSingleton<T>(key: ProviderKey, value: IProvider<T>, ...args: any[]): T {
         if (!this.instances.has(key)) {
-            const instance = this.resolvePerRequest(value, ...args);
-            this.instances.set(key, instance);
+            this.instances.set(key, this.resolvePerRequest(value, ...args));
         }
 
         return this.instances.get(key) as T;

@@ -1,7 +1,7 @@
 import { CONSTRUCTOR_METADATA_KEY, MetadataCollector } from './MetadataCollector';
 import { ArgsFn } from '../../provider/IProvider';
 import { InjectionToken } from '../../IServiceLocator';
-import { InjectionItem } from './InjectionItem';
+import { InjectionItem } from './item/InjectionItem';
 
 export const metadataCollector = new MetadataCollector();
 

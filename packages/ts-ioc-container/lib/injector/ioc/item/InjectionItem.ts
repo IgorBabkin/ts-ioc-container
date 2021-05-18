@@ -1,15 +1,12 @@
-import { InjectionToken, IServiceLocator } from '../../IServiceLocator';
-import { ArgsFn } from '../../provider/IProvider';
+import { InjectionToken, IServiceLocator } from '../../../IServiceLocator';
+import { ArgsFn } from '../../../provider/IProvider';
+import { IInjectionItem } from './IInjectionItem';
+import { Factory } from '../../../helpers/types';
+import { UnknownInjectionTypeError } from '../../../errors/UnknownInjectionTypeError';
 
 export interface InjectorOptions {
     type: 'factory' | 'instance';
     argsFn: ArgsFn;
-}
-
-export type Factory<T> = (...args: any[]) => T;
-
-export interface IInjectionItem<T> {
-    resolve(locator: IServiceLocator): T | Factory<T>;
 }
 
 export class InjectionItem<T> implements IInjectionItem<T> {
@@ -28,19 +25,14 @@ export class InjectionItem<T> implements IInjectionItem<T> {
 
             case 'factory':
                 return (...args2: any[]) => locator.resolve(this.token, ...argsFn(locator), ...args2);
+
+            default:
+                throw new UnknownInjectionTypeError(type);
         }
     }
 
     withArgsFn(argsFn: ArgsFn): this {
         this.options.argsFn = argsFn;
         return this;
-    }
-}
-
-export class InstanceInjectionItem<T> implements IInjectionItem<T> {
-    constructor(private value: T) {}
-
-    resolve(locator: IServiceLocator): Factory<T> | T {
-        return this.value;
     }
 }
