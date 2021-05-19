@@ -18,7 +18,7 @@ export class ServiceLocator implements IServiceLocator {
     constructor(
         private injectorFactory: IInjectorFactory,
         private hookFactory: IHookFactory = new HookFactory(),
-        private readonly parent?: IServiceLocator,
+        private parent?: IServiceLocator,
     ) {
         this.injector = injectorFactory.create(this);
         this.hook = hookFactory.create();
@@ -48,6 +48,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     remove(): void {
+        this.parent = null;
         this.hook.onContainerRemove();
         this.instances.clear();
         this.providers.clear();

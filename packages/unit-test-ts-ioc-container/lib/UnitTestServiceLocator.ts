@@ -1,12 +1,30 @@
 import { IUnitTestServiceLocator } from './IUnitTestServiceLocator';
-import { constructor, IHook, InjectionToken, IServiceLocator, IInjector, ProviderKey } from 'ts-ioc-container';
+import {
+    constructor,
+    IHook,
+    IHookFactory,
+    IInjector,
+    IInjectorFactory,
+    InjectionToken,
+    IServiceLocator,
+    ProviderKey,
+} from 'ts-ioc-container';
 import { IMockAdapter } from './IMockAdapter';
 import { IMockFactory } from './IMockFactory';
 
 export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GMock> {
     private mocks: Map<ProviderKey, IMockAdapter<GMock, any>> = new Map();
+    private readonly injector: IInjector;
+    private hook: IHook;
 
-    constructor(private strategy: IInjector, private hook: IHook, private mockFactory: IMockFactory<GMock>) {}
+    constructor(
+        private injectorFactory: IInjectorFactory,
+        private hookFactory: IHookFactory,
+        private mockFactory: IMockFactory<GMock>,
+    ) {
+        this.injector = injectorFactory.create(this);
+        this.hook = hookFactory.create();
+    }
 
     resolveMock(key: ProviderKey): GMock {
         return this.findMock(key).getMock();
@@ -35,7 +53,7 @@ export class UnitTestServiceLocator<GMock> implements IUnitTestServiceLocator<GM
     }
 
     private resolveConstructor<T>(c: constructor<T>, ...deps: any[]): T {
-        const instance = this.strategy.resolveConstructor(this, c, ...deps);
+        const instance = this.injector.resolve(c, ...deps);
         this.hook.onInstanceCreate(instance);
         return instance;
     }
