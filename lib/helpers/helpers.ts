@@ -10,7 +10,7 @@ export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     }
 
     if (insertArr.length === 0) {
-        return baseArr;
+        return baseArr as T[];
     }
     const [b1, ...restBaseArr] = baseArr;
     const [i1, ...restInsertArr] = insertArr;

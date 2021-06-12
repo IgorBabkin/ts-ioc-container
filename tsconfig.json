@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": "./lib",
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
     "declaration": true,
     "sourceMap": true,
     "target": "ES2017",

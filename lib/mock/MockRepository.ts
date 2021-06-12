@@ -9,7 +9,7 @@ export abstract class MockRepository<GMock> implements IMockRepository<GMock> {
             this.mocks.set(key, this.createMock<GInstance>());
         }
 
-        return this.mocks.get(key);
+        return this.mocks.get(key) as IMockAdapter<GMock, GInstance>;
     }
 
     protected abstract createMock<TInstance>(): IMockAdapter<GMock, TInstance>;

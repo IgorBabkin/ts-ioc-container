@@ -6,7 +6,7 @@ export class OnDisposeHook implements IInstanceHook {
 
     constructor(private metadata: IHooksMetadataCollector) {}
 
-    onDispose(instance: unknown): void {
+    onDispose(instance: any): void {
         if (!(instance instanceof Object)) {
             return;
         }

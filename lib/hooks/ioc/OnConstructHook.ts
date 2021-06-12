@@ -6,7 +6,7 @@ export class OnConstructHook implements IInstanceHook {
 
     constructor(private metadata: IHooksMetadataCollector) {}
 
-    onCreate(instance: unknown): void {
+    onCreate(instance: any): void {
         if (!(instance instanceof Object)) {
             return;
         }

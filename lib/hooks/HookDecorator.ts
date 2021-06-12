@@ -14,7 +14,7 @@ export abstract class HookDecorator implements IHook {
         this.decorated.onInstanceCreate(instance);
     }
 
-    onProviderResolved<GInstance>(instance: GInstance, key: ProviderKey, ...args: any[]): GInstance {
-        return this.decorated.onProviderResolved(instance, key, ...args);
+    onDependencyNotFound<GInstance>(key: ProviderKey, ...args: any[]): GInstance | undefined {
+        return this.decorated.onDependencyNotFound(key, ...args);
     }
 }

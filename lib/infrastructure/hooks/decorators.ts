@@ -5,12 +5,14 @@ import getPrototypeOf = Reflect.getPrototypeOf;
 
 export function createOnConstructDecorator(collector: IHooksMetadataCollector): MethodDecorator {
     return (target, propertyKey) => {
-        collector.addHookMethod(OnConstructHook.HOOK_KEY, getPrototypeOf(target), propertyKey);
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        collector.addHookMethod(OnConstructHook.HOOK_KEY, getPrototypeOf(target) as object, propertyKey);
     };
 }
 
 export function createOnDisposeDecorator(collector: IHooksMetadataCollector): MethodDecorator {
     return (target, propertyKey) => {
-        collector.addHookMethod(OnDisposeHook.HOOK_KEY, getPrototypeOf(target), propertyKey);
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        collector.addHookMethod(OnDisposeHook.HOOK_KEY, getPrototypeOf(target) as object, propertyKey);
     };
 }

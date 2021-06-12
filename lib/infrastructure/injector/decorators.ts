@@ -11,7 +11,7 @@ export function Factory<T>(token: InjectionToken<T>): InjectionItem<T> {
 export function createInjectDecorator(collector: IMetadataCollector) {
     return <T>(item: InjectionToken | InjectionItem<T>, argsFn: ArgsFn = () => []): ParameterDecorator => {
         return (target, propertyKey, parameterIndex) => {
-            const metadata = collector.getMetadata(target, CONSTRUCTOR_METADATA_KEY) || [];
+            const metadata = collector.getMetadata<any[]>(target, CONSTRUCTOR_METADATA_KEY) || [];
             metadata[parameterIndex] =
                 item instanceof InjectionItem ? item.withArgsFn(argsFn) : new InjectionItem(item, { argsFn });
             collector.setMetadata(target, CONSTRUCTOR_METADATA_KEY, metadata);

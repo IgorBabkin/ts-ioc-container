@@ -5,8 +5,8 @@ export class EmptyHook implements IHook {
 
     onContainerRemove(): void {}
 
-    onProviderResolved<GInstance>(instance: GInstance): GInstance {
-        return instance;
+    onDependencyNotFound<GInstance>(): GInstance | undefined {
+        return undefined;
     }
 
     clone(): IHook {

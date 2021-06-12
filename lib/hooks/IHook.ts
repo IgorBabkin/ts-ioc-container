@@ -5,7 +5,7 @@ export interface IHook {
 
     onContainerRemove(): void;
 
-    onProviderResolved<GInstance>(instance: GInstance, key: ProviderKey, ...args: any[]): GInstance;
+    onDependencyNotFound<GInstance>(key: ProviderKey, ...args: any[]): GInstance | undefined;
 
     clone(): IHook;
 }

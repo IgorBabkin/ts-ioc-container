@@ -37,25 +37,26 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     remove(): void {
-        this.parent = null;
+        this.parent = undefined;
         this.hook.onContainerRemove();
         this.instances.clear();
         this.providers.clear();
     }
 
     private resolveByProvider<T>(key: ProviderKey, ...args: any[]): T {
-        const instance = this.hook.onProviderResolved(
-            this.resolveLocally<T>(key, ...args) || this.parent?.resolve<T>(key, ...args),
-            key,
-            ...args,
-        );
+        const instance =
+            this.resolveLocally<T>(key, ...args) ||
+            this.parent?.resolve<T>(key, ...args) ||
+            this.hook.onDependencyNotFound(key, ...args);
+
         if (instance === undefined) {
             throw new DependencyNotFoundError(key.toString());
         }
+
         return instance;
     }
 
-    private resolveLocally<T>(key: ProviderKey, ...args: any[]): T {
+    private resolveLocally<T>(key: ProviderKey, ...args: any[]): T | undefined {
         const provider = this.providers.get(key);
         if (!provider) {
             return undefined;
