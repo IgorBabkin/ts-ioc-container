@@ -1,21 +1,10 @@
-import { IHook, IMockAdapter, ProviderKey } from '../index';
+import { EmptyHook, IHook, IMockAdapter, ProviderKey } from '../index';
 import { IMockRepository } from './IMockRepository';
+import { HookDecorator } from '../hooks/HookDecorator';
 
-export class MockHook<GMock> implements IHook {
-    constructor(private decorated: IHook, private mocksRepo: IMockRepository<GMock>) {}
-
-    fallbackResolve<GInstance>(key: ProviderKey, ...args: any[]): GInstance {
-        return this.decorated.fallbackResolve
-            ? this.decorated.fallbackResolve(key, ...args)
-            : this.resolveMockAdapter<GInstance>(key, ...args).instance;
-    }
-
-    onContainerRemove(): void {
-        this.decorated.onContainerRemove();
-    }
-
-    onInstanceCreate<GInstance>(instance: GInstance): void {
-        this.decorated.onInstanceCreate(instance);
+export class MockHook<GMock> extends HookDecorator {
+    constructor(private mocksRepo: IMockRepository<GMock>, decorated: IHook = new EmptyHook()) {
+        super(decorated);
     }
 
     resolveMockAdapter<GInstance>(key: ProviderKey, ...args: any[]): IMockAdapter<GMock, GInstance> {
@@ -23,6 +12,13 @@ export class MockHook<GMock> implements IHook {
     }
 
     clone(): MockHook<GMock> {
-        return new MockHook(this.decorated.clone(), this.mocksRepo);
+        return new MockHook(this.mocksRepo, this.decorated.clone());
+    }
+
+    onProviderResolved<GInstance>(instance: GInstance, key: ProviderKey, ...args: any[]): GInstance {
+        return (
+            this.decorated.onProviderResolved(instance, key, ...args) ||
+            this.resolveMockAdapter<GInstance>(key, ...args).instance
+        );
     }
 }

@@ -1,4 +1,4 @@
-import { Hook, IServiceLocator, MockHook, ServiceLocator, SimpleInjector } from '../lib';
+import { IServiceLocator, MockHook, ServiceLocator, SimpleInjector } from '../lib';
 import { MoqRepository } from './MoqRepository';
 
 interface IDepClass {
@@ -21,7 +21,7 @@ describe('UnitTestSimpleLocator', () => {
     });
 
     function createSimpleLocator() {
-        return new ServiceLocator(new SimpleInjector(), new MockHook(new Hook([]), mockRepo));
+        return new ServiceLocator(new SimpleInjector(), new MockHook(mockRepo));
     }
 
     it('hey', () => {

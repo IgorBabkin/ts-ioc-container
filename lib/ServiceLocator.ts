@@ -2,16 +2,16 @@ import { InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocato
 import { IInjector } from './injector/IInjector';
 import { IProvider, ProviderKey } from './provider/IProvider';
 import { constructor } from './helpers/types';
-import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 import { IHook } from './hooks/IHook';
 import { UnknownResolvingTypeError } from './errors/UnknownResolvingTypeError';
-import { Hook } from './hooks/Hook';
+import { EmptyHook } from './hooks/EmptyHook';
+import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 
 export class ServiceLocator implements IServiceLocator {
     private readonly providers: Map<ProviderKey, IProvider<any>> = new Map();
     private readonly instances: Map<ProviderKey, any> = new Map();
 
-    constructor(private injector: IInjector, private hook: IHook = new Hook([]), private parent?: IServiceLocator) {}
+    constructor(private injector: IInjector, private hook: IHook = new EmptyHook(), private parent?: IServiceLocator) {}
 
     register(key: ProviderKey, provider: IProvider<unknown>): this {
         this.providers.set(key, provider);
@@ -19,7 +19,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
-        return isProviderKey(key) ? this.resolveProvider(key, ...args) : this.resolveConstructor(key, ...args);
+        return isProviderKey(key) ? this.resolveByProvider(key, ...args) : this.resolveConstructor(key, ...args);
     }
 
     createContainer(): IServiceLocator {
@@ -43,16 +43,15 @@ export class ServiceLocator implements IServiceLocator {
         this.providers.clear();
     }
 
-    private resolveProvider<T>(key: ProviderKey, ...args: any[]): T {
-        const instance =
-            this.resolveLocally<T>(key, ...args) ||
-            this.parent?.resolve<T>(key, ...args) ||
-            (this.hook.fallbackResolve && this.hook.fallbackResolve(key, ...args));
-
+    private resolveByProvider<T>(key: ProviderKey, ...args: any[]): T {
+        const instance = this.hook.onProviderResolved(
+            this.resolveLocally<T>(key, ...args) || this.parent?.resolve<T>(key, ...args),
+            key,
+            ...args,
+        );
         if (instance === undefined) {
             throw new DependencyNotFoundError(key.toString());
         }
-
         return instance;
     }
 

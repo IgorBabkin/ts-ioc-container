@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-    Hook,
     IInstanceHook,
     IocInjector,
     IServiceLocator,
@@ -16,6 +15,7 @@ import { Group } from './fixtures/Group';
 import { OnDisposeImpl } from './fixtures/OnDisposeImpl';
 import { IocServiceLocatorStrategyOptions } from '../lib/injector/ioc/IocInjector';
 import { hooksMetadataCollector, metadataCollector } from './decorators';
+import { InstanceHook } from '../lib/hooks/InstanceHook';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -23,9 +23,9 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook[] = []) =>
-        new ServiceLocator(new SimpleInjector(), new Hook(hooks));
+        new ServiceLocator(new SimpleInjector(), new InstanceHook(hooks));
     const createIoCLocator = (hooks: IInstanceHook[] = [], options?: IocServiceLocatorStrategyOptions) =>
-        new ServiceLocator(new IocInjector(metadataCollector, options), new Hook(hooks));
+        new ServiceLocator(new IocInjector(metadataCollector, options), new InstanceHook(hooks));
 
     it('should create an instance', () => {
         const expectedInstance = {};

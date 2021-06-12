@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Hook, IocInjector, MockHook, ServiceLocator } from '../lib';
+import { IocInjector, MockHook, ServiceLocator } from '../lib';
 import { MoqRepository } from './MoqRepository';
 import { inject, metadataCollector } from './decorators';
 
@@ -19,7 +19,7 @@ describe('UnitTestIoCLocator', () => {
     });
 
     function createIoCLocator() {
-        return new ServiceLocator(new IocInjector(metadataCollector), new MockHook(new Hook(), mockRepo));
+        return new ServiceLocator(new IocInjector(metadataCollector), new MockHook(mockRepo));
     }
 
     it('ioc', () => {

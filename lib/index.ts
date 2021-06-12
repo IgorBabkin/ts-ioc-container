@@ -14,7 +14,7 @@ export { OnConstructHook } from './hooks/ioc/OnConstructHook';
 export { OnDisposeHook } from './hooks/ioc/OnDisposeHook';
 export { Provider } from './provider/Provider';
 export { IHook } from './hooks/IHook';
-export { Hook } from './hooks/Hook';
+export { EmptyHook } from './hooks/EmptyHook';
 export { IHooksMetadataCollector } from './hooks/ioc/IHooksMetadataCollector';
 export { InjectionToken } from './IServiceLocator';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
@@ -25,6 +25,5 @@ export { UnitTestServiceLocator, UnitTestServiceLocatorOptions } from './test/Un
 export { IMockRepository } from './test/IMockRepository';
 export { MockRepository } from './test/MockRepository';
 export { MockHook } from './test/MockHook';
-export { IInjectorFactory } from './ServiceLocator';
 export { createOnConstructDecorator, createOnDisposeDecorator } from './infrastructure/hooks/decorators';
 export { HooksMetadataCollector } from './infrastructure/hooks/HooksMetadataCollector';
