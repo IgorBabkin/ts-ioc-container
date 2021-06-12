@@ -5,7 +5,9 @@ export class MockHook<GMock> implements IHook {
     constructor(private decorated: IHook, private mocksRepo: IMockRepository<GMock>) {}
 
     fallbackResolve<GInstance>(key: ProviderKey, ...args: any[]): GInstance {
-        return this.resolveMockAdapter<GInstance>(key, ...args).instance;
+        return this.decorated.fallbackResolve
+            ? this.decorated.fallbackResolve(key, ...args)
+            : this.resolveMockAdapter<GInstance>(key, ...args).instance;
     }
 
     onContainerRemove(): void {
