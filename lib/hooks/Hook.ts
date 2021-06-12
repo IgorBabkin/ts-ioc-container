@@ -1,7 +1,6 @@
 import { IHook } from './IHook';
 import { Fn } from '../helpers/types';
 import { IInstanceHook } from './IInstanceHook';
-import { ProviderKey } from '../provider/IProvider';
 
 export class Hook implements IHook {
     private disposeHooks: Fn[] = [];
@@ -24,10 +23,6 @@ export class Hook implements IHook {
     onContainerRemove(): void {
         this.disposeHooks.forEach((h) => h());
         this.disposeHooks = [];
-    }
-
-    fallbackResolve<GInstance>(key: ProviderKey, args: any): GInstance {
-        return undefined;
     }
 
     clone(): IHook {
