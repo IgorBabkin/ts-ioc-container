@@ -18,7 +18,7 @@ export class MockHook<GMock> extends HookDecorator {
     onDependencyNotFound<GInstance>(key: ProviderKey, ...args: any[]): GInstance | undefined {
         return (
             this.decorated.onDependencyNotFound(key, ...args) ||
-            this.resolveMockAdapter<GInstance>(key, ...args).instance
+            this.mocksRepo.findOrCreate<GInstance>(key, ...args).instance
         );
     }
 }
