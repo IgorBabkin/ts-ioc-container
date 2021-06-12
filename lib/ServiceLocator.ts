@@ -61,13 +61,15 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     private resolveProvider<T>(key: ProviderKey, ...args: any[]): T {
-        const instance = this.resolveLocally<T>(key, ...args) || this.parent?.resolve<T>(key, ...args);
+        const instance =
+            this.resolveLocally<T>(key, ...args) ||
+            this.parent?.resolve<T>(key, ...args) ||
+            (this.hook.fallbackResolve && this.hook.fallbackResolve(key, ...args));
+
         if (instance === undefined) {
-            if (this.hook.onDependencyNotFound) {
-                return this.hook.onDependencyNotFound(key);
-            }
             throw new DependencyNotFoundError(key.toString());
         }
+
         return instance;
     }
 
