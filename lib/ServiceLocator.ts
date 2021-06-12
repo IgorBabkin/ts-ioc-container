@@ -7,28 +7,11 @@ import { IHook } from './hooks/IHook';
 import { UnknownResolvingTypeError } from './errors/UnknownResolvingTypeError';
 import { Hook } from './hooks/Hook';
 
-export interface IHookFactory {
-    create(): IHook;
-}
-
-export interface IInjectorFactory {
-    create(locator: IServiceLocator): IInjector;
-}
-
 export class ServiceLocator implements IServiceLocator {
     private readonly providers: Map<ProviderKey, IProvider<any>> = new Map();
     private readonly instances: Map<ProviderKey, any> = new Map();
-    private readonly injector: IInjector;
-    private readonly hook: IHook;
 
-    constructor(
-        private injectorFactory: IInjectorFactory,
-        private hookFactory: IHookFactory = { create: () => new Hook() },
-        private parent?: IServiceLocator,
-    ) {
-        this.injector = injectorFactory.create(this);
-        this.hook = hookFactory.create();
-    }
+    constructor(private injector: IInjector, private hook: IHook = new Hook([]), private parent?: IServiceLocator) {}
 
     register(key: ProviderKey, provider: IProvider<unknown>): this {
         this.providers.set(key, provider);
@@ -40,7 +23,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createContainer(): IServiceLocator {
-        const locator = new ServiceLocator(this.injectorFactory, this.hookFactory, this);
+        const locator = new ServiceLocator(this.injector, this.hook.clone(), this);
         for (const [key, provider] of this.providers.entries()) {
             switch (provider.resolving) {
                 case 'perScope':
@@ -104,7 +87,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     private resolveConstructor<T>(value: constructor<T>, ...args: any[]): T {
-        const instance = this.injector.resolve<T>(value, ...args);
+        const instance = this.injector.resolve<T>(this, value, ...args);
         this.hook.onInstanceCreate(instance);
         return instance;
     }

@@ -6,4 +6,6 @@ export interface IHook {
     onContainerRemove(): void;
 
     fallbackResolve?: <GInstance>(key: ProviderKey, ...args: any[]) => GInstance;
+
+    clone(): IHook;
 }

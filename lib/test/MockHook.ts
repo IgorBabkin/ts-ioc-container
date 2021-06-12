@@ -19,4 +19,8 @@ export class MockHook<GMock> implements IHook {
     resolveMockAdapter<GInstance>(key: ProviderKey, ...args: any[]): IMockAdapter<GMock, GInstance> {
         return this.mocksRepo.findOrCreate<GInstance>(key, ...args);
     }
+
+    clone(): MockHook<GMock> {
+        return new MockHook(this.decorated.clone(), this.mocksRepo);
+    }
 }
