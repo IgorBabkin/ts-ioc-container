@@ -1,17 +1,25 @@
 import { InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
 import { IInjector } from './injector/IInjector';
 import { IProvider, ProviderKey } from './provider/IProvider';
-import { constructor } from './helpers/types';
+import { constructor, Fn } from './helpers/types';
 import { IHook } from './hooks/IHook';
 import { UnknownResolvingTypeError } from './errors/UnknownResolvingTypeError';
-import { EmptyHook } from './hooks/EmptyHook';
 import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
+
+export type CreateHook = Fn<IServiceLocator, IHook>;
 
 export class ServiceLocator implements IServiceLocator {
     private readonly providers: Map<ProviderKey, IProvider<any>> = new Map();
     private readonly instances: Map<ProviderKey, any> = new Map();
+    private readonly hook: IHook;
 
-    constructor(private injector: IInjector, private hook: IHook = new EmptyHook(), private parent?: IServiceLocator) {}
+    constructor(
+        private injector: IInjector,
+        private createHook: CreateHook = () => ({}),
+        private parent?: IServiceLocator,
+    ) {
+        this.hook = createHook(this);
+    }
 
     register(key: ProviderKey, provider: IProvider<unknown>): this {
         this.providers.set(key, provider);
@@ -23,7 +31,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createContainer(): IServiceLocator {
-        const locator = new ServiceLocator(this.injector, this.hook.clone(), this);
+        const locator = new ServiceLocator(this.injector, this.createHook, this);
         for (const [key, provider] of this.providers.entries()) {
             switch (provider.resolving) {
                 case 'perScope':
@@ -38,7 +46,7 @@ export class ServiceLocator implements IServiceLocator {
 
     remove(): void {
         this.parent = undefined;
-        this.hook.onContainerRemove();
+        this.hook.onContainerRemove && this.hook.onContainerRemove();
         this.instances.clear();
         this.providers.clear();
     }
@@ -47,7 +55,7 @@ export class ServiceLocator implements IServiceLocator {
         const instance =
             this.resolveLocally<T>(key, ...args) ||
             this.parent?.resolve<T>(key, ...args) ||
-            this.hook.onDependencyNotFound(key, ...args);
+            (this.hook.onDependencyNotFound && this.hook.onDependencyNotFound(key, ...args));
 
         if (instance === undefined) {
             throw new DependencyNotFoundError(key.toString());
@@ -74,7 +82,7 @@ export class ServiceLocator implements IServiceLocator {
 
     private resolvePerRequest<T>(provider: IProvider<T>, ...args: any[]): T {
         const instance = provider.resolve(this, ...args);
-        this.hook.onInstanceCreate(instance);
+        this.hook.onInstanceCreate && this.hook.onInstanceCreate(instance);
         return instance;
     }
 
@@ -88,7 +96,7 @@ export class ServiceLocator implements IServiceLocator {
 
     private resolveConstructor<T>(value: constructor<T>, ...args: any[]): T {
         const instance = this.injector.resolve<T>(this, value, ...args);
-        this.hook.onInstanceCreate(instance);
+        this.hook.onInstanceCreate && this.hook.onInstanceCreate(instance);
         return instance;
     }
 }

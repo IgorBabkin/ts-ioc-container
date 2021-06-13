@@ -1,5 +1,5 @@
-import { IServiceLocator, MockHook, ServiceLocator, SimpleInjector } from '../lib';
-import { MoqRepository } from './MoqRepository';
+import { IServiceLocator, ProviderKey, ServiceLocator, SimpleInjector } from '../lib';
+import { MockRepository } from './MockRepository';
 
 interface IDepClass {
     greeting(): string;
@@ -14,20 +14,22 @@ class TestClass {
 }
 
 describe('UnitTestSimpleLocator', () => {
-    let mockRepo: MoqRepository;
+    let mockRepo: MockRepository;
 
     beforeEach(() => {
-        mockRepo = new MoqRepository();
+        mockRepo = new MockRepository();
     });
 
     function createSimpleLocator() {
-        return new ServiceLocator(new SimpleInjector(), new MockHook(mockRepo));
+        return new ServiceLocator(new SimpleInjector(), () => ({
+            onDependencyNotFound: <GInstance>(key: ProviderKey) => mockRepo.findOrCreate<GInstance>(key).object(),
+        }));
     }
 
     it('hey', () => {
         const locator = createSimpleLocator();
 
-        const { mock } = mockRepo.findOrCreate<IDepClass>('key1');
+        const mock = mockRepo.findOrCreate<IDepClass>('key1');
         mock.setup((i) => i.greeting()).returns('hello');
 
         const key1 = locator.resolve(TestClass);

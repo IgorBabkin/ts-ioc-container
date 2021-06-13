@@ -1,11 +1,9 @@
 import { ProviderKey } from '../provider/IProvider';
 
 export interface IHook {
-    onInstanceCreate<GInstance>(instance: GInstance): void;
+    onInstanceCreate?: <GInstance>(instance: GInstance) => void;
 
-    onContainerRemove(): void;
+    onContainerRemove?: () => void;
 
-    onDependencyNotFound<GInstance>(key: ProviderKey, ...args: any[]): GInstance | undefined;
-
-    clone(): IHook;
+    onDependencyNotFound?: <GInstance>(key: ProviderKey, ...args: any[]) => GInstance | undefined;
 }

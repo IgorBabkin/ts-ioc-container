@@ -1,8 +1,18 @@
+import { ProviderKey } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
-import { IMockAdapter, MockRepository } from '../lib';
 
-export class MoqRepository extends MockRepository<IMock<any>> {
-    protected createMock<GInstance>(): IMockAdapter<IMock<GInstance>, GInstance> {
+export class MockRepository {
+    private mocks = new Map<ProviderKey, IMock<any>>();
+
+    findOrCreate<GInstance>(key: ProviderKey): IMock<GInstance> {
+        if (!this.mocks.has(key)) {
+            this.mocks.set(key, this.createMock<GInstance>());
+        }
+
+        return this.mocks.get(key) as IMock<GInstance>;
+    }
+
+    protected createMock<GInstance>(): IMock<GInstance> {
         const mock = new Mock<GInstance>()
             .setup(() => It.IsAny())
             .callback((interaction) => {
@@ -20,11 +30,6 @@ export class MoqRepository extends MockRepository<IMock<any>> {
                     return true;
                 }
             });
-        return {
-            get instance(): GInstance {
-                return mock.object();
-            },
-            mock,
-        };
+        return mock;
     }
 }

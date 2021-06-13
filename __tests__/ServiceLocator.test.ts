@@ -23,9 +23,9 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook[] = []) =>
-        new ServiceLocator(new SimpleInjector(), new InstanceHook(hooks));
+        new ServiceLocator(new SimpleInjector(), () => new InstanceHook(hooks));
     const createIoCLocator = (hooks: IInstanceHook[] = [], options?: IocServiceLocatorStrategyOptions) =>
-        new ServiceLocator(new IocInjector(metadataCollector, options), new InstanceHook(hooks));
+        new ServiceLocator(new IocInjector(metadataCollector, options), () => new InstanceHook(hooks));
 
     it('should create an instance', () => {
         const expectedInstance = {};
