@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
+    "baseUrl": "./lib",
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
     "declaration": true,
     "sourceMap": true,
     "target": "ES2017",
@@ -13,7 +16,7 @@
     "downlevelIteration": true
   },
   "include": [
-    "src"
+    "lib",
   ],
   "exclude": [
     "node_modules",

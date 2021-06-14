@@ -1,24 +1,75 @@
 {
-  "name": "root",
-  "private": true,
-  "repository": "https://github.com/IgorBabkin/ServiceLocator.git",
+  "name": "ts-ioc-container",
+  "version": "4.4.5",
+  "description": "Typescript IoC container",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
-  "license": "MIT",
-  "workspaces": [
-    "packages/*"
+  "homepage": "https://github.com/IgorBabkin/service-locator/tree/master/packages/ts-ioc-container",
+  "license": "ISC",
+  "sideEffects": false,
+  "main": "cjm/index.js",
+  "types": "esm/index.d.ts",
+  "module": "esm/index.js",
+  "keywords": [
+    "typescript",
+    "ioc",
+    "service-locator",
+    "di"
   ],
-  "scripts": {
-    "commit": "git-cz",
-    "format": "prettier --write packages/**/*.ts",
-    "lint": "eslint packages/**/*.ts",
-    "lint:fix": "yarn lint --fix",
-    "test": "lerna run test --stream",
-    "build": "lerna run build --stream"
+  "directories": {
+    "lib": "lib",
+    "docs": "docs",
+    "test": "__tests__"
   },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-lerna-changelog"
-    }
+  "files": [
+    "cjm/**/*",
+    "esm/**/*",
+    "docs/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgorBabkin/service-locator"
+  },
+  "bugs": {
+    "url": "https://github.com/IgorBabkin/service-locator/issues"
+  },
+  "scripts": {
+    "prepare": "npm set-script prepare \"husky install\" && npm run prepare",
+    "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
+    "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
+    "build": "npm-run-all -p build:**",
+    "prepublish": "yarn build",
+    "test": "jest",
+    "commit": "git-cz",
+    "format": "prettier --write lib/**/*.ts",
+    "lint": "eslint lib/**/*.ts",
+    "lint:fix": "yarn lint --fix"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "12.1.4",
+    "@commitlint/config-conventional": "12.1.4",
+    "@types/jest": "26.0.23",
+    "@typescript-eslint/eslint-plugin": "4.27.0",
+    "@typescript-eslint/parser": "4.27.0",
+    "coveralls": "3.1.0",
+    "eslint": "7.28.0",
+    "eslint-config-prettier": "8.3.0",
+    "eslint-plugin-prettier": "3.4.0",
+    "husky": "^6.0.0",
+    "jest": "27.0.4",
+    "lint-staged": "11.0.0",
+    "moq.ts": "^7.3.4",
+    "npm-run-all": "4.1.5",
+    "prettier": "2.3.1",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "3.0.2",
+    "standard-version": "^9.3.0",
+    "ts-jest": "27.0.3",
+    "typescript": "4.3.2",
+    "git-cz": "^4.7.6"
+  },
+  "gitHead": "ed54cf87295afcf6da383ac8f9ecdca358db17eb",
+  "peerDependencies": {
+    "reflect-metadata": "^0.1.13"
   },
   "husky": {
     "hooks": {
@@ -31,21 +82,5 @@
       "eslint --fix",
       "prettier --write"
     ]
-  },
-  "devDependencies": {
-    "@commitlint/cli": "11.0.0",
-    "@commitlint/config-conventional": "11.0.0",
-    "@typescript-eslint/eslint-plugin": "4.7.0",
-    "@typescript-eslint/parser": "4.7.0",
-    "coveralls": "3.1.0",
-    "cz-lerna-changelog": "2.0.3",
-    "eslint": "7.13.0",
-    "eslint-config-prettier": "6.15.0",
-    "eslint-plugin-prettier": "3.1.4",
-    "husky": "4.3.0",
-    "lerna": "3.22.1",
-    "lint-staged": "10.5.1",
-    "prettier": "2.1.2"
-  },
-  "version": "0.0.0"
+  }
 }
