@@ -4,7 +4,7 @@ import { constructor } from './helpers/types';
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 
 export interface IServiceLocator {
-    createContainer(): IServiceLocator;
+    createLocator(): IServiceLocator;
 
     remove(): void;
 

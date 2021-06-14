@@ -88,10 +88,11 @@ const provider = new Provider.fromConstructor(Logger).asSingleton();
 ```
 
 ### Scoped containers
+
 ```typescript
 const container = new ServiceLocator(new SimpleInjector());
 container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
-const scopedContainer = container.createContainer();
+const scopedContainer = container.createLocator();
 const logger = scopedContainer.resolve('ILogger');
 logger.log('Hello');
 scopedContainer.remove();

@@ -30,7 +30,7 @@ export class ServiceLocator implements IServiceLocator {
         return isProviderKey(key) ? this.resolveByProvider(key, ...args) : this.resolveConstructor(key, ...args);
     }
 
-    createContainer(): IServiceLocator {
+    createLocator(): IServiceLocator {
         const locator = new ServiceLocator(this.injector, this.createHook, this);
         for (const [key, provider] of this.providers.entries()) {
             switch (provider.resolving) {
@@ -46,7 +46,7 @@ export class ServiceLocator implements IServiceLocator {
 
     remove(): void {
         this.parent = undefined;
-        this.hook.onContainerRemove && this.hook.onContainerRemove();
+        this.hook.onLocatorRemoved && this.hook.onLocatorRemoved();
         this.instances.clear();
         this.providers.clear();
     }
@@ -82,7 +82,7 @@ export class ServiceLocator implements IServiceLocator {
 
     private resolvePerRequest<T>(provider: IProvider<T>, ...args: any[]): T {
         const instance = provider.resolve(this, ...args);
-        this.hook.onInstanceCreate && this.hook.onInstanceCreate(instance);
+        this.hook.onInstanceCreated && this.hook.onInstanceCreated(instance);
         return instance;
     }
 
@@ -96,7 +96,7 @@ export class ServiceLocator implements IServiceLocator {
 
     private resolveConstructor<T>(value: constructor<T>, ...args: any[]): T {
         const instance = this.injector.resolve<T>(this, value, ...args);
-        this.hook.onInstanceCreate && this.hook.onInstanceCreate(instance);
+        this.hook.onInstanceCreated && this.hook.onInstanceCreated(instance);
         return instance;
     }
 }

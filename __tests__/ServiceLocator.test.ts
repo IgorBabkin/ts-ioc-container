@@ -62,7 +62,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator().register('key1', Provider.fromInstance(expectedInstance1));
 
-            const child = locator.createContainer().register('key1', Provider.fromInstance(expectedInstance2));
+            const child = locator.createLocator().register('key1', Provider.fromInstance(expectedInstance2));
 
             expect(locator.resolve('key1')).toBe(expectedInstance1);
             expect(child.resolve('key1')).toBe(expectedInstance2);
@@ -73,7 +73,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator().register('key1', Provider.fromInstance(expectedInstance1));
 
-            const child = locator.createContainer();
+            const child = locator.createLocator();
 
             expect(child.resolve('key1')).toBe(expectedInstance1);
         });
@@ -83,7 +83,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator();
 
-            locator.createContainer().register('key1', Provider.fromInstance(expectedInstance1));
+            locator.createLocator().register('key1', Provider.fromInstance(expectedInstance1));
 
             expect(() => locator.resolve('key1')).toThrow();
         });
@@ -91,7 +91,7 @@ describe('ServiceLocator', () => {
         it('returns the same singleton for child and parent', () => {
             const locator = createIoCLocator().register('key1', new Provider(() => ({})).asSingleton());
 
-            const child = locator.createContainer();
+            const child = locator.createLocator();
 
             expect(child.resolve('key1')).toBe(locator.resolve('key1'));
         });
@@ -99,7 +99,7 @@ describe('ServiceLocator', () => {
         it('clears container', () => {
             const locator = createIoCLocator().register('key1', Provider.fromInstance({}));
 
-            const child = locator.createContainer();
+            const child = locator.createLocator();
 
             expect(child.resolve('key1')).toBeDefined();
 
@@ -122,7 +122,7 @@ describe('ServiceLocator', () => {
                 },
             };
 
-            const child = locator.createContainer().register('key1', Provider.fromInstance(disposable));
+            const child = locator.createLocator().register('key1', Provider.fromInstance(disposable));
 
             child.resolve('key1');
 
@@ -145,7 +145,7 @@ describe('ServiceLocator', () => {
                 },
             };
 
-            const child = locator.createContainer().register('key1', Provider.fromInstance(disposable));
+            const child = locator.createLocator().register('key1', Provider.fromInstance(disposable));
 
             child.resolve('key1');
 
@@ -161,8 +161,8 @@ describe('ServiceLocator', () => {
                 .register('key1', new Provider(() => expectedInstance).asScoped())
                 .register('key2', new Provider(() => ({})).asScoped());
 
-            const child1 = locator.createContainer();
-            const child2 = child1.createContainer();
+            const child1 = locator.createLocator();
+            const child2 = child1.createLocator();
 
             expect(child2.resolve('key1')).toBe(expectedInstance);
             expect(child1.resolve('key1')).toBe(expectedInstance);
@@ -199,13 +199,13 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator().register('key1', new Provider(() => expected).asSingleton());
 
-            const child1 = locator.createContainer();
+            const child1 = locator.createLocator();
 
             expect(child1.resolve('key1')).toEqual(locator.resolve('key1'));
 
             child1.remove();
 
-            const child2 = locator.createContainer();
+            const child2 = locator.createLocator();
             expect(child2.resolve('key1')).toEqual(locator.resolve('key1'));
 
             child2.remove();
@@ -217,8 +217,8 @@ describe('ServiceLocator', () => {
                 new Provider((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad')).asScoped(),
             );
 
-            const child1 = locator.createContainer().register('context', Provider.fromInstance('a'));
-            const child2 = locator.createContainer().register('context', Provider.fromInstance('b'));
+            const child1 = locator.createLocator().register('context', Provider.fromInstance('a'));
+            const child2 = locator.createLocator().register('context', Provider.fromInstance('b'));
 
             expect(child1.resolve('key1')).toEqual('good');
             expect(child2.resolve('key1')).toEqual('bad');
