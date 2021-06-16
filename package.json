@@ -42,8 +42,7 @@
     "format": "prettier --write lib/**/*.ts",
     "lint": "eslint lib/**/*.ts",
     "lint:fix": "yarn lint --fix",
-    "release": "standard-version",
-    "push-and-publish": "git push --follow-tags origin master && npm publish"
+    "release": "standard-version && git push --follow-tags origin master && npm publish"
   },
   "devDependencies": {
     "@commitlint/cli": "12.1.4",
