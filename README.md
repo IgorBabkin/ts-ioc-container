@@ -13,9 +13,6 @@
 - composable and open to extend
 - can be used with `unit-test-ts-ioc-container`
 
-## Architecture
-![image info](docs/diagram.png)
-
 ## Install
 ```shell script
 npm install ts-ioc-container
@@ -33,49 +30,54 @@ yarn add reflect-metadata
 
 ## Usage
 
+### ServiceLocator
 How to create new simple locator
 ```typescript
-import {ServiceLocatorFactory, SimpleInjector} from 'ts-ioc-container';
+import {ServiceLocator} from 'ts-ioc-container';
 
-const container = new ServiceLocatorFactory(new SimpleInjector());
+const container = new ServiceLocator(new SimpleInjector());
+locator.register('ILogger', Provider.fromConstructor(Logger));
+const logger = locator.resolve<ILogger>('ILogger');
 ```
-How to create new IoC locator
+### Injectors
+Simple injector
+```typescript
+import {IServiceLocator} from "./IServiceLocator";
+import {Provider} from "./Provider";
+
+class Car {
+    constructor(locator: IServiceLocator) {
+        const engine = locator.resolve<IEngine>('IEngine')
+    }
+}
+
+const container = new ServiceLocator(new SimpleInjector());
+container.register('IEngine', Provider.fromConstructor(Engine));
+const car = container.resolve(Car);
+```
+IoC injector
 ```typescript
 import 'reflect-metadata';
 import {ServiceLocatorFactory, IocInjector, metadataCollector} from 'ts-ioc-container';
+import {args} from "./helpers";
+import {Provider} from "./Provider";
 
+export const metadataCollector = new MetadataCollector();
+export const hooksMetadataCollector = new HooksMetadataCollector();
+
+export const inject = createInjectDecorator(metadataCollector);
 const container = new ServiceLocatorFactory(new IocInjector(metadataCollector));
-```
-How to register dependencies
-```typescript
-locator.register('ILogger', Provider.fromConstructor(Logger));
-```
-How to resolve dependencies
-```typescript
-const logger = locator.resolve('ILogger', 'loggerPrefix');
-```
-How to destroy container
-```typescript
-container.remove();
-```
-How to inject dependencies from IoC
-```typescript
-import {inject, Factory, args} from 'ts-ioc-container';
+container.register<IEngine>('IEngine', Provider.fromConstructor(Engine));
 
-class StickerRepository {
-  private stickers: ISticker;
-
-  constructor(
-    @inject('ILogger', args('loggerPrefix')) private logger: ILogger,
-    @inject(Factory('ISticker'), args(...['arg1'])) private stickerFactory: (...args: any[]) => ISticker, // auto-factory (no need to register it)
-  ) {}
-
-  createSticker(title: string, body: string) {
-    this.stickers.push(this.stickerFactory(title, body));
-  }
+class Car {
+    constructor(@inject('IEngine') private engine: IEngine) {
+    }
 }
+
+const car = container.resolve(Car);
 ```
-Provider
+
+## Provider
 ```typescript
 locator.register('ILogger', new Provider((l, ...args) => new Logger(...args)));
 locator.register('ILogger', Provider.fromConstructor(Logger));
@@ -83,18 +85,7 @@ locator.register('ILogger', Provider.fromInstance(new Logger));
 locator.register('ILogger', Provider.fromInstance(new Logger).withArgs('dev').asSingleton());
 ```
 
-### Scoped locators
-
-```typescript
-const container = new ServiceLocator(new SimpleInjector());
-container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
-const scope = container.createLocator();
-const logger = scope.resolve('ILogger');
-logger.log('Hello');
-scope.remove();
-```
-
-### HOOK
+## Hooks
 
 ```typescript
 import {ServiceLocator} from "./ServiceLocator";
@@ -123,41 +114,52 @@ const container = new ServiceLocator(new SimpleInjector(), (locator: IServiceLoc
     }
 }))
 ```
-OnConstructHook
+
+### OnConstruct
+
 ```typescript
-const container = new ServiceLocator(new SimpleInjector(), () => ({
-    new Hook([new OnConstructHook(hooksMetadataCollector)])
-}));
-class Logger {
+export const hooksMetadataCollector = new HooksMetadataCollector();
+export const onConstruct = createOnConstructDecorator(hooksMetadataCollector);
+
+class Car {
+    constructor() {
+    }
+    
     @onConstruct
-    init(): void {
-        console.log('initialized');
-    }
-
-    dispose(): void {
-        console.log('destroyed');
+    public initialize() {
+        console('initialized!');
     }
 }
 ```
-OnDisposeHook
+
+### OnDispose
+
 ```typescript
-const container = new ServiceLocator(new SimpleInjector(), new Hook([new OnDisposeHook(hooksMetadataCollector)]));
-class Logger {
+import {createOnDisposeDecorator} from "./decorators";
+
+export const hooksMetadataCollector = new HooksMetadataCollector();
+export const onDispose = createOnDisposeDecorator(hooksMetadataCollector);
+
+class Car {
+    constructor() {
+    }
+
     @onDispose
-    dispose(): void {
-        console.log('destroyed');
+    public destroy() {
+        console('destroyed!');
     }
 }
 ```
 
-### Types of containers
-SimpleLocator (cannot be used with decorators)
+## Scoped locators
+
 ```typescript
 const container = new ServiceLocator(new SimpleInjector());
-```
-IoC container (work based on decorators)
-```typescript
-const container = new ServiceLocator(new IocInjector(metadataCollector));
+container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
+const scope = container.createLocator();
+const logger = scope.resolve('ILogger');
+logger.log('Hello');
+scope.remove();
 ```
 
 ### Tests
