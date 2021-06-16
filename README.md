@@ -117,27 +117,36 @@ const container = new ServiceLocator(new SimpleInjector(), (locator: IServiceLoc
 ### OnConstruct
 
 ```typescript
+import {ServiceLocator} from "./ServiceLocator";
+import {SimpleInjector} from "./SimpleInjector";
+import {InstanceHook} from "./InstanceHook";
+import {OnConstructHook} from "./OnConstructHook";
+
 export const hooksMetadataCollector = new HooksMetadataCollector();
 export const onConstruct = createOnConstructDecorator(hooksMetadataCollector);
+const locator = new ServiceLocator(new SimpleInjector(), new InstanceHook([new OnConstructHook(hooksMetadataCollector)]))
 
 class Car {
     constructor() {
     }
-    
+
     @onConstruct
     public initialize() {
         console('initialized!');
     }
 }
+const car = locator.resolve(Car); // initialized!
 ```
 
 ### OnDispose
 
 ```typescript
 import {createOnDisposeDecorator} from "./decorators";
+import {OnDisposeHook} from "./OnDisposeHook";
 
 export const hooksMetadataCollector = new HooksMetadataCollector();
 export const onDispose = createOnDisposeDecorator(hooksMetadataCollector);
+const locator = new ServiceLocator(new SimpleInjector(), new InstanceHook([new OnDisposeHook(hooksMetadataCollector)]))
 
 class Car {
     constructor() {
@@ -148,6 +157,9 @@ class Car {
         console('destroyed!');
     }
 }
+
+const car = locator.resolve(Car)
+locator.remove(); // destroyed!
 ```
 
 ## Scoped locators
