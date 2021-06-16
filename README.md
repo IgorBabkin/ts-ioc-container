@@ -80,28 +80,54 @@ Provider
 locator.register('ILogger', new Provider((l, ...args) => new Logger(...args)));
 locator.register('ILogger', Provider.fromConstructor(Logger));
 locator.register('ILogger', Provider.fromInstance(new Logger));
+locator.register('ILogger', Provider.fromInstance(new Logger).withArgs('dev').asSingleton());
 ```
 
-Singleton
-```typescript
-const provider = new Provider.fromConstructor(Logger).asSingleton();
-```
-
-### Scoped containers
+### Scoped locators
 
 ```typescript
 const container = new ServiceLocator(new SimpleInjector());
 container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
-const scopedContainer = container.createLocator();
-const logger = scopedContainer.resolve('ILogger');
+const scope = container.createLocator();
+const logger = scope.resolve('ILogger');
 logger.log('Hello');
-scopedContainer.remove();
+scope.remove();
 ```
 
-### Instance hooks
+### HOOK
+
+```typescript
+import {ServiceLocator} from "./ServiceLocator";
+import {SimpleInjector} from "./SimpleInjector";
+import {ProviderKey} from "./IProvider";
+import {Mock} from "moq.ts";
+import {IServiceLocator} from "./IServiceLocator";
+
+export interface IHook {
+    onInstanceCreated?: <GInstance>(instance: GInstance) => void;
+
+    onLocatorRemoved?: () => void;
+
+    onDependencyNotFound?: <GInstance>(key: ProviderKey, ...args: any[]) => GInstance | undefined;
+}
+
+const container = new ServiceLocator(new SimpleInjector(), (locator: IServiceLocator) => ({
+    onInstanceCreated: (instance) => {
+        console.log(instance);
+    },
+    onDependencyNotFound: <T>(key: ProviderKey, ...args: any[]): T | undefined => {
+        return new Mock<T>().object();
+    },
+    onLocatorRemoved: () => {
+
+    }
+}))
+```
 OnConstructHook
 ```typescript
-const container = new ServiceLocator(new SimpleInjector(), new Hook([new OnConstructHook(hooksMetadataCollector)]));
+const container = new ServiceLocator(new SimpleInjector(), () => ({
+    new Hook([new OnConstructHook(hooksMetadataCollector)])
+}));
 class Logger {
     @onConstruct
     init(): void {
@@ -135,18 +161,44 @@ const container = new ServiceLocator(new IocInjector(metadataCollector));
 ```
 
 ### Tests
-Use [unit-test-ts-ioc-container](https://github.com/IgorBabkin/service-locator/tree/master/packages/unit-test-ts-ioc-container)
 ```typescript
-import {Mock} from 'moq.ts';
-import {ServiceLocatorFactory} from 'ts-ioc-container';
-import {UnitTestServiceLocatorFactory, MoqAdapter, MoqAdapter} from 'unit-test-ts-ioc-container';
+let mockRepo: MockRepository;
 
-const container = new UnitTestServiceLocator(
-  new IocInjector(metadataCollector),
-  new Hook(),
-  new MoqFactory(),
-);
+beforeEach(() => {
+    mockRepo = new MockRepository();
+});
 
-const stickerMock = unitTestContainer.resolveMock('ISticker');
-stickerMock.setup(i => i.title).return('Sticker title');
+function createSimpleLocator() {
+    return new ServiceLocator(new SimpleInjector(), () => ({
+        onDependencyNotFound: <GInstance>(key: ProviderKey) => mockRepo.findOrCreate<GInstance>(key).object(),
+    }));
+}
+
+it('hey', () => {
+    const locator = createSimpleLocator();
+
+    const mock = mockRepo.findOrCreate<IDepClass>('key1');
+    mock.setup((i) => i.greeting()).returns('hello');
+
+    const key1 = locator.resolve(TestClass);
+
+    expect(key1.dep1.greeting()).toBe('hello');
+});
+```
+MockRepository
+```typescript
+import { ProviderKey } from '../lib';
+import { IMock, Mock } from 'moq.ts';
+
+export class MockRepository {
+    private mocks = new Map<ProviderKey, IMock<any>>();
+
+    findOrCreate<GInstance>(key: ProviderKey): IMock<GInstance> {
+        if (!this.mocks.has(key)) {
+            this.mocks.set(key, new Mock<GInstance>());
+        }
+
+        return this.mocks.get(key) as IMock<GInstance>;
+    }
+}
 ```
