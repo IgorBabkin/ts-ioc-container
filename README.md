@@ -63,7 +63,6 @@ import {args} from "./helpers";
 import {Provider} from "./Provider";
 
 export const metadataCollector = new MetadataCollector();
-export const hooksMetadataCollector = new HooksMetadataCollector();
 
 export const inject = createInjectDecorator(metadataCollector);
 const container = new ServiceLocatorFactory(new IocInjector(metadataCollector));
