@@ -42,6 +42,7 @@
     "format": "prettier --write lib/**/*.ts",
     "lint": "eslint lib/**/*.ts",
     "lint:fix": "yarn lint --fix",
+    "prerelease": "npm run build",
     "release": "standard-version",
     "push-and-publish": "git push --follow-tags origin master && npm publish"
   },
