@@ -13,7 +13,8 @@
     "emitDecoratorMetadata": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "declarationMap": true
   },
   "include": [
     "lib",

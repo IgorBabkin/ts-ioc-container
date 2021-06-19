@@ -1,4 +1,4 @@
-import { ArgsFn } from '../provider/IProvider';
+import { ArgsFn } from '../core/IProvider';
 
 export function args(...deps: any[]): ArgsFn {
     return () => [...deps];
@@ -18,3 +18,12 @@ export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
         ? [i1].concat(merge(restBaseArr, restInsertArr))
         : [b1].concat(merge(restBaseArr, insertArr));
 }
+
+export function toArray<T>(value: T | T[]): T[] {
+    return value instanceof Array ? value : [value];
+}
+
+export const constant =
+    <T>(value: T) =>
+    () =>
+        value;

@@ -1,4 +1,4 @@
-import { onDispose } from '../1/decorators';
+import { onDispose } from './decorators';
 
 export class OnDisposeImpl {
     isDisposed = false;

@@ -1,4 +1,4 @@
-import { inject } from '../1/decorators';
+import { inject } from './decorators';
 
 export class SubGroup3 {
     constructor(
@@ -10,5 +10,3 @@ export class SubGroup3 {
         return [this.p1, this.p2];
     }
 }
-
-(SubGroup3 as any).prototype._id = 'sss';
