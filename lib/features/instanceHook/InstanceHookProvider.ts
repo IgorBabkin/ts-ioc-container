@@ -1,6 +1,6 @@
 import { IProviderOptions, ProviderFn } from '../../core/IProvider';
 import { HookedProvider } from './HookedProvider';
-import { IInstanceHook } from '../../hooks/IInstanceHook';
+import { IInstanceHook } from './IInstanceHook';
 import { Provider } from '../../core/Provider';
 
 export class InstanceHookProvider<GInstance> extends HookedProvider<GInstance> {

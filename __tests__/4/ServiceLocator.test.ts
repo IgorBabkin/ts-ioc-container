@@ -1,22 +1,19 @@
 import 'reflect-metadata';
-import { IocInjector, ServiceLocator } from '../../lib';
+import {
+    emptyHook,
+    IInstanceHook,
+    InstanceHookInjector,
+    IocInjector,
+    IocServiceLocatorStrategyOptions,
+    ProviderRepository,
+    ServiceLocator,
+} from '../../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './OnConstructImpl';
 import { Group } from './Group';
 import { OnDisposeImpl } from './OnDisposeImpl';
-import { IocServiceLocatorStrategyOptions } from '../../lib/features/injectors/ioc/IocInjector';
-import { constructorMetadataCollector } from './decorators';
-import { ProviderRepository } from '../../lib/core/ProviderRepository';
-import { IInstanceHook } from '../../lib/hooks/IInstanceHook';
-import {
-    fromConstructor,
-    fromFn,
-    fromInstance,
-    onConstructMetadataCollector,
-    onDisposeMetadataCollector,
-} from './decorators';
-import { InstanceHookInjector } from '../../lib/features/injectors/InstanceHookInjector';
-import { emptyHook } from '../../lib/hooks/helpers';
+import { constructorMetadataCollector, onConstructMetadataCollector } from '../8/decorators';
 import { SubGroup3 } from './SubGroup3';
+import { fromConstructor, fromFn, fromInstance, onDisposeMetadataCollector } from './decorators';
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook, options?: IocServiceLocatorStrategyOptions) =>
@@ -24,14 +21,6 @@ describe('ServiceLocator', () => {
             new InstanceHookInjector(new IocInjector(constructorMetadataCollector, options), hook),
             new ProviderRepository(),
         );
-
-    it('should create an instance', () => {
-        const expectedInstance = { id: 'expectedInstance' };
-
-        const locator = createIoCLocator().register('key1', fromInstance(expectedInstance));
-
-        expect(locator.resolve('key1')).toBe(expectedInstance);
-    });
 
     it('should create an instanse', () => {
         const locator = createIoCLocator().register(

@@ -1,4 +1,4 @@
-import { inject } from '../1/decorators';
+import { inject } from '../decorators';
 
 export class SubGroup {
     constructor(@inject((l) => l.resolve('key2')) private hey: string) {}

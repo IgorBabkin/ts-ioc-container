@@ -1,5 +1,5 @@
 import { IServiceLocator } from '../../lib';
-import { inject, onConstruct } from './decorators';
+import { inject, onConstruct } from '../8/decorators';
 
 export class OnConstructImpl {
     isConstructed = false;
@@ -38,7 +38,8 @@ export class App2 {
     private logger: Logger2;
 
     constructor(
-        @inject((l) => () => l.resolve('logger2', 'super')) private loggerFactory: (prefix2: string) => Logger2,
+        @inject((l) => (prefix2: string) => l.resolve('logger2', 'super', prefix2))
+        private loggerFactory: (prefix2: string) => Logger2,
     ) {
         this.logger = loggerFactory('duper');
     }

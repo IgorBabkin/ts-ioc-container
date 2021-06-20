@@ -6,11 +6,11 @@ import {
     IProvider,
     IProviderOptions,
     ProviderFn,
+    InjectFn,
+    IInstanceHook,
+    InstanceHookProvider,
 } from '../../lib';
-import { InjectFn } from '../../lib/features/injectors/ioc/InjectFn';
 import getPrototypeOf = Reflect.getPrototypeOf;
-import { IInstanceHook } from '../../lib/hooks/IInstanceHook';
-import { InstanceHookProvider } from '../../lib/features/provider/InstanceHookProvider';
 
 export const constructorMetadataCollector = new ConstructorMetadataCollector();
 export const inject =

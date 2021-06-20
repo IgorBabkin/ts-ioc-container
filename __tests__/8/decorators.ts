@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-    constructor,
     ConstructorMetadataCollector,
     IInstanceHook,
     InjectFn,
@@ -24,12 +23,6 @@ export const onConstruct: MethodDecorator = (target, propertyKey) => {
     onConstructMetadataCollector.addHook(target, propertyKey);
 };
 
-export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol('OnDisposeHook'));
-export const onDispose: MethodDecorator = (target, propertyKey) => {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    onDisposeMetadataCollector.addHook(target, propertyKey);
-};
-
 export const instanceHook: IInstanceHook = {
     onConstruct<GInstance>(instance: GInstance) {
         if (!(instance instanceof Object)) {
@@ -38,22 +31,8 @@ export const instanceHook: IInstanceHook = {
 
         onConstructMetadataCollector.invokeHooksOf<GInstance>(instance);
     },
-    onDispose<GInstance>(instance: GInstance) {
-        if (!(instance instanceof Object)) {
-            return;
-        }
-
-        onDisposeMetadataCollector.invokeHooksOf(instance);
-    },
+    onDispose<GInstance>(instance: GInstance) {},
 };
 
-const createProvider = <T>(fn: ProviderFn<T>, options: IProviderOptions) =>
+export const createProvider = <T>(fn: ProviderFn<T>, options: IProviderOptions): IProvider<T> =>
     new InstanceHookProvider(fn, options, instanceHook);
-export const fromFn = <T>(fn: ProviderFn<T>, options: IProviderOptions = { resolving: 'perRequest' }): IProvider<T> =>
-    createProvider(fn, options);
-export const fromInstance = <T>(instance: T, options: IProviderOptions = { resolving: 'perRequest' }): IProvider<T> =>
-    createProvider(() => instance, options);
-export const fromConstructor = <T>(
-    value: constructor<T>,
-    options: IProviderOptions = { resolving: 'perRequest' },
-): IProvider<T> => createProvider((l, ...args) => l.resolve(value, ...args), options);

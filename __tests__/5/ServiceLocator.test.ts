@@ -1,12 +1,16 @@
 import 'reflect-metadata';
-import { IServiceLocator, ServiceLocator, SimpleInjector } from '../../lib';
-import { ProviderRepository } from '../../lib/core/ProviderRepository';
-import { IInstanceHook } from '../../lib/hooks/IInstanceHook';
-import { emptyHook } from '../../lib/hooks/helpers';
-import { InstanceHookInjector } from '../../lib/features/injectors/InstanceHookInjector';
+import {
+    emptyHook,
+    IDisposable,
+    IInstanceHook,
+    InstanceHookInjector,
+    InstanceHookProvider,
+    IServiceLocator,
+    ProviderRepository,
+    ServiceLocator,
+    SimpleInjector,
+} from '../../lib';
 import { fromConstructor, fromFn, fromInstance } from './decorators';
-import { IDisposable } from '../../lib/core/IDisposable';
-import { InstanceHookProvider } from '../../lib/features/provider/InstanceHookProvider';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}

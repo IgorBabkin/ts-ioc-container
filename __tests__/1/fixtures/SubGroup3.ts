@@ -1,4 +1,4 @@
-import { inject } from '../1/decorators';
+import { inject } from '../decorators';
 
 export class SubGroup3 {
     constructor(

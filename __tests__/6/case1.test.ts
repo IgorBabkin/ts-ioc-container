@@ -1,7 +1,6 @@
 import 'reflect-metadata';
-import { IocInjector, IServiceLocator, ServiceLocator } from '../../lib';
+import { IocInjector, IServiceLocator, ProviderRepository, ServiceLocator } from '../../lib';
 import { constructorMetadataCollector, inject } from './decorators';
-import { ProviderRepository } from '../../lib/core/ProviderRepository';
 
 class Logger {
     constructor(private prefix: string) {}

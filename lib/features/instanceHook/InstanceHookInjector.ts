@@ -1,5 +1,5 @@
 import { constructor, IInjector, IServiceLocator } from '../../index';
-import { IInstanceHook } from '../../hooks/IInstanceHook';
+import { IInstanceHook } from './IInstanceHook';
 
 export class InstanceHookInjector implements IInjector {
     private instances = new Set();

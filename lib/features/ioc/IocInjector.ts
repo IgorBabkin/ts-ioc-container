@@ -1,7 +1,7 @@
-import { constructor } from '../../../helpers/types';
-import { IServiceLocator } from '../../../core/IServiceLocator';
-import { IInjector } from '../../../core/IInjector';
-import { constant, merge } from '../../../helpers/helpers';
+import { constructor } from '../../helpers/types';
+import { IServiceLocator } from '../../core/IServiceLocator';
+import { IInjector } from '../../core/IInjector';
+import { constant, merge } from '../../helpers/helpers';
 import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 
 export type IocServiceLocatorStrategyOptions = { simpleInjectionCompatible?: boolean };

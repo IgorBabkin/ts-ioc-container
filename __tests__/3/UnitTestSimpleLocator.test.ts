@@ -1,7 +1,5 @@
-import { IocInjector, IServiceLocator, ServiceLocator, SimpleInjector } from '../../lib';
+import { IServiceLocator, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
 import { MockRepository } from '../MockRepository';
-import { ProviderRepository } from '../../lib/core/ProviderRepository';
-import { constructorMetadataCollector } from '../2/decorators';
 
 interface IDepClass {
     greeting(): string;
