@@ -10,7 +10,7 @@ import {
     SimpleInjector,
 } from '../../lib';
 import { fromFn, fromInstance } from './decorators';
-import { ProviderBuilder } from '../../lib/core/ProviderBuilder';
+import { ProviderBuilder } from '../../lib/features/ProviderBuilder';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}

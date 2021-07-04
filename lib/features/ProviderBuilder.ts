@@ -1,11 +1,11 @@
-import { IProvider, ProviderFn } from './providers/IProvider';
-import { SingletonProvider } from './providers/SingletonProvider';
-import { ScopedProvider } from './providers/ScopedProvider';
-import { Provider } from './providers/Provider';
+import { IProvider, ProviderFn } from '../core/providers/IProvider';
+import { SingletonProvider } from '../core/providers/SingletonProvider';
+import { ScopedProvider } from '../core/providers/ScopedProvider';
+import { Provider } from '../core/providers/Provider';
 import { constructor } from '../helpers/types';
-import { IServiceLocator } from './IServiceLocator';
-import { InstanceHookProvider } from '../features/instanceHook/InstanceHookProvider';
-import { IInstanceHook } from '../features/instanceHook/IInstanceHook';
+import { IServiceLocator } from '../core/IServiceLocator';
+import { InstanceHookProvider } from './instanceHook/InstanceHookProvider';
+import { IInstanceHook } from './instanceHook/IInstanceHook';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { constructor, ConstructorMetadataCollector, InjectFn } from '../../lib';
-import { ProviderBuilder } from '../../lib/core/ProviderBuilder';
+import { ProviderBuilder } from '../../lib/features/ProviderBuilder';
 
 export const constructorMetadataCollector = new ConstructorMetadataCollector();
 export const inject =
