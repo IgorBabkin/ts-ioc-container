@@ -24,3 +24,4 @@ export { InstanceHookInjector } from './features/instanceHook/InstanceHookInject
 export { emptyHook } from './features/hook/emptyHook';
 export { IDisposable } from './helpers/IDisposable';
 export { constant } from './helpers/helpers';
+export { MockRepository } from './features/mock/MockRepository';

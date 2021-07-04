@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { IocInjector, ProviderRepository, ServiceLocator } from '../../lib';
 import { constructorMetadataCollector, inject } from './decorators';
-import { MockRepository } from '../MockRepository';
+import { MoqRepository } from '../MoqRepository';
 
 interface ISubClass {
     greeting(): string;
@@ -12,10 +12,10 @@ class TestClass1 {
 }
 
 describe('UnitTestIoCLocator', () => {
-    let mockRepo: MockRepository;
+    let mockRepo: MoqRepository;
 
     beforeEach(() => {
-        mockRepo = new MockRepository(new ProviderRepository());
+        mockRepo = new MoqRepository(new ProviderRepository());
     });
 
     function createIoCLocator() {
@@ -25,7 +25,7 @@ describe('UnitTestIoCLocator', () => {
     it('ioc', () => {
         const locator = createIoCLocator();
 
-        const mock = mockRepo.findOrCreateMock<ISubClass>('key1');
+        const mock = mockRepo.findMock<ISubClass>('key1');
         mock.setup((i) => i.greeting()).returns('hello');
 
         const key1 = locator.resolve(TestClass1);
