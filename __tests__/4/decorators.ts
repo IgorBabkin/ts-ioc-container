@@ -4,12 +4,10 @@ import {
     ConstructorMetadataCollector,
     IInstanceHook,
     InjectFn,
-    InstanceHookProvider,
-    IProvider,
-    IProviderOptions,
     MethodsMetadataCollector,
     ProviderFn,
 } from '../../lib';
+import { ProviderBuilder } from '../../lib/core/ProviderBuilder';
 
 export const constructorMetadataCollector = new ConstructorMetadataCollector();
 export const inject =
@@ -47,13 +45,8 @@ export const instanceHook: IInstanceHook = {
     },
 };
 
-const createProvider = <T>(fn: ProviderFn<T>, options: IProviderOptions) =>
-    new InstanceHookProvider(fn, options, instanceHook);
-export const fromFn = <T>(fn: ProviderFn<T>, options: IProviderOptions = { resolving: 'perRequest' }): IProvider<T> =>
-    createProvider(fn, options);
-export const fromInstance = <T>(instance: T, options: IProviderOptions = { resolving: 'perRequest' }): IProvider<T> =>
-    createProvider(() => instance, options);
-export const fromConstructor = <T>(
-    value: constructor<T>,
-    options: IProviderOptions = { resolving: 'perRequest' },
-): IProvider<T> => createProvider((l, ...args) => l.resolve(value, ...args), options);
+export const fromFn = <T>(fn: ProviderFn<T>): ProviderBuilder<T> => new ProviderBuilder(fn).withHook(instanceHook);
+export const fromInstance = <T>(instance: T): ProviderBuilder<T> =>
+    ProviderBuilder.fromInstance(instance).withHook(instanceHook);
+export const fromConstructor = <T>(value: constructor<T>): ProviderBuilder<T> =>
+    ProviderBuilder.fromConstructor(value).withHook(instanceHook);

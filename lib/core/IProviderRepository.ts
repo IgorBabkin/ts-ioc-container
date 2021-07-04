@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey } from './providers/IProvider';
 
 export interface IProviderRepository {
     clone(parent?: IProviderRepository): IProviderRepository;

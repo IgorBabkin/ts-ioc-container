@@ -1,23 +1,17 @@
-import { IProviderOptions, ProviderFn } from '../../core/IProvider';
+import { IProvider } from '../../core/providers/IProvider';
 import { HookedProvider } from './HookedProvider';
 import { IInstanceHook } from './IInstanceHook';
-import { Provider } from '../../core/Provider';
 
 export class InstanceHookProvider<GInstance> extends HookedProvider<GInstance> {
     private instances = new Set<GInstance>();
+    canBeCloned = true;
 
-    constructor(private fn: ProviderFn<GInstance>, private options: IProviderOptions, private hook: IInstanceHook) {
-        super(
-            new Provider((l, ...args) => {
-                const instance = fn(l, ...args);
-                this.onConstruct(instance);
-                return instance;
-            }, options),
-        );
+    constructor(decorated: IProvider<GInstance>, private hook: IInstanceHook) {
+        super(decorated);
     }
 
-    clone(options?: Partial<IProviderOptions>): HookedProvider<GInstance> {
-        return new InstanceHookProvider(this.fn, { ...this.options, ...options }, this.hook);
+    clone(): HookedProvider<GInstance> {
+        return new InstanceHookProvider(this.decorated.clone(), this.hook);
     }
 
     protected override onDispose(): void {
@@ -26,7 +20,11 @@ export class InstanceHookProvider<GInstance> extends HookedProvider<GInstance> {
         }
     }
 
-    private onConstruct(instance: GInstance): void {
+    protected onResolve(instance: GInstance): void {
+        if (this.instances.has(instance)) {
+            return;
+        }
+
         this.instances.add(instance);
         this.hook.onConstruct(instance);
     }

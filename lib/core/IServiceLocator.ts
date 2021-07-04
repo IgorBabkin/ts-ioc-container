@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey } from './providers/IProvider';
 import { constructor } from '../helpers/types';
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;

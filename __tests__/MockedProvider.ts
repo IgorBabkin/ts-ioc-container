@@ -1,17 +1,19 @@
-import { IProvider, IProviderOptions, IServiceLocator, Resolving } from '../lib';
+import { IProvider, IServiceLocator } from '../lib';
 import { Mock } from 'moq.ts';
 
 export class MockedProvider<T> implements IProvider<T> {
-    readonly mock: Mock<T>;
-    resolving: Resolving;
+    private readonly mock: Mock<T>;
 
     constructor() {
         this.mock = new Mock();
-        this.resolving = 'perRequest';
     }
 
-    clone(options?: Partial<IProviderOptions>): IProvider<T> {
-        throw new Error('Not implemented');
+    getMock(): Mock<T> {
+        return this.mock;
+    }
+
+    clone(): IProvider<T> {
+        return new MockedProvider();
     }
 
     dispose(): void {}
@@ -19,4 +21,6 @@ export class MockedProvider<T> implements IProvider<T> {
     resolve(locator: IServiceLocator, ...args: any[]): T {
         return this.mock.object();
     }
+
+    canBeCloned = false;
 }

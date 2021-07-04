@@ -1,13 +1,7 @@
 import 'reflect-metadata';
-import {
-    constant,
-    InstanceHookInjector,
-    InstanceHookProvider,
-    ProviderRepository,
-    ServiceLocator,
-    SimpleInjector,
-} from '../../lib';
+import { InstanceHookInjector, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
+import { ProviderBuilder } from '../../lib/core/ProviderBuilder';
 
 class MyClass {
     @onConstruct
@@ -32,18 +26,14 @@ describe('ServiceLocator', () => {
 
         locator.register(
             'key1',
-            new InstanceHookProvider(
-                constant(expectedInstance),
-                {
-                    resolving: 'perRequest',
-                },
-                {
+            ProviderBuilder.fromInstance(expectedInstance)
+                .withHook({
                     onDispose<GInstance>(instance: GInstance) {},
                     onConstruct<GInstance>(instance: GInstance) {
                         onConstructMetadataCollector.invokeHooksOf(instance);
                     },
-                },
-            ),
+                })
+                .asRequested(),
         );
 
         locator.resolve(MyClass);

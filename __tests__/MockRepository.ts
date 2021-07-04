@@ -18,7 +18,7 @@ export class MockRepository implements IProviderRepository {
             return this.decorated.find(key);
         } catch (e) {
             if (e instanceof ProviderNotFoundError) {
-                return this.findProvider<T>(key as ProviderKey);
+                return this.findOrCreateProvider<T>(key as ProviderKey);
             }
 
             throw e;
@@ -29,10 +29,10 @@ export class MockRepository implements IProviderRepository {
     }
 
     findOrCreateMock<T>(key: ProviderKey): IMock<any> {
-        return this.findProvider<T>(key).mock;
+        return this.findOrCreateProvider<T>(key).getMock();
     }
 
-    private findProvider<T>(key: ProviderKey): MockedProvider<T> {
+    private findOrCreateProvider<T>(key: ProviderKey): MockedProvider<T> {
         if (!this.mocks.has(key)) {
             this.mocks.set(key, new MockedProvider());
         }

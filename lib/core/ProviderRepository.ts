@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey } from './providers/IProvider';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProviderRepository } from './IProviderRepository';
 
@@ -12,15 +12,11 @@ export class ProviderRepository implements IProviderRepository {
         return this;
     }
 
-    clone(parent: IProviderRepository = this): IProviderRepository {
-        const repo = new ProviderRepository(parent);
+    clone(): IProviderRepository {
+        const repo = new ProviderRepository(this);
         for (const [key, provider] of this.providers.entries()) {
-            switch (provider.resolving) {
-                case 'perScope':
-                    repo.add(key, provider.clone({ resolving: 'singleton' }));
-                    break;
-                case 'perRequest':
-                    repo.add(key, provider.clone());
+            if (provider.canBeCloned) {
+                repo.add(key, provider.clone());
             }
         }
         return repo;

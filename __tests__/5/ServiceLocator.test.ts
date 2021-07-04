@@ -4,13 +4,13 @@ import {
     IDisposable,
     IInstanceHook,
     InstanceHookInjector,
-    InstanceHookProvider,
     IServiceLocator,
     ProviderRepository,
     ServiceLocator,
     SimpleInjector,
 } from '../../lib';
-import { fromConstructor, fromFn, fromInstance } from './decorators';
+import { fromFn, fromInstance } from './decorators';
+import { ProviderBuilder } from '../../lib/core/ProviderBuilder';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -21,7 +21,10 @@ describe('ServiceLocator', () => {
         new ServiceLocator(new InstanceHookInjector(new SimpleInjector(), hooks), new ProviderRepository());
 
     it('should pass dependencies', () => {
-        const locator = createSimpleLocator().register('key1', fromConstructor(TestClass));
+        const locator = createSimpleLocator().register(
+            'key1',
+            ProviderBuilder.fromConstructor(TestClass).asRequested(),
+        );
         const testClass = locator.resolve<TestClass>('key1', 'a', 3);
 
         expect(testClass.dep1).toBe('a');
@@ -42,16 +45,14 @@ describe('ServiceLocator', () => {
 
         const child = locator.createLocator().register(
             'key1',
-            new InstanceHookProvider(
-                () => disposable,
-                { resolving: 'perRequest' },
-                {
+            ProviderBuilder.fromInstance(disposable)
+                .withHook({
                     onConstruct<GInstance>(instance: GInstance) {
                         (instance as any).postConstruct();
                     },
                     onDispose<GInstance>(instance: GInstance) {},
-                },
-            ),
+                })
+                .asRequested(),
         );
 
         child.resolve('key1');
@@ -75,16 +76,14 @@ describe('ServiceLocator', () => {
 
         const child = locator.createLocator().register(
             'key1',
-            new InstanceHookProvider(
-                () => disposable,
-                { resolving: 'perRequest' },
-                {
+            ProviderBuilder.fromInstance(disposable)
+                .withHook({
                     onConstruct<GInstance>(instance: GInstance) {},
                     onDispose<GInstance>(instance: GInstance) {
                         (instance as any).dispose();
                     },
-                },
-            ),
+                })
+                .asRequested(),
         );
 
         child.resolve('key1');
@@ -97,11 +96,11 @@ describe('ServiceLocator', () => {
     it('conditional resolving', () => {
         const locator = createSimpleLocator().register(
             'key1',
-            fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad'), { resolving: 'perScope' }),
+            fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad')).asScoped(),
         );
 
-        const child1 = locator.createLocator().register('context', fromInstance('a'));
-        const child2 = locator.createLocator().register('context', fromInstance('b'));
+        const child1 = locator.createLocator().register('context', fromInstance('a').asRequested());
+        const child2 = locator.createLocator().register('context', fromInstance('b').asRequested());
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

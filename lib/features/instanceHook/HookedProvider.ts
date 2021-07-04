@@ -1,13 +1,12 @@
 import { IServiceLocator } from '../../core/IServiceLocator';
-import { IProvider, IProviderOptions, Resolving } from '../../core/IProvider';
+import { IProvider } from '../../core/providers/IProvider';
+import { ProviderCannotBeClonedError } from '../../errors/ProviderCannotBeClonedError';
 
 export abstract class HookedProvider<GInstance> implements IProvider<GInstance> {
     constructor(protected decorated: IProvider<GInstance>) {}
 
-    abstract clone(options?: Partial<IProviderOptions>): IProvider<GInstance>;
-
-    get resolving(): Resolving {
-        return this.decorated.resolving;
+    clone(): IProvider<GInstance> {
+        throw new ProviderCannotBeClonedError();
     }
 
     dispose(): void {
@@ -16,8 +15,14 @@ export abstract class HookedProvider<GInstance> implements IProvider<GInstance> 
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): GInstance {
-        return this.decorated.resolve(locator, ...args);
+        const instance = this.decorated.resolve(locator, ...args);
+        this.onResolve(instance);
+        return instance;
     }
 
     protected abstract onDispose(): void;
+
+    canBeCloned = false;
+
+    protected abstract onResolve(instance: GInstance): void;
 }

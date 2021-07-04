@@ -1,4 +1,4 @@
-import { ArgsFn } from '../core/IProvider';
+import { ArgsFn } from '../core/providers/IProvider';
 
 export function args(...deps: any[]): ArgsFn {
     return () => [...deps];

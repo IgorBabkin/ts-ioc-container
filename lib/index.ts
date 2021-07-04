@@ -2,7 +2,7 @@ export { IServiceLocator } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { args } from './helpers/helpers';
 export { ServiceLocator } from './core/ServiceLocator';
-export { Resolving, ArgsFn, ProviderKey, IProviderOptions, IProvider, ProviderFn } from './core/IProvider';
+export { Resolving, ArgsFn, ProviderKey, IProvider, ProviderFn } from './core/providers/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/simpleInjector/SimpleInjector';
 export { IocInjector, IocServiceLocatorStrategyOptions } from './features/ioc/IocInjector';
@@ -19,7 +19,7 @@ export { InstanceHookProvider } from './features/instanceHook/InstanceHookProvid
 export { InjectFn } from './features/ioc/InjectFn';
 export { IInstanceHook } from './features/instanceHook/IInstanceHook';
 export { ProviderRepository } from './core/ProviderRepository';
-export { Provider } from './core/Provider';
+export { Provider } from './core/providers/Provider';
 export { InstanceHookInjector } from './features/instanceHook/InstanceHookInjector';
 export { emptyHook } from './features/hook/emptyHook';
 export { IDisposable } from './helpers/IDisposable';
