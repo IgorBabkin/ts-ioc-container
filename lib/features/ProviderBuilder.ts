@@ -33,7 +33,8 @@ export class ProviderBuilder<T> {
     }
 
     withArgsFn(fn: (l: IServiceLocator) => any[]): this {
-        this.provider = new Provider((l, ...args) => this.provider.resolve(l, ...args, ...fn(l)));
+        const oldProvider = this.provider;
+        this.provider = new Provider((l, ...args) => oldProvider.resolve(l, ...args, ...fn(l)));
         return this;
     }
 

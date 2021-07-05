@@ -5,6 +5,6 @@ module.exports = {
         '^.+\\.tsx?$': 'ts-jest',
     },
     collectCoverage: true,
-    coveragePathIgnorePatterns: ['/node_modules/', '/fixtures/', '/cjm/', '/esm/'],
+    coveragePathIgnorePatterns: ['/node_modules/', '/fixtures/', '/cjm/', '/esm/', '__tests__'],
     moduleDirectories: ['node_modules', '<rootDir>/lib'],
 };
