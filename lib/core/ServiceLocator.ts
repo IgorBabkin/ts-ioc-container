@@ -31,7 +31,7 @@ export class ServiceLocator implements IServiceLocator {
         return new ServiceLocator(this.createInjector, this.providerRepo.clone());
     }
 
-    remove(): void {
+    dispose(): void {
         this.providerRepo.dispose();
         this.injector.dispose();
     }

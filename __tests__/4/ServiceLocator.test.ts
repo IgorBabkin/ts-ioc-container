@@ -88,7 +88,7 @@ describe('ServiceLocator', () => {
 
             expect(child.resolve('key1')).toBeDefined();
 
-            child.remove();
+            child.dispose();
 
             expect(() => child.resolve('key1')).toThrow();
         });
@@ -109,11 +109,11 @@ describe('ServiceLocator', () => {
 
             expect(() => locator.resolve('key1')).toThrow();
 
-            child2.remove();
+            child2.dispose();
             expect(() => child2.resolve('key1')).toThrow();
             expect(child1.resolve('key1')).toBe(expectedInstance);
             expect(() => locator.resolve('key1')).toThrow();
-            child1.remove();
+            child1.dispose();
 
             expect(() => child1.resolve('key1')).toThrow();
             expect(() => locator.resolve('key1')).toThrow();
@@ -142,12 +142,12 @@ describe('ServiceLocator', () => {
 
             expect(child1.resolve('key1')).toEqual(locator.resolve('key1'));
 
-            child1.remove();
+            child1.dispose();
 
             const child2 = locator.createLocator();
             expect(child2.resolve('key1')).toEqual(locator.resolve('key1'));
 
-            child2.remove();
+            child2.dispose();
         });
 
         it('ios: onConstructHook', () => {
@@ -174,7 +174,7 @@ describe('ServiceLocator', () => {
             const group = decorated.resolve(OnDisposeImpl);
 
             expect(group.isDisposed).toBeFalsy();
-            decorated.remove();
+            decorated.dispose();
             expect(group.isDisposed).toBeTruthy();
         });
 

@@ -1,9 +1,8 @@
 import { IProvider, ProviderKey } from './providers/IProvider';
+import { IDisposable } from '../helpers/IDisposable';
 
-export interface IProviderRepository {
+export interface IProviderRepository extends IDisposable {
     clone(parent?: IProviderRepository): IProviderRepository;
-
-    dispose(): void;
 
     find<T>(key: ProviderKey): IProvider<T>;
 

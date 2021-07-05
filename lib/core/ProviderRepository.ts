@@ -7,9 +7,8 @@ export class ProviderRepository implements IProviderRepository {
 
     constructor(private parent?: IProviderRepository) {}
 
-    add<T>(key: ProviderKey, provider: IProvider<T>): this {
+    add<T>(key: ProviderKey, provider: IProvider<T>): void {
         this.providers.set(key, provider);
-        return this;
     }
 
     clone(parent: IProviderRepository = this): IProviderRepository {

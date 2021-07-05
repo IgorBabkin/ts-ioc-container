@@ -88,7 +88,7 @@ describe('ServiceLocator', () => {
 
         child.resolve('key1');
 
-        child.remove();
+        child.dispose();
 
         expect(isDisposed).toBeTruthy();
     });

@@ -1,20 +1,32 @@
 import { IProvider } from '../../core/providers/IProvider';
-import { HookedProvider } from './HookedProvider';
 import { IInstanceHook } from './IInstanceHook';
+import { IServiceLocator } from '../../core/IServiceLocator';
 
-export class InstanceHookProvider<GInstance> extends HookedProvider<GInstance> {
+export class InstanceHookProvider<GInstance> implements IProvider<GInstance> {
     private instances = new Set<GInstance>();
-    canBeCloned = true;
 
-    constructor(decorated: IProvider<GInstance>, private hook: IInstanceHook) {
-        super(decorated);
+    constructor(private decorated: IProvider<GInstance>, private hook: IInstanceHook) {}
+
+    dispose(): void {
+        this.decorated.dispose();
+        this.onDispose();
     }
 
-    clone(): HookedProvider<GInstance> {
+    resolve(locator: IServiceLocator, ...args: any[]): GInstance {
+        const instance = this.decorated.resolve(locator, ...args);
+        this.onResolve(instance);
+        return instance;
+    }
+
+    get canBeCloned(): boolean {
+        return this.decorated.canBeCloned;
+    }
+
+    clone(): InstanceHookProvider<GInstance> {
         return new InstanceHookProvider(this.decorated.clone(), this.hook);
     }
 
-    protected override onDispose(): void {
+    protected onDispose(): void {
         for (const instance of this.instances) {
             this.hook.onDispose(instance);
         }
