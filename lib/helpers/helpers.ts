@@ -1,9 +1,3 @@
-import { ArgsFn } from '../core/providers/IProvider';
-
-export function args(...deps: any[]): ArgsFn {
-    return () => [...deps];
-}
-
 export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     if (baseArr.length === 0) {
         return insertArr;
@@ -17,10 +11,6 @@ export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     return b1 === undefined
         ? [i1].concat(merge(restBaseArr, restInsertArr))
         : [b1].concat(merge(restBaseArr, insertArr));
-}
-
-export function toArray<T>(value: T | T[]): T[] {
-    return value instanceof Array ? value : [value];
 }
 
 export const constant =

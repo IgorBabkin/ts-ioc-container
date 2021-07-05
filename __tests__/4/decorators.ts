@@ -41,7 +41,7 @@ export const instanceHook: IInstanceHook = {
             return;
         }
 
-        onDisposeMetadataCollector.invokeHooksOf(instance);
+        onDisposeMetadataCollector.invokeHooksOf<GInstance>(instance);
     },
 };
 

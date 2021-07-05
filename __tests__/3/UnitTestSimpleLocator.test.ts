@@ -21,7 +21,7 @@ describe('UnitTestSimpleLocator', () => {
     });
 
     function createSimpleLocator() {
-        return new ServiceLocator(new SimpleInjector(), mockRepo);
+        return new ServiceLocator(() => new SimpleInjector(), mockRepo);
     }
 
     it('hey', () => {

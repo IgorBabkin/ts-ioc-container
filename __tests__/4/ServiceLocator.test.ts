@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-    emptyHook,
     IInstanceHook,
     InstanceHookInjector,
     IocInjector,
@@ -20,11 +19,12 @@ import {
     onDisposeMetadataCollector,
 } from './decorators';
 import { SubGroup3 } from './SubGroup3';
+import { emptyHook } from '../emptyHook';
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook, options?: IocServiceLocatorStrategyOptions) =>
         new ServiceLocator(
-            new InstanceHookInjector(new IocInjector(constructorMetadataCollector, options), hook),
+            () => new InstanceHookInjector(new IocInjector(constructorMetadataCollector, options), hook),
             new ProviderRepository(),
         );
 

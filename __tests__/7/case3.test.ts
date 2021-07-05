@@ -25,7 +25,7 @@ describe('case3', () => {
     let locator: IServiceLocator;
 
     beforeEach(() => {
-        locator = new ServiceLocator(new IocInjector(constructorMetadataCollector), new ProviderRepository());
+        locator = new ServiceLocator(() => new IocInjector(constructorMetadataCollector), new ProviderRepository());
     });
 
     it('tee', () => {

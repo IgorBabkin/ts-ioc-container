@@ -9,13 +9,15 @@ import {
     SimpleInjector,
     SingletonProvider,
 } from '../../lib';
+import { createMock } from '../MoqProvider';
+import { Times } from 'moq.ts';
 
 describe('ScopedProvider', function () {
     let locator: IServiceLocator;
     let provider: IProvider<any>;
 
     beforeEach(() => {
-        locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
+        locator = new ServiceLocator(() => new SimpleInjector(), new ProviderRepository());
         provider = new Provider(() => 1);
     });
 
@@ -35,5 +37,14 @@ describe('ScopedProvider', function () {
         const scopedProvider = new ScopedProvider(provider);
 
         expect(scopedProvider.clone() instanceof SingletonProvider).toBe(true);
+    });
+
+    test('dispose', () => {
+        const providerMock = createMock<IProvider<any>>();
+
+        const scopedProvider = new ScopedProvider(providerMock.object());
+        scopedProvider.dispose();
+
+        providerMock.verify((i) => i.dispose(), Times.Once());
     });
 });

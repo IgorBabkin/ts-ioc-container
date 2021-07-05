@@ -15,12 +15,13 @@ describe('ServiceLocator', () => {
         const expectedInstance = { id: 'expectedInstance' };
 
         const locator = new ServiceLocator(
-            new InstanceHookInjector(new SimpleInjector(), {
-                onConstruct<GInstance>(instance: GInstance) {
-                    onConstructMetadataCollector.invokeHooksOf(instance);
-                },
-                onDispose<GInstance>(instance: GInstance) {},
-            }),
+            () =>
+                new InstanceHookInjector(new SimpleInjector(), {
+                    onConstruct<GInstance>(instance: GInstance) {
+                        onConstructMetadataCollector.invokeHooksOf(instance);
+                    },
+                    onDispose<GInstance>(instance: GInstance) {},
+                }),
             new ProviderRepository(),
         );
 

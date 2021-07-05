@@ -20,9 +20,5 @@ export class IocInjector implements IInjector {
         );
     }
 
-    clone(options: Partial<IocServiceLocatorStrategyOptions> = {}): IocInjector {
-        return new IocInjector(this.metadataCollector, { ...this.options, ...options });
-    }
-
     dispose(): void {}
 }

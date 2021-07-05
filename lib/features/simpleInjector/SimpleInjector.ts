@@ -7,9 +7,5 @@ export class SimpleInjector implements IInjector {
         return new value(locator, ...deps);
     }
 
-    clone(): IInjector {
-        return new SimpleInjector();
-    }
-
     dispose(): void {}
 }

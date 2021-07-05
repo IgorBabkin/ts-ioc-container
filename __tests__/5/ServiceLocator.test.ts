@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-    emptyHook,
     IDisposable,
     IInstanceHook,
     InstanceHookInjector,
@@ -11,6 +10,7 @@ import {
 } from '../../lib';
 import { fromFn, fromInstance } from './decorators';
 import { ProviderBuilder } from '../../lib/features/ProviderBuilder';
+import { emptyHook } from '../emptyHook';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
@@ -18,7 +18,7 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook = emptyHook) =>
-        new ServiceLocator(new InstanceHookInjector(new SimpleInjector(), hooks), new ProviderRepository());
+        new ServiceLocator(() => new InstanceHookInjector(new SimpleInjector(), hooks), new ProviderRepository());
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(

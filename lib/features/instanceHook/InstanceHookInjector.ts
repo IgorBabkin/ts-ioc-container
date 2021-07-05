@@ -5,10 +5,6 @@ export class InstanceHookInjector implements IInjector {
     private instances = new Set();
     constructor(private decorated: IInjector, private hook: IInstanceHook) {}
 
-    clone(): IInjector {
-        return new InstanceHookInjector(this.decorated.clone(), this.hook);
-    }
-
     dispose(): void {
         this.decorated.dispose();
         for (const i of this.instances) {
