@@ -11,7 +11,7 @@
 - provides auto-factories
 - supports `onConstruct` and `dispose` instance hooks
 - composable and open to extend
-- can be used with `unit-test-ts-ioc-container`
+- awesome for testing (auto mocks)
 
 ## Install
 ```shell script
@@ -28,22 +28,30 @@ npm install reflect-metadata
 yarn add reflect-metadata
 ```
 
-## Usage
+## Recipes
+
+All features []
 
 ### ServiceLocator
 How to create new simple locator
+
 ```typescript
 import {ServiceLocator} from 'ts-ioc-container';
+import {ProviderRepository} from "./ProviderRepository";
+import {ProviderBuilder} from "./ProviderBuilder";
 
-const container = new ServiceLocator(new SimpleInjector());
-locator.register('ILogger', Provider.fromConstructor(Logger));
+const container = new ServiceLocator(() => new SimpleInjector(), new ProviderRepository());
+locator.register('ILogger', ProviderBuilder.fromConstructor(Logger).asRequested());
 const logger = locator.resolve<ILogger>('ILogger');
 ```
 ### Injectors
 Simple injector
+
 ```typescript
 import {IServiceLocator} from "./IServiceLocator";
 import {Provider} from "./Provider";
+import {ProviderRepository} from "./ProviderRepository";
+import {ProviderBuilder} from "./ProviderBuilder";
 
 class Car {
     constructor(locator: IServiceLocator) {
@@ -51,22 +59,29 @@ class Car {
     }
 }
 
-const container = new ServiceLocator(new SimpleInjector());
-container.register('IEngine', Provider.fromConstructor(Engine));
+const container = new ServiceLocator(() => new SimpleInjector(), new ProviderRepository());
+container.register('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 const car = container.resolve(Car);
 ```
 IoC injector
+
 ```typescript
 import 'reflect-metadata';
-import {ServiceLocatorFactory, IocInjector, metadataCollector} from 'ts-ioc-container';
+import {ServiceLocator, IocInjector, metadataCollector} from 'ts-ioc-container';
 import {args} from "./helpers";
 import {Provider} from "./Provider";
+import {ConstructorMetadataCollector} from "./ConstructorMetadataCollector";
+import {ProviderRepository} from "./ProviderRepository";
+import {ProviderBuilder} from "./ProviderBuilder";
 
-export const metadataCollector = new MetadataCollector();
-
-export const inject = createInjectDecorator(metadataCollector);
-const container = new ServiceLocatorFactory(new IocInjector(metadataCollector));
-container.register<IEngine>('IEngine', Provider.fromConstructor(Engine));
+export const constructorMetadataCollector = new ConstructorMetadataCollector();
+export const inject =
+    <T>(providerKey: PropertyKey): ParameterDecorator =>
+        (target, propertyKey, parameterIndex) => {
+            constructorMetadataCollector.addMetadata(target, parameterIndex, (l, ...args) => l.resolve(providerKey, ...args));
+        };
+const container = new ServiceLocator(() => new IocInjector(constructorMetadataCollector), new ProviderRepository());
+container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 
 class Car {
     constructor(@inject('IEngine') private engine: IEngine) {
@@ -76,12 +91,15 @@ class Car {
 const car = container.resolve(Car);
 ```
 
-## Provider
+## ProviderBuilder
+
 ```typescript
-locator.register('ILogger', new Provider((l, ...args) => new Logger(...args)));
-locator.register('ILogger', Provider.fromConstructor(Logger));
-locator.register('ILogger', Provider.fromInstance(new Logger));
-locator.register('ILogger', Provider.fromInstance(new Logger).withArgs('dev').asSingleton());
+import {ProviderBuilder} from "./ProviderBuilder";
+
+locator.register('ILogger', new ProviderBuilder((l, ...args) => new Logger(...args)).asRequested());
+locator.register('ILogger1', ProviderBuilder.fromConstructor(Logger).asSingleton());
+locator.register('ILogger2', ProviderBuilder.fromConstructor(Logger).asScoped());
+locator.register('ILogger3', ProviderBuilder.fromConstructor(Logger).withArgs('dev').asSingleton());
 ```
 
 ## Hooks
@@ -92,26 +110,39 @@ import {SimpleInjector} from "./SimpleInjector";
 import {ProviderKey} from "./IProvider";
 import {Mock} from "moq.ts";
 import {IServiceLocator} from "./IServiceLocator";
+import {ProviderBuilder} from "./ProviderBuilder";
 
-export interface IHook {
-    onInstanceCreated?: <GInstance>(instance: GInstance) => void;
+export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol('OnConstructHook'));
+export const onConstruct: MethodDecorator = (target, propertyKey) => {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    onConstructMetadataCollector.addHook(target, propertyKey);
+};
 
-    onLocatorRemoved?: () => void;
+export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol('OnDisposeHook'));
+export const onDispose: MethodDecorator = (target, propertyKey) => {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    onDisposeMetadataCollector.addHook(target, propertyKey);
+};
 
-    onDependencyNotFound?: <GInstance>(key: ProviderKey, ...args: any[]) => GInstance | undefined;
-}
-
-const container = new ServiceLocator(new SimpleInjector(), (locator: IServiceLocator) => ({
-    onInstanceCreated: (instance) => {
-        console.log(instance);
+const fromConstructor = () => ProviderBuilder.fromConstructor().withHook({
+    onConstruct<GInstance>(instance: GInstance): void {
+        instance.init();
     },
-    onDependencyNotFound: <T>(key: ProviderKey, ...args: any[]): T | undefined => {
-        return new Mock<T>().object();
-    },
-    onLocatorRemoved: () => {
-
+    onDispose<GInstance>(instance: GInstance): void {
+        instance.dispose();
     }
-}))
+}).asRequested();
+
+class Car {
+    constructor() {
+    }
+
+    @onConstruct
+    public initialize() {
+        console('initialized!');
+    }
+}
+const car = locator.resolve(Car); // initialized!
 ```
 
 ### OnConstruct
