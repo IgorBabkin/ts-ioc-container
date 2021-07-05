@@ -30,13 +30,13 @@ describe('ScopedProvider', function () {
     test('can be cloned', () => {
         const scopedProvider = new ScopedProvider(provider);
 
-        expect(scopedProvider.canBeCloned).toBe(true);
+        expect(scopedProvider.clone()).toBeDefined();
     });
 
     test('should be cloned as singleton', () => {
         const scopedProvider = new ScopedProvider(provider);
 
-        expect(scopedProvider.clone() instanceof SingletonProvider).toBe(true);
+        expect(scopedProvider.clone()).toBeInstanceOf(SingletonProvider);
     });
 
     test('dispose', () => {

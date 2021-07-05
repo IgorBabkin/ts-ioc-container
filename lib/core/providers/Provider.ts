@@ -2,8 +2,6 @@ import { IProvider, ProviderFn } from './IProvider';
 import { IServiceLocator } from '../IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
-    canBeCloned = true;
-
     constructor(public fn: ProviderFn<T>) {}
 
     clone(): IProvider<T> {

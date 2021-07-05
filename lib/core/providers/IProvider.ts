@@ -4,9 +4,7 @@ import { IDisposable } from '../../helpers/IDisposable';
 export type ProviderFn<T> = (locator: IServiceLocator, ...args: any[]) => T;
 
 export interface IProvider<T> extends IDisposable {
-    canBeCloned: boolean;
-
-    clone(): IProvider<T>;
+    clone(): IProvider<T> | undefined;
 
     resolve(locator: IServiceLocator, ...args: any[]): T;
 }

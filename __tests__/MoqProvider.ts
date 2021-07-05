@@ -23,7 +23,6 @@ export function createMock<T>(): IMock<T> {
 }
 
 export class MoqProvider<T> implements IProvider<T> {
-    canBeCloned = true;
     private readonly mock = createMock<T>();
 
     getMock(): IMock<T> {

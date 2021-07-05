@@ -22,6 +22,5 @@ export { IDisposable } from './helpers/IDisposable';
 export { constant } from './helpers/helpers';
 export { MockRepository } from './features/mock/MockRepository';
 export { ProviderNotResolvedError } from './errors/ProviderNotResolvedError';
-export { ProviderNotClonedError } from './errors/ProviderNotClonedError';
 export { ScopedProvider } from './core/providers/ScopedProvider';
 export { SingletonProvider } from './core/providers/SingletonProvider';

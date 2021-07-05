@@ -14,8 +14,9 @@ export class ProviderRepository implements IProviderRepository {
     clone(parent: IProviderRepository = this): IProviderRepository {
         const repo = new ProviderRepository(parent);
         for (const [key, provider] of this.providers.entries()) {
-            if (provider.canBeCloned) {
-                repo.add(key, provider.clone());
+            const cloned = provider.clone();
+            if (cloned) {
+                repo.add(key, cloned);
             }
         }
         return repo;

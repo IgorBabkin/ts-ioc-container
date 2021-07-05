@@ -2,7 +2,6 @@ import {
     IProvider,
     IServiceLocator,
     Provider,
-    ProviderNotClonedError,
     ProviderRepository,
     ServiceLocator,
     SimpleInjector,
@@ -21,8 +20,7 @@ describe('SingletonProvider', function () {
     test('cannot be cloned', () => {
         const singletonProvider = new SingletonProvider(provider);
 
-        expect(singletonProvider.canBeCloned).toBe(false);
-        expect(() => singletonProvider.clone()).toThrow(ProviderNotClonedError);
+        expect(singletonProvider.clone()).toBeUndefined();
     });
 
     test('should resolve the same value', () => {
