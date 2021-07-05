@@ -11,8 +11,6 @@ export { ConstructorMetadataCollector } from './features/ioc/ConstructorMetadata
 export { IMethodsMetadataCollector } from './features/hook/IMethodsMetadataCollector';
 export { InjectionToken } from './core/IServiceLocator';
 export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
-export { UnknownResolvingTypeError } from './errors/UnknownResolvingTypeError';
-export { UnknownInjectionTypeError } from './errors/UnknownInjectionTypeError';
 export { MethodsMetadataCollector } from './features/hook/MethodsMetadataCollector';
 export { IProviderRepository } from './core/IProviderRepository';
 export { InstanceHookProvider } from './features/instanceHook/InstanceHookProvider';

@@ -1,7 +1,7 @@
 import { IProvider } from './IProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { IServiceLocator } from '../IServiceLocator';
-import { CannotResolveFromScopedProviderError } from '../../errors/CannotResolveFromScopedProviderError';
+import { ProviderNotResolvedError } from '../../errors/ProviderNotResolvedError';
 
 export class ScopedProvider<T> implements IProvider<T> {
     canBeCloned = true;
@@ -17,6 +17,6 @@ export class ScopedProvider<T> implements IProvider<T> {
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
-        throw new CannotResolveFromScopedProviderError();
+        throw new ProviderNotResolvedError('Cannot resolve dependency from scoped provider');
     }
 }

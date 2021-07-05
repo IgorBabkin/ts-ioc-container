@@ -1,12 +1,12 @@
 import { IServiceLocator } from '../../core/IServiceLocator';
 import { IProvider } from '../../core/providers/IProvider';
-import { ProviderCannotBeClonedError } from '../../errors/ProviderCannotBeClonedError';
+import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
 
 export abstract class HookedProvider<GInstance> implements IProvider<GInstance> {
     constructor(protected decorated: IProvider<GInstance>) {}
 
     clone(): IProvider<GInstance> {
-        throw new ProviderCannotBeClonedError();
+        throw new ProviderNotClonedError();
     }
 
     dispose(): void {
