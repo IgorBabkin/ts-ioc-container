@@ -3,6 +3,7 @@ import { IServiceLocator } from '../IServiceLocator';
 
 export class SingletonProvider<T> implements IProvider<T> {
     private instance: T | undefined;
+    private isInstantiated = false;
 
     constructor(private decorated: IProvider<T>) {}
 
@@ -16,10 +17,11 @@ export class SingletonProvider<T> implements IProvider<T> {
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
-        if (this.instance === undefined) {
+        if (!this.isInstantiated) {
+            this.isInstantiated = true;
             this.instance = this.decorated.resolve(locator, ...args);
         }
 
-        return this.instance;
+        return this.instance as T;
     }
 }
