@@ -1,5 +1,4 @@
-import { IServiceLocator, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
-import { ProviderBuilder } from '../../lib/features/ProviderBuilder';
+import { IServiceLocator, ProviderBuilder, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
 
 describe('ProviderBuilder', function () {
     let locator: IServiceLocator;

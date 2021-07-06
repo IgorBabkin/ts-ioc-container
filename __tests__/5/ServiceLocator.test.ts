@@ -4,12 +4,12 @@ import {
     IInstanceHook,
     InstanceHookInjector,
     IServiceLocator,
+    ProviderBuilder,
     ProviderRepository,
     ServiceLocator,
     SimpleInjector,
 } from '../../lib';
 import { fromFn, fromInstance } from './decorators';
-import { ProviderBuilder } from '../../lib/features/ProviderBuilder';
 import { emptyHook } from '../emptyHook';
 
 class TestClass {

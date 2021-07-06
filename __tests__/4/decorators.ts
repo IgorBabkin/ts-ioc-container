@@ -5,9 +5,9 @@ import {
     IInstanceHook,
     InjectFn,
     MethodsMetadataCollector,
+    ProviderBuilder,
     ProviderFn,
 } from '../../lib';
-import { ProviderBuilder } from '../../lib/features/ProviderBuilder';
 
 export const constructorMetadataCollector = new ConstructorMetadataCollector();
 export const inject =

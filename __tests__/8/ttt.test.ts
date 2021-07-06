@@ -1,7 +1,6 @@
 import 'reflect-metadata';
-import { InstanceHookInjector, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
+import { InstanceHookInjector, ProviderBuilder, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
-import { ProviderBuilder } from '../../lib/features/ProviderBuilder';
 
 class MyClass {
     @onConstruct

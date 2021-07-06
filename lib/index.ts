@@ -24,3 +24,4 @@ export { MockRepository } from './features/mock/MockRepository';
 export { ProviderNotResolvedError } from './errors/ProviderNotResolvedError';
 export { ScopedProvider } from './core/providers/ScopedProvider';
 export { SingletonProvider } from './core/providers/SingletonProvider';
+export { ProviderBuilder } from './features/ProviderBuilder';
