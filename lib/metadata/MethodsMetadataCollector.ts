@@ -1,4 +1,4 @@
-import { IMethodsMetadataCollector } from './IMethodsMetadataCollector';
+import { IMethodsMetadataCollector } from '../features/instanceHook/IMethodsMetadataCollector';
 
 export class MethodsMetadataCollector implements IMethodsMetadataCollector {
     constructor(readonly hookKey: string | symbol) {}

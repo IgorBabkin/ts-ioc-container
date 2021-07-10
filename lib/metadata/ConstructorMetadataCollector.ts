@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { IInjectMetadataCollector } from './IInjectMetadataCollector';
-import { InjectFn } from './InjectFn';
+import { IInjectMetadataCollector } from '../features/ioc/IInjectMetadataCollector';
+import { InjectFn } from '../features/ioc/InjectFn';
 
 const CONSTRUCTOR_METADATA_KEY = Symbol('CONSTRUCTOR_METADATA_KEY');
 

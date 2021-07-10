@@ -1,14 +1,6 @@
 import 'reflect-metadata';
-import {
-    constructor,
-    ConstructorMetadataCollector,
-    createHookDecorator,
-    createInjectFnDecorator,
-    IInstanceHook,
-    MethodsMetadataCollector,
-    ProviderBuilder,
-    ProviderFn,
-} from '../../lib';
+import { constructor, IInstanceHook, InjectFn, ProviderBuilder, ProviderFn } from '../../lib';
+import { ConstructorMetadataCollector, MethodsMetadataCollector } from '../../lib/metadata';
 
 export const constructorMetadataCollector = new ConstructorMetadataCollector();
 export const inject = createInjectFnDecorator(constructorMetadataCollector);
