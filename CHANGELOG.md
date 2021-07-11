@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.0.0](https://github.com/IgorBabkin/service-locator/compare/v5.1.6...v6.0.0) (2021-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* new api
+* everything
+
+### Features
+
+* test helpers ([177bf70](https://github.com/IgorBabkin/service-locator/commit/177bf70942162babad0e7aeafd85b00a27b384e2))
+* test helpers ([f77078d](https://github.com/IgorBabkin/service-locator/commit/f77078d65457c1bc5a4df635630b2b8caadf001a))
+
+
+### Bug Fixes
+
+* cleanup ([4dc73e5](https://github.com/IgorBabkin/service-locator/commit/4dc73e519a4fe0cadce993d8c26198414c11642f))
+* singleton ([60f5176](https://github.com/IgorBabkin/service-locator/commit/60f517609ca5f07ece3aeae1557c4c7d10be03d1))
+
+
+* everything ([50b2a2b](https://github.com/IgorBabkin/service-locator/commit/50b2a2b15dd96526df6d38fd26d2ccd911eb9f0a))
+* new api ([7cdcba2](https://github.com/IgorBabkin/service-locator/commit/7cdcba2f95cf2b3e35bc95c203753650e56047bb))
+
 ### [5.1.6](https://github.com/IgorBabkin/service-locator/compare/v5.1.5...v5.1.6) (2021-06-16)
 
 
