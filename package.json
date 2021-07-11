@@ -17,13 +17,11 @@
   ],
   "directories": {
     "lib": "lib",
-    "docs": "docs",
     "test": "__tests__"
   },
   "files": [
     "cjm/**/*",
-    "esm/**/*",
-    "docs/**/*"
+    "esm/**/*"
   ],
   "repository": {
     "type": "git",
