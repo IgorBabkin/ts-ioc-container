@@ -1,9 +1,12 @@
 import 'reflect-metadata';
 import {
+    HookServiceLocator,
     IInstanceHook,
     InstanceHookInjector,
+    InstanceHookProvider,
     IocInjector,
     IocServiceLocatorStrategyOptions,
+    IProvider,
     ProviderRepository,
     ServiceLocator,
 } from '../../lib';
@@ -15,6 +18,7 @@ import {
     fromConstructor,
     fromFn,
     fromInstance,
+    instanceHook,
     onConstructMetadataCollector,
     onDisposeMetadataCollector,
 } from './decorators';
@@ -22,11 +26,19 @@ import { SubGroup3 } from './SubGroup3';
 import { emptyHook } from '../emptyHook';
 
 describe('ServiceLocator', () => {
-    const createIoCLocator = (hook: IInstanceHook = emptyHook, options?: IocServiceLocatorStrategyOptions) =>
-        new ServiceLocator(
-            () => new InstanceHookInjector(new IocInjector(constructorMetadataCollector, options), hook),
-            new ProviderRepository(),
+    const createIoCLocator = (hook: IInstanceHook = emptyHook, options?: IocServiceLocatorStrategyOptions) => {
+        return new HookServiceLocator(
+            new ServiceLocator(
+                () => new InstanceHookInjector(new IocInjector(constructorMetadataCollector, options), hook),
+                new ProviderRepository(),
+            ),
+            {
+                onBeforeRegister<T>(provider: IProvider<T>): IProvider<T> {
+                    return new InstanceHookProvider(provider, hook);
+                },
+            },
         );
+    };
 
     it('should create an instanse', () => {
         const locator = createIoCLocator().register('key1', fromFn(() => ({})).asRequested());
@@ -42,8 +54,8 @@ describe('ServiceLocator', () => {
 
     describe('scope', () => {
         it('should override parent', () => {
-            const expectedInstance1 = {};
-            const expectedInstance2 = {};
+            const expectedInstance1 = { id: 1 };
+            const expectedInstance2 = { id: 2 };
 
             const locator = createIoCLocator().register('key1', fromInstance(expectedInstance1).asRequested());
 

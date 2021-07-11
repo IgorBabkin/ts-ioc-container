@@ -1,4 +1,4 @@
-import { InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
+import { CreateInjectorFn, InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
 import { IInjector } from './IInjector';
 import { IProvider, ProviderKey } from './providers/IProvider';
 import { IProviderRepository } from './IProviderRepository';
@@ -6,10 +6,7 @@ import { IProviderRepository } from './IProviderRepository';
 export class ServiceLocator implements IServiceLocator {
     private readonly injector: IInjector;
 
-    constructor(
-        private createInjector: (l: IServiceLocator) => IInjector,
-        private readonly providerRepo: IProviderRepository,
-    ) {
+    constructor(private createInjector: CreateInjectorFn, private readonly providerRepo: IProviderRepository) {
         this.injector = createInjector(this);
     }
 
