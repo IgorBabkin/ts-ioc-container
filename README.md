@@ -141,108 +141,19 @@ class Car {
     public initialize() {
         console('initialized!');
     }
-}
-const car = locator.resolve(Car); // initialized!
-```
-
-### OnConstruct
-
-```typescript
-import {ServiceLocator} from "./ServiceLocator";
-import {SimpleInjector} from "./SimpleInjector";
-import {InstanceHook} from "./InstanceHook";
-import {OnConstructHook} from "./OnConstructHook";
-
-export const hooksMetadataCollector = new HooksMetadataCollector();
-export const onConstruct = createOnConstructDecorator(hooksMetadataCollector);
-const locator = new ServiceLocator(new SimpleInjector(), new InstanceHook([new OnConstructHook(hooksMetadataCollector)]))
-
-class Car {
-    constructor() {
-    }
-
-    @onConstruct
-    public initialize() {
-        console('initialized!');
-    }
-}
-const car = locator.resolve(Car); // initialized!
-```
-
-### OnDispose
-
-```typescript
-import {createOnDisposeDecorator} from "./decorators";
-import {OnDisposeHook} from "./OnDisposeHook";
-
-export const hooksMetadataCollector = new HooksMetadataCollector();
-export const onDispose = createOnDisposeDecorator(hooksMetadataCollector);
-const locator = new ServiceLocator(new SimpleInjector(), new InstanceHook([new OnDisposeHook(hooksMetadataCollector)]))
-
-class Car {
-    constructor() {
-    }
 
     @onDispose
-    public destroy() {
-        console('destroyed!');
+    public dispose() {
+        console('disposed!');
     }
 }
-
-const car = locator.resolve(Car)
-locator.remove(); // destroyed!
+const car = locator.resolve(Car); // initialized!
 ```
 
 ## Scoped locators
 
 ```typescript
-const container = new ServiceLocator(new SimpleInjector());
-container.register('ILogger', Provider.fromConstructor(Logger).asScoped());
 const scope = container.createLocator();
 const logger = scope.resolve('ILogger');
-logger.log('Hello');
 scope.remove();
-```
-
-### Tests
-```typescript
-let mockRepo: MockRepository;
-
-beforeEach(() => {
-    mockRepo = new MockRepository();
-});
-
-function createSimpleLocator() {
-    return new ServiceLocator(new SimpleInjector(), () => ({
-        onDependencyNotFound: <GInstance>(key: ProviderKey) => mockRepo.findOrCreate<GInstance>(key).object(),
-    }));
-}
-
-it('hey', () => {
-    const locator = createSimpleLocator();
-
-    const mock = mockRepo.findOrCreate<IDepClass>('key1');
-    mock.setup((i) => i.greeting()).returns('hello');
-
-    const key1 = locator.resolve(TestClass);
-
-    expect(key1.dep1.greeting()).toBe('hello');
-});
-```
-MockRepository
-```typescript
-import { ProviderKey } from '../lib';
-import { IMock, Mock } from 'moq.ts';
-
-export class MockRepository {
-    private mocks = new Map<ProviderKey, IMock<any>>();
-
-    findOrCreate<GInstance>(key: ProviderKey): IMock<GInstance> {
-        if (!this.mocks.has(key)) {
-            this.mocks.set(key, new Mock<GInstance>());
-        }
-
-        return this.mocks.get(key) as IMock<GInstance>;
-    }
-}
 ```
