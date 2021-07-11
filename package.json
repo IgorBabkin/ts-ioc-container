@@ -36,7 +36,6 @@
     "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
     "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
     "build": "npm-run-all -p build:**",
-    "prepublish": "yarn build",
     "test": "jest",
     "commit": "git-cz",
     "format": "prettier --write lib/**/*.ts",
@@ -44,7 +43,7 @@
     "lint:fix": "yarn lint --fix",
     "prerelease": "yarn test",
     "release": "standard-version",
-    "postrelease": "git push --follow-tags origin master && npm publish"
+    "postrelease": "git push --follow-tags origin master && yarn build && npm publish"
   },
   "devDependencies": {
     "@commitlint/cli": "12.1.4",
