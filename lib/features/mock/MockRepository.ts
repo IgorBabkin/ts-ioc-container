@@ -1,5 +1,4 @@
-import { IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError } from '../../index';
-import { MoqProvider } from '../../../__tests__/MoqProvider';
+import {IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError} from '../../index';
 
 export abstract class MockRepository implements IProviderRepository {
     private mocks = new Map<ProviderKey, IProvider<any>>();
@@ -28,7 +27,7 @@ export abstract class MockRepository implements IProviderRepository {
             this.mocks.set(key, this.createMockProvider<T>());
         }
 
-        return this.mocks.get(key) as MoqProvider<T>;
+        return this.mocks.get(key) as IProvider<T>;
     }
 
     add<T>(key: ProviderKey, provider: IProvider<T>): void {
