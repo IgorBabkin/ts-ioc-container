@@ -1,4 +1,4 @@
-import { IMethodsMetadataCollector } from './IMethodsMetadataCollector';
+import { IMethodsMetadataCollector } from '../../decorators/instanceHook/IMethodsMetadataCollector';
 
 export function createHookDecorator(metadata: IMethodsMetadataCollector): MethodDecorator {
     return (target, propertyKey) => {
