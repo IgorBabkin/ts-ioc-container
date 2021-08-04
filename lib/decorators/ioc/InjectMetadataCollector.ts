@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { IInjectMetadataCollector } from '../features/ioc/IInjectMetadataCollector';
-import { InjectFn } from '../features/ioc/InjectFn';
+import { IInjectMetadataCollector } from '../../features/ioc/IInjectMetadataCollector';
+import { InjectFn } from '../../features/ioc/InjectFn';
 
 const CONSTRUCTOR_METADATA_KEY = Symbol('CONSTRUCTOR_METADATA_KEY');
 
-export class ConstructorMetadataCollector implements IInjectMetadataCollector {
+export class InjectMetadataCollector implements IInjectMetadataCollector {
     // eslint-disable-next-line @typescript-eslint/ban-types
     addMetadata<T>(target: T, parameterIndex: number, injectionFn: InjectFn<any>): void {
         const metadata = this.getInjectionFns(target);

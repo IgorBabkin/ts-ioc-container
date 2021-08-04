@@ -20,7 +20,7 @@ describe('SingletonProvider', function () {
     test('cannot be cloned', () => {
         const singletonProvider = new SingletonProvider(provider);
 
-        expect(singletonProvider.clone()).toBeUndefined();
+        expect(singletonProvider.clone()).toBeNull();
     });
 
     test('should resolve the same value', () => {

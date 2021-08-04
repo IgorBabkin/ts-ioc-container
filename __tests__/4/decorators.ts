@@ -1,15 +1,23 @@
 import 'reflect-metadata';
-import { constructor, IInstanceHook, InjectFn, ProviderBuilder, ProviderFn } from '../../lib';
-import { ConstructorMetadataCollector, MethodsMetadataCollector } from '../../lib/metadata';
+import {
+    constructor,
+    createHookDecorator,
+    createInjectFnDecorator,
+    IInstanceHook,
+    InjectMetadataCollector,
+    MethodsMetadataCollector,
+    ProviderBuilder,
+    ProviderFn,
+} from '../../lib';
 
-export const constructorMetadataCollector = new ConstructorMetadataCollector();
+export const constructorMetadataCollector = new InjectMetadataCollector();
 export const inject = createInjectFnDecorator(constructorMetadataCollector);
 
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol('OnConstructHook'));
-export const onConstruct: MethodDecorator = createHookDecorator(onConstructMetadataCollector);
+export const onConstruct = createHookDecorator(onConstructMetadataCollector);
 
 export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol('OnDisposeHook'));
-export const onDispose: MethodDecorator = createHookDecorator(onDisposeMetadataCollector);
+export const onDispose = createHookDecorator(onDisposeMetadataCollector);
 
 export const instanceHook: IInstanceHook = {
     onConstruct<GInstance>(instance: GInstance) {

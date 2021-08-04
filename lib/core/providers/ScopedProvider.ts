@@ -6,9 +6,9 @@ import { ProviderNotResolvedError } from '../../errors/ProviderNotResolvedError'
 export class ScopedProvider<T> implements IProvider<T> {
     constructor(private decorated: IProvider<T>) {}
 
-    clone(): IProvider<T> | undefined {
+    clone(): IProvider<T> | null {
         const cloned = this.decorated.clone();
-        return cloned ? new SingletonProvider(cloned) : undefined;
+        return cloned ? new SingletonProvider(cloned) : null;
     }
 
     dispose(): void {

@@ -7,8 +7,8 @@ export class SingletonProvider<T> implements IProvider<T> {
 
     constructor(private decorated: IProvider<T>) {}
 
-    clone(): IProvider<T> | undefined {
-        return undefined;
+    clone(): IProvider<T> | null {
+        return null;
     }
 
     dispose(): void {
