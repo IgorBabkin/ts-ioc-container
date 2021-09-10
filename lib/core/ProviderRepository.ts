@@ -1,6 +1,7 @@
 import { IProvider, ProviderKey } from './providers/IProvider';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProviderRepository } from './IProviderRepository';
+import { ProviderCannotBeClonedError } from '../errors/ProviderCannotBeClonedError';
 
 export class ProviderRepository implements IProviderRepository {
     private providers = new Map<ProviderKey, IProvider<any>>();
@@ -14,9 +15,13 @@ export class ProviderRepository implements IProviderRepository {
     clone(parent: IProviderRepository = this): IProviderRepository {
         const repo = new ProviderRepository(parent);
         for (const [key, provider] of this.providers.entries()) {
-            const cloned = provider.clone();
-            if (cloned) {
-                repo.add(key, cloned);
+            try {
+                repo.add(key, provider.clone());
+            } catch (e) {
+                if (e instanceof ProviderCannotBeClonedError) {
+                    continue;
+                }
+                throw e;
             }
         }
         return repo;

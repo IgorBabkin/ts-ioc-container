@@ -2,7 +2,7 @@ import {
     IProvider,
     IServiceLocator,
     Provider,
-    ProviderNotResolvedError,
+    ProviderCannotBeResolvedError,
     ProviderRepository,
     ScopedProvider,
     ServiceLocator,
@@ -24,7 +24,7 @@ describe('ScopedProvider', function () {
     test('cannot resolve dependency from scoped provider', () => {
         const scopedProvider = new ScopedProvider(provider);
 
-        expect(() => scopedProvider.resolve(locator)).toThrow(ProviderNotResolvedError);
+        expect(() => scopedProvider.resolve(locator)).toThrow(ProviderCannotBeResolvedError);
     });
 
     test('can be cloned', () => {

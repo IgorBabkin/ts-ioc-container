@@ -18,9 +18,8 @@ export class InstanceHookProvider<GInstance> implements IProvider<GInstance> {
         return instance;
     }
 
-    clone(): InstanceHookProvider<GInstance> | null {
-        const cloned = this.decorated.clone();
-        return cloned ? new InstanceHookProvider(cloned, this.hook) : null;
+    clone(): InstanceHookProvider<GInstance> {
+        return new InstanceHookProvider(this.decorated.clone(), this.hook);
     }
 
     protected onDispose(): void {

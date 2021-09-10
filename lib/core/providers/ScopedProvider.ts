@@ -1,14 +1,13 @@
 import { IProvider } from './IProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { IServiceLocator } from '../IServiceLocator';
-import { ProviderNotResolvedError } from '../../errors/ProviderNotResolvedError';
+import { ProviderCannotBeResolvedError } from '../../errors/ProviderCannotBeResolvedError';
 
 export class ScopedProvider<T> implements IProvider<T> {
     constructor(private decorated: IProvider<T>) {}
 
-    clone(): IProvider<T> | null {
-        const cloned = this.decorated.clone();
-        return cloned ? new SingletonProvider(cloned) : null;
+    clone(): IProvider<T> {
+        return new SingletonProvider(this.decorated.clone());
     }
 
     dispose(): void {
@@ -16,6 +15,6 @@ export class ScopedProvider<T> implements IProvider<T> {
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
-        throw new ProviderNotResolvedError('Cannot resolve dependency from scoped provider');
+        throw new ProviderCannotBeResolvedError('Cannot resolve dependency from scoped provider');
     }
 }

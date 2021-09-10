@@ -18,7 +18,6 @@ import {
     fromConstructor,
     fromFn,
     fromInstance,
-    instanceHook,
     onConstructMetadataCollector,
     onDisposeMetadataCollector,
 } from './decorators';
