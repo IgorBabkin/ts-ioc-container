@@ -41,7 +41,10 @@
     "lint:fix": "yarn lint --fix",
     "prerelease": "yarn test",
     "release": "standard-version",
-    "postrelease": "git push --follow-tags origin master && yarn build && npm publish"
+    "postrelease": "git push --follow-tags origin master && yarn build && npm publish",
+    "postinstall": "husky install",
+    "pre-commit": "lint-staged",
+    "commit-msg": "commitlint --edit $1"
   },
   "devDependencies": {
     "@commitlint/cli": "13.1.0",
@@ -69,12 +72,6 @@
   "gitHead": "ed54cf87295afcf6da383ac8f9ecdca358db17eb",
   "peerDependencies": {
     "reflect-metadata": "^0.1.13"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
   },
   "lint-staged": {
     "*.{js,ts}": [
