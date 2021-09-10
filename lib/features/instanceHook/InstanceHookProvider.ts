@@ -3,9 +3,9 @@ import { IInstanceHook } from './IInstanceHook';
 import { IServiceLocator } from '../../core/IServiceLocator';
 
 export class InstanceHookProvider<GInstance> implements IProvider<GInstance> {
-    private instances = new Set<GInstance>();
+    private readonly instances = new Set<GInstance>();
 
-    constructor(private decorated: IProvider<GInstance>, private hook: IInstanceHook) {}
+    constructor(private readonly decorated: IProvider<GInstance>, private readonly hook: IInstanceHook) {}
 
     dispose(): void {
         this.decorated.dispose();

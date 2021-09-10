@@ -8,8 +8,8 @@ export type IocServiceLocatorStrategyOptions = { simpleInjectionCompatible?: boo
 
 export class IocInjector implements IInjector {
     constructor(
-        private metadataCollector: IInjectMetadataCollector,
-        private options: IocServiceLocatorStrategyOptions = {},
+        private readonly metadataCollector: IInjectMetadataCollector,
+        private readonly options: IocServiceLocatorStrategyOptions = {},
     ) {}
 
     resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {

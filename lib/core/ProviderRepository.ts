@@ -4,7 +4,7 @@ import { IProviderRepository } from './IProviderRepository';
 import { ProviderCannotBeClonedError } from '../errors/ProviderCannotBeClonedError';
 
 export class ProviderRepository implements IProviderRepository {
-    private providers = new Map<ProviderKey, IProvider<any>>();
+    private readonly providers = new Map<ProviderKey, IProvider<any>>();
 
     constructor(private parent?: IProviderRepository) {}
 

@@ -6,7 +6,7 @@ export interface IServiceLocatorHook {
 }
 
 export class HookServiceLocator implements IServiceLocator {
-    constructor(private decorated: IServiceLocator, private hook: IServiceLocatorHook) {}
+    constructor(private readonly decorated: IServiceLocator, private readonly hook: IServiceLocatorHook) {}
 
     createLocator(): IServiceLocator {
         return new HookServiceLocator(this.decorated.createLocator(), this.hook);

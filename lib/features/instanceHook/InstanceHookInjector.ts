@@ -2,8 +2,8 @@ import { constructor, IInjector, IServiceLocator } from '../../index';
 import { IInstanceHook } from './IInstanceHook';
 
 export class InstanceHookInjector implements IInjector {
-    private instances = new Set();
-    constructor(private decorated: IInjector, private hook: IInstanceHook) {}
+    private readonly instances = new Set();
+    constructor(private readonly decorated: IInjector, private readonly hook: IInstanceHook) {}
 
     dispose(): void {
         this.decorated.dispose();

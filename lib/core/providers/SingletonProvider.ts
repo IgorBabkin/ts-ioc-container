@@ -6,7 +6,7 @@ export class SingletonProvider<T> implements IProvider<T> {
     private instance: T | null = null;
     private hasInstance = false;
 
-    constructor(private decorated: IProvider<T>) {}
+    constructor(private readonly decorated: IProvider<T>) {}
 
     clone(): IProvider<T> {
         throw new ProviderCannotBeClonedError('Singleton cannot be cloned');

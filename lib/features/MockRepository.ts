@@ -1,7 +1,7 @@
-import {IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError} from '../index';
+import { IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError } from '../index';
 
 export abstract class MockRepository implements IProviderRepository {
-    private mocks = new Map<ProviderKey, IProvider<any>>();
+    private readonly mocks = new Map<ProviderKey, IProvider<any>>();
 
     constructor(protected decorated: IProviderRepository) {}
 

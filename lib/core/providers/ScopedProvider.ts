@@ -4,7 +4,7 @@ import { IServiceLocator } from '../IServiceLocator';
 import { ProviderCannotBeResolvedError } from '../../errors/ProviderCannotBeResolvedError';
 
 export class ScopedProvider<T> implements IProvider<T> {
-    constructor(private decorated: IProvider<T>) {}
+    constructor(private readonly decorated: IProvider<T>) {}
 
     clone(): IProvider<T> {
         return new SingletonProvider(this.decorated.clone());

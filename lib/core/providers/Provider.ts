@@ -2,7 +2,7 @@ import { IProvider, ProviderFn } from './IProvider';
 import { IServiceLocator } from '../IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
-    constructor(public fn: ProviderFn<T>) {}
+    constructor(private readonly fn: ProviderFn<T>) {}
 
     clone(): IProvider<T> {
         return new Provider(this.fn);
