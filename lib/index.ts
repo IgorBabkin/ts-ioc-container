@@ -23,7 +23,7 @@ export { InstanceHookInjector } from './features/instanceHook/InstanceHookInject
 export { IDisposable } from './helpers/IDisposable';
 export { constant } from './helpers/helpers';
 export { MockRepository } from './features/MockRepository';
-export { ProviderCannotBeResolvedError } from './errors/ProviderCannotBeResolvedError';
+export { DependencyCannotBeResolvedError } from './errors/DependencyCannotBeResolvedError';
 export { ScopedProvider } from './core/providers/ScopedProvider';
 export { SingletonProvider } from './core/providers/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';
