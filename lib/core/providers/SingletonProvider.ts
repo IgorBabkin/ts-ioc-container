@@ -1,6 +1,6 @@
 import { IProvider } from './IProvider';
 import { IServiceLocator } from '../IServiceLocator';
-import { ProviderCannotBeClonedError } from '../../errors/ProviderCannotBeClonedError';
+import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
 
 export class SingletonProvider<T> implements IProvider<T> {
     private instance: T | null = null;
@@ -9,7 +9,7 @@ export class SingletonProvider<T> implements IProvider<T> {
     constructor(private readonly decorated: IProvider<T>) {}
 
     clone(): IProvider<T> {
-        throw new ProviderCannotBeClonedError('SingletonProvider cannot be cloned');
+        throw new ProviderNotClonedError('SingletonProvider cannot be cloned');
     }
 
     dispose(): void {

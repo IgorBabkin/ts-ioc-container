@@ -7,7 +7,7 @@ import {
     SimpleInjector,
     SingletonProvider,
 } from '../../lib';
-import { ProviderCannotBeClonedError } from '../../lib/errors/ProviderCannotBeClonedError';
+import { ProviderNotClonedError } from '../../lib/errors/ProviderNotClonedError';
 
 describe('SingletonProvider', function () {
     let locator: IServiceLocator;
@@ -21,7 +21,7 @@ describe('SingletonProvider', function () {
     test('cannot be cloned', () => {
         const singletonProvider = new SingletonProvider(provider);
 
-        expect(() => singletonProvider.clone()).toThrow(ProviderCannotBeClonedError);
+        expect(() => singletonProvider.clone()).toThrow(ProviderNotClonedError);
     });
 
     test('should resolve the same value', () => {
