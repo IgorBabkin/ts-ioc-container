@@ -13,8 +13,7 @@ export class IocInjector implements IInjector {
     ) {}
 
     resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
-        const injectionFns = this.metadataCollector.getInjectionFns(value);
-        const args = merge(injectionFns, deps.map(constant)).map((fn) => fn(locator));
+        const args = merge(this.metadataCollector.getInjectionFns(value), deps.map(constant)).map((fn) => fn(locator));
         if (this.options.simpleInjectionCompatible) {
             args.push(locator);
         }
