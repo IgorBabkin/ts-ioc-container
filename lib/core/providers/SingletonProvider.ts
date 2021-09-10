@@ -9,7 +9,7 @@ export class SingletonProvider<T> implements IProvider<T> {
     constructor(private decorated: IProvider<T>) {}
 
     clone(): IProvider<T> {
-        throw new ProviderCannotBeClonedError();
+        throw new ProviderCannotBeClonedError('Singleton cannot be cloned');
     }
 
     dispose(): void {
