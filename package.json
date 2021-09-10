@@ -24,8 +24,7 @@
     "esm/**/*"
   ],
   "repository": {
-    "type": "git",
-    "url": "git@github.com/IgorBabkin/service-locator"
+    "url": "https://github.com/IgorBabkin/service-locator.git"
   },
   "bugs": {
     "url": "https://github.com/IgorBabkin/service-locator/issues"
