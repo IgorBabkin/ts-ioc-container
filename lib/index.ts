@@ -21,7 +21,6 @@ export { ProviderRepository } from './core/ProviderRepository';
 export { Provider } from './core/providers/Provider';
 export { InstanceHookInjector } from './features/instanceHook/InstanceHookInjector';
 export { IDisposable } from './helpers/IDisposable';
-export { constant } from './helpers/helpers';
 export { MockRepository } from './features/MockRepository';
 export { DependencyCannotBeResolvedError } from './errors/DependencyCannotBeResolvedError';
 export { ScopedProvider } from './core/providers/ScopedProvider';
