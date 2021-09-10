@@ -30,6 +30,7 @@
     "url": "https://github.com/IgorBabkin/service-locator/issues"
   },
   "scripts": {
+    "prepare": "husky install",
     "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
     "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
     "build": "npm-run-all -p build:**",
