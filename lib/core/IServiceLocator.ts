@@ -4,9 +4,7 @@ import { IDisposable } from '../helpers/IDisposable';
 import { IInjector } from './IInjector';
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
-
 export type CreateInjectorFn = (l: IServiceLocator) => IInjector;
-export type DecorateInjectorFn = (injector: IInjector) => IInjector;
 
 export interface IServiceLocator extends IDisposable {
     createLocator(): IServiceLocator;
@@ -17,6 +15,5 @@ export interface IServiceLocator extends IDisposable {
 }
 
 export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {
-    const tokenType = typeof token;
-    return tokenType === 'string' || tokenType === 'symbol';
+    return ['string', 'symbol'].includes(typeof token);
 }
