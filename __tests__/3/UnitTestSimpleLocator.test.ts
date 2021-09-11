@@ -22,7 +22,7 @@ describe('UnitTestSimpleLocator', () => {
 
     function createSimpleLocator() {
         return new ServiceLocator(
-            () => new SimpleInjector(),
+            (l) => new SimpleInjector(l),
             new MockedRepository(new ProviderRepository(), mockStorage),
         );
     }

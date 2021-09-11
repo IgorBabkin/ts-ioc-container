@@ -1,4 +1,4 @@
-import { constructor, IInjector, IServiceLocator } from '../../index';
+import { constructor, IInjector } from '../../index';
 import { IInstanceHook } from './IInstanceHook';
 
 export class InstanceHookInjector implements IInjector {
@@ -13,8 +13,8 @@ export class InstanceHookInjector implements IInjector {
         this.instances.clear();
     }
 
-    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
-        const instance = this.decorated.resolve(locator, value, ...deps);
+    resolve<T>(value: constructor<T>, ...deps: any[]): T {
+        const instance = this.decorated.resolve(value, ...deps);
         this.hook.onConstruct(instance);
         this.instances.add(instance);
         return instance;

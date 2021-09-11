@@ -3,8 +3,10 @@ import { IServiceLocator } from '../core/IServiceLocator';
 import { IInjector } from '../core/IInjector';
 
 export class SimpleInjector implements IInjector {
-    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
-        return new value(locator, ...deps);
+    constructor(private readonly locator: IServiceLocator) {}
+
+    resolve<T>(value: constructor<T>, ...deps: any[]): T {
+        return new value(this.locator, ...deps);
     }
 
     dispose(): void {}

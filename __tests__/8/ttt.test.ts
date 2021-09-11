@@ -14,8 +14,8 @@ describe('ServiceLocator', () => {
         const expectedInstance = { id: 'expectedInstance' };
 
         const locator = new ServiceLocator(
-            () =>
-                new InstanceHookInjector(new SimpleInjector(), {
+            (l) =>
+                new InstanceHookInjector(new SimpleInjector(l), {
                     onConstruct<GInstance>(instance: GInstance) {
                         onConstructMetadataCollector.invokeHooksOf(instance);
                     },

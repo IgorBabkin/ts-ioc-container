@@ -56,7 +56,7 @@ How to create new simple locator
 ```typescript
 import {ServiceLocator, ProviderRepository, ProviderBuilder} from 'ts-ioc-container';
 
-const container = new ServiceLocator(() => new SimpleInjector(), new ProviderRepository());
+const container = new ServiceLocator((l) => new SimpleInjector(l), new ProviderRepository());
 locator.register('ILogger', ProviderBuilder.fromConstructor(Logger).asRequested());
 const logger = locator.resolve<ILogger>('ILogger');
 ```
@@ -72,7 +72,7 @@ class Car {
     }
 }
 
-const container = new ServiceLocator(() => new SimpleInjector(), new ProviderRepository());
+const container = new ServiceLocator((l) => new SimpleInjector(l), new ProviderRepository());
 container.register('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 const car = container.resolve(Car);
 ```
@@ -107,7 +107,7 @@ export const Collection = <T>(...injections: InjectFn<T>[]) => l => injections.m
  * export const inject = createInjectFnDecorator(constructorMetadataCollector);
  */
 
-const container = new ServiceLocator(() => new IocInjector(constructorMetadataCollector), new ProviderRepository());
+const container = new ServiceLocator((l) => new IocInjector(l, constructorMetadataCollector), new ProviderRepository());
 container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 
 class Car {
@@ -151,11 +151,14 @@ import {
   InstanceHookInjector,
   ProviderRepository,
   HookServiceLocator,
-  InstanceHookProvider
+  InstanceHookProvider,
+  InjectMetadataCollector,
+  MethodsMetadataCollector
 } from "ts-ioc-container";
 import { Mock } from "moq.ts";
 import { IInstanceHook } from "./IInstanceHook";
 
+export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
 export const onConstruct: MethodDecorator = (target, propertyKey) => {
   // eslint-disable-next-line @typescript-eslint/ban-types
@@ -183,7 +186,7 @@ const hook: IInstanceHook = {
     }
 }
 
-const container = new HookServiceLocator(new ServiceLocator(() => new InstanceHookInjector(new IocInjector(), hook), new ProviderRepository()), {
+const container = new HookServiceLocator(new ServiceLocator((l) => new InstanceHookInjector(new IocInjector(l, constructorMetadataCollector), hook), new ProviderRepository()), {
   onBeforeRegister: (provider) => new InstanceHookProvider(provider, hook)
 })
 
@@ -224,7 +227,7 @@ import {IEngine} from "./IEngine";
 
 describe('test', () => {
     const mockProviderStorage = new MoqProviderStorage(() => new MoqProvider());
-    const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockProviderStorage));
+    const container = new ServiceLocator((l) => new SimpleInjector(l), new MockedRepository(new ProviderRepository(), mockProviderStorage));
     
     const engineMock = mockProviderStorage.findMock<IEngine>('IEngine');
     engineMock.setup(i => i.getRegistrationNumber()).return('123');

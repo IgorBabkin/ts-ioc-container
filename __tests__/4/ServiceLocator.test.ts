@@ -27,7 +27,7 @@ describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
         return new HookServiceLocator(
             new ServiceLocator(
-                () => new InstanceHookInjector(new IocInjector(constructorMetadataCollector), hook),
+                (l) => new InstanceHookInjector(new IocInjector(l, constructorMetadataCollector), hook),
                 new ProviderRepository(),
             ),
             {

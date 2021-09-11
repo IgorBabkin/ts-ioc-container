@@ -21,7 +21,7 @@ export class ServiceLocator implements IServiceLocator {
             return provider.resolve(this, ...args);
         }
 
-        return this.injector.resolve<T>(this, key, ...args);
+        return this.injector.resolve<T>(key, ...args);
     }
 
     createLocator(): IServiceLocator {

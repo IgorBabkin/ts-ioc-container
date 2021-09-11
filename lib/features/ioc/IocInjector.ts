@@ -5,11 +5,14 @@ import { constant, merge } from '../../helpers/helpers';
 import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 
 export class IocInjector implements IInjector {
-    constructor(private readonly metadataCollector: IInjectMetadataCollector) {}
+    constructor(
+        private readonly locator: IServiceLocator,
+        private readonly metadataCollector: IInjectMetadataCollector,
+    ) {}
 
-    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
+    resolve<T>(value: constructor<T>, ...deps: any[]): T {
         return new value(
-            ...merge(this.metadataCollector.getInjectionFns(value), deps.map(constant)).map((fn) => fn(locator)),
+            ...merge(this.metadataCollector.getInjectionFns(value), deps.map(constant)).map((fn) => fn(this.locator)),
         );
     }
 

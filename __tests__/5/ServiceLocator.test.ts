@@ -18,7 +18,7 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook = emptyHook) =>
-        new ServiceLocator(() => new InstanceHookInjector(new SimpleInjector(), hooks), new ProviderRepository());
+        new ServiceLocator((l) => new InstanceHookInjector(new SimpleInjector(l), hooks), new ProviderRepository());
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(

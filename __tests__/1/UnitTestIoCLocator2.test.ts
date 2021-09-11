@@ -20,7 +20,7 @@ describe('UnitTestIoCLocator', () => {
 
     function createIoCLocator() {
         return new ServiceLocator(
-            () => new IocInjector(constructorMetadataCollector),
+            (l) => new IocInjector(l, constructorMetadataCollector),
             new MockedRepository(new ProviderRepository(), mockStorage),
         );
     }
