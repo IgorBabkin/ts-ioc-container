@@ -243,12 +243,19 @@ export class MoqStorage implements IMockStorage {
 Usage
 ```typescript
 import {MoqRepository} from "./MoqRepository";
-import {ProviderRepository, SimpleInjector, ProviderBuilder, ServiceLocator} from "ts-ioc-container";
+import {ProviderRepository, SimpleInjector, ServiceLocator, MockedRepository} from "ts-ioc-container";
 import {MoqProvider} from "./MoqProvider";
+import {IEngine} from "./IEngine";
 
-const mockStorage = new MoqStorage();
-const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockStorage));
-
-const mock = mockStorage.findMock('key1');
-mock.setup(i => i.someMethod()).return('someValue');
+describe('test', () => {
+    const mockStorage = new MoqStorage();
+    const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockStorage));
+    
+    const engineMock = mockStorage.findMock<IEngine>('IEngine');
+    engineMock.setup(i => i.getRegistrationNumber()).return('123');
+    
+    const engine = container.resolve<IEngine>('IEngine');
+    
+    expect(engine.getRegistrationNumber()).toBe('123');
+})
 ```
