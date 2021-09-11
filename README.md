@@ -81,20 +81,21 @@ IoC injector
 ```typescript
 import 'reflect-metadata';
 import {
-    ServiceLocator,
-    IocInjector,
-    metadataCollector,
-    InjectFnDecorator,
-    InjectMetadataCollector,
-    ProviderRepository,
-    ProviderBuilder,
-    InjectionToken,
+  ServiceLocator,
+  IocInjector,
+  metadataCollector,
+  InjectFnDecorator,
+  InjectMetadataCollector,
+  ProviderRepository,
+  ProviderBuilder,
+  InjectionToken,
 } from 'ts-ioc-container';
-import {InjectFn} from "./InjectFn";
+import { InjectFn } from "./InjectFn";
+import { IServiceLocator } from "./IServiceLocator";
 
 export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const inject: InjectFnDecorator = (injectionFn) => (target, propertyKey, parameterIndex) => {
-    constructorMetadataCollector.addMetadata(target, parameterIndex, injectionFn);
+  constructorMetadataCollector.addMetadata(target, parameterIndex, injectionFn);
 };
 export const Factory = <T>(key: InjectionToken<T>, ...args1) => l => (...args2: any[]) => l.resolve(key, ...args1, ...args2);
 export const Item = <T>(key: InjectionToken<T>, ...args: any[]) => l => l.resolve(key, ...args);
@@ -110,19 +111,20 @@ const container = new ServiceLocator(() => new IocInjector(constructorMetadataCo
 container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 
 class Car {
-    constructor(
-        @inject(l => l.resolve('IEngine', 'V1')) private engine1: IEngine,
-        /**
-         * OR
-         * @inject('IEngine', 'V8') private engine8: IEngine, // by using createInjectDecorator
-         * @inject(['IBike', 'ICar']) private vehicles: IVehicles[],
-         */
-        @inject(Item('IEngine', 'V8')) private engine8: IEngine,
-        @inject(Collection(Item('IEngine', 'V2'), Item('IEngine', 'V4'), Item('IEngine', 'V6'))) private engines: IEngine[],
-        @inject(Factory('IEngine', 'V12')) private engineFactory: (model: string) => IEngine,
-    ) {
-        const newEngine = engineFactory('SuperCharger');
-    }
+  constructor(
+    @inject(l => l.resolve('IEngine', 'V1')) private engine1: IEngine,
+    @inject(l => l) private locator: IServiceLocator,
+    /**
+     * OR
+     * @inject('IEngine', 'V8') private engine8: IEngine, // by using createInjectDecorator
+     * @inject(['IBike', 'ICar']) private vehicles: IVehicles[],
+     */
+    @inject(Item('IEngine', 'V8')) private engine8: IEngine,
+    @inject(Collection(Item('IEngine', 'V2'), Item('IEngine', 'V4'), Item('IEngine', 'V6'))) private engines: IEngine[],
+    @inject(Factory('IEngine', 'V12')) private engineFactory: (model: string) => IEngine,
+  ) {
+    const newEngine = engineFactory('SuperCharger');
+  }
 }
 
 const car = container.resolve(Car);
