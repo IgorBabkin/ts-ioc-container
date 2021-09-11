@@ -100,6 +100,12 @@ export const Factory = <T>(key: InjectionToken<T>, ...args1) => l => (...args2: 
 export const Item = <T>(key: InjectionToken<T>, ...args: any[]) => l => l.resolve(key, ...args);
 export const Collection = <T>(...injections: InjectFn<T>[]) => l => injections.map(fn => fn(l));
 
+/**
+ * OR
+ * export const inject = createInjectDecorator(constructorMetadataCollector);
+ * export const inject = createInjectFnDecorator(constructorMetadataCollector);
+ */
+
 const container = new ServiceLocator(() => new IocInjector(constructorMetadataCollector), new ProviderRepository());
 container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 
@@ -116,9 +122,6 @@ class Car {
 
 const car = container.resolve(Car);
 ```
-### Helpers
-- `createInjectDecorator`
-- `createInjectFnDecorator`
 
 ## ProviderBuilder
 
@@ -148,6 +151,12 @@ export const onDispose: MethodDecorator = (target, propertyKey) => {
     // eslint-disable-next-line @typescript-eslint/ban-types
     onDisposeMetadataCollector.addHook(target, propertyKey);
 };
+
+/**
+ * OR
+ * export const onConstruct = createHookDecorator(onConstructMetadataCollector)
+ * export const onDispose = createHookDecorator(onDisposeMetadataCollector)
+ */
 
 const hook = {
     onConstruct<GInstance>(instance: GInstance): void {
@@ -180,9 +189,6 @@ class Car {
 const car = container.resolve(Car); // output: initialized!
 container.dispose(); // output: disposed!
 ```
-
-### Helpers
-- `createHookDecorator`
 
 ## Scoped locators
 
