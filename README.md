@@ -36,9 +36,7 @@ All features []
 How to create new simple locator
 
 ```typescript
-import {ServiceLocator} from 'ts-ioc-container';
-import {ProviderRepository} from "./ProviderRepository";
-import {ProviderBuilder} from "./ProviderBuilder";
+import {ServiceLocator, ProviderRepository, ProviderBuilder} from 'ts-ioc-container';
 
 const container = new ServiceLocator(() => new SimpleInjector(), new ProviderRepository());
 locator.register('ILogger', ProviderBuilder.fromConstructor(Logger).asRequested());
@@ -48,10 +46,7 @@ const logger = locator.resolve<ILogger>('ILogger');
 Simple injector
 
 ```typescript
-import {IServiceLocator} from "./IServiceLocator";
-import {Provider} from "./Provider";
-import {ProviderRepository} from "./ProviderRepository";
-import {ProviderBuilder} from "./ProviderBuilder";
+import {ServiceLocator, ProviderRepository, ProviderBuilder, SimpleInjector} from "ts-ioc-container";
 
 class Car {
     constructor(locator: IServiceLocator) {
@@ -67,12 +62,7 @@ IoC injector
 
 ```typescript
 import 'reflect-metadata';
-import {ServiceLocator, IocInjector, metadataCollector, createInjectDecorator, InjectMetadataCollector} from 'ts-ioc-container';
-import {args} from "./helpers";
-import {Provider} from "./Provider";
-import {ConstructorMetadataCollector} from "./ConstructorMetadataCollector";
-import {ProviderRepository} from "./ProviderRepository";
-import {ProviderBuilder} from "./ProviderBuilder";
+import {ServiceLocator, IocInjector, metadataCollector, createInjectDecorator, InjectMetadataCollector, ProviderRepository, ProviderBuilder} from 'ts-ioc-container';
 
 export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const inject = createInjectDecorator(constructorMetadataCollector);
@@ -91,7 +81,7 @@ const car = container.resolve(Car);
 ## ProviderBuilder
 
 ```typescript
-import {ProviderBuilder} from "./ProviderBuilder";
+import {ProviderBuilder} from "ts-ioc-container";
 
 locator.register('ILogger', new ProviderBuilder((l, ...args) => new Logger(...args)).asRequested());
 locator.register('ILogger1', ProviderBuilder.fromConstructor(Logger).asSingleton());
@@ -102,17 +92,8 @@ locator.register('ILogger3', ProviderBuilder.fromConstructor(Logger).withArgs('d
 ## Hooks
 
 ```typescript
-import {ServiceLocator} from "./ServiceLocator";
-import {SimpleInjector} from "./SimpleInjector";
-import {ProviderKey} from "./IProvider";
+import {ServiceLocator, SimpleInjector, ProviderKey, IocInjector, InstanceHookInjector, ProviderRepository, HookServiceLocator, InstanceHookProvider} from "ts-ioc-container";
 import {Mock} from "moq.ts";
-import {IServiceLocator} from "./IServiceLocator";
-import {ProviderBuilder} from "./ProviderBuilder";
-import {IocInjector} from "./IocInjector";
-import {InstanceHookInjector} from "./InstanceHookInjector";
-import {ProviderRepository} from "./ProviderRepository";
-import {HookServiceLocator} from "./HookServiceLocator";
-import {InstanceHookProvider} from "./InstanceHookProvider";
 
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
 export const onConstruct: MethodDecorator = (target, propertyKey) => {
@@ -215,10 +196,7 @@ export class MoqRepository extends MockRepository {
 Usage
 ```typescript
 import {MoqRepository} from "./MoqRepository";
-import {ProviderRepository} from "./ProviderRepository";
-import {ProviderBuilder} from "ts-ioc-container";
-import {ServiceLocator} from "./ServiceLocator";
-import {SimpleInjector} from "./SimpleInjector";
+import {ProviderRepository, SimpleInjector, ProviderBuilder, ServiceLocator} from "ts-ioc-container";
 import {MoqProvider} from "./MoqProvider";
 
 const repo = new MoqRepository(new ProviderRepository());
