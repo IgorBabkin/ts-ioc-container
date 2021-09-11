@@ -23,7 +23,7 @@ export function createMock<T>(): IMock<T> {
 }
 
 export class MoqProvider<T> implements IProvider<T> {
-    private readonly mock = createMock<T>();
+    private readonly mock = new Mock<T>();
 
     getMock(): IMock<T> {
         return this.mock;

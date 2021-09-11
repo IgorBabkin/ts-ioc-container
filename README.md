@@ -157,3 +157,65 @@ const scope = container.createLocator();
 const logger = scope.resolve('ILogger');
 scope.remove();
 ```
+
+## Mocking/Tests
+
+Provider
+```typescript
+import { IProvider, IServiceLocator } from 'ts-ioc-container';
+import { IMock, It, Mock } from 'moq.ts';
+
+export class MoqProvider<T> implements IProvider<T> {
+    private readonly mock = new Mock<T>();
+
+    getMock(): IMock<T> {
+        return this.mock;
+    }
+
+    resolve(locator: IServiceLocator, ...args: any[]): T {
+        return this.mock.object();
+    }
+
+    clone(): IProvider<T> {
+        return new MoqProvider();
+    }
+
+    dispose(): void {}
+}
+```
+
+Repository
+```typescript
+import { MockRepository, ProviderKey, IServiceLocator } from 'ts-ioc-container';
+import { MoqProvider } from './MoqProvider';
+import { IMock } from 'moq.ts';
+
+export class MoqRepository extends MockRepository {
+    findMock<T>(key: ProviderKey): IMock<T> {
+        return (this.findOrCreateProvider<T>(key) as MoqProvider<T>).getMock();
+    }
+
+    protected createMockProvider<T>(): MoqProvider<T> {
+        return new MoqProvider();
+    }
+
+    clone(parent: IProviderRepository = this): IProviderRepository {
+        return new MoqRepository(this.decorated.clone(parent));
+    }
+}
+```
+Usage
+```typescript
+import {MoqRepository} from "./MoqRepository";
+import {ProviderRepository} from "./ProviderRepository";
+import {ProviderBuilder} from "ts-ioc-container";
+import {ServiceLocator} from "./ServiceLocator";
+import {SimpleInjector} from "./SimpleInjector";
+import {MoqProvider} from "./MoqProvider";
+
+const repo = new MoqRepository(new ProviderRepository());
+const container = new ServiceLocator(() => new SimpleInjector(), repo);
+
+const mock = repo.findMock('key1');
+mock.setup(i => i.someMethod()).return('someValue');
+```
