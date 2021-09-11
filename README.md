@@ -1,4 +1,4 @@
-# Typescript IoC and service locator container :boom: :100: :green_heart:
+# Typescript IoC (Inversion Of Control) container :boom: :100: :green_heart:
 
 ![NPM version:latest](https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square)
 ![npm downloads](https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square)
@@ -63,16 +63,36 @@ IoC injector
 
 ```typescript
 import 'reflect-metadata';
-import {ServiceLocator, IocInjector, metadataCollector, createInjectDecorator, InjectMetadataCollector, ProviderRepository, ProviderBuilder} from 'ts-ioc-container';
+import {
+    ServiceLocator,
+    IocInjector,
+    metadataCollector,
+    InjectFnDecorator,
+    InjectMetadataCollector,
+    ProviderRepository,
+    ProviderBuilder,
+    InjectionToken,
+} from 'ts-ioc-container';
+import {InjectFn} from "./InjectFn";
 
 export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
-export const inject = createInjectDecorator(constructorMetadataCollector);
+export const inject: InjectFnDecorator = (injectionFn) => (target, propertyKey, parameterIndex) => {
+    constructorMetadataCollector.addMetadata(target, parameterIndex, injectionFn);
+};
+export const Factory = <T>(key: InjectionToken<T>, ...args1) => l => (...args2: any[]) => l.resolve(key, ...args1, ...args2);
+export const Item = <T>(key: InjectionToken<T>, ...args: any[]) => l => l.resolve(key, ...args);
+export const Collection = <T>(...injections: InjectFn<T>[]) => l => injections.map(fn => fn(l));
 
 const container = new ServiceLocator(() => new IocInjector(constructorMetadataCollector), new ProviderRepository());
 container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 
 class Car {
-    constructor(@inject('IEngine') private engine: IEngine) {
+    constructor(
+        @inject(Item('IEngine', 'V8')) private engine: IEngine,
+        @inject(Collection(Item('IEngine', 'V2'), Item('IEngine', 'V4'), Item('IEngine', 'V6'))) private engines: IEngine[],
+        @inject(Factory('IEngine', 'V12')) private engineFactory: (model: string) => IEngine,
+    ) {
+        const newEngine = engineFactory('SuperCharger');
     }
 }
 
