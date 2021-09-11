@@ -3,5 +3,7 @@ export class ProviderNotFoundError extends Error {
 
     constructor(key: string) {
         super(`ServiceLocator cannot find ${key}`);
+
+        Object.setPrototypeOf(this, ProviderNotFoundError.prototype);
     }
 }
