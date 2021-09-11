@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { constructor, createInjectFnDecorator, InjectMetadataCollector, ProviderBuilder, ProviderFn } from '../../lib';
 
-export const constructorMetadataCollector = new InjectMetadataCollector();
+export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const inject = createInjectFnDecorator(constructorMetadataCollector);
 
 export const fromFn = <T>(fn: ProviderFn<T>): ProviderBuilder<T> => new ProviderBuilder(fn);

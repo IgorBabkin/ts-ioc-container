@@ -67,19 +67,16 @@ IoC injector
 
 ```typescript
 import 'reflect-metadata';
-import {ServiceLocator, IocInjector, metadataCollector} from 'ts-ioc-container';
+import {ServiceLocator, IocInjector, metadataCollector, createInjectDecorator, InjectMetadataCollector} from 'ts-ioc-container';
 import {args} from "./helpers";
 import {Provider} from "./Provider";
 import {ConstructorMetadataCollector} from "./ConstructorMetadataCollector";
 import {ProviderRepository} from "./ProviderRepository";
 import {ProviderBuilder} from "./ProviderBuilder";
 
-export const constructorMetadataCollector = new ConstructorMetadataCollector();
-export const inject =
-    <T>(providerKey: PropertyKey): ParameterDecorator =>
-        (target, propertyKey, parameterIndex) => {
-            constructorMetadataCollector.addMetadata(target, parameterIndex, (l, ...args) => l.resolve(providerKey, ...args));
-        };
+export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
+export const inject = createInjectDecorator(constructorMetadataCollector);
+
 const container = new ServiceLocator(() => new IocInjector(constructorMetadataCollector), new ProviderRepository());
 container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 
@@ -111,27 +108,36 @@ import {ProviderKey} from "./IProvider";
 import {Mock} from "moq.ts";
 import {IServiceLocator} from "./IServiceLocator";
 import {ProviderBuilder} from "./ProviderBuilder";
+import {IocInjector} from "./IocInjector";
+import {InstanceHookInjector} from "./InstanceHookInjector";
+import {ProviderRepository} from "./ProviderRepository";
+import {HookServiceLocator} from "./HookServiceLocator";
+import {InstanceHookProvider} from "./InstanceHookProvider";
 
-export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol('OnConstructHook'));
+export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
 export const onConstruct: MethodDecorator = (target, propertyKey) => {
     // eslint-disable-next-line @typescript-eslint/ban-types
     onConstructMetadataCollector.addHook(target, propertyKey);
 };
 
-export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol('OnDisposeHook'));
+export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnDisposeHook'));
 export const onDispose: MethodDecorator = (target, propertyKey) => {
     // eslint-disable-next-line @typescript-eslint/ban-types
     onDisposeMetadataCollector.addHook(target, propertyKey);
 };
 
-const fromConstructor = () => ProviderBuilder.fromConstructor().withHook({
+const hook = {
     onConstruct<GInstance>(instance: GInstance): void {
         instance.init();
     },
     onDispose<GInstance>(instance: GInstance): void {
         instance.dispose();
     }
-}).asRequested();
+}
+
+const container = new HookServiceLocator(new ServiceLocator(() => new InstanceHookInjector(new IocInjector(), hook), new ProviderRepository()), {
+    onBeforeRegister: (provider) => new InstanceHookProvider(provider, hook)
+})
 
 class Car {
     constructor() {
@@ -147,7 +153,9 @@ class Car {
         console('disposed!');
     }
 }
-const car = locator.resolve(Car); // initialized!
+
+const car = container.resolve(Car); // output: initialized!
+container.dispose(); // output: disposed!
 ```
 
 ## Scoped locators
@@ -155,7 +163,7 @@ const car = locator.resolve(Car); // initialized!
 ```typescript
 const scope = container.createLocator();
 const logger = scope.resolve('ILogger');
-scope.remove();
+scope.dispose();
 ```
 
 ## Mocking/Tests
