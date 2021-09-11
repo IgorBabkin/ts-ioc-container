@@ -31,6 +31,12 @@ npm install reflect-metadata
 yarn add reflect-metadata
 ```
 
+## Bundled size
+Full-featured IoC bundle (decorators `@inject`, hooks `@onDispose` `@onConstruct`)
+- Stat size: 13.34 KB
+- Parsed size: 5.44 KB
+- Gzipped size: 1.63 KB
+
 ## Configuration
 ```json
 {
