@@ -224,7 +224,7 @@ import {MoqProvider} from "./MoqProvider";
 import {IEngine} from "./IEngine";
 
 describe('test', () => {
-    const mockStorage = new MoqStorage();
+    const mockStorage = new MoqStorage(() => new MoqProvider());
     const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockStorage));
     
     const engineMock = mockStorage.findMock<IEngine>('IEngine');
@@ -244,13 +244,15 @@ import { IMock } from 'moq.ts';
 export class MoqStorage implements IMockStorage {
     private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
 
+    constructor(private createProvider: <T>() => MoqProvider<T>) {}
+
     dispose(): void {
         this.mocks.clear();
     }
 
     findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
         if (!this.mocks.has(key)) {
-            this.mocks.set(key, new MoqProvider());
+            this.mocks.set(key, this.createProvider<T>());
         }
 
         return this.mocks.get(key) as MoqProvider<T>;

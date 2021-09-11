@@ -13,13 +13,15 @@ export class MoqProvider<T> extends MockProvider<T> {
 export class MoqStorage implements IMockStorage {
     private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
 
+    constructor(private createProvider: <T>() => MoqProvider<T>) {}
+
     dispose(): void {
         this.mocks.clear();
     }
 
     findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
         if (!this.mocks.has(key)) {
-            this.mocks.set(key, new MoqProvider());
+            this.mocks.set(key, this.createProvider<T>());
         }
 
         return this.mocks.get(key) as MoqProvider<T>;

@@ -1,5 +1,5 @@
 import { IServiceLocator, MockedRepository, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
-import { MoqStorage } from '../MoqStorage';
+import { MoqProvider, MoqStorage } from '../MoqStorage';
 
 interface IDepClass {
     greeting(): string;
@@ -17,7 +17,7 @@ describe('UnitTestSimpleLocator', () => {
     let mockStorage: MoqStorage;
 
     beforeEach(() => {
-        mockStorage = new MoqStorage();
+        mockStorage = new MoqStorage(() => new MoqProvider());
     });
 
     function createSimpleLocator() {
