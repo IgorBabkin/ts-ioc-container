@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.18.0](https://github.com/IgorBabkin/service-locator/compare/v6.17.5...v6.18.0) (2021-09-11)
+
+
+### Features
+
+* remove compatibility mode ([7cc9f5f](https://github.com/IgorBabkin/service-locator/commit/7cc9f5fac99c8dbba952314cade098ec6beaa70c))
+
 ### [6.17.5](https://github.com/IgorBabkin/service-locator/compare/v6.17.4...v6.17.5) (2021-09-11)
 
 
