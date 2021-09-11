@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.13.2](https://github.com/IgorBabkin/service-locator/compare/v6.13.1...v6.13.2) (2021-09-11)
+
+
+### Bug Fixes
+
+* husky ([019cb2b](https://github.com/IgorBabkin/service-locator/commit/019cb2b36c096448c67e9f96170fc1892cb95784))
+
 ### [6.13.1](https://github.com/IgorBabkin/service-locator/compare/v6.13.0...v6.13.1) (2021-09-11)
 
 
