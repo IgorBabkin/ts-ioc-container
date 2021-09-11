@@ -30,8 +30,6 @@ yarn add reflect-metadata
 
 ## Recipes
 
-All features []
-
 ### ServiceLocator
 How to create new simple locator
 
