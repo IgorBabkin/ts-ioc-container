@@ -137,19 +137,29 @@ locator.register('ILogger3', ProviderBuilder.fromConstructor(Logger).withArgs('d
 ## Hooks
 
 ```typescript
-import {ServiceLocator, SimpleInjector, ProviderKey, IocInjector, InstanceHookInjector, ProviderRepository, HookServiceLocator, InstanceHookProvider} from "ts-ioc-container";
-import {Mock} from "moq.ts";
+import {
+  ServiceLocator,
+  SimpleInjector,
+  ProviderKey,
+  IocInjector,
+  InstanceHookInjector,
+  ProviderRepository,
+  HookServiceLocator,
+  InstanceHookProvider
+} from "ts-ioc-container";
+import { Mock } from "moq.ts";
+import { IInstanceHook } from "./IInstanceHook";
 
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
 export const onConstruct: MethodDecorator = (target, propertyKey) => {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    onConstructMetadataCollector.addHook(target, propertyKey);
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  onConstructMetadataCollector.addHook(target, propertyKey);
 };
 
 export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnDisposeHook'));
 export const onDispose: MethodDecorator = (target, propertyKey) => {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    onDisposeMetadataCollector.addHook(target, propertyKey);
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  onDisposeMetadataCollector.addHook(target, propertyKey);
 };
 
 /**
@@ -158,7 +168,7 @@ export const onDispose: MethodDecorator = (target, propertyKey) => {
  * export const onDispose = createHookDecorator(onDisposeMetadataCollector)
  */
 
-const hook = {
+const hook: IInstanceHook = {
     onConstruct<GInstance>(instance: GInstance): void {
         onConstructMetadataCollector.invokeHooksOf(instance);
     },
@@ -168,22 +178,22 @@ const hook = {
 }
 
 const container = new HookServiceLocator(new ServiceLocator(() => new InstanceHookInjector(new IocInjector(), hook), new ProviderRepository()), {
-    onBeforeRegister: (provider) => new InstanceHookProvider(provider, hook)
+  onBeforeRegister: (provider) => new InstanceHookProvider(provider, hook)
 })
 
 class Car {
-    constructor() {
-    }
+  constructor() {
+  }
 
-    @onConstruct
-    public initialize() {
-        console('initialized!');
-    }
+  @onConstruct
+  public initialize() {
+    console('initialized!');
+  }
 
-    @onDispose
-    public dispose() {
-        console('disposed!');
-    }
+  @onDispose
+  public dispose() {
+    console('disposed!');
+  }
 }
 
 const car = container.resolve(Car); // output: initialized!
