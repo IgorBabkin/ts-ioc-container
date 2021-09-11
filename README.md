@@ -31,6 +31,16 @@ npm install reflect-metadata
 yarn add reflect-metadata
 ```
 
+## Configuration
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+```
+
 ## Recipes
 
 ### ServiceLocator
