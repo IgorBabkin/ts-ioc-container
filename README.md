@@ -208,23 +208,27 @@ const logger = scope.resolve('ILogger');
 scope.dispose();
 ```
 
-## Mocking/Tests
+## Mocking / Tests
 
-Provider
 ```typescript
-import { MockProvider, IServiceLocator } from 'ts-ioc-container';
-import { Mock } from 'moq.ts';
+import {MoqRepository} from "./MoqRepository";
+import {ProviderRepository, SimpleInjector, ServiceLocator, MockedRepository} from "ts-ioc-container";
+import {MoqProvider} from "./MoqProvider";
+import {IEngine} from "./IEngine";
 
-export class MoqProvider<T> extends MockProvider<T> {
-  mock = new Mock<T>();
-
-  resolve(locator: IServiceLocator, ...args: any[]): T {
-    return this.mock.object();
-  }
-}
+describe('test', () => {
+    const mockStorage = new MoqStorage();
+    const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockStorage));
+    
+    const engineMock = mockStorage.findMock<IEngine>('IEngine');
+    engineMock.setup(i => i.getRegistrationNumber()).return('123');
+    
+    const engine = container.resolve<IEngine>('IEngine');
+    
+    expect(engine.getRegistrationNumber()).toBe('123');
+})
 ```
-
-Mock storage
+MoqStorage
 ```typescript
 import { IMockStorage, ProviderKey, IServiceLocator } from 'ts-ioc-container';
 import { MoqProvider } from './MoqProvider';
@@ -250,22 +254,17 @@ export class MoqStorage implements IMockStorage {
     }
 }
 ```
-Usage
-```typescript
-import {MoqRepository} from "./MoqRepository";
-import {ProviderRepository, SimpleInjector, ServiceLocator, MockedRepository} from "ts-ioc-container";
-import {MoqProvider} from "./MoqProvider";
-import {IEngine} from "./IEngine";
 
-describe('test', () => {
-    const mockStorage = new MoqStorage();
-    const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockStorage));
-    
-    const engineMock = mockStorage.findMock<IEngine>('IEngine');
-    engineMock.setup(i => i.getRegistrationNumber()).return('123');
-    
-    const engine = container.resolve<IEngine>('IEngine');
-    
-    expect(engine.getRegistrationNumber()).toBe('123');
-})
+MoqProvider
+```typescript
+import { MockProvider, IServiceLocator } from 'ts-ioc-container';
+import { Mock } from 'moq.ts';
+
+export class MoqProvider<T> extends MockProvider<T> {
+  mock = new Mock<T>();
+
+  resolve(locator: IServiceLocator, ...args: any[]): T {
+    return this.mock.object();
+  }
+}
 ```
