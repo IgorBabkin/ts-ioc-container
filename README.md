@@ -114,7 +114,7 @@ class Car {
         @inject(l => l.resolve('IEngine', 'V1')) private engine1: IEngine,
         /**
          * OR
-         * @inject('IEngine', 'V8') private engine8: IEngine,
+         * @inject('IEngine', 'V8') private engine8: IEngine, // by using createInjectDecorator
          * @inject(['IBike', 'ICar']) private vehicles: IVehicles[],
          */
         @inject(Item('IEngine', 'V8')) private engine8: IEngine,
