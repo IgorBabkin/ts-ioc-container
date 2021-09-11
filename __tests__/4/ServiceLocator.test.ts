@@ -6,6 +6,7 @@ import {
     InstanceHookProvider,
     IocInjector,
     IProvider,
+    ProviderNotFoundError,
     ProviderRepository,
     ServiceLocator,
 } from '../../lib';
@@ -80,7 +81,7 @@ describe('ServiceLocator', () => {
 
             locator.createLocator().register('key1', fromInstance(expectedInstance1).asRequested());
 
-            expect(() => locator.resolve('key1')).toThrow();
+            expect(() => locator.resolve('key1')).toThrow(ProviderNotFoundError);
         });
 
         it('returns the same singleton for child and parent', () => {
