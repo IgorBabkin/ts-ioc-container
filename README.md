@@ -141,10 +141,10 @@ export const onDispose: MethodDecorator = (target, propertyKey) => {
 
 const hook = {
     onConstruct<GInstance>(instance: GInstance): void {
-        instance.init();
+        onConstructMetadataCollector.invokeHooksOf(instance);
     },
     onDispose<GInstance>(instance: GInstance): void {
-        instance.dispose();
+        onDisposeMetadataCollector.invokeHooksOf(instance);
     }
 }
 
