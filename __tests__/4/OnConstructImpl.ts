@@ -66,7 +66,10 @@ export class App3 {
 }
 
 export class App4 {
-    constructor(@inject((l) => l.resolve('dep1')) private dep1: string, private locator: IServiceLocator) {}
+    constructor(
+        @inject((l) => l.resolve('dep1')) private dep1: string,
+        @inject((l) => l) private locator: IServiceLocator,
+    ) {}
 
     run(): string {
         return `${this.dep1}${this.locator.resolve('dep2')}`;

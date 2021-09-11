@@ -4,20 +4,13 @@ import { IInjector } from '../../core/IInjector';
 import { constant, merge } from '../../helpers/helpers';
 import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 
-export type IocServiceLocatorStrategyOptions = { simpleInjectionCompatible?: boolean };
-
 export class IocInjector implements IInjector {
-    constructor(
-        private readonly metadataCollector: IInjectMetadataCollector,
-        private readonly options: IocServiceLocatorStrategyOptions = {},
-    ) {}
+    constructor(private readonly metadataCollector: IInjectMetadataCollector) {}
 
     resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
-        const args = merge(this.metadataCollector.getInjectionFns(value), deps.map(constant)).map((fn) => fn(locator));
-        if (this.options.simpleInjectionCompatible) {
-            args.push(locator);
-        }
-        return new value(...args);
+        return new value(
+            ...merge(this.metadataCollector.getInjectionFns(value), deps.map(constant)).map((fn) => fn(locator)),
+        );
     }
 
     dispose(): void {}

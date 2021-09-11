@@ -5,7 +5,6 @@ import {
     InstanceHookInjector,
     InstanceHookProvider,
     IocInjector,
-    IocServiceLocatorStrategyOptions,
     IProvider,
     ProviderRepository,
     ServiceLocator,
@@ -25,10 +24,10 @@ import { SubGroup3 } from './SubGroup3';
 import { emptyHook } from '../emptyHook';
 
 describe('ServiceLocator', () => {
-    const createIoCLocator = (hook: IInstanceHook = emptyHook, options?: IocServiceLocatorStrategyOptions) => {
+    const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
         return new HookServiceLocator(
             new ServiceLocator(
-                () => new InstanceHookInjector(new IocInjector(constructorMetadataCollector, options), hook),
+                () => new InstanceHookInjector(new IocInjector(constructorMetadataCollector), hook),
                 new ProviderRepository(),
             ),
             {
@@ -217,13 +216,10 @@ describe('ServiceLocator', () => {
         });
 
         it('passes locator as last dep', () => {
-            const decorated = createIoCLocator(
-                {
-                    onConstruct<GInstance>(instance: GInstance) {},
-                    onDispose<GInstance>(instance: GInstance) {},
-                },
-                { simpleInjectionCompatible: true },
-            );
+            const decorated = createIoCLocator({
+                onConstruct<GInstance>(instance: GInstance) {},
+                onDispose<GInstance>(instance: GInstance) {},
+            });
 
             decorated.register('dep1', fromInstance('dep1').asRequested());
             decorated.register('dep2', fromInstance('dep2').asRequested());

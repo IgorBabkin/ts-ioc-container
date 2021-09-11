@@ -6,7 +6,7 @@ export { ServiceLocator } from './core/ServiceLocator';
 export { ProviderKey, IProvider, ProviderFn } from './core/providers/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/SimpleInjector';
-export { IocInjector, IocServiceLocatorStrategyOptions } from './features/ioc/IocInjector';
+export { IocInjector } from './features/ioc/IocInjector';
 export { IInjectMetadataCollector } from './features/ioc/IInjectMetadataCollector';
 export { IMethodsMetadataCollector } from './decorators/instanceHook/IMethodsMetadataCollector';
 export { MethodsMetadataCollector } from './decorators/instanceHook/MethodsMetadataCollector';
@@ -15,6 +15,7 @@ export { createInjectDecorator, createInjectFnDecorator } from './decorators/ioc
 export { InjectMetadataCollector } from './decorators/ioc/InjectMetadataCollector';
 export { InjectionToken } from './core/IServiceLocator';
 export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
+export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { IProviderRepository } from './core/IProviderRepository';
 export { InstanceHookProvider } from './features/instanceHook/InstanceHookProvider';
 export { InjectFn } from './features/ioc/InjectFn';
