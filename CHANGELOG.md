@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.19.0](https://github.com/IgorBabkin/service-locator/compare/v6.18.5...v6.19.0) (2021-09-11)
+
+
+### Features
+
+* refactor injectors ([740f2eb](https://github.com/IgorBabkin/service-locator/commit/740f2eb65e4bac3ff1849e9a4285182a35ecdeb8))
+* refactor injectors ([a528ac3](https://github.com/IgorBabkin/service-locator/commit/a528ac39049344019c4d430a4794b4fc105304bb))
+
 ### [6.18.5](https://github.com/IgorBabkin/service-locator/compare/v6.18.4...v6.18.5) (2021-09-11)
 
 ### [6.18.4](https://github.com/IgorBabkin/service-locator/compare/v6.18.3...v6.18.4) (2021-09-11)
