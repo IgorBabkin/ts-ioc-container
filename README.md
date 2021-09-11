@@ -88,7 +88,8 @@ container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).a
 
 class Car {
     constructor(
-        @inject(Item('IEngine', 'V8')) private engine: IEngine,
+        @inject(l => l.resolve('IEngine', 'V1')) private engine1: IEngine,
+        @inject(Item('IEngine', 'V8')) private engine8: IEngine,
         @inject(Collection(Item('IEngine', 'V2'), Item('IEngine', 'V4'), Item('IEngine', 'V6'))) private engines: IEngine[],
         @inject(Factory('IEngine', 'V12')) private engineFactory: (model: string) => IEngine,
     ) {
