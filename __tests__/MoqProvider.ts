@@ -1,4 +1,4 @@
-import { IMockProvider, IProvider, IServiceLocator } from '../lib';
+import { IProvider, IServiceLocator } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
 
 export function createMock<T>(): IMock<T> {
@@ -22,7 +22,7 @@ export function createMock<T>(): IMock<T> {
     return mock;
 }
 
-export class MoqProvider<T> implements IMockProvider<T> {
+export class MoqProvider<T> implements IProvider<T> {
     private readonly mock = new Mock<T>();
 
     getMock(): IMock<T> {

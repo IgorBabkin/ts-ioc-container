@@ -202,24 +202,24 @@ scope.dispose();
 
 Provider
 ```typescript
-import { IMockProvider, IServiceLocator } from 'ts-ioc-container';
-import { IMock, Mock } from 'moq.ts';
+import { IProvider, IServiceLocator } from 'ts-ioc-container';
+import { IMock, It, Mock } from 'moq.ts';
 
-export class MoqProvider<T> implements IMockProvider<T> {
+export class MoqProvider<T> implements IProvider<T> {
     private readonly mock = new Mock<T>();
-    
+
     getMock(): IMock<T> {
         return this.mock;
     }
-    
+
     resolve(locator: IServiceLocator, ...args: any[]): T {
         return this.mock.object();
     }
-    
+
     clone(): IProvider<T> {
         return new MoqProvider();
     }
-    
+
     dispose(): void {}
 }
 ```
@@ -231,10 +231,14 @@ import { MoqProvider } from './MoqProvider';
 import { IMock } from 'moq.ts';
 
 export class MoqRepository extends MockRepository {
+    findMock<T>(key: ProviderKey): IMock<T> {
+        return (this.findOrCreateProvider<T>(key) as MoqProvider<T>).getMock();
+    }
+
     protected createMockProvider<T>(): MoqProvider<T> {
         return new MoqProvider();
     }
-    
+
     clone(parent: IProviderRepository = this): IProviderRepository {
         return new MoqRepository(this.decorated.clone(parent));
     }
