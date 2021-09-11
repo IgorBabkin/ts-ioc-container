@@ -33,6 +33,5 @@ describe('UnitTestIoCLocator', () => {
         const key1 = locator.resolve(TestClass1);
 
         expect(key1.dep1.greeting()).toBe('hello');
-        expect(true).toBe(true);
     });
 });
