@@ -1,5 +1,7 @@
 export { IMockProviderStorage } from './features/mock/IMockProviderStorage';
 export { MockProvider } from './features/mock/MockProvider';
+export { MockProviderStorage } from './features/mock/MockProviderStorage';
+export { VendorMockProviderStorage } from './features/mock/VendorMockProviderStorage';
 export { IServiceLocator } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';

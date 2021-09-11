@@ -1,6 +1,5 @@
-import { IMockProviderStorage, IServiceLocator, ProviderKey } from '../lib';
+import { IServiceLocator, MockProvider, ProviderKey, VendorMockProviderStorage } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
-import { MockProvider } from '../lib';
 
 export class MoqProvider<T> extends MockProvider<T> {
     mock = new Mock<T>();
@@ -10,25 +9,13 @@ export class MoqProvider<T> extends MockProvider<T> {
     }
 }
 
-export class MoqProviderStorage implements IMockProviderStorage {
-    private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
-
-    constructor(private createProvider: <T>() => MoqProvider<T>) {}
-
-    dispose(): void {
-        this.mocks.clear();
-    }
-
+export class MoqProviderStorage extends VendorMockProviderStorage {
     findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
-        if (!this.mocks.has(key)) {
-            this.mocks.set(key, this.createProvider<T>());
-        }
-
-        return this.mocks.get(key) as MoqProvider<T>;
+        return this.storage.findOrCreate(key) as MoqProvider<T>;
     }
 
     findMock<T>(key: ProviderKey): IMock<T> {
-        return this.findOrCreate<T>(key).mock;
+        return (this.storage.findOrCreate(key) as MoqProvider<T>).mock;
     }
 }
 

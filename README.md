@@ -221,12 +221,12 @@ scope.dispose();
 
 ```typescript
 import {MoqRepository} from "./MoqRepository";
-import {ProviderRepository, SimpleInjector, ServiceLocator, MockedRepository} from "ts-ioc-container";
+import {ProviderRepository, SimpleInjector, ServiceLocator, MockedRepository, MockProviderStorage} from "ts-ioc-container";
 import {MoqProviderStorage} from "./MoqProviderStorage";
 import {IEngine} from "./IEngine";
 
 describe('test', () => {
-    const mockProviderStorage = new MoqProviderStorage(() => new MoqProvider());
+    const mockProviderStorage = new MoqProviderStorage(new MockProviderStorage(() => new MoqProvider()));
     const container = new ServiceLocator((l) => new SimpleInjector(l), new MockedRepository(new ProviderRepository(), mockProviderStorage));
     
     const engineMock = mockProviderStorage.findMock<IEngine>('IEngine');
@@ -239,30 +239,18 @@ describe('test', () => {
 ```
 MoqStorage
 ```typescript
-import { IMockProviderStorage, ProviderKey, IServiceLocator } from 'ts-ioc-container';
+import { VendorMockProviderStorage, ProviderKey } from 'ts-ioc-container';
 import { MoqProvider } from './MoqProvider';
 import { IMock } from 'moq.ts';
 
-export class MoqProviderStorage implements IMockProviderStorage {
-    private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
+export class MoqProviderStorage extends VendorMockProviderStorage {
+  findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
+    return this.storage.findOrCreate(key) as MoqProvider<T>;
+  }
 
-    constructor(private createProvider: <T>() => MoqProvider<T>) {}
-
-    dispose(): void {
-        this.mocks.clear();
-    }
-
-    findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
-        if (!this.mocks.has(key)) {
-            this.mocks.set(key, this.createProvider<T>());
-        }
-
-        return this.mocks.get(key) as MoqProvider<T>;
-    }
-
-    findMock<T>(key: ProviderKey): IMock<T> {
-        return this.findOrCreate<T>(key).mock;
-    }
+  findMock<T>(key: ProviderKey): IMock<T> {
+    return (this.storage.findOrCreate(key) as MoqProvider<T>).mock;
+  }
 }
 ```
 
