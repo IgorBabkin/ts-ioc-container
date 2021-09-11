@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.14.0](https://github.com/IgorBabkin/service-locator/compare/v6.13.3...v6.14.0) (2021-09-11)
+
+
+### Features
+
+* update license ([9e312aa](https://github.com/IgorBabkin/service-locator/commit/9e312aabdfb7691684e78454a8a60feff69e8ac6))
+
 ### [6.13.3](https://github.com/IgorBabkin/service-locator/compare/v6.13.2...v6.13.3) (2021-09-11)
 
 

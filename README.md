@@ -10,6 +10,7 @@
 - simple and lightweight (roughly it's just one file of **~100 lines**) :heart:
 - clean API
 - supports scopes
+- fully test covered
 - can be used with decorators `@inject`
 - provides auto-factories
 - supports `onConstruct` and `dispose` instance hooks
