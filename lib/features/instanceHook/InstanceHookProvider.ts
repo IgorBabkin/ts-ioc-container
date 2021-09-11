@@ -9,31 +9,20 @@ export class InstanceHookProvider<GInstance> implements IProvider<GInstance> {
 
     dispose(): void {
         this.decorated.dispose();
-        this.onDispose();
+        for (const instance of this.instances) {
+            this.hook.onDispose(instance);
+        }
+        this.instances.clear();
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): GInstance {
         const instance = this.decorated.resolve(locator, ...args);
-        this.onResolve(instance);
+        this.hook.onConstruct(instance);
+        this.instances.add(instance);
         return instance;
     }
 
     clone(): InstanceHookProvider<GInstance> {
         return new InstanceHookProvider(this.decorated.clone(), this.hook);
-    }
-
-    protected onDispose(): void {
-        for (const instance of this.instances) {
-            this.hook.onDispose(instance);
-        }
-    }
-
-    protected onResolve(instance: GInstance): void {
-        if (this.instances.has(instance)) {
-            return;
-        }
-
-        this.instances.add(instance);
-        this.hook.onConstruct(instance);
     }
 }

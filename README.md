@@ -76,7 +76,7 @@ const container = new ServiceLocator(() => new SimpleInjector(), new ProviderRep
 container.register('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 const car = container.resolve(Car);
 ```
-IoC injector
+IoC injector. Compose `@inject` decorator as you need. Or use default `createInjectDecorator`;
 
 ```typescript
 import 'reflect-metadata';
@@ -117,7 +117,6 @@ class Car {
     /**
      * OR
      * @inject('IEngine', 'V8') private engine8: IEngine, // by using createInjectDecorator
-     * @inject(['IBike', 'ICar']) private vehicles: IVehicles[],
      */
     @inject(Item('IEngine', 'V8')) private engine8: IEngine,
     @inject(Collection(Item('IEngine', 'V2'), Item('IEngine', 'V4'), Item('IEngine', 'V6'))) private engines: IEngine[],
