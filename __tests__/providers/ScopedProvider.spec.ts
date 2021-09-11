@@ -2,15 +2,15 @@ import {
     IProvider,
     IServiceLocator,
     Provider,
-    DependencyNotResolvedError,
     ProviderRepository,
     ScopedProvider,
     ServiceLocator,
     SimpleInjector,
     SingletonProvider,
 } from '../../lib';
-import { createMock } from '../MoqProvider';
 import { Times } from 'moq.ts';
+import { createMock } from '../MoqStorage';
+import { MethodNotImplementedError } from '../../lib/errors/MethodNotImplementedError';
 
 describe('ScopedProvider', function () {
     let locator: IServiceLocator;
@@ -24,7 +24,7 @@ describe('ScopedProvider', function () {
     test('cannot resolve dependency from scoped provider', () => {
         const scopedProvider = new ScopedProvider(provider);
 
-        expect(() => scopedProvider.resolve(locator)).toThrow(DependencyNotResolvedError);
+        expect(() => scopedProvider.resolve(locator)).toThrow(MethodNotImplementedError);
     });
 
     test('can be cloned', () => {

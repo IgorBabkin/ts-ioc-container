@@ -1,5 +1,34 @@
-import { IProvider, IServiceLocator } from '../lib';
+import { IMockStorage, IServiceLocator, ProviderKey } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
+import { MockProvider } from '../lib';
+
+export class MoqProvider<T> extends MockProvider<T> {
+    mock = new Mock<T>();
+
+    resolve(locator: IServiceLocator, ...args: any[]): T {
+        return this.mock.object();
+    }
+}
+
+export class MoqStorage implements IMockStorage {
+    private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
+
+    dispose(): void {
+        this.mocks.clear();
+    }
+
+    findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
+        if (!this.mocks.has(key)) {
+            this.mocks.set(key, new MoqProvider());
+        }
+
+        return this.mocks.get(key) as MoqProvider<T>;
+    }
+
+    findMock<T>(key: ProviderKey): IMock<T> {
+        return this.findOrCreate<T>(key).mock;
+    }
+}
 
 export function createMock<T>(): IMock<T> {
     const mock = new Mock<T>()
@@ -20,22 +49,4 @@ export function createMock<T>(): IMock<T> {
             }
         });
     return mock;
-}
-
-export class MoqProvider<T> implements IProvider<T> {
-    private readonly mock = new Mock<T>();
-
-    getMock(): IMock<T> {
-        return this.mock;
-    }
-
-    resolve(locator: IServiceLocator, ...args: any[]): T {
-        return this.mock.object();
-    }
-
-    clone(): IProvider<T> {
-        return new MoqProvider();
-    }
-
-    dispose(): void {}
 }

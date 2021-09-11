@@ -1,3 +1,5 @@
+export { IMockStorage } from './features/mock/IMockStorage';
+export { MockProvider } from './features/mock/MockProvider';
 export { IServiceLocator } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
@@ -21,8 +23,7 @@ export { ProviderRepository } from './core/ProviderRepository';
 export { Provider } from './core/providers/Provider';
 export { InstanceHookInjector } from './features/instanceHook/InstanceHookInjector';
 export { IDisposable } from './helpers/IDisposable';
-export { MockRepository } from './features/MockRepository';
-export { DependencyNotResolvedError } from './errors/DependencyNotResolvedError';
+export { MockedRepository } from './features/mock/MockedRepository';
 export { ScopedProvider } from './core/providers/ScopedProvider';
 export { SingletonProvider } from './core/providers/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';

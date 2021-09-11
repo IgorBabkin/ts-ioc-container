@@ -202,45 +202,41 @@ scope.dispose();
 
 Provider
 ```typescript
-import { IProvider, IServiceLocator } from 'ts-ioc-container';
-import { IMock, It, Mock } from 'moq.ts';
+import { MockProvider, IServiceLocator } from 'ts-ioc-container';
+import { Mock } from 'moq.ts';
 
-export class MoqProvider<T> implements IProvider<T> {
-    private readonly mock = new Mock<T>();
+export class MoqProvider<T> extends MockProvider<T> {
+  mock = new Mock<T>();
 
-    getMock(): IMock<T> {
-        return this.mock;
-    }
-
-    resolve(locator: IServiceLocator, ...args: any[]): T {
-        return this.mock.object();
-    }
-
-    clone(): IProvider<T> {
-        return new MoqProvider();
-    }
-
-    dispose(): void {}
+  resolve(locator: IServiceLocator, ...args: any[]): T {
+    return this.mock.object();
+  }
 }
 ```
 
-Repository
+Mock storage
 ```typescript
-import { MockRepository, ProviderKey, IServiceLocator } from 'ts-ioc-container';
+import { IMockStorage, ProviderKey, IServiceLocator } from 'ts-ioc-container';
 import { MoqProvider } from './MoqProvider';
 import { IMock } from 'moq.ts';
 
-export class MoqRepository extends MockRepository {
+export class MoqStorage implements IMockStorage {
+    private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
+
+    dispose(): void {
+        this.mocks.clear();
+    }
+
+    findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
+        if (!this.mocks.has(key)) {
+            this.mocks.set(key, new MoqProvider());
+        }
+
+        return this.mocks.get(key) as MoqProvider<T>;
+    }
+
     findMock<T>(key: ProviderKey): IMock<T> {
-        return (this.findOrCreateProvider<T>(key) as MoqProvider<T>).getMock();
-    }
-
-    protected createMockProvider<T>(): MoqProvider<T> {
-        return new MoqProvider();
-    }
-
-    clone(parent: IProviderRepository = this): IProviderRepository {
-        return new MoqRepository(this.decorated.clone(parent));
+        return this.findOrCreate<T>(key).mock;
     }
 }
 ```
@@ -250,9 +246,9 @@ import {MoqRepository} from "./MoqRepository";
 import {ProviderRepository, SimpleInjector, ProviderBuilder, ServiceLocator} from "ts-ioc-container";
 import {MoqProvider} from "./MoqProvider";
 
-const repo = new MoqRepository(new ProviderRepository());
-const container = new ServiceLocator(() => new SimpleInjector(), repo);
+const mockStorage = new MoqStorage();
+const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockStorage));
 
-const mock = repo.findMock('key1');
+const mock = mockStorage.findMock('key1');
 mock.setup(i => i.someMethod()).return('someValue');
 ```
