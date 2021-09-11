@@ -219,14 +219,14 @@ scope.dispose();
 ```typescript
 import {MoqRepository} from "./MoqRepository";
 import {ProviderRepository, SimpleInjector, ServiceLocator, MockedRepository} from "ts-ioc-container";
-import {MoqProvider} from "./MoqProvider";
+import {MoqProviderStorage} from "./MoqProviderStorage";
 import {IEngine} from "./IEngine";
 
 describe('test', () => {
-    const mockStorage = new MoqStorage(() => new MoqProvider());
-    const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockStorage));
+    const mockProviderStorage = new MoqProviderStorage(() => new MoqProvider());
+    const container = new ServiceLocator(() => new SimpleInjector(), new MockedRepository(new ProviderRepository(), mockProviderStorage));
     
-    const engineMock = mockStorage.findMock<IEngine>('IEngine');
+    const engineMock = mockProviderStorage.findMock<IEngine>('IEngine');
     engineMock.setup(i => i.getRegistrationNumber()).return('123');
     
     const engine = container.resolve<IEngine>('IEngine');
@@ -236,11 +236,11 @@ describe('test', () => {
 ```
 MoqStorage
 ```typescript
-import { IMockStorage, ProviderKey, IServiceLocator } from 'ts-ioc-container';
+import { IMockProviderStorage, ProviderKey, IServiceLocator } from 'ts-ioc-container';
 import { MoqProvider } from './MoqProvider';
 import { IMock } from 'moq.ts';
 
-export class MoqStorage implements IMockStorage {
+export class MoqProviderStorage implements IMockProviderStorage {
     private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
 
     constructor(private createProvider: <T>() => MoqProvider<T>) {}

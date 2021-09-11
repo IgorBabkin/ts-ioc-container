@@ -1,4 +1,4 @@
-import { IProvider, ProviderFn } from '../core/providers/IProvider';
+import { IProvider, ResolveDependency } from '../core/providers/IProvider';
 import { SingletonProvider } from '../core/providers/SingletonProvider';
 import { ScopedProvider } from '../core/providers/ScopedProvider';
 import { Provider } from '../core/providers/Provider';
@@ -18,7 +18,7 @@ export class ProviderBuilder<T> {
         return new ProviderBuilder(() => value);
     }
 
-    constructor(fn: ProviderFn<T>) {
+    constructor(fn: ResolveDependency<T>) {
         this.provider = new Provider(fn);
     }
 

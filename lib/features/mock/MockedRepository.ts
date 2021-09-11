@@ -1,13 +1,13 @@
 import { IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError } from '../../index';
-import { IMockStorage } from './IMockStorage';
+import { IMockProviderStorage } from './IMockProviderStorage';
 import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
 
 export class MockedRepository implements IProviderRepository {
-    constructor(protected decorated: IProviderRepository, private mocks: IMockStorage) {}
+    constructor(protected decorated: IProviderRepository, private mockProviders: IMockProviderStorage) {}
 
     dispose(): void {
         this.decorated.dispose();
-        this.mocks.dispose();
+        this.mockProviders.dispose();
     }
 
     find<T>(key: ProviderKey): IProvider<T> {
@@ -15,7 +15,7 @@ export class MockedRepository implements IProviderRepository {
             return this.decorated.find(key);
         } catch (e) {
             if (e instanceof ProviderNotFoundError) {
-                return this.mocks.findOrCreate<T>(key);
+                return this.mockProviders.findOrCreate<T>(key);
             }
 
             throw e;

@@ -1,7 +1,7 @@
 import { IServiceLocator } from '../IServiceLocator';
 import { IDisposable } from '../../helpers/IDisposable';
 
-export type ProviderFn<T> = (locator: IServiceLocator, ...args: any[]) => T;
+export type ResolveDependency<T> = (locator: IServiceLocator, ...args: any[]) => T;
 
 export interface IProvider<T> extends IDisposable {
     clone(): IProvider<T>;

@@ -1,9 +1,9 @@
-export { IMockStorage } from './features/mock/IMockStorage';
+export { IMockProviderStorage } from './features/mock/IMockProviderStorage';
 export { MockProvider } from './features/mock/MockProvider';
 export { IServiceLocator } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
-export { ProviderKey, IProvider, ProviderFn } from './core/providers/IProvider';
+export { ProviderKey, IProvider, ResolveDependency } from './core/providers/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/SimpleInjector';
 export { IocInjector } from './features/ioc/IocInjector';

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { IocInjector, MockedRepository, ProviderRepository, ServiceLocator } from '../../lib';
 import { constructorMetadataCollector, inject } from './decorators';
-import { MoqProvider, MoqStorage } from '../MoqStorage';
+import { MoqProvider, MoqProviderStorage } from '../MoqProviderStorage';
 
 interface ISubClass {
     greeting(): string;
@@ -12,10 +12,10 @@ class TestClass1 {
 }
 
 describe('UnitTestIoCLocator', () => {
-    let mockStorage: MoqStorage;
+    let mockStorage: MoqProviderStorage;
 
     beforeEach(() => {
-        mockStorage = new MoqStorage(() => new MoqProvider());
+        mockStorage = new MoqProviderStorage(() => new MoqProvider());
     });
 
     function createIoCLocator() {

@@ -9,8 +9,8 @@ import {
     SingletonProvider,
 } from '../../lib';
 import { Times } from 'moq.ts';
-import { createMock } from '../MoqStorage';
-import { MethodNotImplementedError } from '../../lib/errors/MethodNotImplementedError';
+import { createMock } from '../MoqProviderStorage';
+import { MethodNotImplementedError } from '../../lib';
 
 describe('ScopedProvider', function () {
     let locator: IServiceLocator;

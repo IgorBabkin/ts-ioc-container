@@ -1,4 +1,4 @@
-import { IMockStorage, IServiceLocator, ProviderKey } from '../lib';
+import { IMockProviderStorage, IServiceLocator, ProviderKey } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
 import { MockProvider } from '../lib';
 
@@ -10,7 +10,7 @@ export class MoqProvider<T> extends MockProvider<T> {
     }
 }
 
-export class MoqStorage implements IMockStorage {
+export class MoqProviderStorage implements IMockProviderStorage {
     private readonly mocks = new Map<ProviderKey, MoqProvider<any>>();
 
     constructor(private createProvider: <T>() => MoqProvider<T>) {}
