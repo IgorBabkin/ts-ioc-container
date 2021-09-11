@@ -1,6 +1,9 @@
-![npm bundle size](https://img.shields.io/bundlephobia/minzip/ts-ioc-container)
-
 # Typescript IoC and service locator container :boom: :100: :green_heart:
+
+![NPM version:latest](https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square)
+![npm downloads](https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square)
+![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/ts-ioc-container)
+![License](https://img.shields.io/npm/l/ts-ioc-container)
 
 ## Advantages
 - written on typescript
