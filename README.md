@@ -116,6 +116,9 @@ class Car {
 
 const car = container.resolve(Car);
 ```
+### Helpers
+- `createInjectDecorator`
+- `createInjectFnDecorator`
 
 ## ProviderBuilder
 
@@ -177,6 +180,9 @@ class Car {
 const car = container.resolve(Car); // output: initialized!
 container.dispose(); // output: disposed!
 ```
+
+### Helpers
+- `createHookDecorator`
 
 ## Scoped locators
 
