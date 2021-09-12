@@ -4,7 +4,7 @@ import { ScopedProvider } from '../core/providers/ScopedProvider';
 import { Provider } from '../core/providers/Provider';
 import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
-import { InstanceHookProvider } from './instanceHook/InstanceHookProvider';
+import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
 
 export class ProviderBuilder<T> {
@@ -28,7 +28,7 @@ export class ProviderBuilder<T> {
     }
 
     withHook(hook: IInstanceHook): this {
-        this.provider = new InstanceHookProvider(this.provider, hook);
+        this.provider = new HookedProvider(this.provider, hook);
         return this;
     }
 

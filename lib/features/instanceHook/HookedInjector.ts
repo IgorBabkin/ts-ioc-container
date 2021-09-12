@@ -1,7 +1,7 @@
 import { constructor, IInjector } from '../../index';
 import { IInstanceHook } from './IInstanceHook';
 
-export class InstanceHookInjector implements IInjector {
+export class HookedInjector implements IInjector {
     private readonly instances = new Set();
     constructor(private readonly decorated: IInjector, private readonly hook: IInstanceHook) {}
 

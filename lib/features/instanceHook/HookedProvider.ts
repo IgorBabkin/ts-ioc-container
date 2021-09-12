@@ -2,7 +2,7 @@ import { IProvider } from '../../core/providers/IProvider';
 import { IInstanceHook } from './IInstanceHook';
 import { IServiceLocator } from '../../core/IServiceLocator';
 
-export class InstanceHookProvider<GInstance> implements IProvider<GInstance> {
+export class HookedProvider<GInstance> implements IProvider<GInstance> {
     private readonly instances = new Set<GInstance>();
 
     constructor(private readonly decorated: IProvider<GInstance>, private readonly hook: IInstanceHook) {}
@@ -22,7 +22,7 @@ export class InstanceHookProvider<GInstance> implements IProvider<GInstance> {
         return instance;
     }
 
-    clone(): InstanceHookProvider<GInstance> {
-        return new InstanceHookProvider(this.decorated.clone(), this.hook);
+    clone(): HookedProvider<GInstance> {
+        return new HookedProvider(this.decorated.clone(), this.hook);
     }
 }

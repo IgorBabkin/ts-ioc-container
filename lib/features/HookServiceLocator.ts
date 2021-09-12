@@ -5,6 +5,9 @@ export interface IServiceLocatorHook {
     onBeforeRegister<T>(provider: IProvider<T>): IProvider<T>;
 }
 
+/**
+ * @deprecated Use HookedProviderRepository
+ */
 export class HookServiceLocator implements IServiceLocator {
     constructor(private readonly decorated: IServiceLocator, private readonly hook: IServiceLocatorHook) {}
 

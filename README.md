@@ -148,15 +148,15 @@ import {
   SimpleInjector,
   ProviderKey,
   IocInjector,
-  InstanceHookInjector,
   ProviderRepository,
-  HookServiceLocator,
-  InstanceHookProvider,
   InjectMetadataCollector,
-  MethodsMetadataCollector
+  MethodsMetadataCollector,
+  HookedProviderRepository,
+  HookedInjector,
+  HookedProvider,
+  IInstanceHook
 } from "ts-ioc-container";
 import { Mock } from "moq.ts";
-import { IInstanceHook } from "./IInstanceHook";
 
 export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
@@ -178,17 +178,20 @@ export const onDispose: MethodDecorator = (target, propertyKey) => {
  */
 
 const hook: IInstanceHook = {
-    onConstruct<GInstance>(instance: GInstance): void {
-        onConstructMetadataCollector.invokeHooksOf(instance);
-    },
-    onDispose<GInstance>(instance: GInstance): void {
-        onDisposeMetadataCollector.invokeHooksOf(instance);
-    }
+  onConstruct<GInstance>(instance: GInstance): void {
+    onConstructMetadataCollector.invokeHooksOf(instance);
+  },
+  onDispose<GInstance>(instance: GInstance): void {
+    onDisposeMetadataCollector.invokeHooksOf(instance);
+  }
 }
 
-const container = new HookServiceLocator(new ServiceLocator((l) => new InstanceHookInjector(new IocInjector(l, constructorMetadataCollector), hook), new ProviderRepository()), {
-  onBeforeRegister: (provider) => new InstanceHookProvider(provider, hook)
-})
+const container = new ServiceLocator(
+  (l) => new HookedInjector(new IocInjector(l, constructorMetadataCollector), hook),
+  new HookedProviderRepository(new ProviderRepository(), {
+    onBeforeAdd: (provider) => new HookedProvider(provider, hook)
+  }),
+)
 
 class Car {
   constructor() {

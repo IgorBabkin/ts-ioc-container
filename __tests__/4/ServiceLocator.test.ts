@@ -1,11 +1,10 @@
 import 'reflect-metadata';
 import {
-    HookServiceLocator,
+    HookedInjector,
+    HookedProvider,
+    HookedProviderRepository,
     IInstanceHook,
-    InstanceHookInjector,
-    InstanceHookProvider,
     IocInjector,
-    IProvider,
     ProviderNotFoundError,
     ProviderRepository,
     ServiceLocator,
@@ -26,16 +25,11 @@ import { emptyHook } from '../emptyHook';
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
-        return new HookServiceLocator(
-            new ServiceLocator(
-                (l) => new InstanceHookInjector(new IocInjector(l, constructorMetadataCollector), hook),
-                new ProviderRepository(),
-            ),
-            {
-                onBeforeRegister<T>(provider: IProvider<T>): IProvider<T> {
-                    return new InstanceHookProvider(provider, hook);
-                },
-            },
+        return new ServiceLocator(
+            (l) => new HookedInjector(new IocInjector(l, constructorMetadataCollector), hook),
+            new HookedProviderRepository(new ProviderRepository(), {
+                onBeforeAdd: (provider) => new HookedProvider(provider, hook),
+            }),
         );
     };
 
