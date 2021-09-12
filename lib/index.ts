@@ -1,5 +1,4 @@
 import { HookedProvider } from './features/instanceHook/HookedProvider';
-import { HookServiceLocator } from './features/HookServiceLocator';
 import { HookedInjector } from './features/instanceHook/HookedInjector';
 
 export { IMockProviderStorage } from './features/mock/IMockProviderStorage';
