@@ -1,8 +1,6 @@
 import 'reflect-metadata';
 import {
     HookedInjector,
-    HookedProvider,
-    HookedProviderRepository,
     IInstanceHook,
     IocInjector,
     ProviderNotFoundError,
@@ -27,9 +25,7 @@ describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
         return new ServiceLocator(
             (l) => new HookedInjector(new IocInjector(l, constructorMetadataCollector), hook),
-            new HookedProviderRepository(new ProviderRepository(), {
-                onBeforeAdd: (provider) => new HookedProvider(provider, hook),
-            }),
+            new ProviderRepository(),
         );
     };
 
@@ -155,7 +151,7 @@ describe('ServiceLocator', () => {
             child2.dispose();
         });
 
-        it('ios: onConstructHook', () => {
+        it('ios: onConstructHook for injector', () => {
             const decorated = createIoCLocator({
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
@@ -168,7 +164,26 @@ describe('ServiceLocator', () => {
             expect(group.isConstructed).toBeTruthy();
         });
 
-        it('ios: onDisposeHook', () => {
+        it('ioc: onConstructHook for provider', () => {
+            const hook = {
+                onConstruct<GInstance>(instance: GInstance) {
+                    onConstructMetadataCollector.invokeHooksOf(instance);
+                },
+                onDispose<GInstance>(instance: GInstance) {},
+            };
+            const locator = createIoCLocator(hook).register(
+                'key',
+                fromFn(() => new OnConstructImpl())
+                    .withHook(hook)
+                    .asRequested(),
+            );
+
+            const group = locator.resolve<OnConstructImpl>('key');
+
+            expect(group.isConstructed).toBeTruthy();
+        });
+
+        it('ioc: onDisposeHook', () => {
             const decorated = createIoCLocator({
                 onConstruct<GInstance>(instance: GInstance) {},
                 onDispose<GInstance>(instance: GInstance) {
@@ -211,10 +226,7 @@ describe('ServiceLocator', () => {
         });
 
         it('passes locator as last dep', () => {
-            const decorated = createIoCLocator({
-                onConstruct<GInstance>(instance: GInstance) {},
-                onDispose<GInstance>(instance: GInstance) {},
-            });
+            const decorated = createIoCLocator();
 
             decorated.register('dep1', fromInstance('dep1').asRequested());
             decorated.register('dep2', fromInstance('dep2').asRequested());

@@ -6,7 +6,7 @@ export interface IServiceLocatorHook {
 }
 
 /**
- * @deprecated Use HookedProviderRepository
+ * @deprecated Use ProviderBuilder.withHook() for hooks
  */
 export class HookServiceLocator implements IServiceLocator {
     constructor(private readonly decorated: IServiceLocator, private readonly hook: IServiceLocatorHook) {}

@@ -34,7 +34,6 @@ export { ScopedProvider } from './core/providers/ScopedProvider';
 export { SingletonProvider } from './core/providers/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';
 export { HookServiceLocator } from './features/HookServiceLocator';
-export { HookedProviderRepository } from './features/HookedProviderRepository';
 
 /**
  * @deprecated Use HookedProvider

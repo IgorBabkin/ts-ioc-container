@@ -151,12 +151,12 @@ import {
   ProviderRepository,
   InjectMetadataCollector,
   MethodsMetadataCollector,
-  HookedProviderRepository,
   HookedInjector,
   HookedProvider,
   IInstanceHook
 } from "ts-ioc-container";
 import { Mock } from "moq.ts";
+import { ProviderBuilder } from "./ProviderBuilder";
 
 export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
@@ -188,9 +188,7 @@ const hook: IInstanceHook = {
 
 const container = new ServiceLocator(
   (l) => new HookedInjector(new IocInjector(l, constructorMetadataCollector), hook),
-  new HookedProviderRepository(new ProviderRepository(), {
-    onBeforeAdd: (provider) => new HookedProvider(provider, hook)
-  }),
+  new ProviderRepository(),
 )
 
 class Car {
@@ -209,6 +207,26 @@ class Car {
 }
 
 const car = container.resolve(Car); // output: initialized!
+container.dispose(); // output: disposed!
+
+class Engine {
+  constructor() {
+  }
+
+  @onConstruct
+  public initialize() {
+    console('initialized!');
+  }
+
+  @onDispose
+  public dispose() {
+    console('disposed!');
+  }
+}
+
+// in the case if you don't want to use locator.resolve to instanciate Engine you should use .withHook
+container.register('IEngine', new ProviderBuilder(() => new Engine()).withHook(hook).asRequested())
+const engine = container.resolve(Engine); // output: initialized!
 container.dispose(); // output: disposed!
 ```
 
