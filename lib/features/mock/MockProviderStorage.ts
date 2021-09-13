@@ -1,11 +1,10 @@
 import { MockProvider } from './MockProvider';
 import { ProviderKey } from '../../core/providers/IProvider';
-import { MoqProvider } from '../../../__tests__/MoqProviderStorage';
 
 export class MockProviderStorage {
     private readonly mocks = new Map<ProviderKey, MockProvider<any>>();
 
-    constructor(private readonly createValue: <T>() => MoqProvider<T>) {}
+    constructor(private readonly createMockProvider: <T>() => MockProvider<T>) {}
 
     dispose(): void {
         this.mocks.clear();
@@ -13,7 +12,7 @@ export class MockProviderStorage {
 
     findOrCreate<T>(key: ProviderKey): MockProvider<T> {
         if (!this.mocks.has(key)) {
-            this.mocks.set(key, this.createValue());
+            this.mocks.set(key, this.createMockProvider());
         }
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
