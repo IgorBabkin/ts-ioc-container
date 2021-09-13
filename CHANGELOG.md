@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.21.3](https://github.com/IgorBabkin/service-locator/compare/v6.21.2...v6.21.3) (2021-09-13)
+
+
+### Bug Fixes
+
+* mock provider storage from moq wrong link ([33ecafd](https://github.com/IgorBabkin/service-locator/commit/33ecafd3a5f3312fcf1c410d7692893953d07a8d))
+
 ### [6.21.2](https://github.com/IgorBabkin/service-locator/compare/v6.21.1...v6.21.2) (2021-09-12)
 
 ### [6.21.1](https://github.com/IgorBabkin/service-locator/compare/v6.21.0...v6.21.1) (2021-09-12)
