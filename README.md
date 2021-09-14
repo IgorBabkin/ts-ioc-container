@@ -54,9 +54,9 @@ Full-featured IoC bundle (decorators `@inject`, hooks `@onDispose` `@onConstruct
 How to create new simple locator
 
 ```typescript
-import {ServiceLocator, ProviderRepository, ProviderBuilder} from 'ts-ioc-container';
+import { SimpleLocatorBuilder, ProviderBuilder } from 'ts-ioc-container';
 
-const container = new ServiceLocator((l) => new SimpleInjector(l), new ProviderRepository());
+const locator = new SimpleLocatorBuilder().build();
 locator.register('ILogger', ProviderBuilder.fromConstructor(Logger).asRequested());
 const logger = locator.resolve<ILogger>('ILogger');
 ```
@@ -64,7 +64,7 @@ const logger = locator.resolve<ILogger>('ILogger');
 Simple injector
 
 ```typescript
-import {ServiceLocator, ProviderRepository, ProviderBuilder, SimpleInjector} from "ts-ioc-container";
+import {ProviderBuilder, SimpleLocatorBuilder} from "ts-ioc-container";
 
 class Car {
     constructor(locator: IServiceLocator) {
@@ -72,26 +72,25 @@ class Car {
     }
 }
 
-const container = new ServiceLocator((l) => new SimpleInjector(l), new ProviderRepository());
-container.register('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
-const car = container.resolve(Car);
+const locator = new SimpleLocatorBuilder().build();
+locator.register('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
+const car = locator.resolve(Car);
 ```
 IoC injector. Compose `@inject` decorator as you need. Or use default `createInjectDecorator`;
 
 ```typescript
 import 'reflect-metadata';
 import {
-  ServiceLocator,
-  IocInjector,
   metadataCollector,
   InjectFnDecorator,
   InjectMetadataCollector,
-  ProviderRepository,
   ProviderBuilder,
   InjectionToken,
+  IocLocatorBuilder
 } from 'ts-ioc-container';
 import { InjectFn } from "./InjectFn";
 import { IServiceLocator } from "./IServiceLocator";
+import { IocLocatorBuilder } from "./IocLocatorBuilder";
 
 export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const inject: InjectFnDecorator = (injectionFn) => (target, propertyKey, parameterIndex) => {
@@ -107,8 +106,8 @@ export const Collection = <T>(...injections: InjectFn<T>[]) => l => injections.m
  * export const inject = createInjectFnDecorator(constructorMetadataCollector);
  */
 
-const container = new ServiceLocator((l) => new IocInjector(l, constructorMetadataCollector), new ProviderRepository());
-container.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
+const locator = new IocLocatorBuilder(constructorMetadataCollector).build();
+locator.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
 
 class Car {
   constructor(
@@ -126,7 +125,7 @@ class Car {
   }
 }
 
-const car = container.resolve(Car);
+const car = locator.resolve(Car);
 ```
 
 ## ProviderBuilder
@@ -144,19 +143,16 @@ locator.register('ILogger3', ProviderBuilder.fromConstructor(Logger).withArgs('d
 
 ```typescript
 import {
-  ServiceLocator,
-  SimpleInjector,
+  IocLocatorBuilder,
   ProviderKey,
-  IocInjector,
-  ProviderRepository,
   InjectMetadataCollector,
   MethodsMetadataCollector,
-  HookedInjector,
   HookedProvider,
   IInstanceHook
 } from "ts-ioc-container";
 import { Mock } from "moq.ts";
 import { ProviderBuilder } from "./ProviderBuilder";
+import { IocLocatorBuilder } from "./IocLocatorBuilder";
 
 export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
@@ -186,10 +182,7 @@ const hook: IInstanceHook = {
   }
 }
 
-const container = new ServiceLocator(
-  (l) => new HookedInjector(new IocInjector(l, constructorMetadataCollector), hook),
-  new ProviderRepository(),
-)
+const locator = new IocLocatorBuilder(constructorMetadataCollector).withInjectorHook(hook).build();
 
 class Car {
   constructor() {
@@ -206,8 +199,8 @@ class Car {
   }
 }
 
-const car = container.resolve(Car); // output: initialized!
-container.dispose(); // output: disposed!
+const car = locator.resolve(Car); // output: initialized!
+locator.dispose(); // output: disposed!
 
 class Engine {
   constructor() {
@@ -225,15 +218,15 @@ class Engine {
 }
 
 // in the case if you don't want to use locator.resolve to instanciate Engine you should use .withHook
-container.register('IEngine', new ProviderBuilder(() => new Engine()).withHook(hook).asRequested())
-const engine = container.resolve(Engine); // output: initialized!
-container.dispose(); // output: disposed!
+locator.register('IEngine', new ProviderBuilder(() => new Engine()).withHook(hook).asRequested())
+const engine = locator.resolve(Engine); // output: initialized!
+locator.dispose(); // output: disposed!
 ```
 
 ## Scoped locators
 
 ```typescript
-const scope = container.createLocator();
+const scope = locator.createLocator();
 const logger = scope.resolve('ILogger');
 scope.dispose();
 ```
@@ -241,21 +234,25 @@ scope.dispose();
 ## Mocking / Tests
 
 ```typescript
-import {MoqRepository} from "./MoqRepository";
-import {ProviderRepository, SimpleInjector, ServiceLocator, MockedRepository, MockProviderStorage} from "ts-ioc-container";
-import {MoqProviderStorage} from "./MoqProviderStorage";
-import {IEngine} from "./IEngine";
+import { MoqRepository } from "./MoqRepository";
+import {
+  SimpleLocatorBuilder,
+  MockProviderStorage
+} from "ts-ioc-container";
+import { MoqProviderStorage } from "./MoqProviderStorage";
+import { IEngine } from "./IEngine";
+import { SimpleLocatorBuilder } from "./SimpleLocatorBuilder";
 
 describe('test', () => {
-    const mockProviderStorage = new MoqProviderStorage(new MockProviderStorage(() => new MoqProvider()));
-    const container = new ServiceLocator((l) => new SimpleInjector(l), new MockedRepository(new ProviderRepository(), mockProviderStorage));
-    
-    const engineMock = mockProviderStorage.findMock<IEngine>('IEngine');
-    engineMock.setup(i => i.getRegistrationNumber()).return('123');
-    
-    const engine = container.resolve<IEngine>('IEngine');
-    
-    expect(engine.getRegistrationNumber()).toBe('123');
+  const mockProviderStorage = new MoqProviderStorage(new MockProviderStorage(() => new MoqProvider()));
+  const locator = new SimpleLocatorBuilder().withMockedRepository(mockProviderStorage).build();
+
+  const engineMock = mockProviderStorage.findMock<IEngine>('IEngine');
+  engineMock.setup(i => i.getRegistrationNumber()).return('123');
+
+  const engine = locator.resolve<IEngine>('IEngine');
+
+  expect(engine.getRegistrationNumber()).toBe('123');
 })
 ```
 MoqStorage

@@ -10,7 +10,7 @@ export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
 export { ProviderKey, IProvider, ResolveDependency } from './core/providers/IProvider';
 export { IInjector } from './core/IInjector';
-export { SimpleInjector } from './features/SimpleInjector';
+export { SimpleInjector } from './features/simple/SimpleInjector';
 export { IocInjector } from './features/ioc/IocInjector';
 export { IInjectMetadataCollector } from './features/ioc/IInjectMetadataCollector';
 export { IMethodsMetadataCollector } from './decorators/instanceHook/IMethodsMetadataCollector';
@@ -33,6 +33,9 @@ export { MockedRepository } from './features/mock/MockedRepository';
 export { ScopedProvider } from './core/providers/ScopedProvider';
 export { SingletonProvider } from './core/providers/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';
+export { IocLocatorBuilder } from './features/ioc/IocLocatorBuilder';
+export { SimpleLocatorBuilder } from './features/simple/SimpleLocatorBuilder';
+export { emptyHook } from './features/instanceHook/emptyHook';
 export { HookServiceLocator } from './features/HookServiceLocator';
 
 /**
