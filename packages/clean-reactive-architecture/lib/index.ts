@@ -1,4 +1,10 @@
 /**
+ * Core
+ */
+export { IDisposable } from './core/IDisposable';
+export { Initializable } from './core/Initializable';
+
+/**
  * Domain
  */
 export { ReactiveObject } from './domain/ReactiveObject';
