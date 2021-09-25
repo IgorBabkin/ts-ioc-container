@@ -19,6 +19,10 @@ export class ContextServiceLocator {
         );
     }
 
+    getContext<T>(): T {
+        return this.locator.resolve<ILocatorContext<T>>(ILocatorContextKey).getValue();
+    }
+
     dispose(): void {
         this.locator.dispose();
     }
