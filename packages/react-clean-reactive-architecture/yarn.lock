@@ -1270,10 +1270,10 @@ cjs-module-lexer@^1.0.0:
   resolved "https://registry.yarnpkg.com/cjs-module-lexer/-/cjs-module-lexer-1.2.2.tgz#9f84ba3244a512f3a54e5277e8eef4c489864e40"
   integrity sha512-cOU9usZw8/dXIXKtwa8pM0OTJQuJkxMN6w30csNRUerHfeQ5R6U3kkU/FtJeIf3M202OHfY2U8ccInBG7/xogA==
 
-clean-reactive-architecture@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/clean-reactive-architecture/-/clean-reactive-architecture-0.1.5.tgz#046eca025a15068259fc45bf1a4a58e86bed2361"
-  integrity sha512-mc9Tyx7xdBJtniBjMV0kHzsuFsjuwXksKW9Zp+PZZK3QLfbsk8W1PKdbuZTD9wRaS+x36nUiZHqTORiUor+Zfg==
+clean-reactive-architecture@^0.1.6:
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/clean-reactive-architecture/-/clean-reactive-architecture-0.1.6.tgz#8db7e0c38365396fa43ef201f34346ff37475b47"
+  integrity sha512-oad5/uRgxKAlEs+D9VIkixTxFHpCizBCXYfZSs9dTV256Dz4bac6iB1zkMsbxm3n9zbEnR9SniUxEHnM28jaxg==
 
 clean-stack@^2.0.0:
   version "2.2.0"
@@ -4362,6 +4362,11 @@ redent@^3.0.0:
     indent-string "^4.0.0"
     strip-indent "^3.0.0"
 
+reflect-metadata@^0.1.13:
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.1.13.tgz#67ae3ca57c972a2aa1642b10fe363fe32d49dc08"
+  integrity sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
+
 regexp.prototype.flags@^1.3.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/regexp.prototype.flags/-/regexp.prototype.flags-1.3.1.tgz#7ef352ae8d159e758c0eadca6f8fcb4eef07be26"
@@ -4998,10 +5003,10 @@ trim-newlines@^3.0.0:
   resolved "https://registry.yarnpkg.com/trim-newlines/-/trim-newlines-3.0.1.tgz#260a5d962d8b752425b32f3a7db0dcacd176c144"
   integrity sha512-c1PTsA3tYrIsLGkJkzHF+w9F2EyxfXGo4UyJc4pFL++FMjnq0HJS69T3M7d//gKrFKwy429bouPescbjecU+Zw==
 
-ts-ioc-container@^6.22.5:
-  version "6.22.5"
-  resolved "https://registry.yarnpkg.com/ts-ioc-container/-/ts-ioc-container-6.22.5.tgz#2fee360350fe722e56f2229769d0fe932b5012aa"
-  integrity sha512-4+LtAdJt1Ry+Ky/QJnpeiZZnEbayPV7+aIr3EMv+R2Aq3E9HCL2e9PZLV4YES/XbDh1avEwW9Vry/cByrP6Qaw==
+ts-ioc-container@^6.25.0:
+  version "6.25.0"
+  resolved "https://registry.yarnpkg.com/ts-ioc-container/-/ts-ioc-container-6.25.0.tgz#fdcb8ff6542a756399b79a8cb8f5ca4d53c6e82d"
+  integrity sha512-vuTHdQ1DN85S1dk2nKtL7WLCo9gsPwLYVBxc1fhNCEEoFGLX3v/Bx4uoTpeBXa18zRZ90MCJrZ1yeGtyy4rIig==
 
 ts-jest@^27.0.5:
   version "27.0.5"

@@ -6,7 +6,11 @@ export function useScope<T>(context?: T): Locator {
   const locator = useLocator();
   const scope = useMemo(() => locator.createScope(context), []);
   useEffect(() => {
-    return () => scope.remove();
+    console.log('initialized');
+    return () => {
+      scope.remove();
+      console.log('removed');
+    };
   }, [scope]);
   return scope;
 }
