@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": "lib",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2017"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
@@ -9,7 +9,6 @@
     "sourceMap": true,
     "module": "commonjs",
     "target": "es5",
-    "jsx": "react",
     "esModuleInterop": true,
     "strict": true,
     "downlevelIteration": true

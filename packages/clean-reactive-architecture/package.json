@@ -28,7 +28,7 @@
     "test": "jest --passWithNoTests"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.ts": [
       "eslint --fix",
       "prettier --write"
     ]

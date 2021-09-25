@@ -1,17 +1,13 @@
 {
   "compilerOptions": {
     "baseUrl": "lib",
-    "lib": [
-      "es2017",
-      "dom"
-    ],
+    "lib": ["es2017"],
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "declaration": true,
     "sourceMap": true,
-    "jsx": "react",
     "esModuleInterop": true,
     "moduleResolution": "node",
     "downlevelIteration": true
