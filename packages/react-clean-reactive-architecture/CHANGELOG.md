@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/IgorBabkin/react-clean-reactive-architecture/compare/v0.0.3...v0.0.4) (2021-09-25)
+
+
+### Features
+
+* update readme ([3d4de4e](https://github.com/IgorBabkin/react-clean-reactive-architecture/commit/3d4de4efe3755adabeeaef54e360ff9cf41c36ef))
+
 ### [0.0.3](https://github.com/IgorBabkin/react-clean-reactive-architecture/compare/v0.0.2...v0.0.3) (2021-09-25)
 
 
