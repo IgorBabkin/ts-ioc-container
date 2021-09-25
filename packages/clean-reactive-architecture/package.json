@@ -1,6 +1,6 @@
 {
   "name": "clean-reactive-architecture",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Clean Reactive Architecture Library",
   "main": "cjm/index.js",
   "module": "esm/index.js",
@@ -25,7 +25,7 @@
     "postinstall": "husky install",
     "prepublishOnly": "pinst --disable",
     "postpublish": "pinst --enable",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

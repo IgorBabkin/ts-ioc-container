@@ -1,15 +1,17 @@
-export class MyNumber {
-  constructor(private value: number) {}
+/**
+ * Domain
+ */
+export { ReactiveObject } from './domain/ReactiveObject';
 
-  add(value: number): void {
-    this.value += value;
-  }
+/**
+ * UseCases
+ */
 
-  sub(value: number): void {
-    this.value -= value;
-  }
+export { IAction } from './useCases/IAction';
+export { Action } from './useCases/Action';
 
-  getValue(): number {
-    return this.value;
-  }
-}
+export { ISaga } from './useCases/ISaga';
+export { Saga } from './useCases/Saga';
+
+export { IQuery } from './useCases/IQuery';
+export { ICommand } from './useCases/ICommand';
