@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from 'react';
-import { InjectionToken, Resolvable } from './locator';
+import { InjectionToken, Locator } from './locator';
 
-export const LocatorContext = createContext<Resolvable | undefined>(undefined);
+export const LocatorContext = createContext<Locator | undefined>(undefined);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useDependency = <T>(token: InjectionToken<T>, ...args: any[]): T => {
