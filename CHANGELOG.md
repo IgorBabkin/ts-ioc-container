@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.22.2](https://github.com/IgorBabkin/service-locator/compare/v6.22.1...v6.22.2) (2021-09-25)
+
+
+### Bug Fixes
+
+* refactor ([9378701](https://github.com/IgorBabkin/service-locator/commit/9378701a0414a473dc25aa867b0225285dd535dc))
+
 ### [6.22.1](https://github.com/IgorBabkin/service-locator/compare/v6.22.0...v6.22.1) (2021-09-25)
 
 
