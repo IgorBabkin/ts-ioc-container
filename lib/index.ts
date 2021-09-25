@@ -33,6 +33,5 @@ export { ProviderBuilder } from './features/ProviderBuilder';
 export { IocLocatorBuilder } from './features/ioc/IocLocatorBuilder';
 export { SimpleLocatorBuilder } from './features/simple/SimpleLocatorBuilder';
 export { emptyHook } from './features/instanceHook/emptyHook';
-export { ContextServiceLocator } from './features/context/ContextServiceLocator';
-export { ILocatorContext } from './features/context/ILocatorContext';
-export { LocatorContext } from './features/context/LocatorContext';
+export { IScopeContext, IScopeContextKey } from './features/scope/IScopeContext';
+export { ScopeContext } from './features/scope/ScopeContext';
