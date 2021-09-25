@@ -1,6 +1,6 @@
 {
   "name": "react-clean-reactive-architecture",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "React mappers for clean-reactive-architecture",
   "main": "cjm/index.js",
   "module": "esm/index.js",
