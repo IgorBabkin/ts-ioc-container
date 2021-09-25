@@ -1,6 +1,3 @@
-import { HookedProvider } from './features/instanceHook/HookedProvider';
-import { HookedInjector } from './features/instanceHook/HookedInjector';
-
 export { IMockProviderStorage } from './features/mock/IMockProviderStorage';
 export { MockProvider } from './features/mock/MockProvider';
 export { MockProviderStorage } from './features/mock/MockProviderStorage';
@@ -36,13 +33,6 @@ export { ProviderBuilder } from './features/ProviderBuilder';
 export { IocLocatorBuilder } from './features/ioc/IocLocatorBuilder';
 export { SimpleLocatorBuilder } from './features/simple/SimpleLocatorBuilder';
 export { emptyHook } from './features/instanceHook/emptyHook';
-export { HookServiceLocator } from './features/HookServiceLocator';
-
-/**
- * @deprecated Use HookedProvider
- */
-export const InstanceHookProvider = HookedProvider;
-/**
- * @deprecated Use HookedInjector
- */
-export const InstanceHookInjector = HookedInjector;
+export { ContextServiceLocator } from './features/context/ContextServiceLocator';
+export { ILocatorContext } from './features/context/ILocatorContext';
+export { LocatorContext } from './features/context/LocatorContext';
