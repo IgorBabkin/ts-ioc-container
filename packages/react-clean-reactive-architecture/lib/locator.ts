@@ -7,5 +7,5 @@ export interface Locator {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
   createScope(): Locator;
-  remove(): Locator;
+  remove(): void;
 }
