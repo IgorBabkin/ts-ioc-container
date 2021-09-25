@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.5](https://github.com/IgorBabkin/react-clean-reactive-architecture/compare/v0.0.4...v0.0.5) (2021-09-25)
+
+
+### Features
+
+* enrich locator api ([a685de1](https://github.com/IgorBabkin/react-clean-reactive-architecture/commit/a685de1d15521e00311a24a6a61252c79bac3311))
+
 ### [0.0.4](https://github.com/IgorBabkin/react-clean-reactive-architecture/compare/v0.0.3...v0.0.4) (2021-09-25)
 
 
