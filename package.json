@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "6.23.0",
+  "version": "6.24.0",
   "description": "Typescript IoC container",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
   "homepage": "https://github.com/IgorBabkin/service-locator",
