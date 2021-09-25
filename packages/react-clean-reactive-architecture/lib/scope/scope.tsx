@@ -12,7 +12,7 @@ export function useScope<T>(context?: T): Locator {
   return scope;
 }
 
-export function Scope<T>({ children, context }: PropsWithChildren<{ context: T | undefined }>): JSX.Element {
+export function Scope<T>({ children, context }: PropsWithChildren<{ context?: T }>): JSX.Element {
   const scope = useScope(context);
   return <LocatorContext.Provider value={scope}>{children}</LocatorContext.Provider>;
 }
