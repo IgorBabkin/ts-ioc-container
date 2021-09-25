@@ -1,6 +1,6 @@
 {
   "name": "clean-reactive-architecture",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Clean Reactive Architecture Library",
   "main": "cjm/index.js",
   "module": "esm/index.js",
