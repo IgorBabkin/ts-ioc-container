@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { IProvider } from './IProvider';
 import { IServiceLocator } from '../IServiceLocator';
 import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
@@ -27,6 +26,7 @@ export class SingletonProvider<T> implements IProvider<T> {
             this.instance = new Box<T>(instance);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.instance!.value as T;
     }
 }
