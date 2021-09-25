@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/IgorBabkin/clean-reactive-architecture/compare/v0.1.2...v0.1.3) (2021-09-25)
+
+
+### Bug Fixes
+
+* add rxjs ([f8bdf91](https://github.com/IgorBabkin/clean-reactive-architecture/commit/f8bdf91b58a43eef6c898192485302e7268a346f))
+
 ### [0.1.2](https://github.com/IgorBabkin/clean-reactive-architecture/compare/v0.1.1...v0.1.2) (2021-09-25)
 
 
