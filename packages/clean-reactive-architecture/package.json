@@ -1,7 +1,7 @@
 {
-  "name": "npm-package-boilerplate",
+  "name": "clean-reactive-architecture",
   "version": "0.0.1",
-  "description": "MISSING",
+  "description": "Clean Reactive Architecture Library",
   "main": "cjm/index.js",
   "module": "esm/index.js",
   "sideEffects": false,
