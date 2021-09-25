@@ -12,7 +12,8 @@ export class IocInjector implements IInjector {
 
     resolve<T>(value: constructor<T>, ...deps: any[]): T {
         const injectionFns = this.metadataCollector.getInjectionFns(value);
-        return new value(...merge(injectionFns, deps.map(constant)).map((fn) => fn(this.locator)));
+        const args = merge(injectionFns, deps.map(constant)).map((fn) => fn(this.locator));
+        return new value(...args);
     }
 
     dispose(): void {}
