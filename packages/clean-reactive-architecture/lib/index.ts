@@ -1,8 +1,8 @@
 /**
  * Core
  */
-export { IDisposable } from './core/IDisposable';
-export { Initializable } from './core/Initializable';
+export { IDisposable, isDisposable } from './core/IDisposable';
+export { Initializable, isInitializable } from './core/Initializable';
 
 /**
  * Domain
