@@ -1,10 +1,14 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { IProvider } from './IProvider';
 import { IServiceLocator } from '../IServiceLocator';
 import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
 
+class Box<T> {
+    constructor(public value: T) {}
+}
+
 export class SingletonProvider<T> implements IProvider<T> {
-    private instance: T | null = null;
-    private hasInstance = false;
+    private instance: Box<T> | null = null;
 
     constructor(private readonly decorated: IProvider<T>) {}
 
@@ -18,11 +22,11 @@ export class SingletonProvider<T> implements IProvider<T> {
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
-        if (!this.hasInstance) {
-            this.hasInstance = true;
-            this.instance = this.decorated.resolve(locator, ...args);
+        if (this.instance === null) {
+            const instance = this.decorated.resolve(locator, ...args);
+            this.instance = new Box<T>(instance);
         }
 
-        return this.instance as T;
+        return this.instance!.value as T;
     }
 }
