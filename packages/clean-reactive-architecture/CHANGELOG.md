@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.5](https://github.com/IgorBabkin/clean-reactive-architecture/compare/v0.1.4...v0.1.5) (2021-09-25)
+
+
+### Features
+
+* expose some core deps ([2c4b1e5](https://github.com/IgorBabkin/clean-reactive-architecture/commit/2c4b1e5cb5c5640003f5f8438162db986d6ba1a3))
+
 ### [0.1.4](https://github.com/IgorBabkin/clean-reactive-architecture/compare/v0.1.3...v0.1.4) (2021-09-25)
 
 
