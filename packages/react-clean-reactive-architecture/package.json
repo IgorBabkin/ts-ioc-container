@@ -1,0 +1,59 @@
+{
+  "name": "npm-package-boilerplate",
+  "version": "0.0.1",
+  "description": "MISSING",
+  "main": "cjm/index.js",
+  "module": "esm/index.js",
+  "sideEffects": false,
+  "types": "esm/index.d.ts",
+  "files": [
+    "cjm/**/*",
+    "esm/**/*"
+  ],
+  "scripts": {
+    "build": "npm-run-all -p build:cjm build:esm",
+    "build:cjm": "rimraf cjm && tsc -p tsconfig.build.json -m commonjs --outDir cjm",
+    "build:esm": "rimraf esm && tsc -p tsconfig.build.json -m es6 -d true --outDir esm",
+    "lint": "eslint src/**/*.*",
+    "lint:fix": "yarn lint --fix",
+    "format": "prettier --write src/**/*.*",
+    "pre-commit": "lint-staged",
+    "commit-msg": "commitlint --edit $1",
+    "prerelease": "yarn test",
+    "release": "standard-version",
+    "postrelease": "git push --follow-tags origin master && yarn build && npm publish",
+    "postinstall": "husky install",
+    "prepublishOnly": "pinst --disable",
+    "postpublish": "pinst --enable",
+    "test": "jest"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "@typescript-eslint/eslint-plugin": "^4.31.2",
+    "@typescript-eslint/parser": "^4.31.2",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-react": "^7.26.0",
+    "husky": "^7.0.2",
+    "jest": "^27.2.1",
+    "lint-staged": "^11.1.2",
+    "moq.ts": "^7.3.4",
+    "npm-run-all": "^4.1.5",
+    "pinst": "^2.1.6",
+    "prettier": "^2.4.1",
+    "rimraf": "^3.0.2",
+    "rxjs": "^7.3.0",
+    "standard-version": "^9.3.1",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  },
+  "author": "Igor Babkin <igba14@gmail.com>",
+  "license": "MIT"
+}
