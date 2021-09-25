@@ -19,7 +19,8 @@ export const useSaga = <T extends ISaga>(value: InjectionToken<T>): void => {
 export const useQuery = <T extends IQuery<R>, R = unknown>(
   value: constructor<T>,
   createQuery: (m: T) => Observable<R>,
-  deps: unknown[] = [],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  deps: any[] = [],
 ): Observable<R> => {
   const model = useDependency(value);
   return useMemo(() => createQuery(model), [model, ...deps]);
