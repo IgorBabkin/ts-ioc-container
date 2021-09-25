@@ -6,5 +6,5 @@ export type InjectionToken<T> = ProviderKey | constructor<T>;
 export interface Locator {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
-  createChild(): Locator;
+  createScope(): Locator;
 }
