@@ -58,5 +58,8 @@
     "rxjs": "^7.3.0"
   },
   "author": "Igor Babkin <igba14@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/IgorBabkin/clean-reactive-architecture"
+  }
 }
