@@ -1,6 +1,6 @@
 import React, { PropsWithChildren, useEffect, useMemo } from 'react';
-import { LocatorContext, useLocator } from '../context';
-import { Locator } from '../locator';
+import { LocatorContext, useLocator } from './context';
+import { Locator } from './locator';
 
 export function useScope<T>(context?: T): Locator {
   const locator = useLocator();
