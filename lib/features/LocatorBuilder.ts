@@ -7,8 +7,9 @@ import { HookedInjector } from './instanceHook/HookedInjector';
 import { IMockProviderStorage } from './mock/IMockProviderStorage';
 import { MockedRepository } from './mock/MockedRepository';
 import { ServiceLocator } from '../core/ServiceLocator';
+import { ILocatorBuilder } from './ILocatorBuilder';
 
-export abstract class LocatorBuilder {
+export abstract class LocatorBuilder implements ILocatorBuilder {
     private providerRepository: IProviderRepository = new ProviderRepository();
 
     protected constructor(private createInjector: (l: IServiceLocator) => IInjector) {}

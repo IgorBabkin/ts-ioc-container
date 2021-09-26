@@ -35,3 +35,5 @@ export { SimpleLocatorBuilder } from './features/simple/SimpleLocatorBuilder';
 export { emptyHook } from './features/instanceHook/emptyHook';
 export { IScopeContext, IScopeContextKey } from './features/scope/IScopeContext';
 export { ScopeContext } from './features/scope/ScopeContext';
+export { LocatorBuilder } from './features/LocatorBuilder';
+export { ILocatorBuilder } from './features/ILocatorBuilder';
