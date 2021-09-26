@@ -1,5 +1,5 @@
 import { useDependency } from './context';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Observable } from 'rxjs';
 import { IAction, ICommand, IQuery, ISaga } from 'clean-reactive-architecture';
 import { constructor, InjectionToken, ProviderKey } from './locator';
@@ -7,9 +7,7 @@ import { constructor, InjectionToken, ProviderKey } from './locator';
 export const useCommand = <T extends ICommand>(value: constructor<T>): T => useDependency(value);
 
 export function useAction<T extends IAction<P>, P = unknown>(value: ProviderKey): T {
-  const model = useDependency<T>(value);
-  useEffect(() => () => model.dispose(), [model]);
-  return model;
+  return useDependency<T>(value);
 }
 
 export const useSaga = <T extends ISaga>(value: InjectionToken<T>): void => {
