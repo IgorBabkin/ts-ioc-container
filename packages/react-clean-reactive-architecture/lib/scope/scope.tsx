@@ -4,12 +4,12 @@ import { Locator } from '../locator';
 
 export function useScope<T>(context?: T): Locator {
   const locator = useLocator();
-  const scope = useMemo(() => locator.createScope(context), []);
+  const scope = useMemo(() => locator.createScope(context), [context]);
   useEffect(() => {
-    console.log('initialized');
+    console.log('scope:created');
     return () => {
       scope.remove();
-      console.log('removed');
+      console.log('scope:removed');
     };
   }, [scope]);
   return scope;
