@@ -7,7 +7,7 @@ export class LocatorAdapter implements Locator {
   createScope<T>(context?: T): Locator {
     const scope = this.locator.createLocator();
     if (context) {
-      scope.register(IScopeContextKey, ProviderBuilder.fromConstructor(new ScopeContext(context)).asRequested());
+      scope.register(IScopeContextKey, ProviderBuilder.fromInstance(new ScopeContext(context)).asRequested());
     }
     return new LocatorAdapter(scope);
   }
