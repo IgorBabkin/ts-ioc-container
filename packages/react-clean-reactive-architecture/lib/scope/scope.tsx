@@ -5,13 +5,7 @@ import { Locator } from '../locator';
 export function useScope<T>(context?: T): Locator {
   const locator = useLocator();
   const scope = useMemo(() => locator.createScope(context), [context]);
-  useEffect(() => {
-    console.log('scope:created');
-    return () => {
-      scope.remove();
-      console.log('scope:removed');
-    };
-  }, [scope]);
+  useEffect(() => () => scope.remove(), [scope]);
   return scope;
 }
 
