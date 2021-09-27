@@ -1,26 +1,25 @@
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { IAction } from './IAction';
 
 export abstract class Action<T> implements IAction<T> {
-  private payload$ = new Subject<T>();
-  private subscriptions: Subscription[] = [];
-
-  initialize(): void {
-    this.subscriptions.push(this.payload$.subscribe((value) => this.handle(value)));
-  }
+  private _after$ = new Subject<T>();
+  private _before$ = new Subject<T>();
 
   dispatch(payload: T): void {
-    this.payload$.next(payload);
+    (async () => {
+      this._after$.next(payload);
+      await this.handle(payload);
+      this._before$.next(payload);
+    })();
   }
 
-  dispose(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-    this.subscriptions = [];
+  public get after$(): Observable<T> {
+    return this._after$.asObservable();
   }
 
-  protected abstract handle(payload: T): void | Promise<void>;
-
-  getPayload(): Observable<T> {
-    return this.payload$;
+  public get before$(): Observable<T> {
+    return this._after$.asObservable();
   }
+
+  protected abstract handle(payload: T): Promise<void>;
 }

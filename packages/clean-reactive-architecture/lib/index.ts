@@ -7,7 +7,7 @@ export { Initializable, isInitializable } from './core/Initializable';
 /**
  * Domain
  */
-export { ReactiveObject } from './domain/ReactiveObject';
+export { ReactiveObject } from './ReactiveObject';
 
 /**
  * UseCases
