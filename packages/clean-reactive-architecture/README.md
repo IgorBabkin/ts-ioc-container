@@ -28,7 +28,7 @@ export class AddTodo extends Action<ITodo> {
 
 const addTodo = new AddTodo(new TodoStore(), new TodoRepository());
 addTodo.dispatch({id: '1', title: 'Go to the GYM'});
-addTodo.after$.subscribe((v) => {
+addTodo.getAfter$().subscribe((v) => {
   console.log(v); // {id: '1', title: 'Go to the GYM'}
 })
 ```
@@ -92,7 +92,7 @@ export class TodoNotificationSaga extends Saga {
   }
 
   protected onInit(subscriptions: Subscription[]): void {
-    subscriptions.push(this.addTodoAction.after$.subscribe((todo) => this.notificationManager.show(todo)));
+    subscriptions.push(this.addTodoAction.getAfter$().subscribe((todo) => this.notificationManager.show(todo)));
   }
 }
 ```

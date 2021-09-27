@@ -13,11 +13,11 @@ export abstract class Action<T> implements IAction<T> {
     })();
   }
 
-  public get after$(): Observable<T> {
+  public getAfter$(): Observable<T> {
     return this._after$.asObservable();
   }
 
-  public get before$(): Observable<T> {
+  public getBefore$(): Observable<T> {
     return this._after$.asObservable();
   }
 
