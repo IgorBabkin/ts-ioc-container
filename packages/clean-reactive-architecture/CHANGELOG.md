@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/IgorBabkin/clean-reactive-architecture/compare/v0.3.0...v2.0.0) (2021-09-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename project
+
+### Features
+
+* rename project ([622d66a](https://github.com/IgorBabkin/clean-reactive-architecture/commit/622d66a19498cbdc2b6467f04d7fb42d6545b875))
+
 ## [0.3.0](https://github.com/IgorBabkin/clean-reactive-architecture/compare/v0.2.1...v0.3.0) (2021-09-27)
 
 
