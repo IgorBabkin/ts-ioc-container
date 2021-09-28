@@ -1,8 +1,7 @@
-import { useDependency } from './context';
+import { constructor, InjectionToken, ProviderKey, useDependency } from 'react-ts-ioc-container';
 import { useMemo } from 'react';
 import { Observable } from 'rxjs';
-import { IAction, ICommand, IQuery, ISaga } from 'clean-reactive-architecture';
-import { constructor, InjectionToken, ProviderKey } from './locator';
+import { IAction, ICommand, IQuery, ISaga } from 'clean-use-case';
 
 export const useCommand = <T extends ICommand>(value: constructor<T>): T => useDependency(value);
 
