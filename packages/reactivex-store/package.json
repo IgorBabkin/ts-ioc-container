@@ -1,7 +1,7 @@
 {
   "name": "reactivex-store",
   "version": "1.0.3",
-  "description": "Use Case Library for Clean Architecture",
+  "description": "Observable store",
   "main": "cjm/index.js",
   "module": "esm/index.js",
   "sideEffects": false,
