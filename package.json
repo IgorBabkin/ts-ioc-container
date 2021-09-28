@@ -13,7 +13,9 @@
     "lint": "eslint packages/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "test": "lerna run test --stream",
-    "build": "lerna run build --stream"
+    "build": "lerna run build --stream",
+    "pre-commit": "lint-staged",
+    "commit-msg": "commitlint --edit $1"
   },
   "config": {
     "commitizen": {
@@ -27,7 +29,7 @@
     }
   },
   "lint-staged": {
-    "*.{js,ts}": [
+    "*.{js,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ]
@@ -42,7 +44,7 @@
     "eslint": "7.13.0",
     "eslint-config-prettier": "6.15.0",
     "eslint-plugin-prettier": "3.1.4",
-    "husky": "4.3.0",
+    "husky": "7.0.2",
     "lerna": "^4.0.0",
     "lint-staged": "10.5.1",
     "prettier": "2.1.2"
