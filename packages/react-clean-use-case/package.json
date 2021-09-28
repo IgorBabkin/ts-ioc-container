@@ -63,5 +63,6 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/react-clean-use-case"
-  }
+  },
+  "gitHead": "f1c666506310b5aad190115b0e450307484a1df4"
 }
