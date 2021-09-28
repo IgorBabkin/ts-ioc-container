@@ -22,6 +22,7 @@
     "build": "npm-run-all -p build:cjm build:esm",
     "build:cjm": "rimraf cjm && tsc -p tsconfig.build.json -m commonjs --outDir cjm",
     "build:esm": "rimraf esm && tsc -p tsconfig.build.json -m es6 -d true --outDir esm",
+    "prepublish": "yarn build",
     "test": "jest --passWithNoTests"
   },
   "devDependencies": {
@@ -63,5 +64,5 @@
   "repository": {
     "url": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/react-clean-use-case"
   },
-  "gitHead": "35330112b2b9eb8d71a585dc01279af518e06076"
+  "gitHead": "d119f73fbf198fe3db71d19c2865e781c65a90f3"
 }

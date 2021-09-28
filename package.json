@@ -15,7 +15,6 @@
     "test": "lerna run test --stream",
     "build": "lerna run build --stream",
     "pre-commit": "lint-staged",
-    "prepublish": "lerna run build --stream",
     "commit-msg": "echo 'skipped'"
   },
   "config": {
