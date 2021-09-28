@@ -1,8 +1,15 @@
 {
   "name": "clean-use-case",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Use Case Library for Clean Architecture",
-  "keywords": ["usecase", "rxjs", "command", "action", "saga", "query"],
+  "keywords": [
+    "usecase",
+    "rxjs",
+    "command",
+    "action",
+    "saga",
+    "query"
+  ],
   "main": "cjm/index.js",
   "module": "esm/index.js",
   "sideEffects": false,
