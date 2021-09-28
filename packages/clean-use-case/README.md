@@ -32,7 +32,7 @@ addTodo.getAfter$().subscribe((v) => {
   console.log(v); // {id: '1', title: 'Go to the GYM'}
 })
 ```
-### Query
+### Query (Getter)
 
 Creates observable to subscribe;
 
@@ -50,7 +50,7 @@ export class GetTodoList implements IQuery<ITodo[]> {
 const getTodoList = new GetTodoList(new TodoStore());
 getTodoList.create().subscribe((todoList) => console.log(todoList))
 ```
-### Command
+### Command (Setter)
 
 To execute smth;
 
@@ -75,9 +75,9 @@ const deleteTodo = new DeleteTodo();
 deleteTodo.execute('2');
 ```
 
-### Saga
+### Saga (Effect)
 
-To observe smth
+To observe smth and make sideEffect
 
 - ISaga
 - Saga
