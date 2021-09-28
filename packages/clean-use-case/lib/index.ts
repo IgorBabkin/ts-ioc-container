@@ -5,11 +5,6 @@ export { IDisposable, isDisposable } from './core/IDisposable';
 export { Initializable, isInitializable } from './core/Initializable';
 
 /**
- * Domain
- */
-export { ReactiveObject } from './ReactiveObject';
-
-/**
  * UseCases
  */
 
