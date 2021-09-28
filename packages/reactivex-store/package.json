@@ -1,6 +1,6 @@
 {
   "name": "reactivex-store",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use Case Library for Clean Architecture",
   "main": "cjm/index.js",
   "module": "esm/index.js",
