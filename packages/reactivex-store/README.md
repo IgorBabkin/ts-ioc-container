@@ -1,11 +1,14 @@
-# `reactivex-store`
-
-> TODO: description
+# Observable store
 
 ## Usage
 
-```
-const reactivexStore = require('reactivex-store');
+```ts
+import { ObservableStore } from "./ObservableStore";
 
-// TODO: DEMONSTRATE API
+const store = new ObservableStore(2);
+store.toObservable().subscribe(value => {
+  console.log(value); // 2, 3, 1
+});
+store.map(v => v + 1);
+store.map(v => v - 2);
 ```
