@@ -5126,7 +5126,7 @@ humanize-ms@^1.2.1:
   dependencies:
     ms "^2.0.0"
 
-husky@7.0.2:
+husky@7.0.2, husky@^7.0.2:
   version "7.0.2"
   resolved "https://registry.yarnpkg.com/husky/-/husky-7.0.2.tgz#21900da0f30199acca43a46c043c4ad84ae88dff"
   integrity sha512-8yKEWNX4z2YsofXAMT7KvA1g8p+GxtB1ffV8XtpAEGuXNAbCV5wdNKH+qTpw8SM9fh4aMPDR+yQuKfgnreyZlg==
@@ -7615,6 +7615,11 @@ param-case@^3.0.3:
   dependencies:
     dot-case "^3.0.4"
     tslib "^2.0.3"
+
+parceljs@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/parceljs/-/parceljs-0.0.1.tgz#70c596613e365fd4cd380316566b72990e19f58e"
+  integrity sha512-xbAtX3nhxitWdiuL4q3FAiZ21hO45N33iZBPg79hat0AnX9NserDl/FyroFrzaPNBDK+YVXs/CXKbMv6bc0wcw==
 
 parent-module@^1.0.0:
   version "1.0.1"
