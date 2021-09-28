@@ -1,84 +1,51 @@
 {
-  "name": "ts-ioc-container",
-  "version": "6.28.0",
-  "description": "Typescript IoC container",
+  "name": "root",
+  "private": true,
+  "repository": "https://github.com/IgorBabkin/ServiceLocator.git",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
-  "homepage": "https://github.com/IgorBabkin/service-locator",
-  "private": false,
   "license": "MIT",
-  "sideEffects": false,
-  "main": "cjm/index.js",
-  "types": "esm/index.d.ts",
-  "module": "esm/index.js",
-  "keywords": [
-    "typescript",
-    "ioc",
-    "service-locator",
-    "di"
+  "workspaces": [
+    "packages/*"
   ],
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
-  "files": [
-    "cjm/**/*",
-    "esm/**/*"
-  ],
-  "repository": {
-    "url": "https://github.com/IgorBabkin/service-locator.git"
-  },
-  "bugs": {
-    "url": "https://github.com/IgorBabkin/service-locator/issues"
-  },
   "scripts": {
-    "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
-    "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
-    "build": "npm-run-all -p build:**",
-    "test": "jest",
     "commit": "git-cz",
-    "format": "prettier --write lib/**/*.ts",
-    "lint": "eslint lib/**/*.ts",
+    "format": "prettier --write packages/**/*.ts",
+    "lint": "eslint packages/**/*.ts",
     "lint:fix": "yarn lint --fix",
-    "prerelease": "yarn test",
-    "release": "standard-version",
-    "postrelease": "git push --follow-tags origin master && yarn build && npm publish",
-    "pre-commit": "lint-staged",
-    "commit-msg": "commitlint --edit $1",
-    "postinstall": "husky install",
-    "prepublishOnly": "pinst --disable",
-    "postpublish": "pinst --enable"
+    "test": "lerna run test --stream",
+    "build": "lerna run build --stream"
   },
-  "devDependencies": {
-    "@commitlint/cli": "13.1.0",
-    "@commitlint/config-conventional": "13.1.0",
-    "@types/jest": "27.0.1",
-    "@typescript-eslint/eslint-plugin": "4.31.0",
-    "@typescript-eslint/parser": "4.31.0",
-    "eslint": "7.32.0",
-    "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-prettier": "4.0.0",
-    "git-cz": "^4.7.6",
-    "husky": "^7.0.2",
-    "jest": "27.1.1",
-    "lint-staged": "11.1.2",
-    "moq.ts": "^7.3.4",
-    "npm-run-all": "4.1.5",
-    "pinst": "^2.1.6",
-    "prettier": "2.4.0",
-    "reflect-metadata": "^0.1.13",
-    "rimraf": "3.0.2",
-    "standard-version": "^9.3.1",
-    "ts-jest": "27.0.5",
-    "typescript": "4.4.3"
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-lerna-changelog"
+    }
   },
-  "gitHead": "ed54cf87295afcf6da383ac8f9ecdca358db17eb",
-  "peerDependencies": {
-    "reflect-metadata": "^0.1.13"
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
   },
   "lint-staged": {
     "*.{js,ts}": [
       "eslint --fix",
       "prettier --write"
     ]
-  }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "11.0.0",
+    "@commitlint/config-conventional": "11.0.0",
+    "@typescript-eslint/eslint-plugin": "4.7.0",
+    "@typescript-eslint/parser": "4.7.0",
+    "coveralls": "3.1.0",
+    "cz-lerna-changelog": "2.0.3",
+    "eslint": "7.13.0",
+    "eslint-config-prettier": "6.15.0",
+    "eslint-plugin-prettier": "3.1.4",
+    "husky": "4.3.0",
+    "lerna": "^4.0.0",
+    "lint-staged": "10.5.1",
+    "prettier": "2.1.2"
+  },
+  "version": "0.0.0"
 }

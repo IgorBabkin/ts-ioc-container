@@ -4,5 +4,4 @@ esm
 coverage
 node_modules
 coverage
-lerna-debug.log
-yarn-error.log
+yarn.log

@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": "./lib",
-    "strict": true,
-    "strictNullChecks": true,
-    "noImplicitAny": true,
+    "baseUrl": "./src",
     "declaration": true,
     "sourceMap": true,
     "target": "ES2017",
@@ -13,11 +10,10 @@
     "emitDecoratorMetadata": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "downlevelIteration": true,
-    "declarationMap": true
+    "downlevelIteration": true
   },
   "include": [
-    "lib",
+    "src"
   ],
   "exclude": [
     "node_modules",
