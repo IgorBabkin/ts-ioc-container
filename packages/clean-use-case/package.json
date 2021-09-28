@@ -1,6 +1,6 @@
 {
   "name": "clean-use-case",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Use Case Library for Clean Architecture",
   "main": "cjm/index.js",
   "module": "esm/index.js",
