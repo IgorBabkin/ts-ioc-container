@@ -21,8 +21,7 @@
     "build": "npm-run-all -p build:cjm build:esm",
     "build:cjm": "rimraf cjm && tsc -p tsconfig.build.json -m commonjs --outDir cjm",
     "build:esm": "rimraf esm && tsc -p tsconfig.build.json -m es6 -d true --outDir esm",
-    "test": "jest --passWithNoTests",
-    "prepublish": "yarn build"
+    "test": "jest --passWithNoTests"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",
