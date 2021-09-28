@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": "lib",
+    "lib": ["es2017"],
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "declaration": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "downlevelIteration": true
+  },
+  "include": [
+    "lib"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
