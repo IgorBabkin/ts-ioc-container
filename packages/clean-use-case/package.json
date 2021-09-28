@@ -34,6 +34,6 @@
   "author": "Igor Babkin <igba14@gmail.com>",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/IgorBabkin/clean-use-case"
+    "url": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/ts-ioc-container"
   }
 }
