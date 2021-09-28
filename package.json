@@ -15,7 +15,7 @@
     "test": "lerna run test --stream",
     "build": "lerna run build --stream",
     "pre-commit": "lint-staged",
-    "commit-msg": "echo 'skipped'"
+    "commit-msg": "commitlint --edit $1"
   },
   "config": {
     "commitizen": {
