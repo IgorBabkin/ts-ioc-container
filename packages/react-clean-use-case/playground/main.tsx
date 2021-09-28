@@ -12,34 +12,34 @@ const isEven = (value: number) => value % 2 === 0;
 const isOdd = (value: number) => value % 2 === 1;
 
 export const App: FC = (): JSX.Element => {
-  const [state, setState] = useState(0);
+    const [state, setState] = useState(0);
 
-  return (
-    <div>
-      <h3>Scopes</h3>
-      {isOdd(state) && (
-        <Scope>
-          <AboutPage onChangePage={() => setState(0)} />
-        </Scope>
-      )}
-      {isEven(state) && (
-        <Scope>
-          <HomePage onChangePage={() => setState(1)} />
-        </Scope>
-      )}
-    </div>
-  );
+    return (
+        <div>
+            <h3>Scopes</h3>
+            {isOdd(state) && (
+                <Scope>
+                    <AboutPage onChangePage={() => setState(0)} />
+                </Scope>
+            )}
+            {isEven(state) && (
+                <Scope>
+                    <HomePage onChangePage={() => setState(1)} />
+                </Scope>
+            )}
+        </div>
+    );
 };
 
 const locator = new IocLocatorBuilder(new InjectMetadataCollector(Symbol.for('contructor'))).build();
 
 render(
-  <LocatorContext.Provider value={new LocatorAdapter(locator)}>
-    <App />
-  </LocatorContext.Provider>,
-  document.getElementById('root'),
+    <LocatorContext.Provider value={new LocatorAdapter(locator)}>
+        <App />
+    </LocatorContext.Provider>,
+    document.getElementById('root'),
 );
 
 if (module.hot) {
-  module.hot.accept();
+    module.hot.accept();
 }
