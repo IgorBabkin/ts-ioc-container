@@ -1,6 +1,6 @@
 {
   "name": "react-clean-use-case",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "React mappers for clean-reactive-architecture",
   "main": "cjm/index.js",
   "module": "esm/index.js",
@@ -32,7 +32,7 @@
     "@types/react-dom": "^17.0.9",
     "@types/webpack-env": "^1.16.2",
     "clean-reactive-architecture": "^0.1.6",
-    "clean-use-case": "^2.0.2",
+    "clean-use-case": "^2.0.8",
     "html-webpack-plugin": "^5.3.2",
     "jest": "^27.2.1",
     "node-sass": "^6.0.1",
