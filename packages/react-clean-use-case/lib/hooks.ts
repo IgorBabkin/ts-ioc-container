@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Observable } from 'rxjs';
-import { ICommand, IQuery } from 'clean-use-case';
+import { IAction, ICommand, IQuery, ISaga } from 'clean-use-case';
 
 export type constructor<T> = new (...args: any[]) => T;
 export type ProviderKey = string | symbol;
@@ -14,12 +14,12 @@ export const createCommandHook =
 
 export const createActionHook =
     (useDependency: UseDependency<any>) =>
-    <T extends ICommand>(value: constructor<T>): T =>
+    <T extends IAction<Payload>, Payload = unknown>(value: constructor<T>): T =>
         useDependency(value);
 
 export const createSagaHook =
     (useDependency: UseDependency<any>) =>
-    <T extends ICommand>(value: constructor<T>): T =>
+    <T extends ISaga>(value: constructor<T>): T =>
         useDependency(value);
 
 export const createQueryHook =
