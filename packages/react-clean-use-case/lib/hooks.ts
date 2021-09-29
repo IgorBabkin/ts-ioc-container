@@ -9,23 +9,23 @@ export type UseDependency<T> = (token: InjectionToken<T>) => T;
 
 export const createCommandHook =
     (useDependency: UseDependency<any>) =>
-    <T extends ICommand>(value: constructor<T>): T =>
+    <T extends ICommand>(value: InjectionToken<T>): T =>
         useDependency(value);
 
 export const createActionHook =
     (useDependency: UseDependency<any>) =>
-    <T extends IAction<Payload>, Payload = unknown>(value: constructor<T>): T =>
+    <T extends IAction<Payload>, Payload = unknown>(value: InjectionToken<T>): T =>
         useDependency(value);
 
 export const createSagaHook =
     (useDependency: UseDependency<any>) =>
-    <T extends ISaga>(value: constructor<T>): T =>
+    <T extends ISaga>(value: InjectionToken<T>): T =>
         useDependency(value);
 
 export const createQueryHook =
     (useDependency: UseDependency<any>) =>
     <T extends IQuery<R>, R = unknown>(
-        value: constructor<T>,
+        value: InjectionToken<T>,
         createQuery: (m: T) => Observable<R>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         deps: any[] = [],
