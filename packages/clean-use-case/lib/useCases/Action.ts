@@ -2,23 +2,23 @@ import { Observable, Subject } from 'rxjs';
 import { IAction } from './IAction';
 
 export abstract class Action<T> implements IAction<T> {
-    private _after$ = new Subject<T>();
-    private _before$ = new Subject<T>();
+    private _start$ = new Subject<T>();
+    private _done$ = new Subject<T>();
 
     dispatch(payload: T): void {
         (async () => {
-            this._after$.next(payload);
+            this._start$.next(payload);
             await this.handle(payload);
-            this._before$.next(payload);
+            this._done$.next(payload);
         })();
     }
 
-    getAfter$(): Observable<T> {
-        return this._after$.asObservable();
+    get done$(): Observable<T> {
+        return this._start$.asObservable();
     }
 
-    getBefore$(): Observable<T> {
-        return this._after$.asObservable();
+    get start$(): Observable<T> {
+        return this._start$.asObservable();
     }
 
     protected abstract handle(payload: T): Promise<void>;

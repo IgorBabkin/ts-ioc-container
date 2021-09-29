@@ -1,8 +1,8 @@
 import { Observable } from 'rxjs';
 
 export interface IAction<T> {
-    getBefore$(): Observable<T>;
-    getAfter$(): Observable<T>;
+    start$: Observable<T>;
+    done$: Observable<T>;
 
     dispatch(payload: T): void;
 }
