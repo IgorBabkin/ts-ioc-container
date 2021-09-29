@@ -1,6 +1,6 @@
 {
   "name": "react-clean-use-case",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "React mappers for clean-reactive-architecture",
   "main": "cjm/index.js",
   "module": "esm/index.js",
