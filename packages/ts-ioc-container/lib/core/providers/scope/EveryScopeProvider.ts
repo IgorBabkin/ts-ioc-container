@@ -2,13 +2,13 @@ import { IProvider } from '../IProvider';
 import { IServiceLocator } from '../../IServiceLocator';
 import { Box } from '../Box';
 
-export class LastScopeProvider<T> implements IProvider<T> {
+export class EveryScopeProvider<T> implements IProvider<T> {
     private instance: Box<T> | null = null;
 
     constructor(private readonly decorated: IProvider<T>) {}
 
     clone(): IProvider<T> {
-        return new LastScopeProvider(this.decorated.clone());
+        return new EveryScopeProvider(this.decorated.clone());
     }
 
     dispose(): void {
