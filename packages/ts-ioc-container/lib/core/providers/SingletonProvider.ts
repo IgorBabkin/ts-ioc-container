@@ -1,7 +1,10 @@
 import { IProvider } from './IProvider';
 import { IServiceLocator } from '../IServiceLocator';
 import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
-import { Box } from './Box';
+
+class Box<T> {
+    constructor(public value: T) {}
+}
 
 export class SingletonProvider<T> implements IProvider<T> {
     private instance: Box<T> | null = null;

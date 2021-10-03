@@ -1,12 +1,11 @@
 import { IProvider, ResolveDependency } from '../core/providers/IProvider';
 import { SingletonProvider } from '../core/providers/SingletonProvider';
-import { ScopedProvider } from '../core/providers/scope/ScopedProvider';
+import { ScopedProvider } from '../core/providers/ScopedProvider';
 import { Provider } from '../core/providers/Provider';
 import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
 import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
-import { LastScopeProvider } from '../core/providers/scope/LastScopeProvider';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;
@@ -49,9 +48,5 @@ export class ProviderBuilder<T> {
 
     asRequested(): IProvider<T> {
         return this.provider;
-    }
-
-    asLastScoped(): LastScopeProvider<T> {
-        return new LastScopeProvider(this.provider);
     }
 }

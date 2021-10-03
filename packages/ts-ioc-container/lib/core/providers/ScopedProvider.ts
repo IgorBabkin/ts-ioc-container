@@ -1,7 +1,7 @@
-import { IProvider } from '../IProvider';
-import { SingletonProvider } from '../SingletonProvider';
-import { IServiceLocator } from '../../IServiceLocator';
-import { MethodNotImplementedError } from '../../../errors/MethodNotImplementedError';
+import { IProvider } from './IProvider';
+import { SingletonProvider } from './SingletonProvider';
+import { IServiceLocator } from '../IServiceLocator';
+import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
 
 export class ScopedProvider<T> implements IProvider<T> {
     constructor(private readonly decorated: IProvider<T>) {}
