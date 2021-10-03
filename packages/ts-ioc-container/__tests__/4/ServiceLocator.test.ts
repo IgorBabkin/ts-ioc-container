@@ -100,7 +100,8 @@ describe('ServiceLocator', () => {
                 .register(
                     'key1',
                     fromFn(() => expectedInstance)
-                        .asScoped()
+                        .asSingleton()
+                        .forScopeRange(1, 1)
                         .build(),
                 )
                 .register(

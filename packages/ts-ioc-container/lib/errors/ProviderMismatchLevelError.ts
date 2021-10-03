@@ -1,4 +1,3 @@
-import { ProviderMismatchNameError } from './ProviderMismatchNameError';
 import { IRangeType } from '../helpers/IRangeType';
 
 export class ProviderMismatchLevelError extends Error {
@@ -7,6 +6,6 @@ export class ProviderMismatchLevelError extends Error {
     constructor(range: IRangeType, actualLocatorLevel: number) {
         super(`Provider intended to use in ${range.toString()} level but invoked in ${actualLocatorLevel}`);
 
-        Object.setPrototypeOf(this, ProviderMismatchNameError.prototype);
+        Object.setPrototypeOf(this, ProviderMismatchLevelError.prototype);
     }
 }

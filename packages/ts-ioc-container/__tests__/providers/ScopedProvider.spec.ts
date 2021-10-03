@@ -1,48 +1,48 @@
 import {
     IProvider,
     IServiceLocator,
+    LevelProvider,
     Provider,
-    ProviderRepository,
-    ScopedProvider,
-    ServiceLocator,
-    SimpleInjector,
+    ProviderMismatchLevelError,
+    RangeType,
     SingletonProvider,
 } from '../../lib';
 import { Times } from 'moq.ts';
 import { createMock } from '../MoqProviderStorage';
-import { MethodNotImplementedError } from '../../lib';
 
 describe('ScopedProvider', function () {
-    let locator: IServiceLocator;
     let provider: IProvider<any>;
 
+    function createScopedProvider<T>(provider: IProvider<T>): IProvider<T> {
+        return new LevelProvider(new SingletonProvider(provider), new RangeType([1, Infinity]));
+    }
+
     beforeEach(() => {
-        locator = new ServiceLocator((l) => new SimpleInjector(l), new ProviderRepository());
         provider = new Provider(() => 1);
     });
 
     test('cannot resolve dependency from scoped provider', () => {
-        const scopedProvider = new ScopedProvider(provider);
+        const scopedProvider = createScopedProvider(provider);
 
-        expect(() => scopedProvider.resolve(locator)).toThrow(MethodNotImplementedError);
+        expect(() => scopedProvider.resolve({ level: 0 } as IServiceLocator)).toThrow(ProviderMismatchLevelError);
     });
 
     test('can be cloned', () => {
-        const scopedProvider = new ScopedProvider(provider);
+        const scopedProvider = createScopedProvider(provider);
 
-        expect(scopedProvider.clone()).toBeDefined();
+        expect(scopedProvider.clone({ level: 1 })).toBeDefined();
     });
 
     test('should be cloned as singleton', () => {
-        const scopedProvider = new ScopedProvider(provider);
+        const scopedProvider = createScopedProvider(provider);
 
-        expect(scopedProvider.clone()).toBeInstanceOf(SingletonProvider);
+        expect(scopedProvider.clone({ level: 1 })).toBeDefined();
     });
 
     test('dispose', () => {
         const providerMock = createMock<IProvider<any>>();
 
-        const scopedProvider = new ScopedProvider(providerMock.object());
+        const scopedProvider = createScopedProvider(providerMock.object());
         scopedProvider.dispose();
 
         providerMock.verify((i) => i.dispose(), Times.Once());

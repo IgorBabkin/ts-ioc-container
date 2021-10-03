@@ -1,4 +1,4 @@
-import { IProvider } from '../../core/IProvider';
+import { IProvider, ScopeOptions } from '../../core/IProvider';
 import { IInstanceHook } from './IInstanceHook';
 import { IServiceLocator } from '../../core/IServiceLocator';
 
@@ -22,7 +22,7 @@ export class HookedProvider<GInstance> implements IProvider<GInstance> {
         return instance;
     }
 
-    clone(): HookedProvider<GInstance> {
-        return new HookedProvider(this.decorated.clone(), this.hook);
+    clone(options: ScopeOptions): HookedProvider<GInstance> {
+        return new HookedProvider(this.decorated.clone(options), this.hook);
     }
 }

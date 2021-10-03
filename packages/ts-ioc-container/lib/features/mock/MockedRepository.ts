@@ -29,4 +29,6 @@ export class MockedRepository implements IProviderRepository {
     clone(parent?: IProviderRepository): IProviderRepository {
         throw new MethodNotImplementedError('MockRepository cannot be cloned');
     }
+
+    level = 0;
 }

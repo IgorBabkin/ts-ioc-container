@@ -6,13 +6,16 @@ import { IProviderRepository } from './IProviderRepository';
 export class ServiceLocator implements IServiceLocator {
     private readonly injector: IInjector;
 
-    constructor(
-        private readonly createInjector: CreateInjectorFn,
-        private readonly providerRepo: IProviderRepository,
-        public level = 0,
-        public name?: string,
-    ) {
+    constructor(private readonly createInjector: CreateInjectorFn, private readonly providerRepo: IProviderRepository) {
         this.injector = createInjector(this);
+    }
+
+    get level(): number {
+        return this.providerRepo.level;
+    }
+
+    get name(): string {
+        return this.providerRepo.name;
     }
 
     register<T>(key: ProviderKey, provider: IProvider<T>): this {
@@ -30,7 +33,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createLocator(name?: string): IServiceLocator {
-        return new ServiceLocator(this.createInjector, this.providerRepo.clone(), this.level + 1, name);
+        return new ServiceLocator(this.createInjector, this.providerRepo.clone(undefined, name));
     }
 
     dispose(): void {

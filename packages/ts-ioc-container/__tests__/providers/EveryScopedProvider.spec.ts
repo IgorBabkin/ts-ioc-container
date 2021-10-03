@@ -1,30 +1,22 @@
-import {
-    IProvider,
-    IServiceLocator,
-    Provider,
-    SingletonForEveryScopeProviderStrategy,
-    SingletonProvider,
-} from '../../lib';
+import { IProvider, IServiceLocator, LevelProvider, Provider, RangeType, SingletonProvider } from '../../lib';
 import { Times } from 'moq.ts';
 import { createMock } from '../MoqProviderStorage';
 
 describe('LastScopedProvider', function () {
-    test('resolve dependency from scoped provider', () => {
-        const scopedProvider = new SingletonProvider(
-            new Provider(() => 1),
-            new SingletonForEveryScopeProviderStrategy(),
-        );
+    function createLastScopedProvider<T>(provider: IProvider<T>) {
+        return new LevelProvider(new SingletonProvider(provider), new RangeType([0, Infinity]));
+    }
 
-        expect(scopedProvider.resolve({} as IServiceLocator)).toBe(1);
+    test('resolve dependency from scoped provider', () => {
+        const scopedProvider = createLastScopedProvider(new Provider(() => 1));
+
+        expect(scopedProvider.resolve({ level: 0 } as IServiceLocator)).toBe(1);
     });
 
     test('should be singleton per scope', () => {
-        const locator = {} as IServiceLocator;
+        const locator = { level: 0 } as IServiceLocator;
 
-        const scopedProvider = new SingletonProvider(
-            new Provider(() => Math.random()),
-            new SingletonForEveryScopeProviderStrategy(),
-        );
+        const scopedProvider = createLastScopedProvider(new Provider(() => Math.random()));
         const dep1 = scopedProvider.resolve(locator);
         const dep2 = scopedProvider.resolve(locator);
 
@@ -32,30 +24,21 @@ describe('LastScopedProvider', function () {
     });
 
     test('can be cloned', () => {
-        const scopedProvider = new SingletonProvider(
-            new Provider(() => 1),
-            new SingletonForEveryScopeProviderStrategy(),
-        );
+        const scopedProvider = createLastScopedProvider(new Provider(() => 1));
 
-        expect(scopedProvider.clone()).toBeDefined();
+        expect(scopedProvider.clone({ level: 0 })).toBeDefined();
     });
 
     test('should be cloned as every scoped', () => {
-        const scopedProvider = new SingletonProvider(
-            new Provider(() => 1),
-            new SingletonForEveryScopeProviderStrategy(),
-        );
+        const scopedProvider = createLastScopedProvider(new Provider(() => 1));
 
-        expect(scopedProvider.clone()).toBeInstanceOf(SingletonProvider);
+        expect(scopedProvider.clone({ level: 0 })).toBeInstanceOf(LevelProvider);
     });
 
     test('dispose', () => {
         const providerMock = createMock<IProvider<any>>();
 
-        const scopedProvider = new SingletonProvider(
-            providerMock.object(),
-            new SingletonForEveryScopeProviderStrategy(),
-        );
+        const scopedProvider = createLastScopedProvider(providerMock.object());
         scopedProvider.dispose();
 
         providerMock.verify((i) => i.dispose(), Times.Once());

@@ -1,13 +1,19 @@
-import { IProvider } from '../../core/IProvider';
+import { IProvider, ScopeOptions } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
-import { ProviderMismatchLevelError } from '../../errors/ProviderMismatchLevelError';
 import { RangeType } from '../../helpers/RangeType';
+import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
+import { ProviderMismatchLevelError } from '../../errors/ProviderMismatchLevelError';
 
 export class LevelProvider<T> implements IProvider<T> {
     constructor(private decorated: IProvider<T>, private range: RangeType) {}
 
-    clone(): IProvider<T> {
-        return new LevelProvider(this.decorated.clone(), this.range);
+    clone(options: ScopeOptions): IProvider<T> {
+        if (!this.range.includes(options.level)) {
+            throw new ProviderNotClonedError(
+                `Expected level range is ${this.range.toString()}. Actual is ${options.level}`,
+            );
+        }
+        return new LevelProvider(this.decorated.clone(options), this.range);
     }
 
     dispose(): void {

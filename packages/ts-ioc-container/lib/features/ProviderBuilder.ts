@@ -1,6 +1,5 @@
 import { IProvider, ResolveDependency } from '../core/IProvider';
-import { SingletonProvider } from './scope/singleton/SingletonProvider';
-import { ScopedProvider } from './scope/ScopedProvider';
+import { SingletonProvider } from './scope/SingletonProvider';
 import { Provider } from '../core/Provider';
 import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
@@ -9,8 +8,6 @@ import { IInstanceHook } from './instanceHook/IInstanceHook';
 import { NamedProvider } from './scope/NamedProvider';
 import { LevelProvider } from './scope/LevelProvider';
 import { RangeType } from '../helpers/RangeType';
-import { SingletonProviderStrategy } from './scope/singleton/SingletonProviderStrategy';
-import { SingletonForEveryScopeProviderStrategy } from './scope/singleton/SingletonForEveryScopeProviderStrategy';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;
@@ -44,17 +41,7 @@ export class ProviderBuilder<T> {
     }
 
     asSingleton(): this {
-        this.provider = new SingletonProvider(this.provider, new SingletonProviderStrategy());
-        return this;
-    }
-
-    asScoped(): this {
-        this.provider = new ScopedProvider(this.provider);
-        return this;
-    }
-
-    asSingletonForEveryScope(): this {
-        this.provider = new SingletonProvider(this.provider, new SingletonForEveryScopeProviderStrategy());
+        this.provider = new SingletonProvider(this.provider);
         return this;
     }
 
