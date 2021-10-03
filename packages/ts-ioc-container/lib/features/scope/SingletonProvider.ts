@@ -3,6 +3,8 @@ import { Box } from '../../helpers/Box';
 import { IServiceLocator } from '../../core/IServiceLocator';
 
 export class SingletonProvider<T> implements IProvider<T> {
+    active = true;
+
     private instance: Box<T> | null = null;
 
     constructor(private readonly decorated: IProvider<T>) {}

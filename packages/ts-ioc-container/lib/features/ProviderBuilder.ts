@@ -45,13 +45,13 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    forScopeName(name: string): this {
-        this.provider = new NamedProvider(this.provider, name);
+    forScopeName(name: string, currentName?: string): this {
+        this.provider = new NamedProvider(this.provider, name).setName(currentName);
         return this;
     }
 
-    forScopeRange(from: number, to = Infinity): this {
-        this.provider = new LevelProvider(this.provider, new RangeType([from, to]));
+    forScopeRange(from: number, to = Infinity, currentLevel = 0): this {
+        this.provider = new LevelProvider(this.provider, new RangeType([from, to])).setLevel(currentLevel);
         return this;
     }
 

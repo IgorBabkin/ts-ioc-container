@@ -7,6 +7,10 @@ export class HookedProvider<GInstance> implements IProvider<GInstance> {
 
     constructor(private readonly decorated: IProvider<GInstance>, private readonly hook: IInstanceHook) {}
 
+    get active(): boolean {
+        return this.decorated.active;
+    }
+
     dispose(): void {
         this.decorated.dispose();
         for (const instance of this.instances) {

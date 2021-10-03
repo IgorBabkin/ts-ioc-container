@@ -1,16 +1,17 @@
 import { IProvider, ScopeOptions } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
-import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
-import { ProviderMismatchNameError } from '../../errors/ProviderMismatchNameError';
 
 export class NamedProvider<T> implements IProvider<T> {
+    active = false;
     constructor(private decorated: IProvider<T>, private scopeName: string) {}
 
+    setName(value?: string): this {
+        this.active = this.scopeName === value;
+        return this;
+    }
+
     clone(options: ScopeOptions): IProvider<T> {
-        if (this.scopeName !== options.name) {
-            throw new ProviderNotClonedError(`Expected scope name ${this.scopeName}. Actual: ${options.name}`);
-        }
-        return new NamedProvider(this.decorated.clone(options), this.scopeName);
+        return new NamedProvider(this.decorated.clone(options), this.scopeName).setName(options.name);
     }
 
     dispose(): void {
@@ -18,9 +19,6 @@ export class NamedProvider<T> implements IProvider<T> {
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
-        if (locator.name !== this.scopeName) {
-            throw new ProviderMismatchNameError(this.scopeName, locator.name);
-        }
         return this.decorated.resolve(locator, ...args);
     }
 }
