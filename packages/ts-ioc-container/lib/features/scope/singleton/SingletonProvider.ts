@@ -1,15 +1,15 @@
-import { IServiceLocator } from '../../core/IServiceLocator';
-import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
-import { IProvider } from '../../core/IProvider';
-import { Box } from '../../helpers/Box';
+import { IProvider } from '../../../core/IProvider';
+import { Box } from '../../../helpers/Box';
+import { IServiceLocator } from '../../../core/IServiceLocator';
+import { ICloneProviderStrategy } from './ICloneProviderStrategy';
 
 export class SingletonProvider<T> implements IProvider<T> {
     private instance: Box<T> | null = null;
 
-    constructor(private readonly decorated: IProvider<T>) {}
+    constructor(private readonly decorated: IProvider<T>, private cloneStrategy: ICloneProviderStrategy) {}
 
     clone(): IProvider<T> {
-        throw new ProviderNotClonedError('SingletonProvider cannot be cloned');
+        return this.cloneStrategy.clone(this.decorated);
     }
 
     dispose(): void {

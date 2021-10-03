@@ -2,12 +2,13 @@ import {
     IProvider,
     IServiceLocator,
     Provider,
+    ProviderNotClonedError,
     ProviderRepository,
     ServiceLocator,
     SimpleInjector,
     SingletonProvider,
+    SingletonProviderStrategy,
 } from '../../lib';
-import { ProviderNotClonedError } from '../../lib/errors/ProviderNotClonedError';
 
 describe('SingletonProvider', function () {
     let locator: IServiceLocator;
@@ -19,13 +20,13 @@ describe('SingletonProvider', function () {
     });
 
     test('cannot be cloned', () => {
-        const singletonProvider = new SingletonProvider(provider);
+        const singletonProvider = new SingletonProvider(provider, new SingletonProviderStrategy());
 
         expect(() => singletonProvider.clone()).toThrow(ProviderNotClonedError);
     });
 
     test('should resolve the same value', () => {
-        const singletonProvider = new SingletonProvider(provider);
+        const singletonProvider = new SingletonProvider(provider, new SingletonProviderStrategy());
 
         expect(singletonProvider.resolve(locator)).toBe(singletonProvider.resolve(locator));
     });

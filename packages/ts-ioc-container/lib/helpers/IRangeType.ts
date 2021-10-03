@@ -1,5 +1,5 @@
 export interface IRangeType {
-    isValid(value: number): boolean;
+    includes(value: number): boolean;
 
     toString(): string;
 }

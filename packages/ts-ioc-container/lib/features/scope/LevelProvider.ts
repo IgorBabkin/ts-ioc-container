@@ -15,7 +15,7 @@ export class LevelProvider<T> implements IProvider<T> {
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
-        if (!this.range.isValid(locator.level)) {
+        if (!this.range.includes(locator.level)) {
             throw new ProviderMismatchLevelError(this.range, locator.level);
         }
         return this.decorated.resolve(locator, ...args);
