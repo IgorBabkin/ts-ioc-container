@@ -1,15 +1,12 @@
-import { IProvider, ResolveDependency } from '../core/IProvider';
-import { SingletonProvider } from './scope/SingletonProvider';
-import { ScopedProvider } from './scope/ScopedProvider';
-import { Provider } from '../core/Provider';
+import { IProvider, ResolveDependency } from '../core/providers/IProvider';
+import { SingletonProvider } from '../core/providers/SingletonProvider';
+import { ScopedProvider } from '../core/providers/scope/ScopedProvider';
+import { Provider } from '../core/providers/Provider';
 import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
 import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
-import { EveryScopeProvider } from './scope/EveryScopeProvider';
-import { NamedProvider } from './scope/NamedProvider';
-import { LevelProvider } from './scope/LevelProvider';
-import { RangeType } from '../helpers/RangeType';
+import { EveryScopeProvider } from '../core/providers/scope/EveryScopeProvider';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;
@@ -42,32 +39,19 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    asSingleton(): this {
-        this.provider = new SingletonProvider(this.provider);
-        return this;
+    asSingleton(): SingletonProvider<T> {
+        return new SingletonProvider(this.provider);
     }
 
-    asScoped(): this {
-        this.provider = new ScopedProvider(this.provider);
-        return this;
+    asScoped(): ScopedProvider<T> {
+        return new ScopedProvider(this.provider);
     }
 
-    asEveryScoped(): this {
-        this.provider = new EveryScopeProvider(this.provider);
-        return this;
-    }
-
-    forScopeName(name: string): this {
-        this.provider = new NamedProvider(this.provider, name);
-        return this;
-    }
-
-    forScopeRange(from: number, to = Infinity): this {
-        this.provider = new LevelProvider(this.provider, new RangeType([from, to]));
-        return this;
-    }
-
-    build(): IProvider<T> {
+    asRequested(): IProvider<T> {
         return this.provider;
+    }
+
+    asEveryScoped(): EveryScopeProvider<T> {
+        return new EveryScopeProvider(this.provider);
     }
 }

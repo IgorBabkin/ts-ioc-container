@@ -1,4 +1,4 @@
-import { IProvider } from '../../core/IProvider';
+import { IProvider } from '../../core/providers/IProvider';
 import { IInstanceHook } from './IInstanceHook';
 import { IServiceLocator } from '../../core/IServiceLocator';
 

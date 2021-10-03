@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey } from './providers/IProvider';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProviderRepository } from './IProviderRepository';
 import { ProviderNotClonedError } from '../errors/ProviderNotClonedError';

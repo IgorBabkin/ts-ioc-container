@@ -1,6 +1,6 @@
 import { CreateInjectorFn, InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey } from './providers/IProvider';
 import { IProviderRepository } from './IProviderRepository';
 
 export class ServiceLocator implements IServiceLocator {

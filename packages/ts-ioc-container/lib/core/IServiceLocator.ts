@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey } from './providers/IProvider';
 import { constructor } from '../helpers/types';
 import { IDisposable } from '../helpers/IDisposable';
 import { IInjector } from './IInjector';

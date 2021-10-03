@@ -1,5 +1,5 @@
-import { IProvider } from '../../core/IProvider';
-import { IServiceLocator } from '../../core/IServiceLocator';
+import { IProvider } from './IProvider';
+import { IServiceLocator } from '../IServiceLocator';
 import { ProviderMismatchLevelError } from '../../errors/ProviderMismatchLevelError';
 import { RangeType } from '../../helpers/RangeType';
 
