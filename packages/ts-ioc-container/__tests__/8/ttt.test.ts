@@ -31,7 +31,7 @@ describe('ServiceLocator', () => {
                         onConstructMetadataCollector.invokeHooksOf(instance);
                     },
                 })
-                .asRequested(),
+                .build(),
         );
 
         locator.resolve(MyClass);

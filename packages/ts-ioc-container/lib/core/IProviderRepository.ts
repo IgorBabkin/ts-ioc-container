@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey } from './providers/IProvider';
+import { IProvider, ProviderKey } from './IProvider';
 import { IDisposable } from '../helpers/IDisposable';
 
 export interface IProviderRepository extends IDisposable {

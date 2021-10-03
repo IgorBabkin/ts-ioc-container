@@ -1,5 +1,5 @@
 import { IProvider, ResolveDependency } from './IProvider';
-import { IServiceLocator } from '../IServiceLocator';
+import { IServiceLocator } from './IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}

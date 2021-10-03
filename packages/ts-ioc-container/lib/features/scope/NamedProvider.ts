@@ -1,6 +1,6 @@
-import { IProvider } from './IProvider';
+import { IProvider } from '../../core/IProvider';
 import { ProviderMismatchNameError } from '../../errors/ProviderMismatchNameError';
-import { IServiceLocator } from '../IServiceLocator';
+import { IServiceLocator } from '../../core/IServiceLocator';
 
 export class NamedProvider<T> implements IProvider<T> {
     constructor(private decorated: IProvider<T>, private locatorName: string) {}
