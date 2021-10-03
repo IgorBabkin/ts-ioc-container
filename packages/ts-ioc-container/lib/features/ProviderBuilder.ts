@@ -6,7 +6,7 @@ import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
 import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
-import { EveryScopeProvider } from '../core/providers/scope/EveryScopeProvider';
+import { LastScopeProvider } from '../core/providers/scope/LastScopeProvider';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;
@@ -51,7 +51,7 @@ export class ProviderBuilder<T> {
         return this.provider;
     }
 
-    asEveryScoped(): EveryScopeProvider<T> {
-        return new EveryScopeProvider(this.provider);
+    asLastScoped(): LastScopeProvider<T> {
+        return new LastScopeProvider(this.provider);
     }
 }

@@ -28,7 +28,6 @@ export { HookedInjector } from './features/instanceHook/HookedInjector';
 export { IDisposable } from './helpers/IDisposable';
 export { MockedRepository } from './features/mock/MockedRepository';
 export { ScopedProvider } from './core/providers/scope/ScopedProvider';
-export { EveryScopeProvider } from './core/providers/scope/EveryScopeProvider';
 export { SingletonProvider } from './core/providers/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';
 export { IocLocatorBuilder } from './features/ioc/IocLocatorBuilder';
