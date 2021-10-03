@@ -7,9 +7,11 @@ export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 export type CreateInjectorFn = (l: IServiceLocator) => IInjector;
 
 export interface IServiceLocator extends IDisposable {
+    level: number;
+
     name?: string;
 
-    createLocator(): IServiceLocator;
+    createLocator(name?: string): IServiceLocator;
 
     resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
 

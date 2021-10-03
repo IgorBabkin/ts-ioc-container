@@ -6,7 +6,7 @@ export class NamedProvider<T> implements IProvider<T> {
     constructor(private decorated: IProvider<T>, private locatorName: string) {}
 
     clone(): IProvider<T> {
-        return this.decorated.clone();
+        return new NamedProvider(this.decorated.clone(), this.locatorName);
     }
 
     dispose(): void {
