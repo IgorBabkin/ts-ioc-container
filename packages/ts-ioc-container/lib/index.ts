@@ -24,6 +24,7 @@ export { InjectFn } from './features/ioc/InjectFn';
 export { IInstanceHook } from './features/instanceHook/IInstanceHook';
 export { ProviderRepository } from './core/ProviderRepository';
 export { Provider } from './core/providers/Provider';
+export { NamedProvider } from './core/providers/NamedProvider';
 export { HookedInjector } from './features/instanceHook/HookedInjector';
 export { IDisposable } from './helpers/IDisposable';
 export { MockedRepository } from './features/mock/MockedRepository';

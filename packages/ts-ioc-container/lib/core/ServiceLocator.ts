@@ -6,7 +6,11 @@ import { IProviderRepository } from './IProviderRepository';
 export class ServiceLocator implements IServiceLocator {
     private readonly injector: IInjector;
 
-    constructor(private readonly createInjector: CreateInjectorFn, private readonly providerRepo: IProviderRepository) {
+    constructor(
+        private readonly createInjector: CreateInjectorFn,
+        private readonly providerRepo: IProviderRepository,
+        public name?: string,
+    ) {
         this.injector = createInjector(this);
     }
 
