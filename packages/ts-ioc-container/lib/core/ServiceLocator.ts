@@ -9,7 +9,6 @@ export class ServiceLocator implements IServiceLocator {
     constructor(
         private readonly createInjector: CreateInjectorFn,
         private readonly providerRepo: IProviderRepository,
-        public level = 0,
         public name?: string,
     ) {
         this.injector = createInjector(this);
@@ -29,8 +28,8 @@ export class ServiceLocator implements IServiceLocator {
         return this.injector.resolve<T>(key, ...args);
     }
 
-    createLocator(name?: string): IServiceLocator {
-        return new ServiceLocator(this.createInjector, this.providerRepo.clone(), this.level + 1, name);
+    createLocator(): IServiceLocator {
+        return new ServiceLocator(this.createInjector, this.providerRepo.clone());
     }
 
     dispose(): void {
