@@ -13,7 +13,7 @@ export class RangeType implements IRangeType {
         return this;
     }
 
-    includes(value: number): boolean {
+    isValid(value: number): boolean {
         const [from, to] = this.range;
         return from <= value && value <= to;
     }
