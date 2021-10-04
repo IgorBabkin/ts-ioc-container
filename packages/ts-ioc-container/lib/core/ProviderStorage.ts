@@ -17,7 +17,7 @@ export class ProviderStorage {
 
     find<T>(key: ProviderKey, filters: ScopeOptions): IProvider<T> | undefined {
         const provider = this.providers.get(key) as IProvider<T>;
-        if (!provider.isValid(filters)) {
+        if (!provider || !provider.isValid(filters)) {
             return undefined;
         }
         return provider;

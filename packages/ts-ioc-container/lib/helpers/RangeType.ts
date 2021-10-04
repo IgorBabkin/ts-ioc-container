@@ -1,6 +1,10 @@
 import { IRangeType } from './IRangeType';
 
 export class RangeType implements IRangeType {
+    static fromSingleValue(level: number): RangeType {
+        return new RangeType([level, level]);
+    }
+
     constructor(private range: [number, number] = [0, Infinity]) {}
 
     from(value: number): this {

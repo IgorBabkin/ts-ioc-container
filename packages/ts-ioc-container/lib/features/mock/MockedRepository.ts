@@ -26,7 +26,7 @@ export class MockedRepository implements IProviderRepository {
         this.decorated.add(key, provider);
     }
 
-    clone(name: string, parent?: IProviderRepository): IProviderRepository {
+    clone(tags: string[] = [], parent?: IProviderRepository): IProviderRepository {
         throw new MethodNotImplementedError('MockRepository cannot be cloned');
     }
 

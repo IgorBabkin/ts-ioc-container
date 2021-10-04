@@ -5,7 +5,7 @@ export type ResolveDependency<T> = (locator: IServiceLocator, ...args: any[]) =>
 
 export interface ScopeOptions {
     level: number;
-    name?: string;
+    tags: string[];
 }
 
 export interface IProvider<T> extends IDisposable {

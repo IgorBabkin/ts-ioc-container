@@ -91,7 +91,8 @@ describe('ServiceLocator', () => {
         const locator = createSimpleLocator().register(
             'key1',
             fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
-                .asScoped()
+                .asSingleton()
+                .forLevel(1)
                 .build(),
         );
 

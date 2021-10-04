@@ -1,12 +1,4 @@
-import {
-    IProvider,
-    IServiceLocator,
-    LevelProvider,
-    Provider,
-    ProviderMismatchLevelError,
-    RangeType,
-    SingletonProvider,
-} from '../../lib';
+import { IProvider, LevelProvider, Provider, SingletonProvider } from '../../lib';
 import { Times } from 'moq.ts';
 import { createMock } from '../MoqProviderStorage';
 
@@ -14,7 +6,7 @@ describe('ScopedProvider', function () {
     let provider: IProvider<any>;
 
     function createScopedProvider<T>(provider: IProvider<T>): IProvider<T> {
-        return new LevelProvider(new SingletonProvider(provider), new RangeType([1, Infinity]));
+        return new LevelProvider(new SingletonProvider(provider), 1);
     }
 
     beforeEach(() => {
@@ -24,7 +16,7 @@ describe('ScopedProvider', function () {
     test('cannot resolve dependency from scoped provider', () => {
         const scopedProvider = createScopedProvider(provider);
 
-        expect(() => scopedProvider.resolve({ level: 0 } as IServiceLocator)).toThrow(ProviderMismatchLevelError);
+        expect(scopedProvider.isValid({ level: 0, tags: [] })).toBeFalsy();
     });
 
     test('can be cloned', () => {

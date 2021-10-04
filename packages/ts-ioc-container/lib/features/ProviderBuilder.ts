@@ -5,7 +5,7 @@ import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
 import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
-import { NamedProvider } from './scope/NamedProvider';
+import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
 import { RangeType } from '../helpers/RangeType';
 
@@ -45,13 +45,13 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    forScopeName(name: string): this {
-        this.provider = new NamedProvider(this.provider, name);
+    forTags(tags: string[]): this {
+        this.provider = new TaggedProvider(this.provider, tags);
         return this;
     }
 
-    forScopeRange(from: number, to = Infinity): this {
-        this.provider = new LevelProvider(this.provider, new RangeType([from, to]));
+    forLevel(level: number): this {
+        this.provider = new LevelProvider(this.provider, RangeType.fromSingleValue(level));
         return this;
     }
 

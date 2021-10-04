@@ -24,8 +24,8 @@ export class ServiceLocator implements IServiceLocator {
         return this.injector.resolve<T>(key, ...args);
     }
 
-    createLocator(name?: string): IServiceLocator {
-        return new ServiceLocator(this.createInjector, this.providerRepo.clone(name));
+    createLocator(tags: string[] = []): IServiceLocator {
+        return new ServiceLocator(this.createInjector, this.providerRepo.clone(tags));
     }
 
     dispose(): void {

@@ -17,3 +17,7 @@ export const constant =
     <T>(value: T) =>
     () =>
         value;
+
+export function hasIntersection<T>(a: T[], b: T[]): boolean {
+    return a.some((tag) => b.includes(tag));
+}

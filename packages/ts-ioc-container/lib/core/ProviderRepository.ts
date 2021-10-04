@@ -6,15 +6,15 @@ import { ProviderStorage } from './ProviderStorage';
 export class ProviderRepository implements IProviderRepository {
     private readonly providers = new ProviderStorage();
 
-    constructor(private parent?: ProviderRepository, public level = 0, private name?: string) {}
+    constructor(private parent?: ProviderRepository, public level = 0, private tags: string[] = []) {}
 
     add<T>(key: ProviderKey, provider: IProvider<T>): void {
         this.providers.add(key, provider);
     }
 
-    clone(name?: string, parent: ProviderRepository = this): IProviderRepository {
-        const options: ScopeOptions = { level: parent.level + 1, name };
-        const repo = new ProviderRepository(parent, options.level, options.name);
+    clone(tags: string[] = [], parent: ProviderRepository = this): IProviderRepository {
+        const options: ScopeOptions = { level: parent.level + 1, tags };
+        const repo = new ProviderRepository(parent, options.level, options.tags);
         for (const [key, provider] of parent.entries()) {
             const newProvider = provider.clone();
             if (newProvider.isValid(options)) {
@@ -24,8 +24,10 @@ export class ProviderRepository implements IProviderRepository {
         return repo;
     }
 
-    entries(): IterableIterator<[ProviderKey, IProvider<any>]> {
-        return new Map([...this.parent?.entries(), ...Array.from(this.providers.entries())]).entries();
+    entries(): Array<[ProviderKey, IProvider<any>]> {
+        const localProviders = Array.from(this.providers.entries());
+        const parentProviders = this.parent ? this.parent.entries() : [];
+        return Array.from(new Map([...parentProviders, ...localProviders]).entries());
     }
 
     dispose(): void {
@@ -37,8 +39,8 @@ export class ProviderRepository implements IProviderRepository {
     }
 
     find<T>(key: ProviderKey): IProvider<T> {
-        const options = { level: this.level, name: this.name };
-        const provider = this.providers.find<T>(key, options) ?? this.parent?.find<T>(key);
+        const provider =
+            this.providers.find<T>(key, { level: this.level, tags: this.tags }) ?? this.parent?.find<T>(key);
         if (provider === undefined) {
             throw new ProviderNotFoundError(key.toString());
         }
