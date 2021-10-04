@@ -10,14 +10,6 @@ export class ServiceLocator implements IServiceLocator {
         this.injector = createInjector(this);
     }
 
-    get level(): number {
-        return this.providerRepo.level;
-    }
-
-    get name(): string {
-        return this.providerRepo.name;
-    }
-
     register<T>(key: ProviderKey, provider: IProvider<T>): this {
         this.providerRepo.add(key, provider);
         return this;
@@ -33,7 +25,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createLocator(name?: string): IServiceLocator {
-        return new ServiceLocator(this.createInjector, this.providerRepo.clone(undefined, name));
+        return new ServiceLocator(this.createInjector, this.providerRepo.clone(name));
     }
 
     dispose(): void {

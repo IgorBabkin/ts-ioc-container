@@ -1,13 +1,14 @@
 import { IProvider, ProviderKey } from './IProvider';
+import { ProviderAdapter } from './ProviderAdapter';
 
 export class ProviderStorage {
-    private readonly providers = new Map<ProviderKey, IProvider<any>>();
+    private readonly providers = new Map<ProviderKey, ProviderAdapter<any>>();
 
-    add<T>(key: ProviderKey, provider: IProvider<T>): void {
+    add<T>(key: ProviderKey, provider: ProviderAdapter<T>): void {
         this.providers.set(key, provider);
     }
 
-    entries(): IterableIterator<[ProviderKey, IProvider<any>]> {
+    entries(): IterableIterator<[ProviderKey, ProviderAdapter<any>]> {
         return this.providers.entries();
     }
 
@@ -15,9 +16,9 @@ export class ProviderStorage {
         return this.providers.values();
     }
 
-    find<T>(key: ProviderKey): IProvider<T> | undefined {
-        const provider = this.providers.get(key) as IProvider<T>;
-        if (!provider.active) {
+    find<T>(key: ProviderKey): ProviderAdapter<T> | undefined {
+        const provider = this.providers.get(key) as ProviderAdapter<T>;
+        if (!provider.isValid()) {
             return undefined;
         }
         return provider;

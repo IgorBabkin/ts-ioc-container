@@ -2,16 +2,10 @@ import { IProvider, ScopeOptions } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
 
 export class NamedProvider<T> implements IProvider<T> {
-    active = false;
     constructor(private decorated: IProvider<T>, private scopeName: string) {}
 
-    setName(value?: string): this {
-        this.active = this.scopeName === value;
-        return this;
-    }
-
-    clone(options: ScopeOptions): IProvider<T> {
-        return new NamedProvider(this.decorated.clone(options), this.scopeName).setName(options.name);
+    clone(): IProvider<T> {
+        return new NamedProvider(this.decorated.clone(), this.scopeName);
     }
 
     dispose(): void {
@@ -20,5 +14,9 @@ export class NamedProvider<T> implements IProvider<T> {
 
     resolve(locator: IServiceLocator, ...args: any[]): T {
         return this.decorated.resolve(locator, ...args);
+    }
+
+    isValid(filters: ScopeOptions): boolean {
+        return this.scopeName === filters.name && this.decorated.isValid(filters);
     }
 }

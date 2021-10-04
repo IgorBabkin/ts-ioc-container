@@ -1,9 +1,7 @@
-import { IProvider, ResolveDependency } from './IProvider';
+import { IProvider, ResolveDependency, ScopeOptions } from './IProvider';
 import { IServiceLocator } from './IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
-    active = true;
-
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
     clone(): IProvider<T> {
@@ -15,4 +13,8 @@ export class Provider<T> implements IProvider<T> {
     }
 
     dispose(): void {}
+
+    isValid(filters: ScopeOptions): boolean {
+        return true;
+    }
 }

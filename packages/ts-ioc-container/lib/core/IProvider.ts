@@ -9,11 +9,11 @@ export interface ScopeOptions {
 }
 
 export interface IProvider<T> extends IDisposable {
-    clone(options: ScopeOptions): IProvider<T>;
+    clone(): IProvider<T>;
 
     resolve(locator: IServiceLocator, ...args: any[]): T;
 
-    readonly active: boolean;
+    isValid(filters: ScopeOptions): boolean;
 }
 
 export type ProviderKey = string | symbol;

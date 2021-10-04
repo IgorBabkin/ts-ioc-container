@@ -2,11 +2,7 @@ import { IProvider, ProviderKey } from './IProvider';
 import { IDisposable } from '../helpers/IDisposable';
 
 export interface IProviderRepository extends IDisposable {
-    level: number;
-
-    name?: string;
-
-    clone(parent?: IProviderRepository, name?: string): IProviderRepository;
+    clone(name?: string, parent?: IProviderRepository): IProviderRepository;
 
     find<T>(key: ProviderKey): IProvider<T>;
 

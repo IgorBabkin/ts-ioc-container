@@ -1,31 +1,22 @@
-import { IProvider, ProviderKey, ScopeOptions } from './IProvider';
+import { IProvider, ProviderKey } from './IProvider';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProviderRepository } from './IProviderRepository';
 import { ProviderStorage } from './ProviderStorage';
+import { ProviderAdapter } from './ProviderAdapter';
 
 export class ProviderRepository implements IProviderRepository {
     private readonly providers = new ProviderStorage();
-    private scopeOptions: ScopeOptions;
-    name?: string;
-    level: number;
 
-    constructor(private parent?: IProviderRepository, options: Partial<ScopeOptions> = {}) {
-        this.level = options.level ?? 0;
-        this.name = options.name;
-    }
+    constructor(private parent?: IProviderRepository, private level = 0, private name?: string) {}
 
     add<T>(key: ProviderKey, provider: IProvider<T>): void {
-        this.providers.add(key, provider);
+        this.providers.add(key, new ProviderAdapter(provider, { level: this.level, name: this.name }));
     }
 
-    clone(parent: IProviderRepository = this, name?: string): IProviderRepository {
-        const options: ScopeOptions = {
-            name,
-            level: this.scopeOptions.level + 1,
-        };
-        const repo = new ProviderRepository(parent, options);
+    clone(name?: string, parent: IProviderRepository = this): IProviderRepository {
+        const repo = new ProviderRepository(parent, this.level + 1);
         for (const [key, provider] of this.providers.entries()) {
-            repo.add(key, provider.clone(options));
+            repo.add(key, provider.clone());
         }
         return repo;
     }

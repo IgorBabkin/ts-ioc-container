@@ -10,11 +10,11 @@ describe('LastScopedProvider', function () {
     test('resolve dependency from scoped provider', () => {
         const scopedProvider = createLastScopedProvider(new Provider(() => 1));
 
-        expect(scopedProvider.resolve({ level: 0 } as IServiceLocator)).toBe(1);
+        expect(scopedProvider.isValid({ level: 0 })).toBe(1);
     });
 
     test('should be singleton per scope', () => {
-        const locator = { level: 0 } as IServiceLocator;
+        const locator = {} as IServiceLocator;
 
         const scopedProvider = createLastScopedProvider(new Provider(() => Math.random()));
         const dep1 = scopedProvider.resolve(locator);

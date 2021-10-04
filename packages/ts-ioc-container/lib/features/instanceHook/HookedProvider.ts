@@ -7,10 +7,6 @@ export class HookedProvider<GInstance> implements IProvider<GInstance> {
 
     constructor(private readonly decorated: IProvider<GInstance>, private readonly hook: IInstanceHook) {}
 
-    get active(): boolean {
-        return this.decorated.active;
-    }
-
     dispose(): void {
         this.decorated.dispose();
         for (const instance of this.instances) {
@@ -26,7 +22,11 @@ export class HookedProvider<GInstance> implements IProvider<GInstance> {
         return instance;
     }
 
-    clone(options: ScopeOptions): HookedProvider<GInstance> {
-        return new HookedProvider(this.decorated.clone(options), this.hook);
+    clone(): HookedProvider<GInstance> {
+        return new HookedProvider(this.decorated.clone(), this.hook);
+    }
+
+    isValid(filters: ScopeOptions): boolean {
+        return this.decorated.isValid(filters);
     }
 }
