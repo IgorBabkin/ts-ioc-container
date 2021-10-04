@@ -3,14 +3,10 @@ import { IServiceLocator } from '../../core/IServiceLocator';
 import { MathSet } from '../../helpers/MathSet';
 
 export class TaggedProvider<T> implements IProvider<T> {
-    private readonly tags: MathSet<string>;
-
-    constructor(private decorated: IProvider<T>, tags: string[]) {
-        this.tags = MathSet.fromArray(tags);
-    }
+    constructor(private decorated: IProvider<T>, private readonly tags: MathSet<string>) {}
 
     clone(): IProvider<T> {
-        return new TaggedProvider(this.decorated.clone(), this.tags.toArray());
+        return new TaggedProvider(this.decorated.clone(), this.tags);
     }
 
     dispose(): void {

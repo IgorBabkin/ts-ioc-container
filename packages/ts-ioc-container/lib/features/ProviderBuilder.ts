@@ -8,6 +8,7 @@ import { IInstanceHook } from './instanceHook/IInstanceHook';
 import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
 import { RangeType } from '../helpers/RangeType';
+import { MathSet } from '../helpers/MathSet';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;
@@ -46,7 +47,7 @@ export class ProviderBuilder<T> {
     }
 
     forTags(tags: string[]): this {
-        this.provider = new TaggedProvider(this.provider, tags);
+        this.provider = new TaggedProvider(this.provider, MathSet.fromArray(tags));
         return this;
     }
 
