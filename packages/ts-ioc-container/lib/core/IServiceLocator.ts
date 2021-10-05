@@ -6,10 +6,12 @@ import { IInjector } from './IInjector';
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 export type CreateInjectorFn = (l: IServiceLocator) => IInjector;
 
-export interface IServiceLocator extends IDisposable {
-    createLocator(tags?: string[]): IServiceLocator;
-
+export interface Resolveable {
     resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
+}
+
+export interface IServiceLocator extends Resolveable, IDisposable {
+    createLocator(tags?: string[]): IServiceLocator;
 
     register<T>(key: ProviderKey, provider: IProvider<T>): this;
 }

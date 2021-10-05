@@ -1,12 +1,16 @@
-import { IProvider, ScopeOptions } from '../../core/IProvider';
+import { IProvider, ScopeOptions, Tag } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
 import { MathSet } from '../../helpers/MathSet';
 
 export class TaggedProvider<T> implements IProvider<T> {
-    constructor(private decorated: IProvider<T>, private readonly tags: MathSet<string>) {}
+    private readonly tags: MathSet<Tag>;
+
+    constructor(private decorated: IProvider<T>, tags: Tag[]) {
+        this.tags = MathSet.fromArray(tags);
+    }
 
     clone(): IProvider<T> {
-        return new TaggedProvider(this.decorated.clone(), this.tags);
+        return new TaggedProvider(this.decorated.clone(), this.tags.toArray());
     }
 
     dispose(): void {

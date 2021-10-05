@@ -3,10 +3,14 @@ import { IServiceLocator } from '../../core/IServiceLocator';
 import { RangeType } from '../../helpers/RangeType';
 
 export class LevelProvider<T> implements IProvider<T> {
-    constructor(private decorated: IProvider<T>, private range: RangeType) {}
+    private readonly range: RangeType;
+
+    constructor(private decorated: IProvider<T>, range: [number, number]) {
+        this.range = new RangeType(range);
+    }
 
     clone(): IProvider<T> {
-        return new LevelProvider(this.decorated.clone(), this.range);
+        return new LevelProvider(this.decorated.clone(), this.range.toTuple());
     }
 
     dispose(): void {

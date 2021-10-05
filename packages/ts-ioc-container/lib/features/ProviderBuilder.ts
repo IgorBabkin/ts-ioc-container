@@ -1,4 +1,4 @@
-import { IProvider, ResolveDependency } from '../core/IProvider';
+import { IProvider, ResolveDependency, Tag } from '../core/IProvider';
 import { SingletonProvider } from './scope/SingletonProvider';
 import { Provider } from '../core/Provider';
 import { constructor } from '../helpers/types';
@@ -7,8 +7,6 @@ import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
 import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
-import { RangeType } from '../helpers/RangeType';
-import { MathSet } from '../helpers/MathSet';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;
@@ -46,13 +44,13 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    forTags(tags: string[]): this {
-        this.provider = new TaggedProvider(this.provider, MathSet.fromArray(tags));
+    forTags(tags: Tag[]): this {
+        this.provider = new TaggedProvider(this.provider, tags);
         return this;
     }
 
     forLevel(level: number): this {
-        this.provider = new LevelProvider(this.provider, new RangeType([level, level]));
+        this.provider = new LevelProvider(this.provider, [level, level]);
         return this;
     }
 

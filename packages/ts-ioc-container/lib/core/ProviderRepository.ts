@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey, ScopeOptions } from './IProvider';
+import { IProvider, ProviderKey, Tag } from './IProvider';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProviderRepository } from './IProviderRepository';
 import { ProviderStorage } from './ProviderStorage';
@@ -6,14 +6,14 @@ import { ProviderStorage } from './ProviderStorage';
 export class ProviderRepository implements IProviderRepository {
     private readonly providers = new ProviderStorage();
 
-    constructor(private parent?: ProviderRepository, public level = 0, private tags: string[] = []) {}
+    constructor(private parent?: ProviderRepository, public level = 0, private tags: Tag[] = []) {}
 
     add<T>(key: ProviderKey, provider: IProvider<T>): void {
         this.providers.add(key, provider);
     }
 
-    clone(tags: string[] = [], parent: ProviderRepository = this): IProviderRepository {
-        const options: ScopeOptions = { level: parent.level + 1, tags };
+    clone(tags: Tag[] = [], parent: ProviderRepository = this): IProviderRepository {
+        const options = { level: parent.level + 1, tags };
         const repo = new ProviderRepository(parent, options.level, options.tags);
         for (const [key, provider] of parent.entries()) {
             const newProvider = provider.clone();
@@ -39,8 +39,8 @@ export class ProviderRepository implements IProviderRepository {
     }
 
     find<T>(key: ProviderKey): IProvider<T> {
-        const provider =
-            this.providers.find<T>(key, { level: this.level, tags: this.tags }) ?? this.parent?.find<T>(key);
+        const options = { level: this.level, tags: this.tags };
+        const provider = this.providers.find<T>(key, options) ?? this.parent?.find<T>(key);
         if (provider === undefined) {
             throw new ProviderNotFoundError(key.toString());
         }
