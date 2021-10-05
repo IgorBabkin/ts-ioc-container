@@ -73,6 +73,7 @@ describe('ServiceLocator', () => {
                 'key1',
                 fromFn(() => ({}))
                     .asSingleton()
+                    .forLevel(0)
                     .build(),
             );
 

@@ -6,7 +6,7 @@ describe('ScopedProvider', function () {
     let provider: IProvider<any>;
 
     function createScopedProvider<T>(provider: IProvider<T>): IProvider<T> {
-        return new LevelProvider(new SingletonProvider(provider), 1);
+        return new LevelProvider(new SingletonProvider(provider), [1, 1]);
     }
 
     beforeEach(() => {
@@ -22,13 +22,7 @@ describe('ScopedProvider', function () {
     test('can be cloned', () => {
         const scopedProvider = createScopedProvider(provider);
 
-        expect(scopedProvider.clone({ level: 1 })).toBeDefined();
-    });
-
-    test('should be cloned as singleton', () => {
-        const scopedProvider = createScopedProvider(provider);
-
-        expect(scopedProvider.clone({ level: 1 })).toBeDefined();
+        expect(scopedProvider.isValid({ level: 1, tags: [] })).toBeTruthy();
     });
 
     test('dispose', () => {

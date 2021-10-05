@@ -3,9 +3,7 @@ import {
     IServiceLocator,
     LevelProvider,
     Provider,
-    ProviderNotClonedError,
     ProviderRepository,
-    RangeType,
     ServiceLocator,
     SimpleInjector,
     SingletonProvider,
@@ -16,7 +14,7 @@ describe('SingletonProvider', function () {
     let provider: IProvider<any>;
 
     function createSingleton<T>(provider: IProvider<T>): IProvider<T> {
-        return new LevelProvider(new SingletonProvider(provider), new RangeType([0, 0]));
+        return new LevelProvider(new SingletonProvider(provider), [0, 0]);
     }
 
     beforeEach(() => {
@@ -27,7 +25,7 @@ describe('SingletonProvider', function () {
     test('cannot be cloned', () => {
         const singletonProvider = createSingleton(provider);
 
-        expect(() => singletonProvider.clone({ level: 1 })).toThrow(ProviderNotClonedError);
+        expect(singletonProvider.isValid({ level: 1, tags: [] })).toBeFalsy();
     });
 
     test('should resolve the same value', () => {
