@@ -7,8 +7,8 @@ export class ProviderStorage {
         this.providers.set(key, provider);
     }
 
-    entries(): IterableIterator<[ProviderKey, IProvider<any>]> {
-        return this.providers.entries();
+    entries(filters: ScopeOptions): [ProviderKey, IProvider<any>][] {
+        return Array.from(this.providers.entries()).filter(([, value]) => value.isValid(filters));
     }
 
     values(): IterableIterator<IProvider<any>> {

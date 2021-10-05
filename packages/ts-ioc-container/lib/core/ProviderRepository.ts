@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey, Tag } from './IProvider';
+import { IProvider, ProviderKey, ScopeOptions, Tag } from './IProvider';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProviderRepository } from './IProviderRepository';
 import { ProviderStorage } from './ProviderStorage';
@@ -15,18 +15,15 @@ export class ProviderRepository implements IProviderRepository {
     clone(tags: Tag[] = [], parent: ProviderRepository = this): IProviderRepository {
         const options = { level: parent.level + 1, tags };
         const repo = new ProviderRepository(parent, options.level, options.tags);
-        for (const [key, provider] of parent.entries()) {
-            const newProvider = provider.clone();
-            if (newProvider.isValid(options)) {
-                repo.add(key, newProvider);
-            }
+        for (const [key, provider] of parent.entries(options)) {
+            repo.add(key, provider.clone());
         }
         return repo;
     }
 
-    entries(): Array<[ProviderKey, IProvider<any>]> {
-        const localProviders = Array.from(this.providers.entries());
-        const parentProviders = this.parent ? this.parent.entries() : [];
+    entries(filters: ScopeOptions): Array<[ProviderKey, IProvider<any>]> {
+        const localProviders = this.providers.entries(filters);
+        const parentProviders = this.parent ? this.parent.entries(filters) : [];
         return Array.from(new Map([...parentProviders, ...localProviders]).entries());
     }
 
