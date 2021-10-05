@@ -52,7 +52,7 @@ export class ProviderBuilder<T> {
     }
 
     forLevel(level: number): this {
-        this.provider = new LevelProvider(this.provider, RangeType.fromSingleValue(level));
+        this.provider = new LevelProvider(this.provider, new RangeType([level, level]));
         return this;
     }
 
