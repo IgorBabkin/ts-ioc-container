@@ -1,6 +1,6 @@
-import { InjectFn } from '../../features/ioc/InjectFn';
-import { InjectionToken } from '../../core/IServiceLocator';
-import { IInjectMetadataCollector } from '../../features/ioc/IInjectMetadataCollector';
+import { InjectFn } from '../InjectFn';
+import { InjectionToken } from '../../../core/IServiceLocator';
+import { IInjectMetadataCollector } from '../IInjectMetadataCollector';
 
 export type InjectFnDecorator = <T>(injectionFn: InjectFn<T>) => ParameterDecorator;
 export function createInjectFnDecorator(metadata: IInjectMetadataCollector): InjectFnDecorator {
