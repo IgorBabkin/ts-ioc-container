@@ -1,6 +1,6 @@
 {
   "name": "clean-use-case",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "description": "Use Case Library for Clean Architecture",
   "keywords": [
     "usecase",
