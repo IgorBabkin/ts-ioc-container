@@ -1,79 +1,34 @@
 # React adapters for clean use cases
 
 ```tsx
-import React, { FunctionComponent } from 'react';
-import { Each, useObservables } from 'reactivex-react';
-import {
-  DeleteTodo,
-  FilterTodoList,
-  getRandomString,
-  GetTodoFilters,
-  GetTodoList,
-  IAddTodo,
-  IAddTodoActionKey,
-  repeat,
-  TodoNotificationSaga,
-} from '../../../../application';
-import { useAction, useCommand, useQuery, useSaga } from 'react-clean-use-case';
-import { Button, Panel } from 'web/ui';
+import * as React from 'react';
+import { FC, useState } from 'react';
+import { Scope } from '../lib';
+import { AboutPage } from './AboutPage';
+import { HomePage } from './HomePage';
 
-export const TodoList: FunctionComponent = () => {
-  useSaga(TodoNotificationSaga);
-  const filterTodos = useCommand(FilterTodoList);
-  const filter$ = useQuery(GetTodoFilters, (q) => q.create());
-  const todoList$ = useQuery(GetTodoList, (m) => m.create());
-  const addTodo = useAction<IAddTodo>(IAddTodoActionKey);
-  const deleteTodo = useCommand(DeleteTodo);
-  const $ = useObservables();
+const isEven = (value: number) => value % 2 === 0;
+const isOdd = (value: number) => value % 2 === 1;
+const homeTags = ['home'];
+const aboutTags = ['about'];
+
+export const App: FC = (): JSX.Element => {
+  const [state, setState] = useState(0);
 
   return (
-    <Panel>
-      <Button
-        onClick={() =>
-          addTodo.dispatch({
-            id: getRandomString(10),
-            title: 'Hey',
-            message: 'Hou',
-            priority: Math.round((Math.random() * 10) % 5),
-          })
-        }
-      >
-        Add
-      </Button>
-      <select
-        defaultValue={$(filter$)!.minPriority}
-        onChange={({ target }) => filterTodos.execute({ minPriority: parseInt(target.value) })}
-      >
-        {repeat(6).map((i) => (
-          <option key={i} value={i}>
-            {i}
-          </option>
-        ))}
-      </select>
-      <select
-        defaultValue={$(filter$)!.maxPriority}
-        onChange={({ target }) => filterTodos.execute({ maxPriority: parseInt(target.value) })}
-      >
-        {repeat(6).map((i) => (
-          <option key={i} value={i}>
-            {i}
-          </option>
-        ))}
-      </select>
-      <ul>
-        <Each obs$={todoList$}>
-          {({ id, title, message, priority }) => (
-            <li key={id}>
-              {title} - {message} - {priority}
-              <button className="btn btn-danger" onClick={() => deleteTodo.execute(id)}>
-                Delete
-              </button>
-            </li>
-          )}
-        </Each>
-      </ul>
-    </Panel>
+    <div>
+      <h3>Scopes</h3>
+      {isOdd(state) && (
+        <Scope context="about" tags={aboutTags}>
+          <AboutPage onChangePage={() => setState(0)} />
+        </Scope>
+      )}
+      {isEven(state) && (
+        <Scope context="home" tags={homeTags}>
+          <HomePage onChangePage={(value) => setState(value)} />
+        </Scope>
+      )}
+    </div>
   );
 };
-
 ```

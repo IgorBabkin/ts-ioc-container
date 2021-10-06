@@ -12,7 +12,9 @@
     "jsx": "react",
     "esModuleInterop": true,
     "strict": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     "node_modules"

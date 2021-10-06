@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey } from './IProvider';
+import { IProvider, ProviderKey, Tag } from './IProvider';
 import { constructor } from '../helpers/types';
 import { IDisposable } from '../helpers/IDisposable';
 import { IInjector } from './IInjector';
@@ -11,7 +11,7 @@ export interface Resolveable {
 }
 
 export interface IServiceLocator extends Resolveable, IDisposable {
-    createLocator(tags?: string[]): IServiceLocator;
+    createLocator(tags?: Tag[]): IServiceLocator;
 
     register<T>(key: ProviderKey, provider: IProvider<T>): this;
 }

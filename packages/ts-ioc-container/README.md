@@ -57,7 +57,7 @@ How to create new simple locator
 import { SimpleLocatorBuilder, ProviderBuilder } from 'ts-ioc-container';
 
 const locator = new SimpleLocatorBuilder().build();
-locator.register('ILogger', ProviderBuilder.fromConstructor(Logger).asRequested());
+locator.register('ILogger', ProviderBuilder.fromConstructor(Logger).build());
 const logger = locator.resolve<ILogger>('ILogger');
 ```
 ### Injectors
@@ -73,7 +73,7 @@ class Car {
 }
 
 const locator = new SimpleLocatorBuilder().build();
-locator.register('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
+locator.register('IEngine', ProviderBuilder.fromConstructor(Engine).build());
 const car = locator.resolve(Car);
 ```
 IoC injector. Compose `@inject` decorator as you need. Or use default `createInjectDecorator`;
@@ -107,7 +107,7 @@ export const Collection = <T>(...injections: InjectFn<T>[]) => l => injections.m
  */
 
 const locator = new IocLocatorBuilder(constructorMetadataCollector).build();
-locator.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested());
+locator.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested().build());
 
 class Car {
   constructor(
@@ -134,9 +134,10 @@ const car = locator.resolve(Car);
 import {ProviderBuilder} from "ts-ioc-container";
 
 locator.register('ILogger', new ProviderBuilder((l, ...args) => new Logger(...args)).asRequested());
-locator.register('ILogger1', ProviderBuilder.fromConstructor(Logger).asSingleton());
-locator.register('ILogger2', ProviderBuilder.fromConstructor(Logger).asScoped());
-locator.register('ILogger3', ProviderBuilder.fromConstructor(Logger).withArgs('dev').asSingleton());
+locator.register('ILogger1', ProviderBuilder.fromConstructor(Logger).asSingleton().forLevel(0).build()); // global singleton
+locator.register('ILogger2', ProviderBuilder.fromConstructor(Logger).asSingleton().forLevel(1).build()); // first scope singleton
+locator.register('ILogger3', ProviderBuilder.fromConstructor(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
+locator.register('ILogger4', ProviderBuilder.fromConstructor(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
 ```
 
 ## Hooks
@@ -218,7 +219,7 @@ class Engine {
 }
 
 // in the case if you don't want to use locator.resolve to instanciate Engine you should use .withHook
-locator.register('IEngine', new ProviderBuilder(() => new Engine()).withHook(hook).asRequested())
+locator.register('IEngine', new ProviderBuilder(() => new Engine()).withHook(hook).build())
 const engine = locator.resolve(Engine); // output: initialized!
 locator.dispose(); // output: disposed!
 ```
@@ -226,7 +227,7 @@ locator.dispose(); // output: disposed!
 ## Scoped locators
 
 ```typescript
-const scope = locator.createLocator();
+const scope = locator.createLocator(['tag1', 'tag2']);
 const logger = scope.resolve('ILogger');
 scope.dispose();
 ```
