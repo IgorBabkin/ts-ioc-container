@@ -1,5 +1,5 @@
-import { IProvider, ResolveDependency } from './IProvider';
-import { IServiceLocator } from '../IServiceLocator';
+import { IProvider, ResolveDependency, ScopeOptions } from './IProvider';
+import { IServiceLocator } from './IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
@@ -13,4 +13,8 @@ export class Provider<T> implements IProvider<T> {
     }
 
     dispose(): void {}
+
+    isValid(filters: ScopeOptions): boolean {
+        return true;
+    }
 }

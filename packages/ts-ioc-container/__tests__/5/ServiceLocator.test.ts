@@ -18,10 +18,7 @@ describe('ServiceLocator', () => {
         new SimpleLocatorBuilder().withInjectorHook(hooks).build();
 
     it('should pass dependencies', () => {
-        const locator = createSimpleLocator().register(
-            'key1',
-            ProviderBuilder.fromConstructor(TestClass).asRequested(),
-        );
+        const locator = createSimpleLocator().register('key1', ProviderBuilder.fromConstructor(TestClass).build());
         const testClass = locator.resolve<TestClass>('key1', 'a', 3);
 
         expect(testClass.dep1).toBe('a');
@@ -49,7 +46,7 @@ describe('ServiceLocator', () => {
                     },
                     onDispose<GInstance>(instance: GInstance) {},
                 })
-                .asRequested(),
+                .build(),
         );
 
         child.resolve('key1');
@@ -80,7 +77,7 @@ describe('ServiceLocator', () => {
                         (instance as any).dispose();
                     },
                 })
-                .asRequested(),
+                .build(),
         );
 
         child.resolve('key1');
@@ -93,11 +90,14 @@ describe('ServiceLocator', () => {
     it('conditional resolving', () => {
         const locator = createSimpleLocator().register(
             'key1',
-            fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad')).asScoped(),
+            fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
+                .asSingleton()
+                .forLevel(1)
+                .build(),
         );
 
-        const child1 = locator.createLocator().register('context', fromInstance('a').asRequested());
-        const child2 = locator.createLocator().register('context', fromInstance('b').asRequested());
+        const child1 = locator.createLocator().register('context', fromInstance('a').build());
+        const child2 = locator.createLocator().register('context', fromInstance('b').build());
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

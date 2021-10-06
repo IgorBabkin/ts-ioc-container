@@ -4,9 +4,7 @@ import { onConstruct, onConstructMetadataCollector } from './decorators';
 
 class MyClass {
     @onConstruct
-    onInit(): void {
-        console.log('HEY');
-    }
+    onInit(): void {}
 }
 
 describe('ServiceLocator', () => {

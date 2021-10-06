@@ -1,11 +1,12 @@
-import { IProvider, ResolveDependency } from '../core/providers/IProvider';
-import { SingletonProvider } from '../core/providers/SingletonProvider';
-import { ScopedProvider } from '../core/providers/ScopedProvider';
-import { Provider } from '../core/providers/Provider';
+import { IProvider, ResolveDependency, Tag } from '../core/IProvider';
+import { SingletonProvider } from './scope/SingletonProvider';
+import { Provider } from '../core/Provider';
 import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
 import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
+import { TaggedProvider } from './scope/TaggedProvider';
+import { LevelProvider } from './scope/LevelProvider';
 
 export class ProviderBuilder<T> {
     private provider: IProvider<T>;
@@ -38,15 +39,22 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    asSingleton(): SingletonProvider<T> {
-        return new SingletonProvider(this.provider);
+    asSingleton(): this {
+        this.provider = new SingletonProvider(this.provider);
+        return this;
     }
 
-    asScoped(): ScopedProvider<T> {
-        return new ScopedProvider(this.provider);
+    forTags(tags: Tag[]): this {
+        this.provider = new TaggedProvider(this.provider, tags);
+        return this;
     }
 
-    asRequested(): IProvider<T> {
+    forLevel(level: number): this {
+        this.provider = new LevelProvider(this.provider, [level, level]);
+        return this;
+    }
+
+    build(): IProvider<T> {
         return this.provider;
     }
 }

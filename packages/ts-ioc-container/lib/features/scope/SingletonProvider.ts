@@ -1,10 +1,6 @@
-import { IProvider } from './IProvider';
-import { IServiceLocator } from '../IServiceLocator';
-import { ProviderNotClonedError } from '../../errors/ProviderNotClonedError';
-
-class Box<T> {
-    constructor(public value: T) {}
-}
+import { IProvider, ScopeOptions } from '../../core/IProvider';
+import { Box } from '../../helpers/Box';
+import { IServiceLocator } from '../../core/IServiceLocator';
 
 export class SingletonProvider<T> implements IProvider<T> {
     private instance: Box<T> | null = null;
@@ -12,7 +8,7 @@ export class SingletonProvider<T> implements IProvider<T> {
     constructor(private readonly decorated: IProvider<T>) {}
 
     clone(): IProvider<T> {
-        throw new ProviderNotClonedError('SingletonProvider cannot be cloned');
+        return new SingletonProvider(this.decorated.clone());
     }
 
     dispose(): void {
@@ -28,5 +24,9 @@ export class SingletonProvider<T> implements IProvider<T> {
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.instance!.value as T;
+    }
+
+    isValid(filters: ScopeOptions): boolean {
+        return this.decorated.isValid(filters);
     }
 }

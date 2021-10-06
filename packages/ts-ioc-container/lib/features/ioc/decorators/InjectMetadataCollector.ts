@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { IInjectMetadataCollector } from '../../features/ioc/IInjectMetadataCollector';
-import { InjectFn } from '../../features/ioc/InjectFn';
+import { IInjectMetadataCollector } from '../IInjectMetadataCollector';
+import { InjectFn } from '../InjectFn';
 
 export class InjectMetadataCollector implements IInjectMetadataCollector {
     constructor(private readonly metadataKey: string | symbol) {}
