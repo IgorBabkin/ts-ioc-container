@@ -12,6 +12,6 @@ describe('ProviderBuilder', function () {
 
         const builder = new ProviderBuilder((l, ...deps) => deps).withArgs(...args);
 
-        expect(builder.asRequested().resolve(locator)).toEqual(args);
+        expect(builder.build().resolve(locator)).toEqual(args);
     });
 });

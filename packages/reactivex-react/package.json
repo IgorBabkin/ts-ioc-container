@@ -22,7 +22,6 @@
     "build": "npm-run-all -p build:cjm build:esm",
     "build:cjm": "rimraf cjm && tsc -p tsconfig.build.json -m commonjs --outDir cjm",
     "build:esm": "rimraf esm && tsc -p tsconfig.build.json -m es6 -d true --outDir esm",
-    "prepublish": "yarn build",
     "test": "jest"
   },
   "devDependencies": {
@@ -55,5 +54,5 @@
     "name": "Igor Babkin",
     "email": "igba14@gmail.com"
   },
-  "gitHead": "871ca21ac4a849fa739f8704d442ca803b12b9ff"
+  "gitHead": "22a23a7b9e7cb9260e1a8858412ddadd6421a53a"
 }
