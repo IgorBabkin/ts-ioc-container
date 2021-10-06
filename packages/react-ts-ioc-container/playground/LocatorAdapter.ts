@@ -1,5 +1,5 @@
-import { IServiceLocator } from 'ts-ioc-container';
-import { InjectionToken, Locator } from '../lib';
+import { IServiceLocator, ProviderBuilder } from 'ts-ioc-container';
+import { InjectionToken, Locator, ProviderKey } from '../lib';
 import { LocatorOptions } from '../lib/locator';
 
 export class LocatorAdapter implements Locator {
@@ -15,5 +15,10 @@ export class LocatorAdapter implements Locator {
 
     resolve<T>(key: InjectionToken<T>, ...deps: unknown[]): T {
         return this.locator.resolve(key, ...deps);
+    }
+
+    register<T>(token: ProviderKey, value: T): this {
+        this.locator.register(token, ProviderBuilder.fromInstance(value).build());
+        return this;
     }
 }

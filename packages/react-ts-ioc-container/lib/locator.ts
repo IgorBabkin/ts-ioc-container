@@ -15,4 +15,5 @@ export interface Locator {
     resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
     createScope(options: LocatorOptions): Locator;
     remove(): void;
+    register<T>(token: ProviderKey, value: T): this;
 }
