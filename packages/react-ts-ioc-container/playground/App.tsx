@@ -16,12 +16,12 @@ export const App: FC = (): JSX.Element => {
         <div>
             <h3>Scopes</h3>
             {isOdd(state) && (
-                <Scope context="about" tags={aboutTags}>
+                <Scope tags={aboutTags}>
                     <AboutPage onChangePage={() => setState(0)} />
                 </Scope>
             )}
             {isEven(state) && (
-                <Scope context="home" tags={homeTags}>
+                <Scope tags={homeTags}>
                     <HomePage onChangePage={(value) => setState(value)} />
                 </Scope>
             )}

@@ -2,11 +2,11 @@ import 'reflect-metadata';
 import * as React from 'react';
 import { FC, useState } from 'react';
 import { render } from 'react-dom';
-import { LocatorContext, Scope } from '../lib';
 import { HomePage } from './HomePage';
 import { AboutPage } from './AboutPage';
 import { InjectMetadataCollector, IocLocatorBuilder } from 'ts-ioc-container';
 import { LocatorAdapter } from './LocatorAdapter';
+import { LocatorContext, Scope } from 'react-ts-ioc-container';
 
 const isEven = (value: number) => value % 2 === 0;
 const isOdd = (value: number) => value % 2 === 1;

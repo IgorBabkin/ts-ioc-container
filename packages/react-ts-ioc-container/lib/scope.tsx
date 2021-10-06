@@ -1,15 +1,16 @@
 import React, { PropsWithChildren, useEffect, useMemo } from 'react';
 import { LocatorContext, useLocator } from './context';
 import { Locator, LocatorOptions } from './locator';
+import { Tag } from 'ts-ioc-container';
 
-export function useScope<T>(options: LocatorOptions<T>): Locator {
+export function useScope(tags?: Tag[]): Locator {
     const locator = useLocator();
-    const scope = useMemo(() => locator.createScope(options), [options.tags, options.context]);
+    const scope = useMemo(() => locator.createScope({ tags }), [tags]);
     useEffect(() => () => scope.remove(), [scope]);
     return scope;
 }
 
-export function Scope<T>({ children, context, tags }: PropsWithChildren<LocatorOptions<T>>): JSX.Element {
-    const scope = useScope({ context, tags });
+export function Scope({ children, tags }: PropsWithChildren<LocatorOptions>): JSX.Element {
+    const scope = useScope(tags);
     return <LocatorContext.Provider value={scope}>{children}</LocatorContext.Provider>;
 }
