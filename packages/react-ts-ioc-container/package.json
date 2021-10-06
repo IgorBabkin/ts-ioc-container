@@ -63,5 +63,6 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/react-ts-ioc-container"
-  }
+  },
+  "gitHead": "871ca21ac4a849fa739f8704d442ca803b12b9ff"
 }
