@@ -1,5 +1,5 @@
 import { MockProvider } from './MockProvider';
-import { ProviderKey } from '../../core/providers/IProvider';
+import { ProviderKey } from '../../core/IProvider';
 import { IMockProviderStorage } from './IMockProviderStorage';
 
 export class MockProviderStorage implements IMockProviderStorage {
