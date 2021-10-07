@@ -1,5 +1,6 @@
 # React adapters for clean use cases
 
+
 ```tsx
 import * as React from 'react';
 import { FC, useState } from 'react';
