@@ -23,7 +23,7 @@ export const AppView: FC<{ model: IAppViewModel }> = ({ model }) => {
                 <ul>
                     <Each obs$={observable}>{(item) => <li key={item}>{item}</li>}</Each>
                 </ul>
-                <If obs$={number$} predicate={(value) => value % 2 === 0}>
+                <If obs$={number$} predicate={(value) => value !== undefined && value % 2 === 0}>
                     Hello world
                 </If>
                 <If obs$={number2$}>Hello world 2</If>
@@ -60,7 +60,9 @@ export const AppView: FC<{ model: IAppViewModel }> = ({ model }) => {
                 Full name: {$(model.firstName$)} {$(model.lastName$)}
             </h1>
             <button onClick={() => model.toggle()}>Toggle</button>
-            {$(model.canShowTime$) && <div>{new Date($(model.time$) ?? 0).toUTCString()}</div>}
+            <If obs$={model.canShowTime$}>
+                <div>{new Date($(model.time$) ?? 0).toUTCString()}</div>
+            </If>
         </div>
     );
 };

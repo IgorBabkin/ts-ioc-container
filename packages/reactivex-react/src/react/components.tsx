@@ -29,14 +29,14 @@ export function Each<T>({ obs$, children }: PropsWithChildren<EachProps<T>>): JS
 
 interface IfProps<T> {
     obs$: Observable<T>;
-    predicate?: (value: T) => boolean;
+    predicate?: (value: T | undefined) => boolean;
 }
 
 export function If<T>({
     obs$,
     children,
-    predicate = (value: T) => !!value,
+    predicate = (value: T | undefined) => !!value,
 }: PropsWithChildren<IfProps<T>>): JSX.Element {
     const value = useObservable(obs$);
-    return <>{value !== undefined && predicate(value) ? children : undefined}</>;
+    return <>{predicate(value) ? children : undefined}</>;
 }
