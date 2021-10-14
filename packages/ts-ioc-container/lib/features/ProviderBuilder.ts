@@ -24,7 +24,8 @@ export class ProviderBuilder<T> {
     }
 
     withArgs(...extraArgs: any[]): this {
-        this.withArgsFn(() => extraArgs);
+        const oldProvider = this.provider;
+        this.provider = new Provider((l, ...args) => oldProvider.resolve(l, ...args, ...extraArgs));
         return this;
     }
 
