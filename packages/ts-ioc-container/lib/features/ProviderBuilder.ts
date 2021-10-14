@@ -39,11 +39,6 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    asSingleton(): this {
-        this.provider = new SingletonProvider(this.provider);
-        return this;
-    }
-
     forTags(tags: Tag[]): this {
         this.provider = new TaggedProvider(this.provider, tags);
         return this;
@@ -54,7 +49,11 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    build(): IProvider<T> {
+    asSingleton(): IProvider<T> {
+        return new SingletonProvider(this.provider);
+    }
+
+    asRequested(): IProvider<T> {
         return this.provider;
     }
 }
