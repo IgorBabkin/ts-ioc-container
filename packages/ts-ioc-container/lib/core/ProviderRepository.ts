@@ -20,7 +20,7 @@ export class ProviderRepository implements IProviderRepository, ScopeOptions {
     }
 
     entries(filters: ScopeOptions): Array<[ProviderKey, IProvider<any>]> {
-        const localProviders = Array.from(this.providers.entries()).filter(([, value]) => value.isValid(filters));
+        const localProviders = Array.from(this.providers.entries()).filter(([, provider]) => provider.isValid(filters));
         const parentProviders = this.parent?.entries(filters) ?? [];
         return Array.from(new Map([...parentProviders, ...localProviders]).entries());
     }
@@ -43,6 +43,6 @@ export class ProviderRepository implements IProviderRepository, ScopeOptions {
 
     private findLocally<T>(key: ProviderKey): IProvider<T> | undefined {
         const provider = this.providers.get(key) as IProvider<T>;
-        return !provider || !provider.isValid(this) ? undefined : provider;
+        return provider && provider.isValid(this) ? provider : undefined;
     }
 }
