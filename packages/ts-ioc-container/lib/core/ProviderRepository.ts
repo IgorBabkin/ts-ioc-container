@@ -13,15 +13,17 @@ export class ProviderRepository implements IProviderRepository, ScopeOptions {
 
     clone(tags: Tag[] = [], parent: ProviderRepository = this): IProviderRepository {
         const repo = new ProviderRepository(parent, parent.level + 1, tags);
-        for (const [key, provider] of parent.entries(repo)) {
-            repo.add(key, provider.clone());
+        for (const [key, provider] of parent.entries()) {
+            if (provider.isValid(repo)) {
+                repo.add(key, provider.clone());
+            }
         }
         return repo;
     }
 
-    entries(filters: ScopeOptions): Array<[ProviderKey, IProvider<any>]> {
-        const localProviders = Array.from(this.providers.entries()).filter(([, provider]) => provider.isValid(filters));
-        const parentProviders = this.parent?.entries(filters) ?? [];
+    entries(): Array<[ProviderKey, IProvider<any>]> {
+        const localProviders = Array.from(this.providers.entries());
+        const parentProviders = this.parent?.entries() ?? [];
         return Array.from(new Map([...parentProviders, ...localProviders]).entries());
     }
 
