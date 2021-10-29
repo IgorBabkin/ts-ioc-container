@@ -1,16 +1,11 @@
 import { IProvider, ScopeOptions } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
-import { RangeType } from '../../helpers/RangeType';
 
 export class LevelProvider<T> implements IProvider<T> {
-    private readonly range: RangeType;
-
-    constructor(private decorated: IProvider<T>, range: [number, number]) {
-        this.range = new RangeType(range);
-    }
+    constructor(private decorated: IProvider<T>, private readonly range: [number, number]) {}
 
     clone(): IProvider<T> {
-        return new LevelProvider(this.decorated.clone(), this.range.toTuple());
+        return new LevelProvider(this.decorated.clone(), this.range);
     }
 
     dispose(): void {
@@ -22,6 +17,8 @@ export class LevelProvider<T> implements IProvider<T> {
     }
 
     isValid(filters: ScopeOptions): boolean {
-        return this.range.includes(filters.level) && this.decorated.isValid(filters);
+        const { level } = filters;
+        const [from, to] = this.range;
+        return from <= level && level <= to && this.decorated.isValid(filters);
     }
 }

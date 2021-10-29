@@ -1,16 +1,11 @@
 import { IProvider, ScopeOptions, Tag } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
-import { MathSet } from '../../helpers/MathSet';
 
 export class TaggedProvider<T> implements IProvider<T> {
-    private readonly tags: MathSet<Tag>;
-
-    constructor(private decorated: IProvider<T>, tags: Tag[]) {
-        this.tags = MathSet.fromArray(tags);
-    }
+    constructor(private decorated: IProvider<T>, private readonly tags: Tag[]) {}
 
     clone(): IProvider<T> {
-        return new TaggedProvider(this.decorated.clone(), this.tags.toArray());
+        return new TaggedProvider(this.decorated.clone(), this.tags);
     }
 
     dispose(): void {
@@ -22,7 +17,7 @@ export class TaggedProvider<T> implements IProvider<T> {
     }
 
     isValid(filters: ScopeOptions): boolean {
-        const scopeTags = MathSet.fromArray(filters.tags);
-        return this.tags.hasIntersection(scopeTags) && this.decorated.isValid(filters);
+        const { tags } = filters;
+        return this.tags.some((t) => tags.includes(t)) && this.decorated.isValid(filters);
     }
 }
