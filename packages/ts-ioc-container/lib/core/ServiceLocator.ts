@@ -1,14 +1,14 @@
-import { CreateInjectorFn, InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
+import { InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
 import { IInjector } from './IInjector';
 import { IProvider, ProviderKey, Tag } from './IProvider';
 import { IProviderRepository } from './IProviderRepository';
+import { ProviderRepository } from './ProviderRepository';
 
 export class ServiceLocator implements IServiceLocator {
-    private readonly injector: IInjector;
-
-    constructor(private readonly createInjector: CreateInjectorFn, private readonly providerRepo: IProviderRepository) {
-        this.injector = createInjector(this);
-    }
+    constructor(
+        private readonly injector: IInjector,
+        private readonly providerRepo: IProviderRepository = new ProviderRepository(),
+    ) {}
 
     register<T>(key: ProviderKey, provider: IProvider<T>): this {
         this.providerRepo.add(key, provider);
@@ -21,11 +21,11 @@ export class ServiceLocator implements IServiceLocator {
             return provider.resolve(this, ...args);
         }
 
-        return this.injector.resolve<T>(key, ...args);
+        return this.injector.resolve<T>(this, key, ...args);
     }
 
     createLocator(tags: Tag[] = []): IServiceLocator {
-        return new ServiceLocator(this.createInjector, this.providerRepo.clone(tags));
+        return new ServiceLocator(this.injector.clone(), this.providerRepo.clone(tags));
     }
 
     dispose(): void {

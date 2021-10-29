@@ -1,10 +1,10 @@
-import { IServiceLocator, ProviderBuilder, ProviderRepository, ServiceLocator, SimpleInjector } from '../../lib';
+import { IServiceLocator, ProviderBuilder, ServiceLocator, SimpleInjector } from '../../lib';
 
 describe('ProviderBuilder', function () {
     let locator: IServiceLocator;
 
     beforeEach(() => {
-        locator = new ServiceLocator((l) => new SimpleInjector(l), new ProviderRepository());
+        locator = new ServiceLocator(new SimpleInjector());
     });
 
     test('withArgs', () => {

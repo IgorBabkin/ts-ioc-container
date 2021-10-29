@@ -3,7 +3,6 @@ import {
     IServiceLocator,
     LevelProvider,
     Provider,
-    ProviderRepository,
     ServiceLocator,
     SimpleInjector,
     SingletonProvider,
@@ -18,7 +17,7 @@ describe('SingletonProvider', function () {
     }
 
     beforeEach(() => {
-        locator = new ServiceLocator((l) => new SimpleInjector(l), new ProviderRepository());
+        locator = new ServiceLocator(new SimpleInjector());
         provider = new Provider(() => Math.random());
     });
 

@@ -1,10 +1,8 @@
 import { IProvider, ProviderKey, Tag } from './IProvider';
 import { constructor } from '../helpers/types';
 import { IDisposable } from '../helpers/IDisposable';
-import { IInjector } from './IInjector';
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
-export type CreateInjectorFn = (l: IServiceLocator) => IInjector;
 
 export interface Resolveable {
     resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;

@@ -31,8 +31,4 @@ export { MockedRepository } from './features/mock/MockedRepository';
 export { LevelProvider } from './features/scope/LevelProvider';
 export { SingletonProvider } from './features/scope/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';
-export { IocLocatorBuilder } from './features/ioc/IocLocatorBuilder';
-export { SimpleLocatorBuilder } from './features/simple/SimpleLocatorBuilder';
 export { emptyHook } from './features/instanceHook/emptyHook';
-export { LocatorBuilder } from './features/LocatorBuilder';
-export { ILocatorBuilder } from './features/ILocatorBuilder';

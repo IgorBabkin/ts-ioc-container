@@ -1,4 +1,4 @@
-import { constructor, IInjector } from '../../index';
+import { constructor, IInjector, IServiceLocator } from '../../index';
 import { IInstanceHook } from './IInstanceHook';
 
 export class HookedInjector implements IInjector {
@@ -13,10 +13,14 @@ export class HookedInjector implements IInjector {
         this.instances.clear();
     }
 
-    resolve<T>(value: constructor<T>, ...deps: any[]): T {
-        const instance = this.decorated.resolve(value, ...deps);
+    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
+        const instance = this.decorated.resolve(locator, value, ...deps);
         this.hook.onConstruct(instance);
         this.instances.add(instance);
         return instance;
+    }
+
+    clone(): IInjector {
+        return new HookedInjector(this.decorated.clone(), this.hook);
     }
 }

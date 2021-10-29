@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ProviderBuilder, SimpleLocatorBuilder } from '../../lib';
+import { HookedInjector, ProviderBuilder, ServiceLocator, SimpleInjector } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
 
 class MyClass {
@@ -11,14 +11,14 @@ describe('ServiceLocator', () => {
     it('should create an instance', () => {
         const expectedInstance = { id: 'expectedInstance' };
 
-        const locator = new SimpleLocatorBuilder()
-            .withInjectorHook({
+        const locator = new ServiceLocator(
+            new HookedInjector(new SimpleInjector(), {
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
                 },
                 onDispose<GInstance>(instance: GInstance) {},
-            })
-            .build();
+            }),
+        );
 
         locator.register(
             'key1',
