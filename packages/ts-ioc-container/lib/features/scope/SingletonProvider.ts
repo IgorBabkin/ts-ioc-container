@@ -1,6 +1,6 @@
 import { IProvider, ScopeOptions } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
-import { Box } from '../../helpers/Box';
+import { Box } from '../../helpers/types';
 
 export class SingletonProvider<T> implements IProvider<T> {
     private instance: Box<T> | null = null;

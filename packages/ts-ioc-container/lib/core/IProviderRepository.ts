@@ -1,5 +1,5 @@
 import { IProvider, ProviderKey, Tag } from './IProvider';
-import { IDisposable } from '../helpers/IDisposable';
+import { IDisposable } from '../helpers/types';
 
 export interface IProviderRepository extends IDisposable {
     clone(tags?: Tag[], parent?: IProviderRepository): IProviderRepository;

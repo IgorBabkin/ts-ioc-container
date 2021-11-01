@@ -1,7 +1,7 @@
 import { constructor } from '../../helpers/types';
 import { IServiceLocator } from '../../core/IServiceLocator';
 import { IInjector } from '../../core/IInjector';
-import { constant, merge } from '../../helpers/helpers';
+import { constant, merge } from '../../helpers/utils';
 import { IInjectMetadataCollector } from './IInjectMetadataCollector';
 
 export class IocInjector implements IInjector {

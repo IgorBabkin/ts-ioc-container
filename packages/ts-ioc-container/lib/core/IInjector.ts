@@ -1,5 +1,4 @@
-import { constructor } from '../helpers/types';
-import { IDisposable } from '../helpers/IDisposable';
+import { constructor, IDisposable } from '../helpers/types';
 import { IServiceLocator } from './IServiceLocator';
 
 export interface IInjector extends IDisposable {

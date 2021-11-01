@@ -1,5 +1,5 @@
 import { IServiceLocator, Resolveable } from './IServiceLocator';
-import { IDisposable } from '../helpers/IDisposable';
+import { IDisposable } from '../helpers/types';
 
 export type ResolveDependency<T> = (locator: IServiceLocator, ...args: any[]) => T;
 

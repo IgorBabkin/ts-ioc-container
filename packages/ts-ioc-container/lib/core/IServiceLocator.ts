@@ -1,6 +1,5 @@
 import { IProvider, ProviderKey, Tag } from './IProvider';
-import { constructor } from '../helpers/types';
-import { IDisposable } from '../helpers/IDisposable';
+import { constructor, IDisposable } from '../helpers/types';
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 

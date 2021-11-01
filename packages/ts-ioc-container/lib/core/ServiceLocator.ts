@@ -24,7 +24,7 @@ export class ServiceLocator implements IServiceLocator {
         return this.injector.resolve<T>(this, key, ...args);
     }
 
-    createLocator(tags: Tag[] = []): IServiceLocator {
+    createLocator(tags?: Tag[]): IServiceLocator {
         return new ServiceLocator(this.injector.clone(), this.providerRepo.clone(tags));
     }
 
