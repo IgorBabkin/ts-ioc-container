@@ -10,7 +10,7 @@ describe('ProviderBuilder', function () {
     test('withArgs', () => {
         const args = [2, 3, 4];
 
-        const builder = new ProviderBuilder((l, ...deps) => deps).withArgs(...args);
+        const builder = ProviderBuilder.fromFn((l, ...deps) => deps).withArgs(...args);
 
         expect(builder.asRequested().resolve(locator)).toEqual(args);
     });

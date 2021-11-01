@@ -3,7 +3,12 @@ import { ProviderBuilder, ProviderNotFoundError, ProviderRepository, ServiceLoca
 describe('LevelProvider', function () {
     test('singleton', () => {
         const locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
-        locator.register('hey', new ProviderBuilder(() => Math.random()).forLevel(0).asSingleton());
+        locator.register(
+            'hey',
+            ProviderBuilder.fromFn(() => Math.random())
+                .forLevel(0)
+                .asSingleton(),
+        );
 
         expect(locator.resolve('hey')).toBe(locator.resolve('hey'));
     });
@@ -11,13 +16,23 @@ describe('LevelProvider', function () {
     describe('scope', function () {
         test('scope', () => {
             const locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
-            locator.register('hey', new ProviderBuilder(() => Math.random()).forLevel(1).asSingleton());
+            locator.register(
+                'hey',
+                ProviderBuilder.fromFn(() => Math.random())
+                    .forLevel(1)
+                    .asSingleton(),
+            );
 
             expect(() => locator.resolve('hey')).toThrow(ProviderNotFoundError);
         });
         test('scope1', () => {
             const locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
-            locator.register('hey', new ProviderBuilder(() => Math.random()).forLevel(1).asSingleton());
+            locator.register(
+                'hey',
+                ProviderBuilder.fromFn(() => Math.random())
+                    .forLevel(1)
+                    .asSingleton(),
+            );
 
             const child = locator.createLocator();
 
@@ -25,7 +40,12 @@ describe('LevelProvider', function () {
         });
         test('scope2', () => {
             const locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
-            locator.register('hey', new ProviderBuilder(() => Math.random()).forLevel(1).asSingleton());
+            locator.register(
+                'hey',
+                ProviderBuilder.fromFn(() => Math.random())
+                    .forLevel(1)
+                    .asSingleton(),
+            );
 
             const child = locator.createLocator();
             const subChild = child.createLocator();
@@ -34,7 +54,12 @@ describe('LevelProvider', function () {
         });
         test('scope2', () => {
             const locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
-            locator.register('hey', new ProviderBuilder(() => Math.random()).forLevel(1).asSingleton());
+            locator.register(
+                'hey',
+                ProviderBuilder.fromFn(() => Math.random())
+                    .forLevel(1)
+                    .asSingleton(),
+            );
 
             const child1 = locator.createLocator();
             const child2 = locator.createLocator();
@@ -43,7 +68,12 @@ describe('LevelProvider', function () {
         });
         test('tagged', () => {
             const locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
-            locator.register('hey', new ProviderBuilder(() => Math.random()).forTags(['a']).asSingleton());
+            locator.register(
+                'hey',
+                ProviderBuilder.fromFn(() => Math.random())
+                    .forTags(['a'])
+                    .asSingleton(),
+            );
 
             const child = locator.createLocator(['b']);
 
@@ -51,7 +81,12 @@ describe('LevelProvider', function () {
         });
         test('tagged1', () => {
             const locator = new ServiceLocator(new SimpleInjector(), new ProviderRepository());
-            locator.register('hey', new ProviderBuilder(() => Math.random()).forTags(['a']).asSingleton());
+            locator.register(
+                'hey',
+                ProviderBuilder.fromFn(() => Math.random())
+                    .forTags(['a'])
+                    .asSingleton(),
+            );
 
             const child = locator.createLocator(['a']);
 

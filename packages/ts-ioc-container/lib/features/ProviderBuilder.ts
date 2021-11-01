@@ -9,19 +9,19 @@ import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
 
 export class ProviderBuilder<T> {
-    private provider: IProvider<T>;
-
     static fromConstructor<T>(value: constructor<T>): ProviderBuilder<T> {
-        return new ProviderBuilder((l, ...args) => l.resolve(value, ...args));
+        return new ProviderBuilder(Provider.fromConstructor(value));
     }
 
     static fromInstance<T>(value: T): ProviderBuilder<T> {
-        return new ProviderBuilder(() => value);
+        return new ProviderBuilder(Provider.fromInstance(value));
     }
 
-    constructor(fn: ResolveDependency<T>) {
-        this.provider = new Provider(fn);
+    static fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
+        return new ProviderBuilder(new Provider(fn));
     }
+
+    constructor(private provider: IProvider<T>) {}
 
     withArgs(...extraArgs: any[]): this {
         const oldProvider = this.provider;
