@@ -1,9 +1,17 @@
-import { IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError } from '../../index';
+import { IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError, Tag } from '../../index';
 import { IMockProviderStorage } from './IMockProviderStorage';
 import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
 
 export class MockedRepository implements IProviderRepository {
     constructor(protected decorated: IProviderRepository, private mockProviders: IMockProviderStorage) {}
+
+    get level(): number {
+        return this.decorated.level;
+    }
+
+    get tags(): Tag[] {
+        return this.decorated.tags;
+    }
 
     dispose(): void {
         this.decorated.dispose();
@@ -26,7 +34,11 @@ export class MockedRepository implements IProviderRepository {
         this.decorated.add(key, provider);
     }
 
-    clone(tags: string[] = [], parent?: IProviderRepository): IProviderRepository {
+    clone(): IProviderRepository {
         throw new MethodNotImplementedError('MockRepository cannot be cloned');
+    }
+
+    entries(): Array<[ProviderKey, IProvider<any>]> {
+        return this.decorated.entries();
     }
 }

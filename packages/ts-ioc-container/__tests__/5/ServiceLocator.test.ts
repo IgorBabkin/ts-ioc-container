@@ -17,7 +17,7 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hooks: IInstanceHook = emptyHook) =>
-        new ServiceLocator(new HookedInjector(new SimpleInjector(), hooks));
+        ServiceLocator.root(new HookedInjector(new SimpleInjector(), hooks));
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(
@@ -42,7 +42,7 @@ describe('ServiceLocator', () => {
             },
         };
 
-        const child = locator.createLocator().register(
+        const child = locator.createScope().register(
             'key1',
             ProviderBuilder.fromInstance(disposable)
                 .withHook({
@@ -73,7 +73,7 @@ describe('ServiceLocator', () => {
             },
         };
 
-        const child = locator.createLocator().register(
+        const child = locator.createScope().register(
             'key1',
             ProviderBuilder.fromInstance(disposable)
                 .withHook({
@@ -100,8 +100,8 @@ describe('ServiceLocator', () => {
                 .asSingleton(),
         );
 
-        const child1 = locator.createLocator().register('context', fromInstance('a').asRequested());
-        const child2 = locator.createLocator().register('context', fromInstance('b').asRequested());
+        const child1 = locator.createScope().register('context', fromInstance('a').asRequested());
+        const child2 = locator.createScope().register('context', fromInstance('b').asRequested());
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

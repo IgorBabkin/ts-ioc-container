@@ -4,7 +4,7 @@ describe('ProviderBuilder', function () {
     let locator: IServiceLocator;
 
     beforeEach(() => {
-        locator = new ServiceLocator(new SimpleInjector());
+        locator = ServiceLocator.root(new SimpleInjector());
     });
 
     test('withArgs', () => {

@@ -22,7 +22,7 @@ import { SubGroup3 } from './SubGroup3';
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
-        return new ServiceLocator(new HookedInjector(new IocInjector(injectMetadataCollector), hook));
+        return ServiceLocator.root(new HookedInjector(new IocInjector(injectMetadataCollector), hook));
     };
 
     it('should create an instanse', () => {
@@ -49,7 +49,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator().register('key1', fromInstance(expectedInstance1).asRequested());
 
-            const child = locator.createLocator().register('key1', fromInstance(expectedInstance2).asRequested());
+            const child = locator.createScope().register('key1', fromInstance(expectedInstance2).asRequested());
 
             expect(locator.resolve('key1')).toBe(expectedInstance1);
             expect(child.resolve('key1')).toBe(expectedInstance2);
@@ -60,7 +60,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator().register('key1', fromInstance(expectedInstance1).asRequested());
 
-            const child = locator.createLocator();
+            const child = locator.createScope();
 
             expect(child.resolve('key1')).toBe(expectedInstance1);
         });
@@ -70,7 +70,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator();
 
-            locator.createLocator().register('key1', fromInstance(expectedInstance1).asRequested());
+            locator.createScope().register('key1', fromInstance(expectedInstance1).asRequested());
 
             expect(() => locator.resolve('key1')).toThrow(ProviderNotFoundError);
         });
@@ -83,7 +83,7 @@ describe('ServiceLocator', () => {
                     .asSingleton(),
             );
 
-            const child = locator.createLocator();
+            const child = locator.createScope();
 
             expect(child.resolve('key1')).toBe(locator.resolve('key1'));
         });
@@ -91,7 +91,7 @@ describe('ServiceLocator', () => {
         it('clears container', () => {
             const locator = createIoCLocator().register('key1', fromInstance({}).asRequested());
 
-            const child = locator.createLocator();
+            const child = locator.createScope();
 
             expect(child.resolve('key1')).toBeDefined();
 
@@ -117,8 +117,8 @@ describe('ServiceLocator', () => {
                         .asSingleton(),
                 );
 
-            const child1 = locator.createLocator();
-            const child2 = child1.createLocator();
+            const child1 = locator.createScope();
+            const child2 = child1.createScope();
 
             expect(child2.resolve('key1')).toBe(expectedInstance);
             expect(child1.resolve('key1')).toBe(expectedInstance);
@@ -155,13 +155,13 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator().register('key1', fromFn(() => expected).asRequested());
 
-            const child1 = locator.createLocator();
+            const child1 = locator.createScope();
 
             expect(child1.resolve('key1')).toEqual(locator.resolve('key1'));
 
             child1.dispose();
 
-            const child2 = locator.createLocator();
+            const child2 = locator.createScope();
             expect(child2.resolve('key1')).toEqual(locator.resolve('key1'));
 
             child2.dispose();

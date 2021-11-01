@@ -17,7 +17,7 @@ describe('SingletonProvider', function () {
     }
 
     beforeEach(() => {
-        locator = new ServiceLocator(new SimpleInjector());
+        locator = ServiceLocator.root(new SimpleInjector());
         provider = new Provider(() => Math.random());
     });
 

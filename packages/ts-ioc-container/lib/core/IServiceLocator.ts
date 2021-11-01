@@ -8,7 +8,7 @@ export interface Resolveable {
 }
 
 export interface IServiceLocator extends Resolveable, IDisposable {
-    createLocator(tags?: Tag[]): IServiceLocator;
+    createScope(tags?: Tag[]): IServiceLocator;
 
     register<T>(key: ProviderKey, provider: IProvider<T>): this;
 }

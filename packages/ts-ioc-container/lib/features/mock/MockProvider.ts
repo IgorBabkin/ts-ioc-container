@@ -1,6 +1,5 @@
 import { IProvider, IServiceLocator } from '../../index';
 import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
-import { ScopeOptions } from '../../core/IProvider';
 
 export abstract class MockProvider<T> implements IProvider<T> {
     clone(): IProvider<T> {
@@ -13,7 +12,7 @@ export abstract class MockProvider<T> implements IProvider<T> {
 
     abstract resolve(locator: IServiceLocator, ...args: any[]): T;
 
-    isValid(filters: ScopeOptions): boolean {
+    isValid(): boolean {
         return true;
     }
 }

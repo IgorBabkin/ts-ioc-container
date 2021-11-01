@@ -5,10 +5,11 @@ import { IProviderRepository } from './IProviderRepository';
 import { ProviderRepository } from './ProviderRepository';
 
 export class ServiceLocator implements IServiceLocator {
-    constructor(
-        private readonly injector: IInjector,
-        private readonly providerRepo: IProviderRepository = new ProviderRepository(),
-    ) {}
+    static root(injector: IInjector, tags?: Tag[]): ServiceLocator {
+        return new ServiceLocator(injector, ProviderRepository.root(tags));
+    }
+
+    constructor(private readonly injector: IInjector, private readonly providerRepo: IProviderRepository) {}
 
     register<T>(key: ProviderKey, provider: IProvider<T>): this {
         this.providerRepo.add(key, provider);
@@ -24,7 +25,7 @@ export class ServiceLocator implements IServiceLocator {
         return this.injector.resolve<T>(this, key, ...args);
     }
 
-    createLocator(tags?: Tag[]): IServiceLocator {
+    createScope(tags?: Tag[]): IServiceLocator {
         return new ServiceLocator(this.injector.clone(), this.providerRepo.clone(tags));
     }
 
