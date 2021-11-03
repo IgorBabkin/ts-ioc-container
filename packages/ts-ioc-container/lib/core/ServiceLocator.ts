@@ -15,6 +15,9 @@ export class ServiceLocator implements IServiceLocator {
         for (const [key, provider] of Object.entries(dictionary)) {
             this.providerRepo.add(key, provider);
         }
+        for (const key of Object.getOwnPropertySymbols(dictionary)) {
+            this.providerRepo.add(key, dictionary[key]);
+        }
         return this;
     }
 

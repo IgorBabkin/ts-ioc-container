@@ -14,11 +14,22 @@ import {
     fromConstructor,
     fromFn,
     fromInstance,
+    inject,
     injectMetadataCollector,
     onConstructMetadataCollector,
     onDisposeMetadataCollector,
 } from './decorators';
 import { SubGroup3 } from './SubGroup3';
+
+const MyKey = Symbol.for('MyKey');
+
+class Greeting {
+    constructor(@inject((l) => l.resolve(MyKey)) private hey: string) {}
+
+    say(): string {
+        return `Hello ${this.hey}`;
+    }
+}
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
@@ -244,6 +255,15 @@ describe('ServiceLocator', () => {
             const app = decorated.resolve(App4);
 
             expect(app.run()).toBe('dep1dep2');
+        });
+
+        it('passes locator as last deaSp', () => {
+            const decorated = createIoCLocator();
+
+            decorated.register({ [MyKey]: fromInstance('world').asRequested() });
+            const app = decorated.resolve(Greeting);
+
+            expect(app.say()).toBe('Hello world');
         });
     });
 });
