@@ -1,10 +1,11 @@
 import { IInjector } from '../../core/IInjector';
 import { IServiceLocator } from '../../core/IServiceLocator';
 import { constructor } from '../../helpers/types';
+import { ProviderKey } from '../../core/IProvider';
 
 export class ProxyInjector implements IInjector {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: {}[]): T {
+    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: Record<ProviderKey, unknown>[]): T {
         const args = deps.reduce((acc, it) => ({ ...acc, ...it }), {});
         return new value(
             new Proxy(locator, {

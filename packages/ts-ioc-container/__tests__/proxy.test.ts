@@ -1,4 +1,4 @@
-import { IServiceLocator, Provider, ProviderBuilder, ProxyInjector, registerModule, ServiceLocator } from '../lib';
+import { IServiceLocator, Provider, ProviderBuilder, ProxyInjector, ServiceLocator } from '../lib';
 
 class Greeting {
     private readonly name: string;
@@ -20,24 +20,25 @@ describe('proxy', function () {
     });
 
     it('should asd', function () {
-        locator.register('name', Provider.fromInstance('world'));
+        locator.register({
+            name: Provider.fromInstance('world'),
+        });
         const greeting = locator.resolve(Greeting);
 
         expect(greeting.say()).toBe('Hello world');
     });
 
     it('should asd 2', function () {
-        locator.register(
-            'greeting',
-            ProviderBuilder.fromConstructor(Greeting).withArgs({ name: 'world' }).asRequested(),
-        );
+        locator.register({
+            greeting: ProviderBuilder.fromConstructor(Greeting).withArgs({ name: 'world' }).asRequested(),
+        });
         const greeting = locator.resolve<Greeting>('greeting');
 
         expect(greeting.say()).toBe('Hello world');
     });
 
     it('should asd 3', function () {
-        registerModule(locator, {
+        locator.register({
             name: Provider.fromInstance('world'),
         });
         const greeting = locator.resolve(Greeting);
