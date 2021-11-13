@@ -16,7 +16,7 @@ export { createHookDecorator } from './features/instanceHook/decorators/decorato
 export { createInjectDecorator, createInjectFnDecorator } from './features/ioc/decorators/decorators';
 export { InjectMetadataCollector } from './features/ioc/decorators/InjectMetadataCollector';
 export { InjectionToken } from './core/IServiceLocator';
-export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
+export { ProviderNotFoundError, ProviderDecoratorNotFound } from './errors/ProviderNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { IProviderRepository } from './core/IProviderRepository';
 export { HookedProvider } from './features/instanceHook/HookedProvider';
@@ -32,4 +32,12 @@ export { LevelProvider } from './features/scope/LevelProvider';
 export { SingletonProvider } from './features/scope/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';
 export { emptyHook } from './features/instanceHook/emptyHook';
+export { IProvidersMetadataCollector } from './features/scope/IProvidersMetadataCollector';
+export { ProvidersMetadataCollector } from './features/scope/ProvidersMetadataCollector';
+export {
+    createLevelDecorator,
+    createProviderDecorator,
+    createSingletonDecorator,
+    createTagsDecorator,
+} from './features/scope/decorators';
 export { IDisposable } from './helpers/types';

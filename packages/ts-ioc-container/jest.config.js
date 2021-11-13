@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 module.exports = {
     testMatch: ['**/?(*.)+(spec|test).+(ts)'],
     transform: {
@@ -5,5 +6,5 @@ module.exports = {
     },
     collectCoverage: true,
     coveragePathIgnorePatterns: ['/node_modules/', '/fixtures/', '/cjm/', '/esm/'],
-    moduleDirectories: ['node_modules', '<rootDir>/lib'],
-}
+    moduleDirectories: ['node_modules'],
+};
