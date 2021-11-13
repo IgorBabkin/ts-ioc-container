@@ -1,5 +1,8 @@
-import { constructor, IProvider, Provider, ProviderDecoratorNotFound, ProviderKey } from '../../lib';
 import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
+import { IProvider, ProviderKey } from '../../core/IProvider';
+import { constructor } from '../../helpers/types';
+import { Provider } from '../../core/Provider';
+import { ProviderDecoratorNotFound } from '../../errors/ProviderNotFoundError';
 
 export type ProviderReduce<T> = (provider: IProvider<T>) => IProvider<T>;
 
