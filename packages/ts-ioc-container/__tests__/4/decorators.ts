@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {
     constructor,
-    createHookDecorator,
+    createMethodHookDecorator,
     createInjectFnDecorator,
     IInstanceHook,
     InjectMetadataCollector,
@@ -14,10 +14,10 @@ export const injectMetadataCollector = new InjectMetadataCollector(Symbol.for('C
 export const inject = createInjectFnDecorator(injectMetadataCollector);
 
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol('OnConstructHook'));
-export const onConstruct = createHookDecorator(onConstructMetadataCollector);
+export const onConstruct = createMethodHookDecorator(onConstructMetadataCollector);
 
 export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol('OnDisposeHook'));
-export const onDispose = createHookDecorator(onDisposeMetadataCollector);
+export const onDispose = createMethodHookDecorator(onDisposeMetadataCollector);
 
 export const instanceHook: IInstanceHook = {
     onConstruct<GInstance>(instance: GInstance) {

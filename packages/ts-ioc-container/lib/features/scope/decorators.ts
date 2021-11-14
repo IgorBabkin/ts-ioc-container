@@ -53,7 +53,7 @@ export const createTagsDecorator =
         metadataCollector.addReducer(targetClass, (provider) => new TaggedProvider(fn(provider), tags));
     };
 
-export const createHookDecorator =
+export const createProviderHookDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
     (hook: IInstanceHook): ClassDecorator =>
     (target) => {

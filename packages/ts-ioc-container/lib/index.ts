@@ -12,7 +12,7 @@ export { IocInjector } from './features/ioc/IocInjector';
 export { IInjectMetadataCollector } from './features/ioc/IInjectMetadataCollector';
 export { IMethodsMetadataCollector } from './features/instanceHook/decorators/IMethodsMetadataCollector';
 export { MethodsMetadataCollector } from './features/instanceHook/decorators/MethodsMetadataCollector';
-export { createHookDecorator } from './features/instanceHook/decorators/decorators';
+export { createMethodHookDecorator } from './features/instanceHook/decorators/decorators';
 export { createInjectDecorator, createInjectFnDecorator } from './features/ioc/decorators/decorators';
 export { InjectMetadataCollector } from './features/ioc/decorators/InjectMetadataCollector';
 export { InjectionToken } from './core/IServiceLocator';
@@ -36,6 +36,7 @@ export { emptyHook } from './features/instanceHook/emptyHook';
 export { IProvidersMetadataCollector } from './features/scope/IProvidersMetadataCollector';
 export { ProvidersMetadataCollector } from './features/scope/ProvidersMetadataCollector';
 export {
+    createProviderHookDecorator,
     createLevelDecorator,
     createSingletonDecorator,
     createTagsDecorator,

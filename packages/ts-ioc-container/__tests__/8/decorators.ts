@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-    createHookDecorator,
+    createMethodHookDecorator,
     createInjectFnDecorator,
     InjectMetadataCollector,
     MethodsMetadataCollector,
@@ -10,4 +10,4 @@ export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.f
 export const inject = createInjectFnDecorator(constructorMetadataCollector);
 
 export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol('OnConstructHook'));
-export const onConstruct = createHookDecorator(onConstructMetadataCollector);
+export const onConstruct = createMethodHookDecorator(onConstructMetadataCollector);
