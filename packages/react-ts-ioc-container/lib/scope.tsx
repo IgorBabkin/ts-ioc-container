@@ -5,7 +5,7 @@ import { Tag } from 'ts-ioc-container';
 
 export function useScope(tags?: Tag[]): Locator {
     const locator = useLocator();
-    const scope = useMemo(() => locator.createScope({ tags }), [tags]);
+    const scope = useMemo(() => locator.createScope({ tags }), [tags, locator]);
     useEffect(() => () => scope.remove(), [scope]);
     return scope;
 }
