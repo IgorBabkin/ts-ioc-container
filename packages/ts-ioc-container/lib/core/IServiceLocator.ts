@@ -12,4 +12,6 @@ export interface IServiceLocator extends Resolveable, IDisposable {
     createScope(tags?: Tag[]): IServiceLocator;
 
     register(provider: IKeyedProvider<unknown>, options?: Partial<RegisterOptions>): this;
+
+    resolveClass<T>(key: constructor<T>, ...deps: any[]): T;
 }

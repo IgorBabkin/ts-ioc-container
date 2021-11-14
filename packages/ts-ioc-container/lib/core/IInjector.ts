@@ -1,8 +1,6 @@
-import { constructor, IDisposable } from '../helpers/types';
+import { constructor } from '../helpers/types';
 import { IServiceLocator } from './IServiceLocator';
 
-export interface IInjector extends IDisposable {
+export interface IInjector {
     resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T;
-
-    clone(): IInjector;
 }

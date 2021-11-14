@@ -6,10 +6,4 @@ export class SimpleInjector implements IInjector {
     resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T {
         return new value(locator, ...deps);
     }
-
-    dispose(): void {}
-
-    clone(): IInjector {
-        return new SimpleInjector();
-    }
 }

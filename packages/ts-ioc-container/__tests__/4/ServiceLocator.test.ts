@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {
     emptyHook,
-    HookedInjector,
+    HookedServiceLocator,
     IInstanceHook,
     IocInjector,
     ProviderNotFoundError,
@@ -33,7 +33,7 @@ class Greeting {
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
-        return ServiceLocator.root(new HookedInjector(new IocInjector(injectMetadataCollector), hook));
+        return new HookedServiceLocator(ServiceLocator.root(new IocInjector(injectMetadataCollector)), hook);
     };
 
     it('should create an instanse', () => {
@@ -198,7 +198,7 @@ describe('ServiceLocator', () => {
                 onDispose<GInstance>(instance: GInstance) {},
             });
 
-            const group = decorated.resolve(OnConstructImpl);
+            const group = decorated.resolveClass(OnConstructImpl);
 
             expect(group.isConstructed).toBeTruthy();
         });
@@ -230,7 +230,7 @@ describe('ServiceLocator', () => {
                 },
             });
 
-            const group = decorated.resolve(OnDisposeImpl);
+            const group = decorated.resolveClass(OnDisposeImpl);
 
             expect(group.isDisposed).toBeFalsy();
             decorated.dispose();

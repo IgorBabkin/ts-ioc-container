@@ -20,8 +20,10 @@ export class HookedProvider<GInstance> extends ProviderDecorator<GInstance> {
 
     resolve(locator: IServiceLocator, ...args: any[]): GInstance {
         const instance = this.provider.resolve(locator, ...args);
-        this.hook.onConstruct(instance);
-        this.instances.add(instance);
+        if (!this.instances.has(instance)) {
+            this.hook.onConstruct(instance);
+            this.instances.add(instance);
+        }
         return instance;
     }
 

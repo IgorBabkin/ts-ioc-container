@@ -4,6 +4,7 @@ import { IKeyedProvider, Tag } from './provider/IProvider';
 import { IProviderRepository, isProviderKey, RegisterOptions } from './IProviderRepository';
 import { ProviderRepository } from './ProviderRepository';
 import { NoRegistrationKeysProvided } from '../errors/NoRegistrationKeysProvided';
+import { constructor } from '../helpers/types';
 
 export class ServiceLocator implements IServiceLocator {
     static root(injector: IInjector, tags?: Tag[]): ServiceLocator {
@@ -32,12 +33,15 @@ export class ServiceLocator implements IServiceLocator {
         return this.injector.resolve<T>(this, key, ...args);
     }
 
+    resolveClass<T>(key: constructor<T>, ...args: any[]): T {
+        return this.injector.resolve<T>(this, key, ...args);
+    }
+
     createScope(tags?: Tag[]): IServiceLocator {
-        return new ServiceLocator(this.injector.clone(), this.providerRepo.clone(tags));
+        return new ServiceLocator(this.injector, this.providerRepo.clone(tags));
     }
 
     dispose(): void {
         this.providerRepo.dispose();
-        this.injector.dispose();
     }
 }
