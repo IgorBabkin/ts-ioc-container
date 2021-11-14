@@ -35,6 +35,11 @@ export { ProviderBuilder } from './features/ProviderBuilder';
 export { emptyHook } from './features/instanceHook/emptyHook';
 export { IProvidersMetadataCollector } from './features/scope/IProvidersMetadataCollector';
 export { ProvidersMetadataCollector } from './features/scope/ProvidersMetadataCollector';
-export { createLevelDecorator, createSingletonDecorator, createTagsDecorator } from './features/scope/decorators';
+export {
+    createLevelDecorator,
+    createSingletonDecorator,
+    createTagsDecorator,
+    createArgsFnDecorator,
+} from './features/scope/decorators';
 export { IDisposable } from './helpers/types';
 export { ProviderKey } from './core/IProviderRepository';

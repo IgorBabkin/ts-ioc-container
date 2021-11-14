@@ -5,6 +5,7 @@ import { LevelProvider } from './LevelProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
 import { ProviderKey } from '../../core/IProviderRepository';
+import { ArgsFn, ArgsProvider } from '../../core/provider/ArgsProvider';
 
 export const createAddKeysDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
@@ -13,6 +14,15 @@ export const createAddKeysDecorator =
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
         metadataCollector.addReducer(targetClass, (provider) => fn(provider).addKeys(...keys));
+    };
+
+export const createArgsFnDecorator =
+    (metadataCollector: IProvidersMetadataCollector) =>
+    (argsFn: ArgsFn): ClassDecorator =>
+    (target) => {
+        const targetClass = target as any as constructor<unknown>;
+        const fn = metadataCollector.findReducerOrCreate(targetClass);
+        metadataCollector.addReducer(targetClass, (provider) => new ArgsProvider(fn(provider), argsFn));
     };
 
 export const createSingletonDecorator =
