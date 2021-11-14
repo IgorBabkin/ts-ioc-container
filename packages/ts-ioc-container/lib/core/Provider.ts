@@ -1,8 +1,8 @@
 import { constructor } from '../helpers/types';
-import { IProvider, ProviderKey, ResolveDependency, ScopeOptions } from './IProvider';
+import { IKeyedProvider, ProviderKey, ResolveDependency, ScopeOptions } from './IProvider';
 import { IServiceLocator } from './IServiceLocator';
 
-export class Provider<T> implements IProvider<T> {
+export class Provider<T> implements IKeyedProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
         return new Provider((l, ...args) => l.resolve(value, ...args));
     }
@@ -15,7 +15,7 @@ export class Provider<T> implements IProvider<T> {
 
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
-    clone(): IProvider<T> {
+    clone(): IKeyedProvider<T> {
         return new Provider(this.resolveDependency);
     }
 

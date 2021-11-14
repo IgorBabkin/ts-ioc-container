@@ -4,10 +4,10 @@ describe('LevelProvider', function () {
     test('singleton', () => {
         const locator = ServiceLocator.root(new SimpleInjector());
         locator.register(
-            'hey',
             ProviderBuilder.fromFn(() => Math.random())
                 .forLevel(0)
-                .asSingleton(),
+                .asSingleton()
+                .build('hey'),
         );
 
         expect(locator.resolve('hey')).toBe(locator.resolve('hey'));
@@ -17,10 +17,10 @@ describe('LevelProvider', function () {
         test('scope', () => {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
-                'hey',
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
-                    .asSingleton(),
+                    .asSingleton()
+                    .build('hey'),
             );
 
             expect(() => locator.resolve('hey')).toThrow(ProviderNotFoundError);
@@ -28,10 +28,10 @@ describe('LevelProvider', function () {
         test('scope1', () => {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
-                'hey',
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
-                    .asSingleton(),
+                    .asSingleton()
+                    .build('hey'),
             );
 
             const child = locator.createScope();
@@ -41,10 +41,10 @@ describe('LevelProvider', function () {
         test('scope2', () => {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
-                'hey',
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
-                    .asSingleton(),
+                    .asSingleton()
+                    .build('hey'),
             );
 
             const child = locator.createScope();
@@ -55,10 +55,10 @@ describe('LevelProvider', function () {
         test('scope2', () => {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
-                'hey',
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
-                    .asSingleton(),
+                    .asSingleton()
+                    .build('hey'),
             );
 
             const child1 = locator.createScope();
@@ -69,10 +69,10 @@ describe('LevelProvider', function () {
         test('tagged', () => {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
-                'hey',
                 ProviderBuilder.fromFn(() => Math.random())
                     .forTags(['a'])
-                    .asSingleton(),
+                    .asSingleton()
+                    .build('hey'),
             );
 
             const child = locator.createScope(['b']);
@@ -82,10 +82,10 @@ describe('LevelProvider', function () {
         test('tagged1', () => {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
-                'hey',
                 ProviderBuilder.fromFn(() => Math.random())
                     .forTags(['a'])
-                    .asSingleton(),
+                    .asSingleton()
+                    .build('hey'),
             );
 
             const child = locator.createScope(['a']);

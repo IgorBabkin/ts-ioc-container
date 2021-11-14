@@ -1,11 +1,11 @@
-import { IProvider, ProviderDecorator } from '../../core/IProvider';
+import { IKeyedProvider, ProviderDecorator } from '../../core/IProvider';
 import { IServiceLocator } from '../../core/IServiceLocator';
 import { Box } from '../../helpers/types';
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
     private instance: Box<T> | null = null;
 
-    constructor(private readonly provider: IProvider<T>) {
+    constructor(private readonly provider: IKeyedProvider<T>) {
         super(provider);
     }
 

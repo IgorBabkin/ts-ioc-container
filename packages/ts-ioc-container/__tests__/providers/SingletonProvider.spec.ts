@@ -1,5 +1,5 @@
 import {
-    IProvider,
+    IKeyedProvider,
     IServiceLocator,
     LevelProvider,
     Provider,
@@ -10,9 +10,9 @@ import {
 
 describe('SingletonProvider', function () {
     let locator: IServiceLocator;
-    let provider: IProvider<any>;
+    let provider: IKeyedProvider<any>;
 
-    function createSingleton<T>(provider: IProvider<T>): IProvider<T> {
+    function createSingleton<T>(provider: IKeyedProvider<T>): IKeyedProvider<T> {
         return new LevelProvider(new SingletonProvider(provider), [0, 0]);
     }
 

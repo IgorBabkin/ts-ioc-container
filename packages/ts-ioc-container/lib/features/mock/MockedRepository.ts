@@ -1,4 +1,4 @@
-import { IProvider, IProviderRepository, ProviderKey, ProviderNotFoundError, Tag } from '../../index';
+import { IKeyedProvider, IProviderRepository, ProviderKey, ProviderNotFoundError, Tag } from '../../index';
 import { IMockProviderStorage } from './IMockProviderStorage';
 import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
 
@@ -18,7 +18,7 @@ export class MockedRepository implements IProviderRepository {
         this.mockProviders.dispose();
     }
 
-    find<T>(key: ProviderKey): IProvider<T> {
+    find<T>(key: ProviderKey): IKeyedProvider<T> {
         try {
             return this.decorated.find(key);
         } catch (e) {
@@ -30,7 +30,7 @@ export class MockedRepository implements IProviderRepository {
         }
     }
 
-    add<T>(key: ProviderKey, provider: IProvider<T>): void {
+    add<T>(key: ProviderKey, provider: IKeyedProvider<T>): void {
         this.decorated.add(key, provider);
     }
 
@@ -38,11 +38,7 @@ export class MockedRepository implements IProviderRepository {
         throw new MethodNotImplementedError('MockRepository cannot be cloned');
     }
 
-    entries(): Array<[ProviderKey, IProvider<any>]> {
+    entries(): Array<[ProviderKey, IKeyedProvider<any>]> {
         return this.decorated.entries();
-    }
-
-    has(key: ProviderKey): boolean {
-        return this.decorated.has(key);
     }
 }

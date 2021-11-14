@@ -1,11 +1,11 @@
-import { IProvider, ProviderDecorator } from '../../core/IProvider';
+import { IKeyedProvider, ProviderDecorator } from '../../core/IProvider';
 import { IInstanceHook } from './IInstanceHook';
 import { IServiceLocator } from '../../core/IServiceLocator';
 
 export class HookedProvider<GInstance> extends ProviderDecorator<GInstance> {
     private readonly instances = new Set<GInstance>();
 
-    constructor(private readonly provider: IProvider<GInstance>, private readonly hook: IInstanceHook) {
+    constructor(private readonly provider: IKeyedProvider<GInstance>, private readonly hook: IInstanceHook) {
         super(provider);
     }
 

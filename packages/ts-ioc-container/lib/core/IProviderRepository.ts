@@ -1,14 +1,13 @@
-import { IProvider, ProviderKey, ScopeOptions, Tag } from './IProvider';
+import { IKeyedProvider, ProviderKey, ScopeOptions, Tag } from './IProvider';
 import { IDisposable } from '../helpers/types';
+import { RegisterOptions } from './IServiceLocator';
 
 export interface IProviderRepository extends IDisposable, ScopeOptions {
     clone(tags?: Tag[], parent?: IProviderRepository): IProviderRepository;
 
-    find<T>(key: ProviderKey): IProvider<T>;
+    find<T>(key: ProviderKey): IKeyedProvider<T>;
 
-    add<T>(key: ProviderKey, provider: IProvider<T>): void;
+    add<T>(key: ProviderKey, provider: IKeyedProvider<T>, options?: Partial<RegisterOptions>): void;
 
-    entries(): Array<[ProviderKey, IProvider<any>]>;
-
-    has(key: ProviderKey): boolean;
+    entries(): Array<[ProviderKey, IKeyedProvider<any>]>;
 }

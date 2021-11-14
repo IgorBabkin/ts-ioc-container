@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey, Tag } from './IProvider';
+import { IKeyedProvider, ProviderKey, Tag } from './IProvider';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProviderRepository } from './IProviderRepository';
@@ -19,15 +19,11 @@ export class EmptyProviderRepository implements IProviderRepository {
         throw new MethodNotImplementedError();
     }
 
-    entries(): Array<[ProviderKey, IProvider<any>]> {
+    entries(): Array<[ProviderKey, IKeyedProvider<any>]> {
         return [];
     }
 
-    find<T>(key: ProviderKey): IProvider<T> {
+    find<T>(key: ProviderKey): IKeyedProvider<T> {
         throw new ProviderNotFoundError(key.toString());
-    }
-
-    has(key: ProviderKey): boolean {
-        return false;
     }
 }

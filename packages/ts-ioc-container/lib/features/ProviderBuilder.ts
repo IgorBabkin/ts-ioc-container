@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey, ResolveDependency, Tag } from '../core/IProvider';
+import { IKeyedProvider, ProviderKey, ResolveDependency, Tag } from '../core/IProvider';
 import { SingletonProvider } from './scope/SingletonProvider';
 import { Provider } from '../core/Provider';
 import { constructor } from '../helpers/types';
@@ -22,7 +22,7 @@ export class ProviderBuilder<T> {
         return new ProviderBuilder(new Provider(fn));
     }
 
-    constructor(private provider: IProvider<T>) {}
+    constructor(private provider: IKeyedProvider<T>) {}
 
     withArgs(...extraArgs: any[]): this {
         const oldProvider = this.provider;
@@ -46,11 +46,6 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    addKeys(...keys: ProviderKey[]): this {
-        this.provider.addKeys(...keys);
-        return this;
-    }
-
     forTags(tags: Tag[]): this {
         this.provider = new TaggedProvider(this.provider, tags);
         return this;
@@ -61,11 +56,12 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    asSingleton(): IProvider<T> {
-        return new SingletonProvider(this.provider);
+    asSingleton(): this {
+        this.provider = new SingletonProvider(this.provider);
+        return this;
     }
 
-    build(): IProvider<T> {
-        return this.provider;
+    build(...keys: ProviderKey[]): IKeyedProvider<T> {
+        return this.provider.addKeys(...keys);
     }
 }

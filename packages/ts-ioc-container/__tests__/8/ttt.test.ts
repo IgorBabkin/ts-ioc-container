@@ -21,7 +21,6 @@ describe('ServiceLocator', () => {
         );
 
         locator.register(
-            'key1',
             ProviderBuilder.fromValue(expectedInstance)
                 .withHook({
                     onDispose<GInstance>(instance: GInstance) {},
@@ -29,7 +28,7 @@ describe('ServiceLocator', () => {
                         onConstructMetadataCollector.invokeHooksOf(instance);
                     },
                 })
-                .build(),
+                .build('key1'),
         );
 
         locator.resolve(MyClass);

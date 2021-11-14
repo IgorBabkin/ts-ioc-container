@@ -7,7 +7,7 @@ export class LocatorAdapter implements Locator {
     constructor(private locator: IServiceLocator) {}
 
     createScope(): Locator {
-        return new LocatorAdapter(this.locator.createLocator());
+        return new LocatorAdapter(this.locator.createScope());
     }
 
     remove(): void {
@@ -19,7 +19,7 @@ export class LocatorAdapter implements Locator {
     }
 
     register<T>(token: ProviderKey, value: T): this {
-        this.locator.register(token, ProviderBuilder.fromInstance(value).build());
+        this.locator.register(token, ProviderBuilder.fromValue(value).build());
         return this;
     }
 }

@@ -1,6 +1,6 @@
-import { IProvider, ProviderKey } from '../../core/IProvider';
+import { IKeyedProvider, ProviderKey } from '../../core/IProvider';
 import { IDisposable } from '../../helpers/types';
 
 export interface IMockProviderStorage extends IDisposable {
-    findOrCreate<T>(key: ProviderKey): IProvider<T>;
+    findOrCreate<T>(key: ProviderKey): IKeyedProvider<T>;
 }

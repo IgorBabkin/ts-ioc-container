@@ -1,11 +1,11 @@
-import { IProvider, LevelProvider, Provider, SingletonProvider } from '../../lib';
+import { IKeyedProvider, LevelProvider, Provider, SingletonProvider } from '../../lib';
 import { Times } from 'moq.ts';
 import { createMock } from '../MoqProviderStorage';
 
 describe('ScopedProvider', function () {
-    let provider: IProvider<any>;
+    let provider: IKeyedProvider<any>;
 
-    function createScopedProvider<T>(provider: IProvider<T>): IProvider<T> {
+    function createScopedProvider<T>(provider: IKeyedProvider<T>): IKeyedProvider<T> {
         return new LevelProvider(new SingletonProvider(provider), [1, 1]);
     }
 
@@ -26,7 +26,7 @@ describe('ScopedProvider', function () {
     });
 
     test('dispose', () => {
-        const providerMock = createMock<IProvider<any>>();
+        const providerMock = createMock<IKeyedProvider<any>>();
 
         const scopedProvider = createScopedProvider(providerMock.object());
         scopedProvider.dispose();

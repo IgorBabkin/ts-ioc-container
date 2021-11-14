@@ -1,7 +1,7 @@
-import { IProvider, ProviderDecorator, ScopeOptions } from '../../core/IProvider';
+import { IKeyedProvider, ProviderDecorator, ScopeOptions } from '../../core/IProvider';
 
 export class LevelProvider<T> extends ProviderDecorator<T> {
-    constructor(private provider: IProvider<T>, private readonly range: [number, number]) {
+    constructor(private provider: IKeyedProvider<T>, private readonly range: [number, number]) {
         super(provider);
     }
 

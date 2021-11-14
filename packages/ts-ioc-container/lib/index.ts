@@ -5,7 +5,7 @@ export { VendorMockProviderStorage } from './features/mock/VendorMockProviderSto
 export { IServiceLocator, Resolveable } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
-export { ProviderKey, IProvider, ScopeOptions, ResolveDependency, Tag } from './core/IProvider';
+export { ProviderKey, IKeyedProvider, ScopeOptions, ResolveDependency, Tag } from './core/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/simple/SimpleInjector';
 export { IocInjector } from './features/ioc/IocInjector';

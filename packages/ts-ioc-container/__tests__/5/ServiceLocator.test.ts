@@ -20,7 +20,7 @@ describe('ServiceLocator', () => {
         ServiceLocator.root(new HookedInjector(new SimpleInjector(), hooks));
 
     it('should pass dependencies', () => {
-        const locator = createSimpleLocator().register('key1', ProviderBuilder.fromClass(TestClass).build());
+        const locator = createSimpleLocator().register(ProviderBuilder.fromClass(TestClass).build('key1'));
         const testClass = locator.resolve<TestClass>('key1', 'a', 3);
 
         expect(testClass.dep1).toBe('a');
@@ -40,7 +40,6 @@ describe('ServiceLocator', () => {
         };
 
         const child = locator.createScope().register(
-            'key1',
             ProviderBuilder.fromValue(disposable)
                 .withHook({
                     onConstruct<GInstance>(instance: GInstance) {
@@ -48,7 +47,7 @@ describe('ServiceLocator', () => {
                     },
                     onDispose<GInstance>(instance: GInstance) {},
                 })
-                .build(),
+                .build('key1'),
         );
 
         child.resolve('key1');
@@ -71,7 +70,6 @@ describe('ServiceLocator', () => {
         };
 
         const child = locator.createScope().register(
-            'key1',
             ProviderBuilder.fromValue(disposable)
                 .withHook({
                     onConstruct<GInstance>(instance: GInstance) {},
@@ -79,7 +77,7 @@ describe('ServiceLocator', () => {
                         (instance as any).dispose();
                     },
                 })
-                .build(),
+                .build('key1'),
         );
 
         child.resolve('key1');
@@ -91,14 +89,14 @@ describe('ServiceLocator', () => {
 
     it('conditional resolving', () => {
         const locator = createSimpleLocator().register(
-            'key1',
             fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
                 .forLevel(1)
-                .asSingleton(),
+                .asSingleton()
+                .build('key1'),
         );
 
-        const child1 = locator.createScope().register('context', fromInstance('a').build());
-        const child2 = locator.createScope().register('context', fromInstance('b').build());
+        const child1 = locator.createScope().register(fromInstance('a').build('context'));
+        const child2 = locator.createScope().register(fromInstance('b').build('context'));
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

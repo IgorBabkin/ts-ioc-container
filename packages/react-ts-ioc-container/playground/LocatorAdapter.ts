@@ -1,12 +1,11 @@
 import { IServiceLocator, ProviderBuilder } from 'ts-ioc-container';
-import { InjectionToken, Locator, ProviderKey } from '../lib';
-import { LocatorOptions } from '../lib/locator';
+import { InjectionToken, Locator, LocatorOptions, ProviderKey } from '../lib';
 
 export class LocatorAdapter implements Locator {
     constructor(private locator: IServiceLocator) {}
 
     createScope({ tags }: LocatorOptions): Locator {
-        return new LocatorAdapter(this.locator.createLocator(tags));
+        return new LocatorAdapter(this.locator.createScope(tags));
     }
 
     remove(): void {
@@ -18,7 +17,7 @@ export class LocatorAdapter implements Locator {
     }
 
     register<T>(token: ProviderKey, value: T): this {
-        this.locator.register(token, ProviderBuilder.fromInstance(value).build());
+        this.locator.register(token, ProviderBuilder.fromValue(value).build());
         return this;
     }
 }

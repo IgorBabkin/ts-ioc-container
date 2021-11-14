@@ -11,10 +11,6 @@ export interface ScopeOptions {
 }
 
 export interface IProvider<T> extends IDisposable {
-    addKeys(...keys: ProviderKey[]): this;
-
-    getKeys(): ProviderKey[];
-
     clone(): IProvider<T>;
 
     resolve(locator: Resolveable, ...args: any[]): T;
@@ -22,8 +18,16 @@ export interface IProvider<T> extends IDisposable {
     isValid(filters: ScopeOptions): boolean;
 }
 
-export abstract class ProviderDecorator<T> implements IProvider<T> {
-    constructor(private decorated: IProvider<T>) {}
+export interface IKeyedProvider<T> extends IProvider<T> {
+    addKeys(...keys: ProviderKey[]): this;
+
+    getKeys(): ProviderKey[];
+
+    clone(): IKeyedProvider<T>;
+}
+
+export abstract class ProviderDecorator<T> implements IKeyedProvider<T> {
+    constructor(private decorated: IKeyedProvider<T>) {}
 
     addKeys(...keys: ProviderKey[]): this {
         this.decorated.addKeys(...keys);
