@@ -1,8 +1,8 @@
-import { IServiceLocator, Resolveable } from '../IServiceLocator';
+import { Resolveable } from '../IServiceLocator';
 import { IDisposable } from '../../helpers/types';
 import { ProviderKey } from '../IProviderRepository';
 
-export type ResolveDependency<T> = (locator: IServiceLocator, ...args: any[]) => T;
+export type ResolveDependency<T> = (locator: Resolveable, ...args: any[]) => T;
 
 export type Tag = string | symbol;
 
