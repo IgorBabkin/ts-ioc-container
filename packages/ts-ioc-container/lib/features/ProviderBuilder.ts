@@ -7,14 +7,15 @@ import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
 import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
+import { ProviderReducer } from './scope/IProvidersMetadataCollector';
 
 export class ProviderBuilder<T> {
-    static fromConstructor<T>(value: constructor<T>): ProviderBuilder<T> {
-        return new ProviderBuilder(Provider.fromConstructor(value));
+    static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
+        return new ProviderBuilder(Provider.fromClass(value));
     }
 
-    static fromInstance<T>(value: T): ProviderBuilder<T> {
-        return new ProviderBuilder(Provider.fromInstance(value));
+    static fromValue<T>(value: T): ProviderBuilder<T> {
+        return new ProviderBuilder(Provider.fromValue(value));
     }
 
     static fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
@@ -40,6 +41,11 @@ export class ProviderBuilder<T> {
         return this;
     }
 
+    withReducer(reducer: ProviderReducer<T>): this {
+        this.provider = reducer(this.provider);
+        return this;
+    }
+
     forTags(tags: Tag[]): this {
         this.provider = new TaggedProvider(this.provider, tags);
         return this;
@@ -54,7 +60,7 @@ export class ProviderBuilder<T> {
         return new SingletonProvider(this.provider);
     }
 
-    asRequested(): IProvider<T> {
+    build(): IProvider<T> {
         return this.provider;
     }
 }

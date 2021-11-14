@@ -20,27 +20,21 @@ describe('proxy', function () {
     });
 
     it('should asd', function () {
-        locator.register({
-            name: Provider.fromInstance('world'),
-        });
+        locator.register('name', Provider.fromValue('world'));
         const greeting = locator.resolve(Greeting);
 
         expect(greeting.say()).toBe('Hello world');
     });
 
     it('should asd 2', function () {
-        locator.register({
-            greeting: ProviderBuilder.fromConstructor(Greeting).withArgs({ name: 'world' }).asRequested(),
-        });
+        locator.register('greeting', ProviderBuilder.fromClass(Greeting).withArgs({ name: 'world' }).build());
         const greeting = locator.resolve<Greeting>('greeting');
 
         expect(greeting.say()).toBe('Hello world');
     });
 
     it('should asd 3', function () {
-        locator.register({
-            name: Provider.fromInstance('world'),
-        });
+        locator.register('name', Provider.fromValue('world'));
         const greeting = locator.resolve(Greeting);
 
         expect(greeting.say()).toBe('Hello world');

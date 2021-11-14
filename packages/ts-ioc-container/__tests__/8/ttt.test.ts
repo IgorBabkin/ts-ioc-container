@@ -20,16 +20,17 @@ describe('ServiceLocator', () => {
             }),
         );
 
-        locator.register({
-            key1: ProviderBuilder.fromInstance(expectedInstance)
+        locator.register(
+            'key1',
+            ProviderBuilder.fromValue(expectedInstance)
                 .withHook({
                     onDispose<GInstance>(instance: GInstance) {},
                     onConstruct<GInstance>(instance: GInstance) {
                         onConstructMetadataCollector.invokeHooksOf(instance);
                     },
                 })
-                .asRequested(),
-        });
+                .build(),
+        );
 
         locator.resolve(MyClass);
 

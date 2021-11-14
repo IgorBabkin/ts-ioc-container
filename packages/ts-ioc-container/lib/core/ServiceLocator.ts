@@ -11,13 +11,8 @@ export class ServiceLocator implements IServiceLocator {
 
     constructor(private readonly injector: IInjector, private readonly providerRepo: IProviderRepository) {}
 
-    register(dictionary: Record<ProviderKey, IProvider<unknown>>): this {
-        for (const [key, provider] of Object.entries(dictionary)) {
-            this.providerRepo.add(key, provider);
-        }
-        for (const key of Object.getOwnPropertySymbols(dictionary)) {
-            this.providerRepo.add(key, dictionary[key]);
-        }
+    register(key: ProviderKey, provider: IProvider<unknown>): this {
+        this.providerRepo.add(key, provider);
         return this;
     }
 

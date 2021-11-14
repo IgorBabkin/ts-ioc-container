@@ -37,5 +37,5 @@ export const instanceHook: IInstanceHook = {
 };
 
 export const fromFn = <T>(fn: ResolveDependency<T>): ProviderBuilder<T> => ProviderBuilder.fromFn(fn);
-export const fromInstance = <T>(instance: T): ProviderBuilder<T> => ProviderBuilder.fromInstance(instance);
-export const fromConstructor = <T>(value: constructor<T>): ProviderBuilder<T> => ProviderBuilder.fromConstructor(value);
+export const fromInstance = <T>(instance: T): ProviderBuilder<T> => ProviderBuilder.fromValue(instance);
+export const fromConstructor = <T>(value: constructor<T>): ProviderBuilder<T> => ProviderBuilder.fromClass(value);

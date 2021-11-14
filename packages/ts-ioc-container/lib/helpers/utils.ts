@@ -17,3 +17,5 @@ export const constant =
     <T>(value: T) =>
     () =>
         value;
+
+export const id = <T>(value: T) => value;

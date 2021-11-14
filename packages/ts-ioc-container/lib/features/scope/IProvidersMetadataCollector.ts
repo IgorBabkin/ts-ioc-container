@@ -1,8 +1,10 @@
-import { IProvider, ProviderKey } from '../../core/IProvider';
+import { IProvider } from '../../core/IProvider';
 import { constructor } from '../../helpers/types';
 
-type ProviderReduce<T> = (provider: IProvider<T>) => IProvider<T>;
+export type ProviderReducer<T> = (provider: IProvider<T>) => IProvider<T>;
+
 export interface IProvidersMetadataCollector {
-    add(key: ProviderKey, target: constructor<unknown>): void;
-    update<T>(target: constructor<T>, reduce: ProviderReduce<T>): void;
+    addReducer<T>(target: constructor<T>, reducer: ProviderReducer<T>): void;
+
+    findReducerOrCreate<T>(target: constructor<T>): ProviderReducer<T>;
 }

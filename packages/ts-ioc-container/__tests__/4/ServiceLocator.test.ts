@@ -37,17 +37,18 @@ describe('ServiceLocator', () => {
     };
 
     it('should create an instanse', () => {
-        const locator = createIoCLocator().register({ key1: fromFn(() => ({})).asRequested() });
+        const locator = createIoCLocator().register('key1', fromFn(() => ({})).build());
 
         expect(locator.resolve('key1')).not.toBe(locator.resolve('key1'));
     });
 
     it('should create a singleton', () => {
-        const locator = createIoCLocator().register({
-            key1: fromFn(() => ({}))
+        const locator = createIoCLocator().register(
+            'key1',
+            fromFn(() => ({}))
                 .forLevel(0)
                 .asSingleton(),
-        });
+        );
 
         expect(locator.resolve('key1')).toBe(locator.resolve('key1'));
     });
@@ -57,9 +58,9 @@ describe('ServiceLocator', () => {
             const expectedInstance1 = { id: 1 };
             const expectedInstance2 = { id: 2 };
 
-            const locator = createIoCLocator().register({ key1: fromInstance(expectedInstance1).asRequested() });
+            const locator = createIoCLocator().register('key1', fromInstance(expectedInstance1).build());
 
-            const child = locator.createScope().register({ key1: fromInstance(expectedInstance2).asRequested() });
+            const child = locator.createScope().register('key1', fromInstance(expectedInstance2).build());
 
             expect(locator.resolve('key1')).toBe(expectedInstance1);
             expect(child.resolve('key1')).toBe(expectedInstance2);
@@ -68,7 +69,7 @@ describe('ServiceLocator', () => {
         it('is available to get parent deps from child', () => {
             const expectedInstance1 = {};
 
-            const locator = createIoCLocator().register({ key1: fromInstance(expectedInstance1).asRequested() });
+            const locator = createIoCLocator().register('key1', fromInstance(expectedInstance1).build());
 
             const child = locator.createScope();
 
@@ -80,17 +81,18 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator();
 
-            locator.createScope().register({ key1: fromInstance(expectedInstance1).asRequested() });
+            locator.createScope().register('key1', fromInstance(expectedInstance1).build());
 
             expect(() => locator.resolve('key1')).toThrow(ProviderNotFoundError);
         });
 
         it('returns the same singleton for child and parent', () => {
-            const locator = createIoCLocator().register({
-                key1: fromFn(() => ({}))
+            const locator = createIoCLocator().register(
+                'key1',
+                fromFn(() => ({}))
                     .forLevel(0)
                     .asSingleton(),
-            });
+            );
 
             const child = locator.createScope();
 
@@ -98,7 +100,7 @@ describe('ServiceLocator', () => {
         });
 
         it('clears container', () => {
-            const locator = createIoCLocator().register({ key1: fromInstance({}).asRequested() });
+            const locator = createIoCLocator().register('key1', fromInstance({}).build());
 
             const child = locator.createScope();
 
@@ -113,16 +115,18 @@ describe('ServiceLocator', () => {
             const expectedInstance = { opa: '11' };
 
             const locator = createIoCLocator()
-                .register({
-                    key1: fromFn(() => expectedInstance)
+                .register(
+                    'key1',
+                    fromFn(() => expectedInstance)
                         .forLevel(1)
                         .asSingleton(),
-                })
-                .register({
-                    key2: fromFn(() => ({}))
+                )
+                .register(
+                    'key2',
+                    fromFn(() => ({}))
                         .forLevel(1)
                         .asSingleton(),
-                });
+                );
 
             const child1 = locator.createScope();
             const child2 = child1.createScope();
@@ -147,9 +151,9 @@ describe('ServiceLocator', () => {
             const expected = ['KEY1_VALUE', 'p2', 'p3', 'KEY2_VALUE', '1', '2', 'KEY1_VALUE', 'KEY2_VALUE'];
 
             const decorated = createIoCLocator()
-                .register({ key1: fromInstance('KEY1_VALUE').asRequested() })
-                .register({ key2: fromInstance('KEY2_VALUE').asRequested() })
-                .register({ key3: fromConstructor(SubGroup3).asRequested() });
+                .register('key1', fromInstance('KEY1_VALUE').build())
+                .register('key2', fromInstance('KEY2_VALUE').build())
+                .register('key3', fromConstructor(SubGroup3).build());
 
             const group = decorated.resolve(Group, 'p2', 'p3');
             const result = group.privet();
@@ -160,7 +164,7 @@ describe('ServiceLocator', () => {
         it('ioc2', () => {
             const expected = {};
 
-            const locator = createIoCLocator().register({ key1: fromFn(() => expected).asRequested() });
+            const locator = createIoCLocator().register('key1', fromFn(() => expected).build());
 
             const child1 = locator.createScope();
 
@@ -194,11 +198,12 @@ describe('ServiceLocator', () => {
                 },
                 onDispose<GInstance>(instance: GInstance) {},
             };
-            const locator = createIoCLocator(hook).register({
-                key: fromFn(() => new OnConstructImpl())
+            const locator = createIoCLocator(hook).register(
+                'key',
+                fromFn(() => new OnConstructImpl())
                     .withHook(hook)
-                    .asRequested(),
-            });
+                    .build(),
+            );
 
             const group = locator.resolve<OnConstructImpl>('key');
 
@@ -223,7 +228,7 @@ describe('ServiceLocator', () => {
         it('passes params to constructor(instance) in decorator', () => {
             const decorated = createIoCLocator();
 
-            decorated.register({ logger: fromConstructor(Logger).asRequested() });
+            decorated.register('logger', fromConstructor(Logger).build());
             const app = decorated.resolve(App);
 
             expect(app.run()).toBe('super');
@@ -232,7 +237,7 @@ describe('ServiceLocator', () => {
         it('passes params to constructor(autofactory) in decorator', () => {
             const decorated = createIoCLocator();
 
-            decorated.register({ logger2: fromConstructor(Logger2).asRequested() });
+            decorated.register('logger2', fromConstructor(Logger2).build());
             const app = decorated.resolve(App2);
 
             expect(app.run()).toBe('superduper');
@@ -241,7 +246,7 @@ describe('ServiceLocator', () => {
         it('passes arguments on registering', () => {
             const decorated = createIoCLocator();
 
-            decorated.register({ logger3: fromFn((l, ...args) => l.resolve(Logger3, 'super', ...args)).asRequested() });
+            decorated.register('logger3', fromFn((l, ...args) => l.resolve(Logger3, 'super', ...args)).build());
             const app = decorated.resolve(App3);
 
             expect(app.run()).toBe('superduper');
@@ -250,8 +255,7 @@ describe('ServiceLocator', () => {
         it('passes locator as last dep', () => {
             const decorated = createIoCLocator();
 
-            decorated.register({ dep1: fromInstance('dep1').asRequested() });
-            decorated.register({ dep2: fromInstance('dep2').asRequested() });
+            decorated.register('dep1', fromInstance('dep1').build()).register('dep2', fromInstance('dep2').build());
             const app = decorated.resolve(App4);
 
             expect(app.run()).toBe('dep1dep2');
@@ -260,7 +264,7 @@ describe('ServiceLocator', () => {
         it('passes locator as last deaSp', () => {
             const decorated = createIoCLocator();
 
-            decorated.register({ [MyKey]: fromInstance('world').asRequested() });
+            decorated.register(MyKey, fromInstance('world').build());
             const app = decorated.resolve(Greeting);
 
             expect(app.say()).toBe('Hello world');

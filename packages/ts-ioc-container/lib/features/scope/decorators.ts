@@ -1,39 +1,32 @@
 import { constructor } from '../../helpers/types';
-import { ProviderKey, Tag } from '../../core/IProvider';
-import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
+import { Tag } from '../../core/IProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { LevelProvider } from './LevelProvider';
 import { TaggedProvider } from './TaggedProvider';
-
-export const createProviderDecorator =
-    (metadataCollector: IProvidersMetadataCollector) =>
-    (key: ProviderKey): ClassDecorator =>
-    (target) => {
-        metadataCollector.add(key, target as any as constructor<unknown>);
-    };
+import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
 
 export const createSingletonDecorator =
     (metadataCollector: IProvidersMetadataCollector): ClassDecorator =>
     (target) => {
-        metadataCollector.update(target as any as constructor<unknown>, (provider) => new SingletonProvider(provider));
+        const targetClass = target as any as constructor<unknown>;
+        const fn = metadataCollector.findReducerOrCreate(targetClass);
+        metadataCollector.addReducer(targetClass, (provider) => new SingletonProvider(fn(provider)));
     };
 
 export const createLevelDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
     (value: number): ClassDecorator =>
     (target) => {
-        metadataCollector.update(
-            target as any as constructor<unknown>,
-            (provider) => new LevelProvider(provider, [value, value]),
-        );
+        const targetClass = target as any as constructor<unknown>;
+        const fn = metadataCollector.findReducerOrCreate(targetClass);
+        metadataCollector.addReducer(targetClass, (provider) => new LevelProvider(fn(provider), [value, value]));
     };
 
 export const createTagsDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
     (tags: Tag[]): ClassDecorator =>
     (target) => {
-        metadataCollector.update(
-            target as any as constructor<unknown>,
-            (provider) => new TaggedProvider(provider, tags),
-        );
+        const targetClass = target as any as constructor<unknown>;
+        const fn = metadataCollector.findReducerOrCreate(targetClass);
+        metadataCollector.addReducer(targetClass, (provider) => new TaggedProvider(fn(provider), tags));
     };

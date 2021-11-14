@@ -10,7 +10,7 @@ export interface Resolveable {
 export interface IServiceLocator extends Resolveable, IDisposable {
     createScope(tags?: Tag[]): IServiceLocator;
 
-    register(dictionary: Record<ProviderKey, IProvider<unknown>>): this;
+    register(key: ProviderKey, provider: IProvider<unknown>): this;
 }
 
 export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {

@@ -1,29 +1,22 @@
-import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
-import { IProvider, ProviderKey } from '../../core/IProvider';
+import { IProvidersMetadataCollector, ProviderReducer } from './IProvidersMetadataCollector';
 import { constructor } from '../../helpers/types';
-import { Provider } from '../../core/Provider';
-import { ProviderDecoratorNotFound } from '../../errors/ProviderNotFoundError';
-
-export type ProviderReduce<T> = (provider: IProvider<T>) => IProvider<T>;
+import { id } from '../../helpers/utils';
 
 export class ProvidersMetadataCollector implements IProvidersMetadataCollector {
-    private providers: Record<ProviderKey, IProvider<any>> = {};
-
-    add(key: ProviderKey, target: constructor<unknown>): void {
-        Reflect.defineMetadata('providerKey', key, target);
-        this.providers[key] = Provider.fromConstructor(target as any as constructor<any>);
+    static create(): ProvidersMetadataCollector {
+        return new ProvidersMetadataCollector('providerReducer', () => id);
     }
 
-    update<T>(target: constructor<T>, reduce: ProviderReduce<T>): void {
-        if (!Reflect.hasMetadata('providerKey', target)) {
-            throw new ProviderDecoratorNotFound(target.name);
+    constructor(private metadataKey: string, private createReducer: () => ProviderReducer<unknown>) {}
+
+    findReducerOrCreate<T>(target: constructor<T>): ProviderReducer<T> {
+        if (!Reflect.hasMetadata(this.metadataKey, target)) {
+            Reflect.defineMetadata(this.metadataKey, this.createReducer(), target);
         }
-
-        const key = Reflect.getMetadata('providerKey', target);
-        this.providers[key] = reduce(this.providers[key] as IProvider<any>);
+        return Reflect.getMetadata(this.metadataKey, target);
     }
 
-    getProviders(): Record<ProviderKey, IProvider<any>> {
-        return this.providers;
+    addReducer<T>(target: constructor<T>, reducer: ProviderReducer<T>): void {
+        Reflect.defineMetadata(this.metadataKey, reducer, target);
     }
 }
