@@ -4,10 +4,10 @@ import { id } from '../../helpers/utils';
 
 export class ProvidersMetadataCollector implements IProvidersMetadataCollector {
     static create(): ProvidersMetadataCollector {
-        return new ProvidersMetadataCollector('providerReducer', () => id);
+        return new ProvidersMetadataCollector(Symbol.for('providerReducer'), () => id);
     }
 
-    constructor(private metadataKey: string, private createReducer: () => ProviderReducer<unknown>) {}
+    constructor(private metadataKey: string | symbol, private createReducer: () => ProviderReducer<unknown>) {}
 
     findReducerOrCreate<T>(target: constructor<T>): ProviderReducer<T> {
         if (!Reflect.hasMetadata(this.metadataKey, target)) {
