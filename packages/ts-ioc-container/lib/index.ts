@@ -18,7 +18,7 @@ export { InjectMetadataCollector } from './features/ioc/decorators/InjectMetadat
 export { InjectionToken } from './core/IServiceLocator';
 export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
-export { IProviderRepository } from './core/IProviderRepository';
+export { IProviderRepository, isProviderKey } from './core/IProviderRepository';
 export { HookedProvider } from './features/instanceHook/HookedProvider';
 export { HookedServiceLocator } from './features/instanceHook/HookedServiceLocator';
 export { InjectFn } from './features/ioc/InjectFn';
