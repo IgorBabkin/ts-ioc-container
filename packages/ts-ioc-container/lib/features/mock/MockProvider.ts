@@ -1,5 +1,6 @@
-import { IProvider, IServiceLocator } from '../../index';
 import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
+import { IServiceLocator } from '../../core/IServiceLocator';
+import { IProvider, ProviderKey } from '../../core/IProvider';
 
 export abstract class MockProvider<T> implements IProvider<T> {
     clone(): IProvider<T> {
@@ -14,5 +15,13 @@ export abstract class MockProvider<T> implements IProvider<T> {
 
     isValid(): boolean {
         return true;
+    }
+
+    addKeys(...keys: ProviderKey[]): this {
+        return this;
+    }
+
+    getKeys(): ProviderKey[] {
+        return [];
     }
 }

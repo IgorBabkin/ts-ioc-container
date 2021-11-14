@@ -1,5 +1,5 @@
 import { constructor } from '../helpers/types';
-import { IProvider, ResolveDependency, ScopeOptions } from './IProvider';
+import { IProvider, ProviderKey, ResolveDependency, ScopeOptions } from './IProvider';
 import { IServiceLocator } from './IServiceLocator';
 
 export class Provider<T> implements IProvider<T> {
@@ -10,6 +10,8 @@ export class Provider<T> implements IProvider<T> {
     static fromValue<T>(value: T): Provider<T> {
         return new Provider(() => value);
     }
+
+    private keys: ProviderKey[] = [];
 
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
@@ -25,5 +27,14 @@ export class Provider<T> implements IProvider<T> {
 
     isValid(filters: ScopeOptions): boolean {
         return true;
+    }
+
+    addKeys(...keys: ProviderKey[]): this {
+        this.keys.push(...keys);
+        return this;
+    }
+
+    getKeys(): ProviderKey[] {
+        return this.keys;
     }
 }

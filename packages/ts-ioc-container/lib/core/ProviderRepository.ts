@@ -42,4 +42,8 @@ export class ProviderRepository implements IProviderRepository {
         const provider = this.providers.get(key) as IProvider<T>;
         return provider && provider.isValid(this) ? provider : this.parent.find<T>(key);
     }
+
+    has(key: ProviderKey): boolean {
+        return this.providers.has(key) || this.parent.has(key);
+    }
 }

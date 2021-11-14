@@ -1,8 +1,10 @@
-import { InjectionToken, IServiceLocator, isProviderKey } from './IServiceLocator';
+import { InjectionToken, IServiceLocator, isProviderKey, RegisterOptions } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IProvider, ProviderKey, Tag } from './IProvider';
+import { IProvider, Tag } from './IProvider';
 import { IProviderRepository } from './IProviderRepository';
 import { ProviderRepository } from './ProviderRepository';
+import { NoRegistrationKeysProvided } from '../errors/NoRegistrationKeysProvided';
+import { ProviderKeyIsBusy } from '../errors/ProviderKeyIsBusy';
 
 export class ServiceLocator implements IServiceLocator {
     static root(injector: IInjector, tags?: Tag[]): ServiceLocator {
@@ -11,8 +13,17 @@ export class ServiceLocator implements IServiceLocator {
 
     constructor(private readonly injector: IInjector, private readonly providerRepo: IProviderRepository) {}
 
-    register(key: ProviderKey, provider: IProvider<unknown>): this {
-        this.providerRepo.add(key, provider);
+    register(provider: IProvider<unknown>, options: Partial<RegisterOptions> = {}): this {
+        const keys = provider.getKeys();
+        if (keys.length === 0) {
+            throw new NoRegistrationKeysProvided();
+        }
+        for (const key of keys) {
+            if (!options.override && this.providerRepo.has(key)) {
+                throw new ProviderKeyIsBusy(key);
+            }
+            this.providerRepo.add(key, provider);
+        }
         return this;
     }
 

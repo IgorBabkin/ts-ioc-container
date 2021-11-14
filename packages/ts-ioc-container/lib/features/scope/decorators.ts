@@ -1,9 +1,18 @@
 import { constructor } from '../../helpers/types';
-import { Tag } from '../../core/IProvider';
+import { ProviderKey, Tag } from '../../core/IProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { LevelProvider } from './LevelProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
+
+export const createAddKeysDecorator =
+    (metadataCollector: IProvidersMetadataCollector) =>
+    (...keys: ProviderKey[]): ClassDecorator =>
+    (target) => {
+        const targetClass = target as any as constructor<unknown>;
+        const fn = metadataCollector.findReducerOrCreate(targetClass);
+        metadataCollector.addReducer(targetClass, (provider) => fn(provider).addKeys(...keys));
+    };
 
 export const createSingletonDecorator =
     (metadataCollector: IProvidersMetadataCollector): ClassDecorator =>

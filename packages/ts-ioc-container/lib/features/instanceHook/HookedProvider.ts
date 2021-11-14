@@ -1,14 +1,16 @@
-import { IProvider, ScopeOptions } from '../../core/IProvider';
+import { IProvider, ProviderDecorator } from '../../core/IProvider';
 import { IInstanceHook } from './IInstanceHook';
 import { IServiceLocator } from '../../core/IServiceLocator';
 
-export class HookedProvider<GInstance> implements IProvider<GInstance> {
+export class HookedProvider<GInstance> extends ProviderDecorator<GInstance> {
     private readonly instances = new Set<GInstance>();
 
-    constructor(private readonly decorated: IProvider<GInstance>, private readonly hook: IInstanceHook) {}
+    constructor(private readonly provider: IProvider<GInstance>, private readonly hook: IInstanceHook) {
+        super(provider);
+    }
 
     dispose(): void {
-        this.decorated.dispose();
+        this.provider.dispose();
         for (const instance of this.instances) {
             this.hook.onDispose(instance);
         }
@@ -16,17 +18,13 @@ export class HookedProvider<GInstance> implements IProvider<GInstance> {
     }
 
     resolve(locator: IServiceLocator, ...args: any[]): GInstance {
-        const instance = this.decorated.resolve(locator, ...args);
+        const instance = this.provider.resolve(locator, ...args);
         this.hook.onConstruct(instance);
         this.instances.add(instance);
         return instance;
     }
 
     clone(): HookedProvider<GInstance> {
-        return new HookedProvider(this.decorated.clone(), this.hook);
-    }
-
-    isValid(filters: ScopeOptions): boolean {
-        return this.decorated.isValid(filters);
+        return new HookedProvider(this.provider.clone(), this.hook);
     }
 }

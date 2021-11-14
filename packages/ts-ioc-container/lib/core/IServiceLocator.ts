@@ -7,10 +7,14 @@ export interface Resolveable {
     resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
 }
 
+export type RegisterOptions = {
+    override: boolean;
+};
+
 export interface IServiceLocator extends Resolveable, IDisposable {
     createScope(tags?: Tag[]): IServiceLocator;
 
-    register(key: ProviderKey, provider: IProvider<unknown>): this;
+    register(provider: IProvider<unknown>, options?: Partial<RegisterOptions>): this;
 }
 
 export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {

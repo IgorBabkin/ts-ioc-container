@@ -41,4 +41,8 @@ export class MockedRepository implements IProviderRepository {
     entries(): Array<[ProviderKey, IProvider<any>]> {
         return this.decorated.entries();
     }
+
+    has(key: ProviderKey): boolean {
+        return this.decorated.has(key);
+    }
 }

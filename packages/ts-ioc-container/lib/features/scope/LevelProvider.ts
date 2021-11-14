@@ -1,24 +1,17 @@
-import { IProvider, ScopeOptions } from '../../core/IProvider';
-import { IServiceLocator } from '../../core/IServiceLocator';
+import { IProvider, ProviderDecorator, ScopeOptions } from '../../core/IProvider';
 
-export class LevelProvider<T> implements IProvider<T> {
-    constructor(private decorated: IProvider<T>, private readonly range: [number, number]) {}
-
-    clone(): IProvider<T> {
-        return new LevelProvider(this.decorated.clone(), this.range);
+export class LevelProvider<T> extends ProviderDecorator<T> {
+    constructor(private provider: IProvider<T>, private readonly range: [number, number]) {
+        super(provider);
     }
 
-    dispose(): void {
-        this.decorated.dispose();
-    }
-
-    resolve(locator: IServiceLocator, ...args: any[]): T {
-        return this.decorated.resolve(locator, ...args);
+    clone(): LevelProvider<T> {
+        return new LevelProvider(this.provider.clone(), this.range);
     }
 
     isValid(filters: ScopeOptions): boolean {
         const { level } = filters;
         const [from, to] = this.range;
-        return from <= level && level <= to && this.decorated.isValid(filters);
+        return from <= level && level <= to && this.provider.isValid(filters);
     }
 }

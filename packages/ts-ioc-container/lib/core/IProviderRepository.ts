@@ -9,4 +9,6 @@ export interface IProviderRepository extends IDisposable, ScopeOptions {
     add<T>(key: ProviderKey, provider: IProvider<T>): void;
 
     entries(): Array<[ProviderKey, IProvider<any>]>;
+
+    has(key: ProviderKey): boolean;
 }

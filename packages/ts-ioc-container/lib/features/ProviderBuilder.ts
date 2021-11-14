@@ -1,4 +1,4 @@
-import { IProvider, ResolveDependency, Tag } from '../core/IProvider';
+import { IProvider, ProviderKey, ResolveDependency, Tag } from '../core/IProvider';
 import { SingletonProvider } from './scope/SingletonProvider';
 import { Provider } from '../core/Provider';
 import { constructor } from '../helpers/types';
@@ -43,6 +43,11 @@ export class ProviderBuilder<T> {
 
     withReducer(reducer: ProviderReducer<T>): this {
         this.provider = reducer(this.provider);
+        return this;
+    }
+
+    addKeys(...keys: ProviderKey[]): this {
+        this.provider.addKeys(...keys);
         return this;
     }
 

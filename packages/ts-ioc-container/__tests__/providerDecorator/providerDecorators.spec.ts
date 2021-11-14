@@ -1,6 +1,7 @@
 import { ServiceLocator, SimpleInjector } from '../../lib';
-import { fromClass, level, singleton } from './decorators';
+import { addKeys, fromClass, level, singleton } from './decorators';
 
+@addKeys('key1')
 @singleton
 @level(0)
 export class Greeting {
@@ -13,7 +14,7 @@ export class Greeting {
 
 describe('ProviderDecorators', function () {
     it('should sdad', function () {
-        const locator = ServiceLocator.root(new SimpleInjector()).register('key1', fromClass(Greeting).build());
+        const locator = ServiceLocator.root(new SimpleInjector()).register(fromClass(Greeting).build());
         const greeting1 = locator.resolve<Greeting>('key1');
         const greeting2 = locator.resolve<Greeting>('key1');
 

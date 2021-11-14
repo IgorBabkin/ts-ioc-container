@@ -26,4 +26,8 @@ export class EmptyProviderRepository implements IProviderRepository {
     find<T>(key: ProviderKey): IProvider<T> {
         throw new ProviderNotFoundError(key.toString());
     }
+
+    has(key: ProviderKey): boolean {
+        return false;
+    }
 }
