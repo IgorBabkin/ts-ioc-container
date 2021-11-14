@@ -1,6 +1,6 @@
 {
   "name": "react-ts-ioc-container",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "description": "React hooks and components for IServiceLocator",
   "main": "cjm/index.js",
   "module": "esm/index.js",
@@ -43,7 +43,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.3.0",
-    "ts-ioc-container": "^9.1.0",
+    "ts-ioc-container": "^9.2.0",
     "ts-jest": "^27.0.5",
     "ts-loader": "^9.2.6",
     "ts-node": "^10.2.1",
