@@ -46,7 +46,7 @@ export const createLevelDecorator =
 
 export const createTagsDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
-    (tags: Tag[]): ClassDecorator =>
+    (...tags: Tag[]): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
