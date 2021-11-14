@@ -24,6 +24,7 @@ export { InjectFn } from './features/ioc/InjectFn';
 export { IInstanceHook } from './features/instanceHook/IInstanceHook';
 export { ProviderRepository } from './core/ProviderRepository';
 export { Provider } from './core/provider/Provider';
+export { ArgsProvider, ArgsFn } from './core/provider/ArgsProvider';
 export { TaggedProvider } from './features/scope/TaggedProvider';
 export { HookedInjector } from './features/instanceHook/HookedInjector';
 export { ProxyInjector } from './features/proxy/ProxyInjector';

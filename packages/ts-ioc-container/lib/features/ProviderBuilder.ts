@@ -2,13 +2,13 @@ import { IKeyedProvider, ResolveDependency, Tag } from '../core/provider/IProvid
 import { SingletonProvider } from './scope/SingletonProvider';
 import { Provider } from '../core/provider/Provider';
 import { constructor } from '../helpers/types';
-import { IServiceLocator } from '../core/IServiceLocator';
 import { HookedProvider } from './instanceHook/HookedProvider';
 import { IInstanceHook } from './instanceHook/IInstanceHook';
 import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
 import { ProviderReducer } from './scope/IProvidersMetadataCollector';
 import { ProviderKey } from '../core/IProviderRepository';
+import { ArgsFn, ArgsProvider } from '../core/provider/ArgsProvider';
 
 export class ProviderBuilder<T> {
     static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
@@ -26,8 +26,7 @@ export class ProviderBuilder<T> {
     constructor(private provider: IKeyedProvider<T>) {}
 
     withArgs(...extraArgs: any[]): this {
-        const oldProvider = this.provider;
-        this.provider = new Provider((l, ...args) => oldProvider.resolve(l, ...args, ...extraArgs));
+        this.provider = new ArgsProvider(this.provider, () => extraArgs);
         return this;
     }
 
@@ -36,9 +35,8 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    withArgsFn(argsFn: (l: IServiceLocator) => any[]): this {
-        const oldProvider = this.provider;
-        this.provider = new Provider((l, ...args) => oldProvider.resolve(l, ...args, ...argsFn(l)));
+    withArgsFn(argsFn: ArgsFn): this {
+        this.provider = new ArgsProvider(this.provider, argsFn);
         return this;
     }
 
