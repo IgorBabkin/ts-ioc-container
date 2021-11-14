@@ -1,9 +1,9 @@
 import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
 import { IServiceLocator } from '../../core/IServiceLocator';
-import { IKeyedProvider, ProviderKey } from '../../core/IProvider';
+import { IProvider } from '../../core/provider/IProvider';
 
-export abstract class MockProvider<T> implements IKeyedProvider<T> {
-    clone(): IKeyedProvider<T> {
+export abstract class MockProvider<T> implements IProvider<T> {
+    clone(): IProvider<T> {
         throw new MethodNotImplementedError('MockProvider cannot be cloned');
     }
 
@@ -15,13 +15,5 @@ export abstract class MockProvider<T> implements IKeyedProvider<T> {
 
     isValid(): boolean {
         return true;
-    }
-
-    addKeys(...keys: ProviderKey[]): this {
-        return this;
-    }
-
-    getKeys(): ProviderKey[] {
-        return [];
     }
 }

@@ -7,7 +7,8 @@ describe('LevelProvider', function () {
             ProviderBuilder.fromFn(() => Math.random())
                 .forLevel(0)
                 .asSingleton()
-                .build('hey'),
+                .forKeys('hey')
+                .build(),
         );
 
         expect(locator.resolve('hey')).toBe(locator.resolve('hey'));
@@ -20,7 +21,8 @@ describe('LevelProvider', function () {
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .build('hey'),
+                    .forKeys('hey')
+                    .build(),
             );
 
             expect(() => locator.resolve('hey')).toThrow(ProviderNotFoundError);
@@ -31,7 +33,8 @@ describe('LevelProvider', function () {
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .build('hey'),
+                    .forKeys('hey')
+                    .build(),
             );
 
             const child = locator.createScope();
@@ -44,7 +47,8 @@ describe('LevelProvider', function () {
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .build('hey'),
+                    .forKeys('hey')
+                    .build(),
             );
 
             const child = locator.createScope();
@@ -58,7 +62,8 @@ describe('LevelProvider', function () {
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .build('hey'),
+                    .forKeys('hey')
+                    .build(),
             );
 
             const child1 = locator.createScope();
@@ -70,9 +75,10 @@ describe('LevelProvider', function () {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
-                    .forTags(['a'])
+                    .forTags('a')
                     .asSingleton()
-                    .build('hey'),
+                    .forKeys('hey')
+                    .build(),
             );
 
             const child = locator.createScope(['b']);
@@ -83,9 +89,10 @@ describe('LevelProvider', function () {
             const locator = ServiceLocator.root(new SimpleInjector());
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
-                    .forTags(['a'])
+                    .forTags('a')
                     .asSingleton()
-                    .build('hey'),
+                    .forKeys('hey')
+                    .build(),
             );
 
             const child = locator.createScope(['a']);

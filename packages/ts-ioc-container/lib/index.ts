@@ -5,7 +5,7 @@ export { VendorMockProviderStorage } from './features/mock/VendorMockProviderSto
 export { IServiceLocator, Resolveable } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
-export { ProviderKey, IKeyedProvider, ScopeOptions, ResolveDependency, Tag } from './core/IProvider';
+export { ScopeOptions, ResolveDependency, Tag, IProvider, IKeyedProvider } from './core/provider/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/simple/SimpleInjector';
 export { IocInjector } from './features/ioc/IocInjector';
@@ -23,7 +23,7 @@ export { HookedProvider } from './features/instanceHook/HookedProvider';
 export { InjectFn } from './features/ioc/InjectFn';
 export { IInstanceHook } from './features/instanceHook/IInstanceHook';
 export { ProviderRepository } from './core/ProviderRepository';
-export { Provider } from './core/Provider';
+export { Provider } from './core/provider/Provider';
 export { TaggedProvider } from './features/scope/TaggedProvider';
 export { HookedInjector } from './features/instanceHook/HookedInjector';
 export { ProxyInjector } from './features/proxy/ProxyInjector';
@@ -36,3 +36,4 @@ export { IProvidersMetadataCollector } from './features/scope/IProvidersMetadata
 export { ProvidersMetadataCollector } from './features/scope/ProvidersMetadataCollector';
 export { createLevelDecorator, createSingletonDecorator, createTagsDecorator } from './features/scope/decorators';
 export { IDisposable } from './helpers/types';
+export { ProviderKey } from './core/IProviderRepository';

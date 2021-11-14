@@ -1,6 +1,6 @@
-import { IKeyedProvider, ProviderKey, ResolveDependency, Tag } from '../core/IProvider';
+import { IKeyedProvider, ResolveDependency, Tag } from '../core/provider/IProvider';
 import { SingletonProvider } from './scope/SingletonProvider';
-import { Provider } from '../core/Provider';
+import { Provider } from '../core/provider/Provider';
 import { constructor } from '../helpers/types';
 import { IServiceLocator } from '../core/IServiceLocator';
 import { HookedProvider } from './instanceHook/HookedProvider';
@@ -8,6 +8,7 @@ import { IInstanceHook } from './instanceHook/IInstanceHook';
 import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
 import { ProviderReducer } from './scope/IProvidersMetadataCollector';
+import { ProviderKey } from '../core/IProviderRepository';
 
 export class ProviderBuilder<T> {
     static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
@@ -46,7 +47,7 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    forTags(tags: Tag[]): this {
+    forTags(...tags: Tag[]): this {
         this.provider = new TaggedProvider(this.provider, tags);
         return this;
     }
@@ -61,7 +62,12 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    build(...keys: ProviderKey[]): IKeyedProvider<T> {
-        return this.provider.addKeys(...keys);
+    forKeys(...keys: ProviderKey[]): this {
+        this.provider = this.provider.addKeys(...keys);
+        return this;
+    }
+
+    build(): IKeyedProvider<T> {
+        return this.provider;
     }
 }

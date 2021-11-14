@@ -19,7 +19,7 @@ export class LocatorAdapter implements Locator {
     }
 
     register<T>(token: ProviderKey, value: T): this {
-        this.locator.register(token, ProviderBuilder.fromValue(value).build());
+        this.locator.register(ProviderBuilder.fromValue(value).forKeys(token).build());
         return this;
     }
 }

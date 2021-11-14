@@ -20,7 +20,7 @@ describe('ServiceLocator', () => {
         ServiceLocator.root(new HookedInjector(new SimpleInjector(), hooks));
 
     it('should pass dependencies', () => {
-        const locator = createSimpleLocator().register(ProviderBuilder.fromClass(TestClass).build('key1'));
+        const locator = createSimpleLocator().register(ProviderBuilder.fromClass(TestClass).forKeys('key1').build());
         const testClass = locator.resolve<TestClass>('key1', 'a', 3);
 
         expect(testClass.dep1).toBe('a');
@@ -47,7 +47,8 @@ describe('ServiceLocator', () => {
                     },
                     onDispose<GInstance>(instance: GInstance) {},
                 })
-                .build('key1'),
+                .forKeys('key1')
+                .build(),
         );
 
         child.resolve('key1');
@@ -77,7 +78,8 @@ describe('ServiceLocator', () => {
                         (instance as any).dispose();
                     },
                 })
-                .build('key1'),
+                .forKeys('key1')
+                .build(),
         );
 
         child.resolve('key1');
@@ -92,11 +94,12 @@ describe('ServiceLocator', () => {
             fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
                 .forLevel(1)
                 .asSingleton()
-                .build('key1'),
+                .forKeys('key1')
+                .build(),
         );
 
-        const child1 = locator.createScope().register(fromInstance('a').build('context'));
-        const child2 = locator.createScope().register(fromInstance('b').build('context'));
+        const child1 = locator.createScope().register(fromInstance('a').forKeys('context').build());
+        const child2 = locator.createScope().register(fromInstance('b').forKeys('context').build());
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

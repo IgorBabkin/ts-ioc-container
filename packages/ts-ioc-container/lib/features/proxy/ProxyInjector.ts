@@ -1,7 +1,7 @@
 import { IInjector } from '../../core/IInjector';
 import { IServiceLocator } from '../../core/IServiceLocator';
 import { constructor } from '../../helpers/types';
-import { ProviderKey } from '../../core/IProvider';
+import { ProviderKey } from '../../core/IProviderRepository';
 
 export class ProxyInjector implements IInjector {
     // eslint-disable-next-line @typescript-eslint/ban-types

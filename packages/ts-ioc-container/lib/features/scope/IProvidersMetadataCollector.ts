@@ -1,5 +1,5 @@
-import { IKeyedProvider } from '../../core/IProvider';
 import { constructor } from '../../helpers/types';
+import { IKeyedProvider } from '../../core/provider/IProvider';
 
 export type ProviderReducer<T> = (provider: IKeyedProvider<T>) => IKeyedProvider<T>;
 

@@ -1,7 +1,7 @@
-import { InjectionToken, IServiceLocator, isProviderKey, RegisterOptions } from './IServiceLocator';
+import { InjectionToken, IServiceLocator } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IKeyedProvider, Tag } from './IProvider';
-import { IProviderRepository } from './IProviderRepository';
+import { IKeyedProvider, Tag } from './provider/IProvider';
+import { IProviderRepository, isProviderKey, RegisterOptions } from './IProviderRepository';
 import { ProviderRepository } from './ProviderRepository';
 import { NoRegistrationKeysProvided } from '../errors/NoRegistrationKeysProvided';
 

@@ -1,6 +1,6 @@
 import { MockProvider } from './MockProvider';
-import { ProviderKey } from '../../core/IProvider';
 import { IMockProviderStorage } from './IMockProviderStorage';
+import { ProviderKey } from '../../core/IProviderRepository';
 
 export class MockProviderStorage implements IMockProviderStorage {
     private readonly mocks = new Map<ProviderKey, MockProvider<any>>();

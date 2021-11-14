@@ -1,6 +1,6 @@
 import { IMockProviderStorage } from './IMockProviderStorage';
-import { ProviderKey } from '../../core/IProvider';
 import { MockProvider } from './MockProvider';
+import { ProviderKey } from '../../core/IProviderRepository';
 
 export abstract class VendorMockProviderStorage implements IMockProviderStorage {
     constructor(protected readonly storage: IMockProviderStorage) {}

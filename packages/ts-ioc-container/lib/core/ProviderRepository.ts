@@ -1,7 +1,6 @@
-import { IKeyedProvider, ProviderKey, Tag } from './IProvider';
-import { IProviderRepository } from './IProviderRepository';
+import { IProvider, Tag } from './provider/IProvider';
+import { IProviderRepository, ProviderKey, RegisterOptions } from './IProviderRepository';
 import { EmptyProviderRepository } from './EmptyProviderRepository';
-import { RegisterOptions } from './IServiceLocator';
 import { ProviderKeyIsBusy } from '../errors/ProviderKeyIsBusy';
 
 export class ProviderRepository implements IProviderRepository {
@@ -9,11 +8,11 @@ export class ProviderRepository implements IProviderRepository {
         return new ProviderRepository(new EmptyProviderRepository(), 0, tags);
     }
 
-    private readonly providers = new Map<ProviderKey, IKeyedProvider<any>>();
+    private readonly providers = new Map<ProviderKey, IProvider<any>>();
 
     constructor(private parent: IProviderRepository, readonly level: number, readonly tags: Tag[]) {}
 
-    add<T>(key: ProviderKey, provider: IKeyedProvider<T>, options: Partial<RegisterOptions> = {}): void {
+    add<T>(key: ProviderKey, provider: IProvider<T>, options: Partial<RegisterOptions> = {}): void {
         if (options.noOverride && this.providers.has(key)) {
             throw new ProviderKeyIsBusy(key);
         }
@@ -30,7 +29,7 @@ export class ProviderRepository implements IProviderRepository {
         return repo;
     }
 
-    entries(): Array<[ProviderKey, IKeyedProvider<any>]> {
+    entries(): Array<[ProviderKey, IProvider<any>]> {
         const localProviders = Array.from(this.providers.entries());
         return Array.from(new Map([...this.parent.entries(), ...localProviders]).entries());
     }
@@ -43,8 +42,8 @@ export class ProviderRepository implements IProviderRepository {
         this.parent = new EmptyProviderRepository();
     }
 
-    find<T>(key: ProviderKey): IKeyedProvider<T> {
-        const provider = this.providers.get(key) as IKeyedProvider<T>;
+    find<T>(key: ProviderKey): IProvider<T> {
+        const provider = this.providers.get(key) as IProvider<T>;
         return provider && provider.isValid(this) ? provider : this.parent.find<T>(key);
     }
 }

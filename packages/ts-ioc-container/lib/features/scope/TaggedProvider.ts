@@ -1,4 +1,5 @@
-import { IKeyedProvider, ProviderDecorator, ScopeOptions, Tag } from '../../core/IProvider';
+import { IKeyedProvider, ScopeOptions, Tag } from '../../core/provider/IProvider';
+import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 
 export class TaggedProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IKeyedProvider<T>, private readonly tags: Tag[]) {

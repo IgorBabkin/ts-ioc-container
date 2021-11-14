@@ -1,4 +1,4 @@
-import { ProviderKey } from '../core/IProvider';
+import { ProviderKey } from '../core/IProviderRepository';
 
 export class ProviderKeyIsBusy extends Error {
     name = 'ProviderKeyIsBusy';
