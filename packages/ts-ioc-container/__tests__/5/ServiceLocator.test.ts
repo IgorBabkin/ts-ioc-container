@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import {
     emptyHook,
-    HookedServiceLocator,
     IDisposable,
     IInstanceHook,
     IServiceLocator,
@@ -16,8 +15,8 @@ class TestClass {
 }
 
 describe('ServiceLocator', () => {
-    const createSimpleLocator = (hooks: IInstanceHook = emptyHook) =>
-        new HookedServiceLocator(ServiceLocator.root(new SimpleInjector()), hooks);
+    const createSimpleLocator = (hook: IInstanceHook = emptyHook) =>
+        ServiceLocator.root(new SimpleInjector(), { hook });
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(ProviderBuilder.fromClass(TestClass).forKeys('key1').build());
@@ -91,7 +90,7 @@ describe('ServiceLocator', () => {
 
     it('conditional resolving', () => {
         const locator = createSimpleLocator().register(
-            fromFn((l: IServiceLocator) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
+            fromFn((l) => (l.resolveByKey('context') === 'a' ? 'good' : 'bad'))
                 .forLevel(1)
                 .asSingleton()
                 .forKeys('key1')

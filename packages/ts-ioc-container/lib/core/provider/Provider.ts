@@ -1,11 +1,11 @@
 import { constructor } from '../../helpers/types';
 import { IKeyedProvider, ResolveDependency, ScopeOptions } from './IProvider';
-import { IServiceLocator } from '../IServiceLocator';
+import { Resolveable } from '../IServiceLocator';
 import { ProviderKey } from '../IProviderRepository';
 
 export class Provider<T> implements IKeyedProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
-        return new Provider((l, ...args) => l.resolve(value, ...args));
+        return new Provider((l, ...args) => l.resolveClass(value, ...args));
     }
 
     static fromValue<T>(value: T): Provider<T> {
@@ -20,7 +20,7 @@ export class Provider<T> implements IKeyedProvider<T> {
         return new Provider(this.resolveDependency);
     }
 
-    resolve(locator: IServiceLocator, ...args: any[]): T {
+    resolve(locator: Resolveable, ...args: any[]): T {
         return this.resolveDependency(locator, ...args);
     }
 

@@ -1,5 +1,5 @@
 import { IInstanceHook } from './IInstanceHook';
-import { IServiceLocator } from '../../core/IServiceLocator';
+import { Resolveable } from '../../core/IServiceLocator';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 import { IKeyedProvider } from '../../core/provider/IProvider';
 
@@ -18,7 +18,7 @@ export class HookedProvider<GInstance> extends ProviderDecorator<GInstance> {
         this.instances.clear();
     }
 
-    resolve(locator: IServiceLocator, ...args: any[]): GInstance {
+    resolve(locator: Resolveable, ...args: any[]): GInstance {
         const instance = this.provider.resolve(locator, ...args);
         if (!this.instances.has(instance)) {
             this.hook.onConstruct(instance);

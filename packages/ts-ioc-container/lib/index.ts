@@ -20,7 +20,6 @@ export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { IProviderRepository, isProviderKey } from './core/IProviderRepository';
 export { HookedProvider } from './features/instanceHook/HookedProvider';
-export { HookedServiceLocator } from './features/instanceHook/HookedServiceLocator';
 export { InjectFn } from './features/ioc/InjectFn';
 export { IInstanceHook } from './features/instanceHook/IInstanceHook';
 export { ProviderRepository } from './core/ProviderRepository';

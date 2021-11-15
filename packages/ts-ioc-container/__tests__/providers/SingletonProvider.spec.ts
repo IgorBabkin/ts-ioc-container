@@ -1,15 +1,7 @@
-import {
-    IKeyedProvider,
-    IServiceLocator,
-    LevelProvider,
-    Provider,
-    ServiceLocator,
-    SimpleInjector,
-    SingletonProvider,
-} from '../../lib';
+import { IKeyedProvider, LevelProvider, Provider, ServiceLocator, SimpleInjector, SingletonProvider } from '../../lib';
 
 describe('SingletonProvider', function () {
-    let locator: IServiceLocator;
+    let locator: ServiceLocator;
     let provider: IKeyedProvider<any>;
 
     function createSingleton<T>(provider: IKeyedProvider<T>): IKeyedProvider<T> {

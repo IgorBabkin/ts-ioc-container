@@ -1,12 +1,5 @@
 import 'reflect-metadata';
-import {
-    emptyHook,
-    HookedServiceLocator,
-    IInstanceHook,
-    IocInjector,
-    ProviderNotFoundError,
-    ServiceLocator,
-} from '../../lib';
+import { emptyHook, IInstanceHook, IocInjector, ProviderNotFoundError, ServiceLocator } from '../../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './OnConstructImpl';
 import { Group } from './Group';
 import { OnDisposeImpl } from './OnDisposeImpl';
@@ -33,7 +26,7 @@ class Greeting {
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
-        return new HookedServiceLocator(ServiceLocator.root(new IocInjector(injectMetadataCollector)), hook);
+        return ServiceLocator.root(new IocInjector(injectMetadataCollector), { hook });
     };
 
     it('should create an instanse', () => {
@@ -198,7 +191,7 @@ describe('ServiceLocator', () => {
                 onDispose<GInstance>(instance: GInstance) {},
             });
 
-            const group = decorated.resolveClass(OnConstructImpl);
+            const group = decorated.resolve(OnConstructImpl);
 
             expect(group.isConstructed).toBeTruthy();
         });
@@ -230,7 +223,7 @@ describe('ServiceLocator', () => {
                 },
             });
 
-            const group = decorated.resolveClass(OnDisposeImpl);
+            const group = decorated.resolve(OnDisposeImpl);
 
             expect(group.isDisposed).toBeFalsy();
             decorated.dispose();
@@ -259,7 +252,7 @@ describe('ServiceLocator', () => {
             const decorated = createIoCLocator();
 
             decorated.register(
-                fromFn((l, ...args) => l.resolve(Logger3, 'super', ...args))
+                fromFn((l, ...args) => l.resolveClass(Logger3, 'super', ...args))
                     .forKeys('logger3')
                     .build(),
             );

@@ -1,5 +1,5 @@
 import { MethodNotImplementedError } from '../../errors/MethodNotImplementedError';
-import { IServiceLocator } from '../../core/IServiceLocator';
+import { Resolveable } from '../../core/IServiceLocator';
 import { IProvider } from '../../core/provider/IProvider';
 
 export abstract class MockProvider<T> implements IProvider<T> {
@@ -11,7 +11,7 @@ export abstract class MockProvider<T> implements IProvider<T> {
         throw new MethodNotImplementedError('MockProvider cannot be disposed');
     }
 
-    abstract resolve(locator: IServiceLocator, ...args: any[]): T;
+    abstract resolve(locator: Resolveable, ...args: any[]): T;
 
     isValid(): boolean {
         return true;

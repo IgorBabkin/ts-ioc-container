@@ -1,10 +1,10 @@
-import { IServiceLocator, MockProvider, ProviderKey, VendorMockProviderStorage } from '../lib';
+import { MockProvider, ProviderKey, Resolveable, VendorMockProviderStorage } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
 
 export class MoqProvider<T> extends MockProvider<T> {
     mock = new Mock<T>();
 
-    resolve(locator: IServiceLocator, ...args: any[]): T {
+    resolve(locator: Resolveable, ...args: any[]): T {
         return this.mock.object();
     }
 }

@@ -10,7 +10,7 @@ export class ProxyInjector implements IInjector {
         return new value(
             new Proxy(locator, {
                 // eslint-disable-next-line @typescript-eslint/ban-types
-                get(target: IServiceLocator, prop: string | symbol): any {
+                get(target: IServiceLocator, prop: ProviderKey): any {
                     // eslint-disable-next-line no-prototype-builtins
                     return args.hasOwnProperty(prop) ? args[prop] : target.resolve(prop);
                 },

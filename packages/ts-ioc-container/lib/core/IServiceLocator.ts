@@ -5,13 +5,15 @@ import { ProviderKey, RegisterOptions } from './IProviderRepository';
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 
 export interface Resolveable {
-    resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
+    resolveByKey<T>(key: ProviderKey, ...args: any[]): T;
+
+    resolveClass<T>(key: constructor<T>, ...args: any[]): T;
 }
 
-export interface IServiceLocator extends Resolveable, IDisposable {
+export interface IServiceLocator extends IDisposable {
     createScope(tags?: Tag[]): IServiceLocator;
 
     register(provider: IKeyedProvider<unknown>, options?: Partial<RegisterOptions>): this;
 
-    resolveClass<T>(key: constructor<T>, ...deps: any[]): T;
+    resolve<T>(key: InjectionToken<T>, ...args: any[]): T;
 }

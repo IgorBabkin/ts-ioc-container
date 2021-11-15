@@ -1,4 +1,4 @@
-import { IServiceLocator } from '../../core/IServiceLocator';
+import { Resolveable } from '../../core/IServiceLocator';
 import { Box } from '../../helpers/types';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 import { IKeyedProvider } from '../../core/provider/IProvider';
@@ -19,7 +19,7 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
         this.provider.dispose();
     }
 
-    resolve(locator: IServiceLocator, ...args: any[]): T {
+    resolve(locator: Resolveable, ...args: any[]): T {
         if (this.instance === null) {
             const instance = this.provider.resolve(locator, ...args);
             this.instance = new Box<T>(instance);
