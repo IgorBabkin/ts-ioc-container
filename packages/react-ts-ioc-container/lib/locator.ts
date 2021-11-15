@@ -13,7 +13,6 @@ export type LocatorOptions = {
 export interface Locator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolve<T>(key: InjectionToken<T>, ...deps: any[]): T;
-    resolveClass<T>(key: constructor<T>, ...deps: any[]): T;
     createScope(options: LocatorOptions): Locator;
     remove(): void;
     register<T>(token: ProviderKey, value: T): this;
