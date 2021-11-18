@@ -3,7 +3,7 @@ import { IProvidersMetadataCollector } from '../features/scope/IProvidersMetadat
 import { ProviderBuilder } from '../features/ProviderBuilder';
 import { ResolveDependency } from './provider/IProvider';
 import { DIProviderBuilder } from './DIProviderBuilder';
-import { constructor } from 'helpers/types';
+import { constructor } from '../helpers/types';
 
 export abstract class DIProviderBuilderDecorator implements IDIProviderBuilder {
     constructor(private decorated: IDIProviderBuilder) {

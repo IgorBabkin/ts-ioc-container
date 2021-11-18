@@ -2,7 +2,7 @@ import { IDIProviderBuilder } from './IDIContainer';
 import { IResolvableHook } from '../features/instanceHook/IResolvableHook';
 import { ProviderBuilder } from '../features/ProviderBuilder';
 import { ResolveDependency } from './provider/IProvider';
-import { constructor } from 'helpers/types';
+import { constructor } from '../helpers/types';
 
 export class HookedProviderBuilder implements IDIProviderBuilder {
     constructor(private decorated: IDIProviderBuilder, private hook: IResolvableHook) {}
