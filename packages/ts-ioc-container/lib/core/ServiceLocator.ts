@@ -1,79 +1,63 @@
-import { InjectionToken, IServiceLocator, Resolveable } from './IServiceLocator';
+import { InjectionToken, IServiceLocator, isProviderKey, ProviderKey, RegisterOptions } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IKeyedProvider, Tag } from './provider/IProvider';
-import { IProviderRepository, isProviderKey, ProviderKey, RegisterOptions } from './IProviderRepository';
-import { ProviderRepository } from './ProviderRepository';
-import { NoRegistrationKeysProvided } from '../errors/NoRegistrationKeysProvided';
-import { constructor } from '../helpers/types';
-import { IInstanceHook } from '../features/instanceHook/IInstanceHook';
-import { emptyHook } from '../features/instanceHook/emptyHook';
-import { HookedProvider } from '../features/instanceHook/HookedProvider';
+import { IProvider, Tag } from './provider/IProvider';
+import { EmptyServiceLocator } from './EmptyServiceLocator';
+import { ProviderKeyIsBusy } from '../errors/ProviderKeyIsBusy';
 
 type ServiceLocatorOptions = {
     tags: Tag[];
-    hook: IInstanceHook;
 };
 
-export class ServiceLocator implements IServiceLocator, Resolveable {
-    static root(injector: IInjector, { tags, hook }: Partial<ServiceLocatorOptions> = {}): ServiceLocator {
-        return new ServiceLocator(injector, ProviderRepository.root(tags), hook);
+export class ServiceLocator implements IServiceLocator {
+    static root(injector: IInjector, { tags = [] }: Partial<ServiceLocatorOptions> = {}): ServiceLocator {
+        return new ServiceLocator(new EmptyServiceLocator(), injector, 0, tags);
     }
 
-    private readonly instances = new Set();
+    private readonly providers = new Map<ProviderKey, IProvider<any>>();
 
     constructor(
+        private readonly parent: IServiceLocator,
         private readonly injector: IInjector,
-        private readonly providerRepo: IProviderRepository,
-        private hook: IInstanceHook = emptyHook,
+        readonly level: number,
+        readonly tags: Tag[],
     ) {}
 
-    register(provider: IKeyedProvider<unknown>, options?: Partial<RegisterOptions>): this {
-        const keys = provider.getKeys();
-        if (keys.length === 0) {
-            throw new NoRegistrationKeysProvided();
+    register(key: ProviderKey, provider: IProvider<unknown>, options: Partial<RegisterOptions> = {}): void {
+        if (options.noOverride && this.providers.has(key)) {
+            throw new ProviderKeyIsBusy(key);
         }
-        for (const key of keys) {
-            this.providerRepo.add(key, new HookedProvider(provider, this.hook), options);
-        }
-        return this;
+        this.providers.set(key, provider);
     }
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
         if (isProviderKey(key)) {
-            const provider = this.providerRepo.find<T>(key);
-            return provider.resolve(this, ...args);
+            return this.providers.has(key)
+                ? (this.providers.get(key) as IProvider<T>).resolve(this, ...args)
+                : this.parent.resolve(key, ...args);
         }
 
-        const instance = this.injector.resolve<T>(this, key, ...args);
-        this.hook.onConstruct(instance);
-        this.instances.add(instance);
-        return instance;
-    }
-
-    /**
-     * @description Use only inside of provider
-     */
-    resolveClass<T>(key: constructor<T>, ...args: any[]): T {
         return this.injector.resolve<T>(this, key, ...args);
     }
 
-    /**
-     * @description Use only inside of provider
-     */
-    resolveByKey<T>(key: ProviderKey, ...args: any[]): T {
-        const provider = this.providerRepo.find<T>(key);
-        return provider.resolve(this, ...args);
+    createScope(tags: Tag[] = [], parent: IServiceLocator = this): ServiceLocator {
+        const scope = new ServiceLocator(parent, this.injector, this.level + 1, tags);
+        for (const [key, provider] of parent.entries()) {
+            if (provider.isValid(scope)) {
+                scope.register(key, provider.clone());
+            }
+        }
+        return scope;
     }
 
-    createScope(tags?: Tag[]): IServiceLocator {
-        return new ServiceLocator(this.injector, this.providerRepo.clone(tags));
+    entries(): Array<[ProviderKey, IProvider<any>]> {
+        const localProviders = Array.from(this.providers.entries());
+        return Array.from(new Map([...this.parent.entries(), ...localProviders]).entries());
     }
 
     dispose(): void {
-        for (const i of this.instances) {
-            this.hook.onDispose(i);
+        for (const p of this.providers.values()) {
+            p.dispose();
         }
-        this.instances.clear();
-        this.providerRepo.dispose();
+        this.providers.clear();
     }
 }

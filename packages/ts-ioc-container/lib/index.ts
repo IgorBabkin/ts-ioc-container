@@ -1,10 +1,10 @@
-export { IMockProviderStorage } from './features/mock/IMockProviderStorage';
-export { MockProvider } from './features/mock/MockProvider';
-export { MockProviderStorage } from './features/mock/MockProviderStorage';
-export { VendorMockProviderStorage } from './features/mock/VendorMockProviderStorage';
+export { ServiceLocatorDecorator } from './core/ServiceLocatorDecorator';
 export { IServiceLocator, Resolveable } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
+export { DIContainer } from './core/DIContainer';
+export { IDIContainer } from './core/IDIContainer';
+export { HookedServiceLocator } from './features/instanceHook/HookedServiceLocator';
 export { ScopeOptions, ResolveDependency, Tag, IProvider, IKeyedProvider } from './core/provider/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/simple/SimpleInjector';
@@ -18,16 +18,12 @@ export { InjectMetadataCollector } from './features/ioc/decorators/InjectMetadat
 export { InjectionToken } from './core/IServiceLocator';
 export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
-export { IProviderRepository, isProviderKey } from './core/IProviderRepository';
-export { HookedProvider } from './features/instanceHook/HookedProvider';
 export { InjectFn } from './features/ioc/InjectFn';
 export { IInstanceHook } from './features/instanceHook/IInstanceHook';
-export { ProviderRepository } from './core/ProviderRepository';
 export { Provider } from './core/provider/Provider';
 export { ArgsProvider, ArgsFn } from './core/provider/ArgsProvider';
 export { TaggedProvider } from './features/scope/TaggedProvider';
 export { ProxyInjector } from './features/proxy/ProxyInjector';
-export { MockedRepository } from './features/mock/MockedRepository';
 export { LevelProvider } from './features/scope/LevelProvider';
 export { SingletonProvider } from './features/scope/SingletonProvider';
 export { ProviderBuilder } from './features/ProviderBuilder';
@@ -35,11 +31,11 @@ export { emptyHook } from './features/instanceHook/emptyHook';
 export { IProvidersMetadataCollector } from './features/scope/IProvidersMetadataCollector';
 export { ProvidersMetadataCollector } from './features/scope/ProvidersMetadataCollector';
 export {
-    createProviderHookDecorator,
     createLevelDecorator,
     createSingletonDecorator,
     createTagsDecorator,
     createArgsFnDecorator,
 } from './features/scope/decorators';
 export { IDisposable } from './helpers/types';
-export { ProviderKey } from './core/IProviderRepository';
+export { isProviderKey } from './core/IServiceLocator';
+export { ProviderKey } from './core/IServiceLocator';

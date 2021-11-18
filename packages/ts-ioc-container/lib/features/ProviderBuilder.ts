@@ -2,13 +2,11 @@ import { IKeyedProvider, ResolveDependency, Tag } from '../core/provider/IProvid
 import { SingletonProvider } from './scope/SingletonProvider';
 import { Provider } from '../core/provider/Provider';
 import { constructor } from '../helpers/types';
-import { HookedProvider } from './instanceHook/HookedProvider';
-import { IInstanceHook } from './instanceHook/IInstanceHook';
 import { TaggedProvider } from './scope/TaggedProvider';
 import { LevelProvider } from './scope/LevelProvider';
 import { ProviderReducer } from './scope/IProvidersMetadataCollector';
-import { ProviderKey } from '../core/IProviderRepository';
 import { ArgsFn, ArgsProvider } from '../core/provider/ArgsProvider';
+import { ProviderKey } from '../core/IServiceLocator';
 
 export class ProviderBuilder<T> {
     static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
@@ -27,11 +25,6 @@ export class ProviderBuilder<T> {
 
     withArgs(...extraArgs: any[]): this {
         this.provider = new ArgsProvider(this.provider, () => extraArgs);
-        return this;
-    }
-
-    withHook(hook: IInstanceHook): this {
-        this.provider = new HookedProvider(this.provider, hook);
         return this;
     }
 

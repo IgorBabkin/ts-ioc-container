@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { IocInjector, MockedRepository, MockProviderStorage, ProviderRepository, ServiceLocator } from '../../lib';
+import { DIContainer, IocInjector, ServiceLocator } from '../../lib';
 import { inject, injectMetadataCollector } from './decorators';
-import { MoqProvider, MoqProviderStorage } from '../MoqProviderStorage';
+import { MoqServiceLocator } from '../MoqProviderStorage';
 
 interface ISubClass {
     greeting(): string;
@@ -12,25 +12,19 @@ class TestClass1 {
 }
 
 describe('UnitTestIoCLocator', () => {
-    let mockStorage: MoqProviderStorage;
-
-    beforeEach(() => {
-        mockStorage = new MoqProviderStorage(new MockProviderStorage(() => new MoqProvider()));
-    });
+    let locator: MoqServiceLocator;
 
     function createIoCLocator() {
-        return new ServiceLocator(
-            new IocInjector(injectMetadataCollector),
-            new MockedRepository(ProviderRepository.root(), mockStorage),
-        );
+        locator = new MoqServiceLocator(ServiceLocator.root(new IocInjector(injectMetadataCollector)));
+        return new DIContainer(locator);
     }
 
     it('ioc', () => {
-        const locator = createIoCLocator();
-        const mock = mockStorage.findMock<ISubClass>('key1');
+        const container = createIoCLocator();
+        const mock = locator.resolveMock<ISubClass>('key1');
         mock.setup((i) => i.greeting()).returns('hello');
 
-        const key1 = locator.resolve(TestClass1);
+        const key1 = container.resolve(TestClass1);
 
         expect(key1.dep1.greeting()).toBe('hello');
     });

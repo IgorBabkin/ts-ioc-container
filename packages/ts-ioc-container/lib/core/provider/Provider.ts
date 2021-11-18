@@ -1,11 +1,10 @@
 import { constructor } from '../../helpers/types';
 import { IKeyedProvider, ResolveDependency, ScopeOptions } from './IProvider';
-import { Resolveable } from '../IServiceLocator';
-import { ProviderKey } from '../IProviderRepository';
+import { ProviderKey, Resolveable } from '../IServiceLocator';
 
 export class Provider<T> implements IKeyedProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
-        return new Provider((l, ...args) => l.resolveClass(value, ...args));
+        return new Provider((l, ...args) => l.resolve(value, ...args));
     }
 
     static fromValue<T>(value: T): Provider<T> {

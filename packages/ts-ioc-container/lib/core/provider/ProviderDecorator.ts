@@ -1,6 +1,5 @@
-import { Resolveable } from '../IServiceLocator';
+import { ProviderKey, Resolveable } from '../IServiceLocator';
 import { IKeyedProvider, ScopeOptions } from './IProvider';
-import { ProviderKey } from '../IProviderRepository';
 
 export abstract class ProviderDecorator<T> implements IKeyedProvider<T> {
     constructor(private decorated: IKeyedProvider<T>) {}

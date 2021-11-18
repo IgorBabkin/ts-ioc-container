@@ -3,6 +3,9 @@ import { Resolveable } from '../../core/IServiceLocator';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 import { IKeyedProvider } from '../../core/provider/IProvider';
 
+/**
+ * @deprecated
+ */
 export class HookedProvider<GInstance> extends ProviderDecorator<GInstance> {
     private readonly instances = new Set<GInstance>();
 

@@ -1,19 +1,25 @@
-import { IKeyedProvider, Tag } from './provider/IProvider';
+import { IProvider, Tag } from './provider/IProvider';
 import { constructor, IDisposable } from '../helpers/types';
-import { ProviderKey, RegisterOptions } from './IProviderRepository';
+
+export type RegisterOptions = {
+    noOverride: boolean;
+};
+export type ProviderKey = string | symbol;
+
+export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {
+    return ['string', 'symbol'].includes(typeof token);
+}
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 
 export interface Resolveable {
-    resolveByKey<T>(key: ProviderKey, ...args: any[]): T;
-
-    resolveClass<T>(key: constructor<T>, ...args: any[]): T;
+    resolve<T>(key: InjectionToken<T>, ...args: any[]): T;
 }
 
-export interface IServiceLocator extends IDisposable {
-    createScope(tags?: Tag[]): IServiceLocator;
+export interface IServiceLocator extends IDisposable, Resolveable {
+    createScope(tags?: Tag[], parent?: IServiceLocator): IServiceLocator;
 
-    register(provider: IKeyedProvider<unknown>, options?: Partial<RegisterOptions>): this;
+    register(key: ProviderKey, provider: IProvider<unknown>, options?: Partial<RegisterOptions>): void;
 
-    resolve<T>(key: InjectionToken<T>, ...args: any[]): T;
+    entries(): Array<[ProviderKey, IProvider<any>]>;
 }

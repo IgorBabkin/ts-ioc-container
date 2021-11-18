@@ -4,10 +4,8 @@ import { SingletonProvider } from './SingletonProvider';
 import { LevelProvider } from './LevelProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
-import { ProviderKey } from '../../core/IProviderRepository';
 import { ArgsFn, ArgsProvider } from '../../core/provider/ArgsProvider';
-import { IInstanceHook } from '../instanceHook/IInstanceHook';
-import { HookedProvider } from '../instanceHook/HookedProvider';
+import { ProviderKey } from '../../core/IServiceLocator';
 
 export const createAddKeysDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
@@ -51,13 +49,4 @@ export const createTagsDecorator =
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
         metadataCollector.addReducer(targetClass, (provider) => new TaggedProvider(fn(provider), tags));
-    };
-
-export const createProviderHookDecorator =
-    (metadataCollector: IProvidersMetadataCollector) =>
-    (hook: IInstanceHook): ClassDecorator =>
-    (target) => {
-        const targetClass = target as any as constructor<unknown>;
-        const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (provider) => new HookedProvider(fn(provider), hook));
     };
