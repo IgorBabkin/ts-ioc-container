@@ -1,4 +1,4 @@
-import { DIContainer, ProxyInjector, ServiceLocator } from '../lib';
+import { Container, fromClass, fromValue, ProxyInjector, ServiceLocator } from '../lib';
 
 class Greeting {
     private readonly name: string;
@@ -13,28 +13,28 @@ class Greeting {
 }
 
 describe('proxy', function () {
-    let locator: DIContainer;
+    let locator: Container;
 
     beforeEach(() => {
-        locator = new DIContainer(ServiceLocator.fromInjector(new ProxyInjector()));
+        locator = new Container(ServiceLocator.fromInjector(new ProxyInjector()));
     });
 
     it('should asd', function () {
-        locator.register((b) => b.fromValue('world').forKeys('name').build());
+        locator.register(fromValue('world').forKeys('name').build());
         const greeting = locator.resolve(Greeting);
 
         expect(greeting.say()).toBe('Hello world');
     });
 
     it('should asd 2', function () {
-        locator.register((b) => b.fromClass(Greeting).withArgs({ name: 'world' }).forKeys('greeting').build());
+        locator.register(fromClass(Greeting).withArgs({ name: 'world' }).forKeys('greeting').build());
         const greeting = locator.resolve<Greeting>('greeting');
 
         expect(greeting.say()).toBe('Hello world');
     });
 
     it('should asd 3', function () {
-        locator.register((b) => b.fromValue('world').forKeys('name').build());
+        locator.register(fromValue('world').forKeys('name').build());
         const greeting = locator.resolve(Greeting);
 
         expect(greeting.say()).toBe('Hello world');

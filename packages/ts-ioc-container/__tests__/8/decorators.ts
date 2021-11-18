@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {
-    createMethodHookDecorator,
     createInjectFnDecorator,
+    createMethodHookDecorator,
     InjectMetadataCollector,
     MethodsMetadataCollector,
 } from '../../lib';

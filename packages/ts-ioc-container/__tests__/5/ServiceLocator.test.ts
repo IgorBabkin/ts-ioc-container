@@ -1,25 +1,25 @@
 import 'reflect-metadata';
 import {
-    CachedResolvableHook,
     ContainerBuilder,
-    emptyHook,
-    HookedInjector,
+    fromClass,
+    fromFn,
+    fromValue,
     IDisposable,
-    IResolvableHook,
     IServiceLocator,
     SimpleInjector,
 } from '../../lib';
+import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
 }
 
 describe('ServiceLocator', () => {
-    const createSimpleLocator = (hook: IResolvableHook = emptyHook) =>
-        new ContainerBuilder(new SimpleInjector()).mapInjector((l) => new HookedInjector(l, hook)).build();
+    const createSimpleLocator = (hook: IInstanceHook = emptyHook) =>
+        new ContainerBuilder(new SimpleInjector()).setHook(hook).build();
 
     it('should pass dependencies', () => {
-        const locator = createSimpleLocator().register((b) => b.fromClass(TestClass).forKeys('key1').build());
+        const locator = createSimpleLocator().register(fromClass(TestClass).forKeys('key1').build());
         const testClass = locator.resolve<TestClass>('key1', 'a', 3);
 
         expect(testClass.dep1).toBe('a');
@@ -29,7 +29,7 @@ describe('ServiceLocator', () => {
     it('should invokes postConstruct', () => {
         let isPostConstructed = false;
         const locator = createSimpleLocator({
-            onResolve: (instance) => (instance as any).postConstruct(),
+            onConstruct: (instance) => (instance as any).postConstruct(),
             onDispose() {},
         });
         const disposable = {
@@ -38,20 +38,7 @@ describe('ServiceLocator', () => {
             },
         };
 
-        const child = locator.createScope().register((b) =>
-            b
-                .fromValue(disposable)
-                .withHook(
-                    new CachedResolvableHook({
-                        onConstruct<GInstance>(instance: GInstance) {
-                            (instance as any).postConstruct();
-                        },
-                        onDispose<GInstance>(instance: GInstance) {},
-                    }),
-                )
-                .forKeys('key1')
-                .build(),
-        );
+        const child = locator.createScope().register(fromValue(disposable).forKeys('key1').build());
 
         child.resolve('key1');
 
@@ -60,34 +47,19 @@ describe('ServiceLocator', () => {
 
     it('should invokes onDispose', () => {
         let isDisposed = false;
-        const locator = createSimpleLocator(
-            new CachedResolvableHook({
-                onConstruct() {},
-                onDispose(instance) {
-                    (instance as any as IDisposable).dispose();
-                },
-            }),
-        );
+        const locator = createSimpleLocator({
+            onConstruct() {},
+            onDispose(instance) {
+                (instance as any as IDisposable).dispose();
+            },
+        });
         const disposable = {
             dispose: () => {
                 isDisposed = true;
             },
         };
 
-        const child = locator.createScope().register((b) =>
-            b
-                .fromValue(disposable)
-                .withHook(
-                    new CachedResolvableHook({
-                        onConstruct<GInstance>(instance: GInstance) {},
-                        onDispose<GInstance>(instance: GInstance) {
-                            (instance as any).dispose();
-                        },
-                    }),
-                )
-                .forKeys('key1')
-                .build(),
-        );
+        const child = locator.createScope().register(fromValue(disposable).forKeys('key1').build());
 
         child.resolve('key1');
 
@@ -97,17 +69,16 @@ describe('ServiceLocator', () => {
     });
 
     it('conditional resolving', () => {
-        const locator = createSimpleLocator().register((b) =>
-            b
-                .fromFn((l) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
+        const locator = createSimpleLocator().register(
+            fromFn((l) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
                 .forLevel(1)
                 .asSingleton()
                 .forKeys('key1')
                 .build(),
         );
 
-        const child1 = locator.createScope().register((b) => b.fromValue('a').forKeys('context').build());
-        const child2 = locator.createScope().register((b) => b.fromValue('b').forKeys('context').build());
+        const child1 = locator.createScope().register(fromValue('a').forKeys('context').build());
+        const child2 = locator.createScope().register(fromValue('b').forKeys('context').build());
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

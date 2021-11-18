@@ -1,5 +1,6 @@
 import { ContainerBuilder, IServiceLocator, SimpleInjector } from '../../lib';
-import { MockedServiceLocator, MoqRepository } from '../MockedServiceLocator';
+import { MockedServiceLocator } from '../../lib';
+import { MoqRepository } from '../MoqRepository';
 
 interface IDepClass {
     greeting(): string;

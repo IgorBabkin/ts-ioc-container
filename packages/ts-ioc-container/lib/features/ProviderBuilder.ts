@@ -7,22 +7,20 @@ import { LevelProvider } from './scope/LevelProvider';
 import { ProviderReducer } from './scope/IProvidersMetadataCollector';
 import { ArgsFn, ArgsProvider } from '../core/provider/ArgsProvider';
 import { ProviderKey } from '../core/IServiceLocator';
-import { IResolvableHook } from './instanceHook/IResolvableHook';
-import { HookedProvider } from './instanceHook/HookedProvider';
+
+export function fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
+    return new ProviderBuilder(Provider.fromClass(value));
+}
+
+export function fromValue<T>(value: T): ProviderBuilder<T> {
+    return new ProviderBuilder(Provider.fromValue(value));
+}
+
+export function fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
+    return new ProviderBuilder(new Provider(fn));
+}
 
 export class ProviderBuilder<T> {
-    static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
-        return new ProviderBuilder(Provider.fromClass(value));
-    }
-
-    static fromValue<T>(value: T): ProviderBuilder<T> {
-        return new ProviderBuilder(Provider.fromValue(value));
-    }
-
-    static fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
-        return new ProviderBuilder(new Provider(fn));
-    }
-
     constructor(private provider: IKeyedProvider<T>) {}
 
     withArgs(...extraArgs: any[]): this {
@@ -37,11 +35,6 @@ export class ProviderBuilder<T> {
 
     withReducer(reducer: ProviderReducer<T>): this {
         this.provider = reducer(this.provider);
-        return this;
-    }
-
-    withHook(hook: IResolvableHook): this {
-        this.provider = new HookedProvider(this.provider, hook);
         return this;
     }
 

@@ -3,21 +3,19 @@ import { IServiceLocator } from './IServiceLocator';
 import { EmptyServiceLocator } from './EmptyServiceLocator';
 import { id } from '../helpers/utils';
 import { ScopeOptions } from './provider/IProvider';
-import { DIContainer } from './DIContainer';
-import { MapFn, ServiceLocator } from './ServiceLocator';
-import { IDIProviderBuilder } from './IDIContainer';
-import { DIProviderBuilder } from './DIProviderBuilder';
-import { IResolvableHook } from '../features/instanceHook/IResolvableHook';
-import { HookedProviderBuilder } from './HookedProviderBuilder';
-import { HookedInjector } from '../features/instanceHook/HookedInjector';
+import { Container } from './Container';
+import { ServiceLocator } from './ServiceLocator';
+import { emptyHook, IInstanceHook } from './IInstanceHook';
+
+export type MapFn<T> = (value: T) => T;
 
 export class ContainerBuilder {
     constructor(
         private injector: IInjector,
         private parent: IServiceLocator = new EmptyServiceLocator(),
-        private providerBuilder: IDIProviderBuilder = new DIProviderBuilder(),
         private mapFn: MapFn<IServiceLocator> = id,
         private options: Partial<ScopeOptions> = {},
+        private hook: IInstanceHook = emptyHook,
     ) {}
 
     mapLocator(fn: MapFn<IServiceLocator>): this {
@@ -26,19 +24,8 @@ export class ContainerBuilder {
         return this;
     }
 
-    withHook(hook: IResolvableHook): this {
-        this.injector = new HookedInjector(this.injector, hook);
-        this.providerBuilder = new HookedProviderBuilder(this.providerBuilder, hook);
-        return this;
-    }
-
-    mapInjector(fn: MapFn<IInjector>): this {
-        this.injector = fn(this.injector);
-        return this;
-    }
-
-    mapProviderBuilder(fn: MapFn<IDIProviderBuilder>): this {
-        this.providerBuilder = fn(this.providerBuilder);
+    setHook(hook: IInstanceHook): this {
+        this.hook = hook;
         return this;
     }
 
@@ -47,9 +34,9 @@ export class ContainerBuilder {
         return this;
     }
 
-    build(): DIContainer {
+    build(): Container {
         const parent = this.mapFn(this.parent);
-        const locator = new ServiceLocator(parent, this.injector, this.options.level, this.options.tags);
-        return new DIContainer(this.mapFn(locator), this.providerBuilder);
+        const locator = new ServiceLocator(parent, this.injector, this.options.level, this.options.tags, this.hook);
+        return new Container(this.mapFn(locator));
     }
 }

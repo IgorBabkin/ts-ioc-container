@@ -1,15 +1,14 @@
-import { DIContainer, ProviderNotFoundError, ServiceLocator, SimpleInjector } from '../../lib';
+import { Container, fromFn, ProviderNotFoundError, ServiceLocator, SimpleInjector } from '../../lib';
 
 describe('LevelProvider', function () {
-    function createContainer(): DIContainer {
-        return new DIContainer(ServiceLocator.fromInjector(new SimpleInjector()));
+    function createContainer(): Container {
+        return new Container(ServiceLocator.fromInjector(new SimpleInjector()));
     }
 
     test('singleton', () => {
         const locator = createContainer();
-        locator.register((b) =>
-            b
-                .fromFn(() => Math.random())
+        locator.register(
+            fromFn(() => Math.random())
                 .forLevel(0)
                 .asSingleton()
                 .forKeys('hey')
@@ -22,9 +21,8 @@ describe('LevelProvider', function () {
     describe('scope', function () {
         test('scope', () => {
             const locator = createContainer();
-            locator.register((b) =>
-                b
-                    .fromFn(() => Math.random())
+            locator.register(
+                fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
                     .forKeys('hey')
@@ -37,9 +35,8 @@ describe('LevelProvider', function () {
         });
         test('scope1', () => {
             const locator = createContainer();
-            locator.register((b) =>
-                b
-                    .fromFn(() => Math.random())
+            locator.register(
+                fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
                     .forKeys('hey')
@@ -52,9 +49,8 @@ describe('LevelProvider', function () {
         });
         test('scope2', () => {
             const locator = createContainer();
-            locator.register((b) =>
-                b
-                    .fromFn(() => Math.random())
+            locator.register(
+                fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
                     .forKeys('hey')
@@ -68,9 +64,8 @@ describe('LevelProvider', function () {
         });
         test('scope2', () => {
             const locator = createContainer();
-            locator.register((b) =>
-                b
-                    .fromFn(() => Math.random())
+            locator.register(
+                fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
                     .forKeys('hey')
@@ -84,9 +79,8 @@ describe('LevelProvider', function () {
         });
         test('tagged', () => {
             const locator = createContainer();
-            locator.register((b) =>
-                b
-                    .fromFn(() => Math.random())
+            locator.register(
+                fromFn(() => Math.random())
                     .forTags('a')
                     .asSingleton()
                     .forKeys('hey')
@@ -99,9 +93,8 @@ describe('LevelProvider', function () {
         });
         test('tagged1', () => {
             const locator = createContainer();
-            locator.register((b) =>
-                b
-                    .fromFn(() => Math.random())
+            locator.register(
+                fromFn(() => Math.random())
                     .forTags('a')
                     .asSingleton()
                     .forKeys('hey')

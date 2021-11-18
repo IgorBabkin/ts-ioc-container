@@ -1,5 +1,5 @@
 import {
-    DIContainer,
+    Container,
     IKeyedProvider,
     LevelProvider,
     Provider,
@@ -9,7 +9,7 @@ import {
 } from '../../lib';
 
 describe('SingletonProvider', function () {
-    let locator: DIContainer;
+    let locator: Container;
     let provider: IKeyedProvider<any>;
 
     function createSingleton<T>(provider: IKeyedProvider<T>): IKeyedProvider<T> {
@@ -17,7 +17,7 @@ describe('SingletonProvider', function () {
     }
 
     beforeEach(() => {
-        locator = new DIContainer(ServiceLocator.fromInjector(new SimpleInjector()));
+        locator = new Container(ServiceLocator.fromInjector(new SimpleInjector()));
         provider = new Provider(() => Math.random());
     });
 

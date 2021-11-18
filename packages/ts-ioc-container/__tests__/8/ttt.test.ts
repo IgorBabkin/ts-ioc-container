@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { CachedResolvableHook, ContainerBuilder, HookedInjector, SimpleInjector } from '../../lib';
+import { ContainerBuilder, fromValue, SimpleInjector } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
 
 class MyClass {
@@ -11,18 +11,16 @@ describe('ServiceLocator', () => {
     it('should create an instance', () => {
         const expectedInstance = { id: 'expectedInstance' };
 
-        const hook = new CachedResolvableHook({
-            onConstruct<GInstance>(instance: GInstance) {
-                onConstructMetadataCollector.invokeHooksOf(instance);
-            },
-            onDispose<GInstance>(instance: GInstance) {},
-        });
-
         const locator = new ContainerBuilder(new SimpleInjector())
-            .mapInjector((l) => new HookedInjector(new SimpleInjector(), hook))
+            .setHook({
+                onConstruct<GInstance>(instance: GInstance) {
+                    onConstructMetadataCollector.invokeHooksOf(instance);
+                },
+                onDispose<GInstance>(instance: GInstance) {},
+            })
             .build();
 
-        locator.register((b) => b.fromValue(expectedInstance).withHook(hook).forKeys('key1').build());
+        locator.register(fromValue(expectedInstance).forKeys('key1').build());
 
         locator.resolve(MyClass);
 

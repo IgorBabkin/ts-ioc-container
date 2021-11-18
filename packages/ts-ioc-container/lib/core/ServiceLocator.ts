@@ -3,12 +3,14 @@ import { IInjector } from './IInjector';
 import { IProvider, Tag } from './provider/IProvider';
 import { ProviderKeyIsBusy } from '../errors/ProviderKeyIsBusy';
 import { EmptyServiceLocator } from './EmptyServiceLocator';
+import { emptyHook, IInstanceHook } from './IInstanceHook';
 
 export class ServiceLocator implements IServiceLocator {
     static fromInjector(injector: IInjector): ServiceLocator {
         return new ServiceLocator(new EmptyServiceLocator(), injector);
     }
 
+    private instances = new Set();
     private readonly providers = new Map<ProviderKey, IProvider<any>>();
 
     constructor(
@@ -16,6 +18,7 @@ export class ServiceLocator implements IServiceLocator {
         private readonly injector: IInjector,
         readonly level: number = 0,
         readonly tags: Tag[] = [],
+        private hook: IInstanceHook = emptyHook,
     ) {}
 
     register(key: ProviderKey, provider: IProvider<unknown>, options: Partial<RegisterOptions> = {}): void {
@@ -27,10 +30,11 @@ export class ServiceLocator implements IServiceLocator {
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
         if (isProviderKey(key)) {
-            return this.findValidProvider<T>(key)?.resolve(this, ...args) ?? this.parent.resolve<T>(key, ...args);
+            const provider = this.findValidProvider<T>(key);
+            return provider ? this.onResolve(provider.resolve(this, ...args)) : this.parent.resolve<T>(key, ...args);
         }
 
-        return this.injector.resolve<T>(this, key, ...args);
+        return this.onResolve(this.injector.resolve<T>(this, key, ...args));
     }
 
     private findValidProvider<T>(key: ProviderKey): IProvider<T> | undefined {
@@ -48,7 +52,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createScope(tags: Tag[] = [], parent: IServiceLocator = this): ServiceLocator {
-        const scope = new ServiceLocator(parent, this.injector.clone(), this.level + 1, tags);
+        const scope = new ServiceLocator(parent, this.injector.clone(), this.level + 1, tags, this.hook);
         for (const [key, provider] of parent.entries()) {
             if (provider.isValid(scope)) {
                 scope.register(key, provider.clone());
@@ -63,13 +67,30 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     dispose(): void {
+        this.parent = new EmptyServiceLocator();
+        this.injector.dispose();
+
         for (const p of this.providers.values()) {
             p.dispose();
         }
         this.providers.clear();
-        this.injector.dispose();
-        this.parent = new EmptyServiceLocator();
+
+        for (const it of this.instances) {
+            this.hook.onDispose(it);
+        }
+        this.instances.clear();
+    }
+
+    setHook(hook: IInstanceHook): this {
+        this.hook = hook;
+        return this;
+    }
+
+    private onResolve<T>(instance: T): T {
+        if (!this.instances.has(instance)) {
+            this.instances.add(instance);
+            this.hook.onConstruct(instance);
+        }
+        return instance;
     }
 }
-
-export type MapFn<T> = (value: T) => T;

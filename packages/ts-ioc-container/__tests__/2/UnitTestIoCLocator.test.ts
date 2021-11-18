@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { ContainerBuilder, IocInjector } from '../../lib';
+import { ContainerBuilder, IocInjector, MockedServiceLocator } from '../../lib';
 import { inject } from './decorators';
 import { injectMetadataCollector } from '../1/decorators';
-import { MockedServiceLocator, MoqRepository } from '../MockedServiceLocator';
+import { MoqRepository } from '../MoqRepository';
 
 interface ISubClass {
     greeting(): string;

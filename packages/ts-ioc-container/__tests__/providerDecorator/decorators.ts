@@ -1,12 +1,12 @@
 import {
     constructor,
+    createAddKeysDecorator,
     createLevelDecorator,
     createSingletonDecorator,
     createTagsDecorator,
-    ProviderBuilder,
     ProvidersMetadataCollector,
+    fromClass as fromConstructor,
 } from '../../lib';
-import { createAddKeysDecorator } from '../../lib/features/scope/decorators';
 
 export const metadataCollector = ProvidersMetadataCollector.create();
 export const singleton = createSingletonDecorator(metadataCollector);
@@ -15,4 +15,4 @@ export const level = createLevelDecorator(metadataCollector);
 export const tags = createTagsDecorator(metadataCollector);
 
 export const fromClass = <T>(target: constructor<T>) =>
-    ProviderBuilder.fromClass(target).withReducer(metadataCollector.findReducerOrCreate(target));
+    fromConstructor(target).withReducer(metadataCollector.findReducerOrCreate(target));
