@@ -1,10 +1,8 @@
 import { InjectionToken, IServiceLocator, isProviderKey, ProviderKey, RegisterOptions } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IProvider, ScopeOptions, Tag } from './provider/IProvider';
+import { IProvider, Tag } from './provider/IProvider';
 import { ProviderKeyIsBusy } from '../errors/ProviderKeyIsBusy';
 import { EmptyServiceLocator } from './EmptyServiceLocator';
-import { id } from '../helpers/utils';
-import { DIContainer } from './DIContainer';
 
 export class ServiceLocator implements IServiceLocator {
     static fromInjector(injector: IInjector): ServiceLocator {
@@ -75,34 +73,3 @@ export class ServiceLocator implements IServiceLocator {
 }
 
 export type MapFn<T> = (value: T) => T;
-
-export class ContainerBuilder {
-    constructor(
-        private injector: IInjector,
-        private parent: IServiceLocator = new EmptyServiceLocator(),
-        private mapFn: MapFn<IServiceLocator> = id,
-        private options: Partial<ScopeOptions> = {},
-    ) {}
-
-    mapLocator(fn: MapFn<IServiceLocator>): this {
-        const oldFn = this.mapFn;
-        this.mapFn = (value) => fn(oldFn(value));
-        return this;
-    }
-
-    mapInjector(fn: MapFn<IInjector>): this {
-        this.injector = fn(this.injector);
-        return this;
-    }
-
-    withOptions(options: Partial<ScopeOptions>): this {
-        this.options = options;
-        return this;
-    }
-
-    build(): DIContainer {
-        const parent = this.mapFn(this.parent);
-        const locator = new ServiceLocator(parent, this.injector, this.options.level, this.options.tags);
-        return new DIContainer(this.mapFn(locator));
-    }
-}

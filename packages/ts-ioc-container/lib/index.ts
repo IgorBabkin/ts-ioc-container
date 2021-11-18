@@ -1,6 +1,6 @@
 export { IServiceLocator, Resolveable } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
-export { ServiceLocator, ContainerBuilder } from './core/ServiceLocator';
+export { ServiceLocator } from './core/ServiceLocator';
 export { DIContainer } from './core/DIContainer';
 export { IDIContainer } from './core/IDIContainer';
 export { ScopeOptions, ResolveDependency, Tag, IProvider, IKeyedProvider } from './core/provider/IProvider';
@@ -39,3 +39,4 @@ export {
 export { IDisposable } from './helpers/types';
 export { isProviderKey } from './core/IServiceLocator';
 export { ProviderKey } from './core/IServiceLocator';
+export { ContainerBuilder } from './core/ContainerBuilder';

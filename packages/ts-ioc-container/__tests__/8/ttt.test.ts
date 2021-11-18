@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { CachedResolvableHook, ContainerBuilder, HookedInjector, ProviderBuilder, SimpleInjector } from '../../lib';
+import { CachedResolvableHook, ContainerBuilder, HookedInjector, SimpleInjector } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
 
 class MyClass {
@@ -22,7 +22,7 @@ describe('ServiceLocator', () => {
             .mapInjector((l) => new HookedInjector(new SimpleInjector(), hook))
             .build();
 
-        locator.register(ProviderBuilder.fromValue(expectedInstance).withHook(hook).forKeys('key1').build());
+        locator.register((b) => b.fromValue(expectedInstance).withHook(hook).forKeys('key1').build());
 
         locator.resolve(MyClass);
 
