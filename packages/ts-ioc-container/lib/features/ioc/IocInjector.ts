@@ -12,4 +12,10 @@ export class IocInjector implements IInjector {
         const args = merge(injectionFns, deps.map(constant)).map((fn) => fn(locator));
         return new value(...args);
     }
+
+    clone(): IInjector {
+        return new IocInjector(this.metadataCollector);
+    }
+
+    dispose(): void {}
 }

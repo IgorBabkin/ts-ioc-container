@@ -1,12 +1,5 @@
-import {
-    IServiceLocator,
-    MockedRepository,
-    MockProviderStorage,
-    ProviderRepository,
-    ServiceLocator,
-    SimpleInjector,
-} from '../../lib';
-import { MoqProvider, MoqProviderStorage } from '../MoqProviderStorage';
+import { ContainerBuilder, IServiceLocator, SimpleInjector } from '../../lib';
+import { MockedServiceLocator, MoqRepository } from '../MockedServiceLocator';
 
 interface IDepClass {
     greeting(): string;
@@ -21,20 +14,22 @@ class TestClass {
 }
 
 describe('UnitTestSimpleLocator', () => {
-    let mockStorage: MoqProviderStorage;
+    let mockRepository: MoqRepository;
 
     beforeEach(() => {
-        mockStorage = new MoqProviderStorage(new MockProviderStorage(() => new MoqProvider()));
+        mockRepository = new MoqRepository();
     });
 
     function createSimpleLocator() {
-        return new ServiceLocator(new SimpleInjector(), new MockedRepository(ProviderRepository.root(), mockStorage));
+        return new ContainerBuilder(new SimpleInjector())
+            .mapLocator((l) => new MockedServiceLocator(l, mockRepository))
+            .build();
     }
 
     it('hey', () => {
         const locator = createSimpleLocator();
 
-        const mock = mockStorage.findMock<IDepClass>('key1');
+        const mock = mockRepository.resolveMock<IDepClass>('key1');
         mock.setup((i) => i.greeting()).returns('hello');
 
         const key1 = locator.resolve(TestClass);

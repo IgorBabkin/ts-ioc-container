@@ -1,36 +1,25 @@
-import { IInstanceHook } from './IInstanceHook';
+import { IResolvableHook } from './IResolvableHook';
 import { Resolveable } from '../../core/IServiceLocator';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 import { IKeyedProvider } from '../../core/provider/IProvider';
 
-/**
- * @deprecated
- */
 export class HookedProvider<GInstance> extends ProviderDecorator<GInstance> {
-    private readonly instances = new Set<GInstance>();
-
-    constructor(private readonly provider: IKeyedProvider<GInstance>, private readonly hook: IInstanceHook) {
+    constructor(private readonly provider: IKeyedProvider<GInstance>, private readonly hook: IResolvableHook) {
         super(provider);
-    }
-
-    dispose(): void {
-        this.provider.dispose();
-        for (const instance of this.instances) {
-            this.hook.onDispose(instance);
-        }
-        this.instances.clear();
     }
 
     resolve(locator: Resolveable, ...args: any[]): GInstance {
         const instance = this.provider.resolve(locator, ...args);
-        if (!this.instances.has(instance)) {
-            this.hook.onConstruct(instance);
-            this.instances.add(instance);
-        }
+        this.hook.onResolve(instance);
         return instance;
     }
 
     clone(): HookedProvider<GInstance> {
         return new HookedProvider(this.provider.clone(), this.hook);
+    }
+
+    dispose(): void {
+        this.provider.dispose();
+        this.hook.onDispose();
     }
 }

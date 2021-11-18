@@ -1,6 +1,6 @@
 import { IKeyedProvider, LevelProvider, Provider, SingletonProvider } from '../../lib';
 import { Times } from 'moq.ts';
-import { createMock } from '../MoqProviderStorage';
+import { createMock } from '../MockedServiceLocator';
 
 describe('ScopedProvider', function () {
     let provider: IKeyedProvider<any>;

@@ -1,4 +1,4 @@
-import { IServiceLocator, ProviderBuilder, ProxyInjector, ServiceLocator } from '../lib';
+import { DIContainer, ProviderBuilder, ProxyInjector, ServiceLocator } from '../lib';
 
 class Greeting {
     private readonly name: string;
@@ -13,10 +13,10 @@ class Greeting {
 }
 
 describe('proxy', function () {
-    let locator: IServiceLocator;
+    let locator: DIContainer;
 
     beforeEach(() => {
-        locator = ServiceLocator.root(new ProxyInjector());
+        locator = new DIContainer(ServiceLocator.fromInjector(new ProxyInjector()));
     });
 
     it('should asd', function () {

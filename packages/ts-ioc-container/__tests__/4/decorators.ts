@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import {
     constructor,
-    createMethodHookDecorator,
     createInjectFnDecorator,
-    IInstanceHook,
+    createMethodHookDecorator,
     InjectMetadataCollector,
     MethodsMetadataCollector,
     ProviderBuilder,
     ResolveDependency,
 } from '../../lib';
+import { CachedResolvableHook, IInstanceHook } from '../../lib/features/instanceHook/IResolvableHook';
 
 export const injectMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
 export const inject = createInjectFnDecorator(injectMetadataCollector);
@@ -19,23 +19,25 @@ export const onConstruct = createMethodHookDecorator(onConstructMetadataCollecto
 export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol('OnDisposeHook'));
 export const onDispose = createMethodHookDecorator(onDisposeMetadataCollector);
 
-export const instanceHook: IInstanceHook = {
-    onConstruct<GInstance>(instance: GInstance) {
+export const instanceHook = new CachedResolvableHook({
+    onConstruct(instance: unknown): void {
         if (!(instance instanceof Object)) {
             return;
         }
 
-        onConstructMetadataCollector.invokeHooksOf<GInstance>(instance);
+        onConstructMetadataCollector.invokeHooksOf(instance);
     },
-    onDispose<GInstance>(instance: GInstance) {
+
+    onDispose(instance: unknown): void {
         if (!(instance instanceof Object)) {
             return;
         }
 
-        onDisposeMetadataCollector.invokeHooksOf<GInstance>(instance);
+        onDisposeMetadataCollector.invokeHooksOf(instance);
     },
-};
+});
 
 export const fromFn = <T>(fn: ResolveDependency<T>): ProviderBuilder<T> => ProviderBuilder.fromFn(fn);
-export const fromInstance = <T>(instance: T): ProviderBuilder<T> => ProviderBuilder.fromValue(instance);
-export const fromConstructor = <T>(value: constructor<T>): ProviderBuilder<T> => ProviderBuilder.fromClass(value);
+export const fromValue = <T>(instance: T): ProviderBuilder<T> => ProviderBuilder.fromValue(instance);
+export const fromClass = <T>(value: constructor<T>): ProviderBuilder<T> =>
+    ProviderBuilder.fromClass(value).withHook(instanceHook);

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ProviderBuilder, ServiceLocator, SimpleInjector } from '../../lib';
+import { CachedResolvableHook, ContainerBuilder, HookedInjector, ProviderBuilder, SimpleInjector } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
 
 class MyClass {
@@ -11,26 +11,18 @@ describe('ServiceLocator', () => {
     it('should create an instance', () => {
         const expectedInstance = { id: 'expectedInstance' };
 
-        const locator = ServiceLocator.root(new SimpleInjector(), {
-            hook: {
-                onConstruct<GInstance>(instance: GInstance) {
-                    onConstructMetadataCollector.invokeHooksOf(instance);
-                },
-                onDispose<GInstance>(instance: GInstance) {},
+        const hook = new CachedResolvableHook({
+            onConstruct<GInstance>(instance: GInstance) {
+                onConstructMetadataCollector.invokeHooksOf(instance);
             },
+            onDispose<GInstance>(instance: GInstance) {},
         });
 
-        locator.register(
-            ProviderBuilder.fromValue(expectedInstance)
-                .withHook({
-                    onDispose<GInstance>(instance: GInstance) {},
-                    onConstruct<GInstance>(instance: GInstance) {
-                        onConstructMetadataCollector.invokeHooksOf(instance);
-                    },
-                })
-                .forKeys('key1')
-                .build(),
-        );
+        const locator = new ContainerBuilder(new SimpleInjector())
+            .mapInjector((l) => new HookedInjector(new SimpleInjector(), hook))
+            .build();
+
+        locator.register(ProviderBuilder.fromValue(expectedInstance).withHook(hook).forKeys('key1').build());
 
         locator.resolve(MyClass);
 

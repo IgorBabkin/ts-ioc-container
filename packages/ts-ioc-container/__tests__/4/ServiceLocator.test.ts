@@ -1,12 +1,20 @@
 import 'reflect-metadata';
-import { emptyHook, IInstanceHook, IocInjector, ProviderNotFoundError, ServiceLocator } from '../../lib';
+import {
+    CachedResolvableHook,
+    ContainerBuilder,
+    emptyHook,
+    HookedInjector,
+    IocInjector,
+    IResolvableHook,
+    ProviderNotFoundError,
+} from '../../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './OnConstructImpl';
 import { Group } from './Group';
 import { OnDisposeImpl } from './OnDisposeImpl';
 import {
-    fromConstructor,
+    fromClass,
     fromFn,
-    fromInstance,
+    fromValue,
     inject,
     injectMetadataCollector,
     onConstructMetadataCollector,
@@ -25,8 +33,10 @@ class Greeting {
 }
 
 describe('ServiceLocator', () => {
-    const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
-        return ServiceLocator.root(new IocInjector(injectMetadataCollector), { hook });
+    const createIoCLocator = (hook: IResolvableHook = emptyHook) => {
+        return new ContainerBuilder(new IocInjector(injectMetadataCollector))
+            .mapInjector((it) => new HookedInjector(it, hook))
+            .build();
     };
 
     it('should create an instanse', () => {
@@ -56,9 +66,9 @@ describe('ServiceLocator', () => {
             const expectedInstance1 = { id: 1 };
             const expectedInstance2 = { id: 2 };
 
-            const locator = createIoCLocator().register(fromInstance(expectedInstance1).forKeys('key1').build());
+            const locator = createIoCLocator().register(fromValue(expectedInstance1).forKeys('key1').build());
 
-            const child = locator.createScope().register(fromInstance(expectedInstance2).forKeys('key1').build());
+            const child = locator.createScope().register(fromValue(expectedInstance2).forKeys('key1').build());
 
             expect(locator.resolve('key1')).toBe(expectedInstance1);
             expect(child.resolve('key1')).toBe(expectedInstance2);
@@ -67,7 +77,7 @@ describe('ServiceLocator', () => {
         it('is available to get parent deps from child', () => {
             const expectedInstance1 = {};
 
-            const locator = createIoCLocator().register(fromInstance(expectedInstance1).forKeys('key1').build());
+            const locator = createIoCLocator().register(fromValue(expectedInstance1).forKeys('key1').build());
 
             const child = locator.createScope();
 
@@ -79,7 +89,7 @@ describe('ServiceLocator', () => {
 
             const locator = createIoCLocator();
 
-            locator.createScope().register(fromInstance(expectedInstance1).forKeys('key1').build());
+            locator.createScope().register(fromValue(expectedInstance1).forKeys('key1').build());
 
             expect(() => locator.resolve('key1')).toThrow(ProviderNotFoundError);
         });
@@ -99,7 +109,7 @@ describe('ServiceLocator', () => {
         });
 
         it('clears container', () => {
-            const locator = createIoCLocator().register(fromInstance({}).forKeys('key1').build());
+            const locator = createIoCLocator().register(fromValue({}).forKeys('key1').build());
 
             const child = locator.createScope();
 
@@ -139,7 +149,9 @@ describe('ServiceLocator', () => {
             expect(() => locator.resolve('key1')).toThrow();
 
             child2.dispose();
-            expect(() => child2.resolve('key1')).toThrow();
+            expect(() => {
+                child2.resolve('key1');
+            }).toThrow();
             expect(child1.resolve('key1')).toBe(expectedInstance);
             expect(() => locator.resolve('key1')).toThrow();
             child1.dispose();
@@ -152,9 +164,9 @@ describe('ServiceLocator', () => {
             const expected = ['KEY1_VALUE', 'p2', 'p3', 'KEY2_VALUE', '1', '2', 'KEY1_VALUE', 'KEY2_VALUE'];
 
             const decorated = createIoCLocator()
-                .register(fromInstance('KEY1_VALUE').forKeys('key1').build())
-                .register(fromInstance('KEY2_VALUE').forKeys('key2').build())
-                .register(fromConstructor(SubGroup3).forKeys('key3').build());
+                .register(fromValue('KEY1_VALUE').forKeys('key1').build())
+                .register(fromValue('KEY2_VALUE').forKeys('key2').build())
+                .register(fromClass(SubGroup3).forKeys('key3').build());
 
             const group = decorated.resolve(Group, 'p2', 'p3');
             const result = group.privet();
@@ -184,12 +196,14 @@ describe('ServiceLocator', () => {
         });
 
         it('ios: onConstructHook for injector', () => {
-            const decorated = createIoCLocator({
-                onConstruct<GInstance>(instance: GInstance) {
-                    onConstructMetadataCollector.invokeHooksOf(instance);
-                },
-                onDispose<GInstance>(instance: GInstance) {},
-            });
+            const decorated = createIoCLocator(
+                new CachedResolvableHook({
+                    onConstruct<GInstance>(instance: GInstance) {
+                        onConstructMetadataCollector.invokeHooksOf(instance);
+                    },
+                    onDispose<GInstance>(instance: GInstance) {},
+                }),
+            );
 
             const group = decorated.resolve(OnConstructImpl);
 
@@ -197,12 +211,12 @@ describe('ServiceLocator', () => {
         });
 
         it('ioc: onConstructHook for provider', () => {
-            const hook = {
+            const hook = new CachedResolvableHook({
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
                 },
                 onDispose<GInstance>(instance: GInstance) {},
-            };
+            });
             const locator = createIoCLocator(hook).register(
                 fromFn(() => new OnConstructImpl())
                     .withHook(hook)
@@ -216,12 +230,14 @@ describe('ServiceLocator', () => {
         });
 
         it('ioc: onDisposeHook', () => {
-            const decorated = createIoCLocator({
-                onConstruct<GInstance>(instance: GInstance) {},
-                onDispose<GInstance>(instance: GInstance) {
-                    onDisposeMetadataCollector.invokeHooksOf(instance);
-                },
-            });
+            const decorated = createIoCLocator(
+                new CachedResolvableHook({
+                    onConstruct<GInstance>(instance: GInstance) {},
+                    onDispose<GInstance>(instance: GInstance) {
+                        onDisposeMetadataCollector.invokeHooksOf(instance);
+                    },
+                }),
+            );
 
             const group = decorated.resolve(OnDisposeImpl);
 
@@ -233,7 +249,7 @@ describe('ServiceLocator', () => {
         it('passes params to constructor(instance) in decorator', () => {
             const decorated = createIoCLocator();
 
-            decorated.register(fromConstructor(Logger).forKeys('logger').build());
+            decorated.register(fromClass(Logger).forKeys('logger').build());
             const app = decorated.resolve(App);
 
             expect(app.run()).toBe('super');
@@ -242,7 +258,7 @@ describe('ServiceLocator', () => {
         it('passes params to constructor(autofactory) in decorator', () => {
             const decorated = createIoCLocator();
 
-            decorated.register(fromConstructor(Logger2).forKeys('logger2').build());
+            decorated.register(fromClass(Logger2).forKeys('logger2').build());
             const app = decorated.resolve(App2);
 
             expect(app.run()).toBe('superduper');
@@ -252,7 +268,7 @@ describe('ServiceLocator', () => {
             const decorated = createIoCLocator();
 
             decorated.register(
-                fromFn((l, ...args) => l.resolveClass(Logger3, 'super', ...args))
+                fromFn((l, ...args) => l.resolve(Logger3, 'super', ...args))
                     .forKeys('logger3')
                     .build(),
             );
@@ -265,8 +281,8 @@ describe('ServiceLocator', () => {
             const decorated = createIoCLocator();
 
             decorated
-                .register(fromInstance('dep1').forKeys('dep1').build())
-                .register(fromInstance('dep2').forKeys('dep2').build());
+                .register(fromValue('dep1').forKeys('dep1').build())
+                .register(fromValue('dep2').forKeys('dep2').build());
             const app = decorated.resolve(App4);
 
             expect(app.run()).toBe('dep1dep2');
@@ -275,7 +291,7 @@ describe('ServiceLocator', () => {
         it('passes locator as last deaSp', () => {
             const decorated = createIoCLocator();
 
-            decorated.register(fromInstance('world').forKeys(MyKey).build());
+            decorated.register(fromValue('world').forKeys(MyKey).build());
             const app = decorated.resolve(Greeting);
 
             expect(app.say()).toBe('Hello world');

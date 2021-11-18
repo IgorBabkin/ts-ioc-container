@@ -7,6 +7,8 @@ import { LevelProvider } from './scope/LevelProvider';
 import { ProviderReducer } from './scope/IProvidersMetadataCollector';
 import { ArgsFn, ArgsProvider } from '../core/provider/ArgsProvider';
 import { ProviderKey } from '../core/IServiceLocator';
+import { IResolvableHook } from './instanceHook/IResolvableHook';
+import { HookedProvider } from './instanceHook/HookedProvider';
 
 export class ProviderBuilder<T> {
     static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
@@ -35,6 +37,11 @@ export class ProviderBuilder<T> {
 
     withReducer(reducer: ProviderReducer<T>): this {
         this.provider = reducer(this.provider);
+        return this;
+    }
+
+    withHook(hook: IResolvableHook): this {
+        this.provider = new HookedProvider(this.provider, hook);
         return this;
     }
 

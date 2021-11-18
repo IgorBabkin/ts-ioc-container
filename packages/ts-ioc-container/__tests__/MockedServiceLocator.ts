@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
+    IDisposable,
     InjectionToken,
     IServiceLocator,
     MethodNotImplementedError,
@@ -8,10 +10,12 @@ import {
 } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
 
-export class MoqServiceLocator extends ServiceLocatorDecorator {
-    private mocks = new Map<ProviderKey, IMock<any>>();
+interface IMockRepository extends IDisposable {
+    resolve<T>(key: InjectionToken<T>): T;
+}
 
-    constructor(private locator: IServiceLocator) {
+export class MockedServiceLocator extends ServiceLocatorDecorator {
+    constructor(private locator: IServiceLocator, private mockRepository: IMockRepository) {
         super(locator);
     }
 
@@ -24,16 +28,32 @@ export class MoqServiceLocator extends ServiceLocatorDecorator {
             return this.locator.resolve(key, ...args);
         } catch (e) {
             if (e instanceof ProviderNotFoundError) {
-                return this.resolveMock<T>(key as ProviderKey).object();
+                return this.mockRepository.resolve<T>(key);
             }
 
             throw e;
         }
     }
 
+    dispose(): void {
+        this.mockRepository.dispose();
+    }
+}
+
+export class MoqRepository implements IMockRepository {
+    private mocks = new Map<ProviderKey, IMock<any>>();
+
+    resolve<T>(key: ProviderKey): T {
+        return this.resolveMock<T>(key).object();
+    }
+
+    dispose(): void {
+        this.mocks.clear();
+    }
+
     resolveMock<T>(key: ProviderKey): IMock<T> {
         if (!this.mocks.has(key)) {
-            this.mocks.set(key, createMock<T>());
+            this.mocks.set(key, createMock());
         }
         return this.mocks.get(key);
     }

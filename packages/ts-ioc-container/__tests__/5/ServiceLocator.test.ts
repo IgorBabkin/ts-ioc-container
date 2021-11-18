@@ -1,11 +1,13 @@
 import 'reflect-metadata';
 import {
+    CachedResolvableHook,
+    ContainerBuilder,
     emptyHook,
+    HookedInjector,
     IDisposable,
-    IInstanceHook,
+    IResolvableHook,
     IServiceLocator,
     ProviderBuilder,
-    ServiceLocator,
     SimpleInjector,
 } from '../../lib';
 import { fromFn, fromInstance } from './decorators';
@@ -15,8 +17,8 @@ class TestClass {
 }
 
 describe('ServiceLocator', () => {
-    const createSimpleLocator = (hook: IInstanceHook = emptyHook) =>
-        ServiceLocator.root(new SimpleInjector(), { hook });
+    const createSimpleLocator = (hook: IResolvableHook = emptyHook) =>
+        new ContainerBuilder(new SimpleInjector()).mapInjector((l) => new HookedInjector(l, hook)).build();
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(ProviderBuilder.fromClass(TestClass).forKeys('key1').build());
@@ -29,7 +31,7 @@ describe('ServiceLocator', () => {
     it('should invokes postConstruct', () => {
         let isPostConstructed = false;
         const locator = createSimpleLocator({
-            onConstruct: (instance) => (instance as any).postConstruct(),
+            onResolve: (instance) => (instance as any).postConstruct(),
             onDispose() {},
         });
         const disposable = {
@@ -40,12 +42,14 @@ describe('ServiceLocator', () => {
 
         const child = locator.createScope().register(
             ProviderBuilder.fromValue(disposable)
-                .withHook({
-                    onConstruct<GInstance>(instance: GInstance) {
-                        (instance as any).postConstruct();
-                    },
-                    onDispose<GInstance>(instance: GInstance) {},
-                })
+                .withHook(
+                    new CachedResolvableHook({
+                        onConstruct<GInstance>(instance: GInstance) {
+                            (instance as any).postConstruct();
+                        },
+                        onDispose<GInstance>(instance: GInstance) {},
+                    }),
+                )
                 .forKeys('key1')
                 .build(),
         );
@@ -57,12 +61,14 @@ describe('ServiceLocator', () => {
 
     it('should invokes onDispose', () => {
         let isDisposed = false;
-        const locator = createSimpleLocator({
-            onConstruct() {},
-            onDispose(instance) {
-                (instance as any as IDisposable).dispose();
-            },
-        });
+        const locator = createSimpleLocator(
+            new CachedResolvableHook({
+                onConstruct() {},
+                onDispose(instance) {
+                    (instance as any as IDisposable).dispose();
+                },
+            }),
+        );
         const disposable = {
             dispose: () => {
                 isDisposed = true;
@@ -71,12 +77,14 @@ describe('ServiceLocator', () => {
 
         const child = locator.createScope().register(
             ProviderBuilder.fromValue(disposable)
-                .withHook({
-                    onConstruct<GInstance>(instance: GInstance) {},
-                    onDispose<GInstance>(instance: GInstance) {
-                        (instance as any).dispose();
-                    },
-                })
+                .withHook(
+                    new CachedResolvableHook({
+                        onConstruct<GInstance>(instance: GInstance) {},
+                        onDispose<GInstance>(instance: GInstance) {
+                            (instance as any).dispose();
+                        },
+                    }),
+                )
                 .forKeys('key1')
                 .build(),
         );
@@ -90,7 +98,7 @@ describe('ServiceLocator', () => {
 
     it('conditional resolving', () => {
         const locator = createSimpleLocator().register(
-            fromFn((l) => (l.resolveByKey('context') === 'a' ? 'good' : 'bad'))
+            fromFn((l) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
                 .forLevel(1)
                 .asSingleton()
                 .forKeys('key1')

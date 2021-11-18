@@ -1,8 +1,12 @@
-import { ProviderBuilder, ProviderNotFoundError, ServiceLocator, SimpleInjector } from '../../lib';
+import { DIContainer, ProviderBuilder, ProviderNotFoundError, ServiceLocator, SimpleInjector } from '../../lib';
 
 describe('LevelProvider', function () {
+    function createContainer(): DIContainer {
+        return new DIContainer(ServiceLocator.fromInjector(new SimpleInjector()));
+    }
+
     test('singleton', () => {
-        const locator = ServiceLocator.root(new SimpleInjector());
+        const locator = createContainer();
         locator.register(
             ProviderBuilder.fromFn(() => Math.random())
                 .forLevel(0)
@@ -16,7 +20,7 @@ describe('LevelProvider', function () {
 
     describe('scope', function () {
         test('scope', () => {
-            const locator = ServiceLocator.root(new SimpleInjector());
+            const locator = createContainer();
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
@@ -25,10 +29,12 @@ describe('LevelProvider', function () {
                     .build(),
             );
 
-            expect(() => locator.resolve('hey')).toThrow(ProviderNotFoundError);
+            expect(() => {
+                locator.resolve('hey');
+            }).toThrow(ProviderNotFoundError);
         });
         test('scope1', () => {
-            const locator = ServiceLocator.root(new SimpleInjector());
+            const locator = createContainer();
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
@@ -42,7 +48,7 @@ describe('LevelProvider', function () {
             expect(child.resolve('hey')).toBe(child.resolve('hey'));
         });
         test('scope2', () => {
-            const locator = ServiceLocator.root(new SimpleInjector());
+            const locator = createContainer();
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
@@ -57,7 +63,7 @@ describe('LevelProvider', function () {
             expect(child.resolve('hey')).toBe(subChild.resolve('hey'));
         });
         test('scope2', () => {
-            const locator = ServiceLocator.root(new SimpleInjector());
+            const locator = createContainer();
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
                     .forLevel(1)
@@ -72,7 +78,7 @@ describe('LevelProvider', function () {
             expect(child1.resolve('hey')).not.toBe(child2.resolve('hey'));
         });
         test('tagged', () => {
-            const locator = ServiceLocator.root(new SimpleInjector());
+            const locator = createContainer();
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
                     .forTags('a')
@@ -86,7 +92,7 @@ describe('LevelProvider', function () {
             expect(() => child.resolve('hey')).toThrow(ProviderNotFoundError);
         });
         test('tagged1', () => {
-            const locator = ServiceLocator.root(new SimpleInjector());
+            const locator = createContainer();
             locator.register(
                 ProviderBuilder.fromFn(() => Math.random())
                     .forTags('a')

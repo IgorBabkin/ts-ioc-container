@@ -1,6 +1,6 @@
-import { IInstanceHook } from './IInstanceHook';
+import { IResolvableHook } from './IResolvableHook';
 
-export const emptyHook: IInstanceHook = {
-    onConstruct<GInstance>(instance: GInstance) {},
-    onDispose<GInstance>(instance: GInstance) {},
+export const emptyHook: IResolvableHook = {
+    onResolve<GInstance>(instance: GInstance) {},
+    onDispose<GInstance>() {},
 };
