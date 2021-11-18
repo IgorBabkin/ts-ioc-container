@@ -37,6 +37,11 @@ export class ContainerBuilder {
         return this;
     }
 
+    mapProviderBuilder(fn: MapFn<IDIProviderBuilder>): this {
+        this.providerBuilder = fn(this.providerBuilder);
+        return this;
+    }
+
     withOptions(options: Partial<ScopeOptions>): this {
         this.options = options;
         return this;
