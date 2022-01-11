@@ -187,6 +187,10 @@ describe('ServiceLocator', () => {
             const decorated = createIoCLocator({
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
+                    return instance;
+                },
+                onResolve<T>(instance: T): T {
+                    return instance;
                 },
                 onDispose<GInstance>(instance: GInstance) {},
             });
@@ -200,6 +204,10 @@ describe('ServiceLocator', () => {
             const hook = {
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
+                    return instance;
+                },
+                onResolve<GInstance>(instance: GInstance) {
+                    return instance;
                 },
                 onDispose<GInstance>(instance: GInstance) {},
             };
@@ -216,7 +224,12 @@ describe('ServiceLocator', () => {
 
         it('ioc: onDisposeHook', () => {
             const decorated = createIoCLocator({
-                onConstruct<GInstance>(instance: GInstance) {},
+                onConstruct<GInstance>(instance: GInstance) {
+                    return instance;
+                },
+                onResolve<T>(instance: T): T {
+                    return instance;
+                },
                 onDispose<GInstance>(instance: GInstance) {
                     onDisposeMetadataCollector.invokeHooksOf(instance);
                 },

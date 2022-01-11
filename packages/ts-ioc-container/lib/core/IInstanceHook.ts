@@ -1,10 +1,15 @@
+import { id } from '../helpers/utils';
+
 export interface IInstanceHook {
-    onConstruct(instance: unknown): void;
+    onConstruct<T>(instance: T): T;
+
+    onResolve<T>(instance: T): T;
 
     onDispose(instance: unknown): void;
 }
 
 export const emptyHook: IInstanceHook = {
-    onConstruct(instance: unknown): void {},
-    onDispose(instance: unknown): void {},
+    onResolve: id,
+    onConstruct: id,
+    onDispose(): void {},
 };

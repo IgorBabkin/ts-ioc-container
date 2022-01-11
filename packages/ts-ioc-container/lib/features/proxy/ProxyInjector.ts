@@ -16,10 +16,4 @@ export class ProxyInjector implements IInjector {
             }),
         );
     }
-
-    clone(): IInjector {
-        return new ProxyInjector();
-    }
-
-    dispose(): void {}
 }

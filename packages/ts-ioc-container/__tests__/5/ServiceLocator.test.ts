@@ -29,7 +29,13 @@ describe('ServiceLocator', () => {
     it('should invokes postConstruct', () => {
         let isPostConstructed = false;
         const locator = createSimpleLocator({
-            onConstruct: (instance) => (instance as any).postConstruct(),
+            onConstruct: (instance) => {
+                (instance as any).postConstruct();
+                return instance;
+            },
+            onResolve<T>(instance: T): T {
+                return instance;
+            },
             onDispose() {},
         });
         const disposable = {
@@ -48,7 +54,12 @@ describe('ServiceLocator', () => {
     it('should invokes onDispose', () => {
         let isDisposed = false;
         const locator = createSimpleLocator({
-            onConstruct() {},
+            onConstruct<T>(instance: T): T {
+                return instance;
+            },
+            onResolve<T>(instance: T): T {
+                return instance;
+            },
             onDispose(instance) {
                 (instance as any as IDisposable).dispose();
             },

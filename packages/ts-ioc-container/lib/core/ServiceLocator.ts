@@ -52,7 +52,7 @@ export class ServiceLocator implements IServiceLocator {
     }
 
     createScope(tags: Tag[] = [], parent: IServiceLocator = this): ServiceLocator {
-        const scope = new ServiceLocator(parent, this.injector.clone(), this.level + 1, tags, this.hook);
+        const scope = new ServiceLocator(parent, this.injector, this.level + 1, tags, this.hook);
         for (const [key, provider] of parent.entries()) {
             if (provider.isValid(scope)) {
                 scope.register(key, provider.clone());
@@ -68,7 +68,6 @@ export class ServiceLocator implements IServiceLocator {
 
     dispose(): void {
         this.parent = new EmptyServiceLocator();
-        this.injector.dispose();
 
         for (const p of this.providers.values()) {
             p.dispose();
@@ -81,16 +80,11 @@ export class ServiceLocator implements IServiceLocator {
         this.instances.clear();
     }
 
-    setHook(hook: IInstanceHook): this {
-        this.hook = hook;
-        return this;
-    }
-
     private onResolve<T>(instance: T): T {
         if (!this.instances.has(instance)) {
             this.instances.add(instance);
             this.hook.onConstruct(instance);
         }
-        return instance;
+        return this.hook.onResolve(instance);
     }
 }

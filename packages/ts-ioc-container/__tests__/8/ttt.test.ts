@@ -15,6 +15,10 @@ describe('ServiceLocator', () => {
             .setHook({
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
+                    return instance;
+                },
+                onResolve<T>(instance: T): T {
+                    return instance;
                 },
                 onDispose<GInstance>(instance: GInstance) {},
             })
