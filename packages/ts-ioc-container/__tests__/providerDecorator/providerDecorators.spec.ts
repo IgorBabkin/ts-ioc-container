@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Container, ServiceLocator, SimpleInjector } from '../../lib';
 import { addKeys, fromClass, level, singleton } from './decorators';
 

@@ -1,4 +1,4 @@
-import { inject } from '../decorators';
+import { injectFn as inject } from '../../../lib';
 
 export class SubGroup3 {
     constructor(

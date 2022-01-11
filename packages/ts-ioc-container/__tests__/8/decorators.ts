@@ -1,13 +1,4 @@
-import 'reflect-metadata';
-import {
-    createInjectFnDecorator,
-    createMethodHookDecorator,
-    InjectMetadataCollector,
-    MethodsMetadataCollector,
-} from '../../lib';
+import { createMethodHookDecorator, MethodsMetadataCollector } from '../../lib';
 
-export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
-export const inject = createInjectFnDecorator(constructorMetadataCollector);
-
-export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol('OnConstructHook'));
+export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
 export const onConstruct = createMethodHookDecorator(onConstructMetadataCollector);

@@ -1,5 +1,5 @@
-import { IServiceLocator } from '../../lib';
-import { inject, onConstruct } from './decorators';
+import { injectFn as inject, IServiceLocator } from '../../lib';
+import { onConstruct } from './decorators';
 
 export class OnConstructImpl {
     isConstructed = false;

@@ -1,6 +1,5 @@
 import 'reflect-metadata';
-import { ContainerBuilder, IocInjector, MockedServiceLocator } from '../../lib';
-import { inject, injectMetadataCollector } from './decorators';
+import { ContainerBuilder, IocInjector, injectFn as inject, MockedServiceLocator } from '../../lib';
 import { MoqRepository } from '../MoqRepository';
 
 interface ISubClass {
@@ -19,7 +18,7 @@ describe('UnitTestIoCLocator', () => {
     });
 
     function createIoCLocator() {
-        return new ContainerBuilder(new IocInjector(injectMetadataCollector))
+        return new ContainerBuilder(new IocInjector())
             .mapLocator((l) => new MockedServiceLocator(l, mockRepository))
             .build();
     }

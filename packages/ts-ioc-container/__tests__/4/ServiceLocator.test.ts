@@ -1,14 +1,13 @@
 import 'reflect-metadata';
-import { ContainerBuilder, fromClass, fromFn, fromValue, IocInjector, ProviderNotFoundError } from '../../lib';
+import { ContainerBuilder, fromClass, fromFn, fromValue, ProviderNotFoundError } from '../../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './OnConstructImpl';
 import { Group } from './Group';
 import { OnDisposeImpl } from './OnDisposeImpl';
-import {
-    inject,
-    injectMetadataCollector,
-    onConstructMetadataCollector,
-    onDisposeMetadataCollector,
-} from './decorators';
+import { onConstructMetadataCollector, onDisposeMetadataCollector } from './decorators';
+import { IocInjector, injectFn } from '../../lib';
+
+export const injectMetadataCollector = new IocInjector();
+export const inject = injectFn;
 import { SubGroup3 } from './SubGroup3';
 import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
 
@@ -24,7 +23,7 @@ class Greeting {
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
-        return new ContainerBuilder(new IocInjector(injectMetadataCollector)).setHook(hook).build();
+        return new ContainerBuilder(new IocInjector()).setHook(hook).build();
     };
 
     it('should create an instanse', () => {

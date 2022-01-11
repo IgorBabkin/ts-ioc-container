@@ -1,7 +1,7 @@
 import { SubGroup } from './SubGroup';
 import { SubGroup2 } from './SubGroup2';
 import { SubGroup3 } from './SubGroup3';
-import { inject } from '../8/decorators';
+import { injectFn as inject } from '../../lib';
 
 export class Group {
     constructor(
