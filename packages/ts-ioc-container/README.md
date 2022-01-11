@@ -287,6 +287,7 @@ export class MoqProvider<T> extends MockProvider<T> {
 }
 ```
 
+
 ## Errors
 
 - ProviderNotFoundError
