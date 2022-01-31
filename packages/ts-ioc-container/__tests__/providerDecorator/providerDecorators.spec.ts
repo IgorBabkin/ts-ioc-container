@@ -3,8 +3,8 @@ import { Container, ServiceLocator, SimpleInjector } from '../../lib';
 import { addKeys, fromClass, level, singleton } from './decorators';
 
 @addKeys('key1')
+@level(1)
 @singleton
-@level(0)
 export class Greeting {
     private name = Math.random();
 
@@ -19,8 +19,10 @@ describe('ProviderDecorators', function () {
             fromClass(Greeting).build(),
         );
 
-        const greeting1 = locator.resolve<Greeting>('key1');
-        const greeting2 = locator.resolve<Greeting>('key1');
+        const scope = locator.createScope();
+
+        const greeting1 = scope.resolve<Greeting>('key1');
+        const greeting2 = scope.resolve<Greeting>('key1');
 
         expect(greeting1.hello()).toBe(greeting2.hello());
     });

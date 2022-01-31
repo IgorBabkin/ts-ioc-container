@@ -19,3 +19,7 @@ export const constant =
         value;
 
 export const id = <T>(value: T) => value;
+
+export function composeClassDecorators(...decorators: ClassDecorator[]): ClassDecorator {
+    return (target) => decorators.forEach((it) => it(target));
+}

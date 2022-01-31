@@ -37,3 +37,4 @@ export { IDisposable } from './helpers/types';
 export { isProviderKey, RegisterOptions } from './core/IServiceLocator';
 export { ProviderKey } from './core/IServiceLocator';
 export { ContainerBuilder } from './core/ContainerBuilder';
+export { composeClassDecorators } from './helpers/utils';
