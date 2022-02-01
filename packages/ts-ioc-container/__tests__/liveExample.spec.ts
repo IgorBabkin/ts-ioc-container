@@ -9,6 +9,7 @@ import {
     fromClass as fromConstructor,
     inject,
     IocInjector,
+    ProviderNotFoundError,
     ProvidersMetadataCollector,
 } from '../lib';
 
@@ -38,7 +39,21 @@ class Repository implements IRepository {
     id = Math.random().toString(10);
 }
 
+@singleton
+@keys(IRepositoryKey)
+class Repository2 implements IRepository {
+    id = Math.random().toString(10);
+}
+
 class Main {
+    constructor(@inject(IRepositoryKey) private repository: IRepository) {}
+
+    greeting(): string {
+        return `Hello ${this.repository.id}`;
+    }
+}
+
+class Main2 {
     constructor(@inject(IRepositoryKey) private repository: IRepository) {}
 
     greeting(): string {
@@ -66,5 +81,22 @@ describe('live example', function () {
         const main2 = scope2.resolve(Main);
 
         expect(main1.greeting()).not.toBe(main2.greeting());
+    });
+
+    it('should throw error if try to resolve from root scope', function () {
+        const container = containerBuilder.build().register(fromClass(Repository).build());
+        expect(() => container.resolve(Main)).toThrow(ProviderNotFoundError);
+    });
+
+    it('should resolve singleton', function () {
+        const container = containerBuilder.build().register(fromClass(Repository2).build());
+
+        const scope = container.createScope();
+        const main1 = scope.resolve(Main2);
+        const main2 = scope.resolve(Main2);
+        const main3 = container.resolve(Main2);
+
+        expect(main1.greeting()).toBe(main2.greeting());
+        expect(main2.greeting()).toBe(main3.greeting());
     });
 });
