@@ -1,6 +1,6 @@
 {
   "name": "constructor-injector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Injector",
   "author": "ibabkin <igba14@gmail.com>",
   "homepage": "https://github.com/IgorBabkin/service-locator/tree/master/packages/ts-ioc-container",
