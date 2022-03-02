@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./lib",
+    "lib": ["es2016"],
+    "types": ["reflect-metadata", "jest"]
+  },
+  "include": [
+    "lib"
+  ]
+}
