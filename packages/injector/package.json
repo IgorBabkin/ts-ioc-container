@@ -1,0 +1,44 @@
+{
+  "name": "constructor-injector",
+  "version": "1.0.1",
+  "description": "Injector",
+  "author": "igorbabkin <igba14@gmail.com>",
+  "license": "ISC",
+  "sideEffects": false,
+  "main": "cjm/index.js",
+  "types": "esm/index.d.ts",
+  "module": "esm/index.js",
+  "keywords": [
+    "injector",
+    "ts",
+    "typescript"
+  ],
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "cjm/**/*",
+    "esm/**/*"
+  ],
+  "scripts": {
+    "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
+    "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
+    "build": "npm-run-all -p build:**",
+    "watch": "nodemon --watch ./lib --exec npm run build",
+    "test": "jest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/jest": "27.0.2",
+    "jest": "27.2.3",
+    "nodemon": "^2.0.13",
+    "npm-run-all": "4.1.5",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "3.0.2",
+    "ts-jest": "27.0.5",
+    "typescript": "4.4.3"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.1.13"
+  }
+}
