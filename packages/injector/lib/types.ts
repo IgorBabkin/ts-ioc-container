@@ -1,4 +1,4 @@
-import {Write} from "./writeMonad";
+import { Write } from './writeMonad';
 
 export type constructor<T> = new (...args: any[]) => T;
 export type Fn<A, B> = (value: Write<A>) => Write<B>;

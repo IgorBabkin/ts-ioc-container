@@ -1,6 +1,6 @@
-import {constructor} from './types';
-import {resolve} from "./resolve";
-import {Write} from "./writeMonad";
+import { constructor } from './types';
+import { resolve } from './resolve';
+import { Write } from './writeMonad';
 
 export const prop =
     <T>(key: string | symbol, value: T): ClassDecorator =>
@@ -22,6 +22,6 @@ export const getProp = <T>(target: constructor<unknown>, key: string | symbol) =
 
 export const to =
     <T>(value: constructor<T>) =>
-        <Context>([env, logs]: Write<Context>): Write<T> => {
-            return [resolve(env)(value), logs];
-        };
+    <Context>([env, logs]: Write<Context>): Write<T> => {
+        return [resolve(env)(value), logs];
+    };
