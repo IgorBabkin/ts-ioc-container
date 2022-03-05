@@ -1,4 +1,6 @@
-import { constructor } from './types';
+import {constructor} from './types';
+import {resolve} from "./resolve";
+import {Write} from "./writeMonad";
 
 export const prop =
     <T>(key: string | symbol, value: T): ClassDecorator =>
@@ -17,3 +19,9 @@ export const attr =
 
 export const getProp = <T>(target: constructor<unknown>, key: string | symbol) =>
     Reflect.getOwnMetadata(key, target) as T;
+
+export const to =
+    <T>(value: constructor<T>) =>
+        <Context>([env, logs]: Write<Context>): Write<T> => {
+            return [resolve(env)(value), logs];
+        };

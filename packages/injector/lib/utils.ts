@@ -1,3 +1,6 @@
+import {Fn, InjectFn} from "./types";
+import {pure, run} from "./writeMonad";
+
 export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     if (baseArr.length === 0) {
         return insertArr;
@@ -18,14 +21,6 @@ export const constant =
     () =>
         value;
 
-export const id = <T>(value: T) => value;
-
-export function composeClassDecorators(...decorators: ClassDecorator[]): ClassDecorator {
-    return (target) => decorators.forEach((it) => it(target));
-}
-
-type Fn<A, B> = (value: A) => B;
-
 export function pipe<A, B>(a: Fn<A, B>): Fn<A, B>;
 export function pipe<A, B, C>(a: Fn<A, B>, b: Fn<B, C>): Fn<A, C>;
 export function pipe<A, B, C, D>(a: Fn<A, B>, b: Fn<B, C>, c: Fn<C, D>): Fn<A, D>;
@@ -36,10 +31,7 @@ export function pipe<A, B, C, D, E, F, G, H>(a: Fn<A, B>, b: Fn<B, C>, c: Fn<C, 
 export function pipe<A, B, C, D, E, F, G, H, I>(a: Fn<A, B>, b: Fn<B, C>, c: Fn<C, D>, d: Fn<D, E>, e: Fn<E, F>, f: Fn<F, G>, g: Fn<G, H>, h: Fn<H, I>): Fn<A, I>;
 export function pipe<A, B, C, D, E, F, G, H, I, J>(a: Fn<A, B>, b: Fn<B, C>, c: Fn<C, D>, d: Fn<D, E>, e: Fn<E, F>, f: Fn<F, G>, g: Fn<G, H>, h: Fn<H, I>, i: Fn<I, J>): Fn<A, J>;
 
-export function pipe(...fns: any[]) {
-    return (value: any) => fns.reduce((acc, next) => next(acc), value);
+export function pipe<Context>(...fns: any[]): InjectFn<Context> {
+    return (value) => [pure, ...fns, run].reduce((acc, next) => next(acc), value);
 }
 
-export type Write<T> = [T, string[]];
-export const pure = <T>(value: T): Write<T> => [value, []];
-export const run = <T>([value]: Write<T>): T => value;
