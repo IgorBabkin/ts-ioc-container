@@ -8,7 +8,7 @@ const INJECT_METADATA_KEY = Symbol('inject');
 export const resolve =
     <Context>(context: Context) =>
     <T>(value: constructor<T>, ...deps: unknown[]) => {
-        const injectionFns = getProp<InjectFn<Context>[]>(value, INJECT_METADATA_KEY);
+        const injectionFns = getProp<InjectFn<Context>[]>(value, INJECT_METADATA_KEY) || [];
         const args = merge(injectionFns, deps.map(constant)).map((fn) => fn(context));
         return new value(...args);
     };

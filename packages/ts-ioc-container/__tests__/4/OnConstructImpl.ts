@@ -1,5 +1,6 @@
-import { injectFn as inject, IServiceLocator } from '../../lib';
+import { IServiceLocator } from '../../lib';
 import { onConstruct } from './decorators';
+import { inject, withoutLogs as w } from '../ioc/IocInjector';
 
 export class OnConstructImpl {
     isConstructed = false;
@@ -19,7 +20,7 @@ export class Logger {
 }
 
 export class App {
-    constructor(@inject((l) => l.resolve('logger', 'super')) private logger: Logger) {}
+    constructor(@inject(w((l) => l.resolve('logger', 'super'))) private logger: Logger) {}
 
     run(): string {
         return this.logger.log();
@@ -38,7 +39,7 @@ export class App2 {
     private logger: Logger2;
 
     constructor(
-        @inject((l) => (prefix2: string) => l.resolve('logger2', 'super', prefix2))
+        @inject(w((l) => (prefix2: string) => l.resolve('logger2', 'super', prefix2)))
         private loggerFactory: (prefix2: string) => Logger2,
     ) {
         this.logger = loggerFactory('duper');
@@ -58,7 +59,7 @@ export class Logger3 {
 }
 
 export class App3 {
-    constructor(@inject((l) => l.resolve('logger3', 'duper')) private logger: Logger3) {}
+    constructor(@inject(w((l) => l.resolve('logger3', 'duper'))) private logger: Logger3) {}
 
     run(): string {
         return this.logger.log();
@@ -67,7 +68,7 @@ export class App3 {
 
 export class App4 {
     constructor(
-        @inject((l) => l.resolve('dep1')) private dep1: string,
+        @inject(w((l) => l.resolve('dep1'))) private dep1: string,
         @inject((l) => l) private locator: IServiceLocator,
     ) {}
 

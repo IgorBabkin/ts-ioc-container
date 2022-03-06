@@ -1,4 +1,4 @@
-import { merge } from '../lib/helpers/utils';
+import { merge } from '../utils';
 
 describe('helpers', () => {
     it('should merge arrays', function () {

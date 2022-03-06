@@ -1,4 +1,4 @@
-import { Container, fromFn, ProviderBuilder, ServiceLocator, SimpleInjector } from '../../lib';
+import { Container, fromFn, ServiceLocator, SimpleInjector } from '../../lib';
 
 describe('ProviderBuilder', function () {
     let locator: Container;

@@ -1,9 +1,9 @@
-import { injectFn as inject } from '../../lib';
+import { inject, withoutLogs as w } from '../ioc/IocInjector';
 
 export class SubGroup3 {
     constructor(
-        @inject((l) => l.resolve('key1')) private p1: string,
-        @inject((l) => l.resolve('key2')) private p2: string,
+        @inject(w((l) => l.resolve('key1'))) private p1: string,
+        @inject(w((l) => l.resolve('key2'))) private p2: string,
     ) {}
 
     privet(): string[] {

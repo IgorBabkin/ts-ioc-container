@@ -1,17 +1,16 @@
 import 'reflect-metadata';
 import {
-    composeClassDecorators,
     constructor,
     ContainerBuilder,
     createAddKeysDecorator,
     createLevelDecorator,
     createSingletonDecorator,
     fromClass as fromConstructor,
-    inject,
-    IocInjector,
     ProviderNotFoundError,
     ProvidersMetadataCollector,
 } from '../lib';
+import { inject, IocInjector, withoutLogs as w } from './ioc/IocInjector';
+import { composeClassDecorators } from 'ts-constructor-injector';
 
 export const containerBuilder = new ContainerBuilder(new IocInjector());
 
@@ -46,7 +45,7 @@ class Repository2 implements IRepository {
 }
 
 class Main {
-    constructor(@inject(IRepositoryKey) private repository: IRepository) {}
+    constructor(@inject(w((l) => l.resolve(IRepositoryKey))) private repository: IRepository) {}
 
     greeting(): string {
         return `Hello ${this.repository.id}`;
@@ -54,7 +53,7 @@ class Main {
 }
 
 class Main2 {
-    constructor(@inject(IRepositoryKey) private repository: IRepository) {}
+    constructor(@inject(w((l) => l.resolve(IRepositoryKey))) private repository: IRepository) {}
 
     greeting(): string {
         return `Hello ${this.repository.id}`;

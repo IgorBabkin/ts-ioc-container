@@ -4,17 +4,16 @@ import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from
 import { Group } from './Group';
 import { OnDisposeImpl } from './OnDisposeImpl';
 import { onConstructMetadataCollector, onDisposeMetadataCollector } from './decorators';
-import { IocInjector, injectFn } from '../../lib';
-
-export const injectMetadataCollector = new IocInjector();
-export const inject = injectFn;
+import { inject, IocInjector, withoutLogs as w } from '../ioc/IocInjector';
 import { SubGroup3 } from './SubGroup3';
 import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
+
+export const injectMetadataCollector = new IocInjector();
 
 const MyKey = Symbol.for('MyKey');
 
 class Greeting {
-    constructor(@inject((l) => l.resolve(MyKey)) private hey: string) {}
+    constructor(@inject(w((l) => l.resolve(MyKey))) private hey: string) {}
 
     say(): string {
         return `Hello ${this.hey}`;

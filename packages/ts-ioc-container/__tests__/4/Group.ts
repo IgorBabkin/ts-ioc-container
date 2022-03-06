@@ -1,14 +1,14 @@
 import { SubGroup } from './SubGroup';
 import { SubGroup2 } from './SubGroup2';
 import { SubGroup3 } from './SubGroup3';
-import { injectFn as inject } from '../../lib';
+import { inject, withoutLogs as w } from '../ioc/IocInjector';
 
 export class Group {
     constructor(
-        @inject((l) => l.resolve('key1')) private p1: string,
-        @inject((l) => l.resolve(SubGroup)) private subGroup: SubGroup,
-        @inject((l) => (v: number) => l.resolve(SubGroup2, v)) private factory: (v: number) => SubGroup2,
-        @inject((l) => l.resolve('key3')) private group3: SubGroup3,
+        @inject(w((l) => l.resolve('key1'))) private p1: string,
+        @inject(w((l) => l.resolve(SubGroup))) private subGroup: SubGroup,
+        @inject(w((l) => (v: number) => l.resolve(SubGroup2, v))) private factory: (v: number) => SubGroup2,
+        @inject(w((l) => l.resolve('key3'))) private group3: SubGroup3,
         private p2: string,
         private p3: string,
     ) {}
