@@ -37,6 +37,9 @@
     "watch": "nodemon --watch ./lib --exec npm run build",
     "test": "jest"
   },
+  "dependencies": {
+    "ts-constructor-injector": "^1.0.6"
+  },
   "devDependencies": {
     "@types/jest": "27.0.2",
     "jest": "27.2.3",

@@ -17,7 +17,7 @@ export const attr =
         Reflect.defineMetadata(key, metadata, target);
     };
 
-export const getProp = <T>(target: constructor<unknown>, key: string | symbol) =>
+export const getProp = <T>(target: constructor<unknown>, key: string | symbol): T | undefined =>
     Reflect.getOwnMetadata(key, target) as T;
 
 export const to =

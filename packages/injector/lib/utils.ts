@@ -68,3 +68,7 @@ export function pipe<A, B, C, D, E, F, G, H, I, J>(
 export function pipe<Context>(...fns: any[]): InjectFn<Context> {
     return (value) => [pure, ...fns, run].reduce((acc, next) => next(acc), value);
 }
+
+export function composeClassDecorators(...decorators: ClassDecorator[]): ClassDecorator {
+    return (target) => decorators.forEach((it) => it(target));
+}
