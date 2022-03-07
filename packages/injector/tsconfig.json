@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": "./lib",
     "lib": ["es2016"],
-    "types": ["reflect-metadata", "jest"]
+    "types": ["reflect-metadata", "jest", "node"]
   },
   "include": [
     "lib"

@@ -14,4 +14,8 @@ export const resolve =
     };
 
 export const inject = <Context>(fn: Fn<Context, unknown>) =>
-    attr(INJECT_METADATA_KEY)((context: Context) => run(fn(pure(context))));
+    attr(INJECT_METADATA_KEY)((context: Context) => {
+        const monad = pure(context);
+        const transformed = fn(monad);
+        return run(transformed);
+    });
