@@ -1,6 +1,7 @@
 export { resolve, inject } from './resolve';
-export { prop, getProp, attr, to } from './decorators';
-export { composeClassDecorators } from './utils';
+export { prop, getProp, attr } from './metadata';
+export { composeDecorators, to } from './utils';
 export { pipe } from './pipe';
-export { constructor, Fn, InjectFn, InjectionDecorator } from './types';
-export { Write } from './writeMonad';
+export { pipeWrite } from './pipeWrite';
+export { constructor, InjectFn, InjectionDecorator } from './types';
+export { Write, WriteFn, toWrite } from './writeMonad';

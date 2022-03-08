@@ -1,3 +1,7 @@
+import { constructor } from './types';
+import { resolve } from './resolve';
+import { Fn } from './pipe';
+
 export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     if (baseArr.length === 0) {
         return insertArr;
@@ -18,6 +22,12 @@ export const constant =
     () =>
         value;
 
-export function composeClassDecorators(...decorators: ClassDecorator[]): ClassDecorator {
+export function composeDecorators(...decorators: ClassDecorator[]): ClassDecorator {
     return (target) => decorators.forEach((it) => it(target));
 }
+
+export const to =
+    <T>(value: constructor<T>) =>
+    <Context>(env: Context): T => {
+        return resolve(env)(value);
+    };
