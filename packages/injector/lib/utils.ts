@@ -1,6 +1,5 @@
 import { constructor } from './types';
 import { resolve } from './resolve';
-import { Fn } from './pipe';
 
 export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     if (baseArr.length === 0) {
