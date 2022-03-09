@@ -9,8 +9,8 @@ import {
     ProviderNotFoundError,
     ProvidersMetadataCollector,
 } from '../lib';
-import { inject, IocInjector, withoutLogs as w } from './ioc/IocInjector';
-import { composeClassDecorators } from 'ts-constructor-injector';
+import { inject, IocInjector } from './ioc/IocInjector';
+import { composeDecorators } from 'ts-constructor-injector';
 
 export const containerBuilder = new ContainerBuilder(new IocInjector());
 
@@ -20,8 +20,8 @@ export const keys = createAddKeysDecorator(metadataCollector);
 
 const single = createSingletonDecorator(metadataCollector);
 const level = createLevelDecorator(metadataCollector);
-export const singleton = composeClassDecorators(level(0), single);
-export const scoped = composeClassDecorators(level(1), single);
+export const singleton = composeDecorators(level(0), single);
+export const scoped = composeDecorators(level(1), single);
 
 export const fromClass = <T>(target: constructor<T>) =>
     fromConstructor(target).withReducer(metadataCollector.findReducerOrCreate(target));
@@ -45,7 +45,7 @@ class Repository2 implements IRepository {
 }
 
 class Main {
-    constructor(@inject(w((l) => l.resolve(IRepositoryKey))) private repository: IRepository) {}
+    constructor(@inject((l) => l.resolve(IRepositoryKey)) private repository: IRepository) {}
 
     greeting(): string {
         return `Hello ${this.repository.id}`;
@@ -53,7 +53,7 @@ class Main {
 }
 
 class Main2 {
-    constructor(@inject(w((l) => l.resolve(IRepositoryKey))) private repository: IRepository) {}
+    constructor(@inject((l) => l.resolve(IRepositoryKey)) private repository: IRepository) {}
 
     greeting(): string {
         return `Hello ${this.repository.id}`;

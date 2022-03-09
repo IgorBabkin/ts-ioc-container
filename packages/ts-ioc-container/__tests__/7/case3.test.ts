@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { IServiceLocator, ServiceLocator } from '../../lib';
-import { inject, IocInjector, withoutLogs as w } from '../ioc/IocInjector';
+import { inject, IocInjector } from '../ioc/IocInjector';
 
 class Logger {
     constructor(private prefix: string) {}
@@ -13,7 +13,7 @@ class Logger {
 class App {
     constructor(
         private value: string,
-        @inject(w((l, ...args) => l.resolve(Logger, 'super', ...args))) private logger: Logger,
+        @inject((l, ...args) => l.resolve(Logger, 'super', ...args)) private logger: Logger,
     ) {}
 
     run(): string {
