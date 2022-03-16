@@ -1,3 +1,4 @@
+export { ProviderReducer } from './features/scope/IProvidersMetadataCollector';
 export { IServiceLocator, Resolveable } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
