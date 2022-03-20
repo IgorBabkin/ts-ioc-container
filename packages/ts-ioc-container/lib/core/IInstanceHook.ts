@@ -1,4 +1,4 @@
-import { id } from '../helpers/utils';
+import { id, noop } from '../helpers/utils';
 
 export interface IInstanceHook {
     onConstruct<T>(instance: T): T;
@@ -11,5 +11,5 @@ export interface IInstanceHook {
 export const emptyHook: IInstanceHook = {
     onResolve: id,
     onConstruct: id,
-    onDispose(): void {},
+    onDispose: noop,
 };

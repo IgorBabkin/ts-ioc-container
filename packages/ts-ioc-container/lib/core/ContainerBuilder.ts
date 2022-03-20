@@ -24,8 +24,11 @@ export class ContainerBuilder {
         return this;
     }
 
-    setHook(hook: IInstanceHook): this {
-        this.hook = hook;
+    setHook(hook: Partial<IInstanceHook>): this {
+        this.hook = {
+            ...emptyHook,
+            ...hook,
+        };
         return this;
     }
 
