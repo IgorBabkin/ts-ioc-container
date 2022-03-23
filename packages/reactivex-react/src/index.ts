@@ -1,3 +1,4 @@
+export {CombineTheLatest} from "./react/CombineTheLatests";
 export { ReaderRepository, CreateReader } from './storage/repository/ReaderRepository';
 export { IReaderRepository } from './storage/repository/IReaderRepository';
 export { ICleaner } from './storage/cleaner/ICleaner';
