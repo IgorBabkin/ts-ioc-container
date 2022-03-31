@@ -2,6 +2,7 @@ import { InjectionToken, IServiceLocator, ProviderKey } from './IServiceLocator'
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProvider } from './provider/IProvider';
+import {IInstanceHook} from "./IInstanceHook";
 
 export class EmptyServiceLocator implements IServiceLocator {
     createScope(): IServiceLocator {
@@ -22,5 +23,13 @@ export class EmptyServiceLocator implements IServiceLocator {
 
     entries(): Array<[ProviderKey, IProvider<any>]> {
         return [];
+    }
+
+    has(key: ProviderKey): boolean {
+        return false;
+    }
+
+    setHook(hook: IInstanceHook): this {
+        throw new MethodNotImplementedError();
     }
 }

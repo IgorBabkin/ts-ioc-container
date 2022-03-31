@@ -1,10 +1,12 @@
-import { ProviderKey, Resolveable } from '../IServiceLocator';
-import { IKeyedProvider, ScopeOptions } from './IProvider';
+import { Resolveable } from '../IServiceLocator';
+import { IProvider, ScopeOptions } from './IProvider';
 
-export abstract class ProviderDecorator<T> implements IKeyedProvider<T> {
-    constructor(private decorated: IKeyedProvider<T>) {}
+export abstract class ProviderDecorator<T> implements IProvider<T> {
+    constructor(private decorated: IProvider<T>) {}
 
-    abstract clone(): ProviderDecorator<T>;
+    clone(): IProvider<T> {
+        return this.decorated.clone();
+    }
 
     dispose(): void {
         this.decorated.dispose();
@@ -16,14 +18,5 @@ export abstract class ProviderDecorator<T> implements IKeyedProvider<T> {
 
     resolve(locator: Resolveable, ...args: any[]): T {
         return this.decorated.resolve(locator, ...args);
-    }
-
-    addKeys(...keys: ProviderKey[]): this {
-        this.decorated.addKeys(...keys);
-        return this;
-    }
-
-    getKeys(): ProviderKey[] {
-        return this.decorated.getKeys();
     }
 }

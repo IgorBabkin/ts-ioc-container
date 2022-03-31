@@ -1,11 +1,11 @@
-import { ProviderDecorator } from './ProviderDecorator';
-import { IKeyedProvider } from './IProvider';
-import { Resolveable } from '../IServiceLocator';
+import {ProviderDecorator} from './ProviderDecorator';
+import {Resolveable} from '../IServiceLocator';
+import {IProvider} from "./IProvider";
 
 export type ArgsFn = (l: Resolveable) => any[];
 
 export class ArgsProvider<T> extends ProviderDecorator<T> {
-    constructor(private provider: IKeyedProvider<T>, private argsFn: ArgsFn) {
+    constructor(private provider: IProvider<T>, private argsFn: ArgsFn) {
         super(provider);
     }
 

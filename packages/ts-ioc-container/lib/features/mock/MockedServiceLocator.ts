@@ -1,19 +1,19 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
+    IInstanceHook,
     InjectionToken,
     IProvider,
     IServiceLocator,
-    MethodNotImplementedError,
     ProviderKey,
     ProviderNotFoundError,
+    Tag,
 } from '../../index';
 import { IMockRepository } from './IMockRepository';
 
 export class MockedServiceLocator implements IServiceLocator {
     constructor(private decorated: IServiceLocator, private mockRepository: IMockRepository) {}
 
-    createScope(): IServiceLocator {
-        throw new MethodNotImplementedError();
+    createScope(tags?: Tag[], parent: IServiceLocator = this): IServiceLocator {
+        return new MockedServiceLocator(this.decorated.createScope(tags, parent), this.mockRepository);
     }
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
@@ -38,5 +38,10 @@ export class MockedServiceLocator implements IServiceLocator {
 
     register(key: ProviderKey, provider: IProvider<unknown>): void {
         this.decorated.register(key, provider);
+    }
+
+    setHook(hook: IInstanceHook): this {
+        this.decorated.setHook(hook);
+        return this;
     }
 }

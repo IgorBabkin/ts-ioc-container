@@ -1,4 +1,4 @@
-import { injectFn as inject } from '../../../lib';
+import { inject } from '../../ioc/IocInjector';
 
 export class SubGroup3 {
     constructor(

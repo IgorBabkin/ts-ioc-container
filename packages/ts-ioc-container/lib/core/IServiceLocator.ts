@@ -1,8 +1,9 @@
 import { IProvider, Tag } from './provider/IProvider';
 import { constructor, IDisposable } from '../helpers/types';
+import { IInstanceHook } from './IInstanceHook';
 
 export type RegisterOptions = {
-    noOverride: boolean;
+    override: boolean;
 };
 export type ProviderKey = string | symbol;
 
@@ -19,7 +20,9 @@ export interface Resolveable {
 export interface IServiceLocator extends IDisposable, Resolveable {
     createScope(tags?: Tag[], parent?: IServiceLocator): IServiceLocator;
 
-    register(key: ProviderKey, provider: IProvider<unknown>, options?: Partial<RegisterOptions>): void;
+    register(key: ProviderKey, provider: IProvider<unknown>): void;
 
     entries(): Array<[ProviderKey, IProvider<any>]>;
+
+    setHook(hook: IInstanceHook): this;
 }

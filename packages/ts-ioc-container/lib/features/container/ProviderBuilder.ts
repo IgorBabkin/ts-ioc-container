@@ -1,12 +1,13 @@
-import { IKeyedProvider, ResolveDependency, Tag } from '../core/provider/IProvider';
-import { SingletonProvider } from './scope/SingletonProvider';
-import { Provider } from '../core/provider/Provider';
-import { constructor } from '../helpers/types';
-import { TaggedProvider } from './scope/TaggedProvider';
-import { LevelProvider } from './scope/LevelProvider';
-import { ProviderReducer } from './scope/IProvidersMetadataCollector';
-import { ArgsFn, ArgsProvider } from '../core/provider/ArgsProvider';
-import { ProviderKey } from '../core/IServiceLocator';
+import { IProvider, ResolveDependency, Tag } from '../../core/provider/IProvider';
+import { SingletonProvider } from '../providers/SingletonProvider';
+import { Provider } from '../../core/provider/Provider';
+import { constructor } from '../../helpers/types';
+import { TaggedProvider } from '../providers/TaggedProvider';
+import { LevelProvider } from '../providers/LevelProvider';
+import { ProviderReducer } from './IProvidersMetadataCollector';
+import { ArgsFn, ArgsProvider } from '../../core/provider/ArgsProvider';
+import { ProviderKey } from '../../core/IServiceLocator';
+import { ContainerProvider } from './ContainerProvider';
 
 export function fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
     return new ProviderBuilder(Provider.fromClass(value));
@@ -21,7 +22,9 @@ export function fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
 }
 
 export class ProviderBuilder<T> {
-    constructor(private provider: IKeyedProvider<T>) {}
+    private keys: ProviderKey[] = [];
+
+    constructor(private provider: IProvider<T>) {}
 
     withArgs(...extraArgs: any[]): this {
         this.provider = new ArgsProvider(this.provider, () => extraArgs);
@@ -33,9 +36,8 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    withReducer(reducer: ProviderReducer<T>): this {
-        this.provider = reducer(this.provider);
-        return this;
+    map(reducer: ProviderReducer<T>): ProviderBuilder<T> {
+        return reducer(this);
     }
 
     forTags(...tags: Tag[]): this {
@@ -54,11 +56,11 @@ export class ProviderBuilder<T> {
     }
 
     forKeys(...keys: ProviderKey[]): this {
-        this.provider = this.provider.addKeys(...keys);
+        this.keys = keys;
         return this;
     }
 
-    build(): IKeyedProvider<T> {
-        return this.provider;
+    build(): ContainerProvider<T> {
+        return new ContainerProvider(this.provider, new Set(this.keys));
     }
 }

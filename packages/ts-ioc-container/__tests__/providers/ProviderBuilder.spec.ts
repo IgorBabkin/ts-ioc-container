@@ -1,17 +1,19 @@
-import { Container, fromFn, ServiceLocator, SimpleInjector } from '../../lib';
+import { Container, fromFn } from '../../lib';
+import {SimpleInjector} from "../ioc/SimpleInjector";
 
 describe('ProviderBuilder', function () {
     let locator: Container;
 
     beforeEach(() => {
-        locator = new Container(ServiceLocator.fromInjector(new SimpleInjector()));
+        locator = Container.fromInjector(new SimpleInjector());
     });
 
     test('withArgs', () => {
         const args = [2, 3, 4];
 
         const builder = fromFn((l, ...deps) => deps).withArgs(...args);
+        locator.register(builder.forKeys('hey').build())
 
-        expect(builder.build().resolve(locator)).toEqual(args);
+        expect(locator.resolve('hey')).toEqual(args);
     });
 });

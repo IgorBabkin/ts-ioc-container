@@ -1,11 +1,8 @@
-import { constructor } from '../../helpers/types';
-import { Tag } from '../../core/provider/IProvider';
-import { SingletonProvider } from './SingletonProvider';
-import { LevelProvider } from './LevelProvider';
-import { TaggedProvider } from './TaggedProvider';
-import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
-import { ArgsFn, ArgsProvider } from '../../core/provider/ArgsProvider';
-import { ProviderKey } from '../../core/IServiceLocator';
+import {constructor} from '../../helpers/types';
+import {Tag} from '../../core/provider/IProvider';
+import {IProvidersMetadataCollector} from './IProvidersMetadataCollector';
+import {ArgsFn} from '../../core/provider/ArgsProvider';
+import {ProviderKey} from '../../core/IServiceLocator';
 
 export const createAddKeysDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
@@ -13,7 +10,7 @@ export const createAddKeysDecorator =
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (provider) => fn(provider).addKeys(...keys));
+        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forKeys(...keys));
     };
 
 export const createArgsFnDecorator =
@@ -22,7 +19,7 @@ export const createArgsFnDecorator =
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (provider) => new ArgsProvider(fn(provider), argsFn));
+        metadataCollector.addReducer(targetClass, (builder) => fn(builder).withArgsFn(argsFn));
     };
 
 export const createSingletonDecorator =
@@ -30,7 +27,7 @@ export const createSingletonDecorator =
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (provider) => new SingletonProvider(fn(provider)));
+        metadataCollector.addReducer(targetClass, (builder) => fn(builder).asSingleton());
     };
 
 export const createLevelDecorator =
@@ -39,7 +36,7 @@ export const createLevelDecorator =
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (provider) => new LevelProvider(fn(provider), [value, value]));
+        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forLevel(value));
     };
 
 export const createTagsDecorator =
@@ -48,5 +45,5 @@ export const createTagsDecorator =
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (provider) => new TaggedProvider(fn(provider), tags));
+        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forTags(...tags));
     };

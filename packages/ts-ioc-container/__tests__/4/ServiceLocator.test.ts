@@ -1,16 +1,17 @@
 import 'reflect-metadata';
-import { ContainerBuilder, fromClass, fromFn, fromValue, ProviderNotFoundError } from '../../lib';
+import { Container, fromClass, fromFn, fromValue, ProviderNotFoundError, ServiceLocator } from '../../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './OnConstructImpl';
 import { Group } from './Group';
 import { OnDisposeImpl } from './OnDisposeImpl';
-import { onConstructMetadataCollector, onDisposeMetadataCollector } from './decorators';
+import { onConstruct, onConstructMetadataCollector, onDisposeMetadataCollector } from './decorators';
 import { inject, IocInjector } from '../ioc/IocInjector';
 import { SubGroup3 } from './SubGroup3';
 import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
+import { InjectorHook } from '../ioc/InjectorHook';
+import { InstanceHook } from '../../lib/features/instanceHook/InstanceHook';
+import { id } from '../../lib/helpers/utils';
 
-export const injectMetadataCollector = new IocInjector();
-
-const MyKey = Symbol.for('MyKey');
+const MyKey = Symbol('MyKey');
 
 class Greeting {
     constructor(@inject((l) => l.resolve(MyKey)) private hey: string) {}
@@ -21,8 +22,8 @@ class Greeting {
 }
 
 describe('ServiceLocator', () => {
-    const createIoCLocator = (hook: IInstanceHook = emptyHook) => {
-        return new ContainerBuilder(new IocInjector()).setHook(hook).build();
+    const createIoCLocator = (hook: IInstanceHook = emptyHook, injectorHook?: InjectorHook) => {
+        return Container.fromInjector(new IocInjector(injectorHook)).setHook(hook);
     };
 
     it('should create an instanse', () => {
@@ -182,15 +183,11 @@ describe('ServiceLocator', () => {
         });
 
         it('ios: onConstructHook for injector', () => {
-            const decorated = createIoCLocator({
+            const decorated = createIoCLocator(new InstanceHook(), {
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
                     return instance;
                 },
-                onResolve<T>(instance: T): T {
-                    return instance;
-                },
-                onDispose<GInstance>(instance: GInstance) {},
             });
 
             const group = decorated.resolve(OnConstructImpl);
@@ -199,39 +196,39 @@ describe('ServiceLocator', () => {
         });
 
         it('ioc: onConstructHook for provider', () => {
-            const hook = {
+            class Initializable {
+                isInitialized: boolean;
+
+                @onConstruct
+                init(): void {
+                    this.isInitialized = true;
+                }
+            }
+
+            const locator = createIoCLocator(new InstanceHook(), {
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
                     return instance;
                 },
-                onResolve<GInstance>(instance: GInstance) {
-                    return instance;
-                },
-                onDispose<GInstance>(instance: GInstance) {},
-            };
-            const locator = createIoCLocator(hook).register(
-                fromFn(() => new OnConstructImpl())
-                    .forKeys('key')
-                    .build(),
-            );
+            }).register(fromClass(Initializable).forKeys('key').build());
 
-            const group = locator.resolve<OnConstructImpl>('key');
+            const group = locator.resolve<Initializable>('key');
 
-            expect(group.isConstructed).toBeTruthy();
+            expect(group.isInitialized).toBeTruthy();
         });
 
         it('ioc: onDisposeHook', () => {
-            const decorated = createIoCLocator({
-                onConstruct<GInstance>(instance: GInstance) {
-                    return instance;
-                },
-                onResolve<T>(instance: T): T {
-                    return instance;
-                },
-                onDispose<GInstance>(instance: GInstance) {
+            const decorated = createIoCLocator(
+                new InstanceHook((instance: unknown) => {
                     onDisposeMetadataCollector.invokeHooksOf(instance);
+                }),
+                {
+                    onConstruct<GInstance>(instance: GInstance) {
+                        onConstructMetadataCollector.invokeHooksOf(instance);
+                        return instance;
+                    },
                 },
-            });
+            );
 
             const group = decorated.resolve(OnDisposeImpl);
 

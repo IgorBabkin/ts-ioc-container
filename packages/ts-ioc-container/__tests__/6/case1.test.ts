@@ -21,7 +21,7 @@ describe('case1', () => {
     let locator: IServiceLocator;
 
     beforeEach(() => {
-        locator = ServiceLocator.fromInjector(new IocInjector());
+        locator = new ServiceLocator(new IocInjector());
     });
 
     it('tee', () => {

@@ -1,4 +1,4 @@
-import { Container, fromClass, fromValue, ProxyInjector, ServiceLocator } from '../lib';
+import {Container, fromClass, fromValue, ProxyInjector} from '../lib';
 
 class Greeting {
     private readonly name: string;
@@ -16,7 +16,7 @@ describe('proxy', function () {
     let locator: Container;
 
     beforeEach(() => {
-        locator = new Container(ServiceLocator.fromInjector(new ProxyInjector()));
+        locator = Container.fromInjector(new ProxyInjector());
     });
 
     it('should asd', function () {

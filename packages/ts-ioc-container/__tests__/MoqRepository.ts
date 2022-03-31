@@ -1,4 +1,4 @@
-import { IMockRepository } from '../lib/features/mock/IMockRepository';
+import { IMockRepository } from '../lib';
 import { ProviderKey } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
 

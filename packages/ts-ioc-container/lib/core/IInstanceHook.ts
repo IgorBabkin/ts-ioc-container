@@ -1,15 +1,16 @@
 import { id, noop } from '../helpers/utils';
+import { IDisposable } from '../helpers/types';
 
-export interface IInstanceHook {
-    onConstruct<T>(instance: T): T;
+export interface IInstanceHook extends IDisposable {
+    resolve<T>(instance: T): T;
 
-    onResolve<T>(instance: T): T;
+    dispose(): void;
 
-    onDispose(instance: unknown): void;
+    clone(): IInstanceHook;
 }
 
 export const emptyHook: IInstanceHook = {
-    onResolve: id,
-    onConstruct: id,
-    onDispose: noop,
+    resolve: id,
+    dispose: noop,
+    clone: () => emptyHook,
 };

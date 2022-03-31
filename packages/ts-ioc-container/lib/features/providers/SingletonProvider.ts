@@ -1,12 +1,12 @@
-import { Resolveable } from '../../core/IServiceLocator';
-import { Box } from '../../helpers/types';
-import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
-import { IKeyedProvider } from '../../core/provider/IProvider';
+import {Resolveable} from '../../core/IServiceLocator';
+import {Box} from '../../helpers/types';
+import {ProviderDecorator} from '../../core/provider/ProviderDecorator';
+import {IProvider} from "../../core/provider/IProvider";
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
     private instance: Box<T> | null = null;
 
-    constructor(private readonly provider: IKeyedProvider<T>) {
+    constructor(private readonly provider: IProvider<T>) {
         super(provider);
     }
 

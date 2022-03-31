@@ -1,7 +1,7 @@
-import { constructor } from '../../helpers/types';
-import { IKeyedProvider } from '../../core/provider/IProvider';
+import {constructor} from '../../helpers/types';
+import {ProviderBuilder} from "./ProviderBuilder";
 
-export type ProviderReducer<T> = (provider: IKeyedProvider<T>) => IKeyedProvider<T>;
+export type ProviderReducer<T> = (builder: ProviderBuilder<T>) => ProviderBuilder<T>;
 
 export interface IProvidersMetadataCollector {
     addReducer<T>(target: constructor<T>, reducer: ProviderReducer<T>): void;

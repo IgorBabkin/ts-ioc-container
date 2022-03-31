@@ -1,5 +1,5 @@
-import { ProviderKey, Resolveable } from '../IServiceLocator';
-import { IDisposable } from '../../helpers/types';
+import {Resolveable} from '../IServiceLocator';
+import {IDisposable} from '../../helpers/types';
 
 export type ResolveDependency<T> = (locator: Resolveable, ...args: any[]) => T;
 
@@ -18,8 +18,3 @@ export interface IProvider<T> extends IDisposable {
     isValid(filters: ScopeOptions): boolean;
 }
 
-export interface IKeyedProvider<T> extends IProvider<T> {
-    clone(): IKeyedProvider<T>;
-    getKeys(): ProviderKey[];
-    addKeys(...keys: ProviderKey[]): this;
-}

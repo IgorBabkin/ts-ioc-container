@@ -1,7 +1,7 @@
 import { SubGroup } from './SubGroup';
 import { SubGroup2 } from './SubGroup2';
 import { SubGroup3 } from './SubGroup3';
-import { injectFn as inject } from '../../../lib';
+import { inject } from '../../ioc/IocInjector';
 
 export class Group {
     constructor(

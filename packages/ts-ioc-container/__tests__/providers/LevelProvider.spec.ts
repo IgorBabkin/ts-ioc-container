@@ -1,8 +1,9 @@
-import { Container, fromFn, ProviderNotFoundError, ServiceLocator, SimpleInjector } from '../../lib';
+import { Container, fromFn, ProviderNotFoundError } from '../../lib';
+import {SimpleInjector} from "../ioc/SimpleInjector";
 
 describe('LevelProvider', function () {
     function createContainer(): Container {
-        return new Container(ServiceLocator.fromInjector(new SimpleInjector()));
+        return Container.fromInjector(new SimpleInjector());
     }
 
     test('singleton', () => {

@@ -1,23 +1,21 @@
 import {
-    Container,
-    IKeyedProvider,
+    Container, IProvider,
     LevelProvider,
     Provider,
-    ServiceLocator,
-    SimpleInjector,
     SingletonProvider,
 } from '../../lib';
+import {SimpleInjector} from "../ioc/SimpleInjector";
 
 describe('SingletonProvider', function () {
     let locator: Container;
-    let provider: IKeyedProvider<any>;
+    let provider: IProvider<any>;
 
-    function createSingleton<T>(provider: IKeyedProvider<T>): IKeyedProvider<T> {
+    function createSingleton<T>(provider: IProvider<T>): IProvider<T> {
         return new LevelProvider(new SingletonProvider(provider), [0, 0]);
     }
 
     beforeEach(() => {
-        locator = new Container(ServiceLocator.fromInjector(new SimpleInjector()));
+        locator = Container.fromInjector(new SimpleInjector());
         provider = new Provider(() => Math.random());
     });
 

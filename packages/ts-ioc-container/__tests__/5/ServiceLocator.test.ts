@@ -1,21 +1,16 @@
-import {
-    ContainerBuilder,
-    fromClass,
-    fromFn,
-    fromValue,
-    IDisposable,
-    IServiceLocator,
-    SimpleInjector,
-} from '../../lib';
+import { Container, fromClass, fromFn, fromValue, IDisposable, IServiceLocator, ServiceLocator } from '../../lib';
 import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
+import { InjectorHook } from '../ioc/InjectorHook';
+import { SimpleInjector } from '../ioc/SimpleInjector';
+import { InstanceHook } from '../../lib/features/instanceHook/InstanceHook';
 
 class TestClass {
     constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
 }
 
 describe('ServiceLocator', () => {
-    const createSimpleLocator = (hook: IInstanceHook = emptyHook) =>
-        new ContainerBuilder(new SimpleInjector()).setHook(hook).build();
+    const createSimpleLocator = (hook: IInstanceHook = emptyHook, injectorHook?: InjectorHook) =>
+        Container.fromInjector(new SimpleInjector(injectorHook)).setHook(hook);
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(fromClass(TestClass).forKeys('key1').build());
@@ -26,43 +21,42 @@ describe('ServiceLocator', () => {
     });
 
     it('should invokes postConstruct', () => {
-        let isPostConstructed = false;
-        const locator = createSimpleLocator({
-            onConstruct: (instance) => {
-                (instance as any).postConstruct();
+        class Disposable {
+            isInitialized: boolean;
+
+            init() {
+                this.isInitialized = true;
+            }
+        }
+
+        const locator = createSimpleLocator(emptyHook, {
+            onConstruct: <T>(instance: T) => {
+                if (instance instanceof Disposable) {
+                    instance.init();
+                }
                 return instance;
             },
-            onResolve<T>(instance: T): T {
-                return instance;
-            },
-            onDispose() {},
         });
-        const disposable = {
-            postConstruct: () => {
-                isPostConstructed = true;
-            },
-        };
 
-        const child = locator.createScope().register(fromValue(disposable).forKeys('key1').build());
+        const child = locator.createScope().register(fromClass(Disposable).forKeys('key1').build());
 
-        child.resolve('key1');
+        const instance = child.resolve<Disposable>('key1');
 
-        expect(isPostConstructed).toBeTruthy();
+        expect(instance.isInitialized).toBeTruthy();
     });
 
     it('should invokes onDispose', () => {
         let isDisposed = false;
-        const locator = createSimpleLocator({
-            onConstruct<T>(instance: T): T {
-                return instance;
-            },
-            onResolve<T>(instance: T): T {
-                return instance;
-            },
-            onDispose(instance) {
+        const locator = createSimpleLocator(
+            new InstanceHook((instance: unknown) => {
                 (instance as any as IDisposable).dispose();
+            }),
+            {
+                onConstruct<T>(instance: T): T {
+                    return instance;
+                },
             },
-        });
+        );
         const disposable = {
             dispose: () => {
                 isDisposed = true;

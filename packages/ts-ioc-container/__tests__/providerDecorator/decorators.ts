@@ -15,4 +15,4 @@ export const level = createLevelDecorator(metadataCollector);
 export const tags = createTagsDecorator(metadataCollector);
 
 export const fromClass = <T>(target: constructor<T>) =>
-    fromConstructor(target).withReducer(metadataCollector.findReducerOrCreate(target));
+    fromConstructor(target).map(metadataCollector.findReducerOrCreate(target));
