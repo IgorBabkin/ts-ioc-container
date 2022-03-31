@@ -9,7 +9,7 @@ export function run<T>([value]: Write<T>): T {
     return value;
 }
 
-export type WriteFn<A, B> = (value: Write<A>) => Write<B>;
+export type WriteFn<A, B> = (value: Write<A>, ...args: any[]) => Write<B>;
 
 export const toWrite =
     <T>(value: constructor<T>) =>

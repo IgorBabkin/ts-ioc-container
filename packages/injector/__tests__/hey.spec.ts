@@ -43,7 +43,7 @@ interface HasCommunityType {
 describe('dasdad', function () {
     it('should asdasd', function () {
         class Query {
-            @injectProp(toOneOf(Yardi, Resman))
+            @injectProp(pipe(toOneOf(Yardi, Resman)))
             integration: Yardi | Resman;
 
             constructor(@inject(pipe(env('community_type'))) private communityType: CommunityType) {}

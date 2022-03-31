@@ -1,6 +1,7 @@
 import { constructor } from './types';
 import { resolve } from './resolve';
 import { getProp } from './metadata';
+import { WriteFn } from './writeMonad';
 
 export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     if (baseArr.length === 0) {
@@ -33,14 +34,14 @@ export const to =
     };
 
 export const toOneOf =
-    (...values: constructor<any>[]) =>
-    <Context>(env: Context, instance: any): unknown => {
+    <Context>(...values: constructor<any>[]): WriteFn<Context, unknown> =>
+    ([input, logs], instance: any) => {
         const Value = values.find((it) => {
             const predicate: (value: any) => boolean = getProp(it, 'predicate');
+            if (!predicate) {
+                throw new Error(`No predicate for ${it.name}`);
+            }
             return predicate(instance);
         });
-        if (!Value) {
-            throw new Error('Cannot find constructor');
-        }
-        return resolve(env)(Value);
+        return [Value ? resolve(input)(Value) : undefined, [...logs, 'toOneOf']];
     };

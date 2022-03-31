@@ -1,6 +1,6 @@
 import { InjectFn } from './types';
 
-export type Fn<A, B> = (value: A) => B;
+export type Fn<A, B> = (value: A, ...args: any[]) => B;
 export function pipe<A, B>(a: Fn<A, B>): Fn<A, B>;
 export function pipe<A, B, C>(a: Fn<A, B>, b: Fn<B, C>): Fn<A, C>;
 export function pipe<A, B, C, D>(a: Fn<A, B>, b: Fn<B, C>, c: Fn<C, D>): Fn<A, D>;
@@ -46,5 +46,5 @@ export function pipe<A, B, C, D, E, F, G, H, I, J>(
 ): Fn<A, J>;
 
 export function pipe<Context>(...fns: any[]): InjectFn<Context> {
-    return (value) => fns.reduce((acc, next) => next(acc), value);
+    return (value, ...args) => fns.reduce((acc, next) => next(acc, ...args), value);
 }
