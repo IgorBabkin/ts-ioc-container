@@ -14,13 +14,15 @@ export const resolve =
         const instance = new value(...args);
 
         const propertyFns =
-            getFieldProps<Map<string | symbol, InjectFn<Context>>>(instance, INJECT_PROPERTY_METADATA_KEY) ?? new Map();
+            getFieldProps<Map<string | symbol, InjectFn<Context>>>(instance, INJECT_PROPERTY_METADATA_KEY) ??
+            new Map<string | symbol, InjectFn<Context>>();
         for (const [key, fn] of propertyFns.entries()) {
-            instance[key] = fn(context);
+            instance[key] = fn(context, instance);
         }
 
         return instance;
     };
 
 export const inject = <Context>(fn: Fn<Context, unknown>) => attr(INJECT_METADATA_KEY)(fn);
-export const injectProperty = <Context>(fn: Fn<Context, unknown>) => field(INJECT_PROPERTY_METADATA_KEY, fn);
+export const injectProperty = <Context, Instance = any>(fn: (value: Context, instance: Instance) => unknown) =>
+    field(INJECT_PROPERTY_METADATA_KEY, fn);
