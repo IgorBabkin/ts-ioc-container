@@ -22,10 +22,11 @@ export const field =
     };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export const getProp = <T>(target: Object, key: string | symbol): T | undefined =>
-    Reflect.getOwnMetadata(key, target) as T;
+export function getProp<T>(target: Object, key: string | symbol): T | undefined {
+    return Reflect.getOwnMetadata(key, target) as T;
+}
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export const getFieldProps = <T>(target: Object, key: string | symbol): T | undefined => {
+export function getFieldProps<T>(target: Object, key: string | symbol): T | undefined {
     return Reflect.getMetadata(key, target) as T;
-};
+}
