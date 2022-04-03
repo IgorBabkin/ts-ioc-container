@@ -2,7 +2,7 @@ import { InjectionToken, IServiceLocator, ProviderKey } from './IServiceLocator'
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProvider } from './provider/IProvider';
-import {IInstanceHook} from "./IInstanceHook";
+import { IInstanceHook } from './IInstanceHook';
 
 export class EmptyServiceLocator implements IServiceLocator {
     createScope(): IServiceLocator {

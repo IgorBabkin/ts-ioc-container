@@ -1,5 +1,5 @@
-import {Resolveable} from '../IServiceLocator';
-import {IDisposable} from '../../helpers/types';
+import { Resolveable } from '../IServiceLocator';
+import { IDisposable } from '../../helpers/types';
 
 export type ResolveDependency<T> = (locator: Resolveable, ...args: any[]) => T;
 
@@ -17,4 +17,3 @@ export interface IProvider<T> extends IDisposable {
 
     isValid(filters: ScopeOptions): boolean;
 }
-

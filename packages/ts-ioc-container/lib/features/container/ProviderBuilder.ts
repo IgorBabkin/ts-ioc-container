@@ -21,6 +21,10 @@ export function fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
     return new ProviderBuilder(new Provider(fn));
 }
 
+export function fromClassArray<T>(classes: constructor<T>[]): ProviderBuilder<T[]> {
+    return fromFn((l) => classes.map((it) => l.resolve(it)));
+}
+
 export class ProviderBuilder<T> {
     private keys: ProviderKey[] = [];
 

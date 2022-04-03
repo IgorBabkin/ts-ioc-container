@@ -4,7 +4,7 @@ export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
 export { Container } from './features/container/Container';
 export { IContainer } from './features/container/IContainer';
-export { ScopeOptions, ResolveDependency, Tag, IProvider} from './core/provider/IProvider';
+export { ScopeOptions, ResolveDependency, Tag, IProvider } from './core/provider/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/injectors/SimpleInjector';
 export { IMethodsMetadataCollector } from './features/instanceHook/IMethodsMetadataCollector';
@@ -22,7 +22,7 @@ export { LevelProvider } from './features/providers/LevelProvider';
 export { IMockRepository } from './features/mock/IMockRepository';
 export { MockedServiceLocator } from './features/mock/MockedServiceLocator';
 export { SingletonProvider } from './features/providers/SingletonProvider';
-export { ProviderBuilder, fromClass, fromFn, fromValue } from './features/container/ProviderBuilder';
+export { ProviderBuilder, fromClass, fromFn, fromValue, fromClassArray } from './features/container/ProviderBuilder';
 export { IProvidersMetadataCollector } from './features/container/IProvidersMetadataCollector';
 export { ProvidersMetadataCollector } from './features/container/ProvidersMetadataCollector';
 export {
