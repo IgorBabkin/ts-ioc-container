@@ -5,6 +5,7 @@ import { IContainerProvider } from './IContainerProvider';
 import { IInjector } from '../../core/IInjector';
 import { ServiceLocator } from '../../core/ServiceLocator';
 import { IInstanceHook } from '../../core/IInstanceHook';
+import { constructor } from '../../helpers/types';
 
 export class Container implements IContainer {
     static fromInjector(injector: IInjector): Container {
@@ -29,6 +30,14 @@ export class Container implements IContainer {
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
         return this.locator.resolve(key, ...args);
+    }
+
+    resolveDecorated<T>(...Constructors: constructor<T>[]): T | undefined {
+        if (Constructors.length === 0) {
+            return undefined;
+        }
+        const [first, ...rest] = Constructors;
+        return this.locator.resolve(first, this.resolveDecorated(...rest));
     }
 
     dispose(): void {
