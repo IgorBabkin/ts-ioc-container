@@ -1,4 +1,4 @@
-import {IProvider, LevelProvider, Provider, SingletonProvider} from '../../lib';
+import { IProvider, LevelProvider, Provider, SingletonProvider } from '../../lib';
 import { Times } from 'moq.ts';
 import { createMock } from '../MoqRepository';
 

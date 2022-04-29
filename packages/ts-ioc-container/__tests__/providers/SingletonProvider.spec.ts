@@ -1,10 +1,5 @@
-import {
-    Container, IProvider,
-    LevelProvider,
-    Provider,
-    SingletonProvider,
-} from '../../lib';
-import {SimpleInjector} from "../ioc/SimpleInjector";
+import { Container, IProvider, LevelProvider, Provider, SingletonProvider } from '../../lib';
+import { SimpleInjector } from '../ioc/SimpleInjector';
 
 describe('SingletonProvider', function () {
     let locator: Container;

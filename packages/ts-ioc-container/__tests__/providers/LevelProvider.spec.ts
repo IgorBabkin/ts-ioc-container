@@ -1,5 +1,5 @@
 import { Container, fromFn, ProviderNotFoundError } from '../../lib';
-import {SimpleInjector} from "../ioc/SimpleInjector";
+import { SimpleInjector } from '../ioc/SimpleInjector';
 
 describe('LevelProvider', function () {
     function createContainer(): Container {

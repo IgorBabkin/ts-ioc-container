@@ -1,11 +1,11 @@
 import { InjectionToken, IServiceLocator, isProviderKey, ProviderKey } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IProvider, Tag } from './provider/IProvider';
+import { IProvider, ScopeOptions, Tag } from './provider/IProvider';
 import { EmptyServiceLocator } from './EmptyServiceLocator';
 import { emptyHook, IInstanceHook } from './IInstanceHook';
 import { ProviderRepo } from './ProviderRepo';
 
-export class ServiceLocator implements IServiceLocator {
+export class ServiceLocator implements IServiceLocator, ScopeOptions {
     private readonly providers = new ProviderRepo();
     private parent: IServiceLocator = new EmptyServiceLocator();
     level = 0;

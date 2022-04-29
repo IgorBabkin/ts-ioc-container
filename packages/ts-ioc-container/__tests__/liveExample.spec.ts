@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {
-    constructor, Container,
+    constructor,
+    Container,
     createAddKeysDecorator,
     createLevelDecorator,
     createSingletonDecorator,
@@ -8,8 +9,8 @@ import {
     ProviderNotFoundError,
     ProvidersMetadataCollector,
 } from '../lib';
-import {inject, IocInjector} from './ioc/IocInjector';
-import {composeDecorators} from 'ts-constructor-injector';
+import { inject, IocInjector } from './ioc/IocInjector';
+import { composeDecorators } from 'ts-constructor-injector';
 
 const injector = new IocInjector();
 

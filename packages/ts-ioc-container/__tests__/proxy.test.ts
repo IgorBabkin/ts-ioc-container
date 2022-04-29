@@ -1,4 +1,4 @@
-import {Container, fromClass, fromValue, ProxyInjector} from '../lib';
+import { Container, fromClass, fromValue, ProxyInjector } from '../lib';
 
 class Greeting {
     private readonly name: string;

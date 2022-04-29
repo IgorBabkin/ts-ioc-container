@@ -33,5 +33,5 @@ export {
     createAddKeysDecorator,
 } from './features/container/decorators';
 export { IDisposable } from './helpers/types';
-export { isProviderKey, RegisterOptions } from './core/IServiceLocator';
+export { isProviderKey } from './core/IServiceLocator';
 export { ProviderKey } from './core/IServiceLocator';

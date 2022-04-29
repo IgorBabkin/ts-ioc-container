@@ -2,9 +2,6 @@ import { IProvider, Tag } from './provider/IProvider';
 import { constructor, IDisposable } from '../helpers/types';
 import { IInstanceHook } from './IInstanceHook';
 
-export type RegisterOptions = {
-    override: boolean;
-};
 export type ProviderKey = string | symbol;
 
 export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {
