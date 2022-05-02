@@ -10,7 +10,7 @@ export class ArgsProvider<T> extends ProviderDecorator<T> {
     }
 
     resolve(locator: Resolveable, ...args: any[]): T {
-        return this.provider.resolve(locator, ...args, ...this.argsFn(locator));
+        return this.provider.resolve(locator, ...this.argsFn(locator), ...args);
     }
 
     clone(): ProviderDecorator<T> {
