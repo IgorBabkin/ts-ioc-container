@@ -292,3 +292,4 @@ export class MoqProvider<T> extends MockProvider<T> {
 
 - ProviderNotFoundError
 - MethodNotImplementedError
+- ProviderNotClonedError
