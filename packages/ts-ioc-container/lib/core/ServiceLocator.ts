@@ -4,6 +4,7 @@ import { IProvider, ScopeOptions, Tag } from './provider/IProvider';
 import { EmptyServiceLocator } from './EmptyServiceLocator';
 import { emptyHook, IInstanceHook } from './IInstanceHook';
 import { ProviderRepo } from './ProviderRepo';
+import { LocatorDisposedError } from '../errors/LocatorDisposedError';
 
 export class ServiceLocator implements IServiceLocator, ScopeOptions {
     private readonly providers = new ProviderRepo();
@@ -11,6 +12,7 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
     level = 0;
     tags: Tag[] = [];
     private hook: IInstanceHook = emptyHook;
+    private isDisposed = false;
 
     constructor(private readonly injector: IInjector) {}
 
@@ -35,10 +37,12 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
     }
 
     register(key: ProviderKey, provider: IProvider<unknown>): void {
+        this.validateLocator();
         this.providers.set(key, provider);
     }
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
+        this.validateLocator();
         if (isProviderKey(key)) {
             const provider = this.providers.get<T>(key);
             return provider?.isValid(this)
@@ -50,6 +54,7 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
     }
 
     createScope(tags: Tag[] = [], parent: IServiceLocator = this): ServiceLocator {
+        this.validateLocator();
         const scope = new ServiceLocator(this.injector)
             .setParent(parent)
             .setLevel(this.level + 1)
@@ -69,6 +74,7 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
     }
 
     dispose(): void {
+        this.isDisposed = true;
         this.parent = new EmptyServiceLocator();
         this.providers.dispose();
         this.hook.dispose();
@@ -77,5 +83,11 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
     map<T extends IServiceLocator>(transform: (l: IServiceLocator) => T): T {
         this.parent = transform(this.parent);
         return transform(this);
+    }
+
+    private validateLocator(): void {
+        if (this.isDisposed) {
+            throw new LocatorDisposedError(`Locator is already disposed`);
+        }
     }
 }

@@ -13,6 +13,7 @@ export { createMethodHookDecorator } from './features/instanceHook/decorators';
 export { InjectionToken } from './core/IServiceLocator';
 export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
+export { LocatorDisposedError } from './errors/LocatorDisposedError';
 export { Provider } from './core/provider/Provider';
 export { ArgsProvider, ArgsFn } from './core/provider/ArgsProvider';
 export { IInstanceHook } from './core/IInstanceHook';
