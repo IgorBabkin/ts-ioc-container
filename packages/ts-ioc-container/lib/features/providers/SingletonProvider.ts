@@ -25,7 +25,6 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
             this.instance = new Box<T>(instance);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return this.instance!.value as T;
+        return this.instance.value as T;
     }
 }
