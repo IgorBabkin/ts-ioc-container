@@ -1,8 +1,0 @@
-.idea
-cjm
-esm
-node_modules
-coverage
-yarn-error.log
-.cache
-dist
