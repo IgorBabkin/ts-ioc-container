@@ -38,6 +38,6 @@ export class MoqRepository implements IMockRepository {
         if (!this.mocks.has(key)) {
             this.mocks.set(key, createMock());
         }
-        return this.mocks.get(key);
+        return this.mocks.get(key) as IMock<T>;
     }
 }

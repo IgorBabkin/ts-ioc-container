@@ -1,7 +1,4 @@
-import { constructor } from './types';
-import { resolve } from './resolve';
-import { getProp } from './metadata';
-import { WriteFn } from './writeMonad';
+export const id = <A>(value: A) => value;
 
 export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     if (baseArr.length === 0) {
@@ -26,22 +23,3 @@ export const constant =
 export function composeDecorators(...decorators: ClassDecorator[]): ClassDecorator {
     return (target) => decorators.forEach((it) => it(target));
 }
-
-export const to =
-    <T>(value: constructor<T>) =>
-    <Context>(env: Context): T => {
-        return resolve(env)(value);
-    };
-
-export const toOneOf =
-    <Context>(...values: constructor<any>[]): WriteFn<Context, unknown> =>
-    ([input, logs], instance: any) => {
-        const Value = values.find((it) => {
-            const predicate: (value: any) => boolean = getProp(it, 'predicate');
-            if (!predicate) {
-                throw new Error(`No predicate for ${it.name}`);
-            }
-            return predicate(instance);
-        });
-        return [Value ? resolve(input)(Value) : undefined, [...logs, 'toOneOf']];
-    };

@@ -22,7 +22,7 @@ describe('ServiceLocator', () => {
 
     it('should invokes postConstruct', () => {
         class Disposable {
-            isInitialized: boolean;
+            isInitialized = false;
 
             init() {
                 this.isInitialized = true;

@@ -1,28 +1,30 @@
-import { constructor, InjectFn } from './types';
-import { attr, field, getFieldProps, getProp } from './metadata';
-import { constant, merge } from './utils';
+import { constructor, InjectFn, MapFn } from './types';
+import { attr, getProp, prop } from './metadata';
+import { constant, id, merge } from './utils';
 import { Fn } from './pipe';
 
 const INJECT_METADATA_KEY = Symbol('inject');
-const INJECT_PROPERTY_METADATA_KEY = Symbol('injectProperty');
+const INJECT_CONTEXT_MAPPER_METADATA_KEY = Symbol('inject-context-mapper');
 
-export const resolve =
+const resolveBase =
     <Context>(context: Context) =>
     <T>(value: constructor<T>, ...deps: unknown[]) => {
         const injectionFns = getProp<InjectFn<Context>[]>(value, INJECT_METADATA_KEY) || [];
         const args = merge(injectionFns, deps.map(constant)).map((fn) => fn(context));
-        const instance = new value(...args);
-
-        const propertyFns =
-            getFieldProps<Map<string | symbol, InjectFn<Context>>>(instance, INJECT_PROPERTY_METADATA_KEY) ??
-            new Map<string | symbol, InjectFn<Context>>();
-        for (const [key, fn] of propertyFns.entries()) {
-            instance[key] = fn(context, instance);
-        }
-
-        return instance;
+        return new value(...args);
     };
 
-export const inject = <Context>(fn: Fn<Context, unknown>) => attr(INJECT_METADATA_KEY)(fn);
-export const injectProperty = <Context, Instance = any>(fn: (value: Context, instance: Instance) => unknown) =>
-    field(INJECT_PROPERTY_METADATA_KEY, fn);
+export function resolve<Context>(context: Context) {
+    return <T>(value: constructor<T>, ...deps: unknown[]) => {
+        const mapContext = getProp<MapFn<Context, unknown>>(value, INJECT_CONTEXT_MAPPER_METADATA_KEY) ?? id;
+        return resolveBase(mapContext(context))(value, ...deps);
+    };
+}
+
+export function inject<Context>(fn: Fn<Context, unknown>) {
+    return attr(INJECT_METADATA_KEY)(fn);
+}
+
+export function mapContext<Context>(value: MapFn<Context, unknown>) {
+    return prop(INJECT_CONTEXT_MAPPER_METADATA_KEY, value);
+}

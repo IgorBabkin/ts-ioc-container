@@ -10,7 +10,9 @@
     "emitDecoratorMetadata": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "noImplicitReturns": true,
+    "strict": true
   },
   "include": [
     "src"

@@ -197,7 +197,7 @@ describe('ServiceLocator', () => {
 
         it('ioc: onConstructHook for provider', () => {
             class Initializable {
-                isInitialized: boolean;
+                isInitialized = false;
 
                 @onConstruct
                 init(): void {
@@ -220,7 +220,8 @@ describe('ServiceLocator', () => {
         it('ioc: onDisposeHook', () => {
             const decorated = createIoCLocator(
                 new InstanceHook((instance: unknown) => {
-                    onDisposeMetadataCollector.invokeHooksOf(instance);
+                    // eslint-disable-next-line @typescript-eslint/ban-types
+                    onDisposeMetadataCollector.invokeHooksOf(instance as object);
                 }),
                 {
                     onConstruct<GInstance>(instance: GInstance) {

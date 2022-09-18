@@ -1,8 +1,8 @@
-export { resolve, inject, injectProperty } from './resolve';
+export { resolve, inject, mapContext } from './resolve';
+export { to, toWrite, matchContext } from './collection';
 export { prop, getProp, attr, field } from './metadata';
-export { composeDecorators, to, toOneOf } from './utils';
-export { getPredicate, predicate } from './predicate';
+export { composeDecorators } from './utils';
 export { pipe, Fn } from './pipe';
 export { pipeWrite } from './pipeWrite';
 export { constructor, InjectFn, InjectionDecorator, InjectionPropertyDecorator } from './types';
-export { Write, WriteFn, toWrite } from './writeMonad';
+export { Write, WriteFn } from './writeMonad';

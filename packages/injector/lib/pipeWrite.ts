@@ -58,5 +58,6 @@ export function pipeWrite<A, B, C, D, E, F, G, H, I, J>(
 ): Fn<A, J>;
 
 export function pipeWrite<Context>(...fns: any[]): InjectFn<Context> {
+    // @ts-ignore
     return pipe.apply(null, [pure, ...fns, run]);
 }
