@@ -14,6 +14,9 @@ const getContextPredicate = <Context>(A: constructor<unknown>) =>
 export const to =
     <T>(...values: constructor<T>[]) =>
     <Context>(context: Context) => {
+        if (context === undefined) {
+            return undefined;
+        }
         const value = values.find((v) => getContextPredicate(v)(context));
         return value ? resolve(context)(value) : undefined;
     };
