@@ -37,7 +37,10 @@ export function getPropOrFail<T>(target: Object, key: string | symbol): T | unde
     return value;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function getFieldProps<T>(target: Object, key: string | symbol): T | undefined {
-    return Reflect.getMetadata(key, target) as T;
+export function myprop<Value>(key: string | symbol) {
+    return {
+        prop: (value: Value) => prop(key, value),
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        getPropOrFail: (target: Object, key: string | symbol) => getPropOrFail<Value>(target, key),
+    };
 }
