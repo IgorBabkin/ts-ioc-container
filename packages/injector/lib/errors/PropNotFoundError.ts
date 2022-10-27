@@ -1,9 +1,9 @@
-export class EntityNotFoundError extends Error {
-    name = 'EntityNotFoundError';
+export class PropNotFoundError extends Error {
+    name = 'PropNotFoundError';
 
     constructor(message: string) {
         super(message);
 
-        Object.setPrototypeOf(this, EntityNotFoundError.prototype);
+        Object.setPrototypeOf(this, PropNotFoundError.prototype);
     }
 }
