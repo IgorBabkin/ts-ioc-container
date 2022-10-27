@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "13.2.1",
+  "version": "13.2.2",
   "description": "Typescript IoC container",
   "author": "ibabkin <ibabkin@goodgamestudios.com>",
   "homepage": "https://github.com/IgorBabkin/service-locator/tree/master/packages/ts-ioc-container",
@@ -45,7 +45,7 @@
     "npm-run-all": "4.1.5",
     "reflect-metadata": "^0.1.13",
     "rimraf": "3.0.2",
-    "ts-constructor-injector": "^2.1.0",
+    "ts-constructor-injector": "^2.2.0",
     "ts-jest": "27.0.5",
     "typescript": "4.4.3"
   },
