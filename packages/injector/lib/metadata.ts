@@ -41,6 +41,6 @@ export function myprop<Value>(key: string | symbol) {
     return {
         prop: (value: Value) => prop(key, value),
         // eslint-disable-next-line @typescript-eslint/ban-types
-        getPropOrFail: (target: Object, key: string | symbol) => getPropOrFail<Value>(target, key),
+        getPropOrFail: (target: Object) => getPropOrFail<Value>(target, key),
     };
 }
