@@ -29,7 +29,7 @@ export function getProp<T>(target: Object, key: string | symbol): T | undefined 
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export function getPropOrFail<T>(target: Object, key: string | symbol): T | undefined {
+export function getPropOrFail<T>(target: Object, key: string | symbol): T {
     const value = getProp<T>(target, key);
     if (!value) {
         throw new PropNotFoundError(`Cannot find prop - ${key.toString()}`);
