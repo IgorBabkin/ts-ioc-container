@@ -1,11 +1,11 @@
-import { fromFn, IServiceLocator, ServiceLocator } from '../../lib';
+import { fromFn, IContainer, Container } from '../../lib';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 
 describe('ProviderBuilder', function () {
-    let locator: IServiceLocator;
+    let locator: IContainer;
 
     beforeEach(() => {
-        locator = new ServiceLocator(new SimpleInjector());
+        locator = new Container(new SimpleInjector());
     });
 
     test('withArgs', () => {

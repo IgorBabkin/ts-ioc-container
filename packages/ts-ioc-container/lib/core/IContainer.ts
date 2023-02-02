@@ -8,8 +8,8 @@ export interface Resolveable {
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T;
 }
 
-export interface IServiceLocator extends IDisposable, Resolveable {
-    createScope(tags?: Tag[], parent?: IServiceLocator): IServiceLocator;
+export interface IContainer extends IDisposable, Resolveable {
+    createScope(tags?: Tag[], parent?: IContainer): IContainer;
 
     register(provider: IProvider<unknown>): void;
 

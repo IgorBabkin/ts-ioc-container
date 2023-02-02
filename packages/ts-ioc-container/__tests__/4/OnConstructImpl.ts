@@ -1,4 +1,4 @@
-import { IServiceLocator } from '../../lib';
+import { IContainer } from '../../lib';
 import { onConstruct } from './decorators';
 import { inject } from '../ioc/IocInjector';
 
@@ -69,7 +69,7 @@ export class App3 {
 export class App4 {
     constructor(
         @inject((l) => l.resolve('dep1')) private dep1: string,
-        @inject((l) => l) private locator: IServiceLocator,
+        @inject((l) => l) private locator: IContainer,
     ) {}
 
     run(): string {

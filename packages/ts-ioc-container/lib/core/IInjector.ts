@@ -1,6 +1,6 @@
 import { constructor } from '../helpers/types';
-import { IServiceLocator } from './IServiceLocator';
+import { IContainer } from './IContainer';
 
 export interface IInjector {
-    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: any[]): T;
+    resolve<T>(locator: IContainer, value: constructor<T>, ...deps: any[]): T;
 }

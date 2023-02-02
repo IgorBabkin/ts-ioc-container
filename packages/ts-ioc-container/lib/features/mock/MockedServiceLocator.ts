@@ -2,17 +2,17 @@ import {
     IInstanceHook,
     InjectionToken,
     IProvider,
-    IServiceLocator,
+    IContainer,
     ProviderKey,
     ProviderNotFoundError,
     Tag,
 } from '../../index';
 import { IMockRepository } from './IMockRepository';
 
-export class MockedServiceLocator implements IServiceLocator {
-    constructor(private decorated: IServiceLocator, private mockRepository: IMockRepository) {}
+export class MockedServiceLocator implements IContainer {
+    constructor(private decorated: IContainer, private mockRepository: IMockRepository) {}
 
-    createScope(tags?: Tag[], parent: IServiceLocator = this): IServiceLocator {
+    createScope(tags?: Tag[], parent: IContainer = this): IContainer {
         return new MockedServiceLocator(this.decorated.createScope(tags, parent), this.mockRepository);
     }
 

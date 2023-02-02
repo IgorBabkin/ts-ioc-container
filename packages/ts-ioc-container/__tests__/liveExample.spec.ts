@@ -7,7 +7,7 @@ import {
     fromClass as fromConstructor,
     ProviderNotFoundError,
     ProvidersMetadataCollector,
-    ServiceLocator,
+    Container,
 } from '../lib';
 import { inject, IocInjector } from './ioc/IocInjector';
 import { composeDecorators } from 'ts-constructor-injector';
@@ -62,7 +62,7 @@ class Main2 {
 
 describe('live example', function () {
     it('should resolve the same repo from the same scope', function () {
-        const container = new ServiceLocator(injector).register(fromClass(Repository).build());
+        const container = new Container(injector).register(fromClass(Repository).build());
 
         const scope = container.createScope();
         const main1 = scope.resolve(Main);
@@ -72,7 +72,7 @@ describe('live example', function () {
     });
 
     it('should resolve the different repo from different scopes', function () {
-        const container = new ServiceLocator(injector).register(fromClass(Repository).build());
+        const container = new Container(injector).register(fromClass(Repository).build());
 
         const scope1 = container.createScope();
         const scope2 = container.createScope();
@@ -83,12 +83,12 @@ describe('live example', function () {
     });
 
     it('should throw error if try to resolve from root scope', function () {
-        const container = new ServiceLocator(injector).register(fromClass(Repository).build());
+        const container = new Container(injector).register(fromClass(Repository).build());
         expect(() => container.resolve(Main)).toThrow(ProviderNotFoundError);
     });
 
     it('should resolve singleton', function () {
-        const container = new ServiceLocator(injector).register(fromClass(Repository2).build());
+        const container = new Container(injector).register(fromClass(Repository2).build());
 
         const scope = container.createScope();
         const main1 = scope.resolve(Main2);

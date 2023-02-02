@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { fromClass, fromFn, fromValue, ProviderNotFoundError, ServiceLocator } from '../../lib';
+import { fromClass, fromFn, fromValue, ProviderNotFoundError, Container } from '../../lib';
 import { App, App2, App3, App4, Logger, Logger2, Logger3, OnConstructImpl } from './OnConstructImpl';
 import { Group } from './Group';
 import { OnDisposeImpl } from './OnDisposeImpl';
@@ -22,7 +22,7 @@ class Greeting {
 
 describe('ServiceLocator', () => {
     const createIoCLocator = (hook: IInstanceHook = emptyHook, injectorHook?: InjectorHook) => {
-        return new ServiceLocator(new IocInjector(injectorHook)).setHook(hook);
+        return new Container(new IocInjector(injectorHook)).setHook(hook);
     };
 
     it('should create an instanse', () => {

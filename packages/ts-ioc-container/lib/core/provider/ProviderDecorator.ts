@@ -1,4 +1,4 @@
-import { Resolveable } from '../IServiceLocator';
+import { Resolveable } from '../IContainer';
 import { IProvider, ProviderKey, ScopeOptions } from './IProvider';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {

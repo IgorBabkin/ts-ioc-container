@@ -1,14 +1,14 @@
-import { InjectionToken, IServiceLocator } from './IServiceLocator';
+import { InjectionToken, IContainer } from './IContainer';
 import { IInjector } from './IInjector';
 import { IProvider, isProviderKey, ScopeOptions, Tag } from './provider/IProvider';
-import { EmptyServiceLocator } from './EmptyServiceLocator';
+import { EmptyContainer } from './EmptyContainer';
 import { emptyHook, IInstanceHook } from './IInstanceHook';
 import { ProviderRepo } from './ProviderRepo';
 import { LocatorDisposedError } from '../errors/LocatorDisposedError';
 
-export class ServiceLocator implements IServiceLocator, ScopeOptions {
+export class Container implements IContainer, ScopeOptions {
     private readonly providers = new ProviderRepo();
-    private parent: IServiceLocator = new EmptyServiceLocator();
+    private parent: IContainer = new EmptyContainer();
     level = 0;
     tags: Tag[] = [];
     private hook: IInstanceHook = emptyHook;
@@ -16,7 +16,7 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
 
     constructor(private readonly injector: IInjector) {}
 
-    setParent(parent: IServiceLocator): this {
+    setParent(parent: IContainer): this {
         this.parent = parent;
         return this;
     }
@@ -54,9 +54,9 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
         return this.hook.resolve(this.injector.resolve<T>(this, key, ...args));
     }
 
-    createScope(tags: Tag[] = [], parent: IServiceLocator = this): ServiceLocator {
+    createScope(tags: Tag[] = [], parent: IContainer = this): Container {
         this.validateLocator();
-        const scope = new ServiceLocator(this.injector)
+        const scope = new Container(this.injector)
             .setParent(parent)
             .setLevel(this.level + 1)
             .setTags(tags)
@@ -74,12 +74,12 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
 
     dispose(): void {
         this.isDisposed = true;
-        this.parent = new EmptyServiceLocator();
+        this.parent = new EmptyContainer();
         this.providers.dispose();
         this.hook.dispose();
     }
 
-    map<T extends IServiceLocator>(transform: (l: IServiceLocator) => T): T {
+    map<T extends IContainer>(transform: (l: IContainer) => T): T {
         this.parent = transform(this.parent);
         return transform(this);
     }

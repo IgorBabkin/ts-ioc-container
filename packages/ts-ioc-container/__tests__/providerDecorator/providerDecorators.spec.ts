@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ServiceLocator } from '../../lib';
+import { Container } from '../../lib';
 import { addKeys, fromClass, level, singleton } from './decorators';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 
@@ -16,7 +16,7 @@ export class Greeting {
 
 describe('ProviderDecorators', function () {
     it('should sdad', function () {
-        const locator = new ServiceLocator(new SimpleInjector()).register(fromClass(Greeting).build());
+        const locator = new Container(new SimpleInjector()).register(fromClass(Greeting).build());
 
         const scope = locator.createScope();
 

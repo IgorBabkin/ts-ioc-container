@@ -1,14 +1,14 @@
 export { ProviderReducer } from './features/container/IProvidersMetadataCollector';
-export { IServiceLocator, Resolveable } from './core/IServiceLocator';
+export { IContainer, Resolveable } from './core/IContainer';
 export { constructor } from './helpers/types';
-export { ServiceLocator } from './core/ServiceLocator';
+export { Container } from './core/Container';
 export { ScopeOptions, ResolveDependency, Tag, IProvider } from './core/provider/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/injectors/SimpleInjector';
 export { IMethodsMetadataCollector } from './features/instanceHook/IMethodsMetadataCollector';
 export { MethodsMetadataCollector } from './features/instanceHook/MethodsMetadataCollector';
 export { createMethodHookDecorator } from './features/instanceHook/decorators';
-export { InjectionToken } from './core/IServiceLocator';
+export { InjectionToken } from './core/IContainer';
 export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { LocatorDisposedError } from './errors/LocatorDisposedError';

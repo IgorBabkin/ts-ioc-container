@@ -1,16 +1,16 @@
 import { IInjector } from '../../core/IInjector';
-import { IServiceLocator } from '../../core/IServiceLocator';
+import { IContainer } from '../../core/IContainer';
 import { constructor } from '../../helpers/types';
 import { ProviderKey } from '../../core/provider/IProvider';
 
 export class ProxyInjector implements IInjector {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    resolve<T>(locator: IServiceLocator, value: constructor<T>, ...deps: Record<ProviderKey, unknown>[]): T {
+    resolve<T>(locator: IContainer, value: constructor<T>, ...deps: Record<ProviderKey, unknown>[]): T {
         const args = deps.reduce((acc, it) => ({ ...acc, ...it }), {});
         return new value(
             new Proxy(locator, {
                 // eslint-disable-next-line @typescript-eslint/ban-types
-                get(target: IServiceLocator, prop: ProviderKey): any {
+                get(target: IContainer, prop: ProviderKey): any {
                     // eslint-disable-next-line no-prototype-builtins
                     return args.hasOwnProperty(prop) ? args[prop] : target.resolve(prop);
                 },

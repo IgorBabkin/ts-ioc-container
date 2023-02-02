@@ -1,16 +1,16 @@
-import { fromClass, fromFn, fromValue, IDisposable, IServiceLocator, ServiceLocator } from '../../lib';
+import { fromClass, fromFn, fromValue, IDisposable, IContainer, Container } from '../../lib';
 import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
 import { InjectorHook } from '../ioc/InjectorHook';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 import { InstanceHook } from '../../lib/features/instanceHook/InstanceHook';
 
 class TestClass {
-    constructor(l: IServiceLocator, public dep1: string, public dep2: number) {}
+    constructor(l: IContainer, public dep1: string, public dep2: number) {}
 }
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hook: IInstanceHook = emptyHook, injectorHook?: InjectorHook) =>
-        new ServiceLocator(new SimpleInjector(injectorHook)).setHook(hook);
+        new Container(new SimpleInjector(injectorHook)).setHook(hook);
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(fromClass(TestClass).forKey('key1').build());

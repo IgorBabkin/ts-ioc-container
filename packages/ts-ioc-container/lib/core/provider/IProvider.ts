@@ -1,4 +1,4 @@
-import { InjectionToken, Resolveable } from '../IServiceLocator';
+import { InjectionToken, Resolveable } from '../IContainer';
 import { IDisposable } from '../../helpers/types';
 
 export type ResolveDependency<T> = (locator: Resolveable, ...args: any[]) => T;

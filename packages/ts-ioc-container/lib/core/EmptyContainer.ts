@@ -1,10 +1,10 @@
-import { InjectionToken, IServiceLocator } from './IServiceLocator';
+import { InjectionToken, IContainer } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
 import { IProvider } from './provider/IProvider';
 
-export class EmptyServiceLocator implements IServiceLocator {
-    createScope(): IServiceLocator {
+export class EmptyContainer implements IContainer {
+    createScope(): IContainer {
         throw new MethodNotImplementedError();
     }
 

@@ -1,4 +1,4 @@
-import { Resolveable } from '../../core/IServiceLocator';
+import { Resolveable } from '../../core/IContainer';
 import { Box } from '../../helpers/types';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 import { IProvider } from '../../core/provider/IProvider';

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { fromValue, ServiceLocator } from '../../lib';
+import { fromValue, Container } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 
@@ -12,7 +12,7 @@ describe('ServiceLocator', () => {
     it('should create an instance', () => {
         const expectedInstance = { id: 'expectedInstance' };
 
-        const locator = new ServiceLocator(
+        const locator = new Container(
             new SimpleInjector({
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
