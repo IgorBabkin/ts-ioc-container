@@ -36,11 +36,3 @@ export function getPropOrFail<T>(target: Object, key: string | symbol): T {
     }
     return value;
 }
-
-export function myprop<Value>(key: string | symbol) {
-    return {
-        prop: (value: Value) => prop(key, value),
-        // eslint-disable-next-line @typescript-eslint/ban-types
-        getPropOrFail: (target: Object) => getPropOrFail<Value>(target, key),
-    };
-}
