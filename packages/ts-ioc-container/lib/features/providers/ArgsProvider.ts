@@ -1,6 +1,6 @@
-import { ProviderDecorator } from './ProviderDecorator';
-import { Resolveable } from '../IContainer';
-import { IProvider } from './IProvider';
+import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
+import { Resolveable } from '../../core/IContainer';
+import { IProvider } from '../../core/provider/IProvider';
 
 export type ArgsFn = (l: Resolveable) => any[];
 

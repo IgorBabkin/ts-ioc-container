@@ -1,4 +1,4 @@
-export { ProviderReducer } from './features/container/IProvidersMetadataCollector';
+export { ProviderReducer } from './features/providers/IProvidersMetadataCollector';
 export { IContainer, Resolveable } from './core/IContainer';
 export { constructor } from './helpers/types';
 export { Container } from './core/Container';
@@ -13,7 +13,7 @@ export { ProviderNotFoundError } from './errors/ProviderNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { LocatorDisposedError } from './errors/LocatorDisposedError';
 export { Provider } from './core/provider/Provider';
-export { ArgsProvider, ArgsFn } from './core/provider/ArgsProvider';
+export { ArgsProvider, ArgsFn } from './features/providers/ArgsProvider';
 export { IInstanceHook } from './core/IInstanceHook';
 export { TaggedProvider } from './features/providers/TaggedProvider';
 export { ProxyInjector } from './features/injectors/ProxyInjector';
@@ -21,16 +21,16 @@ export { LevelProvider } from './features/providers/LevelProvider';
 export { IMockRepository } from './features/mock/IMockRepository';
 export { MockedServiceLocator } from './features/mock/MockedServiceLocator';
 export { SingletonProvider } from './features/providers/SingletonProvider';
-export { ProviderBuilder, fromClass, fromFn, fromValue, fromClassArray } from './features/container/ProviderBuilder';
-export { IProvidersMetadataCollector } from './features/container/IProvidersMetadataCollector';
-export { ProvidersMetadataCollector } from './features/container/ProvidersMetadataCollector';
+export { ProviderBuilder, fromClass, fromFn, fromValue, fromClassArray } from './features/providers/ProviderBuilder';
+export { IProvidersMetadataCollector } from './features/providers/IProvidersMetadataCollector';
+export { ProvidersMetadataCollector } from './features/providers/ProvidersMetadataCollector';
 export {
     createLevelDecorator,
     createSingletonDecorator,
     createTagsDecorator,
     createArgsFnDecorator,
     createAddKeysDecorator,
-} from './features/container/decorators';
+} from './features/providers/decorators';
 export { IDisposable } from './helpers/types';
 export { ProviderKey } from './core/provider/IProvider';
 export { isProviderKey } from './core/provider/IProvider';
