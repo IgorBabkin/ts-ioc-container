@@ -1,27 +1,9 @@
-import { IProvider, ProviderKey, ResolveDependency, Tag } from '../../core/provider/IProvider';
+import { IProvider, ProviderKey, Tag } from '../../core/provider/IProvider';
 import { SingletonProvider } from './SingletonProvider';
-import { Provider } from '../../core/provider/Provider';
-import { constructor } from '../../helpers/types';
 import { TaggedProvider } from './TaggedProvider';
 import { LevelProvider } from './LevelProvider';
 import { ProviderReducer } from '../../core/provider/IProvidersMetadataCollector';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
-
-export function fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
-    return new ProviderBuilder(Provider.fromClass(value));
-}
-
-export function fromValue<T>(value: T): ProviderBuilder<T> {
-    return new ProviderBuilder(Provider.fromValue(value));
-}
-
-export function fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
-    return new ProviderBuilder(new Provider(fn));
-}
-
-export function fromClassArray<T>(classes: constructor<T>[]): ProviderBuilder<T[]> {
-    return fromFn((l) => classes.map((it) => l.resolve(it)));
-}
 
 export class ProviderBuilder<T> {
     constructor(private provider: IProvider<T>) {}

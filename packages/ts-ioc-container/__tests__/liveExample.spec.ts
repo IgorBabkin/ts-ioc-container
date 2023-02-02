@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {
     constructor,
-    createAddKeysDecorator,
+    createAddKeyDecorator,
     createLevelDecorator,
     createSingletonDecorator,
     fromClass as fromConstructor,
@@ -16,7 +16,7 @@ const injector = new IocInjector();
 
 const metadataCollector = ProvidersMetadataCollector.create();
 
-export const keys = createAddKeysDecorator(metadataCollector);
+export const keys = createAddKeyDecorator(metadataCollector);
 
 const single = createSingletonDecorator(metadataCollector);
 const level = createLevelDecorator(metadataCollector);

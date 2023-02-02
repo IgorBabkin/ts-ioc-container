@@ -1,15 +1,16 @@
+import 'reflect-metadata';
 import { fromClass, fromFn, fromValue, IDisposable, IContainer, Container } from '../../lib';
-import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
+import { emptyHook, IContainerHook } from '../../lib/core/container/IContainerHook';
 import { InjectorHook } from '../ioc/InjectorHook';
 import { SimpleInjector } from '../ioc/SimpleInjector';
-import { InstanceHook } from '../../lib/features/instanceHook/InstanceHook';
+import { ContainerHook } from '../../lib/features/hooks/ContainerHook';
 
 class TestClass {
     constructor(l: IContainer, public dep1: string, public dep2: number) {}
 }
 
 describe('ServiceLocator', () => {
-    const createSimpleLocator = (hook: IInstanceHook = emptyHook, injectorHook?: InjectorHook) =>
+    const createSimpleLocator = (hook: IContainerHook = emptyHook, injectorHook?: InjectorHook) =>
         new Container(new SimpleInjector(injectorHook)).setHook(hook);
 
     it('should pass dependencies', () => {
@@ -48,7 +49,7 @@ describe('ServiceLocator', () => {
     it('should invokes onDispose', () => {
         let isDisposed = false;
         const locator = createSimpleLocator(
-            new InstanceHook((instance: unknown) => {
+            new ContainerHook((instance: unknown) => {
                 (instance as any as IDisposable).dispose();
             }),
             {

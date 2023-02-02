@@ -1,5 +1,5 @@
-import { Resolveable } from '../../core/IContainer';
-import { Box, constructor } from '../../helpers/types';
+import { Resolveable } from '../../core/container/IContainer';
+import { Box, constructor } from '../../core/utils/types';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 import { IProvider } from '../../core/provider/IProvider';
 import { IProvidersMetadataCollector } from '../../core/provider/IProvidersMetadataCollector';

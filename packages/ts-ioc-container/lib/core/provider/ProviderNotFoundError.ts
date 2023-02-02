@@ -1,8 +1,8 @@
 export class ProviderNotFoundError extends Error {
     name = 'ProviderNotFoundError';
 
-    constructor(key: string) {
-        super(`Cannot find ${key}`);
+    constructor(message: string) {
+        super(message);
 
         Object.setPrototypeOf(this, ProviderNotFoundError.prototype);
     }

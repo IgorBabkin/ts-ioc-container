@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { MockedServiceContainer, Container } from '../../lib';
+import { AutoMockedContainer, Container } from '../../lib';
 import { MoqRepository } from '../MoqRepository';
 import { inject, IocInjector } from '../ioc/IocInjector';
 
@@ -19,7 +19,7 @@ describe('UnitTestIoCLocator', () => {
     });
 
     function createIoCLocator() {
-        return new Container(new IocInjector()).map((l) => new MockedServiceContainer(l, mockRepository));
+        return new Container(new IocInjector()).map((l) => new AutoMockedContainer(l, mockRepository));
     }
 
     it('ioc', () => {

@@ -1,4 +1,4 @@
-import { constructor } from '../../helpers/types';
+import { constructor } from '../utils/types';
 import { ProviderBuilder } from '../../features/providers/ProviderBuilder';
 
 export type ProviderReducer<T> = (builder: ProviderBuilder<T>) => ProviderBuilder<T>;

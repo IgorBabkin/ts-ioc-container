@@ -1,6 +1,6 @@
-import { IProvider, ProviderKey, Tag } from './provider/IProvider';
-import { constructor, IDisposable } from '../helpers/types';
-import { IInstanceHook } from './IInstanceHook';
+import { IProvider, ProviderKey, Tag } from '../provider/IProvider';
+import { constructor, IDisposable } from '../utils/types';
+import { IContainerHook } from './IContainerHook';
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 
@@ -15,5 +15,5 @@ export interface IContainer extends IDisposable, Resolveable {
 
     getProviders(): IProvider<unknown>[];
 
-    setHook(hook: IInstanceHook): this;
+    setHook(hook: IContainerHook): this;
 }

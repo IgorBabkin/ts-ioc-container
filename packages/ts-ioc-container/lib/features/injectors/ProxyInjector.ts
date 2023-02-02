@@ -1,6 +1,6 @@
 import { IInjector } from '../../core/IInjector';
-import { IContainer } from '../../core/IContainer';
-import { constructor } from '../../helpers/types';
+import { IContainer } from '../../core/container/IContainer';
+import { constructor } from '../../core/utils/types';
 import { ProviderKey } from '../../core/provider/IProvider';
 
 export class ProxyInjector implements IInjector {

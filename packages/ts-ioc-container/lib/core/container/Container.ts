@@ -1,17 +1,17 @@
 import { InjectionToken, IContainer } from './IContainer';
-import { IInjector } from './IInjector';
-import { IProvider, isProviderKey, ScopeOptions, Tag } from './provider/IProvider';
+import { IInjector } from '../IInjector';
+import { IProvider, isProviderKey, ScopeOptions, Tag } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
-import { emptyHook, IInstanceHook } from './IInstanceHook';
-import { ProviderRepo } from './provider/ProviderRepo';
-import { ContainerDisposedError } from '../errors/ContainerDisposedError';
+import { emptyHook, IContainerHook } from './IContainerHook';
+import { ProviderRepo } from '../provider/ProviderRepo';
+import { ContainerDisposedError } from './ContainerDisposedError';
 
 export class Container implements IContainer, ScopeOptions {
     private readonly providers = new ProviderRepo();
     private parent: IContainer = new EmptyContainer();
     level = 0;
     tags: Tag[] = [];
-    private hook: IInstanceHook = emptyHook;
+    private hook: IContainerHook = emptyHook;
     private isDisposed = false;
 
     constructor(private readonly injector: IInjector) {}
@@ -31,7 +31,7 @@ export class Container implements IContainer, ScopeOptions {
         return this;
     }
 
-    setHook(hook: IInstanceHook): this {
+    setHook(hook: IContainerHook): this {
         this.hook = hook;
         return this;
     }

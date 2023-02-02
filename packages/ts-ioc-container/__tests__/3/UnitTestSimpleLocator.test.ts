@@ -1,4 +1,4 @@
-import { IContainer, MockedServiceContainer, Container, SimpleInjector } from '../../lib';
+import { IContainer, AutoMockedContainer, Container, SimpleInjector } from '../../lib';
 import { MoqRepository } from '../MoqRepository';
 
 interface IDepClass {
@@ -21,7 +21,7 @@ describe('UnitTestSimpleLocator', () => {
     });
 
     function createSimpleLocator() {
-        return new Container(new SimpleInjector()).map((l) => new MockedServiceContainer(l, mockRepository));
+        return new Container(new SimpleInjector()).map((l) => new AutoMockedContainer(l, mockRepository));
     }
 
     it('hey', () => {

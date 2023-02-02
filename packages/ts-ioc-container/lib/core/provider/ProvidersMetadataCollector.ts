@@ -1,6 +1,6 @@
 import { IProvidersMetadataCollector, ProviderReducer } from './IProvidersMetadataCollector';
-import { constructor } from '../../helpers/types';
-import { id } from '../../helpers/utils';
+import { constructor } from '../utils/types';
+import { id } from '../utils/others';
 
 export class ProvidersMetadataCollector implements IProvidersMetadataCollector {
     static create(): ProvidersMetadataCollector {

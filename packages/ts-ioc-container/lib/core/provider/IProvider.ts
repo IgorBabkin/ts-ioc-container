@@ -1,5 +1,5 @@
-import { InjectionToken, Resolveable } from '../IContainer';
-import { IDisposable } from '../../helpers/types';
+import { InjectionToken, Resolveable } from '../container/IContainer';
+import { IDisposable } from '../utils/types';
 
 export type ResolveDependency<T> = (container: Resolveable, ...args: any[]) => T;
 

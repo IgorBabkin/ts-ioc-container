@@ -1,9 +1,9 @@
-import { IInstanceHook } from '../../core/IInstanceHook';
-import { noop } from '../../helpers/utils';
+import { IContainerHook } from '../../core/container/IContainerHook';
+import { noop } from '../../core/utils/others';
 
 export type OnDisposeHook = (instance: unknown) => void;
 
-export class InstanceHook implements IInstanceHook {
+export class ContainerHook implements IContainerHook {
     private instances = new Set();
 
     constructor(private onDisposeFn: OnDisposeHook = noop) {}
@@ -24,7 +24,7 @@ export class InstanceHook implements IInstanceHook {
         this.instances.clear();
     }
 
-    clone(): IInstanceHook {
-        return new InstanceHook(this.onDisposeFn);
+    clone(): IContainerHook {
+        return new ContainerHook(this.onDisposeFn);
     }
 }

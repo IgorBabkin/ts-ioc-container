@@ -6,9 +6,9 @@ import { OnDisposeImpl } from './OnDisposeImpl';
 import { onConstruct, onConstructMetadataCollector, onDisposeMetadataCollector } from './decorators';
 import { inject, IocInjector } from '../ioc/IocInjector';
 import { SubGroup3 } from './SubGroup3';
-import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
+import { emptyHook, IContainerHook } from '../../lib/core/container/IContainerHook';
 import { InjectorHook } from '../ioc/InjectorHook';
-import { InstanceHook } from '../../lib/features/instanceHook/InstanceHook';
+import { ContainerHook } from '../../lib/features/hooks/ContainerHook';
 
 const MyKey = Symbol('MyKey');
 
@@ -21,7 +21,7 @@ class Greeting {
 }
 
 describe('ServiceLocator', () => {
-    const createIoCLocator = (hook: IInstanceHook = emptyHook, injectorHook?: InjectorHook) => {
+    const createIoCLocator = (hook: IContainerHook = emptyHook, injectorHook?: InjectorHook) => {
         return new Container(new IocInjector(injectorHook)).setHook(hook);
     };
 
@@ -182,7 +182,7 @@ describe('ServiceLocator', () => {
         });
 
         it('ios: onConstructHook for injector', () => {
-            const decorated = createIoCLocator(new InstanceHook(), {
+            const decorated = createIoCLocator(new ContainerHook(), {
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
                     return instance;
@@ -204,7 +204,7 @@ describe('ServiceLocator', () => {
                 }
             }
 
-            const locator = createIoCLocator(new InstanceHook(), {
+            const locator = createIoCLocator(new ContainerHook(), {
                 onConstruct<GInstance>(instance: GInstance) {
                     onConstructMetadataCollector.invokeHooksOf(instance);
                     return instance;
@@ -218,7 +218,7 @@ describe('ServiceLocator', () => {
 
         it('ioc: onDisposeHook', () => {
             const decorated = createIoCLocator(
-                new InstanceHook((instance: unknown) => {
+                new ContainerHook((instance: unknown) => {
                     // eslint-disable-next-line @typescript-eslint/ban-types
                     onDisposeMetadataCollector.invokeHooksOf(instance as object);
                 }),

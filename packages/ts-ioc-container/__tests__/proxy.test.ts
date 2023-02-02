@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { fromClass, fromValue, IContainer, ProxyInjector, Container } from '../lib';
 
 class Greeting {

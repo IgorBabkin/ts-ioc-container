@@ -1,7 +1,7 @@
 import { IProvider, ScopeOptions, Tag } from '../../core/provider/IProvider';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
 import { IProvidersMetadataCollector } from '../../core/provider/IProvidersMetadataCollector';
-import { constructor } from '../../helpers/types';
+import { constructor } from '../../core/utils/types';
 
 export class TaggedProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private readonly tags: Tag[]) {

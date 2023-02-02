@@ -1,6 +1,6 @@
 import {
     constructor,
-    createAddKeysDecorator,
+    createAddKeyDecorator,
     createLevelDecorator,
     createSingletonDecorator,
     createTagsDecorator,
@@ -10,7 +10,7 @@ import {
 
 export const metadataCollector = ProvidersMetadataCollector.create();
 export const singleton = createSingletonDecorator(metadataCollector);
-export const addKeys = createAddKeysDecorator(metadataCollector);
+export const addKeys = createAddKeyDecorator(metadataCollector);
 export const level = createLevelDecorator(metadataCollector);
 export const tags = createTagsDecorator(metadataCollector);
 

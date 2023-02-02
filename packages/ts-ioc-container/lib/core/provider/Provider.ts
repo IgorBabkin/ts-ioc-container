@@ -1,7 +1,7 @@
-import { constructor } from '../../helpers/types';
+import { constructor } from '../utils/types';
 import { IProvider, ProviderKey, ResolveDependency } from './IProvider';
-import { Resolveable } from '../IContainer';
-import { NoRegistrationKeysProvidedError } from '../../errors/NoRegistrationKeysProvidedError';
+import { Resolveable } from '../container/IContainer';
+import { ProviderHasNoKeyError } from './ProviderHasNoKeyError';
 import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
 
 export class Provider<T> implements IProvider<T> {
@@ -41,13 +41,13 @@ export class Provider<T> implements IProvider<T> {
 
     getKeyOrFail(): ProviderKey {
         if (!this.key) {
-            throw new NoRegistrationKeysProvidedError('Pls provide registration keys for current provider');
+            throw new ProviderHasNoKeyError('Pls provide registration keys for current provider');
         }
         return this.key;
     }
 }
 
-export const createAddKeysDecorator =
+export const createAddKeyDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
     (key: ProviderKey): ClassDecorator =>
     (target) => {

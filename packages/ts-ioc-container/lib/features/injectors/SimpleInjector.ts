@@ -1,5 +1,5 @@
-import { constructor } from '../../helpers/types';
-import { IContainer } from '../../core/IContainer';
+import { constructor } from '../../core/utils/types';
+import { IContainer } from '../../core/container/IContainer';
 import { IInjector } from '../../core/IInjector';
 
 export class SimpleInjector implements IInjector {
