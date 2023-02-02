@@ -1,4 +1,4 @@
-export { ProviderReducer } from './features/providers/IProvidersMetadataCollector';
+export { ProviderReducer } from './core/provider/IProvidersMetadataCollector';
 export { IContainer, Resolveable } from './core/IContainer';
 export { constructor } from './helpers/types';
 export { Container } from './core/Container';
@@ -22,15 +22,13 @@ export { IMockRepository } from './features/mock/IMockRepository';
 export { MockedServiceLocator } from './features/mock/MockedServiceLocator';
 export { SingletonProvider } from './features/providers/SingletonProvider';
 export { ProviderBuilder, fromClass, fromFn, fromValue, fromClassArray } from './features/providers/ProviderBuilder';
-export { IProvidersMetadataCollector } from './features/providers/IProvidersMetadataCollector';
-export { ProvidersMetadataCollector } from './features/providers/ProvidersMetadataCollector';
-export {
-    createLevelDecorator,
-    createSingletonDecorator,
-    createTagsDecorator,
-    createArgsFnDecorator,
-    createAddKeysDecorator,
-} from './features/providers/decorators';
+export { IProvidersMetadataCollector } from './core/provider/IProvidersMetadataCollector';
+export { ProvidersMetadataCollector } from './core/provider/ProvidersMetadataCollector';
 export { IDisposable } from './helpers/types';
 export { ProviderKey } from './core/provider/IProvider';
 export { isProviderKey } from './core/provider/IProvider';
+export { createTagsDecorator } from './features/providers/TaggedProvider';
+export { createLevelDecorator } from './features/providers/LevelProvider';
+export { createSingletonDecorator } from './features/providers/SingletonProvider';
+export { createArgsFnDecorator } from './features/providers/ArgsProvider';
+export { createAddKeysDecorator } from './core/provider/Provider';

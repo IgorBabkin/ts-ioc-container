@@ -3,7 +3,7 @@ import { IInjector } from './IInjector';
 import { IProvider, isProviderKey, ScopeOptions, Tag } from './provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { emptyHook, IInstanceHook } from './IInstanceHook';
-import { ProviderRepo } from './ProviderRepo';
+import { ProviderRepo } from './provider/ProviderRepo';
 import { LocatorDisposedError } from '../errors/LocatorDisposedError';
 
 export class Container implements IContainer, ScopeOptions {

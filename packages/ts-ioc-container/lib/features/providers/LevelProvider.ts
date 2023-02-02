@@ -1,5 +1,7 @@
 import { IProvider, ScopeOptions } from '../../core/provider/IProvider';
 import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
+import { IProvidersMetadataCollector } from '../../core/provider/IProvidersMetadataCollector';
+import { constructor } from '../../helpers/types';
 
 export class LevelProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private readonly range: [number, number]) {
@@ -16,3 +18,12 @@ export class LevelProvider<T> extends ProviderDecorator<T> {
         return from <= level && level <= to && this.provider.isValid(filters);
     }
 }
+
+export const createLevelDecorator =
+    (metadataCollector: IProvidersMetadataCollector) =>
+    (value: number): ClassDecorator =>
+    (target) => {
+        const targetClass = target as any as constructor<unknown>;
+        const fn = metadataCollector.findReducerOrCreate(targetClass);
+        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forLevel(value));
+    };

@@ -4,7 +4,7 @@ import { Provider } from '../../core/provider/Provider';
 import { constructor } from '../../helpers/types';
 import { TaggedProvider } from './TaggedProvider';
 import { LevelProvider } from './LevelProvider';
-import { ProviderReducer } from './IProvidersMetadataCollector';
+import { ProviderReducer } from '../../core/provider/IProvidersMetadataCollector';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
 
 export function fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
