@@ -16,8 +16,8 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
         return this.decorated.isValid(filters);
     }
 
-    resolve(locator: Resolveable, ...args: any[]): T {
-        return this.decorated.resolve(locator, ...args);
+    resolve(container: Resolveable, ...args: any[]): T {
+        return this.decorated.resolve(container, ...args);
     }
 
     getKeyOrFail(): ProviderKey {

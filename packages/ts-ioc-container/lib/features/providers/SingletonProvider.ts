@@ -20,9 +20,9 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
         this.provider.dispose();
     }
 
-    resolve(locator: Resolveable, ...args: any[]): T {
+    resolve(container: Resolveable, ...args: any[]): T {
         if (this.instance === null) {
-            const instance = this.provider.resolve(locator, ...args);
+            const instance = this.provider.resolve(container, ...args);
             this.instance = new Box<T>(instance);
         }
 

@@ -1,7 +1,7 @@
 import { constructor } from '../../helpers/types';
 import { IProvider, ProviderKey, ResolveDependency } from './IProvider';
 import { Resolveable } from '../IContainer';
-import { NoRegistrationKeysProvided } from '../../errors/NoRegistrationKeysProvided';
+import { NoRegistrationKeysProvidedError } from '../../errors/NoRegistrationKeysProvidedError';
 import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
 
 export class Provider<T> implements IProvider<T> {
@@ -29,8 +29,8 @@ export class Provider<T> implements IProvider<T> {
         return provider;
     }
 
-    resolve(locator: Resolveable, ...args: any[]): T {
-        return this.resolveDependency(locator, ...args);
+    resolve(container: Resolveable, ...args: any[]): T {
+        return this.resolveDependency(container, ...args);
     }
 
     dispose(): void {}
@@ -41,7 +41,7 @@ export class Provider<T> implements IProvider<T> {
 
     getKeyOrFail(): ProviderKey {
         if (!this.key) {
-            throw new NoRegistrationKeysProvided();
+            throw new NoRegistrationKeysProvidedError('Pls provide registration keys for current provider');
         }
         return this.key;
     }

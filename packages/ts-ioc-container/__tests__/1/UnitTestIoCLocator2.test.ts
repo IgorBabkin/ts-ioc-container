@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { MockedServiceLocator, Container } from '../../lib';
+import { MockedServiceContainer, Container } from '../../lib';
 import { MoqRepository } from '../MoqRepository';
 import { inject, IocInjector } from '../ioc/IocInjector';
 
@@ -19,8 +19,8 @@ describe('UnitTestIoCLocator', () => {
     });
 
     function createIoCLocator() {
-        const locator = new Container(new IocInjector()).map((l) => new MockedServiceLocator(l, mockRepository));
-        return new MockedServiceLocator(locator, mockRepository);
+        const locator = new Container(new IocInjector()).map((l) => new MockedServiceContainer(l, mockRepository));
+        return new MockedServiceContainer(locator, mockRepository);
     }
 
     it('ioc', () => {

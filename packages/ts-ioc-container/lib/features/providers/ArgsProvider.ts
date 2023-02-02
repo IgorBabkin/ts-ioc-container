@@ -11,8 +11,8 @@ export class ArgsProvider<T> extends ProviderDecorator<T> {
         super(provider);
     }
 
-    resolve(locator: Resolveable, ...args: any[]): T {
-        return this.provider.resolve(locator, ...this.argsFn(locator), ...args);
+    resolve(container: Resolveable, ...args: any[]): T {
+        return this.provider.resolve(container, ...this.argsFn(container), ...args);
     }
 
     clone(): ProviderDecorator<T> {

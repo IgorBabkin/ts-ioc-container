@@ -1,7 +1,7 @@
 import { InjectionToken, Resolveable } from '../IContainer';
 import { IDisposable } from '../../helpers/types';
 
-export type ResolveDependency<T> = (locator: Resolveable, ...args: any[]) => T;
+export type ResolveDependency<T> = (container: Resolveable, ...args: any[]) => T;
 
 export type Tag = string | symbol;
 
@@ -15,7 +15,7 @@ export interface IProvider<T> extends IDisposable {
     getKeyOrFail(): ProviderKey;
     clone(): IProvider<T>;
 
-    resolve(locator: Resolveable, ...args: any[]): T;
+    resolve(container: Resolveable, ...args: any[]): T;
 
     isValid(filters: ScopeOptions): boolean;
 }

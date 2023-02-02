@@ -4,7 +4,7 @@ import { IProvider, isProviderKey, ScopeOptions, Tag } from './provider/IProvide
 import { EmptyContainer } from './EmptyContainer';
 import { emptyHook, IInstanceHook } from './IInstanceHook';
 import { ProviderRepo } from './provider/ProviderRepo';
-import { LocatorDisposedError } from '../errors/LocatorDisposedError';
+import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer, ScopeOptions {
     private readonly providers = new ProviderRepo();
@@ -37,13 +37,13 @@ export class Container implements IContainer, ScopeOptions {
     }
 
     register(provider: IProvider<unknown>): this {
-        this.validateLocator();
+        this.validateContainer();
         this.providers.add(provider);
         return this;
     }
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
-        this.validateLocator();
+        this.validateContainer();
         if (isProviderKey(key)) {
             const provider = this.providers.get<T>(key);
             return provider?.isValid(this)
@@ -55,7 +55,7 @@ export class Container implements IContainer, ScopeOptions {
     }
 
     createScope(tags: Tag[] = [], parent: IContainer = this): Container {
-        this.validateLocator();
+        this.validateContainer();
         const scope = new Container(this.injector)
             .setParent(parent)
             .setLevel(this.level + 1)
@@ -84,9 +84,7 @@ export class Container implements IContainer, ScopeOptions {
         return transform(this);
     }
 
-    private validateLocator(): void {
-        if (this.isDisposed) {
-            throw new LocatorDisposedError(`Locator is already disposed`);
-        }
+    private validateContainer(): void {
+        ContainerDisposedError.assert(!this.isDisposed, 'Container is already disposed');
     }
 }

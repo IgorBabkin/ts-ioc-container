@@ -1,19 +1,11 @@
-import {
-    IInstanceHook,
-    InjectionToken,
-    IProvider,
-    IContainer,
-    ProviderKey,
-    ProviderNotFoundError,
-    Tag,
-} from '../../index';
+import { IContainer, IInstanceHook, InjectionToken, IProvider, ProviderNotFoundError, Tag } from '../../index';
 import { IMockRepository } from './IMockRepository';
 
-export class MockedServiceLocator implements IContainer {
+export class MockedServiceContainer implements IContainer {
     constructor(private decorated: IContainer, private mockRepository: IMockRepository) {}
 
     createScope(tags?: Tag[], parent: IContainer = this): IContainer {
-        return new MockedServiceLocator(this.decorated.createScope(tags, parent), this.mockRepository);
+        return new MockedServiceContainer(this.decorated.createScope(tags, parent), this.mockRepository);
     }
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
@@ -32,12 +24,12 @@ export class MockedServiceLocator implements IContainer {
         this.mockRepository.dispose();
     }
 
-    getProviders(): Array<[ProviderKey, IProvider<any>]> {
+    getProviders(): IProvider<unknown>[] {
         return this.decorated.getProviders();
     }
 
-    register(key: ProviderKey, provider: IProvider<unknown>): void {
-        this.decorated.register(key, provider);
+    register(provider: IProvider<unknown>): void {
+        this.decorated.register(provider);
     }
 
     setHook(hook: IInstanceHook): this {
