@@ -1,8 +1,7 @@
 import { constructor } from '../../helpers/types';
-import { Tag } from '../../core/provider/IProvider';
+import { ProviderKey, Tag } from '../../core/provider/IProvider';
 import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
 import { ArgsFn } from '../../core/provider/ArgsProvider';
-import { ProviderKey } from '../../core/IServiceLocator';
 
 export const createAddKeysDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>

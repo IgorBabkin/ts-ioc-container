@@ -1,5 +1,5 @@
-import { IServiceLocator, ProviderKey } from '../../core/IServiceLocator';
-import { IProvider } from '../../core/provider/IProvider';
+import { IServiceLocator } from '../../core/IServiceLocator';
+import { IProvider, ProviderKey } from '../../core/provider/IProvider';
 import { IContainerProvider } from './IContainerProvider';
 import { NoRegistrationKeysProvided } from '../../errors/NoRegistrationKeysProvided';
 

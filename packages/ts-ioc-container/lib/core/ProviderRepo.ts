@@ -1,5 +1,4 @@
-import { ProviderKey } from './IServiceLocator';
-import { IProvider } from './provider/IProvider';
+import { IProvider, ProviderKey } from './provider/IProvider';
 
 export class ProviderRepo {
     private readonly providers = new Map<ProviderKey, IProvider<any>>();

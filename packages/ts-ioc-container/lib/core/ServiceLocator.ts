@@ -1,6 +1,6 @@
-import { InjectionToken, IServiceLocator, isProviderKey, ProviderKey } from './IServiceLocator';
+import { InjectionToken, IServiceLocator } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IProvider, ScopeOptions, Tag } from './provider/IProvider';
+import { IProvider, isProviderKey, ProviderKey, ScopeOptions, Tag } from './provider/IProvider';
 import { EmptyServiceLocator } from './EmptyServiceLocator';
 import { emptyHook, IInstanceHook } from './IInstanceHook';
 import { ProviderRepo } from './ProviderRepo';

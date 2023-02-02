@@ -1,4 +1,4 @@
-import { IProvider, ResolveDependency, Tag } from '../../core/provider/IProvider';
+import { IProvider, ProviderKey, ResolveDependency, Tag } from '../../core/provider/IProvider';
 import { SingletonProvider } from '../providers/SingletonProvider';
 import { Provider } from '../../core/provider/Provider';
 import { constructor } from '../../helpers/types';
@@ -6,7 +6,6 @@ import { TaggedProvider } from '../providers/TaggedProvider';
 import { LevelProvider } from '../providers/LevelProvider';
 import { ProviderReducer } from './IProvidersMetadataCollector';
 import { ArgsFn, ArgsProvider } from '../../core/provider/ArgsProvider';
-import { ProviderKey } from '../../core/IServiceLocator';
 import { ContainerProvider } from './ContainerProvider';
 
 export function fromClass<T>(value: constructor<T>): ProviderBuilder<T> {

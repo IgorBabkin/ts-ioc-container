@@ -1,12 +1,6 @@
-import { IProvider, Tag } from './provider/IProvider';
+import { IProvider, ProviderKey, Tag } from './provider/IProvider';
 import { constructor, IDisposable } from '../helpers/types';
 import { IInstanceHook } from './IInstanceHook';
-
-export type ProviderKey = string | symbol;
-
-export function isProviderKey<T>(token: InjectionToken<T>): token is ProviderKey {
-    return ['string', 'symbol'].includes(typeof token);
-}
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
 
