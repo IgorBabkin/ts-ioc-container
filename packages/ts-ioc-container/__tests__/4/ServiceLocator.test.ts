@@ -8,7 +8,7 @@ import { inject, IocInjector } from '../ioc/IocInjector';
 import { SubGroup3 } from './SubGroup3';
 import { emptyHook, IContainerHook } from '../../lib/core/container/IContainerHook';
 import { InjectorHook } from '../ioc/InjectorHook';
-import { ContainerHook } from '../../lib/features/hooks/ContainerHook';
+import { ContainerHook } from '../../lib/hooks/ContainerHook';
 
 const MyKey = Symbol('MyKey');
 

@@ -1,7 +1,7 @@
-import { IProvider, ScopeOptions } from '../../core/provider/IProvider';
-import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
-import { IProvidersMetadataCollector } from '../../core/provider/IProvidersMetadataCollector';
-import { constructor } from '../../core/utils/types';
+import { IProvider, ScopeOptions } from '../core/provider/IProvider';
+import { ProviderDecorator } from '../core/provider/ProviderDecorator';
+import { IProvidersMetadataCollector } from '../core/provider/IProvidersMetadataCollector';
+import { constructor } from '../core/utils/types';
 
 export class LevelProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private readonly range: [number, number]) {

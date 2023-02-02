@@ -1,8 +1,8 @@
-import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
-import { Resolveable } from '../../core/container/IContainer';
-import { IProvider } from '../../core/provider/IProvider';
-import { IProvidersMetadataCollector } from '../../core/provider/IProvidersMetadataCollector';
-import { constructor } from '../../core/utils/types';
+import { ProviderDecorator } from '../core/provider/ProviderDecorator';
+import { Resolveable } from '../core/container/IContainer';
+import { IProvider } from '../core/provider/IProvider';
+import { IProvidersMetadataCollector } from '../core/provider/IProvidersMetadataCollector';
+import { constructor } from '../core/utils/types';
 
 export type ArgsFn = (l: Resolveable) => any[];
 

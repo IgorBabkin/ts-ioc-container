@@ -1,8 +1,8 @@
-import { Resolveable } from '../../core/container/IContainer';
-import { Box, constructor } from '../../core/utils/types';
-import { ProviderDecorator } from '../../core/provider/ProviderDecorator';
-import { IProvider } from '../../core/provider/IProvider';
-import { IProvidersMetadataCollector } from '../../core/provider/IProvidersMetadataCollector';
+import { Resolveable } from '../core/container/IContainer';
+import { Box, constructor } from '../core/utils/types';
+import { ProviderDecorator } from '../core/provider/ProviderDecorator';
+import { IProvider } from '../core/provider/IProvider';
+import { IProvidersMetadataCollector } from '../core/provider/IProvidersMetadataCollector';
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
     private instance: Box<T> | null = null;

@@ -3,7 +3,7 @@ import { fromClass, fromFn, fromValue, IDisposable, IContainer, Container } from
 import { emptyHook, IContainerHook } from '../../lib/core/container/IContainerHook';
 import { InjectorHook } from '../ioc/InjectorHook';
 import { SimpleInjector } from '../ioc/SimpleInjector';
-import { ContainerHook } from '../../lib/features/hooks/ContainerHook';
+import { ContainerHook } from '../../lib/hooks/ContainerHook';
 
 class TestClass {
     constructor(l: IContainer, public dep1: string, public dep2: number) {}

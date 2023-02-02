@@ -1,7 +1,7 @@
-import { IInjector } from '../../core/IInjector';
-import { IContainer } from '../../core/container/IContainer';
-import { constructor } from '../../core/utils/types';
-import { ProviderKey } from '../../core/provider/IProvider';
+import { IInjector } from '../core/IInjector';
+import { IContainer } from '../core/container/IContainer';
+import { constructor } from '../core/utils/types';
+import { ProviderKey } from '../core/provider/IProvider';
 
 export class ProxyInjector implements IInjector {
     // eslint-disable-next-line @typescript-eslint/ban-types

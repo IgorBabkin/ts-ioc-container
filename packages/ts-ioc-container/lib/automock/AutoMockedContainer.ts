@@ -1,4 +1,4 @@
-import { IContainer, IContainerHook, InjectionToken, IProvider, ProviderNotFoundError, Tag } from '../../index';
+import { IContainer, IContainerHook, InjectionToken, IProvider, ProviderNotFoundError, Tag } from '../index';
 import { IMockRepository } from './IMockRepository';
 
 export class AutoMockedContainer implements IContainer {

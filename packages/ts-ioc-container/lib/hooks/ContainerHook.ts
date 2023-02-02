@@ -1,5 +1,5 @@
-import { IContainerHook } from '../../core/container/IContainerHook';
-import { noop } from '../../core/utils/others';
+import { IContainerHook } from '../core/container/IContainerHook';
+import { noop } from '../core/utils/others';
 
 export type OnDisposeHook = (instance: unknown) => void;
 
