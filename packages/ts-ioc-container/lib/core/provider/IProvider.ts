@@ -3,7 +3,7 @@ import { IDisposable } from '../utils/types';
 
 export type ResolveDependency<T> = (container: Resolveable, ...args: any[]) => T;
 
-export type Tag = string | symbol;
+export type Tag = string;
 
 export interface ScopeOptions {
     level: number;

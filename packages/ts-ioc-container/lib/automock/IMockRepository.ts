@@ -1,5 +1,3 @@
-import { IDisposable, InjectionToken } from '../index';
+import { IDisposable, Resolveable } from '../index';
 
-export interface IMockRepository extends IDisposable {
-    resolve<T>(key: InjectionToken<T>): T;
-}
+export interface IMockRepository extends IDisposable, Resolveable {}

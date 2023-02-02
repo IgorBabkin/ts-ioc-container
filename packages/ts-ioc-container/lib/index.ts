@@ -5,6 +5,7 @@ import { createTagsDecorator } from './providers/TaggedProvider';
 import { constructor } from './core/utils/types';
 import { ProviderBuilder } from './providers/ProviderBuilder';
 import { ResolveDependency } from './core/provider/IProvider';
+import { IContainer, InjectionToken } from './core/container/IContainer';
 
 export { ProviderReducer } from './core/provider/IProvidersMetadataCollector';
 export { IContainer, Resolveable } from './core/container/IContainer';
@@ -56,7 +57,9 @@ export function fromFn<T>(fn: ResolveDependency<T>): ProviderBuilder<T> {
     return new ProviderBuilder(new Provider(fn));
 }
 
-export function fromClassArray<T>(classes: constructor<T>[]): ProviderBuilder<T[]> {
-    return fromFn((l) => classes.map((it) => l.resolve(it)));
-}
 export { createMethodHookDecorator } from './hooks/IMethodsMetadataCollector';
+
+export const by =
+    <T>(key: InjectionToken<T>, ...args: unknown[]) =>
+    (l: IContainer) =>
+        l.resolve<T>(key, ...args);
