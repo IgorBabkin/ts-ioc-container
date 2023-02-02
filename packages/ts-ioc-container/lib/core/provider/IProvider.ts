@@ -11,6 +11,8 @@ export interface ScopeOptions {
 }
 
 export interface IProvider<T> extends IDisposable {
+    setKey(key: ProviderKey): void;
+    getKeyOrFail(): ProviderKey;
     clone(): IProvider<T>;
 
     resolve(locator: Resolveable, ...args: any[]): T;

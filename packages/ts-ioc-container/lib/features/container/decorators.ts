@@ -5,11 +5,11 @@ import { ArgsFn } from '../../core/provider/ArgsProvider';
 
 export const createAddKeysDecorator =
     (metadataCollector: IProvidersMetadataCollector) =>
-    (...keys: ProviderKey[]): ClassDecorator =>
+    (key: ProviderKey): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forKeys(...keys));
+        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forKey(key));
     };
 
 export const createArgsFnDecorator =

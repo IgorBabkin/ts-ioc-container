@@ -32,8 +32,8 @@ export class MockedServiceLocator implements IServiceLocator {
         this.mockRepository.dispose();
     }
 
-    entries(): Array<[ProviderKey, IProvider<any>]> {
-        return this.decorated.entries();
+    getProviders(): Array<[ProviderKey, IProvider<any>]> {
+        return this.decorated.getProviders();
     }
 
     register(key: ProviderKey, provider: IProvider<unknown>): void {

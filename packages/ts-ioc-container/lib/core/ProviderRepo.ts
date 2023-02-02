@@ -1,18 +1,22 @@
 import { IProvider, ProviderKey } from './provider/IProvider';
 
 export class ProviderRepo {
-    private readonly providers = new Map<ProviderKey, IProvider<any>>();
+    private readonly providers = new Map<ProviderKey, IProvider<unknown>>();
 
-    set(key: ProviderKey, provider: IProvider<unknown>): void {
-        this.providers.set(key, provider);
+    add(provider: IProvider<unknown>): void {
+        this.providers.set(provider.getKeyOrFail(), provider);
     }
 
     get<T>(key: ProviderKey): IProvider<T> | undefined {
-        return this.providers.get(key);
+        return this.providers.get(key) as IProvider<T>;
     }
 
-    entries(): Array<[ProviderKey, IProvider<any>]> {
-        return Array.from(this.providers.entries());
+    merge(providers: IProvider<unknown>[]): IProvider<unknown>[] {
+        const map = new Map<ProviderKey, IProvider<unknown>>();
+        for (const p of providers.concat(Array.from(this.providers.values()))) {
+            map.set(p.getKeyOrFail(), p);
+        }
+        return Array.from(map.values());
     }
 
     dispose(): void {

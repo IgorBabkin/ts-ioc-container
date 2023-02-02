@@ -1,6 +1,6 @@
 import { InjectionToken, IServiceLocator } from './IServiceLocator';
 import { IInjector } from './IInjector';
-import { IProvider, isProviderKey, ProviderKey, ScopeOptions, Tag } from './provider/IProvider';
+import { IProvider, isProviderKey, ScopeOptions, Tag } from './provider/IProvider';
 import { EmptyServiceLocator } from './EmptyServiceLocator';
 import { emptyHook, IInstanceHook } from './IInstanceHook';
 import { ProviderRepo } from './ProviderRepo';
@@ -36,9 +36,10 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
         return this;
     }
 
-    register(key: ProviderKey, provider: IProvider<unknown>): void {
+    register(provider: IProvider<unknown>): this {
         this.validateLocator();
-        this.providers.set(key, provider);
+        this.providers.add(provider);
+        return this;
     }
 
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
@@ -61,16 +62,14 @@ export class ServiceLocator implements IServiceLocator, ScopeOptions {
             .setTags(tags)
             .setHook(this.hook.clone());
 
-        for (const [key, provider] of parent.entries()) {
-            if (provider.isValid(scope)) {
-                scope.register(key, provider.clone());
-            }
+        for (const provider of parent.getProviders().filter((p) => p.isValid(scope))) {
+            scope.register(provider.clone());
         }
         return scope;
     }
 
-    entries(): Array<[ProviderKey, IProvider<any>]> {
-        return Array.from(new Map([...this.parent.entries(), ...this.providers.entries()]).entries());
+    getProviders(): IProvider<unknown>[] {
+        return this.providers.merge(this.parent.getProviders());
     }
 
     dispose(): void {

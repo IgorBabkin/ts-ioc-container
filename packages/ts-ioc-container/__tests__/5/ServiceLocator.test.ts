@@ -1,4 +1,4 @@
-import { Container, fromClass, fromFn, fromValue, IDisposable, IServiceLocator, ServiceLocator } from '../../lib';
+import { fromClass, fromFn, fromValue, IDisposable, IServiceLocator, ServiceLocator } from '../../lib';
 import { emptyHook, IInstanceHook } from '../../lib/core/IInstanceHook';
 import { InjectorHook } from '../ioc/InjectorHook';
 import { SimpleInjector } from '../ioc/SimpleInjector';
@@ -10,10 +10,10 @@ class TestClass {
 
 describe('ServiceLocator', () => {
     const createSimpleLocator = (hook: IInstanceHook = emptyHook, injectorHook?: InjectorHook) =>
-        Container.fromInjector(new SimpleInjector(injectorHook)).setHook(hook);
+        new ServiceLocator(new SimpleInjector(injectorHook)).setHook(hook);
 
     it('should pass dependencies', () => {
-        const locator = createSimpleLocator().register(fromClass(TestClass).forKeys('key1').build());
+        const locator = createSimpleLocator().register(fromClass(TestClass).forKey('key1').build());
         const testClass = locator.resolve<TestClass>('key1', 'a', 3);
 
         expect(testClass.dep1).toBe('a');
@@ -38,7 +38,7 @@ describe('ServiceLocator', () => {
             },
         });
 
-        const child = locator.createScope().register(fromClass(Disposable).forKeys('key1').build());
+        const child = locator.createScope().register(fromClass(Disposable).forKey('key1').build());
 
         const instance = child.resolve<Disposable>('key1');
 
@@ -63,7 +63,7 @@ describe('ServiceLocator', () => {
             },
         };
 
-        const child = locator.createScope().register(fromValue(disposable).forKeys('key1').build());
+        const child = locator.createScope().register(fromValue(disposable).forKey('key1').build());
 
         child.resolve('key1');
 
@@ -77,12 +77,12 @@ describe('ServiceLocator', () => {
             fromFn((l) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
                 .forLevel(1)
                 .asSingleton()
-                .forKeys('key1')
+                .forKey('key1')
                 .build(),
         );
 
-        const child1 = locator.createScope().register(fromValue('a').forKeys('context').build());
-        const child2 = locator.createScope().register(fromValue('b').forKeys('context').build());
+        const child1 = locator.createScope().register(fromValue('a').forKey('context').build());
+        const child2 = locator.createScope().register(fromValue('b').forKey('context').build());
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

@@ -1,9 +1,9 @@
-import { Container, fromFn, ProviderNotFoundError } from '../../lib';
+import { fromFn, IServiceLocator, ProviderNotFoundError, ServiceLocator } from '../../lib';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 
 describe('LevelProvider', function () {
-    function createContainer(): Container {
-        return Container.fromInjector(new SimpleInjector());
+    function createContainer(): IServiceLocator {
+        return new ServiceLocator(new SimpleInjector());
     }
 
     test('singleton', () => {
@@ -12,7 +12,7 @@ describe('LevelProvider', function () {
             fromFn(() => Math.random())
                 .forLevel(0)
                 .asSingleton()
-                .forKeys('hey')
+                .forKey('hey')
                 .build(),
         );
 
@@ -26,7 +26,7 @@ describe('LevelProvider', function () {
                 fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .forKeys('hey')
+                    .forKey('hey')
                     .build(),
             );
 
@@ -40,7 +40,7 @@ describe('LevelProvider', function () {
                 fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .forKeys('hey')
+                    .forKey('hey')
                     .build(),
             );
 
@@ -54,7 +54,7 @@ describe('LevelProvider', function () {
                 fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .forKeys('hey')
+                    .forKey('hey')
                     .build(),
             );
 
@@ -69,7 +69,7 @@ describe('LevelProvider', function () {
                 fromFn(() => Math.random())
                     .forLevel(1)
                     .asSingleton()
-                    .forKeys('hey')
+                    .forKey('hey')
                     .build(),
             );
 
@@ -84,7 +84,7 @@ describe('LevelProvider', function () {
                 fromFn(() => Math.random())
                     .forTags('a')
                     .asSingleton()
-                    .forKeys('hey')
+                    .forKey('hey')
                     .build(),
             );
 
@@ -98,7 +98,7 @@ describe('LevelProvider', function () {
                 fromFn(() => Math.random())
                     .forTags('a')
                     .asSingleton()
-                    .forKeys('hey')
+                    .forKey('hey')
                     .build(),
             );
 

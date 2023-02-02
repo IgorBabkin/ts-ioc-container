@@ -11,9 +11,9 @@ export interface Resolveable {
 export interface IServiceLocator extends IDisposable, Resolveable {
     createScope(tags?: Tag[], parent?: IServiceLocator): IServiceLocator;
 
-    register(key: ProviderKey, provider: IProvider<unknown>): void;
+    register(provider: IProvider<unknown>): void;
 
-    entries(): Array<[ProviderKey, IProvider<any>]>;
+    getProviders(): IProvider<unknown>[];
 
     setHook(hook: IInstanceHook): this;
 }

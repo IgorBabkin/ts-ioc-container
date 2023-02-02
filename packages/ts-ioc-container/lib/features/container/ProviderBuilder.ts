@@ -6,7 +6,6 @@ import { TaggedProvider } from '../providers/TaggedProvider';
 import { LevelProvider } from '../providers/LevelProvider';
 import { ProviderReducer } from './IProvidersMetadataCollector';
 import { ArgsFn, ArgsProvider } from '../../core/provider/ArgsProvider';
-import { ContainerProvider } from './ContainerProvider';
 
 export function fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
     return new ProviderBuilder(Provider.fromClass(value));
@@ -25,8 +24,6 @@ export function fromClassArray<T>(classes: constructor<T>[]): ProviderBuilder<T[
 }
 
 export class ProviderBuilder<T> {
-    private keys: ProviderKey[] = [];
-
     constructor(private provider: IProvider<T>) {}
 
     withArgs(...extraArgs: any[]): this {
@@ -58,12 +55,12 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    forKeys(...keys: ProviderKey[]): this {
-        this.keys = keys;
+    forKey(key: ProviderKey): this {
+        this.provider.setKey(key);
         return this;
     }
 
-    build(): ContainerProvider<T> {
-        return new ContainerProvider(this.provider, new Set(this.keys));
+    build(): IProvider<T> {
+        return this.provider;
     }
 }

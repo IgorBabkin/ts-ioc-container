@@ -2,8 +2,6 @@ export { ProviderReducer } from './features/container/IProvidersMetadataCollecto
 export { IServiceLocator, Resolveable } from './core/IServiceLocator';
 export { constructor } from './helpers/types';
 export { ServiceLocator } from './core/ServiceLocator';
-export { Container } from './features/container/Container';
-export { IContainer } from './features/container/IContainer';
 export { ScopeOptions, ResolveDependency, Tag, IProvider } from './core/provider/IProvider';
 export { IInjector } from './core/IInjector';
 export { SimpleInjector } from './features/injectors/SimpleInjector';

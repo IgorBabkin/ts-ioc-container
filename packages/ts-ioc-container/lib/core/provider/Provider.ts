@@ -1,6 +1,7 @@
 import { constructor } from '../../helpers/types';
-import { IProvider, ResolveDependency } from './IProvider';
+import { IProvider, ProviderKey, ResolveDependency } from './IProvider';
 import { Resolveable } from '../IServiceLocator';
+import { NoRegistrationKeysProvided } from '../../errors/NoRegistrationKeysProvided';
 
 export class Provider<T> implements IProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
@@ -11,10 +12,20 @@ export class Provider<T> implements IProvider<T> {
         return new Provider(() => value);
     }
 
+    private key?: ProviderKey;
+
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
+    setKey(key: ProviderKey): void {
+        this.key = key;
+    }
+
     clone(): Provider<T> {
-        return new Provider(this.resolveDependency);
+        const provider = new Provider(this.resolveDependency);
+        if (this.key) {
+            provider.setKey(this.key);
+        }
+        return provider;
     }
 
     resolve(locator: Resolveable, ...args: any[]): T {
@@ -25,5 +36,12 @@ export class Provider<T> implements IProvider<T> {
 
     isValid(): boolean {
         return true;
+    }
+
+    getKeyOrFail(): ProviderKey {
+        if (!this.key) {
+            throw new NoRegistrationKeysProvided();
+        }
+        return this.key;
     }
 }

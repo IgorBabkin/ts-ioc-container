@@ -1,8 +1,7 @@
 import { InjectionToken, IServiceLocator } from './IServiceLocator';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { ProviderNotFoundError } from '../errors/ProviderNotFoundError';
-import { IProvider, ProviderKey } from './provider/IProvider';
-import { IInstanceHook } from './IInstanceHook';
+import { IProvider } from './provider/IProvider';
 
 export class EmptyServiceLocator implements IServiceLocator {
     createScope(): IServiceLocator {
@@ -21,15 +20,11 @@ export class EmptyServiceLocator implements IServiceLocator {
         throw new ProviderNotFoundError(key.toString());
     }
 
-    entries(): Array<[ProviderKey, IProvider<any>]> {
+    getProviders(): IProvider<unknown>[] {
         return [];
     }
 
-    has(key: ProviderKey): boolean {
-        return false;
-    }
-
-    setHook(hook: IInstanceHook): this {
+    setHook(): this {
         throw new MethodNotImplementedError();
     }
 }
