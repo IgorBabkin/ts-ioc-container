@@ -11,7 +11,7 @@ export interface Resolveable {
 export interface IContainer extends IDisposable, Resolveable {
     createScope(tags?: Tag[], parent?: IContainer): IContainer;
 
-    register(provider: IProvider<unknown>): void;
+    register(provider: IProvider<unknown>): this;
 
     getProviders(): IProvider<unknown>[];
 

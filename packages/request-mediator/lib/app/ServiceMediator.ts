@@ -5,8 +5,9 @@ import { SimpleMediator } from '../mediator/simple/SimpleMediator';
 import { ScopedMediator } from '../mediator/ScopedMediator';
 import { IQueryHandler } from '../IQueryHandler';
 import { HookedMediator, IHook, IHooksRepo } from '../mediator/HookedMediator';
-import { constructor, getProp, prop } from 'ts-constructor-injector';
-import { IContainer } from '../di/IContainer';
+import { getProp, prop } from '../metadata';
+import { constructor } from '../others';
+import { IDependencyContainer } from '../di/IDependencyContainer';
 
 export const IServiceMediatorKey = Symbol('IServiceMediator');
 const createMetadataKey = <K extends keyof IHook>(key: K) => `RequestMediator/${key}`;
@@ -14,7 +15,7 @@ const createMetadataKey = <K extends keyof IHook>(key: K) => `RequestMediator/${
 export class ServiceMediator extends ScopedMediator<ITransaction> implements IHooksRepo {
     protected scopes = [Scope.Service];
 
-    protected createMediator(scope: IContainer): IMediator {
+    protected createMediator(scope: IDependencyContainer): IMediator {
         return new TransactionMediator(new HookedMediator(new SimpleMediator(scope), this), scope);
     }
 
@@ -39,7 +40,7 @@ export function useService<TQuery, TResponse>(
     Service: constructor<IQueryHandler<TQuery, TResponse>>,
     context?: ITransaction,
 ) {
-    return (useCaseScope: IContainer) =>
+    return (useCaseScope: IDependencyContainer) =>
         new ServiceDecorator(useCaseScope.resolve(IServiceMediatorKey), Service, context);
 }
 

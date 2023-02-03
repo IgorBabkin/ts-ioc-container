@@ -3,16 +3,17 @@ import { IMediator } from '../mediator/IMediator';
 import { HookedMediator, IHook, IHooksRepo } from '../mediator/HookedMediator';
 import { ScopedMediator } from '../mediator/ScopedMediator';
 import { UseCaseMediator } from './UseCaseMediator';
-import { constructor, getProp, prop } from 'ts-constructor-injector';
+import { getProp, prop } from '../metadata';
+import { constructor } from '../others';
 import { IQueryHandler } from '../IQueryHandler';
-import { IContainer } from '../di/IContainer';
+import { IDependencyContainer } from '../di/IDependencyContainer';
 
 const createMetadataKey = <K extends keyof IHook>(key: K) => `RequestMediator/${key}`;
 
 export class RequestMediator extends ScopedMediator implements IHooksRepo {
     protected scopes = [Scope.Request];
 
-    protected createMediator(scope: IContainer): IMediator {
+    protected createMediator(scope: IDependencyContainer): IMediator {
         return new HookedMediator(new UseCaseMediator(scope), this);
     }
 

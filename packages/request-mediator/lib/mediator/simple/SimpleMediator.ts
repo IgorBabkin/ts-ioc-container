@@ -1,15 +1,15 @@
 import { IMediator } from '../IMediator';
 import { IQueryHandler } from '../../IQueryHandler';
-import { constructor } from 'ts-constructor-injector';
+import { constructor } from '../../others';
 import { AsyncMethodsMetadataCollector } from './AsyncMethodsMetadataCollector';
-import { IContainer } from '../../di/IContainer';
+import { IDependencyContainer } from '../../di/IDependencyContainer';
 import { createMethodHookDecorator } from './IAsyncMethodsMetadataCollector';
 
 const onBeforeMetadataCollector = new AsyncMethodsMetadataCollector(Symbol('SimpleMediator/BeforeHook'));
 const onAfterMetadataCollector = new AsyncMethodsMetadataCollector(Symbol('SimpleMediator/AfterHook'));
 
 export class SimpleMediator implements IMediator {
-    constructor(private scope: IContainer) {}
+    constructor(private scope: IDependencyContainer) {}
 
     async send<TResponse, TQuery>(
         QueryHandler: constructor<IQueryHandler<TQuery, TResponse>>,

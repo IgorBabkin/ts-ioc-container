@@ -28,8 +28,9 @@ export class AutoMockedContainer implements IContainer {
         return this.decorated.getProviders();
     }
 
-    register(provider: IProvider<unknown>): void {
+    register(provider: IProvider<unknown>): this {
         this.decorated.register(provider);
+        return this;
     }
 
     setHook(hook: IContainerHook): this {

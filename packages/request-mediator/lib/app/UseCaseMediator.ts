@@ -5,16 +5,17 @@ import { SimpleMediator } from '../mediator/simple/SimpleMediator';
 import { ScopedMediator } from '../mediator/ScopedMediator';
 import { IServiceMediatorKey, ServiceMediator } from './ServiceMediator';
 import { HookedMediator, IHook, IHooksRepo } from '../mediator/HookedMediator';
-import { constructor, getProp, prop } from 'ts-constructor-injector';
+import { getProp, prop } from '../metadata';
+import { constructor } from '../others';
 import { IQueryHandler } from '../IQueryHandler';
-import { IContainer } from '../di/IContainer';
+import { IDependencyContainer } from '../di/IDependencyContainer';
 
 const createMetadataKey = <K extends keyof IHook>(key: K) => `UseCaseMediator/${key}`;
 
 export class UseCaseMediator extends ScopedMediator<ITransaction> implements IHooksRepo {
     protected scopes = [Scope.UseCase];
 
-    protected createMediator(scope: IContainer): IMediator {
+    protected createMediator(scope: IDependencyContainer): IMediator {
         scope.registerValue(IServiceMediatorKey, new ServiceMediator(scope));
         return new TransactionMediator(new HookedMediator(new SimpleMediator(scope), this), scope);
     }

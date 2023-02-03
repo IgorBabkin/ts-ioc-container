@@ -1,13 +1,13 @@
 import { IQueryHandler } from '../IQueryHandler';
 import { IMediator } from './IMediator';
-import { constructor } from 'ts-constructor-injector';
 import { Scope } from '../app/Scope';
-import { IContainer } from '../di/IContainer';
+import { IDependencyContainer } from '../di/IDependencyContainer';
+import { constructor } from '../others';
 
 export abstract class ScopedMediator<Context = unknown> implements IMediator<Context> {
     protected abstract scopes: Scope[];
 
-    constructor(private scope: IContainer) {}
+    constructor(private scope: IDependencyContainer) {}
 
     async send<TQuery, TResponse>(
         QueryHandler: constructor<IQueryHandler<TQuery, TResponse>>,
@@ -23,5 +23,5 @@ export abstract class ScopedMediator<Context = unknown> implements IMediator<Con
         }
     }
 
-    protected abstract createMediator(scope: IContainer): IMediator;
+    protected abstract createMediator(scope: IDependencyContainer): IMediator;
 }

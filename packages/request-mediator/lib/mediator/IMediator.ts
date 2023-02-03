@@ -1,5 +1,5 @@
 import { IQueryHandler } from '../IQueryHandler';
-import { constructor } from 'ts-constructor-injector';
+import { constructor } from '../others';
 
 export interface IMediator<Context = unknown> {
     send<TQuery, TResponse>(

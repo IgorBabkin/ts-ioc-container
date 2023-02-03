@@ -1,15 +1,15 @@
 import { IMediator } from '../IMediator';
 import { IQueryHandler } from '../../IQueryHandler';
 import { isTransaction, ITransactionContext, ITransactionContextKey } from './ITransactionContext';
-import { constructor } from 'ts-constructor-injector';
-import { IContainer } from '../../di/IContainer';
+import { constructor } from '../../others';
+import { IDependencyContainer } from '../../di/IDependencyContainer';
 
 export interface ITransaction {
     transaction?: boolean;
 }
 
 export class TransactionMediator implements IMediator<ITransaction> {
-    constructor(private mediator: IMediator, private scope: IContainer) {}
+    constructor(private mediator: IMediator, private scope: IDependencyContainer) {}
 
     async send<TResponse, TQuery>(
         QueryHandler: constructor<IQueryHandler<TQuery, TResponse>>,

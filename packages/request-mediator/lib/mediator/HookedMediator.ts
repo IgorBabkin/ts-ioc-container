@@ -1,6 +1,6 @@
 import { IQueryHandler } from '../IQueryHandler';
 import { IMediator } from './IMediator';
-import { constructor } from 'ts-constructor-injector';
+import { constructor } from '../others';
 
 export interface IHooksRepo {
     getBeforeHooks<TQuery, TResponse>(
