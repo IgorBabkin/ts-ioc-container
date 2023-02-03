@@ -1,8 +1,8 @@
-import { IContainer } from 'ts-ioc-container';
 import { IQueryHandler } from '../IQueryHandler';
 import { IMediator } from './IMediator';
 import { constructor } from 'ts-constructor-injector';
 import { Scope } from '../app/Scope';
+import { IContainer } from '../di/IContainer';
 
 export abstract class ScopedMediator<Context = unknown> implements IMediator<Context> {
     protected abstract scopes: Scope[];

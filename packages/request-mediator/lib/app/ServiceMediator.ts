@@ -1,5 +1,4 @@
 import { Scope } from './Scope';
-import { IContainer, Resolveable } from 'ts-ioc-container';
 import { IMediator } from '../mediator/IMediator';
 import { ITransaction, TransactionMediator } from '../mediator/transaction/TransactionMediator';
 import { SimpleMediator } from '../mediator/simple/SimpleMediator';
@@ -7,18 +6,12 @@ import { ScopedMediator } from '../mediator/ScopedMediator';
 import { IQueryHandler } from '../IQueryHandler';
 import { HookedMediator, IHook, IHooksRepo } from '../mediator/HookedMediator';
 import { constructor, getProp, prop } from 'ts-constructor-injector';
+import { IContainer } from '../di/IContainer';
 
 export const IServiceMediatorKey = Symbol('IServiceMediator');
 const createMetadataKey = <K extends keyof IHook>(key: K) => `RequestMediator/${key}`;
 
 export class ServiceMediator extends ScopedMediator<ITransaction> implements IHooksRepo {
-    static getHooks<TQuery, K extends keyof IHook>(
-        UseCase: constructor<IQueryHandler<TQuery, unknown>>,
-        key: K,
-    ): IHook[K] | undefined {
-        return getProp(UseCase, createMetadataKey(key));
-    }
-
     protected scopes = [Scope.Service];
 
     protected createMediator(scope: IContainer): IMediator {
@@ -28,13 +21,13 @@ export class ServiceMediator extends ScopedMediator<ITransaction> implements IHo
     getAfterHooks<TQuery, TResponse>(
         UseCase: constructor<IQueryHandler<TQuery, TResponse>>,
     ): constructor<IQueryHandler<TQuery, void>>[] {
-        return ServiceMediator.getHooks(UseCase, 'after') ?? [];
+        return getProp(UseCase, createMetadataKey('after')) ?? [];
     }
 
     getBeforeHooks<TQuery, TResponse>(
         UseCase: constructor<IQueryHandler<TQuery, TResponse>>,
     ): constructor<IQueryHandler<TQuery, void>>[] {
-        return ServiceMediator.getHooks(UseCase, 'before') ?? [];
+        return getProp(UseCase, createMetadataKey('before')) ?? [];
     }
 }
 
@@ -46,7 +39,7 @@ export function useService<TQuery, TResponse>(
     Service: constructor<IQueryHandler<TQuery, TResponse>>,
     context?: ITransaction,
 ) {
-    return (useCaseScope: Resolveable) =>
+    return (useCaseScope: IContainer) =>
         new ServiceDecorator(useCaseScope.resolve(IServiceMediatorKey), Service, context);
 }
 

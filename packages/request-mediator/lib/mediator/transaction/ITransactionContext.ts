@@ -1,5 +1,4 @@
-import { getProp, prop } from 'ts-constructor-injector';
-import { constructor } from 'ts-ioc-container';
+import { constructor, getProp, prop } from 'ts-constructor-injector';
 
 export interface ITransactionContext {
     execute: <Response>(fn: (context: ITransactionContext) => Promise<Response>) => Promise<Response>;

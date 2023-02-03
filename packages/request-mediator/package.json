@@ -1,5 +1,5 @@
 {
-  "name": "request-mediator",
+  "name": "ts-request-mediator",
   "version": "0.0.0",
   "description": "Request mediator for server",
   "author": "ibabkin <igba14@gmail.com>",
@@ -40,7 +40,6 @@
   },
   "peerDependencies": {
     "reflect-metadata": "^0.1.13",
-    "ts-constructor-injector": "^2.3.1",
-    "ts-ioc-container": "^13.2.5"
+    "ts-constructor-injector": "^2.3.1"
   }
 }

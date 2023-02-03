@@ -1,7 +1,8 @@
 import { IMediator } from '../IMediator';
-import { constructor, fromValue, IContainer } from 'ts-ioc-container';
 import { IQueryHandler } from '../../IQueryHandler';
 import { isTransaction, ITransactionContext, ITransactionContextKey } from './ITransactionContext';
+import { constructor } from 'ts-constructor-injector';
+import { IContainer } from '../../di/IContainer';
 
 export interface ITransaction {
     transaction?: boolean;
@@ -18,7 +19,7 @@ export class TransactionMediator implements IMediator<ITransaction> {
         if (options.transaction || isTransaction(QueryHandler)) {
             const transactionContext = this.scope.resolve<ITransactionContext>(ITransactionContextKey);
             return transactionContext.execute((childTransactionContext) => {
-                this.scope.register(fromValue(childTransactionContext).forKey(ITransactionContextKey).build());
+                this.scope.registerValue(ITransactionContextKey, childTransactionContext);
                 return this.mediator.send(QueryHandler, query);
             });
         }
