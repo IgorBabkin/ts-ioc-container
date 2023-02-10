@@ -122,6 +122,9 @@ const logger = container.resolve<ILogger>('ILogger');
 
 ## Scoped locators
 
+- levels - every scope has level (0, 1, 2, 3). 0 is root. And register provider per level.
+- tags - you can add tag to scope and root container. And register provider per tag.
+
 ```typescript
 const scope = container.createScope(['tag1', 'tag2']);
 const logger = scope.resolve('ILogger');
