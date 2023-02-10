@@ -3,6 +3,7 @@
   "version": "3.0.1",
   "description": "Injector",
   "author": "igorbabkin <igba14@gmail.com>",
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/injector",
   "license": "ISC",
   "sideEffects": false,
   "main": "cjm/index.js",
@@ -13,6 +14,10 @@
     "ts",
     "typescript"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container"
+  },
   "directories": {
     "lib": "lib",
     "test": "__tests__"
