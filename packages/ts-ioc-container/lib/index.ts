@@ -7,6 +7,7 @@ import { ProviderBuilder } from './providers/ProviderBuilder';
 import { ResolveDependency } from './core/provider/IProvider';
 import { IContainer, InjectionToken } from './core/container/IContainer';
 
+export { ContainerHook } from './hooks/ContainerHook';
 export { ProviderReducer } from './core/provider/IProvidersMetadataCollector';
 export { IContainer, Resolveable } from './core/container/IContainer';
 export { constructor } from './core/utils/types';

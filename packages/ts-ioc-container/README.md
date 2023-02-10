@@ -19,26 +19,13 @@
 
 ## Install
 ```shell script
-npm install ts-ioc-container
+npm install ts-ioc-container reflect-metadata
 ```
 ```shell script
-yarn add ts-ioc-container
-```
-Add `reflect-metadata` for IoC
-```shell script
-npm install reflect-metadata
-```
-```shell script
-yarn add reflect-metadata
+yarn add ts-ioc-container reflect-metadata
 ```
 
-## Bundled size
-Full-featured IoC bundle (decorators `@inject`, hooks `@onDispose` `@onConstruct`)
-- Stat size: **13.34 KB**
-- Parsed size: **5.44 KB**
-- Gzipped size: **1.63 KB**
-
-## Configuration
+## tsconfig.json
 ```json
 {
   "compilerOptions": {
@@ -48,186 +35,95 @@ Full-featured IoC bundle (decorators `@inject`, hooks `@onDispose` `@onConstruct
 }
 ```
 
-## Recipes
 
-### ServiceLocator
-How to create new simple locator
-
-```typescript
-import { SimpleLocatorBuilder, ProviderBuilder } from 'ts-ioc-container';
-
-const locator = new SimpleLocatorBuilder().build();
-locator.register('ILogger', ProviderBuilder.fromConstructor(Logger).build());
-const logger = locator.resolve<ILogger>('ILogger');
-```
-### Injectors
-Simple injector
+## Container
+How to create new container
 
 ```typescript
-import {ProviderBuilder, SimpleLocatorBuilder} from "ts-ioc-container";
+import { Container, fromClass, IInjector } from "ts-ioc-container";
+import { resolve } from 'ts-constructor-injector';
 
-class Car {
-    constructor(locator: IServiceLocator) {
-        const engine = locator.resolve<IEngine>('IEngine')
-    }
-}
-
-const locator = new SimpleLocatorBuilder().build();
-locator.register('IEngine', ProviderBuilder.fromConstructor(Engine).build());
-const car = locator.resolve(Car);
-```
-IoC injector. Compose `@inject` decorator as you need. Or use default `createInjectDecorator`;
-
-```typescript
-import 'reflect-metadata';
-import {
-  metadataCollector,
-  InjectFnDecorator,
-  InjectMetadataCollector,
-  ProviderBuilder,
-  InjectionToken,
-  IocLocatorBuilder
-} from 'ts-ioc-container';
-import { InjectFn } from "./InjectFn";
-import { IServiceLocator } from "./IServiceLocator";
-import { IocLocatorBuilder } from "./IocLocatorBuilder";
-
-export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
-export const inject: InjectFnDecorator = (injectionFn) => (target, propertyKey, parameterIndex) => {
-  constructorMetadataCollector.addMetadata(target, parameterIndex, injectionFn);
+const injector: IInjector = {
+  resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
+    return resolve(locator)(value, ...deps);
+  },
 };
-export const Factory = <T>(key: InjectionToken<T>, ...args1) => l => (...args2: any[]) => l.resolve(key, ...args1, ...args2);
-export const Item = <T>(key: InjectionToken<T>, ...args: any[]) => l => l.resolve(key, ...args);
-export const Collection = <T>(...injections: InjectFn<T>[]) => l => injections.map(fn => fn(l));
-
-/**
- * OR
- * export const inject = createInjectDecorator(constructorMetadataCollector);
- * export const inject = createInjectFnDecorator(constructorMetadataCollector);
- */
-
-const locator = new IocLocatorBuilder(constructorMetadataCollector).build();
-locator.register<IEngine>('IEngine', ProviderBuilder.fromConstructor(Engine).asRequested().build());
-
-class Car {
-  constructor(
-    @inject(l => l.resolve('IEngine', 'V1')) private engine1: IEngine,
-    @inject(l => l) private locator: IServiceLocator,
-    /**
-     * OR
-     * @inject('IEngine', 'V8') private engine8: IEngine, // by using createInjectDecorator
-     */
-    @inject(Item('IEngine', 'V8')) private engine8: IEngine,
-    @inject(Collection(Item('IEngine', 'V2'), Item('IEngine', 'V4'), Item('IEngine', 'V6'))) private engines: IEngine[],
-    @inject(Factory('IEngine', 'V12')) private engineFactory: (model: string) => IEngine,
-  ) {
-    const newEngine = engineFactory('SuperCharger');
-  }
-}
-
-const car = locator.resolve(Car);
+const container = new Container(injector);
+container.register('ILogger', fromClass(Logger).build());
+const logger = container.resolve<ILogger>('ILogger');
 ```
 
 ## ProviderBuilder
 
 ```typescript
-import {ProviderBuilder} from "ts-ioc-container";
+import { fromClass } from "ts-ioc-container";
 
-locator.register('ILogger', new ProviderBuilder((l, ...args) => new Logger(...args)).asRequested());
-locator.register('ILogger1', ProviderBuilder.fromConstructor(Logger).asSingleton().forLevel(0).build()); // global singleton
-locator.register('ILogger2', ProviderBuilder.fromConstructor(Logger).asSingleton().forLevel(1).build()); // first scope singleton
-locator.register('ILogger3', ProviderBuilder.fromConstructor(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
-locator.register('ILogger4', ProviderBuilder.fromConstructor(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
+container.register('ILogger', new ProviderBuilder((container, ...args) => new Logger(...args)).build());
+container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton().forLevel(0).build()); // global singleton
+container.register('ILogger2', fromClass(Logger).asSingleton().forLevel(1).build()); // first scope singleton
+container.register('ILogger3', fromClass(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
+container.register('ILogger4', fromClass(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
+```
+
+## Decorators
+
+```typescript
+import { asSingleton, perTags, forKey, by } from "ts-ioc-container";
+import { inject } from "ts-constructor-injector";
+
+@asSingleton
+@forKey('IEngine')
+@perTags('tag1', 'tag2')
+class Engine {
+  constructor(@inject(by('ILogger')) private logger: ILogger) {
+  }
+}
 ```
 
 ## Hooks
 
 ```typescript
 import {
-  IocLocatorBuilder,
-  ProviderKey,
-  InjectMetadataCollector,
   MethodsMetadataCollector,
-  HookedProvider,
-  IInstanceHook
+  createMethodHookDecorator,
+  Container,
+  IInjector,
+  ContainerHook,
 } from "ts-ioc-container";
-import { Mock } from "moq.ts";
-import { ProviderBuilder } from "./ProviderBuilder";
-import { IocLocatorBuilder } from "./IocLocatorBuilder";
 
-export const constructorMetadataCollector = new InjectMetadataCollector(Symbol.for('CONSTRUCTOR_METADATA_KEY'));
-export const onConstructMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnConstructHook'));
-export const onConstruct: MethodDecorator = (target, propertyKey) => {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  onConstructMetadataCollector.addHook(target, propertyKey);
-};
+export const onConstructMetadataCollector = new MethodsMetadataCollector('OnConstructHook');
+export const onConstruct = createMethodHookDecorator(onConstructMetadataCollector);
 
-export const onDisposeMetadataCollector = new MethodsMetadataCollector(Symbol.for('OnDisposeHook'));
-export const onDispose: MethodDecorator = (target, propertyKey) => {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  onDisposeMetadataCollector.addHook(target, propertyKey);
-};
+export const onDisposeMetadataCollector = new MethodsMetadataCollector('OnDisposeHook');
+export const onDispose = createMethodHookDecorator(onDisposeMetadataCollector);
 
-/**
- * OR
- * export const onConstruct = createHookDecorator(onConstructMetadataCollector)
- * export const onDispose = createHookDecorator(onDisposeMetadataCollector)
- */
+class Logger {
+  @onConstruct
+  initialize() {
+  }
 
-const hook: IInstanceHook = {
-  onConstruct<GInstance>(instance: GInstance): void {
-    onConstructMetadataCollector.invokeHooksOf(instance);
+  @onDispose
+  dispose() {}
+}
+
+const injector: IInjector = {
+  resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
+    const instance = resolve(locator)(value, ...deps);
+    onConstructMetadataCollector.invokeHooksOf(instance)
+    return instance;
   },
-  onDispose<GInstance>(instance: GInstance): void {
-    onDisposeMetadataCollector.invokeHooksOf(instance);
-  }
-}
-
-const locator = new IocLocatorBuilder(constructorMetadataCollector).withInjectorHook(hook).build();
-
-class Car {
-  constructor() {
-  }
-
-  @onConstruct
-  public initialize() {
-    console('initialized!');
-  }
-
-  @onDispose
-  public dispose() {
-    console('disposed!');
-  }
-}
-
-const car = locator.resolve(Car); // output: initialized!
-locator.dispose(); // output: disposed!
-
-class Engine {
-  constructor() {
-  }
-
-  @onConstruct
-  public initialize() {
-    console('initialized!');
-  }
-
-  @onDispose
-  public dispose() {
-    console('disposed!');
-  }
-}
-
-// in the case if you don't want to use locator.resolve to instanciate Engine you should use .withHook
-locator.register('IEngine', new ProviderBuilder(() => new Engine()).withHook(hook).build())
-const engine = locator.resolve(Engine); // output: initialized!
-locator.dispose(); // output: disposed!
+};
+const container = new Container(injector).setHook(new ContainerHook((instance) => {
+  onDisposeMetadataCollector.invokeHooksOf(instance);
+}));
+container.register('ILogger', fromClass(Logger).build());
+const logger = container.resolve<ILogger>('ILogger');
 ```
 
 ## Scoped locators
 
 ```typescript
-const scope = locator.createLocator(['tag1', 'tag2']);
+const scope = container.createScope(['tag1', 'tag2']);
 const logger = scope.resolve('ILogger');
 scope.dispose();
 ```
@@ -235,60 +131,49 @@ scope.dispose();
 ## Mocking / Tests
 
 ```typescript
-import { MoqRepository } from "./MoqRepository";
 import {
-  SimpleLocatorBuilder,
-  MockProviderStorage
+  IMockRepository,
+  Container,
+  SimpleInjector,
 } from "ts-ioc-container";
-import { MoqProviderStorage } from "./MoqProviderStorage";
-import { IEngine } from "./IEngine";
-import { SimpleLocatorBuilder } from "./SimpleLocatorBuilder";
+import { Mock } from "moq.ts";
+
+export class MoqRepository implements IMockRepository {
+  private mocks = new Map<ProviderKey, IMock<any>>();
+
+  resolve<T>(key: ProviderKey): T {
+    return this.resolveMock<T>(key).object();
+  }
+
+  dispose(): void {
+    this.mocks.clear();
+  }
+
+  resolveMock<T>(key: ProviderKey): IMock<T> {
+    if (!this.mocks.has(key)) {
+      this.mocks.set(key, new Mock());
+    }
+    return this.mocks.get(key) as IMock<T>;
+  }
+}
 
 describe('test', () => {
-  const mockProviderStorage = new MoqProviderStorage(new MockProviderStorage(() => new MoqProvider()));
-  const locator = new SimpleLocatorBuilder().withMockedRepository(mockProviderStorage).build();
+  const mockRepository = new MoqRepository();
+  const container = new Container(new SimpleInjector()).map((l) => new AutoMockedContainer(l, mockRepository));
 
-  const engineMock = mockProviderStorage.findMock<IEngine>('IEngine');
+  const engineMock = mockRepository.resolveMock<IEngine>('IEngine');
   engineMock.setup(i => i.getRegistrationNumber()).return('123');
 
-  const engine = locator.resolve<IEngine>('IEngine');
+  const engine = container.resolve<IEngine>('IEngine');
 
   expect(engine.getRegistrationNumber()).toBe('123');
 })
-```
-MoqStorage
-```typescript
-import { VendorMockProviderStorage, ProviderKey } from 'ts-ioc-container';
-import { MoqProvider } from './MoqProvider';
-import { IMock } from 'moq.ts';
-
-export class MoqProviderStorage extends VendorMockProviderStorage {
-  findOrCreate<T>(key: ProviderKey): MoqProvider<T> {
-    return this.storage.findOrCreate(key) as MoqProvider<T>;
-  }
-
-  findMock<T>(key: ProviderKey): IMock<T> {
-    return (this.storage.findOrCreate(key) as MoqProvider<T>).mock;
-  }
-}
-```
-
-MoqProvider
-```typescript
-import { MockProvider, IServiceLocator } from 'ts-ioc-container';
-import { Mock } from 'moq.ts';
-
-export class MoqProvider<T> extends MockProvider<T> {
-  mock = new Mock<T>();
-
-  resolve(locator: IServiceLocator, ...args: any[]): T {
-    return this.mock.object();
-  }
-}
 ```
 
 
 ## Errors
 
 - ProviderNotFoundError
+- ProviderHasNoKeyError
 - MethodNotImplementedError
+- ContainerDisposedError

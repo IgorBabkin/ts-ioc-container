@@ -19,8 +19,7 @@ describe('UnitTestIoCLocator', () => {
     });
 
     function createIoCLocator() {
-        const locator = new Container(new IocInjector()).map((l) => new AutoMockedContainer(l, mockRepository));
-        return new AutoMockedContainer(locator, mockRepository);
+        return new Container(new IocInjector()).map((l) => new AutoMockedContainer(l, mockRepository));
     }
 
     it('ioc', () => {

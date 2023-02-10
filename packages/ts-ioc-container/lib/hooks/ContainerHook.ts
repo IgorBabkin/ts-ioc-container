@@ -8,10 +8,6 @@ export class ContainerHook implements IContainerHook {
 
     constructor(private onDisposeFn: OnDisposeHook = noop) {}
 
-    onDispose(hook: OnDisposeHook): void {
-        this.onDisposeFn = hook;
-    }
-
     resolve<T>(instance: T): T {
         this.instances.add(instance);
         return instance;
