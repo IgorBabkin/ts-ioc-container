@@ -1,8 +1,21 @@
 # Injects dependencies into constructor
 
 ## Install
-```shell
-npm install ts-constructor-injector
+```shell script
+npm install ts-constructor-injector reflect-metadata
+```
+```shell script
+yarn add ts-constructor-injector reflect-metadata
+```
+
+## tsconfig.json
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
 ```
 
 ## Usage
