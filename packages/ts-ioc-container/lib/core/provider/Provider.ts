@@ -17,16 +17,16 @@ export class Provider<T> implements IProvider<T> {
 
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
-    setKey(key: ProviderKey): void {
+    setKey(key: ProviderKey): this {
         this.key = key;
+        return this;
     }
 
     clone(): Provider<T> {
-        const provider = new Provider(this.resolveDependency);
-        if (this.key) {
-            provider.setKey(this.key);
+        if (!this.key) {
+            throw new ProviderHasNoKeyError('Pls provide registration keys for current provider');
         }
-        return provider;
+        return new Provider(this.resolveDependency).setKey(this.key);
     }
 
     resolve(container: Resolveable, ...args: any[]): T {

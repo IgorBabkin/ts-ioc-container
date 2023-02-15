@@ -24,7 +24,8 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
         return this.decorated.getKeyOrFail();
     }
 
-    setKey(key: ProviderKey): void {
+    setKey(key: ProviderKey): this {
         this.decorated.setKey(key);
+        return this;
     }
 }
