@@ -164,7 +164,7 @@ function useObservableReader<T>(obs$: Observable<T>, onUpdate: () => void): IObs
 export const useObservable: Reader = (obs$, onUpdate?: () => void) => {
   const forceUpdate = useForceUpdate();
   const reader = useObservableReader(obs$, onUpdate || forceUpdate);
-  useEffect(() => () => reader.dispose(), [reader]);
+  useEffect(() => () => reader.disable(), [reader]);
   return reader.current;
 };
 ```

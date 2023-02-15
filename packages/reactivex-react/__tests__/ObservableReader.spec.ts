@@ -67,7 +67,7 @@ describe('ObservableReader', () => {
         const reader = new ObservableReader(obs$, mock.object());
         reader.enable();
         obs$.next(1);
-        reader.dispose();
+        reader.disable();
         obs$.next(2);
 
         expect(reader.current).toBe(1);

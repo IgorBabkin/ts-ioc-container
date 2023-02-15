@@ -25,7 +25,7 @@ describe('ReaderRepository', () => {
         repository.findOrCreate(obs$);
         repository.dispose();
 
-        readerMock.verify((i) => i.dispose(), Times.Once());
+        readerMock.verify((i) => i.disable(), Times.Once());
     });
     it('should raise an error when try to remove unexisting observable', () => {
         const obs$ = of(2);

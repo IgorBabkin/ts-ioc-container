@@ -26,7 +26,7 @@ export class ReaderRepository implements IReaderRepository {
     }
 
     dispose(): void {
-        this.observables.forEach((r) => r.dispose());
+        this.observables.forEach((r) => r.disable());
         this.observables.clear();
     }
 

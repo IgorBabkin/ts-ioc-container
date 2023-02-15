@@ -1,7 +1,6 @@
-import { IDisposable } from '../../core/IDisposable';
 import { Observable } from 'rxjs';
 
-export interface IObservableReader<T> extends IDisposable {
+export interface IObservableReader<T> {
     readonly obs$: Observable<T>;
 
     enable(): this;

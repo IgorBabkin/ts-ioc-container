@@ -20,8 +20,7 @@ export class ObservableStorage implements IObservableStorage {
     }
 
     getValue<T>(obs$: Observable<T>): T | undefined {
-        const current = this.readerRepository.findOrCreate(obs$).enable().current;
         this.activeObservables.add(obs$);
-        return current;
+        return this.readerRepository.findOrCreate(obs$).enable().current;
     }
 }

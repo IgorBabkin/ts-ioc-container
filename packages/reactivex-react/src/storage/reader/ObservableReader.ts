@@ -29,9 +29,4 @@ export class ObservableReader<T> implements IObservableReader<T> {
         this.isEnabled = true;
         return this;
     }
-
-    dispose(): void {
-        this.isEnabled = false;
-        this.subscription?.unsubscribe();
-    }
 }

@@ -7,7 +7,7 @@ export class DestroyCleaner implements ICleaner {
 
     cleanup(obs$: Observable<unknown>): void {
         const reader = this.repository.find(obs$);
-        reader.dispose();
+        reader.disable();
         this.repository.remove(reader);
     }
 }
