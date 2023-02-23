@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "14.0.8",
+  "version": "15.0.0",
   "description": "Typescript IoC container",
   "author": "ibabkin <igba14@gmail.com>",
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/ts-ioc-container",
