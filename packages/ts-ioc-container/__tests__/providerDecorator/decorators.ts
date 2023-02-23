@@ -4,11 +4,11 @@ import {
     createLevelDecorator,
     createSingletonDecorator,
     createTagsDecorator,
-    ProvidersMetadataCollector,
+    ProviderReflector,
     fromClass as fromConstructor,
 } from '../../lib';
 
-export const metadataCollector = ProvidersMetadataCollector.create();
+export const metadataCollector = ProviderReflector.create();
 export const singleton = createSingletonDecorator(metadataCollector);
 export const addKeys = createAddKeyDecorator(metadataCollector);
 export const level = createLevelDecorator(metadataCollector);

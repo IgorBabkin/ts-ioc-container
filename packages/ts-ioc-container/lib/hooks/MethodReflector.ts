@@ -1,18 +1,18 @@
-import { IMethodsMetadataCollector } from './IMethodsMetadataCollector';
+import { IMethodReflector } from './IMethodReflector';
 
-export class MethodsMetadataCollector implements IMethodsMetadataCollector {
+export class MethodReflector implements IMethodReflector {
     constructor(readonly hookKey: string | symbol) {}
 
     // eslint-disable-next-line @typescript-eslint/ban-types
     addHook<GInstance extends Object>(target: GInstance, propertyKey: string | symbol): void {
-        const targetId = MethodsMetadataCollector.getTargetId(target);
+        const targetId = MethodReflector.getTargetId(target);
         const hooks = Reflect.getMetadata(this.hookKey, targetId) || [];
         Reflect.defineMetadata(this.hookKey, [...hooks, propertyKey], targetId);
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-types
     invokeHooksOf<GInstance extends Object>(target: GInstance): void {
-        const targetId = MethodsMetadataCollector.getTargetId(target);
+        const targetId = MethodReflector.getTargetId(target);
         const hooks: string[] = Reflect.hasMetadata(this.hookKey, targetId)
             ? Reflect.getMetadata(this.hookKey, targetId)
             : [];

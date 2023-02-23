@@ -84,17 +84,17 @@ class Engine {
 
 ```typescript
 import {
-  MethodsMetadataCollector,
+  MethodReflector,
   createMethodHookDecorator,
   Container,
   IInjector,
   ContainerHook,
 } from "ts-ioc-container";
 
-export const onConstructMetadataCollector = new MethodsMetadataCollector('OnConstructHook');
+export const onConstructMetadataCollector = new MethodReflector('OnConstructHook');
 export const onConstruct = createMethodHookDecorator(onConstructMetadataCollector);
 
-export const onDisposeMetadataCollector = new MethodsMetadataCollector('OnDisposeHook');
+export const onDisposeMetadataCollector = new MethodReflector('OnDisposeHook');
 export const onDispose = createMethodHookDecorator(onDisposeMetadataCollector);
 
 class Logger {

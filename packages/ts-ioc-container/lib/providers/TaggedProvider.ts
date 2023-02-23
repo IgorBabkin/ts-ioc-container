@@ -1,6 +1,6 @@
 import { IProvider, ScopeOptions, Tag } from '../core/provider/IProvider';
 import { ProviderDecorator } from '../core/provider/ProviderDecorator';
-import { IProvidersMetadataCollector } from '../core/provider/IProvidersMetadataCollector';
+import { IProviderReflector } from '../core/provider/IProviderReflector';
 import { constructor } from '../core/utils/types';
 
 export class TaggedProvider<T> extends ProviderDecorator<T> {
@@ -19,7 +19,7 @@ export class TaggedProvider<T> extends ProviderDecorator<T> {
 }
 
 export const createTagsDecorator =
-    (metadataCollector: IProvidersMetadataCollector) =>
+    (metadataCollector: IProviderReflector) =>
     (...tags: Tag[]): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;

@@ -2,7 +2,7 @@ import { constructor } from '../utils/types';
 import { IProvider, ProviderKey, ResolveDependency } from './IProvider';
 import { Resolveable } from '../container/IContainer';
 import { ProviderHasNoKeyError } from './ProviderHasNoKeyError';
-import { IProvidersMetadataCollector } from './IProvidersMetadataCollector';
+import { IProviderReflector } from './IProviderReflector';
 
 export class Provider<T> implements IProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
@@ -48,7 +48,7 @@ export class Provider<T> implements IProvider<T> {
 }
 
 export const createAddKeyDecorator =
-    (metadataCollector: IProvidersMetadataCollector) =>
+    (metadataCollector: IProviderReflector) =>
     (key: ProviderKey): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;

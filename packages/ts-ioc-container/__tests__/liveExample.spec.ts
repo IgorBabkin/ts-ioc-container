@@ -6,7 +6,7 @@ import {
     createSingletonDecorator,
     fromClass as fromConstructor,
     ProviderNotFoundError,
-    ProvidersMetadataCollector,
+    ProviderReflector,
     Container,
 } from '../lib';
 import { inject, IocInjector } from './ioc/IocInjector';
@@ -14,7 +14,7 @@ import { composeDecorators } from 'ts-constructor-injector';
 
 const injector = new IocInjector();
 
-const metadataCollector = ProvidersMetadataCollector.create();
+const metadataCollector = ProviderReflector.create();
 
 export const keys = createAddKeyDecorator(metadataCollector);
 

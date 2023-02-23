@@ -1,6 +1,6 @@
 import { IProvider, ScopeOptions } from '../core/provider/IProvider';
 import { ProviderDecorator } from '../core/provider/ProviderDecorator';
-import { IProvidersMetadataCollector } from '../core/provider/IProvidersMetadataCollector';
+import { IProviderReflector } from '../core/provider/IProviderReflector';
 import { constructor } from '../core/utils/types';
 
 export class LevelProvider<T> extends ProviderDecorator<T> {
@@ -20,7 +20,7 @@ export class LevelProvider<T> extends ProviderDecorator<T> {
 }
 
 export const createLevelDecorator =
-    (metadataCollector: IProvidersMetadataCollector) =>
+    (metadataCollector: IProviderReflector) =>
     (value: number): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;

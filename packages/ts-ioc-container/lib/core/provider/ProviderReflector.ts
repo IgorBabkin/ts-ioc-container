@@ -1,10 +1,10 @@
-import { IProvidersMetadataCollector, ProviderReducer } from './IProvidersMetadataCollector';
+import { IProviderReflector, ProviderReducer } from './IProviderReflector';
 import { constructor } from '../utils/types';
 import { id } from '../utils/others';
 
-export class ProvidersMetadataCollector implements IProvidersMetadataCollector {
-    static create(): ProvidersMetadataCollector {
-        return new ProvidersMetadataCollector(Symbol('providerReducer'), () => id);
+export class ProviderReflector implements IProviderReflector {
+    static create(): ProviderReflector {
+        return new ProviderReflector(Symbol('providerReducer'), () => id);
     }
 
     constructor(private metadataKey: string | symbol, private createReducer: () => ProviderReducer<unknown>) {}

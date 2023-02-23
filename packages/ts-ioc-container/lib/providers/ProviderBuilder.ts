@@ -2,7 +2,7 @@ import { IProvider, ProviderKey, Tag } from '../core/provider/IProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { LevelProvider } from './LevelProvider';
-import { ProviderReducer } from '../core/provider/IProvidersMetadataCollector';
+import { ProviderReducer } from '../core/provider/IProviderReflector';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
 
 export class ProviderBuilder<T> {

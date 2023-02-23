@@ -1,7 +1,7 @@
 import { ProviderDecorator } from '../core/provider/ProviderDecorator';
 import { Resolveable } from '../core/container/IContainer';
 import { IProvider } from '../core/provider/IProvider';
-import { IProvidersMetadataCollector } from '../core/provider/IProvidersMetadataCollector';
+import { IProviderReflector } from '../core/provider/IProviderReflector';
 import { constructor } from '../core/utils/types';
 
 export type ArgsFn = (l: Resolveable) => any[];
@@ -21,7 +21,7 @@ export class ArgsProvider<T> extends ProviderDecorator<T> {
 }
 
 export const createArgsFnDecorator =
-    (metadataCollector: IProvidersMetadataCollector) =>
+    (metadataCollector: IProviderReflector) =>
     (argsFn: ArgsFn): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;
