@@ -20,3 +20,5 @@ export class ProviderReflector implements IProviderReflector {
         Reflect.defineMetadata(this.metadataKey, reducer, target);
     }
 }
+
+export const providerReflector = ProviderReflector.create();

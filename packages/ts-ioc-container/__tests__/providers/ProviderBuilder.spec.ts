@@ -1,4 +1,4 @@
-import { fromFn, IContainer, Container } from '../../lib';
+import { Container, IContainer, ProviderBuilder } from '../../lib';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 
 describe('ProviderBuilder', function () {
@@ -11,7 +11,7 @@ describe('ProviderBuilder', function () {
     test('withArgs', () => {
         const args = [2, 3, 4];
 
-        const builder = fromFn((l, ...deps) => deps).withArgs(...args);
+        const builder = ProviderBuilder.fromFn((l, ...deps) => deps).withArgs(...args);
         locator.register(builder.forKey('hey').build());
 
         expect(locator.resolve('hey')).toEqual(args);

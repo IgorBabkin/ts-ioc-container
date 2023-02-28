@@ -3,6 +3,7 @@ import { IProvider, ProviderKey, ResolveDependency } from './IProvider';
 import { Resolveable } from '../container/IContainer';
 import { ProviderHasNoKeyError } from './ProviderHasNoKeyError';
 import { IProviderReflector } from './IProviderReflector';
+import { providerReflector } from './ProviderReflector';
 
 export class Provider<T> implements IProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
@@ -47,11 +48,10 @@ export class Provider<T> implements IProvider<T> {
     }
 }
 
-export const createAddKeyDecorator =
-    (metadataCollector: IProviderReflector) =>
+export const forKey =
     (key: ProviderKey): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;
-        const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forKey(key));
+        const fn = providerReflector.findReducerOrCreate(targetClass);
+        providerReflector.addReducer(targetClass, (builder) => fn(builder).forKey(key));
     };

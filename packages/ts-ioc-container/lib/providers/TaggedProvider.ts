@@ -1,7 +1,7 @@
 import { IProvider, ScopeOptions, Tag } from '../core/provider/IProvider';
 import { ProviderDecorator } from '../core/provider/ProviderDecorator';
-import { IProviderReflector } from '../core/provider/IProviderReflector';
 import { constructor } from '../core/utils/types';
+import { providerReflector } from '../core/provider/ProviderReflector';
 
 export class TaggedProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private readonly tags: Tag[]) {
@@ -18,11 +18,10 @@ export class TaggedProvider<T> extends ProviderDecorator<T> {
     }
 }
 
-export const createTagsDecorator =
-    (metadataCollector: IProviderReflector) =>
+export const perTags =
     (...tags: Tag[]): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;
-        const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forTags(...tags));
+        const fn = providerReflector.findReducerOrCreate(targetClass);
+        providerReflector.addReducer(targetClass, (builder) => fn(builder).forTags(...tags));
     };

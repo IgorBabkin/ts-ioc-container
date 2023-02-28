@@ -2,7 +2,7 @@ import { Resolveable } from '../core/container/IContainer';
 import { Box, constructor } from '../core/utils/types';
 import { ProviderDecorator } from '../core/provider/ProviderDecorator';
 import { IProvider } from '../core/provider/IProvider';
-import { IProviderReflector } from '../core/provider/IProviderReflector';
+import { providerReflector } from '../core/provider/ProviderReflector';
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
     private instance: Box<T> | null = null;
@@ -30,10 +30,8 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     }
 }
 
-export const createSingletonDecorator =
-    (metadataCollector: IProviderReflector): ClassDecorator =>
-    (target) => {
-        const targetClass = target as any as constructor<unknown>;
-        const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (builder) => fn(builder).asSingleton());
-    };
+export const asSingleton: ClassDecorator = (target) => {
+    const targetClass = target as any as constructor<unknown>;
+    const fn = providerReflector.findReducerOrCreate(targetClass);
+    providerReflector.addReducer(targetClass, (builder) => fn(builder).asSingleton());
+};

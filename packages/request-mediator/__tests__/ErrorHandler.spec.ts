@@ -3,7 +3,7 @@ import { constructor } from 'ts-ioc-container';
 import { ErrorHandler } from '../lib';
 import { ArgumentNullError } from './ArgumentNullError';
 import { createLooseMock } from './mock';
-import { IErrorHandler } from '../lib/ErrorHandler';
+import { IErrorHandler } from '../lib';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 type ErrorContext = {

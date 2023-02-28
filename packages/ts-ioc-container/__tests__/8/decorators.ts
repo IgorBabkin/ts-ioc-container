@@ -1,4 +1,4 @@
-import { createMethodHookDecorator, MethodReflector } from '../../lib';
+import { MethodReflector } from '../../lib';
 
-export const onConstructMetadataCollector = new MethodReflector(Symbol.for('OnConstructHook'));
-export const onConstruct = createMethodHookDecorator(onConstructMetadataCollector);
+export const onConstructMetadataCollector = new MethodReflector(Symbol('OnConstructHook'));
+export const onConstruct = onConstructMetadataCollector.createMethodHookDecorator();

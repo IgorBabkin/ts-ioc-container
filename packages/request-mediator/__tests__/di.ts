@@ -1,8 +1,8 @@
-import { constructor, Container, IContainer, IInjector, Resolveable } from 'ts-ioc-container';
+import { constructor, Container, IContainer, IInjector, ProviderBuilder, Resolveable } from 'ts-ioc-container';
 import { composeDecorators, resolve } from 'ts-constructor-injector';
 import { Scope } from '../lib';
-import { asSingleton, fromValue, perTags } from 'ts-ioc-container/lib';
-import { IDependencyContainer } from '../lib/di/IDependencyContainer';
+import { asSingleton, perTags } from 'ts-ioc-container/lib';
+import { IDependencyContainer } from '../lib';
 
 export const injector: IInjector = {
     resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
@@ -30,7 +30,7 @@ export class ContainerAdapter implements IDependencyContainer {
     }
 
     registerValue(key: string | symbol, value: unknown): void {
-        this.container.register(fromValue(value).forKey(key).build());
+        this.container.register(ProviderBuilder.fromValue(value).forKey(key).build());
     }
 
     resolve<T>(key: constructor<T> | symbol): T {

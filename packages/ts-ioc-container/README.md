@@ -40,7 +40,7 @@ yarn add ts-ioc-container reflect-metadata
 How to create new container
 
 ```typescript
-import { Container, fromClass, IInjector } from "ts-ioc-container";
+import { Container, IInjector, ProviderBuilder } from "ts-ioc-container";
 import { resolve } from 'ts-constructor-injector';
 
 const injector: IInjector = {
@@ -49,20 +49,20 @@ const injector: IInjector = {
   },
 };
 const container = new Container(injector);
-container.register('ILogger', fromClass(Logger).build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).build());
 const logger = container.resolve<ILogger>('ILogger');
 ```
 
 ## ProviderBuilder
 
 ```typescript
-import { fromClass } from "ts-ioc-container";
+import { fromClass, ProviderBuilder } from "ts-ioc-container";
 
 container.register('ILogger', new ProviderBuilder((container, ...args) => new Logger(...args)).build());
-container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton().forLevel(0).build()); // global singleton
-container.register('ILogger2', fromClass(Logger).asSingleton().forLevel(1).build()); // first scope singleton
-container.register('ILogger3', fromClass(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
-container.register('ILogger4', fromClass(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
+container.register('ILogger1', ProviderBuilder.fromClass(Logger).forKey('ILogger').asSingleton().forLevel(0).build()); // global singleton
+container.register('ILogger2', ProviderBuilder.fromClass(Logger).asSingleton().forLevel(1).build()); // first scope singleton
+container.register('ILogger3', ProviderBuilder.fromClass(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
+container.register('ILogger4', ProviderBuilder.fromClass(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
 ```
 
 ## Decorators
@@ -89,13 +89,14 @@ import {
   Container,
   IInjector,
   ContainerHook,
+  ProviderBuilder,
 } from "ts-ioc-container";
 
-export const onConstructMetadataCollector = new MethodReflector('OnConstructHook');
-export const onConstruct = createMethodHookDecorator(onConstructMetadataCollector);
+export const onConstructReflector = new MethodReflector('OnConstructHook');
+export const onConstruct = onConstructReflector.createMethodHookDecorator();
 
-export const onDisposeMetadataCollector = new MethodReflector('OnDisposeHook');
-export const onDispose = createMethodHookDecorator(onDisposeMetadataCollector);
+export const onDisposeReflector = new MethodReflector('OnDisposeHook');
+export const onDispose = onDisposeReflector.createMethodHookDecorator();
 
 class Logger {
   @onConstruct
@@ -116,7 +117,7 @@ const injector: IInjector = {
 const container = new Container(injector).setHook(new ContainerHook((instance) => {
   onDisposeMetadataCollector.invokeHooksOf(instance);
 }));
-container.register('ILogger', fromClass(Logger).build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).build());
 const logger = container.resolve<ILogger>('ILogger');
 ```
 

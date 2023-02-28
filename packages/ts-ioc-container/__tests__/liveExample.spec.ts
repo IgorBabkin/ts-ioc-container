@@ -1,30 +1,12 @@
 import 'reflect-metadata';
-import {
-    constructor,
-    createAddKeyDecorator,
-    createLevelDecorator,
-    createSingletonDecorator,
-    fromClass as fromConstructor,
-    ProviderNotFoundError,
-    ProviderReflector,
-    Container,
-} from '../lib';
+import { asSingleton, Container, forKey, perLevel, ProviderBuilder, ProviderNotFoundError } from '../lib';
 import { inject, IocInjector } from './ioc/IocInjector';
 import { composeDecorators } from 'ts-constructor-injector';
 
 const injector = new IocInjector();
 
-const metadataCollector = ProviderReflector.create();
-
-export const keys = createAddKeyDecorator(metadataCollector);
-
-const single = createSingletonDecorator(metadataCollector);
-const level = createLevelDecorator(metadataCollector);
-export const singleton = composeDecorators(level(0), single);
-export const scoped = composeDecorators(level(1), single);
-
-export const fromClass = <T>(target: constructor<T>) =>
-    fromConstructor(target).map(metadataCollector.findReducerOrCreate(target));
+export const perRoot = composeDecorators(perLevel(0), asSingleton);
+export const scoped = composeDecorators(perLevel(1), asSingleton);
 
 const IRepositoryKey = Symbol('IRepository');
 
@@ -33,13 +15,13 @@ interface IRepository {
 }
 
 @scoped
-@keys(IRepositoryKey)
+@forKey(IRepositoryKey)
 class Repository implements IRepository {
     id = Math.random().toString(10);
 }
 
-@singleton
-@keys(IRepositoryKey)
+@perRoot
+@forKey(IRepositoryKey)
 class Repository2 implements IRepository {
     id = Math.random().toString(10);
 }
@@ -62,7 +44,7 @@ class Main2 {
 
 describe('live example', function () {
     it('should resolve the same repo from the same scope', function () {
-        const container = new Container(injector).register(fromClass(Repository).build());
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Repository).build());
 
         const scope = container.createScope();
         const main1 = scope.resolve(Main);
@@ -72,7 +54,7 @@ describe('live example', function () {
     });
 
     it('should resolve the different repo from different scopes', function () {
-        const container = new Container(injector).register(fromClass(Repository).build());
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Repository).build());
 
         const scope1 = container.createScope();
         const scope2 = container.createScope();
@@ -83,12 +65,12 @@ describe('live example', function () {
     });
 
     it('should throw error if try to resolve from root scope', function () {
-        const container = new Container(injector).register(fromClass(Repository).build());
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Repository).build());
         expect(() => container.resolve(Main)).toThrow(ProviderNotFoundError);
     });
 
     it('should resolve singleton', function () {
-        const container = new Container(injector).register(fromClass(Repository2).build());
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Repository2).build());
 
         const scope = container.createScope();
         const main1 = scope.resolve(Main2);

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { fromValue, Container } from '../../lib';
+import { Container, ProviderBuilder } from '../../lib';
 import { onConstruct, onConstructMetadataCollector } from './decorators';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 
@@ -21,7 +21,7 @@ describe('ServiceLocator', () => {
             }),
         );
 
-        locator.register(fromValue(expectedInstance).forKey('key1').build());
+        locator.register(ProviderBuilder.fromValue(expectedInstance).forKey('key1').build());
 
         locator.resolve(MyClass);
 

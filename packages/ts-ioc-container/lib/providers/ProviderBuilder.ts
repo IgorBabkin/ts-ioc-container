@@ -4,8 +4,23 @@ import { TaggedProvider } from './TaggedProvider';
 import { LevelProvider } from './LevelProvider';
 import { ProviderReducer } from '../core/provider/IProviderReflector';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
+import { Provider } from '../core/provider/Provider';
+import { constructor } from '../core/utils/types';
+import { providerReflector } from '../core/provider/ProviderReflector';
 
 export class ProviderBuilder<T> {
+    static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
+        return new ProviderBuilder(Provider.fromClass(value)).map(providerReflector.findReducerOrCreate(value));
+    }
+
+    static fromValue<T>(value: T): ProviderBuilder<T> {
+        return new ProviderBuilder(Provider.fromValue(value));
+    }
+
+    static fromFn<T>(fn: (...args: any[]) => T): ProviderBuilder<T> {
+        return new ProviderBuilder(new Provider(fn));
+    }
+
     constructor(private provider: IProvider<T>) {}
 
     withArgs(...extraArgs: any[]): this {

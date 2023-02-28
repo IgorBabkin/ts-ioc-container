@@ -4,7 +4,7 @@ export class MethodReflector implements IMethodReflector {
     constructor(readonly hookKey: string | symbol) {}
 
     // eslint-disable-next-line @typescript-eslint/ban-types
-    addHook<GInstance extends Object>(target: GInstance, propertyKey: string | symbol): void {
+    private addHook<GInstance extends Object>(target: GInstance, propertyKey: string | symbol): void {
         const targetId = MethodReflector.getTargetId(target);
         const hooks = Reflect.getMetadata(this.hookKey, targetId) || [];
         Reflect.defineMetadata(this.hookKey, [...hooks, propertyKey], targetId);
@@ -25,5 +25,12 @@ export class MethodReflector implements IMethodReflector {
     // eslint-disable-next-line @typescript-eslint/ban-types
     private static getTargetId<GInstance extends Object = any>(target: GInstance): any {
         return target.constructor;
+    }
+
+    createMethodHookDecorator(): MethodDecorator {
+        return (target, propertyKey) => {
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            this.addHook(target, propertyKey);
+        };
     }
 }

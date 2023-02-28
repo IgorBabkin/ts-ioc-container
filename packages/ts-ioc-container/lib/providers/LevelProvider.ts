@@ -1,7 +1,7 @@
 import { IProvider, ScopeOptions } from '../core/provider/IProvider';
 import { ProviderDecorator } from '../core/provider/ProviderDecorator';
-import { IProviderReflector } from '../core/provider/IProviderReflector';
 import { constructor } from '../core/utils/types';
+import { providerReflector } from '../core/provider/ProviderReflector';
 
 export class LevelProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private readonly range: [number, number]) {
@@ -19,11 +19,10 @@ export class LevelProvider<T> extends ProviderDecorator<T> {
     }
 }
 
-export const createLevelDecorator =
-    (metadataCollector: IProviderReflector) =>
+export const perLevel =
     (value: number): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;
-        const fn = metadataCollector.findReducerOrCreate(targetClass);
-        metadataCollector.addReducer(targetClass, (builder) => fn(builder).forLevel(value));
+        const fn = providerReflector.findReducerOrCreate(targetClass);
+        providerReflector.addReducer(targetClass, (builder) => fn(builder).forLevel(value));
     };
