@@ -110,7 +110,7 @@ class Logger {
 const injector: IInjector = {
   resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
     const instance = resolve(locator)(value, ...deps);
-    onConstructMetadataCollector.invokeHooksOf(instance)
+    onConstructReflector.invokeHooksOf(instance)
     return instance;
   },
 };
