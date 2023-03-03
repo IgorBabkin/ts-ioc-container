@@ -8,6 +8,11 @@
   "main": "cjm/index.js",
   "types": "esm/index.d.ts",
   "module": "esm/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/request-mediator"
+  },
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/request-mediator",
   "keywords": [
     "typescript",
     "server",
