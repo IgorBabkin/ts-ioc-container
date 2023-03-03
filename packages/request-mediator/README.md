@@ -1,11 +1,5 @@
 # Framework agnostic request mediator
 
-[![Build Status](https://travis-ci.org/leocavalcante/request-mediator.svg?branch=master)](https://travis-ci.org/leocavalcante/request-mediator)
-[![Coverage Status](https://coveralls.io/repos/github/leocavalcante/request-mediator/badge.svg?branch=master)](https://coveralls.io/github/leocavalcante/request-mediator?branch=master)
-[![Latest Stable Version](https://poser.pugx.org/leocavalcante/request-mediator/v/stable)](https://packagist.org/packages/leocavalcante/request-mediator)
-[![Total Downloads](https://poser.pugx.org/leocavalcante/request-mediator/downloads)](https://packagist.org/packages/leocavalcante/request-mediator)
-[![License](https://poser.pugx.org/leocavalcante/request-mediator/license)](https://packagist.org/packages/leocavalcante/request-mediator)
-
 ## Advantages
 
 - written on typescript
