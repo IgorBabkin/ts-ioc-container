@@ -8,7 +8,3 @@ export interface IMediator<Context = unknown> {
         context?: Context,
     ): Promise<TResponse>;
 }
-
-export interface WithMediator {
-    mediator: IMediator;
-}
