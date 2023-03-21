@@ -1,21 +1,34 @@
-import { constructor, Container, IContainer, IInjector, ProviderBuilder, Resolveable } from 'ts-ioc-container';
+import {
+    asSingleton,
+    constructor,
+    Container,
+    IContainer,
+    IInjector,
+    Injector,
+    perTags,
+    ProviderBuilder,
+    Resolveable,
+} from 'ts-ioc-container';
 import { composeDecorators, resolve } from 'ts-constructor-injector';
-import { Scope } from '../lib';
-import { asSingleton, perTags } from 'ts-ioc-container/lib';
-import { IDependencyContainer } from '../lib';
+import { AsyncMethodReflector, IDependencyContainer, Scope } from '../lib';
 
-export const injector: IInjector = {
-    resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
-        return resolve(locator)(value, ...deps);
-    },
-};
+const onDisposeReflector = new AsyncMethodReflector('onDispose');
+export const onDispose = onDisposeReflector.createMethodHookDecorator();
+export class IocInjector extends Injector {
+    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
+        return resolve(container)(value, ...args);
+    }
+    clone(): IInjector {
+        return new IocInjector();
+    }
+}
 
 export const perApplication = composeDecorators(perTags(Scope.Application), asSingleton);
 export const perRequest = composeDecorators(perTags(Scope.Request), asSingleton);
 export const perUseCase = composeDecorators(perTags(Scope.UseCase), asSingleton);
 
 export function createContainer(): IContainer {
-    return new Container(injector).setTags([Scope.Application]);
+    return new Container(new IocInjector()).setTags([Scope.Application]);
 }
 
 export class ContainerAdapter implements IDependencyContainer {
@@ -35,6 +48,13 @@ export class ContainerAdapter implements IDependencyContainer {
 
     resolve<T>(key: constructor<T> | symbol): T {
         return this.container.resolve(key);
+    }
+
+    async onBeforeDispose(): Promise<void> {
+        for (const instance of this.container.getInstances()) {
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            await onDisposeReflector.invokeHooksOf(instance as object);
+        }
     }
 }
 

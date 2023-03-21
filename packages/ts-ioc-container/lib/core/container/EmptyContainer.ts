@@ -1,4 +1,4 @@
-import { InjectionToken, IContainer } from './IContainer';
+import { IContainer, InjectionToken } from './IContainer';
 import { MethodNotImplementedError } from '../utils/MethodNotImplementedError';
 import { ProviderNotFoundError } from '../provider/ProviderNotFoundError';
 import { IProvider } from '../provider/IProvider';
@@ -26,5 +26,9 @@ export class EmptyContainer implements IContainer {
 
     setHook(): this {
         throw new MethodNotImplementedError();
+    }
+
+    getInstances(): unknown[] {
+        return [];
     }
 }

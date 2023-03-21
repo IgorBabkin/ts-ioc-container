@@ -1,3 +1,3 @@
-import { IDisposable, Resolveable } from '../index';
+import { Disposable, Resolveable } from '../index';
 
-export interface IMockRepository extends IDisposable, Resolveable {}
+export interface IMockRepository extends Disposable, Resolveable {}

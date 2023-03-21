@@ -26,12 +26,13 @@ export { SingletonProvider } from './providers/SingletonProvider';
 export { ProviderBuilder } from './providers/ProviderBuilder';
 export { IProviderReflector } from './core/provider/IProviderReflector';
 export { ProviderReflector } from './core/provider/ProviderReflector';
-export { IDisposable } from './core/utils/types';
+export { Disposable } from './core/utils/types';
 export { ProviderKey } from './core/provider/IProvider';
 export { isProviderKey } from './core/provider/IProvider';
 export { perTags } from './providers/TaggedProvider';
 export { asSingleton } from './providers/SingletonProvider';
 export { forKey } from './core/provider/Provider';
+export { VisitInstance, Injector } from './core/IInjector';
 
 export const by =
     <T>(key: InjectionToken<T>, ...args: unknown[]) =>

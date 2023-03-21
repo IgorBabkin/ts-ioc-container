@@ -1,7 +1,7 @@
 import { id, noop } from '../utils/others';
-import { IDisposable } from '../utils/types';
+import { Disposable } from '../utils/types';
 
-export interface IContainerHook extends IDisposable {
+export interface IContainerHook extends Disposable {
     resolve<T>(instance: T): T;
 
     clone(): IContainerHook;

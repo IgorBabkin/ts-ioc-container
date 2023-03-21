@@ -1,5 +1,5 @@
 import { InjectionToken, Resolveable } from '../container/IContainer';
-import { IDisposable } from '../utils/types';
+import { Disposable } from '../utils/types';
 
 export type ResolveDependency<T> = (container: Resolveable, ...args: any[]) => T;
 
@@ -10,7 +10,7 @@ export interface ScopeOptions {
     tags: Tag[];
 }
 
-export interface IProvider<T> extends IDisposable {
+export interface IProvider<T> extends Disposable {
     setKey(key: ProviderKey): this;
     getKeyOrFail(): ProviderKey;
     clone(): IProvider<T>;

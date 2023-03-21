@@ -6,4 +6,14 @@ export class SimpleInjector implements IInjector {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: any[]): T {
         return new value(container, ...deps);
     }
+
+    clone(): IInjector {
+        return new SimpleInjector();
+    }
+
+    dispose(): void {}
+
+    getInstances(): unknown[] {
+        return [];
+    }
 }

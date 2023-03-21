@@ -4,6 +4,6 @@ export class Box<T> {
     constructor(public value: T) {}
 }
 
-export interface IDisposable {
+export interface Disposable {
     dispose(): void;
 }

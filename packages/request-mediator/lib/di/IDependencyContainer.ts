@@ -8,4 +8,6 @@ export interface IDependencyContainer {
     resolve<T>(key: constructor<T> | symbol): T;
 
     dispose(): void;
+
+    onBeforeDispose(): Promise<void>;
 }

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { IDisposable, IContainer, Container, ProviderBuilder } from '../../lib';
+import { Disposable, IContainer, Container, ProviderBuilder } from '../../lib';
 import { emptyHook, IContainerHook } from '../../lib/core/container/IContainerHook';
 import { InjectorHook } from '../ioc/InjectorHook';
 import { SimpleInjector } from '../ioc/SimpleInjector';
@@ -50,7 +50,7 @@ describe('ServiceLocator', () => {
         let isDisposed = false;
         const locator = createSimpleLocator(
             new ContainerHook((instance: unknown) => {
-                (instance as any as IDisposable).dispose();
+                (instance as any as Disposable).dispose();
             }),
             {
                 onConstruct<T>(instance: T): T {

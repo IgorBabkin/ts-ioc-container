@@ -3,13 +3,16 @@ import { inject } from 'ts-constructor-injector';
 import { by, ProviderBuilder } from 'ts-ioc-container';
 import { Context } from './context/Context';
 import { IQueryHandler, request, RequestMediator } from '../lib';
-import { ContainerAdapter, createContainer, EmptyType } from './di';
+import { ContainerAdapter, createContainer, EmptyType, onDispose } from './di';
 
 export class Logger extends Context<string[]> {
     addLog(log: string): void {
         const logs = this.getValue();
         this.setValue(logs.concat(log));
     }
+
+    @onDispose
+    async save(): Promise<void> {}
 }
 
 class QueryHandler2 implements IQueryHandler<EmptyType, void> {

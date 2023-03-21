@@ -1,13 +1,20 @@
-import { constructor, IInjector, IContainer } from '../../lib';
+import { constructor, IContainer, IInjector, Injector } from '../../lib';
 import { inject as injectFn, InjectionDecorator, resolve } from 'ts-constructor-injector';
 import { InjectorHook } from './InjectorHook';
 
-export class IocInjector implements IInjector {
-    constructor(private hook: InjectorHook = { onConstruct: (v) => v }) {}
+export class IocInjector extends Injector {
+    constructor(private hook: InjectorHook = { onConstruct: (v) => v }) {
+        super();
+    }
 
-    resolve<T>(locator: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-        const it = resolve(locator)(value, ...deps);
-        return this.hook.onConstruct(it);
+    clone(): IInjector {
+        return new IocInjector(this.hook);
+    }
+
+    protected resolver<T>(container: IContainer, value: constructor<T>, ...deps: any[]): T {
+        const instance = resolve(container)(value, ...deps);
+        this.hook.onConstruct(instance);
+        return instance;
     }
 }
 

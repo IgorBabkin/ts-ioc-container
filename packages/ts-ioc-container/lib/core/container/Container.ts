@@ -1,5 +1,5 @@
-import { InjectionToken, IContainer } from './IContainer';
-import { IInjector } from '../IInjector';
+import { IContainer, InjectionToken } from './IContainer';
+import { IInjector, VisitInstance } from '../IInjector';
 import { IProvider, isProviderKey, ScopeOptions, Tag } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { emptyHook, IContainerHook } from './IContainerHook';
@@ -15,6 +15,10 @@ export class Container implements IContainer, ScopeOptions {
     private isDisposed = false;
 
     constructor(private readonly injector: IInjector) {}
+
+    getInstances(): unknown[] {
+        return this.injector.getInstances();
+    }
 
     setParent(parent: IContainer): this {
         this.parent = parent;
@@ -56,7 +60,7 @@ export class Container implements IContainer, ScopeOptions {
 
     createScope(tags: Tag[] = [], parent: IContainer = this): Container {
         this.validateContainer();
-        const scope = new Container(this.injector)
+        const scope = new Container(this.injector.clone())
             .setParent(parent)
             .setLevel(this.level + 1)
             .setTags(tags)
@@ -77,6 +81,7 @@ export class Container implements IContainer, ScopeOptions {
         this.parent = new EmptyContainer();
         this.providers.dispose();
         this.hook.dispose();
+        this.injector.dispose();
     }
 
     map<T extends IContainer>(transform: (l: IContainer) => T): T {

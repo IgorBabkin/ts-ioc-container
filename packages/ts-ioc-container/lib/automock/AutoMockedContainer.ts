@@ -37,4 +37,8 @@ export class AutoMockedContainer implements IContainer {
         this.decorated.setHook(hook);
         return this;
     }
+
+    getInstances(): unknown[] {
+        return this.decorated.getInstances();
+    }
 }
