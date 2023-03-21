@@ -56,8 +56,8 @@
     "webpack-notifier": "^1.14.0"
   },
   "peerDependencies": {
-    "react": "^16.14.0",
-    "rxjs": "^7.3.0"
+    "react": "^17.0.2",
+    "rxjs": "^7.8.0"
   },
   "repository": {
     "type": "git",
