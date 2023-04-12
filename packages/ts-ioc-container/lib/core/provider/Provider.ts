@@ -2,7 +2,6 @@ import { constructor } from '../utils/types';
 import { IProvider, ProviderKey, ResolveDependency } from './IProvider';
 import { Resolveable } from '../container/IContainer';
 import { ProviderHasNoKeyError } from './ProviderHasNoKeyError';
-import { IProviderReflector } from './IProviderReflector';
 import { providerReflector } from './ProviderReflector';
 
 export class Provider<T> implements IProvider<T> {

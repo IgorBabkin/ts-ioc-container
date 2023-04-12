@@ -13,7 +13,7 @@ export class EmptyContainer implements IContainer {
     }
 
     register(): this {
-        return this;
+        throw new MethodNotImplementedError();
     }
 
     resolve<T>(key: InjectionToken<T>): T {
@@ -22,10 +22,6 @@ export class EmptyContainer implements IContainer {
 
     getProviders(): IProvider<unknown>[] {
         return [];
-    }
-
-    setHook(): this {
-        throw new MethodNotImplementedError();
     }
 
     getInstances(): unknown[] {
