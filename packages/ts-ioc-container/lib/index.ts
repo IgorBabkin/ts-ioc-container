@@ -6,9 +6,9 @@ export { constructor } from './core/utils/types';
 export { Container } from './core/container/Container';
 export { Tagged, ResolveDependency, Tag, IProvider } from './core/provider/IProvider';
 export { IInjector } from './core/IInjector';
-export { SimpleInjector } from './injectors/SimpleInjector';
 export { IMethodReflector } from './hooks/IMethodReflector';
 export { MethodReflector } from './hooks/MethodReflector';
+export { AsyncMethodReflector } from './hooks/AsyncMethodReflector';
 export { InjectionToken } from './core/container/IContainer';
 export { ProviderNotFoundError } from './core/provider/ProviderNotFoundError';
 export { MethodNotImplementedError } from './core/utils/MethodNotImplementedError';
@@ -16,7 +16,6 @@ export { ContainerDisposedError } from './core/container/ContainerDisposedError'
 export { Provider } from './core/provider/Provider';
 export { ArgsProvider, ArgsFn, createArgsFnDecorator } from './providers/ArgsProvider';
 export { TaggedProvider } from './providers/TaggedProvider';
-export { ProxyInjector } from './injectors/ProxyInjector';
 export { IMockRepository } from './automock/IMockRepository';
 export { AutoMockedContainer } from './automock/AutoMockedContainer';
 export { SingletonProvider } from './providers/SingletonProvider';
