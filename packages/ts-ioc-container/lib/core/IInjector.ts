@@ -28,7 +28,7 @@ export abstract class Injector implements IInjector {
 
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: any[]): T {
         const instance = this.resolver(container, value, ...deps);
-        this.values.push(value);
+        this.values.push(instance);
         return instance;
     }
 

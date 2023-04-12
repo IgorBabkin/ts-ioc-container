@@ -1,20 +1,16 @@
-import { constructor, IContainer, IInjector } from '../../lib';
+import { constructor, IContainer, IInjector, Injector } from '../../lib';
 import { InjectorHook } from './InjectorHook';
 
-export class SimpleInjector implements IInjector {
-    constructor(private hook: InjectorHook = { onConstruct: (v) => v }) {}
+export class SimpleInjector extends Injector {
+    constructor(private hook: InjectorHook = { onConstruct: (v) => v }) {
+        super();
+    }
 
-    resolve<T>(locator: IContainer, value: constructor<T>, ...deps: any[]): T {
-        return this.hook.onConstruct(new value(locator, ...deps));
+    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
+        return this.hook.onConstruct(new value(container, ...args));
     }
 
     clone(): IInjector {
         return new SimpleInjector(this.hook);
-    }
-
-    dispose(): void {}
-
-    getInstances(): unknown[] {
-        return [];
     }
 }

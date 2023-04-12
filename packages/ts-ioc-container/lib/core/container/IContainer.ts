@@ -1,6 +1,5 @@
 import { IProvider, ProviderKey, Tag } from '../provider/IProvider';
 import { constructor, Disposable } from '../utils/types';
-import { IContainerHook } from './IContainerHook';
 import { Traversable } from '../IInjector';
 
 export type InjectionToken<T = any> = constructor<T> | ProviderKey;
@@ -15,6 +14,4 @@ export interface IContainer extends Disposable, Resolveable, Traversable {
     register(provider: IProvider<unknown>): this;
 
     getProviders(): IProvider<unknown>[];
-
-    setHook(hook: IContainerHook): this;
 }

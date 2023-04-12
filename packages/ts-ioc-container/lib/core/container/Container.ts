@@ -1,8 +1,7 @@
 import { IContainer, InjectionToken } from './IContainer';
-import { IInjector, VisitInstance } from '../IInjector';
+import { IInjector } from '../IInjector';
 import { IProvider, isProviderKey, ScopeOptions, Tag } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
-import { emptyHook, IContainerHook } from './IContainerHook';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
 
@@ -11,7 +10,6 @@ export class Container implements IContainer, ScopeOptions {
     private parent: IContainer = new EmptyContainer();
     level = 0;
     tags: Tag[] = [];
-    private hook: IContainerHook = emptyHook;
     private isDisposed = false;
 
     constructor(private readonly injector: IInjector) {}
@@ -35,11 +33,6 @@ export class Container implements IContainer, ScopeOptions {
         return this;
     }
 
-    setHook(hook: IContainerHook): this {
-        this.hook = hook;
-        return this;
-    }
-
     register(provider: IProvider<unknown>): this {
         this.validateContainer();
         this.providers.add(provider);
@@ -50,12 +43,10 @@ export class Container implements IContainer, ScopeOptions {
         this.validateContainer();
         if (isProviderKey(key)) {
             const provider = this.providers.get<T>(key);
-            return provider?.isValid(this)
-                ? this.hook.resolve(provider.resolve(this, ...args))
-                : this.parent.resolve<T>(key, ...args);
+            return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(key, ...args);
         }
 
-        return this.hook.resolve(this.injector.resolve<T>(this, key, ...args));
+        return this.injector.resolve<T>(this, key, ...args);
     }
 
     createScope(tags: Tag[] = [], parent: IContainer = this): Container {
@@ -63,8 +54,7 @@ export class Container implements IContainer, ScopeOptions {
         const scope = new Container(this.injector.clone())
             .setParent(parent)
             .setLevel(this.level + 1)
-            .setTags(tags)
-            .setHook(this.hook.clone());
+            .setTags(tags);
 
         for (const provider of parent.getProviders().filter((p) => p.isValid(scope))) {
             scope.register(provider.clone());
@@ -80,7 +70,6 @@ export class Container implements IContainer, ScopeOptions {
         this.isDisposed = true;
         this.parent = new EmptyContainer();
         this.providers.dispose();
-        this.hook.dispose();
         this.injector.dispose();
     }
 

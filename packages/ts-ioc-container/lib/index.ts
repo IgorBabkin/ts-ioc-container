@@ -1,6 +1,5 @@
 import { IContainer, InjectionToken } from './core/container/IContainer';
 
-export { ContainerHook } from './hooks/ContainerHook';
 export { ProviderReducer } from './core/provider/IProviderReflector';
 export { IContainer, Resolveable } from './core/container/IContainer';
 export { constructor } from './core/utils/types';
@@ -16,7 +15,6 @@ export { MethodNotImplementedError } from './core/utils/MethodNotImplementedErro
 export { ContainerDisposedError } from './core/container/ContainerDisposedError';
 export { Provider } from './core/provider/Provider';
 export { ArgsProvider, ArgsFn, createArgsFnDecorator } from './providers/ArgsProvider';
-export { IContainerHook } from './core/container/IContainerHook';
 export { TaggedProvider } from './providers/TaggedProvider';
 export { ProxyInjector } from './injectors/ProxyInjector';
 export { LevelProvider, perLevel } from './providers/LevelProvider';

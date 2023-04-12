@@ -1,17 +1,14 @@
 import 'reflect-metadata';
-import { Disposable, IContainer, Container, ProviderBuilder } from '../../lib';
-import { emptyHook, IContainerHook } from '../../lib/core/container/IContainerHook';
+import { Container, IContainer, ProviderBuilder } from '../../lib';
 import { InjectorHook } from '../ioc/InjectorHook';
 import { SimpleInjector } from '../ioc/SimpleInjector';
-import { ContainerHook } from '../../lib';
 
 class TestClass {
     constructor(l: IContainer, public dep1: string, public dep2: number) {}
 }
 
 describe('ServiceLocator', () => {
-    const createSimpleLocator = (hook: IContainerHook = emptyHook, injectorHook?: InjectorHook) =>
-        new Container(new SimpleInjector(injectorHook)).setHook(hook);
+    const createSimpleLocator = (injectorHook?: InjectorHook) => new Container(new SimpleInjector(injectorHook));
 
     it('should pass dependencies', () => {
         const locator = createSimpleLocator().register(ProviderBuilder.fromClass(TestClass).forKey('key1').build());
@@ -30,7 +27,7 @@ describe('ServiceLocator', () => {
             }
         }
 
-        const locator = createSimpleLocator(emptyHook, {
+        const locator = createSimpleLocator({
             onConstruct: <T>(instance: T) => {
                 if (instance instanceof Disposable) {
                     instance.init();
@@ -47,30 +44,29 @@ describe('ServiceLocator', () => {
     });
 
     it('should invokes onDispose', () => {
-        let isDisposed = false;
-        const locator = createSimpleLocator(
-            new ContainerHook((instance: unknown) => {
-                (instance as any as Disposable).dispose();
-            }),
-            {
-                onConstruct<T>(instance: T): T {
-                    return instance;
-                },
+        const locator = createSimpleLocator({
+            onConstruct<T>(instance: T): T {
+                return instance;
             },
-        );
-        const disposable = {
-            dispose: () => {
-                isDisposed = true;
-            },
-        };
+        });
+        class Disposable {
+            isDisposed = false;
+            dispose() {
+                this.isDisposed = true;
+            }
+        }
 
-        const child = locator.createScope().register(ProviderBuilder.fromValue(disposable).forKey('key1').build());
+        const child = locator.createScope().register(ProviderBuilder.fromClass(Disposable).forKey('key1').build());
 
-        child.resolve('key1');
+        const dep = child.resolve<Disposable>('key1');
+
+        child.getInstances().forEach((i: any) => {
+            i.dispose();
+        });
 
         child.dispose();
 
-        expect(isDisposed).toBeTruthy();
+        expect(dep.isDisposed).toBeTruthy();
     });
 
     it('conditional resolving', () => {
