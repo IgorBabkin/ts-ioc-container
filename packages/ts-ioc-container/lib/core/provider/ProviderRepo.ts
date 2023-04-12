@@ -3,8 +3,9 @@ import { IProvider, ProviderKey } from './IProvider';
 export class ProviderRepo {
     private readonly providers = new Map<ProviderKey, IProvider<unknown>>();
 
-    add(provider: IProvider<unknown>): void {
+    add(provider: IProvider<unknown>): this {
         this.providers.set(provider.getKeyOrFail(), provider);
+        return this;
     }
 
     get<T>(key: ProviderKey): IProvider<T> | undefined {
