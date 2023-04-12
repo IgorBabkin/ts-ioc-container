@@ -7,7 +7,7 @@ import { ContainerDisposedError } from './ContainerDisposedError';
 
 export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();
-    tags: Tag[];
+    readonly tags: Tag[];
     private isDisposed = false;
     private parent: IContainer;
 

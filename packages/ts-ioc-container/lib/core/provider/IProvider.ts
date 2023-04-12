@@ -6,7 +6,7 @@ export type ResolveDependency<T> = (container: Resolveable, ...args: any[]) => T
 export type Tag = string;
 
 export interface Tagged {
-    tags: Tag[];
+    readonly tags: Tag[];
 }
 
 export interface IProvider<T> extends Disposable {
