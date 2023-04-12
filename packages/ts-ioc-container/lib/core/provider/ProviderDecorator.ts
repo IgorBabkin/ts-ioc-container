@@ -1,5 +1,5 @@
 import { Resolveable } from '../container/IContainer';
-import { IProvider, ProviderKey, ScopeOptions } from './IProvider';
+import { IProvider, ProviderKey, Tagged } from './IProvider';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
     protected constructor(private decorated: IProvider<T>) {}
@@ -12,7 +12,7 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
         this.decorated.dispose();
     }
 
-    isValid(filters: ScopeOptions): boolean {
+    isValid(filters: Tagged): boolean {
         return this.decorated.isValid(filters);
     }
 

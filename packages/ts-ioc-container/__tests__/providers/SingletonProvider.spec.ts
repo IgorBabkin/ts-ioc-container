@@ -1,4 +1,4 @@
-import { IProvider, IContainer, LevelProvider, Provider, Container, SingletonProvider } from '../../lib';
+import { IProvider, IContainer, Provider, Container, SingletonProvider, TaggedProvider } from '../../lib';
 import { SimpleInjector } from '../ioc/SimpleInjector';
 
 describe('SingletonProvider', function () {
@@ -6,18 +6,18 @@ describe('SingletonProvider', function () {
     let provider: IProvider<any>;
 
     function createSingleton<T>(provider: IProvider<T>): IProvider<T> {
-        return new LevelProvider(new SingletonProvider(provider), [0, 0]);
+        return new TaggedProvider(new SingletonProvider(provider), ['root']);
     }
 
     beforeEach(() => {
-        locator = new Container(new SimpleInjector());
+        locator = new Container(new SimpleInjector(), { tags: ['root'] });
         provider = new Provider(() => Math.random());
     });
 
     test('cannot be cloned', () => {
         const singletonProvider = createSingleton(provider);
 
-        expect(singletonProvider.isValid({ level: 1, tags: [] })).toBeFalsy();
+        expect(singletonProvider.isValid({ tags: ['child'] })).toBeFalsy();
     });
 
     test('should resolve the same value', () => {

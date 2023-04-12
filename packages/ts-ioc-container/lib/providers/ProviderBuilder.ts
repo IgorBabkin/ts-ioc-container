@@ -1,7 +1,6 @@
 import { IProvider, ProviderKey, Tag } from '../core/provider/IProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { TaggedProvider } from './TaggedProvider';
-import { LevelProvider } from './LevelProvider';
 import { ProviderReducer } from '../core/provider/IProviderReflector';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
 import { Provider } from '../core/provider/Provider';
@@ -39,11 +38,6 @@ export class ProviderBuilder<T> {
 
     forTags(...tags: Tag[]): this {
         this.provider = new TaggedProvider(this.provider, tags);
-        return this;
-    }
-
-    forLevel(level: number): this {
-        this.provider = new LevelProvider(this.provider, [level, level]);
         return this;
     }
 

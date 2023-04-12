@@ -28,7 +28,7 @@ export const perRequest = composeDecorators(perTags(Scope.Request), asSingleton)
 export const perUseCase = composeDecorators(perTags(Scope.UseCase), asSingleton);
 
 export function createContainer(): IContainer {
-    return new Container(new IocInjector()).setTags([Scope.Application]);
+    return new Container(new IocInjector(), { tags: [Scope.Application] });
 }
 
 export class ContainerAdapter implements IDependencyContainer {

@@ -1,4 +1,4 @@
-import { IProvider, LevelProvider, Provider, SingletonProvider } from '../../lib';
+import { IProvider, Provider, SingletonProvider, TaggedProvider } from '../../lib';
 import { Times } from 'moq.ts';
 import { createMock } from '../MoqRepository';
 
@@ -6,7 +6,7 @@ describe('ScopedProvider', function () {
     let provider: IProvider<any>;
 
     function createScopedProvider<T>(provider: IProvider<T>): IProvider<T> {
-        return new LevelProvider(new SingletonProvider(provider), [1, 1]);
+        return new TaggedProvider(new SingletonProvider(provider), ['child']);
     }
 
     beforeEach(() => {
@@ -16,13 +16,13 @@ describe('ScopedProvider', function () {
     test('cannot resolve dependency from scoped provider', () => {
         const scopedProvider = createScopedProvider(provider);
 
-        expect(scopedProvider.isValid({ level: 0, tags: [] })).toBeFalsy();
+        expect(scopedProvider.isValid({ tags: ['root'] })).toBeFalsy();
     });
 
     test('can be cloned', () => {
         const scopedProvider = createScopedProvider(provider);
 
-        expect(scopedProvider.isValid({ level: 1, tags: [] })).toBeTruthy();
+        expect(scopedProvider.isValid({ tags: ['child'] })).toBeTruthy();
     });
 
     test('dispose', () => {

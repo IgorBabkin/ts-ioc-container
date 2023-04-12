@@ -1,36 +1,19 @@
 import { IContainer, InjectionToken } from './IContainer';
 import { IInjector } from '../IInjector';
-import { IProvider, isProviderKey, ScopeOptions, Tag } from '../provider/IProvider';
+import { IProvider, isProviderKey, Tagged, Tag } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
 
-export class Container implements IContainer, ScopeOptions {
+export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();
-    private parent: IContainer = new EmptyContainer();
-    level = 0;
-    tags: Tag[] = [];
+    tags: Tag[];
     private isDisposed = false;
+    private parent: IContainer;
 
-    constructor(private readonly injector: IInjector) {}
-
-    getInstances(): unknown[] {
-        return this.injector.getInstances();
-    }
-
-    setParent(parent: IContainer): this {
-        this.parent = parent;
-        return this;
-    }
-
-    setTags(tags: Tag[]): this {
-        this.tags = tags;
-        return this;
-    }
-
-    setLevel(level = 0): this {
-        this.level = level;
-        return this;
+    constructor(private readonly injector: IInjector, options: { parent?: IContainer; tags?: Tag[] } = {}) {
+        this.parent = options.parent ?? new EmptyContainer();
+        this.tags = options.tags ?? [];
     }
 
     register(provider: IProvider<unknown>): this {
@@ -51,19 +34,13 @@ export class Container implements IContainer, ScopeOptions {
 
     createScope(tags: Tag[] = [], parent: IContainer = this): Container {
         this.validateContainer();
-        const scope = new Container(this.injector.clone())
-            .setParent(parent)
-            .setLevel(this.level + 1)
-            .setTags(tags);
+        const scope = new Container(this.injector.clone(), { parent, tags });
 
         for (const provider of parent.getProviders().filter((p) => p.isValid(scope))) {
             scope.register(provider.clone());
         }
-        return scope;
-    }
 
-    getProviders(): IProvider<unknown>[] {
-        return this.providers.merge(this.parent.getProviders());
+        return scope;
     }
 
     dispose(): void {
@@ -71,6 +48,14 @@ export class Container implements IContainer, ScopeOptions {
         this.parent = new EmptyContainer();
         this.providers.dispose();
         this.injector.dispose();
+    }
+
+    getProviders(): IProvider<unknown>[] {
+        return this.providers.merge(this.parent.getProviders());
+    }
+
+    getInstances(): unknown[] {
+        return this.injector.getInstances();
     }
 
     map<T extends IContainer>(transform: (l: IContainer) => T): T {

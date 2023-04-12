@@ -1,4 +1,4 @@
-import { IProvider, ScopeOptions, Tag } from '../core/provider/IProvider';
+import { IProvider, Tagged, Tag } from '../core/provider/IProvider';
 import { ProviderDecorator } from '../core/provider/ProviderDecorator';
 import { constructor } from '../core/utils/types';
 import { providerReflector } from '../core/provider/ProviderReflector';
@@ -12,7 +12,7 @@ export class TaggedProvider<T> extends ProviderDecorator<T> {
         return new TaggedProvider(this.provider.clone(), this.tags);
     }
 
-    isValid(filters: ScopeOptions): boolean {
+    isValid(filters: Tagged): boolean {
         const { tags } = filters;
         return this.tags.some((t) => tags.includes(t)) && this.provider.isValid(filters);
     }

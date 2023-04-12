@@ -72,14 +72,18 @@ describe('ServiceLocator', () => {
     it('conditional resolving', () => {
         const locator = createSimpleLocator().register(
             ProviderBuilder.fromFn((l) => (l.resolve('context') === 'a' ? 'good' : 'bad'))
-                .forLevel(1)
+                .forTags('child')
                 .asSingleton()
                 .forKey('key1')
                 .build(),
         );
 
-        const child1 = locator.createScope().register(ProviderBuilder.fromValue('a').forKey('context').build());
-        const child2 = locator.createScope().register(ProviderBuilder.fromValue('b').forKey('context').build());
+        const child1 = locator
+            .createScope(['child'])
+            .register(ProviderBuilder.fromValue('a').forKey('context').build());
+        const child2 = locator
+            .createScope(['child'])
+            .register(ProviderBuilder.fromValue('b').forKey('context').build());
 
         expect(child1.resolve('key1')).toEqual('good');
         expect(child2.resolve('key1')).toEqual('bad');

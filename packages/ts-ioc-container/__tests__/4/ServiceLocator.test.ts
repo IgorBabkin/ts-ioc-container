@@ -19,7 +19,8 @@ class Greeting {
 }
 
 describe('ServiceLocator', () => {
-    const createIoCLocator = (injectorHook?: InjectorHook) => new Container(new IocInjector(injectorHook));
+    const createIoCLocator = (injectorHook?: InjectorHook) =>
+        new Container(new IocInjector(injectorHook), { tags: ['root'] });
 
     it('should create an instanse', () => {
         const locator = createIoCLocator().register(
@@ -34,7 +35,7 @@ describe('ServiceLocator', () => {
     it('should create a singleton', () => {
         const locator = createIoCLocator().register(
             ProviderBuilder.fromFn(() => ({}))
-                .forLevel(0)
+                .forTags('root')
                 .asSingleton()
                 .forKey('key1')
                 .build(),
@@ -85,7 +86,7 @@ describe('ServiceLocator', () => {
         it('returns the same singleton for child and parent', () => {
             const locator = createIoCLocator().register(
                 ProviderBuilder.fromFn(() => ({}))
-                    .forLevel(0)
+                    .forTags('root')
                     .asSingleton()
                     .forKey('key1')
                     .build(),
@@ -114,20 +115,20 @@ describe('ServiceLocator', () => {
             const locator = createIoCLocator()
                 .register(
                     ProviderBuilder.fromFn(() => expectedInstance)
-                        .forLevel(1)
+                        .forTags('child')
                         .asSingleton()
                         .forKey('key1')
                         .build(),
                 )
                 .register(
                     ProviderBuilder.fromFn(() => ({}))
-                        .forLevel(1)
+                        .forTags('child')
                         .asSingleton()
                         .forKey('key2')
                         .build(),
                 );
 
-            const child1 = locator.createScope();
+            const child1 = locator.createScope(['child']);
             const child2 = child1.createScope();
 
             expect(child2.resolve('key1')).toBe(expectedInstance);

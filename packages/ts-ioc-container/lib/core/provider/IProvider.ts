@@ -5,8 +5,7 @@ export type ResolveDependency<T> = (container: Resolveable, ...args: any[]) => T
 
 export type Tag = string;
 
-export interface ScopeOptions {
-    level: number;
+export interface Tagged {
     tags: Tag[];
 }
 
@@ -17,7 +16,7 @@ export interface IProvider<T> extends Disposable {
 
     resolve(container: Resolveable, ...args: any[]): T;
 
-    isValid(filters: ScopeOptions): boolean;
+    isValid(filters: Tagged): boolean;
 }
 
 export type ProviderKey = string | symbol;
