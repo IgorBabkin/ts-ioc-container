@@ -19,10 +19,10 @@
 
 ## Install
 ```shell script
-npm install ts-ioc-container reflect-metadata
+npm install ts-ioc-container ts-constructor-injector reflect-metadata
 ```
 ```shell script
-yarn add ts-ioc-container reflect-metadata
+yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 ```
 
 ## tsconfig.json
