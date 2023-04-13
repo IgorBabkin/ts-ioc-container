@@ -60,7 +60,6 @@ import { fromClass, ProviderBuilder } from "ts-ioc-container";
 
 container.register('ILogger', new ProviderBuilder((container, ...args) => new Logger(...args)).build());
 container.register('ILogger1', ProviderBuilder.fromClass(Logger).forKey('ILogger').asSingleton().forLevel(0).build()); // global singleton
-container.register('ILogger2', ProviderBuilder.fromClass(Logger).asSingleton().forLevel(1).build()); // first scope singleton
 container.register('ILogger3', ProviderBuilder.fromClass(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
 container.register('ILogger4', ProviderBuilder.fromClass(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
 ```
@@ -89,7 +88,7 @@ import {
   Container,
   IInjector,
   ContainerHook,
-  ProviderBuilder,
+  ProviderBuilder, Injector
 } from "ts-ioc-container";
 
 export const onConstructReflector = new MethodReflector('OnConstructHook');
@@ -104,21 +103,24 @@ class Logger {
   }
 
   @onDispose
-  dispose() {}
+  dispose() {
+  }
 }
 
-const injector: IInjector = {
-  resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
-    const instance = resolve(locator)(value, ...deps);
-    onConstructReflector.invokeHooksOf(instance)
-    return instance;
-  },
-};
-const container = new Container(injector).setHook(new ContainerHook((instance) => {
-  onDisposeMetadataCollector.invokeHooksOf(instance);
-}));
+class IocInjector extends Injector {
+    resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
+        const instance = super.resolve(locator, value, ...deps);
+        onConstructReflector.invokeHooksOf(instance)
+        return instance;
+    }
+}
+
+const container = new Container(new IocInjector());
 container.register('ILogger', ProviderBuilder.fromClass(Logger).build());
 const logger = container.resolve<ILogger>('ILogger');
+for (const instance of container.getInstances()) {
+  onDisposeReflector.invokeHooksOf(instance);
+}
 ```
 
 ## Scoped locators
