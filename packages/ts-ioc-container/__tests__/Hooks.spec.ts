@@ -8,7 +8,6 @@ import {
     forKey,
     IContainer,
     IInjector,
-    Injector,
     MethodReflector,
     ProviderBuilder,
 } from '../lib';
@@ -20,17 +19,13 @@ const onConstruct = onConstructReflector.createMethodHookDecorator();
 const onDisposeReflector = new AsyncMethodReflector('onDispose');
 const onDispose = onDisposeReflector.createMethodHookDecorator();
 
-export class IocInjector extends Injector {
-    clone(): IInjector {
-        return new IocInjector();
-    }
-
-    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
-        const instance = resolve(container)(value, ...args);
+const injector: IInjector = {
+    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+        const instance = resolve(container)(value, ...deps);
         onConstructReflector.invokeHooksOf(instance);
         return instance;
-    }
-}
+    },
+};
 
 @asSingleton
 @forKey('logsRepo')
@@ -65,7 +60,7 @@ class Logger {
 
 describe('Hooks', function () {
     function createContainer() {
-        return new Container(new IocInjector());
+        return new Container(injector);
     }
 
     it('should invoke hooks on all instances', async function () {

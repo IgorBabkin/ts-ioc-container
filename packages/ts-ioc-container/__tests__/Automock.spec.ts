@@ -4,24 +4,20 @@ import {
     by,
     constructor,
     Container,
+    EmptyContainer,
     IContainer,
     IInjector,
     IMockRepository,
-    Injector,
     ProviderKey,
 } from '../lib';
 import { inject, resolve } from 'ts-constructor-injector';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
-export class IocInjector extends Injector {
-    clone(): IInjector {
-        return new IocInjector();
-    }
-
-    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
-        return resolve(container)(value, ...args);
-    }
-}
+const injector: IInjector = {
+    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+        return resolve(container)(value, ...deps);
+    },
+};
 
 const ILogsRepoKey = Symbol('ILogsRepo');
 
@@ -31,6 +27,7 @@ interface ILogsRepo {
 
 class Logger {
     private messages: string[] = [];
+
     constructor(@inject(by(ILogsRepoKey)) private logsRepo: ILogsRepo) {}
 
     log(message: string): void {
@@ -92,7 +89,7 @@ describe('Automock', function () {
     });
 
     function createContainer() {
-        return new Container(new IocInjector()).map((c) => new AutoMockedContainer(c, mockRepo));
+        return new Container(injector, { parent: new AutoMockedContainer(new EmptyContainer(), mockRepo) });
     }
 
     it('should automock all non defined dependencies', async function () {

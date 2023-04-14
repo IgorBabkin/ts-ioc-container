@@ -3,24 +3,20 @@ import {
     asSingleton,
     constructor,
     Container,
+    ContainerDisposedError,
     forKey,
     IContainer,
     IInjector,
-    Injector,
     perTags,
     ProviderBuilder,
 } from '../lib';
 import { composeDecorators, resolve } from 'ts-constructor-injector';
 
-export class IocInjector extends Injector {
-    clone(): IInjector {
-        return new IocInjector();
-    }
-
-    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
-        return resolve(container)(value, ...args);
-    }
-}
+const injector: IInjector = {
+    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+        return resolve(container)(value, ...deps);
+    },
+};
 
 const perHome = composeDecorators(asSingleton, perTags('home'));
 
@@ -30,7 +26,7 @@ class Logger {}
 
 describe('Singleton', function () {
     it('should resolve the same dependency if provider registered per root', function () {
-        const container = new Container(new IocInjector(), { tags: ['home'] }).register(
+        const container = new Container(injector, { tags: ['home'] }).register(
             ProviderBuilder.fromClass(Logger).build(),
         );
 
@@ -41,7 +37,7 @@ describe('Singleton', function () {
     });
 
     it('should resolve unique dependency for every registered scope', function () {
-        const container = new Container(new IocInjector()).register(ProviderBuilder.fromClass(Logger).build());
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
 
         const child1 = container.createScope(['home']);
         const child2 = container.createScope(['home']);
@@ -50,12 +46,53 @@ describe('Singleton', function () {
     });
 
     it('should resolve unique dependency if registered scope has another registered scope', function () {
-        const container = new Container(new IocInjector(), { tags: ['home'] }).register(
+        const container = new Container(injector, { tags: ['home'] }).register(
             ProviderBuilder.fromClass(Logger).build(),
         );
 
         const child1 = container.createScope(['home']);
 
         expect(child1.resolve('logger')).not.toBe(container.resolve('logger'));
+    });
+
+    it('should dispose all scopes', function () {
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
+
+        const child1 = container.createScope(['home']);
+        const child2 = container.createScope(['home']);
+
+        child1.resolve('logger');
+        child2.resolve('logger');
+
+        container.dispose();
+
+        expect(() => child1.resolve('logger')).toThrowError(ContainerDisposedError);
+        expect(() => child2.resolve('logger')).toThrowError(ContainerDisposedError);
+    });
+
+    it('should collect instances from all scopes', function () {
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
+
+        const childScope1 = container.createScope(['home']);
+        const childScope2 = container.createScope(['home']);
+
+        const logger1 = childScope1.resolve('logger');
+        const logger2 = childScope2.resolve('logger');
+        const instances = container.getInstances();
+
+        expect(instances).toContain(logger1);
+        expect(instances).toContain(logger2);
+    });
+
+    it('should clear all instances on dispose', function () {
+        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
+
+        const child1 = container.createScope(['home']);
+        const child2 = container.createScope(['home']);
+        child1.resolve('logger');
+        child2.resolve('logger');
+        container.dispose();
+
+        expect(container.getInstances().length).toBe(0);
     });
 });

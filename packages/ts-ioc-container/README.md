@@ -12,8 +12,6 @@
 - supports scopes
 - fully test covered
 - can be used with decorators `@inject`
-- provides auto-factories
-- supports `onConstruct` and `dispose` instance hooks
 - composable and open to extend
 - awesome for testing (auto mocks)
 
@@ -40,12 +38,12 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 How to create new container
 
 ```typescript
-import { Container, IInjector, ProviderBuilder } from "ts-ioc-container";
+import { Container, IContainer, IInjector, ProviderBuilder } from "ts-ioc-container";
 import { resolve } from 'ts-constructor-injector';
 
 const injector: IInjector = {
-  resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
-    return resolve(locator)(value, ...deps);
+  resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+    return resolve(container)(value, ...deps);
   },
 };
 const container = new Container(injector);
@@ -58,8 +56,9 @@ const logger = container.resolve<ILogger>('ILogger');
 ```typescript
 import { fromClass, ProviderBuilder } from "ts-ioc-container";
 
+const container = new Container(injector, {tags: ['root']});
 container.register('ILogger', new ProviderBuilder((container, ...args) => new Logger(...args)).build());
-container.register('ILogger1', ProviderBuilder.fromClass(Logger).forKey('ILogger').asSingleton().forLevel(0).build()); // global singleton
+container.register('ILogger1', ProviderBuilder.fromClass(Logger).forKey('ILogger').asSingleton().forTags(['root']).build()); // global singleton
 container.register('ILogger3', ProviderBuilder.fromClass(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
 container.register('ILogger4', ProviderBuilder.fromClass(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
 ```
@@ -107,15 +106,15 @@ class Logger {
   }
 }
 
-class IocInjector extends Injector {
-    resolve<T>(locator: Resolveable, value: constructor<T>, ...deps: unknown[]): T {
-        const instance = super.resolve(locator, value, ...deps);
-        onConstructReflector.invokeHooksOf(instance)
-        return instance;
-    }
+const injector: IInjector = {
+  resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+    const instance = resolve(container)(value, ...deps);
+    onConstructReflector.invokeHooksOf(instance)
+    return instance;
+  },
 }
 
-const container = new Container(new IocInjector());
+const container = new Container(injector);
 container.register('ILogger', ProviderBuilder.fromClass(Logger).build());
 const logger = container.resolve<ILogger>('ILogger');
 for (const instance of container.getInstances()) {
@@ -140,7 +139,6 @@ scope.dispose();
 import {
   IMockRepository,
   Container,
-  SimpleInjector,
 } from "ts-ioc-container";
 import { Mock } from "moq.ts";
 
@@ -165,7 +163,7 @@ export class MoqRepository implements IMockRepository {
 
 describe('test', () => {
   const mockRepository = new MoqRepository();
-  const container = new Container(new SimpleInjector()).map((l) => new AutoMockedContainer(l, mockRepository));
+  const container = new Container(injector).map((l) => new AutoMockedContainer(l, mockRepository));
 
   const engineMock = mockRepository.resolveMock<IEngine>('IEngine');
   engineMock.setup(i => i.getRegistrationNumber()).return('123');

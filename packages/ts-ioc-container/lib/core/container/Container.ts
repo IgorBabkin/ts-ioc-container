@@ -10,6 +10,8 @@ export class Container implements IContainer, Tagged {
     readonly tags: Tag[];
     private isDisposed = false;
     private parent: IContainer;
+    private children: Set<IContainer> = new Set();
+    private instances: Set<unknown> = new Set();
 
     constructor(private readonly injector: IInjector, options: { parent?: IContainer; tags?: Tag[] } = {}) {
         this.parent = options.parent ?? new EmptyContainer();
@@ -29,25 +31,33 @@ export class Container implements IContainer, Tagged {
             return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(key, ...args);
         }
 
-        return this.injector.resolve<T>(this, key, ...args);
+        const instance = this.injector.resolve<T>(this, key, ...args);
+        this.instances.add(instance);
+        return instance;
     }
 
-    createScope(tags: Tag[] = [], parent: IContainer = this): Container {
+    createScope(tags: Tag[] = []): Container {
         this.validateContainer();
-        const scope = new Container(this.injector.clone(), { parent, tags });
+        const scope = new Container(this.injector, { parent: this, tags });
 
-        for (const provider of parent.getProviders().filter((p) => p.isValid(scope))) {
+        for (const provider of this.getProviders().filter((p) => p.isValid(scope))) {
             scope.register(provider.clone());
         }
+
+        this.children.add(scope);
 
         return scope;
     }
 
     dispose(): void {
         this.isDisposed = true;
+        this.parent.removeScope(this);
         this.parent = new EmptyContainer();
+        for (const child of this.children) {
+            child.dispose();
+        }
         this.providers.dispose();
-        this.injector.dispose();
+        this.instances.clear();
     }
 
     getProviders(): IProvider<unknown>[] {
@@ -55,12 +65,15 @@ export class Container implements IContainer, Tagged {
     }
 
     getInstances(): unknown[] {
-        return this.injector.getInstances();
+        let instances = Array.from(this.instances);
+        for (const child of this.children) {
+            instances = instances.concat(child.getInstances());
+        }
+        return instances;
     }
 
-    map<T extends IContainer>(transform: (l: IContainer) => T): T {
-        this.parent = transform(this.parent);
-        return transform(this);
+    removeScope(child: IContainer): void {
+        this.children.delete(child);
     }
 
     private validateContainer(): void {

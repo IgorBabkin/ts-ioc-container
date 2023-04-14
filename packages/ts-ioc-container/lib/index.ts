@@ -2,6 +2,7 @@ import { IContainer, InjectionToken } from './core/container/IContainer';
 
 export { ProviderReducer } from './core/provider/IProviderReflector';
 export { IContainer, Resolveable } from './core/container/IContainer';
+export { EmptyContainer } from './core/container/EmptyContainer';
 export { constructor } from './core/utils/types';
 export { Container } from './core/container/Container';
 export { Tagged, ResolveDependency, Tag, IProvider } from './core/provider/IProvider';
@@ -28,7 +29,6 @@ export { isProviderKey } from './core/provider/IProvider';
 export { perTags } from './providers/TaggedProvider';
 export { asSingleton } from './providers/SingletonProvider';
 export { forKey } from './core/provider/Provider';
-export { VisitInstance, Injector } from './core/IInjector';
 
 export const by =
     <T>(key: InjectionToken<T>, ...args: unknown[]) =>

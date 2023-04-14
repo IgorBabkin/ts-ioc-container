@@ -36,4 +36,8 @@ export class AutoMockedContainer implements IContainer {
     getInstances(): unknown[] {
         return this.decorated.getInstances();
     }
+
+    removeScope(child: IContainer): void {
+        return this.decorated.removeScope(child);
+    }
 }

@@ -6,22 +6,17 @@ import {
     forKey,
     IContainer,
     IInjector,
-    Injector,
     ProviderBuilder,
     ProviderNotFoundError,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
 import { ProviderHasNoKeyError } from '../lib/core/provider/ProviderHasNoKeyError';
 
-export class IocInjector extends Injector {
-    clone(): IInjector {
-        return new IocInjector();
-    }
-
-    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
-        return resolve(container)(value, ...args);
-    }
-}
+const injector: IInjector = {
+    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+        return resolve(container)(value, ...deps);
+    },
+};
 
 @forKey('logger')
 class Logger {
@@ -30,7 +25,7 @@ class Logger {
 
 describe('IocContainer', function () {
     function createContainer() {
-        return new Container(new IocInjector());
+        return new Container(injector);
     }
 
     it('should resolve dependency', function () {
@@ -49,14 +44,6 @@ describe('IocContainer', function () {
         const container = createContainer();
 
         expect(() => container.register(ProviderBuilder.fromValue(5).build())).toThrow(ProviderHasNoKeyError);
-    });
-
-    it('should dispose all providers', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
-
-        container.dispose();
-
-        expect(container.getProviders().length).toBe(0);
     });
 
     it('should keep all instances', function () {

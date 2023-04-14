@@ -1,16 +1,12 @@
 import 'reflect-metadata';
-import { asSingleton, constructor, Container, forKey, IContainer, IInjector, Injector, ProviderBuilder } from '../lib';
+import { asSingleton, constructor, Container, forKey, IContainer, IInjector, ProviderBuilder } from '../lib';
 import { resolve } from 'ts-constructor-injector';
 
-export class IocInjector extends Injector {
-    clone(): IInjector {
-        return new IocInjector();
-    }
-
-    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
-        return resolve(container)(value, ...args);
-    }
-}
+const injector: IInjector = {
+    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+        return resolve(container)(value, ...deps);
+    },
+};
 
 @asSingleton
 @forKey('logger')
@@ -18,7 +14,7 @@ class Logger {}
 
 describe('Singleton', function () {
     function createContainer() {
-        return new Container(new IocInjector());
+        return new Container(injector);
     }
 
     it('should resolve the same container per every request', function () {
