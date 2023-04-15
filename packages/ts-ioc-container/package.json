@@ -10,9 +10,11 @@
   "types": "esm/index.d.ts",
   "module": "esm/index.js",
   "keywords": [
+    "dependency-injection",
+    "inversion-of-control",
+    "container",
     "typescript",
     "ioc",
-    "service-locator",
     "di"
   ],
   "directories": {
