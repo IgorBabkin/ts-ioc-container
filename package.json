@@ -16,7 +16,7 @@
     "build": "lerna run build --stream",
     "pre-commit": " ",
     "commit-msg": "echo 'skipped'",
-    "release": "yarn test && yarn build && lerna publish --ignore-prepublish"
+    "release": "yarn build && yarn test && lerna publish --ignore-prepublish"
   },
   "config": {
     "commitizen": {
