@@ -22,4 +22,18 @@ describe('Singleton', function () {
 
         expect(container.resolve('logger')).toBe(container.resolve('logger'));
     });
+
+    it('should resolve different dependency per scope', function () {
+        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const child = container.createScope();
+
+        expect(container.resolve('logger')).not.toBe(child.resolve('logger'));
+    });
+
+    it('should resolve the same dependency for scope', function () {
+        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const child = container.createScope();
+
+        expect(child.resolve('logger')).toBe(child.resolve('logger'));
+    });
 });
