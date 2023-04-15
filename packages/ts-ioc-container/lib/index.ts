@@ -1,35 +1,64 @@
-import { IContainer, InjectionToken } from './core/container/IContainer';
+import { IContainer, InjectionToken } from './container/IContainer';
+import { ProviderKey, ResolveDependency, Tag } from './provider/IProvider';
+import { Provider } from './provider/Provider';
+import { RegistrationReflector } from './registration/RegistrationReflector';
+import { constructor } from './utils/types';
+import { RegistrationBuilder } from './registration/RegistrationBuilder';
 
-export { ProviderReducer } from './core/provider/IProviderReflector';
-export { IContainer, Resolveable } from './core/container/IContainer';
-export { EmptyContainer } from './core/container/EmptyContainer';
-export { constructor } from './core/utils/types';
-export { Container } from './core/container/Container';
-export { Tagged, ResolveDependency, Tag, IProvider } from './core/provider/IProvider';
-export { IInjector } from './core/IInjector';
-export { IMethodReflector } from './hooks/IMethodReflector';
+export { IContainer, Resolveable } from './container/IContainer';
+export { EmptyContainer } from './container/EmptyContainer';
+export { constructor } from './utils/types';
+export { Container } from './container/Container';
+export { Tagged, ResolveDependency, Tag, IProvider } from './provider/IProvider';
+export { IInjector } from './IInjector';
 export { MethodReflector } from './hooks/MethodReflector';
 export { AsyncMethodReflector } from './hooks/AsyncMethodReflector';
-export { InjectionToken } from './core/container/IContainer';
-export { ProviderNotFoundError } from './core/provider/ProviderNotFoundError';
-export { MethodNotImplementedError } from './core/utils/MethodNotImplementedError';
-export { ContainerDisposedError } from './core/container/ContainerDisposedError';
-export { Provider } from './core/provider/Provider';
-export { ArgsProvider, ArgsFn, createArgsFnDecorator } from './providers/ArgsProvider';
-export { TaggedProvider } from './providers/TaggedProvider';
-export { AutoMockedContainer } from './AutoMockedContainer';
-export { SingletonProvider } from './providers/SingletonProvider';
-export { fromFn, fromClass, fromValue } from './providers/RegistrationBuilder';
-export { IProviderReflector } from './core/provider/IProviderReflector';
-export { ProviderReflector } from './core/provider/ProviderReflector';
-export { Disposable } from './core/utils/types';
-export { ProviderKey } from './core/provider/IProvider';
-export { isProviderKey } from './core/provider/IProvider';
-export { perTags } from './providers/TaggedProvider';
-export { asSingleton } from './providers/SingletonProvider';
-export { forKey } from './core/provider/Provider';
+export { InjectionToken } from './container/IContainer';
+export { ProviderNotFoundError } from './provider/ProviderNotFoundError';
+export { MethodNotImplementedError } from './utils/MethodNotImplementedError';
+export { ContainerDisposedError } from './container/ContainerDisposedError';
+export { Provider } from './provider/Provider';
+export { ArgsFn } from './provider/ArgsProvider';
+export { AutoMockedContainer } from './container/AutoMockedContainer';
+export { Disposable } from './utils/types';
+export { ProviderKey } from './provider/IProvider';
+export { isProviderKey } from './provider/IProvider';
 
 export const by =
     <T>(key: InjectionToken<T>, ...args: unknown[]) =>
     (l: IContainer) =>
         l.resolve<T>(key, ...args);
+
+export function fromClass<T>(value: constructor<T>): RegistrationBuilder<T> {
+    return new RegistrationBuilder(Provider.fromClass(value)).map(providerReflector.findReducerOrCreate(value));
+}
+
+export function fromValue<T>(value: T): RegistrationBuilder<T> {
+    return new RegistrationBuilder(Provider.fromValue(value));
+}
+
+export function fromFn<T>(fn: ResolveDependency<T>): RegistrationBuilder<T> {
+    return new RegistrationBuilder(new Provider(fn));
+}
+
+const providerReflector = new RegistrationReflector('registrationMapper');
+
+export const perTags =
+    (...tags: Tag[]): ClassDecorator =>
+    (target) => {
+        const targetClass = target as any as constructor<unknown>;
+        const fn = providerReflector.findReducerOrCreate(targetClass);
+        providerReflector.addReducer(targetClass, (builder) => fn(builder).perTags(...tags));
+    };
+export const asSingleton: ClassDecorator = (target) => {
+    const targetClass = target as any as constructor<unknown>;
+    const fn = providerReflector.findReducerOrCreate(targetClass);
+    providerReflector.addReducer(targetClass, (builder) => fn(builder).asSingleton());
+};
+export const forKey =
+    (key: ProviderKey): ClassDecorator =>
+    (target) => {
+        const targetClass = target as any as constructor<unknown>;
+        const fn = providerReflector.findReducerOrCreate(targetClass);
+        providerReflector.addReducer(targetClass, (builder) => fn(builder).forKey(key));
+    };

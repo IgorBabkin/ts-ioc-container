@@ -1,9 +1,10 @@
-import { IContainer, InjectionToken, Registration } from './IContainer';
+import { IContainer, InjectionToken } from './IContainer';
 import { IInjector } from '../IInjector';
 import { IProvider, isProviderKey, Tagged, Tag, ProviderKey } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
+import { Registration } from '../registration/Registration';
 
 export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();

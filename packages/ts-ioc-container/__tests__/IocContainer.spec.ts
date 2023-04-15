@@ -11,7 +11,7 @@ import {
     ProviderNotFoundError,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
-import { ProviderHasNoKeyError } from '../lib/core/provider/ProviderHasNoKeyError';
+import { ProviderHasNoKeyError } from '../lib/provider/ProviderHasNoKeyError';
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {

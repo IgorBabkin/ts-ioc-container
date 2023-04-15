@@ -1,6 +1,4 @@
-import { IMethodReflector } from './IMethodReflector';
-
-export class MethodReflector implements IMethodReflector {
+export class MethodReflector {
     constructor(readonly hookKey: string | symbol) {}
 
     // eslint-disable-next-line @typescript-eslint/ban-types

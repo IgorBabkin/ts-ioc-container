@@ -1,0 +1,49 @@
+import { IProvider, ProviderKey, Tag } from '../provider/IProvider';
+import { SingletonProvider } from '../provider/SingletonProvider';
+import { TaggedProvider } from '../provider/TaggedProvider';
+import { ArgsFn, ArgsProvider } from '../provider/ArgsProvider';
+import { ProviderHasNoKeyError } from '../provider/ProviderHasNoKeyError';
+import { MapFn } from '../utils/types';
+import { Registration } from './Registration';
+
+export class RegistrationBuilder<T = unknown> {
+    private key?: ProviderKey;
+
+    constructor(private provider: IProvider<T>) {}
+
+    withArgs(...extraArgs: any[]): this {
+        this.provider = new ArgsProvider(this.provider, () => extraArgs);
+        return this;
+    }
+
+    withArgsFn(argsFn: ArgsFn): this {
+        this.provider = new ArgsProvider(this.provider, argsFn);
+        return this;
+    }
+
+    map(reducer: MapFn<RegistrationBuilder<T>>): RegistrationBuilder<T> {
+        return reducer(this);
+    }
+
+    perTags(...tags: Tag[]): this {
+        this.provider = new TaggedProvider(this.provider, tags);
+        return this;
+    }
+
+    asSingleton(): this {
+        this.provider = new SingletonProvider(this.provider);
+        return this;
+    }
+
+    forKey(key: ProviderKey): this {
+        this.key = key;
+        return this;
+    }
+
+    build(): Registration<T> {
+        if (!this.key) {
+            throw new ProviderHasNoKeyError('Pls provide registration keys for current provider');
+        }
+        return { key: this.key, provider: this.provider };
+    }
+}

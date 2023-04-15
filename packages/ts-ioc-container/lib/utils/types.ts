@@ -7,3 +7,5 @@ export class Box<T> {
 export interface Disposable {
     dispose(): void;
 }
+
+export type MapFn<T> = (value: T) => T;
