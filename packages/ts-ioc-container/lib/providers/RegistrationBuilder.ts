@@ -1,4 +1,4 @@
-import { IProvider, ProviderKey, Tag } from '../core/provider/IProvider';
+import { IProvider, ProviderKey, ResolveDependency, Tag } from '../core/provider/IProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { ProviderReducer } from '../core/provider/IProviderReflector';
@@ -9,19 +9,7 @@ import { providerReflector } from '../core/provider/ProviderReflector';
 import { Registration } from '../core/container/IContainer';
 import { ProviderHasNoKeyError } from '../core/provider/ProviderHasNoKeyError';
 
-export class ProviderBuilder<T> {
-    static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
-        return new ProviderBuilder(Provider.fromClass(value)).map(providerReflector.findReducerOrCreate(value));
-    }
-
-    static fromValue<T>(value: T): ProviderBuilder<T> {
-        return new ProviderBuilder(Provider.fromValue(value));
-    }
-
-    static fromFn<T>(fn: (...args: any[]) => T): ProviderBuilder<T> {
-        return new ProviderBuilder(new Provider(fn));
-    }
-
+export class RegistrationBuilder<T> {
     private key?: ProviderKey;
 
     constructor(private provider: IProvider<T>) {}
@@ -36,7 +24,7 @@ export class ProviderBuilder<T> {
         return this;
     }
 
-    map(reducer: ProviderReducer<T>): ProviderBuilder<T> {
+    map(reducer: ProviderReducer<T>): RegistrationBuilder<T> {
         return reducer(this);
     }
 
@@ -61,4 +49,16 @@ export class ProviderBuilder<T> {
         }
         return { key: this.key, provider: this.provider };
     }
+}
+
+export function fromClass<T>(value: constructor<T>): RegistrationBuilder<T> {
+    return new RegistrationBuilder(Provider.fromClass(value)).map(providerReflector.findReducerOrCreate(value));
+}
+
+export function fromValue<T>(value: T): RegistrationBuilder<T> {
+    return new RegistrationBuilder(Provider.fromValue(value));
+}
+
+export function fromFn<T>(fn: ResolveDependency<T>): RegistrationBuilder<T> {
+    return new RegistrationBuilder(new Provider(fn));
 }

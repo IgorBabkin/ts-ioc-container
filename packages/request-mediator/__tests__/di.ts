@@ -2,10 +2,10 @@ import {
     asSingleton,
     constructor,
     Container,
+    fromValue,
     IContainer,
     IInjector,
     perTags,
-    ProviderBuilder,
     Resolveable,
 } from 'ts-ioc-container';
 import { composeDecorators, resolve } from 'ts-constructor-injector';
@@ -40,7 +40,7 @@ export class ContainerAdapter implements IDependencyContainer {
     }
 
     registerValue(key: string | symbol, value: unknown): void {
-        this.container.register(ProviderBuilder.fromValue(value).forKey(key).build());
+        this.container.register(fromValue(value).forKey(key).build());
     }
 
     resolve<T>(key: constructor<T> | symbol): T {

@@ -1,7 +1,7 @@
 import { constructor } from '../utils/types';
-import { ProviderBuilder } from '../../providers/ProviderBuilder';
+import { RegistrationBuilder } from '../../providers/RegistrationBuilder';
 
-export type ProviderReducer<T> = (builder: ProviderBuilder<T>) => ProviderBuilder<T>;
+export type ProviderReducer<T> = (builder: RegistrationBuilder<T>) => RegistrationBuilder<T>;
 
 export interface IProviderReflector {
     addReducer<T>(target: constructor<T>, reducer: ProviderReducer<T>): void;

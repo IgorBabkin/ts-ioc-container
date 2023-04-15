@@ -4,9 +4,10 @@ import {
     Container,
     ContainerDisposedError,
     forKey,
+    fromClass,
+    fromValue,
     IContainer,
     IInjector,
-    ProviderBuilder,
     ProviderNotFoundError,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
@@ -29,13 +30,13 @@ describe('IocContainer', function () {
     }
 
     it('should resolve dependency', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
 
         expect(container.resolve('logger')).toBeInstanceOf(Logger);
     });
 
     it('should resolve unique dependency per every request', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
 
         expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
     });
@@ -43,11 +44,11 @@ describe('IocContainer', function () {
     it('should throws an error if provider key is not defined', function () {
         const container = createContainer();
 
-        expect(() => container.register(ProviderBuilder.fromValue(5).build())).toThrow(ProviderHasNoKeyError);
+        expect(() => container.register(fromValue(5).build())).toThrow(ProviderHasNoKeyError);
     });
 
     it('should keep all instances', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
 
         const logger = container.resolve<Logger>('logger');
 
@@ -55,7 +56,7 @@ describe('IocContainer', function () {
     });
 
     it('should dispose all instances', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
 
         container.resolve('logger');
         container.dispose();
@@ -70,7 +71,7 @@ describe('IocContainer', function () {
     });
 
     it('should throw an error when trying to resolve a dependency of disposed container', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
 
         container.dispose();
 
@@ -82,13 +83,11 @@ describe('IocContainer', function () {
 
         container.dispose();
 
-        expect(() => container.register(ProviderBuilder.fromClass(Logger).build())).toThrowError(
-            ContainerDisposedError,
-        );
+        expect(() => container.register(fromClass(Logger).build())).toThrowError(ContainerDisposedError);
     });
 
     it('should keep argument for provider', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).withArgs('main').build());
+        const container = createContainer().register(fromClass(Logger).withArgs('main').build());
 
         expect(container.resolve<Logger>('logger').topic).toBe('main');
     });

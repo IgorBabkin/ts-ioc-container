@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { asSingleton, constructor, Container, forKey, IContainer, IInjector, ProviderBuilder } from '../lib';
+import { asSingleton, constructor, Container, forKey, fromClass, IContainer, IInjector } from '../lib';
 import { resolve } from 'ts-constructor-injector';
 
 const injector: IInjector = {
@@ -18,20 +18,20 @@ describe('Singleton', function () {
     }
 
     it('should resolve the same container per every request', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
 
         expect(container.resolve('logger')).toBe(container.resolve('logger'));
     });
 
     it('should resolve different dependency per scope', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
         const child = container.createScope();
 
         expect(container.resolve('logger')).not.toBe(child.resolve('logger'));
     });
 
     it('should resolve the same dependency for scope', function () {
-        const container = createContainer().register(ProviderBuilder.fromClass(Logger).build());
+        const container = createContainer().register(fromClass(Logger).build());
         const child = container.createScope();
 
         expect(child.resolve('logger')).toBe(child.resolve('logger'));

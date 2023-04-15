@@ -5,10 +5,10 @@ import {
     Container,
     ContainerDisposedError,
     forKey,
+    fromClass,
     IContainer,
     IInjector,
     perTags,
-    ProviderBuilder,
 } from '../lib';
 import { composeDecorators, resolve } from 'ts-constructor-injector';
 
@@ -26,9 +26,7 @@ class Logger {}
 
 describe('Singleton', function () {
     it('should resolve the same dependency if provider registered per root', function () {
-        const container = new Container(injector, { tags: ['home'] }).register(
-            ProviderBuilder.fromClass(Logger).build(),
-        );
+        const container = new Container(injector, { tags: ['home'] }).register(fromClass(Logger).build());
 
         const child1 = container.createScope();
         const child2 = container.createScope();
@@ -37,7 +35,7 @@ describe('Singleton', function () {
     });
 
     it('should resolve unique dependency for every registered scope', function () {
-        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
+        const container = new Container(injector).register(fromClass(Logger).build());
 
         const child1 = container.createScope(['home']);
         const child2 = container.createScope(['home']);
@@ -46,9 +44,7 @@ describe('Singleton', function () {
     });
 
     it('should resolve unique dependency if registered scope has another registered scope', function () {
-        const container = new Container(injector, { tags: ['home'] }).register(
-            ProviderBuilder.fromClass(Logger).build(),
-        );
+        const container = new Container(injector, { tags: ['home'] }).register(fromClass(Logger).build());
 
         const child1 = container.createScope(['home']);
 
@@ -56,7 +52,7 @@ describe('Singleton', function () {
     });
 
     it('should dispose all scopes', function () {
-        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
+        const container = new Container(injector).register(fromClass(Logger).build());
 
         const child1 = container.createScope(['home']);
         const child2 = container.createScope(['home']);
@@ -71,7 +67,7 @@ describe('Singleton', function () {
     });
 
     it('should collect instances from all scopes', function () {
-        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
+        const container = new Container(injector).register(fromClass(Logger).build());
 
         const childScope1 = container.createScope(['home']);
         const childScope2 = container.createScope(['home']);
@@ -85,7 +81,7 @@ describe('Singleton', function () {
     });
 
     it('should clear all instances on dispose', function () {
-        const container = new Container(injector).register(ProviderBuilder.fromClass(Logger).build());
+        const container = new Container(injector).register(fromClass(Logger).build());
 
         const child1 = container.createScope(['home']);
         const child2 = container.createScope(['home']);

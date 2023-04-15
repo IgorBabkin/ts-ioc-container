@@ -19,7 +19,7 @@ export { ArgsProvider, ArgsFn, createArgsFnDecorator } from './providers/ArgsPro
 export { TaggedProvider } from './providers/TaggedProvider';
 export { AutoMockedContainer } from './AutoMockedContainer';
 export { SingletonProvider } from './providers/SingletonProvider';
-export { ProviderBuilder } from './providers/ProviderBuilder';
+export { fromFn, fromClass, fromValue } from './providers/RegistrationBuilder';
 export { IProviderReflector } from './core/provider/IProviderReflector';
 export { ProviderReflector } from './core/provider/ProviderReflector';
 export { Disposable } from './core/utils/types';

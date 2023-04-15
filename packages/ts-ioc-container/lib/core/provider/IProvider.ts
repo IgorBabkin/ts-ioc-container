@@ -1,7 +1,7 @@
 import { InjectionToken, Resolveable } from '../container/IContainer';
 import { Disposable } from '../utils/types';
 
-export type ResolveDependency<T> = (container: Resolveable, ...args: any[]) => T;
+export type ResolveDependency<T> = (container: Resolveable, ...args: unknown[]) => T;
 
 export type Tag = string;
 
@@ -12,7 +12,7 @@ export interface Tagged {
 export interface IProvider<T> extends Disposable {
     clone(): IProvider<T>;
 
-    resolve(container: Resolveable, ...args: any[]): T;
+    resolve(container: Resolveable, ...args: unknown[]): T;
 
     isValid(filters: Tagged): boolean;
 }
