@@ -4,7 +4,7 @@ import { Resolveable } from '../container/IContainer';
 
 export class Provider<T> implements IProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
-        return new Provider((l, ...args) => l.resolve(value, ...args));
+        return new Provider((container, ...args) => container.resolve(value, ...args));
     }
 
     static fromValue<T>(value: T): Provider<T> {
