@@ -122,13 +122,13 @@ for (const instance of container.getInstances()) {
 }
 ```
 
-## Scoped locators
+## Scoped containers
 
-- levels - every scope has level (0, 1, 2, 3). 0 is root. And register provider per level.
 - tags - you can add tag to scope and root container. And register provider per tag.
 
 ```typescript
-const scope = container.createScope(['tag1', 'tag2']);
+const container = new Container(injector, {tags: ['root']});
+const scope = container.createScope(['home', 'child']);
 const logger = scope.resolve('ILogger');
 scope.dispose();
 ```
