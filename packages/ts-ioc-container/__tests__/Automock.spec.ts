@@ -1,15 +1,5 @@
 import 'reflect-metadata';
-import {
-    AutoMockedContainer,
-    by,
-    constructor,
-    Container,
-    EmptyContainer,
-    IContainer,
-    IInjector,
-    IMockRepository,
-    ProviderKey,
-} from '../lib';
+import { AutoMockedContainer, by, constructor, Container, IContainer, IInjector, ProviderKey } from '../lib';
 import { inject, resolve } from 'ts-constructor-injector';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
@@ -60,7 +50,7 @@ export function createMock<T>(): IMock<T> {
     return mock;
 }
 
-export class MoqRepository implements IMockRepository {
+export class MoqContainer extends AutoMockedContainer {
     private mocks = new Map<ProviderKey, IMock<any>>();
 
     resolve<T>(key: ProviderKey): T {
@@ -80,16 +70,16 @@ export class MoqRepository implements IMockRepository {
 }
 
 describe('Automock', function () {
-    let mockRepo: MoqRepository;
+    let mockContainer: MoqContainer;
     let logsRepoMock: IMock<ILogsRepo>;
 
     beforeEach(function () {
-        mockRepo = new MoqRepository();
-        logsRepoMock = mockRepo.resolveMock(ILogsRepoKey);
+        mockContainer = new MoqContainer();
+        logsRepoMock = mockContainer.resolveMock(ILogsRepoKey);
     });
 
     function createContainer() {
-        return new Container(injector, { parent: new AutoMockedContainer(new EmptyContainer(), mockRepo) });
+        return new Container(injector, { parent: mockContainer });
     }
 
     it('should automock all non defined dependencies', async function () {

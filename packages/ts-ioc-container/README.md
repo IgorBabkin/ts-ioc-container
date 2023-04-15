@@ -137,12 +137,12 @@ scope.dispose();
 
 ```typescript
 import {
-  IMockRepository,
+  AutoMockedContainer,
   Container,
 } from "ts-ioc-container";
 import { Mock } from "moq.ts";
 
-export class MoqRepository implements IMockRepository {
+export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<ProviderKey, IMock<any>>();
 
   resolve<T>(key: ProviderKey): T {
@@ -162,10 +162,10 @@ export class MoqRepository implements IMockRepository {
 }
 
 describe('test', () => {
-  const mockRepository = new MoqRepository();
-  const container = new Container(injector).map((l) => new AutoMockedContainer(l, mockRepository));
+  const mockContainer = new MoqContainer();
+  const container = new Container(injector, { parent: mockContainer });
 
-  const engineMock = mockRepository.resolveMock<IEngine>('IEngine');
+  const engineMock = mockContainer.resolveMock<IEngine>('IEngine');
   engineMock.setup(i => i.getRegistrationNumber()).return('123');
 
   const engine = container.resolve<IEngine>('IEngine');

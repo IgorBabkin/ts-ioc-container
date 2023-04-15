@@ -17,8 +17,7 @@ export { ContainerDisposedError } from './core/container/ContainerDisposedError'
 export { Provider } from './core/provider/Provider';
 export { ArgsProvider, ArgsFn, createArgsFnDecorator } from './providers/ArgsProvider';
 export { TaggedProvider } from './providers/TaggedProvider';
-export { IMockRepository } from './automock/IMockRepository';
-export { AutoMockedContainer } from './automock/AutoMockedContainer';
+export { AutoMockedContainer } from './AutoMockedContainer';
 export { SingletonProvider } from './providers/SingletonProvider';
 export { ProviderBuilder } from './providers/ProviderBuilder';
 export { IProviderReflector } from './core/provider/IProviderReflector';

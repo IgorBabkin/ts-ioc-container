@@ -4,7 +4,6 @@ import {
     Container,
     IContainer,
     IInjector,
-    Injector,
     perTags,
     ProviderBuilder,
     Resolveable,
@@ -14,21 +13,19 @@ import { AsyncMethodReflector, IDependencyContainer, Scope } from '../lib';
 
 const onDisposeReflector = new AsyncMethodReflector('onDispose');
 export const onDispose = onDisposeReflector.createMethodHookDecorator();
-export class IocInjector extends Injector {
-    protected resolver<T>(container: IContainer, value: constructor<T>, ...args: any[]): T {
-        return resolve(container)(value, ...args);
-    }
-    clone(): IInjector {
-        return new IocInjector();
-    }
-}
+
+const injector: IInjector = {
+    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+        return resolve(container)(value, ...deps);
+    },
+};
 
 export const perApplication = composeDecorators(perTags(Scope.Application), asSingleton);
 export const perRequest = composeDecorators(perTags(Scope.Request), asSingleton);
 export const perUseCase = composeDecorators(perTags(Scope.UseCase), asSingleton);
 
 export function createContainer(): IContainer {
-    return new Container(new IocInjector(), { tags: [Scope.Application] });
+    return new Container(injector, { tags: [Scope.Application] });
 }
 
 export class ContainerAdapter implements IDependencyContainer {
