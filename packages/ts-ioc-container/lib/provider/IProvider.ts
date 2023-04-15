@@ -9,7 +9,7 @@ export interface Tagged {
     readonly tags: Tag[];
 }
 
-export interface IProvider<T> extends Disposable {
+export interface IProvider<T = unknown> extends Disposable {
     clone(): IProvider<T>;
 
     resolve(container: Resolveable, ...args: unknown[]): T;

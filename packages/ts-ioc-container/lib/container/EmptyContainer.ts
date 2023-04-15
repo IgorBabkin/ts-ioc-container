@@ -20,7 +20,7 @@ export class EmptyContainer implements IContainer {
         throw new ProviderNotFoundError(`Cannot find ${key.toString()}`);
     }
 
-    getProviders(): Map<ProviderKey, IProvider<unknown>> {
+    getProviders(): Map<ProviderKey, IProvider> {
         return new Map();
     }
 

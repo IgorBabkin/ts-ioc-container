@@ -1,6 +1,6 @@
 import { IContainer, InjectionToken } from './IContainer';
 import { IInjector } from '../IInjector';
-import { IProvider, isProviderKey, Tagged, Tag, ProviderKey } from '../provider/IProvider';
+import { IProvider, isProviderKey, ProviderKey, Tag, Tagged } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
@@ -19,7 +19,7 @@ export class Container implements IContainer, Tagged {
         this.tags = options.tags ?? [];
     }
 
-    register({ key, provider }: Registration<unknown>): this {
+    register({ key, provider }: Registration): this {
         this.validateContainer();
         this.providers.add(key, provider);
         return this;
@@ -63,7 +63,7 @@ export class Container implements IContainer, Tagged {
         this.instances.clear();
     }
 
-    getProviders(): Map<ProviderKey, IProvider<unknown>> {
+    getProviders(): Map<ProviderKey, IProvider> {
         return this.providers.merge(this.parent.getProviders());
     }
 

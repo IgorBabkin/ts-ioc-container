@@ -9,7 +9,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
     abstract dispose(): void;
 
-    getProviders(): Map<ProviderKey, IProvider<unknown>> {
+    getProviders(): Map<ProviderKey, IProvider> {
         return new Map();
     }
 
