@@ -91,4 +91,9 @@ describe('Automock', function () {
 
         logsRepoMock.verify((x) => x.saveLogs(It.IsAny()), Times.Once());
     });
+
+    it('should not throw an error on dispose', function () {
+        const container = createContainer();
+        expect(() => container.dispose()).not.toThrowError();
+    });
 });

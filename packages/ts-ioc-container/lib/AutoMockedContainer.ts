@@ -21,7 +21,5 @@ export abstract class AutoMockedContainer implements IContainer {
         return [];
     }
 
-    removeScope(): void {
-        throw new MethodNotImplementedError();
-    }
+    removeScope(): void {}
 }
