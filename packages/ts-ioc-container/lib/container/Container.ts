@@ -25,7 +25,7 @@ export class Container implements IContainer, Tagged {
         return this;
     }
 
-    resolve<T>(key: InjectionToken<T>, ...args: any[]): T {
+    resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T {
         this.validateContainer();
         if (isProviderKey(key)) {
             const provider = this.providers.get<T>(key);
