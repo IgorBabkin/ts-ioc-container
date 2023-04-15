@@ -18,9 +18,9 @@ export class Container implements IContainer, Tagged {
         this.tags = options.tags ?? [];
     }
 
-    register({ key, value }: Registration<unknown>): this {
+    register({ key, provider }: Registration<unknown>): this {
         this.validateContainer();
-        this.providers.add(key, value);
+        this.providers.add(key, provider);
         return this;
     }
 
@@ -42,7 +42,7 @@ export class Container implements IContainer, Tagged {
 
         for (const [key, provider] of this.getProviders().entries()) {
             if (provider.isValid(scope)) {
-                scope.register({ key, value: provider.clone() });
+                scope.register({ key, provider: provider.clone() });
             }
         }
 

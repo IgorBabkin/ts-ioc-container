@@ -9,7 +9,7 @@ export interface Resolveable {
 
 export interface Registration<T> {
     key: ProviderKey;
-    value: IProvider<T>;
+    provider: IProvider<T>;
 }
 
 export interface IContainer extends Disposable, Resolveable {

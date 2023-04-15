@@ -59,6 +59,6 @@ export class ProviderBuilder<T> {
         if (!this.key) {
             throw new ProviderHasNoKeyError('Pls provide registration keys for current provider');
         }
-        return { key: this.key, value: this.provider };
+        return { key: this.key, provider: this.provider };
     }
 }
