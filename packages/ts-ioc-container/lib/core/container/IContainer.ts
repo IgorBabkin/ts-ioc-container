@@ -8,7 +8,7 @@ export interface Resolveable {
 }
 
 export interface IContainer extends Disposable, Resolveable {
-    createScope(tags?: Tag[], parent?: IContainer): IContainer;
+    createScope(tags?: Tag[]): IContainer;
 
     register(provider: IProvider<unknown>): this;
 
