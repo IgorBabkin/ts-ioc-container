@@ -6,6 +6,8 @@ import { ArgsFn, ArgsProvider } from './ArgsProvider';
 import { Provider } from '../core/provider/Provider';
 import { constructor } from '../core/utils/types';
 import { providerReflector } from '../core/provider/ProviderReflector';
+import { Registration } from '../core/container/IContainer';
+import { ProviderHasNoKeyError } from '../core/provider/ProviderHasNoKeyError';
 
 export class ProviderBuilder<T> {
     static fromClass<T>(value: constructor<T>): ProviderBuilder<T> {
@@ -19,6 +21,8 @@ export class ProviderBuilder<T> {
     static fromFn<T>(fn: (...args: any[]) => T): ProviderBuilder<T> {
         return new ProviderBuilder(new Provider(fn));
     }
+
+    private key?: ProviderKey;
 
     constructor(private provider: IProvider<T>) {}
 
@@ -36,7 +40,7 @@ export class ProviderBuilder<T> {
         return reducer(this);
     }
 
-    forTags(...tags: Tag[]): this {
+    perTags(...tags: Tag[]): this {
         this.provider = new TaggedProvider(this.provider, tags);
         return this;
     }
@@ -47,11 +51,14 @@ export class ProviderBuilder<T> {
     }
 
     forKey(key: ProviderKey): this {
-        this.provider.setKey(key);
+        this.key = key;
         return this;
     }
 
-    build(): IProvider<T> {
-        return this.provider;
+    build(): Registration<T> {
+        if (!this.key) {
+            throw new ProviderHasNoKeyError('Pls provide registration keys for current provider');
+        }
+        return { key: this.key, value: this.provider };
     }
 }

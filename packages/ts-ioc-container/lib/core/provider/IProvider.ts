@@ -10,8 +10,6 @@ export interface Tagged {
 }
 
 export interface IProvider<T> extends Disposable {
-    setKey(key: ProviderKey): this;
-    getKeyOrFail(): ProviderKey;
     clone(): IProvider<T>;
 
     resolve(container: Resolveable, ...args: any[]): T;

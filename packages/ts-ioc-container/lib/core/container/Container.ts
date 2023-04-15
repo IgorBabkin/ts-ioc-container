@@ -1,6 +1,6 @@
-import { IContainer, InjectionToken } from './IContainer';
+import { IContainer, InjectionToken, Registration } from './IContainer';
 import { IInjector } from '../IInjector';
-import { IProvider, isProviderKey, Tagged, Tag } from '../provider/IProvider';
+import { IProvider, isProviderKey, Tagged, Tag, ProviderKey } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
@@ -18,9 +18,9 @@ export class Container implements IContainer, Tagged {
         this.tags = options.tags ?? [];
     }
 
-    register(provider: IProvider<unknown>): this {
+    register({ key, value }: Registration<unknown>): this {
         this.validateContainer();
-        this.providers.add(provider);
+        this.providers.add(key, value);
         return this;
     }
 
@@ -40,8 +40,10 @@ export class Container implements IContainer, Tagged {
         this.validateContainer();
         const scope = new Container(this.injector, { parent: this, tags });
 
-        for (const provider of this.getProviders().filter((p) => p.isValid(scope))) {
-            scope.register(provider.clone());
+        for (const [key, provider] of this.getProviders().entries()) {
+            if (provider.isValid(scope)) {
+                scope.register({ key, value: provider.clone() });
+            }
         }
 
         this.children.add(scope);
@@ -60,7 +62,7 @@ export class Container implements IContainer, Tagged {
         this.instances.clear();
     }
 
-    getProviders(): IProvider<unknown>[] {
+    getProviders(): Map<ProviderKey, IProvider<unknown>> {
         return this.providers.merge(this.parent.getProviders());
     }
 

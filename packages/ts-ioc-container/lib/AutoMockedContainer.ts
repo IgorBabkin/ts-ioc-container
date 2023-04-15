@@ -1,4 +1,4 @@
-import { IContainer, InjectionToken, IProvider, MethodNotImplementedError } from './index';
+import { IContainer, InjectionToken, IProvider, MethodNotImplementedError, ProviderKey } from './index';
 
 export abstract class AutoMockedContainer implements IContainer {
     createScope(): IContainer {
@@ -9,8 +9,8 @@ export abstract class AutoMockedContainer implements IContainer {
 
     abstract dispose(): void;
 
-    getProviders(): IProvider<unknown>[] {
-        return [];
+    getProviders(): Map<ProviderKey, IProvider<unknown>> {
+        return new Map();
     }
 
     register(): this {

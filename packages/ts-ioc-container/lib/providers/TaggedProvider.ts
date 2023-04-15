@@ -23,5 +23,5 @@ export const perTags =
     (target) => {
         const targetClass = target as any as constructor<unknown>;
         const fn = providerReflector.findReducerOrCreate(targetClass);
-        providerReflector.addReducer(targetClass, (builder) => fn(builder).forTags(...tags));
+        providerReflector.addReducer(targetClass, (builder) => fn(builder).perTags(...tags));
     };

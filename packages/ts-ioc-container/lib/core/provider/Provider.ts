@@ -17,16 +17,8 @@ export class Provider<T> implements IProvider<T> {
 
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
-    setKey(key: ProviderKey): this {
-        this.key = key;
-        return this;
-    }
-
     clone(): Provider<T> {
-        if (!this.key) {
-            throw new ProviderHasNoKeyError('Pls provide registration keys for current provider');
-        }
-        return new Provider(this.resolveDependency).setKey(this.key);
+        return new Provider(this.resolveDependency);
     }
 
     resolve(container: Resolveable, ...args: any[]): T {

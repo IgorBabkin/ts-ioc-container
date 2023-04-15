@@ -3,8 +3,8 @@ import { IProvider, ProviderKey } from './IProvider';
 export class ProviderRepo {
     private readonly providers = new Map<ProviderKey, IProvider<unknown>>();
 
-    add(provider: IProvider<unknown>): this {
-        this.providers.set(provider.getKeyOrFail(), provider);
+    add(key: ProviderKey, provider: IProvider<unknown>): this {
+        this.providers.set(key, provider);
         return this;
     }
 
@@ -12,12 +12,15 @@ export class ProviderRepo {
         return this.providers.get(key) as IProvider<T>;
     }
 
-    merge(providers: IProvider<unknown>[]): IProvider<unknown>[] {
+    merge(providers: Map<ProviderKey, IProvider<unknown>>): Map<ProviderKey, IProvider<unknown>> {
         const map = new Map<ProviderKey, IProvider<unknown>>();
-        for (const p of providers.concat(Array.from(this.providers.values()))) {
-            map.set(p.getKeyOrFail(), p);
+        for (const [key, value] of providers.entries()) {
+            map.set(key, value);
         }
-        return Array.from(map.values());
+        for (const [key, value] of this.providers.entries()) {
+            map.set(key, value);
+        }
+        return map;
     }
 
     dispose(): void {

@@ -1,5 +1,5 @@
 import { Resolveable } from '../container/IContainer';
-import { IProvider, ProviderKey, Tagged } from './IProvider';
+import { IProvider, Tagged } from './IProvider';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
     protected constructor(private decorated: IProvider<T>) {}
@@ -18,14 +18,5 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
 
     resolve(container: Resolveable, ...args: any[]): T {
         return this.decorated.resolve(container, ...args);
-    }
-
-    getKeyOrFail(): ProviderKey {
-        return this.decorated.getKeyOrFail();
-    }
-
-    setKey(key: ProviderKey): this {
-        this.decorated.setKey(key);
-        return this;
     }
 }

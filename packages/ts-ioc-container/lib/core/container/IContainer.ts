@@ -7,12 +7,17 @@ export interface Resolveable {
     resolve<T>(key: InjectionToken<T>, ...args: any[]): T;
 }
 
+export interface Registration<T> {
+    key: ProviderKey;
+    value: IProvider<T>;
+}
+
 export interface IContainer extends Disposable, Resolveable {
     createScope(tags?: Tag[]): IContainer;
 
-    register(provider: IProvider<unknown>): this;
+    register(value: Registration<unknown>): this;
 
-    getProviders(): IProvider<unknown>[];
+    getProviders(): Map<ProviderKey, IProvider<unknown>>;
 
     removeScope(child: IContainer): void;
 
