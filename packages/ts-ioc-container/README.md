@@ -54,13 +54,14 @@ const logger = container.resolve<ILogger>('ILogger');
 ## Registration builder
 
 ```typescript
-import { fromClass, fromFn } from "ts-ioc-container";
+import { fromClass, fromFn, fromValue } from "ts-ioc-container";
 
-const container = new Container(injector, {tags: ['root']});
+const container = new Container(injector, { tags: ['root'] });
 container.register('ILogger', fromFn((container, ...args) => new Logger(...args)).build());
 container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton().forTags(['root']).build()); // global singleton
 container.register('ILogger3', fromClass(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
 container.register('ILogger4', fromClass(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
+container.register('ILogger5', fromValue(new Logger()).build()); // singleton in every scope
 ```
 
 ## Decorators
