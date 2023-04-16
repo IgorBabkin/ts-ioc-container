@@ -68,11 +68,23 @@ container.register('ILogger5', fromValue(new Logger()).build());
 
 ```typescript
 import { asSingleton, perTags, forKey, by } from "ts-ioc-container";
-import { inject } from "ts-constructor-injector";
+import { composeDecorators, inject } from "ts-constructor-injector";
 
 @asSingleton
+@perTags('root')
 @forKey('IEngine')
-@perTags('tag1', 'tag2')
+class Engine {
+  constructor(@inject(by('ILogger')) private logger: ILogger) {
+  }
+}
+
+const perRoot = composeDecorators(
+  asSingleton,
+  perTags('root'),
+);
+
+@perRoot
+@forKey('IEngine')
 class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {
   }
@@ -129,7 +141,35 @@ for (const instance of container.getInstances()) {
 - tags - you can add tag to scope and root container. And register provider per tag.
 
 ```typescript
-const container = new Container(injector, {tags: ['root']});
+import { composeDecorators } from "ts-constructor-injector";
+import { forKey } from "ts-ioc-container";
+
+const perRoot = composeDecorators(
+  asSingleton,
+  perTags('root'),
+);
+
+const perHome = composeDecorators(
+  asSingleton,
+  perTags('home'),
+);
+
+@perRoot
+@forKey('IEngine')
+class Logger {
+}
+
+@perHome
+@forKey('IEngine')
+class Engine {
+  constructor(@inject(by('ILogger')) private logger: ILogger) {
+  }
+}
+
+const container = new Container(injector, { tags: ['root'] })
+  .register('ILogger', fromClass(Logger).build())
+  .register('IEngine', fromClass(Engine).build());
+
 const scope = container.createScope(['home', 'child']);
 const logger = scope.resolve('ILogger');
 scope.dispose();
