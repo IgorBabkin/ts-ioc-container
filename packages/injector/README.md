@@ -59,7 +59,9 @@ class Logger {
   }
 }
 
-const instance = new Logger();
-onConstructReflector.invokeHooksOf(instance); // initialized
-onDisposeReflector.invokeHooksOf(instance); // disposed
+(async () => {
+  const instance = new Logger();
+  onConstructReflector.invokeHooksOf(instance); // initialized
+  await onDisposeReflector.invokeHooksOf(instance); // disposed  
+})()
 ```
