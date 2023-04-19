@@ -34,3 +34,32 @@ class Logger {
 
 const logger = resolve({topic: 'main'})(Logger);
 ```
+
+### Reflectors
+
+```typescript
+import { AsyncMethodReflector, MethodReflector } from "ts-constructor-injector";
+import { onDispose } from "./di";
+
+export const onConstructReflector = new MethodReflector('OnConstructHook');
+export const onConstruct = onConstructReflector.createMethodHookDecorator();
+
+export const onDisposeReflector = new AsyncMethodReflector('OnDisposeHook');
+export const onDispose = onDisposeReflector.createMethodHookDecorator();
+
+class Logger {
+  @onConstruct
+  initialize() {
+    console.log('initialized');
+  }
+
+  @onDispose
+  async dispose(): Promise<void> {
+    console.log('disposed');
+  }
+}
+
+const instance = new Logger();
+onConstructReflector.invokeHooksOf(instance); // initialized
+onDisposeReflector.invokeHooksOf(instance); // disposed
+```
