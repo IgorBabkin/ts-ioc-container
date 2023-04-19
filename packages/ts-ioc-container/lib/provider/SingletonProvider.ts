@@ -1,10 +1,11 @@
 import { Resolveable } from '../container/IContainer';
-import { Box } from '../utils/types';
 import { ProviderDecorator } from './ProviderDecorator';
 import { IProvider } from './IProvider';
 
+type Boxed<T> = { value: T };
+
 export class SingletonProvider<T> extends ProviderDecorator<T> {
-    private instance: Box<T> | null = null;
+    private instance: Boxed<T> | null = null;
 
     constructor(private readonly provider: IProvider<T>) {
         super(provider);
@@ -22,9 +23,9 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     resolve(container: Resolveable, ...args: unknown[]): T {
         if (this.instance === null) {
             const instance = this.provider.resolve(container, ...args);
-            this.instance = new Box<T>(instance);
+            this.instance = { value: instance };
         }
 
-        return this.instance.value as T;
+        return this.instance?.value as T;
     }
 }

@@ -6,14 +6,14 @@
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
 ## Advantages
-- written on typescript
+- written on `typescript`
 - simple and lightweight (roughly it's just one file of **~100 lines**) :heart:
 - clean API
-- supports scopes
+- supports `tagged scopes`
 - fully test covered
 - can be used with decorators `@inject`
 - composable and open to extend
-- awesome for testing (auto mocks)
+- awesome for testing (auto mocking)
 
 ## Install
 ```shell script

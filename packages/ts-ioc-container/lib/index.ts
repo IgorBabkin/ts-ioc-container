@@ -18,7 +18,6 @@ export { ContainerDisposedError } from './container/ContainerDisposedError';
 export { Provider } from './provider/Provider';
 export { ArgsFn } from './provider/ArgsProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
-export { Disposable } from './utils/types';
 export { ProviderKey } from './provider/IProvider';
 export { isProviderKey } from './provider/IProvider';
 
