@@ -11,8 +11,6 @@ export { constructor } from './utils/types';
 export { Container } from './container/Container';
 export { Tagged, ResolveDependency, Tag, IProvider } from './provider/IProvider';
 export { IInjector } from './IInjector';
-export { MethodReflector } from './hooks/MethodReflector';
-export { AsyncMethodReflector } from './hooks/AsyncMethodReflector';
 export { InjectionToken } from './container/IContainer';
 export { ProviderNotFoundError } from './provider/ProviderNotFoundError';
 export { MethodNotImplementedError } from './utils/MethodNotImplementedError';

@@ -95,14 +95,13 @@ class Engine {
 
 ```typescript
 import {
-  MethodReflector,
-  createMethodHookDecorator,
   Container,
   IInjector,
   ContainerHook,
   Injector,
   fromClass
 } from "ts-ioc-container";
+import { MethodReflector } from "ts-constructor-injector";
 
 export const onConstructReflector = new MethodReflector('OnConstructHook');
 export const onConstruct = onConstructReflector.createMethodHookDecorator();

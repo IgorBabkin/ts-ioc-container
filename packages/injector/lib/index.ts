@@ -6,3 +6,5 @@ export { pipe, Fn } from './pipe';
 export { pipeWrite } from './pipeWrite';
 export { constructor, InjectFn, InjectionDecorator, InjectionPropertyDecorator } from './types';
 export { Write, WriteFn } from './writeMonad';
+export { AsyncMethodReflector } from './AsyncMethodReflector';
+export { MethodReflector } from './MethodReflector';

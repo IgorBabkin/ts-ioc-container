@@ -1,17 +1,6 @@
 import 'reflect-metadata';
-import {
-    asSingleton,
-    AsyncMethodReflector,
-    by,
-    constructor,
-    Container,
-    forKey,
-    fromClass,
-    IContainer,
-    IInjector,
-    MethodReflector,
-} from '../lib';
-import { inject, resolve } from 'ts-constructor-injector';
+import { asSingleton, by, constructor, Container, forKey, fromClass, IContainer, IInjector } from '../lib';
+import { AsyncMethodReflector, MethodReflector, inject, resolve } from 'ts-constructor-injector';
 
 const onConstructReflector = new MethodReflector('onConstruct');
 const onConstruct = onConstructReflector.createMethodHookDecorator();
