@@ -9,18 +9,18 @@ describe('AsyncMethodReflector', function () {
         const onDispose = reflector.createMethodHookDecorator();
 
         class Logger {
-            disposed = false;
+            value = '';
 
             @onDispose
-            async dispose() {
+            async dispose(value: string) {
                 await sleep(1000);
-                this.disposed = true;
+                this.value = value;
             }
         }
 
         const logger = new Logger();
-        await reflector.invokeHooksOf(logger);
+        await reflector.invokeHooksOf(logger, 'disposed');
 
-        expect(logger.disposed).toBe(true);
+        expect(logger.value).toBe('disposed');
     });
 });

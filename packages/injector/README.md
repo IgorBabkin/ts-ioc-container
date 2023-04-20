@@ -49,19 +49,19 @@ export const onDispose = onDisposeReflector.createMethodHookDecorator();
 
 class Logger {
   @onConstruct
-  initialize() {
-    console.log('initialized');
+  initialize(state: string) {
+    console.log(state);
   }
 
   @onDispose
-  async dispose(): Promise<void> {
-    console.log('disposed');
+  async dispose(state: string): Promise<void> {
+    console.log(state);
   }
 }
 
 (async () => {
   const instance = new Logger();
-  onConstructReflector.invokeHooksOf(instance); // initialized
-  await onDisposeReflector.invokeHooksOf(instance); // disposed  
+  onConstructReflector.invokeHooksOf(instance, 'initialized); // initialized
+  await onDisposeReflector.invokeHooksOf(instance, 'disposed'); // disposed  
 })()
 ```

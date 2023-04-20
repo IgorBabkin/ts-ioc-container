@@ -7,17 +7,17 @@ describe('MethodReflector', function () {
         const onConstruct = reflector.createMethodHookDecorator();
 
         class Logger {
-            initialized = false;
+            initialized = '';
 
             @onConstruct
-            initialize() {
-                this.initialized = true;
+            initialize(value: string) {
+                this.initialized = value;
             }
         }
 
         const logger = new Logger();
-        reflector.invokeHooksOf(logger);
+        reflector.invokeHooksOf(logger, 'initialized');
 
-        expect(logger.initialized).toBe(true);
+        expect(logger.initialized).toBe('initialized');
     });
 });
