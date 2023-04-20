@@ -47,11 +47,13 @@ export const perTags =
         const fn = providerReflector.findReducerOrCreate(targetClass);
         providerReflector.addReducer(targetClass, (builder) => fn(builder).perTags(...tags));
     };
-export const asSingleton: ClassDecorator = (target) => {
-    const targetClass = target as any as constructor<unknown>;
-    const fn = providerReflector.findReducerOrCreate(targetClass);
-    providerReflector.addReducer(targetClass, (builder) => fn(builder).asSingleton());
-};
+export const asSingleton =
+    (...tags: Tag[]): ClassDecorator =>
+    (target) => {
+        const targetClass = target as any as constructor<unknown>;
+        const fn = providerReflector.findReducerOrCreate(targetClass);
+        providerReflector.addReducer(targetClass, (builder) => fn(builder).asSingleton(...tags));
+    };
 export const forKey =
     (key: ProviderKey): ClassDecorator =>
     (target) => {

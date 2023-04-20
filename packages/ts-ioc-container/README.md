@@ -58,9 +58,21 @@ import { fromClass, fromFn, fromValue } from "ts-ioc-container";
 
 const container = new Container(injector, { tags: ['root'] });
 container.register('ILogger', fromFn((container, ...args) => new Logger(...args)).build());
-container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton().forTags(['root']).build()); // global singleton
-container.register('ILogger3', fromClass(Logger).asSingleton().forTags(['tag1', 'tag2']).build()); // singleton for scope with tag1 or tag2
-container.register('ILogger4', fromClass(Logger).withArgs('dev').asSingleton().build()); // singleton in every scope
+
+// Available only in root scope and all his children
+container.register('ILogger1', fromClass(Logger).forKey('ILogger').perTags(['root']).build());
+
+// Singleton per root tag and all his children
+container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton().perTags(['root']).build());
+// OR
+container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton('root').build());
+
+// singleton for scope with tag1 or tag2
+container.register('ILogger3', fromClass(Logger).asSingleton('tag1', 'tag2').build()); 
+
+// singleton in every scope
+container.register('ILogger4', fromClass(Logger).withArgs('dev').asSingleton().build());
+
 container.register('ILogger5', fromValue(new Logger()).build());
 ```
 
@@ -70,16 +82,17 @@ container.register('ILogger5', fromValue(new Logger()).build());
 import { asSingleton, perTags, forKey, by } from "ts-ioc-container";
 import { composeDecorators, inject } from "ts-constructor-injector";
 
-@asSingleton
-@perTags('root')
 @forKey('IEngine')
+@asSingleton('root')
 class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {
   }
 }
 
+// OR
+
 const perRoot = composeDecorators(
-  asSingleton,
+  asSingleton(),
   perTags('root'),
 );
 
@@ -143,22 +156,12 @@ for (const instance of container.getInstances()) {
 import { composeDecorators } from "ts-constructor-injector";
 import { forKey } from "ts-ioc-container";
 
-const perRoot = composeDecorators(
-  asSingleton,
-  perTags('root'),
-);
-
-const perHome = composeDecorators(
-  asSingleton,
-  perTags('home'),
-);
-
-@perRoot
+@asSingleton('root')
 @forKey('IEngine')
 class Logger {
 }
 
-@perHome
+@asSingleton('home')
 @forKey('IEngine')
 class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {

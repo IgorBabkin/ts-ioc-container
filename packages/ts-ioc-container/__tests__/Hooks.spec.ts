@@ -16,7 +16,7 @@ const injector: IInjector = {
     },
 };
 
-@asSingleton
+@asSingleton()
 @forKey('logsRepo')
 class LogsRepo {
     savedLogs: string[] = [];

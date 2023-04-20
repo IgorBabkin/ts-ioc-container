@@ -30,8 +30,11 @@ export class RegistrationBuilder<T = unknown> {
         return this;
     }
 
-    asSingleton(): this {
+    asSingleton(...tags: Tag[]): this {
         this.provider = new SingletonProvider(this.provider);
+        if (tags.length > 0) {
+            this.provider = new TaggedProvider(this.provider, tags);
+        }
         return this;
     }
 

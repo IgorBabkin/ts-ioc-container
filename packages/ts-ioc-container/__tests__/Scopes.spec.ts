@@ -8,9 +8,8 @@ import {
     fromClass,
     IContainer,
     IInjector,
-    perTags,
 } from '../lib';
-import { composeDecorators, resolve } from 'ts-constructor-injector';
+import { resolve } from 'ts-constructor-injector';
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
@@ -18,9 +17,7 @@ const injector: IInjector = {
     },
 };
 
-const perHome = composeDecorators(asSingleton, perTags('home'));
-
-@perHome
+@asSingleton('home')
 @forKey('logger')
 class Logger {}
 

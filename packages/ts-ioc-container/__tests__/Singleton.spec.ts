@@ -8,7 +8,7 @@ const injector: IInjector = {
     },
 };
 
-@asSingleton
+@asSingleton()
 @forKey('logger')
 class Logger {}
 
