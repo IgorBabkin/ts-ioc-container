@@ -1,5 +1,5 @@
 import { IContainer, InjectionToken } from './IContainer';
-import { MethodNotImplementedError } from '../utils/MethodNotImplementedError';
+import { MethodNotImplementedError } from '../MethodNotImplementedError';
 import { ProviderNotFoundError } from '../provider/ProviderNotFoundError';
 import { IProvider, ProviderKey } from '../provider/IProvider';
 

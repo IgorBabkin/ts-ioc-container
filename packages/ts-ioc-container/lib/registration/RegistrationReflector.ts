@@ -1,4 +1,4 @@
-import { constructor, MapFn } from '../utils/types';
+import { constructor, MapFn } from '../types';
 import { RegistrationBuilder } from './RegistrationBuilder';
 
 const id = <T>(value: T) => value;

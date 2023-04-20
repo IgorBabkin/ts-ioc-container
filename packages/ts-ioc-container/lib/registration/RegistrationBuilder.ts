@@ -3,7 +3,7 @@ import { SingletonProvider } from '../provider/SingletonProvider';
 import { TaggedProvider } from '../provider/TaggedProvider';
 import { ArgsFn, ArgsProvider } from '../provider/ArgsProvider';
 import { ProviderHasNoKeyError } from '../provider/ProviderHasNoKeyError';
-import { MapFn } from '../utils/types';
+import { MapFn } from '../types';
 import { Registration } from './Registration';
 
 export class RegistrationBuilder<T = unknown> {
