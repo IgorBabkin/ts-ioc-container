@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { inject } from 'ts-constructor-injector';
-import { by, forKey, fromClass, fromValue } from 'ts-ioc-container';
+import { asSingleton, by, forKey, fromClass, fromValue } from 'ts-ioc-container';
 import { Context } from './context/Context';
 import {
     IQueryHandler,
@@ -8,9 +8,10 @@ import {
     ITransactionContextKey,
     request,
     RequestMediator,
+    Scope,
     transaction,
 } from '../lib';
-import { ContainerAdapter, createContainer, EmptyType, perApplication } from './di';
+import { ContainerAdapter, createContainer, EmptyType } from './di';
 
 export class Logger extends Context<string[]> {
     addLog(log: string): void {
@@ -45,7 +46,7 @@ class BeforeHandler implements IQueryHandler<EmptyType, void> {
         @inject(by(ITransactionContextKey)) private transactionContext: TransactionContext,
     ) {}
 
-    async handle(query: EmptyType): Promise<void> {
+    async handle(): Promise<void> {
         this.logger.addLog(this.transactionContext.id.toString());
         this.logger.addLog('BeforeHandler');
     }
@@ -66,7 +67,7 @@ class QueryHandler implements IQueryHandler<EmptyType, void> {
     }
 }
 
-@perApplication
+@asSingleton(Scope.Application)
 @forKey(ITransactionContextKey)
 class TestTransaction implements ITransactionContext {
     constructor(private id: number = 0) {}

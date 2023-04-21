@@ -1,15 +1,6 @@
-import {
-    asSingleton,
-    constructor,
-    Container,
-    fromValue,
-    IContainer,
-    IInjector,
-    perTags,
-    Resolveable,
-} from 'ts-ioc-container';
-import { composeDecorators, resolve } from 'ts-constructor-injector';
-import { AsyncMethodReflector, IDependencyContainer, Scope } from '../lib';
+import { constructor, Container, fromValue, IContainer, IInjector, Resolveable } from 'ts-ioc-container';
+import { AsyncMethodReflector, resolve } from 'ts-constructor-injector';
+import { IDependencyContainer, Scope } from '../lib';
 
 const onDisposeReflector = new AsyncMethodReflector('onDispose');
 export const onDispose = onDisposeReflector.createMethodHookDecorator();
@@ -19,10 +10,6 @@ const injector: IInjector = {
         return resolve(container)(value, ...deps);
     },
 };
-
-export const perApplication = composeDecorators(perTags(Scope.Application), asSingleton);
-export const perRequest = composeDecorators(perTags(Scope.Request), asSingleton);
-export const perUseCase = composeDecorators(perTags(Scope.UseCase), asSingleton);
 
 export function createContainer(): IContainer {
     return new Container(injector, { tags: [Scope.Application] });
