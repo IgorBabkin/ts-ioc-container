@@ -1,6 +1,6 @@
 {
   "name": "ts-request-mediator",
-  "version": "0.2.31",
+  "version": "0.3.0",
   "description": "Request mediator for server",
   "author": "ibabkin <igba14@gmail.com>",
   "license": "ISC",
