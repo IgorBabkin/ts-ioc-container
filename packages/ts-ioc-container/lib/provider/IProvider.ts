@@ -5,7 +5,7 @@ export type ResolveDependency<T> = (container: Resolveable, ...args: unknown[]) 
 export type Tag = string;
 
 export interface Tagged {
-    readonly tags: Tag[];
+    hasTag(tag: Tag): boolean;
 }
 
 export interface IProvider<T = unknown> {

@@ -8,7 +8,7 @@ import { Registration } from '../registration/Registration';
 
 export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();
-    readonly tags: Tag[];
+    private readonly tags: Tag[];
     private isDisposed = false;
     private parent: IContainer;
     private children: Set<IContainer> = new Set();
@@ -77,6 +77,10 @@ export class Container implements IContainer, Tagged {
 
     removeScope(child: IContainer): void {
         this.children.delete(child);
+    }
+
+    hasTag(tag: Tag): boolean {
+        return this.tags.includes(tag);
     }
 
     private validateContainer(): void {

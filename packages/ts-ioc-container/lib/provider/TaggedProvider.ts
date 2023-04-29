@@ -11,7 +11,6 @@ export class TaggedProvider<T> extends ProviderDecorator<T> {
     }
 
     isValid(filters: Tagged): boolean {
-        const { tags } = filters;
-        return this.tags.some((t) => tags.includes(t)) && this.provider.isValid(filters);
+        return this.tags.some((t) => filters.hasTag(t)) && this.provider.isValid(filters);
     }
 }
