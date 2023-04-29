@@ -5,6 +5,7 @@
     "sourceMap": true,
     "target": "ES2017",
     "module": "ESNext",
+    "lib": ["es2019"],
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -13,9 +14,7 @@
     "downlevelIteration": true,
     "noImplicitReturns": true,
     "strict": true,
-    "paths": {
-
-    }
+    "resolveJsonModule": true
   },
   "include": [
     "src"

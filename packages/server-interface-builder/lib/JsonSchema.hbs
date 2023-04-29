@@ -1,0 +1,33 @@
+{{~#if (has_property $ref)~}}
+  {{render_ref $ref~}}
+{{else}}
+  {{#if (is_equal type "array")}}
+    {{render_schema items}}[]
+  {{else if (is_equal type "object")}}
+    {
+    {{#each properties as |prop key|}}
+      {{key}}{{#if (excludes ../required key)}}?{{/if}}: {{render_schema prop}};
+    {{/each}}
+    }
+  {{else}}
+    {{#if (is_equal type "number")}}
+      number
+    {{else}}
+      {{#if (is_equal type "string")}}
+        {{#if (is_equal format "date-time")}}Date{{else}}string{{/if}}
+      {{else}}
+        {{#if (is_equal type "boolean")}}
+          boolean
+        {{else}}
+          {{#if (is_equal type "integer")}}
+            number
+          {{else}}
+            void
+          {{/if}}
+        {{/if}}
+      {{/if}}
+    {{/if}}
+  {{/if}}
+{{~/if~}}
+
+
