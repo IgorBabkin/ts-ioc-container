@@ -6,7 +6,7 @@ const id = <T>(value: T) => value;
 export class RegistrationReflector {
     constructor(private metadataKey: string) {}
 
-    findReducerOrCreate<T>(target: constructor<T>): MapFn<RegistrationBuilder<T>> {
+    findReducer<T>(target: constructor<T>): MapFn<RegistrationBuilder<T>> {
         if (!Reflect.hasMetadata(this.metadataKey, target)) {
             Reflect.defineMetadata(this.metadataKey, id, target);
         }

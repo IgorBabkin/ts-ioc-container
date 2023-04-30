@@ -21,13 +21,15 @@ export { AutoMockedContainer } from './container/AutoMockedContainer';
 export { ProviderKey } from './provider/IProvider';
 export { isProviderKey } from './provider/IProvider';
 
+const providerReflector = new RegistrationReflector('registrationReducer');
+
 export const by =
     <T>(key: InjectionToken<T>, ...args: unknown[]) =>
     (l: IContainer) =>
         l.resolve<T>(key, ...args);
 
-export function fromClass<T>(value: constructor<T>): RegistrationBuilder<T> {
-    return new RegistrationBuilder(Provider.fromClass(value)).map(providerReflector.findReducerOrCreate(value));
+export function fromClass<T>(Target: constructor<T>): RegistrationBuilder<T> {
+    return new RegistrationBuilder(Provider.fromClass(Target)).map(providerReflector.findReducer(Target));
 }
 
 export function fromValue<T>(value: T): RegistrationBuilder<T> {
@@ -38,26 +40,26 @@ export function fromFn<T>(fn: ResolveDependency<T>): RegistrationBuilder<T> {
     return new RegistrationBuilder(new Provider(fn));
 }
 
-const providerReflector = new RegistrationReflector('registrationMapper');
-
 export const perTags =
     (...tags: Tag[]): ClassDecorator =>
     (target) => {
-        const targetClass = target as any as constructor<unknown>;
-        const fn = providerReflector.findReducerOrCreate(targetClass);
+        const targetClass: constructor<unknown> = target as any;
+        const fn = providerReflector.findReducer(targetClass);
         providerReflector.addReducer(targetClass, (builder) => fn(builder).perTags(...tags));
     };
+
 export const asSingleton =
     (...tags: Tag[]): ClassDecorator =>
     (target) => {
-        const targetClass = target as any as constructor<unknown>;
-        const fn = providerReflector.findReducerOrCreate(targetClass);
+        const targetClass: constructor<unknown> = target as any;
+        const fn = providerReflector.findReducer(targetClass);
         providerReflector.addReducer(targetClass, (builder) => fn(builder).asSingleton(...tags));
     };
+
 export const forKey =
     (key: ProviderKey): ClassDecorator =>
     (target) => {
         const targetClass = target as any as constructor<unknown>;
-        const fn = providerReflector.findReducerOrCreate(targetClass);
+        const fn = providerReflector.findReducer(targetClass);
         providerReflector.addReducer(targetClass, (builder) => fn(builder).forKey(key));
     };
