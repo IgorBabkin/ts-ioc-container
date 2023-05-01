@@ -221,7 +221,7 @@ describe('test', () => {
 
 ## Errors
 
-- ProviderNotFoundError
-- ProviderHasNoKeyError
-- MethodNotImplementedError
-- ContainerDisposedError
+- [ProviderNotFoundError.ts](lib%2Fprovider%2FProviderNotFoundError.ts)
+- [RegistrationMissingKeyError.ts](lib%2Fregistration%2FRegistrationMissingKeyError.ts)
+- [MethodNotImplementedError.ts](lib%2FMethodNotImplementedError.ts)
+- [ContainerDisposedError.ts](lib%2Fcontainer%2FContainerDisposedError.ts)

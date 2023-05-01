@@ -2,7 +2,7 @@ import { IProvider, ProviderKey, Tag } from '../provider/IProvider';
 import { SingletonProvider } from '../provider/SingletonProvider';
 import { TaggedProvider } from '../provider/TaggedProvider';
 import { ArgsFn, ArgsProvider } from '../provider/ArgsProvider';
-import { ProviderHasNoKeyError } from '../provider/ProviderHasNoKeyError';
+import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
 import { MapFn } from '../types';
 import { Registration } from './Registration';
 
@@ -45,7 +45,7 @@ export class RegistrationBuilder<T = unknown> {
 
     build(): Registration<T> {
         if (!this.key) {
-            throw new ProviderHasNoKeyError('Pls provide registration keys for current provider');
+            throw new RegistrationMissingKeyError('Pls provide registration keys for current provider');
         }
         return { key: this.key, provider: this.provider };
     }

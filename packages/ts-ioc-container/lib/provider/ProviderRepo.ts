@@ -8,7 +8,7 @@ export class ProviderRepo {
         return this;
     }
 
-    get<T>(key: ProviderKey): IProvider<T> | undefined {
+    find<T>(key: ProviderKey): IProvider<T> | undefined {
         return this.providers.get(key) as IProvider<T>;
     }
 

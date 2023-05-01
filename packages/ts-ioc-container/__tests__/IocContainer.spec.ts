@@ -11,7 +11,7 @@ import {
     ProviderNotFoundError,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
-import { ProviderHasNoKeyError } from '../lib/provider/ProviderHasNoKeyError';
+import { RegistrationMissingKeyError } from '../lib/registration/RegistrationMissingKeyError';
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
@@ -44,7 +44,7 @@ describe('IocContainer', function () {
     it('should throws an error if provider key is not defined', function () {
         const container = createContainer();
 
-        expect(() => container.register(fromValue(5).build())).toThrow(ProviderHasNoKeyError);
+        expect(() => container.register(fromValue(5).build())).toThrow(RegistrationMissingKeyError);
     });
 
     it('should keep all instances', function () {

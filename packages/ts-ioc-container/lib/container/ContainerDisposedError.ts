@@ -4,6 +4,7 @@ export class ContainerDisposedError extends Error {
             throw new ContainerDisposedError(failMessage);
         }
     }
+
     name = 'ContainerDisposedError';
 
     constructor(message: string) {

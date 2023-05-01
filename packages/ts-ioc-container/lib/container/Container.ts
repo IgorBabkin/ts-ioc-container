@@ -5,6 +5,7 @@ import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
 import { Registration } from '../registration/Registration';
+import { constructor } from '../types';
 
 export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();
@@ -27,12 +28,16 @@ export class Container implements IContainer, Tagged {
 
     resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T {
         this.validateContainer();
-        if (isProviderKey(key)) {
-            const provider = this.providers.get<T>(key);
-            return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(key, ...args);
-        }
+        return isProviderKey(key) ? this.resolveByProvider(key, ...args) : this.resolveByInjector(key, ...args);
+    }
 
-        const instance = this.injector.resolve<T>(this, key, ...args);
+    private resolveByProvider<T>(key: string | symbol, ...args: unknown[]): T {
+        const provider = this.providers.find<T>(key);
+        return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(key, ...args);
+    }
+
+    private resolveByInjector<T>(key: constructor<T>, ...args: unknown[]): T {
+        const instance = this.injector.resolve(this, key, ...args);
         this.instances.add(instance);
         return instance;
     }
@@ -53,6 +58,7 @@ export class Container implements IContainer, Tagged {
     }
 
     dispose(): void {
+        this.validateContainer();
         this.isDisposed = true;
         this.parent.removeScope(this);
         this.parent = new EmptyContainer();
