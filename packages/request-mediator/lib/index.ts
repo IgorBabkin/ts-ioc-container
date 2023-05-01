@@ -12,3 +12,4 @@ export { ITransactionContext, transaction, ITransactionContextKey } from './medi
 export { ErrorMapperNotFoundError } from './errorMapper/ErrorMapperNotFoundError';
 export { IErrorMapper, mapError, errorMapper } from './errorMapper/IErrorMapper';
 export { DomainErrorMapper } from './errorMapper/DomainErrorMapper';
+export { DomainError } from './errorMapper/DomainError';
