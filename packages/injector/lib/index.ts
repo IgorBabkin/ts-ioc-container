@@ -8,3 +8,4 @@ export { constructor, InjectFn, InjectionDecorator, InjectionPropertyDecorator }
 export { Write, WriteFn } from './writeMonad';
 export { AsyncMethodReflector } from './AsyncMethodReflector';
 export { MethodReflector } from './MethodReflector';
+export { handleAsyncError, HandleErrorParams } from './errorHandler';

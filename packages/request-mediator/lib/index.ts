@@ -9,7 +9,3 @@ export { IQueryHandler } from './IQueryHandler';
 export { before, after } from './mediator/simple/SimpleMediator';
 export { IMediator } from './mediator/IMediator';
 export { ITransactionContext, transaction, ITransactionContextKey } from './mediator/transaction/ITransactionContext';
-export { ErrorMapperNotFoundError } from './errorMapper/ErrorMapperNotFoundError';
-export { IErrorMapper, mapError, errorMapper } from './errorMapper/IErrorMapper';
-export { DomainErrorMapper } from './errorMapper/DomainErrorMapper';
-export { DomainError } from './errorMapper/DomainError';
