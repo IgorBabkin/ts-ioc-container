@@ -11,7 +11,7 @@ export class RegistrationBuilder<T = unknown> {
 
     constructor(private provider: IProvider<T>) {}
 
-    withArgs(...extraArgs: any[]): this {
+    withArgs(...extraArgs: unknown[]): this {
         this.provider = new ArgsProvider(this.provider, () => extraArgs);
         return this;
     }
