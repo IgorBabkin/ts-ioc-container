@@ -1,4 +1,4 @@
-import { Resolveable } from '../container/IContainer';
+import { Resolvable } from '../container/IContainer';
 import { ProviderDecorator } from './ProviderDecorator';
 import { IProvider } from './IProvider';
 
@@ -20,7 +20,7 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
         this.provider.dispose();
     }
 
-    resolve(container: Resolveable, ...args: unknown[]): T {
+    resolve(container: Resolvable, ...args: unknown[]): T {
         if (this.instance === null) {
             const instance = this.provider.resolve(container, ...args);
             this.instance = { value: instance };

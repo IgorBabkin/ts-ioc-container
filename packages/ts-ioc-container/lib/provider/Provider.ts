@@ -1,6 +1,6 @@
 import { constructor } from '../types';
 import { IProvider, ResolveDependency } from './IProvider';
-import { Resolveable } from '../container/IContainer';
+import { Resolvable } from '../container/IContainer';
 
 export class Provider<T> implements IProvider<T> {
     static fromClass<T>(value: constructor<T>): Provider<T> {
@@ -17,7 +17,7 @@ export class Provider<T> implements IProvider<T> {
         return new Provider(this.resolveDependency);
     }
 
-    resolve(container: Resolveable, ...args: unknown[]): T {
+    resolve(container: Resolvable, ...args: unknown[]): T {
         return this.resolveDependency(container, ...args);
     }
 

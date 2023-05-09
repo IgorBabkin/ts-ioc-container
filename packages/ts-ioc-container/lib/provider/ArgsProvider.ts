@@ -1,15 +1,15 @@
 import { ProviderDecorator } from './ProviderDecorator';
-import { Resolveable } from '../container/IContainer';
+import { Resolvable } from '../container/IContainer';
 import { IProvider } from './IProvider';
 
-export type ArgsFn = (l: Resolveable) => unknown[];
+export type ArgsFn = (l: Resolvable) => unknown[];
 
 export class ArgsProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private argsFn: ArgsFn) {
         super(provider);
     }
 
-    resolve(container: Resolveable, ...args: unknown[]): T {
+    resolve(container: Resolvable, ...args: unknown[]): T {
         return this.provider.resolve(container, ...this.argsFn(container), ...args);
     }
 

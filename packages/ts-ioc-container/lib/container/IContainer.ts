@@ -4,11 +4,11 @@ import { Registration } from '../registration/Registration';
 
 export type InjectionToken<T = unknown> = constructor<T> | ProviderKey;
 
-export interface Resolveable {
+export interface Resolvable {
     resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T;
 }
 
-export interface IContainer extends Resolveable {
+export interface IContainer extends Resolvable {
     createScope(tags?: Tag[]): IContainer;
 
     register(value: Registration): this;

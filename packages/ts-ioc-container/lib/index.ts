@@ -5,7 +5,7 @@ import { RegistrationReflector } from './registration/RegistrationReflector';
 import { constructor } from './types';
 import { RegistrationBuilder } from './registration/RegistrationBuilder';
 
-export { IContainer, Resolveable } from './container/IContainer';
+export { IContainer, Resolvable } from './container/IContainer';
 export { EmptyContainer } from './container/EmptyContainer';
 export { constructor } from './types';
 export { Container } from './container/Container';
