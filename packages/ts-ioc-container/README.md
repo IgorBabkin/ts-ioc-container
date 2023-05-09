@@ -162,7 +162,7 @@ for (const instance of container.getInstances()) {
 }
 ```
 
-## Scoped containers
+## Scopes (child containers)
 
 - tags - you can add tag to scope and root container. And register provider per tag.
 
