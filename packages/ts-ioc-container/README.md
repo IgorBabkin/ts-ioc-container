@@ -60,10 +60,10 @@ const container = new Container(injector, { tags: ['root'] });
 container.register(fromFn((container, ...args) => new Logger(...args)).forKey('ILogger').build());
 
 // Available only in root scope and all his children
-container.register(fromClass(Logger).forKey('ILogger').perTags(['root']).build());
+container.register(fromClass(Logger).forKey('ILogger').perTags('root').build());
 
 // Singleton per root tag and all his children
-container.register(fromClass(Logger).forKey('ILogger').asSingleton().perTags(['root']).build());
+container.register(fromClass(Logger).forKey('ILogger').asSingleton().perTags('root').build());
 // OR
 container.register(fromClass(Logger).forKey('ILogger').asSingleton('root').build());
 
