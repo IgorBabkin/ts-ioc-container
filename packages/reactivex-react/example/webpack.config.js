@@ -4,9 +4,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HotModuleReplacementPlugin = require('webpack').HotModuleReplacementPlugin;
 const ProgressPlugin = require('webpack').ProgressPlugin;
 const WebpackNotifierPlugin = require('webpack-notifier');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
-    mode: 'development',
+    mode: 'production',
     context: path.resolve(__dirname),
 
     entry: './main.tsx',
@@ -29,22 +30,17 @@ module.exports = {
             },
         ],
     },
-    devServer: {
-        hot: true,
-        port: 3330,
-        host: 'localhost',
-        historyApiFallback: false,
-    },
-
-    devtool: 'inline-source-map',
 
     plugins: [
         new HtmlWebpackPlugin({
             template: './index.html.ejs',
             inject: 'body',
         }),
-        new HotModuleReplacementPlugin(),
         new WebpackNotifierPlugin(),
         new ProgressPlugin(),
+        new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: true,
+        }),
     ],
 };

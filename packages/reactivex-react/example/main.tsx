@@ -1,11 +1,14 @@
 import * as React from 'react';
 import { render } from 'react-dom';
 import { AppView } from './AppView';
-import { AppViewModel } from './AppViewModel';
+import { ScopeContext } from './Scope';
+import { development } from './env/development';
 
-const model = new AppViewModel();
-render(<AppView model={model} />, document.getElementById('root'));
+const container = development();
 
-if (module.hot) {
-    module.hot.accept();
-}
+render(
+    <ScopeContext.Provider value={container}>
+        <AppView />
+    </ScopeContext.Provider>,
+    document.getElementById('root'),
+);

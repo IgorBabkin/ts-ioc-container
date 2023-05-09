@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "baseUrl": "./src",
     "lib": ["es2017", "dom"],
+    "types": ["node", "jest"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
