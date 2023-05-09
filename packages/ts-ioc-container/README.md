@@ -82,7 +82,7 @@ container.register(fromClass(Logger).forKey('ILogger').asSingleton('tag1', 'tag2
 container.register(fromClass(Logger).forKey('ILogger').withArgs('dev').asSingleton().build());
 
 // singleton in every scope
-container.register(fromClass(Logger).forKey('ILogger').withArgsFn((container) => container.resolve('isTestEnv') ? 'dev' : 'prod').asSingleton().build());
+container.register(fromClass(Logger).forKey('ILogger').withArgsFn((container) => [container.resolve('isTestEnv') ? 'dev' : 'prod']).asSingleton().build());
 
 container.register(fromValue(new Logger()).forKey('ILogger').build());
 ```
