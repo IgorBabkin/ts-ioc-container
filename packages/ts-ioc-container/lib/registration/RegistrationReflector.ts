@@ -1,14 +1,18 @@
-import { constructor, identity, MapFn } from '../utils';
-import { RegistrationBuilder } from './RegistrationBuilder';
+import { constructor, MapFn } from '../types';
+import { Registration } from './Registration';
+
+const id = <T>(value: T) => value;
 
 export class RegistrationReflector {
     private metadataKey = 'RegistrationReflector';
-    getMapper<T>(target: constructor<T>): MapFn<RegistrationBuilder<T>> | undefined {
+    findReducer<T>(target: constructor<T>): MapFn<Registration> {
+        if (!Reflect.hasMetadata(this.metadataKey, target)) {
+            Reflect.defineMetadata(this.metadataKey, id, target);
+        }
         return Reflect.getMetadata(this.metadataKey, target);
     }
 
-    appendMapper<T>(target: constructor<T>, mapper: MapFn<RegistrationBuilder<T>>): void {
-        const current: MapFn<RegistrationBuilder<T>> = Reflect.getMetadata(this.metadataKey, target) ?? identity;
-        Reflect.defineMetadata(this.metadataKey, (builder: RegistrationBuilder<T>) => mapper(current(builder)), target);
+    addReducer(target: constructor<unknown>, reducer: MapFn<Registration>): void {
+        Reflect.defineMetadata(this.metadataKey, reducer, target);
     }
 }

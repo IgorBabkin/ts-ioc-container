@@ -4,8 +4,8 @@ import { IProvider, isProviderKey, ProviderKey, Tag, Tagged } from '../provider/
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
-import { Registration } from '../registration/Registration';
-import { constructor } from '../utils';
+import { constructor } from '../types';
+import { IRegistration } from '../registration/IRegistration';
 
 export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();
@@ -20,7 +20,12 @@ export class Container implements IContainer, Tagged {
         this.tags = options.tags ?? [];
     }
 
-    register({ key, provider }: Registration): this {
+    add(registration: IRegistration): this {
+        registration.appendTo(this);
+        return this;
+    }
+
+    register(key: ProviderKey, provider: IProvider): this {
         this.validateContainer();
         this.providers.add(key, provider);
         return this;
@@ -48,7 +53,7 @@ export class Container implements IContainer, Tagged {
 
         for (const [key, provider] of this.getProviders().entries()) {
             if (provider.isValid(scope)) {
-                scope.register({ key, provider: provider.clone() });
+                scope.register(key, provider.clone());
             }
         }
 

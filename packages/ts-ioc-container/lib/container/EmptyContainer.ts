@@ -29,4 +29,8 @@ export class EmptyContainer implements IContainer {
     }
 
     removeScope(): void {}
+
+    add(): this {
+        throw new MethodNotImplementedError();
+    }
 }

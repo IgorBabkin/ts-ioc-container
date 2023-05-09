@@ -40,6 +40,7 @@ How to create new container
 ```typescript
 import { Container, IContainer, IInjector, fromClass } from "ts-ioc-container";
 import { resolve } from 'ts-constructor-injector';
+import { ProviderBuilder } from "ts-ioc-container/lib";
 
 class Logger {
   info(message: string) {
@@ -53,38 +54,57 @@ const injector: IInjector = {
   },
 };
 
-const container = new Container(injector);
-container.register(fromClass(Logger).forKey('ILogger').build());
+const container = new Container(injector)
+  .register('ILogger', ProviderBuilder.fromClass(Logger).build());
 const logger = container.resolve<ILogger>('ILogger');
 logger.info('Hello world');
 ```
 
-## Registration builder
+## Provider builder
 
 ```typescript
-import { fromClass, fromFn, fromValue } from "ts-ioc-container";
+import { ProviderBuilder } from "ts-ioc-container";
 
 const container = new Container(injector, { tags: ['root'] });
-container.register(fromFn((container, ...args) => new Logger(...args)).forKey('ILogger').build());
+container.register('ILogger', ProviderBuilder.fromFn((container, ...args) => new Logger(...args)).build());
 
 // Available only in root scope and all his children
-container.register(fromClass(Logger).forKey('ILogger').perTags('root').build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).perTags('root').build());
 
 // Singleton per root tag and all his children
-container.register(fromClass(Logger).forKey('ILogger').asSingleton().perTags('root').build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).asSingleton().perTags('root').build());
 // OR
-container.register(fromClass(Logger).forKey('ILogger').asSingleton('root').build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).asSingleton('root').build());
 
 // singleton for scope with tag1 or tag2
-container.register(fromClass(Logger).forKey('ILogger').asSingleton('tag1', 'tag2').build()); 
+container.register('ILogger', ProviderBuilder.fromClass(Logger).asSingleton('tag1', 'tag2').build()); 
 
 // singleton in every scope
-container.register(fromClass(Logger).forKey('ILogger').withArgs('dev').asSingleton().build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgs('dev').asSingleton().build());
 
 // singleton in every scope
-container.register(fromClass(Logger).forKey('ILogger').withArgsFn((container) => [container.resolve('isTestEnv') ? 'dev' : 'prod']).asSingleton().build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgsFn((container) => [container.resolve('isTestEnv') ? 'dev' : 'prod']).asSingleton().build());
 
-container.register(fromValue(new Logger()).forKey('ILogger').build());
+container.register('ILogger', ProviderBuilder.fromValue(new Logger()).build());
+```
+
+## Registration (Provider + ProviderKey)
+
+```typescript
+import { asSingleton, forKey, fromClass } from "ts-ioc-container";
+
+@forKey('ILogger')
+@asSingleton('root')
+class Logger {
+  info(message: string) {
+    console.log(message);
+  }
+}
+
+const container = new Container(injector, { tags: ['root'] })
+  .accept(fromClass(Logger));
+const logger = container.resolve<ILogger>('ILogger');
+logger.info('Hello world');
 ```
 
 ## Decorators
@@ -115,7 +135,7 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .register(fromClass(Engine).build());
+  .accept(fromClass(Engine));
 ```
 
 ## Hooks
@@ -158,7 +178,7 @@ const injector: IInjector = {
 }
 
 const container = new Container(injector)
-  .register(fromClass(Logger).build());
+  .accept(fromClass(Logger));
 const logger = container.resolve<ILogger>('ILogger'); // initialized
 for (const instance of container.getInstances()) {
   onDisposeReflector.invokeHooksOf(instance); // disposed
@@ -186,8 +206,8 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .register(fromClass(Logger).build())
-  .register(fromClass(Engine).build());
+  .accept(fromClass(Logger))
+  .accept(fromClass(Engine));
 
 const scope = container.createScope(['home', 'child']);
 const logger = scope.resolve('ILogger');

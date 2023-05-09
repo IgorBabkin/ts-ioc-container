@@ -81,8 +81,8 @@ describe('RequestMediator', () => {
     it('should invoke middleware', async () => {
         const logger = new Logger('logger', []);
         const container = createContainer()
-            .register(fromValue(logger).forKey('Logger').build())
-            .register(fromClass(TestTransaction).build());
+            .accept(fromValue(logger).forKey('Logger'))
+            .accept(fromClass(TestTransaction));
 
         const mediator = new RequestMediator(new ContainerAdapter(container));
 

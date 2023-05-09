@@ -1,6 +1,7 @@
-import { constructor, Container, fromValue, IContainer, IInjector, Resolvable } from 'ts-ioc-container';
+import { constructor, Container, IContainer, IInjector, Resolvable } from 'ts-ioc-container';
 import { AsyncMethodReflector, resolve } from 'ts-constructor-injector';
 import { IDependencyContainer, Scope } from '../lib';
+import { ProviderBuilder } from 'ts-ioc-container/lib';
 
 const onDisposeReflector = new AsyncMethodReflector('onDispose');
 export const onDispose = onDisposeReflector.createMethodHookDecorator();
@@ -27,7 +28,7 @@ export class ContainerAdapter implements IDependencyContainer {
     }
 
     registerValue(key: string | symbol, value: unknown): void {
-        this.container.register(fromValue(value).forKey(key).build());
+        this.container.register(key, ProviderBuilder.fromValue(value).build());
     }
 
     resolve<T>(key: constructor<T> | symbol): T {

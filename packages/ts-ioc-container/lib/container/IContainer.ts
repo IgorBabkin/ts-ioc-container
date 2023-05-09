@@ -1,6 +1,6 @@
 import { IProvider, ProviderKey, Tag } from '../provider/IProvider';
-import { constructor } from '../utils';
-import { Registration } from '../registration/Registration';
+import { constructor } from '../types';
+import { IRegistration } from '../registration/IRegistration';
 
 export type InjectionToken<T = unknown> = constructor<T> | ProviderKey;
 
@@ -11,7 +11,7 @@ export interface Resolvable {
 export interface IContainer extends Resolvable {
     createScope(tags?: Tag[]): IContainer;
 
-    register(value: Registration): this;
+    register(key: ProviderKey, value: IProvider): this;
 
     getProviders(): Map<ProviderKey, IProvider>;
 
@@ -20,4 +20,6 @@ export interface IContainer extends Resolvable {
     getInstances(): unknown[];
 
     dispose(): void;
+
+    add(registration: IRegistration): this;
 }
