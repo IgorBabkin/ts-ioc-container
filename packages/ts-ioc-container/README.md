@@ -34,21 +34,29 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 ```
 
 
-## Container
+## Injector
 How to create new container
 
 ```typescript
 import { Container, IContainer, IInjector, fromClass } from "ts-ioc-container";
 import { resolve } from 'ts-constructor-injector';
 
+class Logger {
+  info(message: string) {
+    console.log(message);
+  }
+}
+
 const injector: IInjector = {
   resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
     return resolve(container)(value, ...deps);
   },
 };
+
 const container = new Container(injector);
 container.register(fromClass(Logger).forKey('ILogger').build());
 const logger = container.resolve<ILogger>('ILogger');
+logger.info('Hello world');
 ```
 
 ## Registration builder
@@ -102,6 +110,9 @@ class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {
   }
 }
+
+const container = new Container(injector, { tags: ['root'] })
+  .register(fromClass(Engine).build());
 ```
 
 ## Hooks
@@ -122,13 +133,16 @@ export const onConstruct = onConstructReflector.createMethodHookDecorator();
 export const onDisposeReflector = new MethodReflector('OnDisposeHook');
 export const onDispose = onDisposeReflector.createMethodHookDecorator();
 
+@forKey('ILogger')
 class Logger {
   @onConstruct
   initialize() {
+    console.log('initialized');
   }
 
   @onDispose
   dispose() {
+    console.log('disposed');
   }
 }
 
@@ -140,11 +154,11 @@ const injector: IInjector = {
   },
 }
 
-const container = new Container(injector);
-container.register(fromClass(Logger).forKey('ILogger').build());
-const logger = container.resolve<ILogger>('ILogger');
+const container = new Container(injector)
+  .register(fromClass(Logger).build());
+const logger = container.resolve<ILogger>('ILogger'); // initialized
 for (const instance of container.getInstances()) {
-  onDisposeReflector.invokeHooksOf(instance);
+  onDisposeReflector.invokeHooksOf(instance); // disposed
 }
 ```
 
@@ -169,8 +183,8 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .register(fromClass(Logger).forKey('ILogger').build())
-  .register(fromClass(Engine).forKey('IEngine').build());
+  .register(fromClass(Logger).build())
+  .register(fromClass(Engine).build());
 
 const scope = container.createScope(['home', 'child']);
 const logger = scope.resolve('ILogger');
