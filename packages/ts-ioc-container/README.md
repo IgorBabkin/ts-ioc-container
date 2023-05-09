@@ -47,7 +47,7 @@ const injector: IInjector = {
   },
 };
 const container = new Container(injector);
-container.register('ILogger', fromClass(Logger).build());
+container.register(fromClass(Logger).forKey('ILogger').build());
 const logger = container.resolve<ILogger>('ILogger');
 ```
 
@@ -57,23 +57,23 @@ const logger = container.resolve<ILogger>('ILogger');
 import { fromClass, fromFn, fromValue } from "ts-ioc-container";
 
 const container = new Container(injector, { tags: ['root'] });
-container.register('ILogger', fromFn((container, ...args) => new Logger(...args)).build());
+container.register(fromFn((container, ...args) => new Logger(...args)).forKey('ILogger').build());
 
 // Available only in root scope and all his children
-container.register('ILogger1', fromClass(Logger).forKey('ILogger').perTags(['root']).build());
+container.register(fromClass(Logger).forKey('ILogger').perTags(['root']).build());
 
 // Singleton per root tag and all his children
-container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton().perTags(['root']).build());
+container.register(fromClass(Logger).forKey('ILogger').asSingleton().perTags(['root']).build());
 // OR
-container.register('ILogger1', fromClass(Logger).forKey('ILogger').asSingleton('root').build());
+container.register(fromClass(Logger).forKey('ILogger').asSingleton('root').build());
 
 // singleton for scope with tag1 or tag2
-container.register('ILogger3', fromClass(Logger).asSingleton('tag1', 'tag2').build()); 
+container.register(fromClass(Logger).forKey('ILogger').asSingleton('tag1', 'tag2').build()); 
 
 // singleton in every scope
-container.register('ILogger4', fromClass(Logger).withArgs('dev').asSingleton().build());
+container.register(fromClass(Logger).forKey('ILogger').withArgs('dev').asSingleton().build());
 
-container.register('ILogger5', fromValue(new Logger()).build());
+container.register(fromValue(new Logger()).forKey('ILogger').build());
 ```
 
 ## Decorators
@@ -141,7 +141,7 @@ const injector: IInjector = {
 }
 
 const container = new Container(injector);
-container.register('ILogger', fromClass(Logger).build());
+container.register(fromClass(Logger).forKey('ILogger').build());
 const logger = container.resolve<ILogger>('ILogger');
 for (const instance of container.getInstances()) {
   onDisposeReflector.invokeHooksOf(instance);
@@ -169,8 +169,8 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .register('ILogger', fromClass(Logger).build())
-  .register('IEngine', fromClass(Engine).build());
+  .register(fromClass(Logger).forKey('ILogger').build())
+  .register(fromClass(Engine).forKey('IEngine').build());
 
 const scope = container.createScope(['home', 'child']);
 const logger = scope.resolve('ILogger');
