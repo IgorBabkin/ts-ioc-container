@@ -4,7 +4,7 @@ import { IProvider, isProviderKey, ProviderKey, Tag, Tagged } from '../provider/
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
-import { constructor } from '../types';
+import { constructor } from '../utils';
 
 export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();

@@ -1,7 +1,6 @@
 import { ProviderKey, Tag } from '../provider/IProvider';
 import { ArgsFn } from '../provider/ArgsProvider';
 import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
-import { MapFn } from '../types';
 import { IContainer, IModule } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
 
@@ -18,10 +17,6 @@ export class Registration implements IModule {
     withArgsFn(argsFn: ArgsFn): this {
         this.providerBuilder = this.providerBuilder.withArgsFn(argsFn);
         return this;
-    }
-
-    map(reducer: MapFn<Registration>): Registration {
-        return reducer(this);
     }
 
     perTags(...tags: Tag[]): this {

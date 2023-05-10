@@ -2,7 +2,7 @@ import { IProvider, ResolveDependency, Tag } from './IProvider';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { SingletonProvider } from './SingletonProvider';
-import { constructor } from '../types';
+import { constructor } from '../utils';
 import { Provider } from './Provider';
 
 export class ProviderBuilder {
