@@ -1,4 +1,4 @@
-import { constructor } from './types';
+import { constructor } from './utils';
 import { IContainer } from './container/IContainer';
 
 export interface IInjector {

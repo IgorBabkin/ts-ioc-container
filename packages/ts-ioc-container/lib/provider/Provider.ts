@@ -1,4 +1,4 @@
-import { constructor } from '../types';
+import { constructor } from '../utils';
 import { IProvider, ResolveDependency } from './IProvider';
 import { Resolvable } from '../container/IContainer';
 

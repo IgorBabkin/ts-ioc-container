@@ -1,5 +1,5 @@
 import { IProvider, ProviderKey, Tag } from '../provider/IProvider';
-import { constructor } from '../types';
+import { constructor } from '../utils';
 import { Registration } from '../registration/Registration';
 
 export type InjectionToken<T = unknown> = constructor<T> | ProviderKey;

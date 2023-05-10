@@ -3,7 +3,6 @@ import { SingletonProvider } from '../provider/SingletonProvider';
 import { TaggedProvider } from '../provider/TaggedProvider';
 import { ArgsFn, ArgsProvider } from '../provider/ArgsProvider';
 import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
-import { MapFn } from '../types';
 import { Registration } from './Registration';
 
 export class RegistrationBuilder<T = unknown> {
@@ -19,10 +18,6 @@ export class RegistrationBuilder<T = unknown> {
     withArgsFn(argsFn: ArgsFn): this {
         this.provider = new ArgsProvider(this.provider, argsFn);
         return this;
-    }
-
-    map(reducer: MapFn<RegistrationBuilder<T>>): RegistrationBuilder<T> {
-        return reducer(this);
     }
 
     perTags(...tags: Tag[]): this {

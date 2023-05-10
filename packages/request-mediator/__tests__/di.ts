@@ -1,4 +1,4 @@
-import { constructor, Container, fromValue, IContainer, IInjector, Resolveable } from 'ts-ioc-container';
+import { constructor, Container, fromValue, IContainer, IInjector, Resolvable } from 'ts-ioc-container';
 import { AsyncMethodReflector, resolve } from 'ts-constructor-injector';
 import { IDependencyContainer, Scope } from '../lib';
 
@@ -42,7 +42,7 @@ export class ContainerAdapter implements IDependencyContainer {
     }
 }
 
-export const scope = (l: Resolveable) => l;
+export const scope = (l: Resolvable) => l;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type EmptyType = {};
