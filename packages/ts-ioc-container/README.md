@@ -107,7 +107,7 @@ const logger = container.resolve<ILogger>('ILogger');
 logger.info('Hello world');
 ```
 
-## Decorators
+### Registration Decorators
 
 ```typescript
 import { asSingleton, perTags, forKey, by, Registration } from "ts-ioc-container";
