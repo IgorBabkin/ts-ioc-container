@@ -19,11 +19,6 @@ export class Container implements IContainer, Tagged {
         this.tags = options.tags ?? [];
     }
 
-    add(module: IModule): this {
-        module.applyTo(this);
-        return this;
-    }
-
     register(key: ProviderKey, provider: IProvider): this {
         this.validateContainer();
         this.providers.add(key, provider);
@@ -91,6 +86,11 @@ export class Container implements IContainer, Tagged {
 
     hasTag(tag: Tag): boolean {
         return this.tags.includes(tag);
+    }
+
+    add(module: IModule): this {
+        module.applyTo(this);
+        return this;
     }
 
     private validateContainer(): void {
