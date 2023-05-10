@@ -38,7 +38,7 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 How to create new container
 
 ```typescript
-import { Container, IContainer, IInjector, fromClass } from "ts-ioc-container";
+import { Container, IContainer, IInjector } from "ts-ioc-container";
 import { resolve } from 'ts-constructor-injector';
 import { ProviderBuilder } from "ts-ioc-container/lib";
 
@@ -91,7 +91,7 @@ container.register('ILogger', ProviderBuilder.fromValue(new Logger()).build());
 ## Registration module (Provider + ProviderKey)
 
 ```typescript
-import { asSingleton, forKey, fromClass } from "ts-ioc-container";
+import { asSingleton, forKey, Registration } from "ts-ioc-container";
 
 @forKey('ILogger')
 @asSingleton('root')
@@ -102,7 +102,7 @@ class Logger {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .add(fromClass(Logger));
+  .add(Registration.fromClass(Logger));
 const logger = container.resolve<ILogger>('ILogger');
 logger.info('Hello world');
 ```
@@ -110,7 +110,7 @@ logger.info('Hello world');
 ## Decorators
 
 ```typescript
-import { asSingleton, perTags, forKey, by } from "ts-ioc-container";
+import { asSingleton, perTags, forKey, by, Registration } from "ts-ioc-container";
 import { composeDecorators, inject } from "ts-constructor-injector";
 
 @forKey('IEngine')
@@ -135,7 +135,7 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .add(fromClass(Engine));
+  .add(Registration.fromClass(Engine));
 ```
 
 ## Hooks
@@ -146,7 +146,7 @@ import {
   IInjector,
   ContainerHook,
   Injector,
-  fromClass
+  Registration,
 } from "ts-ioc-container";
 import { MethodReflector } from "ts-constructor-injector";
 
@@ -178,7 +178,7 @@ const injector: IInjector = {
 }
 
 const container = new Container(injector)
-  .add(fromClass(Logger));
+  .add(Registration.fromClass(Logger));
 const logger = container.resolve<ILogger>('ILogger'); // initialized
 for (const instance of container.getInstances()) {
   onDisposeReflector.invokeHooksOf(instance); // disposed
@@ -191,7 +191,7 @@ for (const instance of container.getInstances()) {
 
 ```typescript
 import { composeDecorators } from "ts-constructor-injector";
-import { forKey } from "ts-ioc-container";
+import { forKey, Registration } from "ts-ioc-container";
 
 @asSingleton('root')
 @forKey('IEngine')
@@ -206,8 +206,8 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .add(fromClass(Logger))
-  .add(fromClass(Engine));
+  .add(Registration.fromClass(Logger))
+  .add(Registration.fromClass(Engine));
 
 const scope = container.createScope(['home', 'child']);
 const logger = scope.resolve('ILogger');
