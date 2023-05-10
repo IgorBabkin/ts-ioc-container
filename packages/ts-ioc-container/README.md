@@ -214,6 +214,28 @@ const logger = scope.resolve('ILogger');
 scope.dispose();
 ```
 
+## Container Modules
+
+```typescript
+import { Registration } from "ts-ioc-container";
+
+class Development implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container.add(Registration.fromClass(DevLogger));
+  }
+}
+
+class Production implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container.add(Registration.fromClass(ProdLogger));
+  }
+}
+
+const container = new Container(injector, { tags: ['root'] })
+  .add(Registration.fromClass(Logger))
+  .add(process.env.NODE_ENV === 'production' ? new Production() : new Development());
+```
+
 ## Mocking / Tests
 
 ```typescript
