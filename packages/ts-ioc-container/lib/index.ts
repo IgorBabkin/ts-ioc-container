@@ -1,6 +1,6 @@
 import { IContainer, InjectionToken } from './container/IContainer';
 
-export { IContainer, Resolvable } from './container/IContainer';
+export { IContainer, Resolvable, IContainerModule } from './container/IContainer';
 export { EmptyContainer } from './container/EmptyContainer';
 export { constructor } from './utils';
 export { Container } from './container/Container';

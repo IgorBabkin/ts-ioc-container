@@ -1,14 +1,14 @@
 import { ProviderKey, ResolveDependency, Tag } from '../provider/IProvider';
 import { ArgsFn } from '../provider/ArgsProvider';
 import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
-import { IContainer, IModule } from '../container/IContainer';
+import { IContainer, IContainerModule } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
 import { RegistrationReflector } from './RegistrationReflector';
 import { constructor, identity } from '../utils';
 
 const registrationReflector = new RegistrationReflector();
 
-export class Registration implements IModule {
+export class Registration implements IContainerModule {
     private key?: ProviderKey;
 
     static fromClass<T>(Target: constructor<T>): Registration {

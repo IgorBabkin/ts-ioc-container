@@ -1,4 +1,4 @@
-import { IContainer, IModule, InjectionToken } from './IContainer';
+import { IContainer, IContainerModule, InjectionToken } from './IContainer';
 import { IInjector } from '../IInjector';
 import { IProvider, isProviderKey, ProviderKey, Tag, Tagged } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
@@ -88,7 +88,7 @@ export class Container implements IContainer, Tagged {
         return this.tags.includes(tag);
     }
 
-    add(module: IModule): this {
+    add(module: IContainerModule): this {
         module.applyTo(this);
         return this;
     }

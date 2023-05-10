@@ -7,7 +7,7 @@ export interface Resolvable {
     resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T;
 }
 
-export interface IModule {
+export interface IContainerModule {
     applyTo(container: IContainer): void;
 }
 
@@ -24,5 +24,5 @@ export interface IContainer extends Resolvable {
 
     dispose(): void;
 
-    add(module: IModule): this;
+    add(module: IContainerModule): this;
 }
