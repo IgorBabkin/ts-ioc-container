@@ -1,11 +1,28 @@
-import { ProviderKey, Tag } from '../provider/IProvider';
+import { ProviderKey, ResolveDependency, Tag } from '../provider/IProvider';
 import { ArgsFn } from '../provider/ArgsProvider';
 import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
 import { IContainer, IModule } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
+import { RegistrationReflector } from './RegistrationReflector';
+import { constructor, identity } from '../utils';
+
+const registrationReflector = new RegistrationReflector();
 
 export class Registration implements IModule {
     private key?: ProviderKey;
+
+    static fromClass<T>(Target: constructor<T>): Registration {
+        const map = registrationReflector.getMapper(Target) ?? identity;
+        return map(new Registration(ProviderBuilder.fromClass(Target)));
+    }
+
+    static fromValue<T>(value: T): Registration {
+        return new Registration(ProviderBuilder.fromValue(value));
+    }
+
+    static fromFn<T>(fn: ResolveDependency<T>): Registration {
+        return new Registration(ProviderBuilder.fromFn(fn));
+    }
 
     constructor(private providerBuilder: ProviderBuilder) {}
 
@@ -41,3 +58,21 @@ export class Registration implements IModule {
         container.register(this.key, this.providerBuilder.build());
     }
 }
+
+export const perTags =
+    (...tags: Tag[]): ClassDecorator =>
+    (target: any) => {
+        registrationReflector.appendMapper(target, (registration) => registration.perTags(...tags));
+    };
+
+export const asSingleton =
+    (...tags: Tag[]): ClassDecorator =>
+    (target: any) => {
+        registrationReflector.appendMapper(target, (registration) => registration.asSingleton(...tags));
+    };
+
+export const forKey =
+    (key: ProviderKey): ClassDecorator =>
+    (target: any) => {
+        registrationReflector.appendMapper(target, (registration) => registration.forKey(key));
+    };

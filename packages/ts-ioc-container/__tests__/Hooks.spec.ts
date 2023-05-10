@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { asSingleton, by, constructor, Container, forKey, fromClass, IContainer, IInjector } from '../lib';
+import { asSingleton, by, constructor, Container, forKey, IContainer, IInjector, Registration } from '../lib';
 import { AsyncMethodReflector, MethodReflector, inject, resolve } from 'ts-constructor-injector';
 
 const onConstructReflector = new MethodReflector('onConstruct');
@@ -55,7 +55,7 @@ describe('Hooks', function () {
     }
 
     it('should invoke hooks on all instances', async function () {
-        const container = createContainer().add(fromClass(Logger)).add(fromClass(LogsRepo));
+        const container = createContainer().add(Registration.fromClass(Logger)).add(Registration.fromClass(LogsRepo));
 
         const logger = container.resolve<Logger>('logger');
         logger.log('Hello');
@@ -69,7 +69,7 @@ describe('Hooks', function () {
     });
 
     it('should make logger be ready on resolve', function () {
-        const container = createContainer().add(fromClass(Logger)).add(fromClass(LogsRepo));
+        const container = createContainer().add(Registration.fromClass(Logger)).add(Registration.fromClass(LogsRepo));
 
         const logger = container.resolve<Logger>('logger');
 

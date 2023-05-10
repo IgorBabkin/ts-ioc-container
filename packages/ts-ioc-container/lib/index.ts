@@ -16,7 +16,7 @@ export { AutoMockedContainer } from './container/AutoMockedContainer';
 export { ProviderKey } from './provider/IProvider';
 export { ProviderBuilder } from './provider/ProviderBuilder';
 export { isProviderKey } from './provider/IProvider';
-export { perTags, forKey, fromClass, fromValue, fromFn, asSingleton } from './registration/helpers';
+export { perTags, forKey, asSingleton, Registration } from './registration/Registration';
 
 export const by =
     <T>(key: InjectionToken<T>, ...args: unknown[]) =>
