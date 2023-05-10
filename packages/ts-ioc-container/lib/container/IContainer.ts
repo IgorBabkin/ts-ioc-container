@@ -1,11 +1,14 @@
 import { IProvider, ProviderKey, Tag } from '../provider/IProvider';
 import { constructor } from '../types';
-import { IRegistration } from '../registration/IRegistration';
 
 export type InjectionToken<T = unknown> = constructor<T> | ProviderKey;
 
 export interface Resolvable {
     resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T;
+}
+
+export interface IModule {
+    applyTo(container: IContainer): void;
 }
 
 export interface IContainer extends Resolvable {
@@ -21,5 +24,5 @@ export interface IContainer extends Resolvable {
 
     dispose(): void;
 
-    add(registration: IRegistration): this;
+    add(module: IModule): this;
 }

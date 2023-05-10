@@ -2,11 +2,10 @@ import { ProviderKey, Tag } from '../provider/IProvider';
 import { ArgsFn } from '../provider/ArgsProvider';
 import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
 import { MapFn } from '../types';
-import { IContainer } from '../container/IContainer';
+import { IContainer, IModule } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
-import { IRegistration } from './IRegistration';
 
-export class Registration implements IRegistration {
+export class Registration implements IModule {
     private key?: ProviderKey;
 
     constructor(private providerBuilder: ProviderBuilder) {}
@@ -40,7 +39,7 @@ export class Registration implements IRegistration {
         return this;
     }
 
-    appendTo(container: IContainer): void {
+    applyTo(container: IContainer): void {
         if (!this.key) {
             throw new RegistrationMissingKeyError('Pls provide registration keys for current providerBuilder');
         }

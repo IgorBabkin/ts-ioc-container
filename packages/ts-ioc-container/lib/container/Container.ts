@@ -1,11 +1,10 @@
-import { IContainer, InjectionToken } from './IContainer';
+import { IContainer, IModule, InjectionToken } from './IContainer';
 import { IInjector } from '../IInjector';
 import { IProvider, isProviderKey, ProviderKey, Tag, Tagged } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
 import { constructor } from '../types';
-import { IRegistration } from '../registration/IRegistration';
 
 export class Container implements IContainer, Tagged {
     private readonly providers = new ProviderRepo();
@@ -20,8 +19,8 @@ export class Container implements IContainer, Tagged {
         this.tags = options.tags ?? [];
     }
 
-    add(registration: IRegistration): this {
-        registration.appendTo(this);
+    add(module: IModule): this {
+        module.applyTo(this);
         return this;
     }
 

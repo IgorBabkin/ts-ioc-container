@@ -88,7 +88,7 @@ container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgsFn((cont
 container.register('ILogger', ProviderBuilder.fromValue(new Logger()).build());
 ```
 
-## Registration (Provider + ProviderKey)
+## Registration module (Provider + ProviderKey)
 
 ```typescript
 import { asSingleton, forKey, fromClass } from "ts-ioc-container";
@@ -102,7 +102,7 @@ class Logger {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .accept(fromClass(Logger));
+  .add(fromClass(Logger));
 const logger = container.resolve<ILogger>('ILogger');
 logger.info('Hello world');
 ```
@@ -135,7 +135,7 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .accept(fromClass(Engine));
+  .add(fromClass(Engine));
 ```
 
 ## Hooks
@@ -178,7 +178,7 @@ const injector: IInjector = {
 }
 
 const container = new Container(injector)
-  .accept(fromClass(Logger));
+  .add(fromClass(Logger));
 const logger = container.resolve<ILogger>('ILogger'); // initialized
 for (const instance of container.getInstances()) {
   onDisposeReflector.invokeHooksOf(instance); // disposed
@@ -206,8 +206,8 @@ class Engine {
 }
 
 const container = new Container(injector, { tags: ['root'] })
-  .accept(fromClass(Logger))
-  .accept(fromClass(Engine));
+  .add(fromClass(Logger))
+  .add(fromClass(Engine));
 
 const scope = container.createScope(['home', 'child']);
 const logger = scope.resolve('ILogger');

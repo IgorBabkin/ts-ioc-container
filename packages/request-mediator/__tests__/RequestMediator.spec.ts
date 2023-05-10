@@ -45,7 +45,7 @@ class QueryHandler3 implements IQueryHandler<EmptyType, void> {
 
 describe('RequestMediator', () => {
     it('should invoke middleware', async () => {
-        const container = createContainer().accept(fromValue(new Logger('logger', [])).forKey('Logger'));
+        const container = createContainer().add(fromValue(new Logger('logger', [])).forKey('Logger'));
 
         const mediator = new RequestMediator(new ContainerAdapter(container));
 

@@ -80,9 +80,7 @@ class TestTransaction implements ITransactionContext {
 describe('RequestMediator', () => {
     it('should invoke middleware', async () => {
         const logger = new Logger('logger', []);
-        const container = createContainer()
-            .accept(fromValue(logger).forKey('Logger'))
-            .accept(fromClass(TestTransaction));
+        const container = createContainer().add(fromValue(logger).forKey('Logger')).add(fromClass(TestTransaction));
 
         const mediator = new RequestMediator(new ContainerAdapter(container));
 
