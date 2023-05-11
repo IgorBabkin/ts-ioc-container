@@ -38,9 +38,8 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 How to create new container
 
 ```typescript
-import { Container, IContainer, IInjector } from "ts-ioc-container";
+import { Container, IContainer, IInjector, ProviderBuilder } from "ts-ioc-container";
 import { resolve } from 'ts-constructor-injector';
-import { ProviderBuilder } from "ts-ioc-container/lib";
 
 class Logger {
   info(message: string) {

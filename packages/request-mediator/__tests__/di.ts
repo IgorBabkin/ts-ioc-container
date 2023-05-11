@@ -1,7 +1,6 @@
-import { constructor, Container, IContainer, IInjector, Resolvable } from 'ts-ioc-container';
+import { constructor, Container, IContainer, IInjector, ProviderBuilder, Resolvable } from 'ts-ioc-container';
 import { AsyncMethodReflector, resolve } from 'ts-constructor-injector';
 import { IDependencyContainer, Scope } from '../lib';
-import { ProviderBuilder } from 'ts-ioc-container/lib';
 
 const onDisposeReflector = new AsyncMethodReflector('onDispose');
 export const onDispose = onDisposeReflector.createMethodHookDecorator();
