@@ -3,16 +3,16 @@ import { ArgsFn } from '../provider/ArgsProvider';
 import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
 import { IContainer, IContainerModule } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
-import { RegistrationReflector } from './RegistrationReflector';
+import { MapperReflector } from '../MapperReflector';
 import { constructor, identity } from '../utils';
 
-const registrationReflector = new RegistrationReflector();
+const reflector = new MapperReflector<Registration>('registration');
 
 export class Registration implements IContainerModule {
     private key?: ProviderKey;
 
     static fromClass<T>(Target: constructor<T>): Registration {
-        const map = registrationReflector.getMapper(Target) ?? identity;
+        const map = reflector.getMapper(Target) ?? identity;
         return map(new Registration(ProviderBuilder.fromClass(Target)));
     }
 
@@ -59,20 +59,8 @@ export class Registration implements IContainerModule {
     }
 }
 
-export const perTags =
-    (...tags: Tag[]): ClassDecorator =>
-    (target: any) => {
-        registrationReflector.appendMapper(target, (registration) => registration.perTags(...tags));
-    };
-
-export const asSingleton =
-    (...tags: Tag[]): ClassDecorator =>
-    (target: any) => {
-        registrationReflector.appendMapper(target, (registration) => registration.asSingleton(...tags));
-    };
-
 export const forKey =
     (key: ProviderKey): ClassDecorator =>
     (target: any) => {
-        registrationReflector.appendMapper(target, (registration) => registration.forKey(key));
+        reflector.appendMapper(target, (registration) => registration.forKey(key));
     };

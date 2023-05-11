@@ -1,11 +1,13 @@
 import 'reflect-metadata';
 import {
+    asSingleton,
     constructor,
     Container,
     ContainerDisposedError,
     forKey,
     IContainer,
     IInjector,
+    ProviderBuilder,
     ProviderNotFoundError,
     Registration,
 } from '../lib';
@@ -89,5 +91,14 @@ describe('IocContainer', function () {
         const container = createContainer().add(Registration.fromClass(Logger).withArgs('main'));
 
         expect(container.resolve<Logger>('logger').topic).toBe('main');
+    });
+
+    it('should use builder decorators', function () {
+        @asSingleton()
+        class Logger1 {}
+
+        const container = createContainer().register('logger', ProviderBuilder.fromClass(Logger1).build());
+
+        expect(container.resolve('logger')).toBe(container.resolve('logger'));
     });
 });

@@ -2,12 +2,16 @@ import { IProvider, ResolveDependency, Tag } from './IProvider';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { SingletonProvider } from './SingletonProvider';
-import { constructor } from '../utils';
+import { constructor, identity } from '../utils';
 import { Provider } from './Provider';
+import { MapperReflector } from '../MapperReflector';
+
+const reflector = new MapperReflector<ProviderBuilder>('provider');
 
 export class ProviderBuilder {
     static fromClass(Target: constructor<unknown>): ProviderBuilder {
-        return new ProviderBuilder(new Provider((container, ...args) => container.resolve(Target, ...args)));
+        const map = reflector.getMapper(Target) ?? identity;
+        return map(new ProviderBuilder(new Provider((container, ...args) => container.resolve(Target, ...args))));
     }
 
     static fromValue(value: unknown): ProviderBuilder {
@@ -47,3 +51,15 @@ export class ProviderBuilder {
         return this.provider;
     }
 }
+
+export const perTags =
+    (...tags: Tag[]): ClassDecorator =>
+    (target: any) => {
+        reflector.appendMapper(target, (builder) => builder.perTags(...tags));
+    };
+
+export const asSingleton =
+    (...tags: Tag[]): ClassDecorator =>
+    (target: any) => {
+        reflector.appendMapper(target, (builder) => builder.asSingleton(...tags));
+    };
