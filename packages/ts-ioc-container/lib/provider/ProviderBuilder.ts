@@ -2,15 +2,27 @@ import { IProvider, ResolveDependency, Tag } from './IProvider';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { SingletonProvider } from './SingletonProvider';
-import { constructor, identity } from '../utils';
+import { constructor, MapFn } from '../utils';
 import { Provider } from './Provider';
-import { MapperReflector } from '../MapperReflector';
+import { reduceProp, getProp } from '../reflection';
 
-const reflector = new MapperReflector<ProviderBuilder>('provider');
+export const perTags = (...tags: Tag[]): ClassDecorator =>
+    reduceProp<MapFn<ProviderBuilder>>(
+        'provider',
+        (prev) => (builder) => prev(builder).perTags(...tags),
+        (x) => x,
+    );
+
+export const asSingleton = (...tags: Tag[]): ClassDecorator =>
+    reduceProp<MapFn<ProviderBuilder>>(
+        'provider',
+        (prev) => (builder) => prev(builder).asSingleton(...tags),
+        (x) => x,
+    );
 
 export class ProviderBuilder {
     static fromClass(Target: constructor<unknown>): ProviderBuilder {
-        const map = reflector.getMapper(Target) ?? identity;
+        const map: MapFn<ProviderBuilder> = getProp(Target, 'provider') ?? ((x) => x);
         return map(new ProviderBuilder(new Provider((container, ...args) => container.resolve(Target, ...args))));
     }
 
@@ -51,15 +63,3 @@ export class ProviderBuilder {
         return this.provider;
     }
 }
-
-export const perTags =
-    (...tags: Tag[]): ClassDecorator =>
-    (target: any) => {
-        reflector.appendMapper(target, (builder) => builder.perTags(...tags));
-    };
-
-export const asSingleton =
-    (...tags: Tag[]): ClassDecorator =>
-    (target: any) => {
-        reflector.appendMapper(target, (builder) => builder.asSingleton(...tags));
-    };

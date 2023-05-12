@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { inject } from 'ts-constructor-injector';
-import { asSingleton, by, forKey, Registration } from 'ts-ioc-container';
+import { asSingleton, by, forKey, ProviderBuilder, Registration } from 'ts-ioc-container';
 import { Context } from './context/Context';
 import {
     IQueryHandler,
@@ -81,7 +81,7 @@ describe('RequestMediator', () => {
     it('should invoke middleware', async () => {
         const logger = new Logger('logger', []);
         const container = createContainer()
-            .add(Registration.fromValue(logger).forKey('Logger'))
+            .register('Logger', ProviderBuilder.fromValue(logger).build())
             .add(Registration.fromClass(TestTransaction));
 
         const mediator = new RequestMediator(new ContainerAdapter(container));

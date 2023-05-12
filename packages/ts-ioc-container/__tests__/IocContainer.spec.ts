@@ -45,7 +45,9 @@ describe('IocContainer', function () {
     it('should throws an error if provider key is not defined', function () {
         const container = createContainer();
 
-        expect(() => container.add(Registration.fromValue(5))).toThrow(RegistrationMissingKeyError);
+        class TestClass {}
+
+        expect(() => container.add(Registration.fromClass(TestClass))).toThrow(RegistrationMissingKeyError);
     });
 
     it('should keep all instances', function () {
