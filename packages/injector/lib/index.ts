@@ -1,6 +1,6 @@
 export { resolve, inject } from './resolve';
 export { to, toWrite, matchContext } from './collection';
-export { prop, getProp, getPropOrFail, attr, field } from './metadata';
+export { prop, getProp, getPropOrFail, attr, field, hook, getHooks } from './reflection';
 export { composeDecorators } from './utils';
 export { pipe, Fn } from './pipe';
 export { pipeWrite } from './pipeWrite';

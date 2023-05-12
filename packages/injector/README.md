@@ -65,3 +65,23 @@ class Logger {
   await onDisposeReflector.invokeHooksOf(instance, 'disposed'); // disposed  
 })()
 ```
+
+### Hooks
+
+```typescript
+import { hook, getHooks } from "ts-constructor-injector";
+
+class Logger {
+  @hook('onDispose')
+  async dispose(message: string): Promise<void> {
+    console.log(message);
+  }
+}
+
+(async () => {
+  const instance = new Logger();
+  for (const hook of getHooks(instance, 'onDispose')) {
+    await instance[hook]('disposed'); // disposed
+  }
+})()
+```

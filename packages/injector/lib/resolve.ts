@@ -1,5 +1,5 @@
 import { constructor, InjectFn } from './types';
-import { attr, getProp } from './metadata';
+import { attr, getProp } from './reflection';
 import { constant, merge } from './utils';
 import { Fn } from './pipe';
 

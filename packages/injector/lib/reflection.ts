@@ -36,3 +36,19 @@ export function getPropOrFail<T>(target: Object, key: string | symbol): T {
     }
     return value;
 }
+
+export const hook =
+    (key: string | symbol): MethodDecorator =>
+    (target, propertyKey) => {
+        const hooks = Reflect.hasMetadata(key, target.constructor) ? Reflect.getMetadata(key, target) : [];
+        Reflect.defineMetadata(key, [...hooks, propertyKey], target.constructor); // eslint-disable-line @typescript-eslint/ban-types
+    };
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function getHooks(target: Object, key: string | symbol): string[] {
+    if (Reflect.hasMetadata(key, target.constructor)) {
+        return Reflect.getMetadata(key, target.constructor);
+    } else {
+        return [];
+    }
+}
