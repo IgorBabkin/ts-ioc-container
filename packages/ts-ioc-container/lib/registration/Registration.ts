@@ -12,7 +12,7 @@ export const forKey = (key: ProviderKey): ClassDecorator => setProp('provider-ke
 export class Registration implements IContainerModule {
     static fromClass<T>(Target: constructor<T>): Registration {
         const providerKey = getProp<ProviderKey>(Target, 'provider-key');
-        if (!providerKey) {
+        if (providerKey === undefined) {
             throw new RegistrationMissingKeyError(`Pls provide provider key for ${Target.name}`);
         }
         return new Registration(providerKey, ProviderBuilder.fromClass(Target));
