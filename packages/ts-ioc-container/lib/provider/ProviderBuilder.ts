@@ -23,11 +23,11 @@ export const asSingleton = (...tags: Tag[]): ClassDecorator =>
 export class ProviderBuilder {
     static fromClass(Target: constructor<unknown>): ProviderBuilder {
         const map: MapFn<ProviderBuilder> = getProp(Target, 'provider') ?? ((x) => x);
-        return map(new ProviderBuilder(new Provider((container, ...args) => container.resolve(Target, ...args))));
+        return map(new ProviderBuilder(Provider.fromClass(Target)));
     }
 
     static fromValue(value: unknown): ProviderBuilder {
-        return new ProviderBuilder(new Provider(() => value));
+        return new ProviderBuilder(Provider.fromValue(value));
     }
 
     static fromFn(fn: ResolveDependency): ProviderBuilder {
