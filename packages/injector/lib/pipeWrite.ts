@@ -1,6 +1,15 @@
 import { InjectFn } from './types';
 import { Fn, pipe } from './pipe';
-import { pure, run, WriteFn } from './writeMonad';
+
+export type Write<T> = [T, string[]];
+function pure<T>(value: T): Write<T> {
+    return [value, []];
+}
+function run<T>([value]: Write<T>): T {
+    return value;
+}
+
+export type WriteFn<A, B> = (value: Write<A>, ...args: any[]) => Write<B>;
 
 export function pipeWrite<A, B>(a: WriteFn<A, B>): Fn<A, B>;
 export function pipeWrite<A, B, C>(a: WriteFn<A, B>, b: WriteFn<B, C>): Fn<A, C>;

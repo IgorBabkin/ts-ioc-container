@@ -1,7 +1,6 @@
 import { constructor, InjectFn } from './types';
 import { attr, getProp } from './reflection';
 import { constant, merge } from './utils';
-import { Fn } from './pipe';
 
 const INJECT_METADATA_KEY = 'INJECT_METADATA_FN';
 
@@ -13,6 +12,4 @@ export function resolve<Context>(context: Context) {
     };
 }
 
-export function inject<Context>(fn: Fn<Context, unknown>) {
-    return attr(INJECT_METADATA_KEY)(fn);
-}
+export const inject = attr(INJECT_METADATA_KEY);

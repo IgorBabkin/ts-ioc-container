@@ -1,5 +1,3 @@
-import { PropNotFoundError } from './errors/PropNotFoundError';
-
 export const prop =
     <T>(key: string | symbol, value: T): ClassDecorator =>
     (target) => {
@@ -28,15 +26,6 @@ export function getProp<T>(target: Object, key: string | symbol): T | undefined 
     return Reflect.getOwnMetadata(key, target) as T;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function getPropOrFail<T>(target: Object, key: string | symbol): T {
-    const value = getProp<T>(target, key);
-    if (!value) {
-        throw new PropNotFoundError(`Cannot find prop - ${key.toString()}`);
-    }
-    return value;
-}
-
 export const hook =
     (key: string | symbol): MethodDecorator =>
     (target, propertyKey) => {
@@ -46,9 +35,5 @@ export const hook =
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function getHooks(target: Object, key: string | symbol): string[] {
-    if (Reflect.hasMetadata(key, target.constructor)) {
-        return Reflect.getMetadata(key, target.constructor);
-    } else {
-        return [];
-    }
+    return Reflect.hasMetadata(key, target.constructor) ? Reflect.getMetadata(key, target.constructor) : [];
 }

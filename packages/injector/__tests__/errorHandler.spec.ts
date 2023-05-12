@@ -1,4 +1,4 @@
-import { handleAsyncError, HandleErrorParams } from '../lib';
+import { handleAsyncError, handleError, HandleErrorParams } from '../lib';
 
 function sleep(number: number) {
     return new Promise((resolve) => setTimeout(resolve, number));
@@ -17,7 +17,7 @@ const networkToTestError: HandleErrorParams = (error: unknown, context: { target
     throw new TestError(error, context);
 };
 
-class Repo {
+class AsyncRepo {
     @handleAsyncError(networkToTestError)
     async saveSmth() {
         await sleep(1000);
@@ -25,8 +25,20 @@ class Repo {
     }
 }
 
-describe('handleAsyncError', function () {
+class Repo {
+    @handleError(networkToTestError)
+    saveSmth() {
+        throw new Error('error');
+    }
+}
+
+describe('handleError', function () {
     it('should handle async error', async function () {
+        const repo = new AsyncRepo();
+        await expect(async () => await repo.saveSmth()).rejects.toThrowError(TestError);
+    });
+
+    it('should handle error', async function () {
         const repo = new Repo();
         await expect(async () => await repo.saveSmth()).rejects.toThrowError(TestError);
     });

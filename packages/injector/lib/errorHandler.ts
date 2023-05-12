@@ -12,3 +12,17 @@ export const handleAsyncError =
         };
         return descriptor;
     };
+
+export const handleError =
+    (errorHandler: HandleErrorParams): MethodDecorator =>
+    (target, propertyKey, descriptor: PropertyDescriptor) => {
+        const originalMethod = descriptor.value;
+        descriptor.value = function (...args: unknown[]) {
+            try {
+                return originalMethod.apply(this, args);
+            } catch (e) {
+                errorHandler(e, { target: (target as any).constructor.name, method: propertyKey as string });
+            }
+        };
+        return descriptor;
+    };

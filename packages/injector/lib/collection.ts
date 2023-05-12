@@ -2,7 +2,7 @@ import { constructor } from './types';
 import { getProp, prop } from './reflection';
 import { resolve } from './resolve';
 import { constant } from './utils';
-import { Write } from './writeMonad';
+import { Write } from './pipeWrite';
 
 type Predicate<T> = (value: T) => boolean;
 

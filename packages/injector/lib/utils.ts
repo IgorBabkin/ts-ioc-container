@@ -1,5 +1,3 @@
-export const id = <A>(value: A) => value;
-
 export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
     if (baseArr.length === 0) {
         return insertArr;

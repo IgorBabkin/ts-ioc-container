@@ -1,11 +1,10 @@
 export { resolve, inject } from './resolve';
-export { to, toWrite, matchContext } from './collection';
-export { prop, getProp, getPropOrFail, attr, field, hook, getHooks } from './reflection';
+export { prop, getProp, attr, field, hook, getHooks } from './reflection';
 export { composeDecorators } from './utils';
 export { pipe, Fn } from './pipe';
-export { pipeWrite } from './pipeWrite';
-export { constructor, InjectFn, InjectionDecorator, InjectionPropertyDecorator } from './types';
-export { Write, WriteFn } from './writeMonad';
+export { pipeWrite, Write, WriteFn } from './pipeWrite';
+export { constructor, InjectFn, InjectionDecorator } from './types';
 export { AsyncMethodReflector } from './AsyncMethodReflector';
 export { MethodReflector } from './MethodReflector';
-export { handleAsyncError, HandleErrorParams } from './errorHandler';
+export { matchContext, toWrite, to } from './collection';
+export { handleError, handleAsyncError, HandleErrorParams } from './errorHandler';
