@@ -1,6 +1,6 @@
 {
   "name": "ts-constructor-injector",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Injector",
   "author": "igorbabkin <igba14@gmail.com>",
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/injector",
