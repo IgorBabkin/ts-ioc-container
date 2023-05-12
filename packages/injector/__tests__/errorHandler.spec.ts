@@ -13,7 +13,7 @@ class TestError extends Error {
     }
 }
 
-const networkToTestError: HandleErrorParams = (error: unknown, context: { target: string; method: string }) => {
+const networkToTestError: HandleErrorParams = (error, context) => {
     throw new TestError(error, context);
 };
 

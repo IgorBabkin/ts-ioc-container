@@ -85,3 +85,40 @@ class Logger {
   }
 })()
 ```
+
+### ErrorHandler
+
+```typescript
+import { handleAsyncError } from "ts-constructor-injector";
+
+const prismaToDomainError: HandleErrorParams = (error, context) => {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    switch (error.code) {
+      case "P2002":
+        throw new PersistenceConflictError(errorToString(error));
+      case "P2025":
+        throw new EntityNotFoundError(errorToString(error));
+      default:
+        throw new PersistenceError(errorToString(error));
+    }
+  }
+
+  throw new UnknownError(errorToString(error));
+};
+
+class AsyncRepo {
+  @handleAsyncError(prismaToDomainError)
+  async saveSmth() {
+    await sleep(1000);
+    throw new Prisma.PrismaClientKnownRequestError("P2002");
+  }
+}
+
+class Repo {
+  @handleError(prismaToDomainError)
+  saveSmth() {
+    throw new Prisma.PrismaClientKnownRequestError("P2002");
+  }
+}
+```
+
