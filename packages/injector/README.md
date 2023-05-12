@@ -39,7 +39,6 @@ const logger = resolve({topic: 'main'})(Logger);
 
 ```typescript
 import { AsyncMethodReflector, MethodReflector } from "ts-constructor-injector";
-import { onDispose } from "./di";
 
 export const onConstructReflector = new MethodReflector('OnConstructHook');
 export const onConstruct = onConstructReflector.createMethodHookDecorator();
