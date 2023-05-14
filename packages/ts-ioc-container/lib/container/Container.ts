@@ -1,6 +1,14 @@
-import { IContainer, IContainerModule, InjectionToken } from './IContainer';
+import {
+    DependencyKey,
+    IContainer,
+    IContainerModule,
+    InjectionToken,
+    isDependencyKey,
+    Tag,
+    Tagged,
+} from './IContainer';
 import { IInjector } from '../IInjector';
-import { IProvider, isProviderKey, ProviderKey, Tag, Tagged } from '../provider/IProvider';
+import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
@@ -19,7 +27,7 @@ export class Container implements IContainer, Tagged {
         this.tags = options.tags ?? [];
     }
 
-    register(key: ProviderKey, provider: IProvider): this {
+    register(key: DependencyKey, provider: IProvider): this {
         this.validateContainer();
         this.providers.add(key, provider);
         return this;
@@ -27,7 +35,7 @@ export class Container implements IContainer, Tagged {
 
     resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T {
         this.validateContainer();
-        return isProviderKey(key) ? this.resolveByProvider(key, ...args) : this.resolveByInjector(key, ...args);
+        return isDependencyKey(key) ? this.resolveByProvider(key, ...args) : this.resolveByInjector(key, ...args);
     }
 
     private resolveByProvider<T>(key: string | symbol, ...args: unknown[]): T {
@@ -68,7 +76,7 @@ export class Container implements IContainer, Tagged {
         this.instances.clear();
     }
 
-    getProviders(): Map<ProviderKey, IProvider> {
+    getProviders(): Map<DependencyKey, IProvider> {
         return this.providers.merge(this.parent.getProviders());
     }
 

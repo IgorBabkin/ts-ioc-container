@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { AutoMockedContainer, by, constructor, Container, IContainer, IInjector, ProviderKey } from '../lib';
+import { AutoMockedContainer, by, constructor, Container, IContainer, IInjector, DependencyKey } from '../lib';
 import { inject, resolve } from 'ts-constructor-injector';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
@@ -51,9 +51,9 @@ export function createMock<T>(): IMock<T> {
 }
 
 export class MoqContainer extends AutoMockedContainer {
-    private mocks = new Map<ProviderKey, IMock<any>>();
+    private mocks = new Map<DependencyKey, IMock<any>>();
 
-    resolve<T>(key: ProviderKey): T {
+    resolve<T>(key: DependencyKey): T {
         return this.resolveMock<T>(key).object();
     }
 
@@ -61,7 +61,7 @@ export class MoqContainer extends AutoMockedContainer {
         this.mocks.clear();
     }
 
-    resolveMock<T>(key: ProviderKey): IMock<T> {
+    resolveMock<T>(key: DependencyKey): IMock<T> {
         if (!this.mocks.has(key)) {
             this.mocks.set(key, createMock());
         }

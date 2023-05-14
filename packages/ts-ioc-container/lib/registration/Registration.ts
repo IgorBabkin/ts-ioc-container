@@ -1,23 +1,22 @@
-import { ProviderKey, Tag } from '../provider/IProvider';
 import { ArgsFn } from '../provider/ArgsProvider';
 import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
-import { IContainer, IContainerModule } from '../container/IContainer';
+import { DependencyKey, IContainer, IContainerModule, Tag } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
 import { constructor } from '../utils';
 import { getProp, setProp } from '../reflection';
 
-export const forKey = (key: ProviderKey): ClassDecorator => setProp('provider-key', key);
+export const forKey = (key: DependencyKey): ClassDecorator => setProp('DependencyKey', key);
 
 export class Registration implements IContainerModule {
     static fromClass<T>(Target: constructor<T>): Registration {
-        const providerKey = getProp<ProviderKey>(Target, 'provider-key');
-        if (providerKey === undefined) {
-            throw new RegistrationMissingKeyError(`Pls provide provider key for ${Target.name}`);
+        const dependencyKey = getProp<DependencyKey>(Target, 'DependencyKey');
+        if (dependencyKey === undefined) {
+            throw new RegistrationMissingKeyError(`Pls provide dependency key for ${Target.name}`);
         }
-        return new Registration(providerKey, ProviderBuilder.fromClass(Target));
+        return new Registration(dependencyKey, ProviderBuilder.fromClass(Target));
     }
 
-    constructor(private key: ProviderKey, private providerBuilder: ProviderBuilder) {}
+    constructor(private key: DependencyKey, private providerBuilder: ProviderBuilder) {}
 
     withArgs(...extraArgs: unknown[]): this {
         this.providerBuilder = this.providerBuilder.withArgs(...extraArgs);

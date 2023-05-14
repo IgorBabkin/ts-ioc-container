@@ -1,5 +1,6 @@
-import { IProvider, Tag, Tagged } from './IProvider';
+import { IProvider } from './IProvider';
 import { ProviderDecorator } from './ProviderDecorator';
+import { Tag, Tagged } from '../container/IContainer';
 
 export class TaggedProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private readonly tags: Tag[]) {

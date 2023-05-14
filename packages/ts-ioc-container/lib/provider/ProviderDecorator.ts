@@ -1,5 +1,5 @@
-import { Resolvable } from '../container/IContainer';
-import { IProvider, Tagged } from './IProvider';
+import { Resolvable, Tagged } from '../container/IContainer';
+import { IProvider } from './IProvider';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
     protected constructor(private decorated: IProvider<T>) {}

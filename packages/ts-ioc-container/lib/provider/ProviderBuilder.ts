@@ -1,10 +1,11 @@
-import { IProvider, ResolveDependency, Tag } from './IProvider';
+import { IProvider, ResolveDependency } from './IProvider';
 import { ArgsFn, ArgsProvider } from './ArgsProvider';
 import { TaggedProvider } from './TaggedProvider';
 import { SingletonProvider } from './SingletonProvider';
 import { constructor, MapFn } from '../utils';
 import { Provider } from './Provider';
 import { reduceProp, getProp } from '../reflection';
+import { Tag } from '../container/IContainer';
 
 export const perTags = (...tags: Tag[]): ClassDecorator =>
     reduceProp<MapFn<ProviderBuilder>>(
