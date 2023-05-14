@@ -87,7 +87,7 @@ container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgsFn((cont
 container.register('ILogger', ProviderBuilder.fromValue(new Logger()).build());
 ```
 
-## Registration module (Provider + ProviderKey)
+## Registration module (Provider + DependencyKey)
 
 ```typescript
 import { asSingleton, forKey, Registration } from "ts-ioc-container";
@@ -241,13 +241,14 @@ const container = new Container(injector, { tags: ['root'] })
 import {
   AutoMockedContainer,
   Container,
+  DependencyKey,
 } from "ts-ioc-container";
 import { Mock } from "moq.ts";
 
 export class MoqContainer extends AutoMockedContainer {
-  private mocks = new Map<ProviderKey, IMock<any>>();
+  private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolve<T>(key: ProviderKey): T {
+  resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 
@@ -255,7 +256,7 @@ export class MoqContainer extends AutoMockedContainer {
     this.mocks.clear();
   }
 
-  resolveMock<T>(key: ProviderKey): IMock<T> {
+  resolveMock<T>(key: DependencyKey): IMock<T> {
     if (!this.mocks.has(key)) {
       this.mocks.set(key, new Mock());
     }
