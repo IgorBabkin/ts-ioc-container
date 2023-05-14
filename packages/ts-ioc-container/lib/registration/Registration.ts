@@ -4,8 +4,7 @@ import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
 import { IContainer, IContainerModule } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
 import { constructor } from '../utils';
-import { setProp } from '../reflection';
-import { getProp } from 'ts-constructor-injector';
+import { getProp, setProp } from '../reflection';
 
 export const forKey = (key: ProviderKey): ClassDecorator => setProp('provider-key', key);
 
