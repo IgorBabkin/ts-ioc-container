@@ -6,6 +6,7 @@
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
 ## Advantages
+- battle tested
 - written on `typescript`
 - simple and lightweight (roughly it's just one file of **~100 lines**) :heart:
 - clean API
