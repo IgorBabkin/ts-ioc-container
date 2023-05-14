@@ -279,7 +279,7 @@ describe('test', () => {
 
 ## Errors
 
-- [DependencyNotFoundError.ts](lib%2Fprovider%2FDependencyNotFoundError.ts)
+- [DependencyNotFoundError.ts](lib%2Fcontainer%2FDependencyNotFoundError.ts)
 - [DependencyMissingKeyError.ts](lib%2Fregistration%2FDependencyMissingKeyError.ts)
 - [MethodNotImplementedError.ts](lib%2FMethodNotImplementedError.ts)
 - [ContainerDisposedError.ts](lib%2Fcontainer%2FContainerDisposedError.ts)
