@@ -1,6 +1,6 @@
 import { DependencyKey, IContainer, InjectionToken } from './IContainer';
-import { MethodNotImplementedError } from '../MethodNotImplementedError';
-import { ProviderNotFoundError } from '../provider/ProviderNotFoundError';
+import { MethodNotImplementedError } from './MethodNotImplementedError';
+import { DependencyNotFoundError } from './DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 
 export class EmptyContainer implements IContainer {
@@ -17,7 +17,7 @@ export class EmptyContainer implements IContainer {
     }
 
     resolve<T>(key: InjectionToken<T>): T {
-        throw new ProviderNotFoundError(`Cannot find ${key.toString()}`);
+        throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
     }
 
     getProviders(): Map<DependencyKey, IProvider> {

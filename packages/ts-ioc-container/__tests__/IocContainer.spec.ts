@@ -8,11 +8,11 @@ import {
     IContainer,
     IInjector,
     ProviderBuilder,
-    ProviderNotFoundError,
+    DependencyNotFoundError,
     Registration,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
-import { RegistrationMissingKeyError } from '../lib/registration/RegistrationMissingKeyError';
+import { DependencyMissingKeyError } from '../lib/registration/DependencyMissingKeyError';
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
@@ -47,7 +47,7 @@ describe('IocContainer', function () {
 
         class TestClass {}
 
-        expect(() => container.add(Registration.fromClass(TestClass))).toThrow(RegistrationMissingKeyError);
+        expect(() => container.add(Registration.fromClass(TestClass))).toThrow(DependencyMissingKeyError);
     });
 
     it('should keep all instances', function () {
@@ -70,7 +70,7 @@ describe('IocContainer', function () {
     it('should throw an error if provider is not registered', function () {
         const container = createContainer();
 
-        expect(() => container.resolve('logger')).toThrowError(ProviderNotFoundError);
+        expect(() => container.resolve('logger')).toThrowError(DependencyNotFoundError);
     });
 
     it('should throw an error when trying to resolve a dependency of disposed container', function () {

@@ -1,5 +1,5 @@
 import { ArgsFn } from '../provider/ArgsProvider';
-import { RegistrationMissingKeyError } from './RegistrationMissingKeyError';
+import { DependencyMissingKeyError } from './DependencyMissingKeyError';
 import { DependencyKey, IContainer, IContainerModule, Tag } from '../container/IContainer';
 import { ProviderBuilder } from '../provider/ProviderBuilder';
 import { constructor } from '../utils';
@@ -11,7 +11,7 @@ export class Registration implements IContainerModule {
     static fromClass<T>(Target: constructor<T>): Registration {
         const dependencyKey = getProp<DependencyKey>(Target, 'DependencyKey');
         if (dependencyKey === undefined) {
-            throw new RegistrationMissingKeyError(`Pls provide dependency key for ${Target.name}`);
+            throw new DependencyMissingKeyError(`Pls provide dependency key for ${Target.name}`);
         }
         return new Registration(dependencyKey, ProviderBuilder.fromClass(Target));
     }
