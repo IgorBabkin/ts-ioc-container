@@ -10,12 +10,11 @@ import {
 import { IInjector } from '../IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
-import { ProviderRepo } from '../provider/ProviderRepo';
 import { ContainerDisposedError } from './ContainerDisposedError';
 import { constructor } from '../utils';
 
 export class Container implements IContainer, Tagged {
-    private readonly providers = new ProviderRepo();
+    private readonly providers = new Map<DependencyKey, IProvider>();
     private readonly tags: Tag[];
     private isDisposed = false;
     private parent: IContainer;
@@ -29,7 +28,7 @@ export class Container implements IContainer, Tagged {
 
     register(key: DependencyKey, provider: IProvider): this {
         this.validateContainer();
-        this.providers.add(key, provider);
+        this.providers.set(key, provider);
         return this;
     }
 
@@ -39,7 +38,7 @@ export class Container implements IContainer, Tagged {
     }
 
     private resolveByProvider<T>(key: string | symbol, ...args: unknown[]): T {
-        const provider = this.providers.find<T>(key);
+        const provider = this.providers.get(key) as IProvider<T> | undefined;
         return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(key, ...args);
     }
 
@@ -72,12 +71,15 @@ export class Container implements IContainer, Tagged {
         for (const child of this.children) {
             child.dispose();
         }
-        this.providers.dispose();
+        for (const p of this.providers.values()) {
+            p.dispose();
+        }
+        this.providers.clear();
         this.instances.clear();
     }
 
     getProviders(): Map<DependencyKey, IProvider> {
-        return this.providers.merge(this.parent.getProviders());
+        return new Map([...this.parent.getProviders(), ...this.providers]);
     }
 
     getInstances(): unknown[] {
