@@ -1,4 +1,4 @@
-# Typescript IoC (Inversion Of Control) container :boom: :100: :green_heart:
+# Typescript IoC (Inversion Of Control) container
 
 ![NPM version:latest](https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square)
 ![npm downloads](https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square)
@@ -6,12 +6,12 @@
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
 ## Advantages
-- battle tested
+- battle tested :boom:
 - written on `typescript`
 - simple and lightweight (roughly it's just one file of **~100 lines**) :heart:
-- clean API
+- clean API :green_heart:
 - supports `tagged scopes`
-- fully test covered
+- fully test covered :100:
 - can be used with decorators `@inject`
 - composable and open to extend
 - awesome for testing (auto mocking)
@@ -83,7 +83,7 @@ container.register('ILogger', ProviderBuilder.fromClass(Logger).asSingleton('tag
 container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgs('dev').asSingleton().build());
 
 // singleton in every scope
-container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgsFn((container) => [container.resolve('isTestEnv') ? 'dev' : 'prod']).asSingleton().build());
+container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']).asSingleton().build());
 
 container.register('ILogger', ProviderBuilder.fromValue(new Logger()).build());
 ```
