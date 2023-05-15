@@ -8,6 +8,4 @@ export interface IProvider<T = unknown> {
     resolve(container: Resolvable, ...args: unknown[]): T;
 
     isValid(filters: Tagged): boolean;
-
-    dispose(): void;
 }

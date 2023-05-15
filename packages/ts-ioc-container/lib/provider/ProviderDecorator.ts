@@ -8,10 +8,6 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
         return this.decorated.clone();
     }
 
-    dispose(): void {
-        this.decorated.dispose();
-    }
-
     isValid(filters: Tagged): boolean {
         return this.decorated.isValid(filters);
     }

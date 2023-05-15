@@ -71,9 +71,6 @@ export class Container implements IContainer, Tagged {
         for (const child of this.children) {
             child.dispose();
         }
-        for (const p of this.providers.values()) {
-            p.dispose();
-        }
         this.providers.clear();
         this.instances.clear();
     }

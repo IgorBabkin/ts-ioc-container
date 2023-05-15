@@ -21,8 +21,6 @@ export class Provider<T> implements IProvider<T> {
         return this.resolveDependency(container, ...args);
     }
 
-    dispose(): void {}
-
     isValid(): boolean {
         return true;
     }
