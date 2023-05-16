@@ -92,7 +92,7 @@ describe('IocContainer', function () {
     });
 
     it('should keep argument for provider', function () {
-        const container = createContainer().add(Registration.fromClass(Logger).map(withArgs('main')));
+        const container = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('main')));
 
         expect(container.resolve<Logger>('logger').topic).toBe('main');
     });

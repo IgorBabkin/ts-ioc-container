@@ -18,7 +18,7 @@ export class Registration implements IContainerModule {
 
     constructor(private key: DependencyKey, private provider: IProvider) {}
 
-    map(...mappers: MapFn<IProvider>[]): this {
+    pipe(...mappers: MapFn<IProvider>[]): this {
         this.provider = this.provider.pipe(...mappers);
         return this;
     }
