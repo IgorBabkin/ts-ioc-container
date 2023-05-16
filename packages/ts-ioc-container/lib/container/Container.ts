@@ -52,7 +52,7 @@ export class Container implements IContainer, Tagged {
         this.validateContainer();
         const scope = new Container(this.injector, { parent: this, tags });
 
-        for (const [key, provider] of this.getProviders().entries()) {
+        for (const [key, provider] of this.getProviders()) {
             if (provider.isValid(scope)) {
                 scope.register(key, provider.clone());
             }
