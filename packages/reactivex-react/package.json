@@ -1,6 +1,6 @@
 {
   "name": "reactivex-react",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "main": "cjm/index.js",
   "module": "esm/index.js",
   "private": false,
