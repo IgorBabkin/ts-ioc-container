@@ -62,6 +62,11 @@ logger.info('Hello world');
 
 ## Provider
 
+- `perTags('tag1', 'tag2', ...)` - provider will be available only in scope with tag1 or tag2
+- `asSingleton()` - provider will be singleton in every scope
+- `withArgs(...args)` - instance will be created with args
+- `withArgsFn((scope) => [scope.resolve('somedeps'), '1', 'a'])` - instance will be created with args
+
 ```typescript
 import { Provider, asSingleton, perTags, withArgs, withArgsFn } from "ts-ioc-container";
 
@@ -87,6 +92,8 @@ container.register('ILogger', Provider.fromValue(new Logger()));
 ```
 
 ## Registration module (Provider + DependencyKey)
+
+- `Registration.fromClass(Logger)`
 
 ```typescript
 import { asSingleton, perTags, forKey, Registration } from "ts-ioc-container";
