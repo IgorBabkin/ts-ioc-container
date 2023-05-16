@@ -63,25 +63,25 @@ logger.info('Hello world');
 ## Provider
 
 ```typescript
-import { Provider, singleton, tags } from "ts-ioc-container";
+import { Provider, asSingleton, perTags, withArgs, withArgsFn } from "ts-ioc-container";
 
 const container = new Container(injector, { tags: ['root'] });
 container.register('ILogger', new Provider((container, ...args) => new Logger(...args)));
 
 // Available only in root scope and all his children
-container.register('ILogger', Provider.fromClass(Logger).pipe(tags('root')));
+container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root')));
 
 // Singleton per root tag and all his children
-container.register('ILogger', Provider.fromClass(Logger).pipe(singleton(), tags('root')));
+container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')));
 
 // singleton for scope with tag1 or tag2
-container.register('ILogger', Provider.fromClass(Logger).pipe(singleton(), tags('tag1', 'tag2')));
+container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton(), perTags('tag1', 'tag2')));
 
 // singleton in every scope
-container.register('ILogger', Provider.fromClass(Logger).pipe(args('dev'), singleton()));
+container.register('ILogger', Provider.fromClass(Logger).pipe(withArgs('dev'), asSingleton()));
 
 // singleton in every scope
-container.register('ILogger', Provider.fromClass(Logger).pipe(argsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']), singleton()));
+container.register('ILogger', Provider.fromClass(Logger).pipe(withArgsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']), asSingleton()));
 
 container.register('ILogger', Provider.fromValue(new Logger()));
 ```
@@ -89,10 +89,10 @@ container.register('ILogger', Provider.fromValue(new Logger()));
 ## Registration module (Provider + DependencyKey)
 
 ```typescript
-import { singleton, tags, forKey, Registration } from "ts-ioc-container";
+import { asSingleton, perTags, forKey, Registration } from "ts-ioc-container";
 
 @forKey('ILogger')
-@provider(singleton(), tags('root'))
+@provider(asSingleton(), perTags('root'))
 class Logger {
   info(message: string) {
     console.log(message);
@@ -108,11 +108,11 @@ logger.info('Hello world');
 ## Decorators
 
 ```typescript
-import { singleton, tags, forKey, by, Registration } from "ts-ioc-container";
+import { asSingleton, perTags, forKey, by, Registration } from "ts-ioc-container";
 import { inject } from "ts-constructor-injector";
 
 @forKey('IEngine')
-@provider(singleton(), tags('root'))
+@provider(asSingleton(), perTags('root'))
 class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {
   }
@@ -120,7 +120,7 @@ class Engine {
 
 // OR
 
-const perRoot = provider(singleton(), tags('root'))
+const perRoot = provider(asSingleton(), perTags('root'))
 
 @perRoot
 @forKey('IEngine')
@@ -186,15 +186,15 @@ for (const instance of container.getInstances()) {
 
 ```typescript
 import { composeDecorators } from "ts-constructor-injector";
-import { forKey, provider, Registration, singleton } from "ts-ioc-container";
+import { forKey, provider, Registration, asSingleton, perTags } from "ts-ioc-container";
 
 @forKey('IEngine')
-@provider(tags('root'), singleton())
+@provider(perTags('root'), asSingleton())
 class Logger {
 }
 
 @forKey('IEngine')
-@provider(tags('home'), singleton())
+@provider(perTags('home'), asSingleton())
 class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {
   }

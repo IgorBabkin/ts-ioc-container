@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-    args,
+    withArgs,
     constructor,
     Container,
     ContainerDisposedError,
@@ -12,7 +12,7 @@ import {
     Provider,
     provider,
     Registration,
-    singleton,
+    asSingleton,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
 
@@ -92,13 +92,13 @@ describe('IocContainer', function () {
     });
 
     it('should keep argument for provider', function () {
-        const container = createContainer().add(Registration.fromClass(Logger).map(args('main')));
+        const container = createContainer().add(Registration.fromClass(Logger).map(withArgs('main')));
 
         expect(container.resolve<Logger>('logger').topic).toBe('main');
     });
 
     it('should use builder decorators', function () {
-        @provider(singleton())
+        @provider(asSingleton())
         class Logger1 {}
 
         const container = createContainer().register('logger', Provider.fromClass(Logger1));

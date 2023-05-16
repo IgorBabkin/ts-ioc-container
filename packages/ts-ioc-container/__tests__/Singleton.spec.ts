@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { constructor, Container, forKey, IContainer, IInjector, provider, Registration, singleton } from '../lib';
+import { constructor, Container, forKey, IContainer, IInjector, provider, Registration, asSingleton } from '../lib';
 import { resolve } from 'ts-constructor-injector';
 
 const injector: IInjector = {
@@ -9,7 +9,7 @@ const injector: IInjector = {
 };
 
 @forKey('logger')
-@provider(singleton())
+@provider(asSingleton())
 class Logger {}
 
 describe('Singleton', function () {

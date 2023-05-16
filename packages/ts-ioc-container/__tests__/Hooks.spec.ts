@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { by, constructor, Container, IContainer, IInjector, Registration, forKey, singleton, provider } from '../lib';
+import { by, constructor, Container, IContainer, IInjector, Registration, forKey, asSingleton, provider } from '../lib';
 import { AsyncMethodReflector, inject, MethodReflector, resolve } from 'ts-constructor-injector';
 
 const onConstructReflector = new MethodReflector('onConstruct');
@@ -17,7 +17,7 @@ const injector: IInjector = {
 };
 
 @forKey('logsRepo')
-@provider(singleton())
+@provider(asSingleton())
 class LogsRepo {
     savedLogs: string[] = [];
 

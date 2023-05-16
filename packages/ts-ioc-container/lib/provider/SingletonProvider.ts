@@ -5,7 +5,7 @@ import { MapFn } from '../utils';
 
 type Boxed<T> = { value: T };
 
-export function singleton(): MapFn<IProvider> {
+export function asSingleton(): MapFn<IProvider> {
     return (provider) => new SingletonProvider(provider);
 }
 

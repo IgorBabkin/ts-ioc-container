@@ -8,8 +8,8 @@ import {
     IInjector,
     provider,
     Registration,
-    singleton,
-    tags,
+    asSingleton,
+    perTags,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
 
@@ -20,7 +20,7 @@ const injector: IInjector = {
 };
 
 @forKey('logger')
-@provider(singleton(), tags('home'))
+@provider(asSingleton(), perTags('home'))
 class Logger {}
 
 describe('Singleton', function () {
