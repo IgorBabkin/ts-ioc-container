@@ -18,7 +18,7 @@ export class Container implements IContainer, Tagged {
     private readonly tags: Tag[];
     private isDisposed = false;
     private parent: IContainer;
-    private children: Set<IContainer> = new Set();
+    private scopes: Set<IContainer> = new Set();
     private instances: Set<unknown> = new Set();
 
     constructor(private readonly injector: IInjector, options: { parent?: IContainer; tags?: Tag[] } = {}) {
@@ -58,7 +58,7 @@ export class Container implements IContainer, Tagged {
             }
         }
 
-        this.children.add(scope);
+        this.scopes.add(scope);
 
         return scope;
     }
@@ -68,8 +68,8 @@ export class Container implements IContainer, Tagged {
         this.isDisposed = true;
         this.parent.removeScope(this);
         this.parent = new EmptyContainer();
-        for (const child of this.children) {
-            child.dispose();
+        for (const scope of this.scopes) {
+            scope.dispose();
         }
         this.providers.clear();
         this.instances.clear();
@@ -81,14 +81,14 @@ export class Container implements IContainer, Tagged {
 
     getInstances(): unknown[] {
         const instances: unknown[] = Array.from(this.instances);
-        for (const child of this.children) {
+        for (const child of this.scopes) {
             instances.push(...child.getInstances());
         }
         return instances;
     }
 
     removeScope(child: IContainer): void {
-        this.children.delete(child);
+        this.scopes.delete(child);
     }
 
     hasTag(tag: Tag): boolean {
