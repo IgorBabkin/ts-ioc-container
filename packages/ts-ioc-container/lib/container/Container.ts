@@ -81,8 +81,8 @@ export class Container implements IContainer, Tagged {
 
     getInstances(): unknown[] {
         const instances: unknown[] = Array.from(this.instances);
-        for (const child of this.scopes) {
-            instances.push(...child.getInstances());
+        for (const scope of this.scopes) {
+            instances.push(...scope.getInstances());
         }
         return instances;
     }
