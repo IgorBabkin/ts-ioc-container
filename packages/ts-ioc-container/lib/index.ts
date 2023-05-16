@@ -7,10 +7,8 @@ export {
     isDependencyKey,
     DependencyKey,
     InjectionToken,
-    Tagged,
     Tag,
 } from './container/IContainer';
-export { EmptyContainer } from './container/EmptyContainer';
 export { constructor } from './utils';
 export { Container } from './container/Container';
 export { ResolveDependency, IProvider } from './provider/IProvider';
@@ -20,8 +18,8 @@ export { MethodNotImplementedError } from './container/MethodNotImplementedError
 export { ContainerDisposedError } from './container/ContainerDisposedError';
 export { Provider, provider } from './provider/Provider';
 export { ArgsFn, withArgsFn, withArgs } from './provider/ArgsProvider';
-export { SingletonProvider, asSingleton } from './provider/SingletonProvider';
-export { TaggedProvider, perTags } from './provider/TaggedProvider';
+export { asSingleton } from './provider/SingletonProvider';
+export { perTags } from './provider/TaggedProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
 export { forKey, Registration } from './registration/Registration';
 export { DependencyMissingKeyError } from './registration/DependencyMissingKeyError';
