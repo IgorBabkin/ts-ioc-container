@@ -114,6 +114,9 @@ logger.info('Hello world');
 
 ## Decorators
 
+- `@forKey('IEngine')` - set key for provider
+- `@provider(...)` - set provider modificators for class
+
 ```typescript
 import { asSingleton, perTags, forKey, by, Registration } from "ts-ioc-container";
 import { inject } from "ts-constructor-injector";
