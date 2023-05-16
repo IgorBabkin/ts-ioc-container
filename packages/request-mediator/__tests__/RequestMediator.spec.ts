@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { inject } from 'ts-constructor-injector';
-import { by, ProviderBuilder } from 'ts-ioc-container';
+import { by, Provider } from 'ts-ioc-container';
 import { Context } from './context/Context';
 import { IQueryHandler, request, RequestMediator } from '../lib';
 import { ContainerAdapter, createContainer, EmptyType, onDispose } from './di';
@@ -45,10 +45,7 @@ class QueryHandler3 implements IQueryHandler<EmptyType, void> {
 
 describe('RequestMediator', () => {
     it('should invoke middleware', async () => {
-        const container = createContainer().register(
-            'Logger',
-            ProviderBuilder.fromValue(new Logger('logger', [])).build(),
-        );
+        const container = createContainer().register('Logger', Provider.fromValue(new Logger('logger', [])));
 
         const mediator = new RequestMediator(new ContainerAdapter(container));
 

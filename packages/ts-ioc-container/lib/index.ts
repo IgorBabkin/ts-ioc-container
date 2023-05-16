@@ -18,11 +18,13 @@ export { IInjector } from './IInjector';
 export { DependencyNotFoundError } from './container/DependencyNotFoundError';
 export { MethodNotImplementedError } from './container/MethodNotImplementedError';
 export { ContainerDisposedError } from './container/ContainerDisposedError';
-export { Provider } from './provider/Provider';
-export { ArgsFn } from './provider/ArgsProvider';
+export { Provider, provider } from './provider/Provider';
+export { ArgsFn, argsFn, args } from './provider/ArgsProvider';
+export { SingletonProvider, singleton } from './provider/SingletonProvider';
+export { TaggedProvider, tags } from './provider/TaggedProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
-export { ProviderBuilder, perTags, asSingleton } from './provider/ProviderBuilder';
 export { forKey, Registration } from './registration/Registration';
+export { DependencyMissingKeyError } from './registration/DependencyMissingKeyError';
 
 export const by =
     <T>(key: InjectionToken<T>, ...args: unknown[]) =>

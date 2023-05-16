@@ -39,7 +39,7 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 How to create new container
 
 ```typescript
-import { Container, IContainer, IInjector, ProviderBuilder } from "ts-ioc-container";
+import { Container, IContainer, IInjector, Provider } from "ts-ioc-container";
 import { resolve } from 'ts-constructor-injector';
 
 class Logger {
@@ -55,46 +55,44 @@ const injector: IInjector = {
 };
 
 const container = new Container(injector)
-  .register('ILogger', ProviderBuilder.fromClass(Logger).build());
+  .register('ILogger', Provider.fromClass(Logger));
 const logger = container.resolve<ILogger>('ILogger');
 logger.info('Hello world');
 ```
 
-## Provider builder
+## Provider
 
 ```typescript
-import { ProviderBuilder } from "ts-ioc-container";
+import { Provider, singleton, tags } from "ts-ioc-container";
 
 const container = new Container(injector, { tags: ['root'] });
-container.register('ILogger', ProviderBuilder.fromFn((container, ...args) => new Logger(...args)).build());
+container.register('ILogger', new Provider((container, ...args) => new Logger(...args)));
 
 // Available only in root scope and all his children
-container.register('ILogger', ProviderBuilder.fromClass(Logger).perTags('root').build());
+container.register('ILogger', Provider.fromClass(Logger).map(tags('root')));
 
 // Singleton per root tag and all his children
-container.register('ILogger', ProviderBuilder.fromClass(Logger).asSingleton().perTags('root').build());
-// OR
-container.register('ILogger', ProviderBuilder.fromClass(Logger).asSingleton('root').build());
+container.register('ILogger', Provider.fromClass(Logger).map(singleton(), tags('root')));
 
 // singleton for scope with tag1 or tag2
-container.register('ILogger', ProviderBuilder.fromClass(Logger).asSingleton('tag1', 'tag2').build()); 
+container.register('ILogger', Provider.fromClass(Logger).map(singleton(), tags('tag1', 'tag2')));
 
 // singleton in every scope
-container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgs('dev').asSingleton().build());
+container.register('ILogger', Provider.fromClass(Logger).map(args('dev'), singleton()));
 
 // singleton in every scope
-container.register('ILogger', ProviderBuilder.fromClass(Logger).withArgsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']).asSingleton().build());
+container.register('ILogger', Provider.fromClass(Logger).map(argsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']), singleton()));
 
-container.register('ILogger', ProviderBuilder.fromValue(new Logger()).build());
+container.register('ILogger', Provider.fromValue(new Logger()));
 ```
 
 ## Registration module (Provider + DependencyKey)
 
 ```typescript
-import { asSingleton, forKey, Registration } from "ts-ioc-container";
+import { singleton, tags, forKey, Registration } from "ts-ioc-container";
 
 @forKey('ILogger')
-@asSingleton('root')
+@provider(singleton(), tags('root'))
 class Logger {
   info(message: string) {
     console.log(message);
@@ -110,11 +108,11 @@ logger.info('Hello world');
 ## Decorators
 
 ```typescript
-import { asSingleton, perTags, forKey, by, Registration } from "ts-ioc-container";
-import { composeDecorators, inject } from "ts-constructor-injector";
+import { singleton, tags, forKey, by, Registration } from "ts-ioc-container";
+import { inject } from "ts-constructor-injector";
 
 @forKey('IEngine')
-@asSingleton('root')
+@provider(singleton(), tags('root'))
 class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {
   }
@@ -122,10 +120,7 @@ class Engine {
 
 // OR
 
-const perRoot = composeDecorators(
-  asSingleton(),
-  perTags('root'),
-);
+const perRoot = provider(singleton(), tags('root'))
 
 @perRoot
 @forKey('IEngine')
@@ -191,15 +186,15 @@ for (const instance of container.getInstances()) {
 
 ```typescript
 import { composeDecorators } from "ts-constructor-injector";
-import { forKey, Registration } from "ts-ioc-container";
+import { forKey, provider, Registration, singleton } from "ts-ioc-container";
 
-@asSingleton('root')
 @forKey('IEngine')
+@provider(tags('root'), singleton())
 class Logger {
 }
 
-@asSingleton('home')
 @forKey('IEngine')
+@provider(tags('home'), singleton())
 class Engine {
   constructor(@inject(by('ILogger')) private logger: ILogger) {
   }

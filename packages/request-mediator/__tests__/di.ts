@@ -1,4 +1,4 @@
-import { constructor, Container, IContainer, IInjector, ProviderBuilder, Resolvable } from 'ts-ioc-container';
+import { constructor, Container, IContainer, IInjector, Provider, Resolvable } from 'ts-ioc-container';
 import { AsyncMethodReflector, resolve } from 'ts-constructor-injector';
 import { IDependencyContainer, Scope } from '../lib';
 
@@ -27,7 +27,7 @@ export class ContainerAdapter implements IDependencyContainer {
     }
 
     registerValue(key: string | symbol, value: unknown): void {
-        this.container.register(key, ProviderBuilder.fromValue(value).build());
+        this.container.register(key, Provider.fromValue(value));
     }
 
     resolve<T>(key: constructor<T> | symbol): T {

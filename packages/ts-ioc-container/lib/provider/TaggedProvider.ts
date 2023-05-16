@@ -1,6 +1,11 @@
 import { IProvider } from './IProvider';
 import { ProviderDecorator } from './ProviderDecorator';
 import { Tag, Tagged } from '../container/IContainer';
+import { MapFn } from '../utils';
+
+export function tags(...tags: Tag[]): MapFn<IProvider> {
+    return (provider) => new TaggedProvider(provider, tags);
+}
 
 export class TaggedProvider<T> extends ProviderDecorator<T> {
     constructor(private provider: IProvider<T>, private readonly tags: Tag[]) {

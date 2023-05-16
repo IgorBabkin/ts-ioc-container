@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { inject } from 'ts-constructor-injector';
-import { asSingleton, by, forKey, ProviderBuilder, Registration } from 'ts-ioc-container';
+import { by, forKey, Provider, provider, Registration, singleton, tags } from 'ts-ioc-container';
 import { Context } from './context/Context';
 import {
     IQueryHandler,
@@ -67,8 +67,8 @@ class QueryHandler implements IQueryHandler<EmptyType, void> {
     }
 }
 
-@asSingleton(Scope.Application)
 @forKey(ITransactionContextKey)
+@provider(singleton(), tags(Scope.Application))
 class TestTransaction implements ITransactionContext {
     constructor(private id: number = 0) {}
 
@@ -81,7 +81,7 @@ describe('RequestMediator', () => {
     it('should invoke middleware', async () => {
         const logger = new Logger('logger', []);
         const container = createContainer()
-            .register('Logger', ProviderBuilder.fromValue(logger).build())
+            .register('Logger', Provider.fromValue(logger))
             .add(Registration.fromClass(TestTransaction));
 
         const mediator = new RequestMediator(new ContainerAdapter(container));

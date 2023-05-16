@@ -1,18 +1,20 @@
 import 'reflect-metadata';
 import {
-    asSingleton,
+    args,
     constructor,
     Container,
     ContainerDisposedError,
+    DependencyMissingKeyError,
+    DependencyNotFoundError,
     forKey,
     IContainer,
     IInjector,
-    ProviderBuilder,
-    DependencyNotFoundError,
+    Provider,
+    provider,
     Registration,
+    singleton,
 } from '../lib';
 import { resolve } from 'ts-constructor-injector';
-import { DependencyMissingKeyError } from '../lib/registration/DependencyMissingKeyError';
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
@@ -90,16 +92,16 @@ describe('IocContainer', function () {
     });
 
     it('should keep argument for provider', function () {
-        const container = createContainer().add(Registration.fromClass(Logger).withArgs('main'));
+        const container = createContainer().add(Registration.fromClass(Logger).map(args('main')));
 
         expect(container.resolve<Logger>('logger').topic).toBe('main');
     });
 
     it('should use builder decorators', function () {
-        @asSingleton()
+        @provider(singleton())
         class Logger1 {}
 
-        const container = createContainer().register('logger', ProviderBuilder.fromClass(Logger1).build());
+        const container = createContainer().register('logger', Provider.fromClass(Logger1));
 
         expect(container.resolve('logger')).toBe(container.resolve('logger'));
     });

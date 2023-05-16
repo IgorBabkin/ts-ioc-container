@@ -1,8 +1,13 @@
 import { Resolvable } from '../container/IContainer';
 import { ProviderDecorator } from './ProviderDecorator';
 import { IProvider } from './IProvider';
+import { MapFn } from '../utils';
 
 type Boxed<T> = { value: T };
+
+export function singleton(): MapFn<IProvider> {
+    return (provider) => new SingletonProvider(provider);
+}
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
     private instance: Boxed<T> | null = null;
