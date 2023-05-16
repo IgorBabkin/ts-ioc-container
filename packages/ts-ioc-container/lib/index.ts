@@ -28,5 +28,5 @@ export { DependencyMissingKeyError } from './registration/DependencyMissingKeyEr
 
 export const by =
     <T>(key: InjectionToken<T>, ...args: unknown[]) =>
-    (l: IContainer) =>
-        l.resolve<T>(key, ...args);
+    (c: IContainer) =>
+        c.resolve<T>(key, ...args);
