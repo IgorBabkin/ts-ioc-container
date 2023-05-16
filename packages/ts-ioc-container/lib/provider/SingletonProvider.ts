@@ -3,7 +3,9 @@ import { ProviderDecorator } from './ProviderDecorator';
 import { IProvider } from './IProvider';
 import { MapFn } from '../utils';
 
-type Boxed<T> = { value: T };
+class Boxed<T> {
+    constructor(public value: T) {}
+}
 
 export function asSingleton(): MapFn<IProvider> {
     return (provider) => new SingletonProvider(provider);
@@ -22,8 +24,7 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
 
     resolve(container: Resolvable, ...args: unknown[]): T {
         if (this.instance === null) {
-            const instance = this.provider.resolve(container, ...args);
-            this.instance = { value: instance };
+            this.instance = new Boxed(this.provider.resolve(container, ...args));
         }
 
         return this.instance?.value as T;
