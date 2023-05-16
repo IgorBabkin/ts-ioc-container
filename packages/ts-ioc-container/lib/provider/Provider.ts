@@ -1,6 +1,6 @@
 import { IProvider, ResolveDependency } from './IProvider';
 import { Resolvable } from '../container/IContainer';
-import { constructor, MapFn } from '../utils';
+import { constructor, MapFn, pipe } from '../utils';
 import { getProp, setProp } from '../reflection';
 
 export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setProp('provider', mappers);
@@ -18,7 +18,7 @@ export class Provider<T> implements IProvider<T> {
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
     pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
-        return mappers.reduce<IProvider<T>>((acc, current) => current(acc), this);
+        return pipe(...mappers)(this);
     }
 
     clone(): Provider<T> {

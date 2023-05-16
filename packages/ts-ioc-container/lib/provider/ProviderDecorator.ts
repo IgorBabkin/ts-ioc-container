@@ -1,6 +1,6 @@
 import { Resolvable, Tagged } from '../container/IContainer';
 import { IProvider } from './IProvider';
-import { MapFn } from '../utils';
+import { MapFn, pipe } from '../utils';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
     protected constructor(private decorated: IProvider<T>) {}
@@ -18,6 +18,6 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     }
 
     pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
-        return mappers.reduce<IProvider<T>>((acc, current) => current(acc), this);
+        return pipe(...mappers)(this);
     }
 }
