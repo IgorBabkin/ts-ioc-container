@@ -8,7 +8,7 @@ export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setP
 export class Provider<T> implements IProvider<T> {
     static fromClass<T>(Target: constructor<T>): IProvider<T> {
         const mappers = getProp<MapFn<IProvider<T>>[]>(Target, 'provider') ?? [];
-        return new Provider((container, ...args) => container.resolve(Target, ...args)).map(...mappers);
+        return new Provider((container, ...args) => container.resolve(Target, ...args)).pipe(...mappers);
     }
 
     static fromValue<T>(value: T): Provider<T> {
@@ -17,7 +17,7 @@ export class Provider<T> implements IProvider<T> {
 
     constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
-    map(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
+    pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
         return mappers.reduce<IProvider<T>>((acc, current) => current(acc), this);
     }
 

@@ -69,19 +69,19 @@ const container = new Container(injector, { tags: ['root'] });
 container.register('ILogger', new Provider((container, ...args) => new Logger(...args)));
 
 // Available only in root scope and all his children
-container.register('ILogger', Provider.fromClass(Logger).map(tags('root')));
+container.register('ILogger', Provider.fromClass(Logger).pipe(tags('root')));
 
 // Singleton per root tag and all his children
-container.register('ILogger', Provider.fromClass(Logger).map(singleton(), tags('root')));
+container.register('ILogger', Provider.fromClass(Logger).pipe(singleton(), tags('root')));
 
 // singleton for scope with tag1 or tag2
-container.register('ILogger', Provider.fromClass(Logger).map(singleton(), tags('tag1', 'tag2')));
+container.register('ILogger', Provider.fromClass(Logger).pipe(singleton(), tags('tag1', 'tag2')));
 
 // singleton in every scope
-container.register('ILogger', Provider.fromClass(Logger).map(args('dev'), singleton()));
+container.register('ILogger', Provider.fromClass(Logger).pipe(args('dev'), singleton()));
 
 // singleton in every scope
-container.register('ILogger', Provider.fromClass(Logger).map(argsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']), singleton()));
+container.register('ILogger', Provider.fromClass(Logger).pipe(argsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']), singleton()));
 
 container.register('ILogger', Provider.fromValue(new Logger()));
 ```

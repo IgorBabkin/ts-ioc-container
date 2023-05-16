@@ -17,7 +17,7 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
         return this.decorated.resolve(container, ...args);
     }
 
-    map(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
+    pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
         return mappers.reduce<IProvider<T>>((acc, current) => current(acc), this);
     }
 }

@@ -10,5 +10,5 @@ export interface IProvider<T = unknown> {
 
     isValid(filters: Tagged): boolean;
 
-    map(...mappers: MapFn<IProvider<T>>[]): IProvider<T>;
+    pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T>;
 }
