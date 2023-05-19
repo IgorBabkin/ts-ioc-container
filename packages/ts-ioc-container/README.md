@@ -62,6 +62,13 @@ logger.info('Hello world');
 
 ## Provider
 
+- `Provider.fromClass` - creates dependency provider from class
+- `.pipe` - decorates provider by features and returns new provider
+- `asSingleton()` - makes provider singleton (singleton in every scope)
+- `perTags(...tags: string[])` - makes provider available only in scope with certain tags and their sub scopes
+- `withArgs(...args: unknown[])` - passes arguments to constructor
+- `withArgsFn(fn: (scope: IContainer) => unknown[])` - passes arguments to constructor as function result
+
 ```typescript
 import { Provider, asSingleton, perTags, withArgs, withArgsFn } from "ts-ioc-container";
 
