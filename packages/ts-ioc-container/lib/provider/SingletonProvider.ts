@@ -3,14 +3,14 @@ import { ProviderDecorator } from './ProviderDecorator';
 import { IProvider } from './IProvider';
 import { MapFn } from '../utils';
 
-type Boxed<T> = { value: T };
+type Cache<T> = { value: T };
 
 export function asSingleton(): MapFn<IProvider> {
     return (provider) => new SingletonProvider(provider);
 }
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
-    private instance: Boxed<T> | null = null;
+    private instance?: Cache<T>;
 
     constructor(private readonly provider: IProvider<T>) {
         super(provider);
@@ -21,10 +21,7 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     }
 
     resolve(container: Resolvable, ...args: unknown[]): T {
-        if (this.instance === null) {
-            this.instance = { value: this.provider.resolve(container, ...args) };
-        }
-
-        return this.instance?.value as T;
+        this.instance = this.instance ?? { value: this.provider.resolve(container, ...args) };
+        return this.instance.value;
     }
 }
