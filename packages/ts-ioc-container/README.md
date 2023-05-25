@@ -36,28 +36,124 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 
 
 ## Injector
-How to create new container
+As long as injector is not part of container, you can use any injector you want (simple, proxy, based on reflection).
+
+### Reflection injector (recommended)
 
 ```typescript
 import { Container, IContainer, IInjector, Provider } from "ts-ioc-container";
-import { resolve } from 'ts-constructor-injector';
+import { inject, resolve } from "ts-constructor-injector";
+import { by } from "ts-ioc-container/lib";
 
-class Logger {
+const injector: IInjector = {
+  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
+    return resolve(container)(Target, ...deps);
+  },
+};
+
+class Logger implements ILogger {
   info(message: string) {
     console.log(message);
   }
 }
 
-const injector: IInjector = {
-  resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-    return resolve(container)(value, ...deps);
-  },
-};
+class App {
+  constructor(@inject(by('ILogger')) private logger: ILogger) {
+  }
+
+  run() {
+    this.logger.info('Hello world');
+  }
+}
 
 const container = new Container(injector)
   .register('ILogger', Provider.fromClass(Logger));
-const logger = container.resolve<ILogger>('ILogger');
-logger.info('Hello world');
+
+const app = container.resolve(App);
+app.run();
+```
+
+### Simple injector
+
+```typescript
+import { IContainer } from "ts-ioc-container";
+
+const injector: IInjector = {
+  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
+    return new Target(container, ...deps);
+  },
+};
+
+class Logger implements ILogger {
+  info(message: string) {
+    console.log(message);
+  }
+}
+
+class App {
+  private logger: ILogger;
+
+  constructor(private container: IContainer) {
+    this.logger = container.resolve('ILogger');
+  }
+  
+  run() {
+    this.logger.info('Hello world');
+  }
+}
+
+const container = new Container(injector)
+  .register('ILogger', Provider.fromClass(Logger));
+
+const app = container.resolve(App);
+app.run();
+```
+
+### Proxy injector
+
+```typescript
+import { IContainer } from "ts-ioc-container";
+
+const injector: IInjector = {
+  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
+    const args = deps.reduce((acc, it) => ({ ...acc, ...it }), {});
+    const proxy = new Proxy(
+      {},
+      {
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        get(target: {}, prop: string | symbol): any {
+          // eslint-disable-next-line no-prototype-builtins
+          return args.hasOwnProperty(prop) ? args[prop] : container.resolve(prop);
+        },
+      },
+    );
+    return new Target(proxy);
+  },
+};
+
+class Logger implements ILogger {
+  info(message: string) {
+    console.log(message);
+  }
+}
+
+class App {
+  private logger: ILogger;
+
+  constructor({logger}: {logger: ILogger}) {
+    this.logger = logger;
+  }
+  
+  run() {
+    this.logger.info('Hello world');
+  }
+}
+
+const container = new Container(injector)
+  .register('logger', Provider.fromClass(Logger));
+
+const app = container.resolve(App);
+app.run();
 ```
 
 ## Provider
