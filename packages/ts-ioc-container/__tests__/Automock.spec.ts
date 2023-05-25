@@ -57,10 +57,6 @@ export class MoqContainer extends AutoMockedContainer {
         return this.resolveMock<T>(key).object();
     }
 
-    dispose(): void {
-        this.mocks.clear();
-    }
-
     resolveMock<T>(key: DependencyKey): IMock<T> {
         if (!this.mocks.has(key)) {
             this.mocks.set(key, createMock());

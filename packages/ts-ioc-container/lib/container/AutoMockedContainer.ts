@@ -7,7 +7,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
     abstract resolve<T>(key: InjectionToken<T>): T;
 
-    abstract dispose(): void;
+    dispose(): void {}
 
     getProviders(): Map<DependencyKey, IProvider> {
         return new Map();
