@@ -36,7 +36,7 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 
 
 ## Injector
-As long as injector is not part of container, you can use any injector you want (simple, proxy, based on reflection).
+As long as injector is not part of container, you can implement injection on your choice (simple, proxy, based on reflection).
 
 ### Reflection injector (recommended)
 
