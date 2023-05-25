@@ -41,9 +41,8 @@ As long as injector is not part of container, you can use any injector you want 
 ### Reflection injector (recommended)
 
 ```typescript
-import { Container, IContainer, IInjector, Provider } from "ts-ioc-container";
+import { Container, IContainer, IInjector, Provider, by } from "ts-ioc-container";
 import { inject, resolve } from "ts-constructor-injector";
-import { by } from "ts-ioc-container/lib";
 
 const injector: IInjector = {
   resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
