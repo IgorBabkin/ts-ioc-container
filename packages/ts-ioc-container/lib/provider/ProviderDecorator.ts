@@ -5,9 +5,7 @@ import { MapFn, pipe } from '../utils';
 export abstract class ProviderDecorator<T> implements IProvider<T> {
     protected constructor(private decorated: IProvider<T>) {}
 
-    clone(): IProvider<T> {
-        return this.decorated.clone();
-    }
+    abstract clone(): IProvider<T>;
 
     isValid(filters: Tagged): boolean {
         return this.decorated.isValid(filters);
