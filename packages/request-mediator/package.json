@@ -1,6 +1,6 @@
 {
     "name": "@babidze/ts-request-mediator",
-    "version": "0.8.9",
+    "version": "0.9.0",
     "description": "Request mediator for server",
     "publishConfig": {
         "access": "public",
