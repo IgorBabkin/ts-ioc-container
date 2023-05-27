@@ -1,5 +1,5 @@
 {
-    "name": "@babidze/ts-ioc-container",
+    "name": "@ibabkin/ts-ioc-container",
     "version": "23.2.0",
     "description": "Typescript IoC container",
     "publishConfig": {
