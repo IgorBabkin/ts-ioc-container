@@ -1,5 +1,5 @@
 {
-    "name": "reactivex-react",
+    "name": "@babidze/reactivex-react",
     "version": "5.2.2",
     "main": "cjs/index.js",
     "publishConfig": {

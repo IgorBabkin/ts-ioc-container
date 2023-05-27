@@ -1,5 +1,5 @@
 {
-    "name": "ts-request-mediator",
+    "name": "@babidze/ts-request-mediator",
     "version": "0.8.9",
     "description": "Request mediator for server",
     "publishConfig": {
