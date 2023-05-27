@@ -12,7 +12,10 @@
     "esModuleInterop": true,
     "downlevelIteration": true,
     "noImplicitReturns": true,
-    "strict": true
+    "strict": true,
+    "paths": {
+
+    }
   },
   "include": [
     "src"

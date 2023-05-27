@@ -1,0 +1,41 @@
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx-cloud",
+      "options": {
+        "cacheableOperations": [
+          "build:cjs",
+          "build:esm"
+        ],
+        "accessToken": "Y2UyNzVhNTktYjU2NS00OWEwLWI1YjMtNDBlMDllNTkxZDRkfHJlYWQtd3JpdGU="
+      }
+    }
+  },
+  "targetDefaults": {
+    "build:cjs": {
+      "dependsOn": [
+        "^build:cjs"
+      ],
+      "outputs": [
+        "{projectRoot}/cjs"
+      ]
+    },
+    "build:esm": {
+      "dependsOn": [
+        "^build:esm"
+      ],
+      "outputs": [
+        "{projectRoot}/esm"
+      ]
+    },
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "{projectRoot}/cjs",
+        "{projectRoot}/esm"
+      ]
+    }
+  }
+}

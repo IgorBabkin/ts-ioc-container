@@ -5,7 +5,7 @@
   "author": "ibabkin <igba14@gmail.com>",
   "license": "ISC",
   "sideEffects": false,
-  "main": "cjm/index.js",
+  "main": "cjs/index.js",
   "types": "esm/index.d.ts",
   "module": "esm/index.js",
   "repository": {
@@ -23,11 +23,11 @@
     "test": "__tests__"
   },
   "files": [
-    "cjm/**/*",
+    "cjs/**/*",
     "esm/**/*"
   ],
   "scripts": {
-    "build:cjs": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
+    "build:cjs": "rimraf cjs && tsc -p tsconfig.json --outDir cjs --module CommonJS --target ES5",
     "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
     "build": "npm-run-all -p build:**",
     "watch": "nodemon --watch ./lib --exec npm run build",

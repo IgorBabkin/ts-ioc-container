@@ -1,7 +1,7 @@
 {
   "name": "reactivex-react",
   "version": "5.2.0",
-  "main": "cjm/index.js",
+  "main": "cjs/index.js",
   "module": "esm/index.js",
   "private": false,
   "sideEffects": false,
@@ -14,13 +14,13 @@
   ],
   "license": "MIT",
   "files": [
-    "cjm/**/*",
+    "cjs/**/*",
     "esm/**/*"
   ],
   "scripts": {
     "start": "webpack serve --config example/webpack.config.js",
-    "build": "npm-run-all -p build:cjm build:esm",
-    "build:cjm": "rimraf cjm && tsc -p tsconfig.build.json -m commonjs --outDir cjm",
+    "build": "npm-run-all -p build:cjs build:esm",
+    "build:cjs": "rimraf cjs && tsc -p tsconfig.build.json -m commonjs --outDir cjs",
     "build:esm": "rimraf esm && tsc -p tsconfig.build.json -m es6 -d true --outDir esm",
     "test": "jest"
   },
