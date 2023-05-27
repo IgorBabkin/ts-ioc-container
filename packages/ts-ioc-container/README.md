@@ -18,10 +18,10 @@
 
 ## Install
 ```shell script
-npm install ts-ioc-container ts-constructor-injector reflect-metadata
+npm install @ibabkin/ts-ioc-container ts-constructor-injector reflect-metadata
 ```
 ```shell script
-yarn add ts-ioc-container ts-constructor-injector reflect-metadata
+yarn add @ibabkin/ts-ioc-container ts-constructor-injector reflect-metadata
 ```
 
 ## tsconfig.json
@@ -41,7 +41,7 @@ As long as injector is not part of container, you can implement injection on you
 ### Reflection injector (recommended)
 
 ```typescript
-import { Container, IContainer, IInjector, Provider, by } from "ts-ioc-container";
+import { Container, IContainer, IInjector, Provider, by } from "@ibabkin/ts-request-mediator";
 import { inject, resolve } from "ts-constructor-injector";
 
 const injector: IInjector = {
@@ -75,7 +75,7 @@ app.run();
 ### Simple injector
 
 ```typescript
-import { IContainer } from "ts-ioc-container";
+import { IContainer } from "@ibabkin/ts-request-mediator";
 
 const injector: IInjector = {
   resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
@@ -111,7 +111,7 @@ app.run();
 ### Proxy injector
 
 ```typescript
-import { IContainer } from "ts-ioc-container";
+import { IContainer } from "@ibabkin/ts-request-mediator";
 
 const injector: IInjector = {
   resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
@@ -165,7 +165,7 @@ app.run();
 - `withArgsFn(fn: (scope: IContainer) => unknown[])` - passes arguments to constructor as function result
 
 ```typescript
-import { Provider, asSingleton, perTags, withArgs, withArgsFn } from "ts-ioc-container";
+import { Provider, asSingleton, perTags, withArgs, withArgsFn } from "@ibabkin/ts-request-mediator";
 
 const container = new Container(injector, { tags: ['root'] });
 container.register('ILogger', new Provider((container, ...args) => new Logger(...args)));
@@ -191,7 +191,7 @@ container.register('ILogger', Provider.fromValue(new Logger()));
 ## Registration module (Provider + DependencyKey)
 
 ```typescript
-import { asSingleton, perTags, forKey, Registration } from "ts-ioc-container";
+import { asSingleton, perTags, forKey, Registration } from "@ibabkin/ts-request-mediator";
 
 @forKey('ILogger')
 @provider(asSingleton(), perTags('root'))
@@ -210,7 +210,7 @@ logger.info('Hello world');
 ## Decorators
 
 ```typescript
-import { asSingleton, perTags, forKey, by, Registration } from "ts-ioc-container";
+import { asSingleton, perTags, forKey, by, Registration } from "@ibabkin/ts-request-mediator";
 import { inject } from "ts-constructor-injector";
 
 @forKey('IEngine')
@@ -244,7 +244,7 @@ import {
   ContainerHook,
   Injector,
   Registration,
-} from "ts-ioc-container";
+} from "@ibabkin/ts-request-mediator";
 import { MethodReflector } from "ts-constructor-injector";
 
 export const onConstructReflector = new MethodReflector('OnConstructHook');
@@ -288,7 +288,7 @@ for (const instance of container.getInstances()) {
 
 ```typescript
 import { composeDecorators } from "ts-constructor-injector";
-import { forKey, provider, Registration, asSingleton, perTags } from "ts-ioc-container";
+import { forKey, provider, Registration, asSingleton, perTags } from "@ibabkin/ts-request-mediator";
 
 @forKey('IEngine')
 @provider(perTags('root'), asSingleton())
@@ -314,7 +314,7 @@ scope.dispose();
 ## Container Modules
 
 ```typescript
-import { Registration } from "ts-ioc-container";
+import { Registration } from "@ibabkin/ts-request-mediator";
 
 class Development implements IContainerModule {
   applyTo(container: IContainer): void {
@@ -340,7 +340,7 @@ import {
   AutoMockedContainer,
   Container,
   DependencyKey,
-} from "ts-ioc-container";
+} from "@ibabkin/ts-request-mediator";
 import { Mock } from "moq.ts";
 
 export class MoqContainer extends AutoMockedContainer {

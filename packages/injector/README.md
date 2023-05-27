@@ -7,10 +7,10 @@
 
 ## Install
 ```shell script
-npm install ts-constructor-injector reflect-metadata
+npm install @ibabkin/ts-constructor-injector reflect-metadata
 ```
 ```shell script
-yarn add ts-constructor-injector reflect-metadata
+yarn add @ibabkin/ts-constructor-injector reflect-metadata
 ```
 
 ## tsconfig.json
@@ -25,7 +25,7 @@ yarn add ts-constructor-injector reflect-metadata
 
 ## Usage
 ```typescript
-import { inject, resolve } from "ts-constructor-injector";
+import { inject, resolve } from "@ibabkin/ts-constructor-injector";
 
 class Logger {
   constructor(@inject(context => context.topic) private name: string) {
@@ -38,7 +38,7 @@ const logger = resolve({topic: 'main'})(Logger);
 ### Reflectors
 
 ```typescript
-import { AsyncMethodReflector, MethodReflector } from "ts-constructor-injector";
+import { AsyncMethodReflector, MethodReflector } from "@ibabkin/ts-constructor-injector";
 
 export const onConstructReflector = new MethodReflector('OnConstructHook');
 export const onConstruct = onConstructReflector.createMethodHookDecorator();
@@ -68,7 +68,7 @@ class Logger {
 ### Hooks
 
 ```typescript
-import { hook, getHooks } from "ts-constructor-injector";
+import { hook, getHooks } from "@ibabkin/ts-constructor-injector";
 
 class Logger {
   @hook('onDispose')
@@ -88,7 +88,7 @@ class Logger {
 ### ErrorHandler
 
 ```typescript
-import { handleAsyncError } from "ts-constructor-injector";
+import { handleAsyncError } from "@ibabkin/ts-constructor-injector";
 
 const prismaToDomainError: HandleErrorParams = (error, context) => {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {

@@ -16,8 +16,8 @@ React hooks to observe values from RxJs Observable.
 ## How to install
 
 ```sh
-npm install reactivex-react # NPM
-yarn add reactivex-react # Yarn
+npm install @ibabkin/reactivex-react # NPM
+yarn add @ibabkin/reactivex-react # Yarn
 ```
 
 ## Usage
