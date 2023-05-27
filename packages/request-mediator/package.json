@@ -1,6 +1,6 @@
 {
     "name": "@ibabkin/ts-request-mediator",
-    "version": "0.9.1",
+    "version": "0.9.2",
     "description": "Request mediator for server",
     "publishConfig": {
         "access": "public",
