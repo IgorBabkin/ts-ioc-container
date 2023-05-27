@@ -2,6 +2,10 @@
     "name": "ts-ioc-container",
     "version": "23.1.8",
     "description": "Typescript IoC container",
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
     "author": "ibabkin <igba14@gmail.com>",
     "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/ts-ioc-container",
     "license": "ISC",
@@ -48,5 +52,5 @@
         "ts-jest": "27.0.5",
         "typescript": "4.4.3"
     },
-    "gitHead": "149234df785ec46cac43142cec60faab3bdfb0e1"
+    "gitHead": "88835c9f71bac5beb41a9eddcd2aafc6de56d232"
 }

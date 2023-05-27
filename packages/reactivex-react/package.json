@@ -2,6 +2,10 @@
     "name": "reactivex-react",
     "version": "5.2.1",
     "main": "cjs/index.js",
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
     "module": "esm/index.js",
     "private": false,
     "sideEffects": false,
@@ -67,5 +71,5 @@
         "name": "Igor Babkin",
         "email": "igba14@gmail.com"
     },
-    "gitHead": "22a23a7b9e7cb9260e1a8858412ddadd6421a53a"
+    "gitHead": "88835c9f71bac5beb41a9eddcd2aafc6de56d232"
 }

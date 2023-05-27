@@ -1,5 +1,9 @@
 {
     "name": "@babidze/ts-constructor-injector",
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
     "version": "4.0.3",
     "description": "Injector",
     "author": "igorbabkin <igba14@gmail.com>",
@@ -46,5 +50,6 @@
     },
     "peerDependencies": {
         "reflect-metadata": "^0.1.13"
-    }
+    },
+    "gitHead": "88835c9f71bac5beb41a9eddcd2aafc6de56d232"
 }
