@@ -8,7 +8,7 @@ jobs:
           name: Test @ibabkin/ts-constructor-injector
           command: |
             yarn install
-            npm run test
+            npm test
 
 workflows:
   test:
