@@ -1,6 +1,6 @@
 {
     "name": "@ibabkin/reactivex-react",
-    "version": "5.3.0",
+    "version": "5.3.1",
     "main": "cjs/index.js",
     "publishConfig": {
         "access": "public",
