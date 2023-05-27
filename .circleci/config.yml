@@ -11,3 +11,8 @@ orbs:
             command: |
               npm ci
               npm run build && npm run test
+
+workflows:
+  test:
+    jobs:
+      - test
