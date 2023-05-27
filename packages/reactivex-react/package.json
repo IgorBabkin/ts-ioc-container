@@ -1,6 +1,6 @@
 {
     "name": "reactivex-react",
-    "version": "5.2.1",
+    "version": "5.2.2",
     "main": "cjs/index.js",
     "publishConfig": {
         "access": "public",
