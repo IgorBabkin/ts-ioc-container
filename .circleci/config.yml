@@ -1,16 +1,16 @@
 version: 2.1
 orbs:
   test: coveralls/coveralls@2.1.2
-  jobs:
-    test:
-      docker:
-        - image: node:latest
-      steps:
-        - run:
-            name: Test @ibabkin/ts-constructor-injector
-            command: |
-              npm ci
-              npm run build && npm run test
+jobs:
+  test:
+    docker:
+      - image: node:latest
+    steps:
+      - run:
+          name: Test @ibabkin/ts-constructor-injector
+          command: |
+            npm ci
+            npm run build && npm run test
 
 workflows:
   test:
