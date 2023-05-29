@@ -18,10 +18,10 @@
 
 ## Install
 ```shell script
-npm install @ibabkin/ts-ioc-container ts-constructor-injector reflect-metadata
+npm install @ibabkin/ts-ioc-container @ibabkin/ts-constructor-injector reflect-metadata
 ```
 ```shell script
-yarn add @ibabkin/ts-ioc-container ts-constructor-injector reflect-metadata
+yarn add @ibabkin/ts-ioc-container @ibabkin/ts-constructor-injector reflect-metadata
 ```
 
 ## tsconfig.json
