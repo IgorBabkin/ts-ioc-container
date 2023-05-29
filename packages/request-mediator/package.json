@@ -1,6 +1,6 @@
 {
     "name": "@ibabkin/ts-request-mediator",
-    "version": "0.9.2",
+    "version": "0.9.3",
     "description": "Request mediator for server",
     "publishConfig": {
         "access": "public",
@@ -38,9 +38,9 @@
         "test": "jest"
     },
     "devDependencies": {
-        "@types/jest": "27.0.2",
         "@ibabkin/ts-constructor-injector": "^4.0.2",
-        "@ibabkin/ts-ioc-container": "^23.1.9",
+        "@ibabkin/ts-ioc-container": "^23.2.4",
+        "@types/jest": "27.0.2",
         "jest": "27.2.3",
         "moq.ts": "^7.3.4",
         "nodemon": "^2.0.13",

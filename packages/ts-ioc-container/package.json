@@ -1,6 +1,6 @@
 {
     "name": "@ibabkin/ts-ioc-container",
-    "version": "23.2.3",
+    "version": "23.2.4",
     "description": "Typescript IoC container",
     "publishConfig": {
         "access": "public",
