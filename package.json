@@ -14,6 +14,7 @@
     "lint:fix": "yarn lint --fix",
     "test": "lerna run test --stream",
     "build": "lerna run build --stream",
+    "coverage": "lerna run coverage --stream",
     "pre-commit": " ",
     "commit-msg": "echo 'skipped'",
     "release": "yarn build && yarn test && lerna publish --ignore-prepublish"
