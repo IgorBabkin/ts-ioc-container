@@ -37,7 +37,7 @@
         "build:cjs": "rimraf cjs && tsc -p tsconfig.json --outDir cjs --module CommonJS --target ES5",
         "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
         "build": "npm-run-all -p build:**",
-        "coverage": "coveralls --repo-token=$COVERALLS_REPO_TOKEN",
+        "coverage": "coveralls",
         "watch": "nodemon --watch ./lib --exec npm run build",
         "test": "jest"
     },
