@@ -11,6 +11,7 @@ jobs:
           install-yarn: true
           node-version: '16.13'
 
+      - run: yarn install
       - run: npm run build
       - run: npm run test
 
