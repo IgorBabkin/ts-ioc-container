@@ -6,6 +6,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
+      - checkout
       - node/install:
           install-yarn: true
           node-version: '16.13'
