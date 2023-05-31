@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { AutoMockedContainer, by, constructor, Container, IContainer, IInjector, DependencyKey } from '../lib';
-import { inject, resolve } from 'ts-constructor-injector';
+import { inject, resolve } from '@ibabkin/ts-constructor-injector';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
 const injector: IInjector = {

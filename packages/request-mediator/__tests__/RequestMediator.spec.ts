@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { inject } from 'ts-constructor-injector';
-import { by, Provider } from 'ts-ioc-container';
+import { inject } from '@ibabkin/ts-constructor-injector';
+import { by, Provider } from '@ibabkin/ts-ioc-container';
 import { Context } from './context/Context';
 import { IQueryHandler, request, RequestMediator } from '../lib';
 import { ContainerAdapter, createContainer, EmptyType, onDispose } from './di';

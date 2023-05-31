@@ -14,7 +14,7 @@ import {
     Registration,
     asSingleton,
 } from '../lib';
-import { resolve } from 'ts-constructor-injector';
+import { resolve } from '@ibabkin/ts-constructor-injector';
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {

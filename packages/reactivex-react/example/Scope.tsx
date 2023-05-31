@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { PropsWithChildren, useMemo } from 'react';
-import { IContainer, InjectionToken } from 'ts-ioc-container';
+import { IContainer, InjectionToken } from '@ibabkin/ts-ioc-container';
 
 export const ScopeContext = React.createContext<IContainer | null>(null);
 const useScope = () => {

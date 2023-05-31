@@ -1,5 +1,5 @@
 import { Times } from 'moq.ts';
-import { constructor } from 'ts-ioc-container';
+import { constructor } from '@ibabkin/ts-ioc-container';
 import { ErrorHandler } from '../lib';
 import { ArgumentNullError } from './ArgumentNullError';
 import { createLooseMock } from './mock';

@@ -1,4 +1,4 @@
-import { IContainer, InjectionToken } from 'ts-ioc-container';
+import { IContainer, InjectionToken } from '@ibabkin/ts-ioc-container';
 
 export interface IContext<T> {
     getValue(): T;

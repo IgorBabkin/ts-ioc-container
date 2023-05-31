@@ -121,7 +121,7 @@ class NotifyAllUsers implements INotifyAllUsers {
 
 ```typescript
 
-import { IDependencyContainer } from 'ts-ioc-container';
+import { IDependencyContainer } from '@ibabkin/ts-ioc-container';
 
 export class ContainerAdapter implements IDependencyContainer {
   constructor(private container: IContainer) {}
@@ -163,8 +163,8 @@ const todo = await mediator.send(CreateTodo, {title: 'Buy milk', description: '2
 
 ```typescript
 import { PrismaClient } from '@prisma/client';
-import { Fn } from 'ts-constructor-injector';
-import { forKey, Resolveable } from 'ts-ioc-container';
+import { Fn } from '@ibabkin/ts-constructor-injector';
+import { forKey, Resolveable } from '@ibabkin/ts-ioc-container';
 import { ITransactionContextKey, ITransactionContext } from '@ibabkin/ts-request-mediator';
 import { perApplication } from '../../core/di';
 

@@ -1,5 +1,5 @@
-import { constructor, Container, IContainer, IInjector, Provider, Resolvable } from 'ts-ioc-container';
-import { AsyncMethodReflector, resolve } from 'ts-constructor-injector';
+import { constructor, Container, IContainer, IInjector, Provider, Resolvable } from '@ibabkin/ts-ioc-container';
+import { AsyncMethodReflector, resolve } from '@ibabkin/ts-constructor-injector';
 import { IDependencyContainer, Scope } from '../lib';
 
 const onDisposeReflector = new AsyncMethodReflector('onDispose');
