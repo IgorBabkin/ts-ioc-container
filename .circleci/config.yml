@@ -1,0 +1,22 @@
+version: 2.1
+orbs:
+  node: circleci/node@5.1.0
+jobs:
+  test:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - node/install:
+        install-yarn: true
+        node-version: '16.13'
+
+      - run:
+          name: Test @ibabkin/ts-constructor-injector
+          command: |
+            yarn install
+            npm test
+
+workflows:
+  test:
+    jobs:
+      - test
