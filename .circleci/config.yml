@@ -11,11 +11,8 @@ jobs:
           install-yarn: true
           node-version: '16.13'
 
-      - run:
-          name: Test @ibabkin/ts-constructor-injector
-          command: |
-            yarn install
-            yarn test
+      - run: npm run build
+      - run: npm run test
 
 workflows:
   test:
