@@ -6,12 +6,12 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
+      - checkout
       - node/install:
           install-yarn: true
           node-version: 'latest'
 
       - run: yarn install
-      - run: npm run build
       - run: npm run test
 
 workflows:
