@@ -10047,16 +10047,6 @@ trim-off-newlines@^1.0.0:
   resolved "https://registry.yarnpkg.com/trim-off-newlines/-/trim-off-newlines-1.0.1.tgz#9f9ba9d9efa8764c387698bcbfeb2c848f11adb3"
   integrity sha1-n5up2e+odkw4dpi8v+sshI8RrbM=
 
-ts-constructor-injector@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/ts-constructor-injector/-/ts-constructor-injector-4.0.2.tgz#b871526622f7dce621e385019ceafa5654ece109"
-  integrity sha512-AEjRXjw4v40STnmNaYzT/dsTzTcaGu1NVGvnKPYG9NwsbTpQEsGXYDE5V5gc7/Fv5lZ/OCDseyPjBQFsRqYnVg==
-
-ts-ioc-container@^23.1.9:
-  version "23.1.9"
-  resolved "https://registry.yarnpkg.com/ts-ioc-container/-/ts-ioc-container-23.1.9.tgz#3169da49bc3cd812e51b61c606fd7ffecb725a6f"
-  integrity sha512-oZrTW1HR5jeeVFl8khOClCGEq6rkOHH/qE/47x1JN7Ji0FAC9iCyyUU4zOht4EQ7BwCuXR9QOrtRi66jyOt1pQ==
-
 ts-jest@27.0.5, ts-jest@^27.0.5:
   version "27.0.5"
   resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-27.0.5.tgz#0b0604e2271167ec43c12a69770f0bb65ad1b750"
