@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  node: cimg/node:latest
+  node: cimg/node:20.2.0
 jobs:
   test:
     docker:
