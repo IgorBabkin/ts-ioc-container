@@ -15,6 +15,7 @@ jobs:
           command: |
             yarn --version
             npm --version
+            ls -a
 
 workflows:
   test:
