@@ -20,12 +20,12 @@ jobs:
       - run: npm run build
       - run: npm run test
       - coveralls/upload:
-            coverage_file: ./packages/ts-ioc-container/coverage/lcov.info
+          coverage_file: ./packages/ts-ioc-container/coverage/lcov.info
       - run:
           name: Publish to NPM
           command: |
             npm set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-            npm publish
+            npm run release
 
 workflows:
   test:
