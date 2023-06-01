@@ -12,6 +12,7 @@ jobs:
           node-version: '16.20.0'
 
       - run: yarn install
+      - run: curl -L https://coveralls.io/coveralls-linux.tar.gz | tar -xz -C /usr/local/bin
       - run: npm run build
       - run: npm run test
       - run: npm run coverage
