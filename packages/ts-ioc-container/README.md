@@ -312,7 +312,7 @@ const logger = scope.resolve('ILogger');
 scope.dispose();
 ```
 
-## Container Modules
+## Container modules
 
 ```typescript
 import { Registration } from "@ibabkin/ts-request-mediator";
