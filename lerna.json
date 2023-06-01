@@ -5,12 +5,6 @@
   "command": {
     "publish": {
       "graphType": "all"
-    },
-    "version": {
-      "createRelease": "github",
-      "conventionalCommits": true,
-      "allowBranch": ["master"],
-      "message": "chore(release): publish"
     }
   },
   "npmClient": "yarn",
