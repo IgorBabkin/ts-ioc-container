@@ -6,6 +6,9 @@ jobs:
   test:
     docker:
       - image: cimg/base:stable
+    environment:
+      NODE_ENV: test
+
     steps:
       - checkout
       - node/install:
@@ -21,4 +24,5 @@ jobs:
 workflows:
   test:
     jobs:
-      - test
+      - test:
+          context: my_context
