@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - checkout
+      - restore_cache:
+          key: v1-deps-{{ checksum "package-lock.json" }}
       - node/install:
           install-yarn: true
           node-version: '16.20.0'
@@ -26,6 +28,11 @@ jobs:
           command: |
             npm set //registry.npmjs.org/:_authToken=$NPM_TOKEN
             npm run release
+
+      - save_cache:
+          key: v1-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
 
 workflows:
   test:
