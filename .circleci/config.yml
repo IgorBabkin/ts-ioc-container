@@ -21,9 +21,16 @@ jobs:
       - run: npm run test
       - coveralls/upload:
             coverage_file: ./packages/ts-ioc-container/coverage/lcov.info
+      - run:
+          name: Publish to NPM
+          command: |
+          npm set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          npm publish
 
 workflows:
   test:
     jobs:
       - test:
           context: my_context
+          tags:
+            only: /v[0-9]+(\.[0-9]+)*/
