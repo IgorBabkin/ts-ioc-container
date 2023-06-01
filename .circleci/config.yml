@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@5.1.0
+  coveralls: coveralls/coveralls@2.1.2
 jobs:
   test:
     docker:
@@ -9,14 +10,14 @@ jobs:
       - checkout
       - node/install:
           install-yarn: true
-          node-version: '16.20.0'
+          node-version: '16.20.0's
 
       - run: yarn install
-      - run: curl -L https://coveralls.io/coveralls-linux.tar.gz | tar -xz -C /usr/local/bin
       - run: npm run build
       - run: npm run test
-      - run: npm run coverage
-
+      - coveralls/upload:
+            base_path: packages/ts-ioc-container
+            parallel: true
 workflows:
   test:
     jobs:
