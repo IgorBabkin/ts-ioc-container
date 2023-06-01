@@ -10,7 +10,7 @@ jobs:
       - checkout
       - node/install:
           install-yarn: true
-          node-version: '16.20.0's
+          node-version: '16.20.0'
 
       - run: yarn install
       - run: npm run build
