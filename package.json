@@ -17,7 +17,7 @@
     "coverage": "lerna run coverage --stream",
     "pre-commit": " ",
     "commit-msg": "echo 'skipped'",
-    "release": "lerna publish --ignore-prepublish --yes"
+    "release": "yarn build && yarn test && lerna publish"
   },
   "config": {
     "commitizen": {

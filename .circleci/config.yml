@@ -27,12 +27,6 @@ jobs:
       - coveralls/upload:
           coverage_file: ./packages/ts-ioc-container/coverage/lcov.info
 
-      - run:
-          name: Publish to NPM
-          command: |
-            npm set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-            npm run release
-
       - save_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
           paths:
