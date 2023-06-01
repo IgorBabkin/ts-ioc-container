@@ -20,8 +20,9 @@ jobs:
       - run: npm run build
       - run: npm run test
       - coveralls/upload:
-            base_path: packages/ts-ioc-container
+            coverage_file: ./packages/ts-ioc-container/lcov.info
             parallel: true
+
 workflows:
   test:
     jobs:
