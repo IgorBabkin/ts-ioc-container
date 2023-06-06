@@ -1,10 +1,8 @@
 import { constructor, Container, IContainer, IInjector, Provider, Resolvable } from '@ibabkin/ts-ioc-container';
-import { AsyncMethodReflector, resolve } from '@ibabkin/ts-constructor-injector';
+import { getHooks, hook, resolve } from '@ibabkin/ts-constructor-injector';
 import { IDependencyContainer, Scope } from '../lib';
 
-const onDisposeReflector = new AsyncMethodReflector('onDispose');
-export const onDispose = onDisposeReflector.createMethodHookDecorator();
-
+export const onDispose = hook('onDispose');
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
         return resolve(container)(value, ...deps);
@@ -37,7 +35,10 @@ export class ContainerAdapter implements IDependencyContainer {
     async onBeforeDispose(): Promise<void> {
         for (const instance of this.container.getInstances()) {
             // eslint-disable-next-line @typescript-eslint/ban-types
-            await onDisposeReflector.invokeHooksOf(instance as object);
+            for (const h of getHooks(instance as object, 'onDispose')) {
+                // @ts-ignore
+                await instance[h]();
+            }
         }
     }
 }
