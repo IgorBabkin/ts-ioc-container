@@ -1,17 +1,17 @@
 import 'reflect-metadata';
-import { by, constructor, Container, IContainer, IInjector, Registration, forKey, asSingleton, provider } from '../lib';
-import { AsyncMethodReflector, inject, MethodReflector, resolve } from '@ibabkin/ts-constructor-injector';
+import { asSingleton, by, constructor, Container, forKey, IContainer, IInjector, provider, Registration } from '../lib';
+import { getHooks, hook, inject, resolve } from '@ibabkin/ts-constructor-injector';
 
-const onConstructReflector = new MethodReflector('onConstruct');
-const onConstruct = onConstructReflector.createMethodHookDecorator();
-
-const onDisposeReflector = new AsyncMethodReflector('onDispose');
-const onDispose = onDisposeReflector.createMethodHookDecorator();
+const onConstruct = hook('onConstruct');
+const onDispose = hook('onDispose');
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
         const instance = resolve(container)(value, ...deps);
-        onConstructReflector.invokeHooksOf(instance);
+        for (const h of getHooks(instance, 'onConstruct')) {
+            // @ts-ignore
+            instance[h]();
+        }
         return instance;
     },
 };
@@ -62,7 +62,10 @@ describe('Hooks', function () {
 
         for (const instance of container.getInstances()) {
             // eslint-disable-next-line @typescript-eslint/ban-types
-            await onDisposeReflector.invokeHooksOf(instance as object);
+            for (const h of getHooks(instance as object, 'onDispose')) {
+                // @ts-ignore
+                await instance[h]();
+            }
         }
 
         expect(container.resolve<LogsRepo>('logsRepo').savedLogs).toContain('Hello');

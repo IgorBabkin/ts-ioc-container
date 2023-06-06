@@ -35,36 +35,6 @@ class Logger {
 const logger = resolve({topic: 'main'})(Logger);
 ```
 
-### Reflectors
-
-```typescript
-import { AsyncMethodReflector, MethodReflector } from "@ibabkin/ts-constructor-injector";
-
-export const onConstructReflector = new MethodReflector('OnConstructHook');
-export const onConstruct = onConstructReflector.createMethodHookDecorator();
-
-export const onDisposeReflector = new AsyncMethodReflector('OnDisposeHook');
-export const onDispose = onDisposeReflector.createMethodHookDecorator();
-
-class Logger {
-  @onConstruct
-  initialize(state: string) {
-    console.log(state);
-  }
-
-  @onDispose
-  async dispose(state: string): Promise<void> {
-    console.log(state);
-  }
-}
-
-(async () => {
-  const instance = new Logger();
-  onConstructReflector.invokeHooksOf(instance, 'initialized); // initialized
-  await onDisposeReflector.invokeHooksOf(instance, 'disposed'); // disposed  
-})()
-```
-
 ### Hooks
 
 ```typescript

@@ -246,22 +246,16 @@ import {
   Injector,
   Registration,
 } from "@ibabkin/ts-request-mediator";
-import { MethodReflector } from "ts-constructor-injector";
-
-export const onConstructReflector = new MethodReflector('OnConstructHook');
-export const onConstruct = onConstructReflector.createMethodHookDecorator();
-
-export const onDisposeReflector = new MethodReflector('OnDisposeHook');
-export const onDispose = onDisposeReflector.createMethodHookDecorator();
+import { getHooks, hook } from "@ibabkin/ts-constructor-injector";
 
 @forKey('ILogger')
 class Logger {
-  @onConstruct
+  @hook('OnConstruct')
   initialize() {
     console.log('initialized');
   }
 
-  @onDispose
+  @hook('OnDispose')
   dispose() {
     console.log('disposed');
   }
@@ -270,7 +264,10 @@ class Logger {
 const injector: IInjector = {
   resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
     const instance = resolve(container)(value, ...deps);
-    onConstructReflector.invokeHooksOf(instance)
+    for (const h of getHooks(instance, 'OnConstruct')) {
+      // @ts-ignore
+      instance[h]();
+    }
     return instance;
   },
 }
@@ -279,7 +276,10 @@ const container = new Container(injector)
   .add(Registration.fromClass(Logger));
 const logger = container.resolve<ILogger>('ILogger'); // initialized
 for (const instance of container.getInstances()) {
-  onDisposeReflector.invokeHooksOf(instance); // disposed
+  for (const h of getHooks(instance, 'OnDispose')) {
+    // @ts-ignore
+    instance[h]();
+  }
 }
 ```
 
