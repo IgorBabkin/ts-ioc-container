@@ -1,7 +1,7 @@
 {
-  "name": "@ibabkin/openapi-to-server-interface",
+  "name": "@ibabkin/openapi-to-zod",
   "version": "0.0.0",
-  "description": "Generates server interface from openapi",
+  "description": "Generates zod from openapi",
   "keywords": [
     "openapi",
     "swagger",
@@ -37,7 +37,8 @@
   "dependencies": {
     "openapi-types": "^12.1.0",
     "handlebars": "^4.7.7",
-    "typescript": "4.4.3"
+    "typescript": "4.4.3",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@types/jest": "27.0.2",

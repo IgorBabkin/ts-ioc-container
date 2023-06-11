@@ -10,22 +10,14 @@
     {{/each}}
     }
   {{else}}
-    {{#if (is_equal type "number")}}
+    {{#if (includes (array 'number' 'integer') type)}}
       number
+    {{else if (is_equal type "string")}}
+      {{#if (is_equal format "date-time")}}Date{{else}}string{{/if}}
+    {{else if (is_equal type "boolean")}}
+      boolean
     {{else}}
-      {{#if (is_equal type "string")}}
-        {{#if (is_equal format "date-time")}}Date{{else}}string{{/if}}
-      {{else}}
-        {{#if (is_equal type "boolean")}}
-          boolean
-        {{else}}
-          {{#if (is_equal type "integer")}}
-            number
-          {{else}}
-            void
-          {{/if}}
-        {{/if}}
-      {{/if}}
+      void
     {{/if}}
   {{/if}}
 {{~/if~}}

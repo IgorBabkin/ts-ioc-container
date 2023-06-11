@@ -1,0 +1,13 @@
+export const {{capitalize operationId}}PayloadValidator = z.object({
+  {{#if parameters}}
+    {{#if (some_parameters parameters 'query')}}
+      query: {{render_template './Parameters.hbs' (filter_parameters parameters 'query')}},
+    {{/if}}
+    {{#if (some_parameters parameters 'path')}}
+      params: {{render_template './Parameters.hbs' (filter_parameters parameters 'path')}},
+    {{/if}}
+  {{/if}}
+  {{#if requestBody}}
+    body: {{render_template './JsonSchema.hbs' (get_value_by_key requestBody 'content.application/json.schema')}},
+  {{/if}}
+});

@@ -1,6 +1,14 @@
 export type {{capitalize operationId}}Payload = {
-  {{#each parameters}}
-  {{name}}: {{render_template './JsonSchema.hbs' this.schema}},
-  {{/each}}
+  {{#if parameters}}
+    {{#if (some_parameters parameters 'query')}}
+    query: {{render_template './Parameters.hbs' (filter_parameters parameters 'query')}}
+    {{/if}}
+    {{#if (some_parameters parameters 'path')}}
+    params: {{render_template './Parameters.hbs' (filter_parameters parameters 'path')}}
+    {{/if}}
+  {{/if}}
+  {{#if requestBody}}
+    body: {{{render_template './JsonSchema.hbs' (get_value_by_key requestBody 'content.application/json.schema')}}}
+  {{/if}}
 };
-export type {{capitalize operationId}}Response = {};
+export type {{capitalize operationId}}Response = {{{render_template './JsonSchema.hbs' (get_value_by_key responses '200.content.application/json.schema')}}};

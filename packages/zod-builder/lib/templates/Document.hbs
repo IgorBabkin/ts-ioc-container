@@ -1,0 +1,20 @@
+import {z} from 'zod';
+
+const zNumber = z.string().regex(/^\d+$/).transform(Number);
+
+const zDate = z.preprocess((arg) => {
+  if (typeof arg === 'string' || typeof arg === 'number') {
+    return new Date(arg);
+  }
+
+  return arg;
+}, z.date());
+
+{{#each paths}}
+  {{#if get}}
+  {{{render_template './Route.hbs' get}}}
+  {{/if}}
+  {{#if post}}
+  {{{render_template './Route.hbs' post}}}
+  {{/if}}
+{{/each}}

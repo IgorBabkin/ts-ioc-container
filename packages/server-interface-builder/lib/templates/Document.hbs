@@ -7,12 +7,22 @@ export interface IRoute<Payload, Response> {
 }
 
 {{#each paths}}
-  {{{render_template './Route.hbs' this.get}}}
+  {{#if get}}
+    {{{render_template './Route.hbs' get}}}
+  {{/if}}
+  {{#if post}}
+    {{{render_template './Route.hbs' post}}}
+  {{/if}}
 {{/each}}
 
 export interface IServer {
 {{#each paths}}
-  {{this.get.operationId}}: IRoute<{{capitalize this.get.operationId}}Payload, {{capitalize this.get.operationId}}Response>;
+  {{#if get}}
+  {{get.operationId}}: {{{render_template './ServerRoute.hbs' get}}};
+  {{/if}}
+  {{#if post}}
+  {{post.operationId}}: {{{render_template './ServerRoute.hbs' post}}};
+  {{/if}}
 {{/each}}
 }
 

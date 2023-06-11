@@ -3,9 +3,9 @@ import { OpenAPIV3 } from 'openapi-types';
 import { Generator } from '../lib';
 
 describe('swagger', function () {
-    it('ServerGenerator', function () {
+    it('Generator', function () {
         const generator = new Generator(__dirname);
-        generator.generate(api as OpenAPIV3.Document, './output.d.ts');
+        generator.generate(api as OpenAPIV3.Document, './output.ts');
         expect(true).toEqual(true);
     });
 });
