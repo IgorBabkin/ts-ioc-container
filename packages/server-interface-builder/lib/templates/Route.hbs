@@ -1,0 +1,6 @@
+export type {{capitalize operationId}}Payload = {
+  {{#each parameters}}
+  {{name}}: {{render_template './JsonSchema.hbs' this.schema}},
+  {{/each}}
+};
+export type {{capitalize operationId}}Response = {};

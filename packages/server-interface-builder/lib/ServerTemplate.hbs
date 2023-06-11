@@ -1,5 +1,0 @@
-export interface IServer {
-{{#each operations}}
-  {{this}}(props: I{{capitalize this}}Payload): Promise<I{{capitalize this}}Response>;
-{{/each}}
-}

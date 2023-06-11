@@ -1,0 +1,18 @@
+{{#each components.schemas}}
+  export type {{@key}} = {{render_template './JsonSchema.hbs' this}};
+{{/each}}
+
+export interface IRoute<Payload, Response> {
+  handle(payload: Payload): Promise<Response>;
+}
+
+{{#each paths}}
+  {{{render_template './Route.hbs' this.get}}}
+{{/each}}
+
+export interface IServer {
+{{#each paths}}
+  {{this.get.operationId}}: IRoute<{{capitalize this.get.operationId}}Payload, {{capitalize this.get.operationId}}Response>;
+{{/each}}
+}
+
