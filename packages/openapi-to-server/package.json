@@ -34,7 +34,7 @@
     "scripts": {
         "build": "npm run clean && npm run compile",
         "test": "jest --passWithNoTests",
-        "precompile": "handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
+        "precompile": "mkdir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
         "clean": "rimraf cjm",
         "compile": "tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5"
     },

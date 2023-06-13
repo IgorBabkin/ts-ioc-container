@@ -34,7 +34,7 @@
         "test": "jest --passWithNoTests",
         "clean": "rimraf cjm",
         "compile": "tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
-        "precompile": "handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime"
+        "precompile": "mkdir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime"
     },
     "dependencies": {
         "args": "^5.0.3",
