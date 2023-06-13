@@ -1,13 +1,17 @@
+import './helpers';
 import { OpenAPIV3 } from 'openapi-types';
-import { renderDocument } from './templates';
-import fs from 'fs';
-import path from 'path';
+import Handlebars from 'handlebars/runtime';
 
-export class Generator {
-    constructor(private dirname: string) {}
+require('../precompiled/templates.js');
 
-    generate(doc: OpenAPIV3.Document, filename: string) {
-        const content = renderDocument(doc);
-        fs.writeFileSync(path.resolve(this.dirname, filename), content);
+function renderTemplate(filename: string, data: unknown) {
+    const template = Handlebars.templates[filename];
+    if (!template) {
+        throw new Error(`Template not found: ${filename}`);
     }
+    return template(data);
 }
+
+Handlebars.registerHelper('render_template', renderTemplate);
+
+export const renderDocument = (doc: OpenAPIV3.Document) => renderTemplate('Document.hbs', doc);

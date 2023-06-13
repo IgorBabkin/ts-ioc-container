@@ -10,11 +10,13 @@ const zDate = z.preprocess((arg) => {
   return arg;
 }, z.date());
 
-{{#each paths}}
-  {{#if get}}
-  {{{render_template './Route.hbs' get}}}
-  {{/if}}
-  {{#if post}}
-  {{{render_template './Route.hbs' post}}}
-  {{/if}}
-{{/each}}
+export const PAYLOADS = {
+  {{#each paths}}
+    {{#if get}}
+    {{get.operationId}}: {{{render_template 'Route.hbs' get}}},
+    {{/if}}
+    {{#if post}}
+    {{post.operationId}}: {{{render_template 'Route.hbs' post}}},
+    {{/if}}
+  {{/each}}
+};

@@ -1,11 +1,12 @@
 import api from './swagger.json';
 import { OpenAPIV3 } from 'openapi-types';
-import { Generator } from '../lib';
+import { renderDocument } from '../lib';
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe('swagger', function () {
     it('Generator', function () {
-        const generator = new Generator(__dirname);
-        generator.generate(api as OpenAPIV3.Document, './output.ts');
+        fs.writeFileSync(path.resolve(__dirname, './output.ts'), renderDocument(api as OpenAPIV3.Document));
         expect(true).toEqual(true);
     });
 });

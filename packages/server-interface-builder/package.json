@@ -1,6 +1,6 @@
 {
   "name": "@ibabkin/openapi-to-server-interface",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Generates server interface from openapi",
   "keywords": [
     "openapi",
@@ -14,23 +14,24 @@
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container#readme",
   "license": "ISC",
   "main": "cjm/index.js",
-  "types": "esm/index.d.ts",
-  "module": "esm/index.js",
+  "types": "cjm/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IgorBabkin/ts-ioc-container.git"
   },
-  "sideEffects": false,
+  "sideEffects": true,
   "directories": {
     "lib": "lib",
     "test": "__tests__"
   },
   "files": [
     "cjm/**/*",
-    "esm/**/*"
+    "esm/**/*",
+    "*.precompiled.js"
   ],
   "scripts": {
-    "build": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
+    "compile": "handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
+    "build": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5 && npm run compile",
     "watch": "nodemon --watch ./lib --exec npm run build",
     "test": "jest --passWithNoTests"
   },

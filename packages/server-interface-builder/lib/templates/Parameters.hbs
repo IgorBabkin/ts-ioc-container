@@ -1,5 +1,5 @@
 {
 {{#each this}}
-  {{name}}{{#if (is_equal this.required false)}}?{{/if}}: {{render_template './JsonSchema.hbs' schema}},
+  {{name}}{{#if (is_equal this.required false)}}?{{/if}}: {{render_template 'JsonSchema.hbs' schema}},
 {{/each}}
 }

@@ -1,27 +1,40 @@
 {{#each components.schemas}}
-  export type {{@key}} = {{render_template './JsonSchema.hbs' this}};
+  export type {{@key}} = {{render_template 'JsonSchema.hbs' this}};
 {{/each}}
 
 export interface IRoute<Payload, Response> {
   handle(payload: Payload): Promise<Response>;
 }
 
+export interface HttpResponse<Payload> {
+  status: number;
+  payload: Payload;
+}
+
+export interface Ok<Payload> extends HttpResponse<Payload> {
+  status: 200;
+};
+
+export interface Created extends HttpResponse<undefined> {
+  status: 203;
+};
+
 {{#each paths}}
   {{#if get}}
-    {{{render_template './Route.hbs' get}}}
+    {{{render_template 'Route.hbs' get}}}
   {{/if}}
   {{#if post}}
-    {{{render_template './Route.hbs' post}}}
+    {{{render_template 'Route.hbs' post}}}
   {{/if}}
 {{/each}}
 
 export interface IServer {
 {{#each paths}}
   {{#if get}}
-  {{get.operationId}}: {{{render_template './ServerRoute.hbs' get}}};
+  {{get.operationId}}: {{{render_template 'ServerRoute.hbs' get}}};
   {{/if}}
   {{#if post}}
-  {{post.operationId}}: {{{render_template './ServerRoute.hbs' post}}};
+  {{post.operationId}}: {{{render_template 'ServerRoute.hbs' post}}};
   {{/if}}
 {{/each}}
 }

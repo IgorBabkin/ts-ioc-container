@@ -1,4 +1,4 @@
-import Handlebars from 'handlebars';
+import Handlebars from 'handlebars/runtime';
 
 function capitalize(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
