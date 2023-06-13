@@ -29,7 +29,7 @@
         "precompiled/**/*"
     ],
     "bin": {
-        "openapi-to-zod": "cjm/openapi-to-server.js"
+        "openapi-to-server": "cjm/openapi-to-server.js"
     },
     "scripts": {
         "build": "npm run clean && npm run compile",
