@@ -34,7 +34,7 @@
         "test": "jest --passWithNoTests",
         "clean": "rimraf cjm",
         "compile": "tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
-        "precompile": "mkdir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime"
+        "precompile": "make-dir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime"
     },
     "dependencies": {
         "args": "^5.0.3",
@@ -48,6 +48,7 @@
         "@types/jest": "27.0.2",
         "@types/node": "^17.0.21",
         "jest": "27.2.3",
+        "make-dir-cli": "^3.0.0",
         "rimraf": "3.0.2",
         "ts-jest": "27.0.5"
     }
