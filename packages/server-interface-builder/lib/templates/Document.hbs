@@ -6,7 +6,7 @@ export interface IRoute<Payload, Response> {
   handle(payload: Payload): Promise<Response>;
 }
 
-export interface HttpResponse<Payload> {
+export interface HttpResponse<Payload = unknown> {
   status: number;
   payload: Payload;
 }
@@ -28,7 +28,7 @@ export interface Created extends HttpResponse<undefined> {
   {{/if}}
 {{/each}}
 
-export interface IServer {
+export type Operations = {
 {{#each paths}}
   {{#if get}}
   {{get.operationId}}: {{{render_template 'ServerRoute.hbs' get}}};
