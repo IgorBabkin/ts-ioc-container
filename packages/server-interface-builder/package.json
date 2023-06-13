@@ -28,6 +28,9 @@
         "cjm/**/*",
         "precompiled/**/*"
     ],
+    "bin": {
+        "openapi-to-zod": "cjm/openapi-to-server.js"
+    },
     "scripts": {
         "build": "npm run clean && npm run compile",
         "test": "jest --passWithNoTests",
@@ -36,11 +39,13 @@
         "compile": "tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5"
     },
     "dependencies": {
+        "args": "^5.0.3",
         "handlebars": "^4.7.7",
         "openapi-types": "^12.1.0",
         "typescript": "4.4.3"
     },
     "devDependencies": {
+        "@types/args": "^5.0.0",
         "@types/jest": "27.0.2",
         "@types/node": "^17.0.21",
         "jest": "27.2.3",
