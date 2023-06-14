@@ -9,7 +9,7 @@
         "typescript"
     ],
     "author": "ibabkin <igba14@gmail.com>",
-    "homepage": "https://github.com/IgorBabkin/ts-ioc-container#readme",
+    "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/openapi-to-zod",
     "license": "ISC",
     "main": "cjm/index.js",
     "types": "cjm/index.d.ts",
