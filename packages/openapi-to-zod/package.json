@@ -1,6 +1,6 @@
 {
     "name": "@ibabkin/openapi-to-zod",
-    "version": "1.1.6",
+    "version": "1.1.7",
     "description": "Generates zod from openapi",
     "keywords": [
         "openapi",
@@ -39,8 +39,8 @@
     "dependencies": {
         "args": "^5.0.3",
         "handlebars": "^4.7.7",
-        "openapi-types": "^12.1.0",
         "js-yaml": "^4.1.0",
+        "openapi-types": "^12.1.0",
         "typescript": "4.4.3",
         "zod": "^3.21.4"
     },
