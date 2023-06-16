@@ -1,108 +1,100 @@
 openapi: 3.0.0
-servers:
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/IgorBabkin/hey/1.0.0
 info:
-  description: This is a simple API
-  version: 1.0.0
   title: Simple Inventory API
+  description: This is a simple API
   contact:
     email: you@your-company.com
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: https://virtserver.swaggerhub.com/DOSAKANTIVENKATESH/smp/1.0.0
+    description: SwaggerHub API Auto Mocking
 tags:
   - name: admins
     description: Secured Admin-only calls
   - name: developers
     description: Operations available to regular developers
 paths:
-  "/inventory":
+  /inventory:
     get:
       tags:
         - developers
       summary: searches inventory
-      operationId: searchInventory
       description: |
         By passing in the appropriate options, you can search for
         available inventory in the system
+      operationId: searchInventory
       parameters:
-        - in: query
-          name: searchString
+        - name: searchString
+          in: query
           description: pass an optional search string for looking up inventory
           required: false
+          style: form
+          explode: true
           schema:
             type: string
-        - in: query
-          name: skip
+        - name: skip
+          in: query
           description: number of records to skip for pagination
+          required: false
+          style: form
+          explode: true
           schema:
+            minimum: 0
             type: integer
             format: int32
-            minimum: 0
-        - in: query
-          name: limit
+        - name: limit
+          in: query
           description: maximum number of records to return
+          required: false
+          style: form
+          explode: true
           schema:
+            maximum: 50
+            minimum: 0
             type: integer
             format: int32
-            minimum: 0
-            maximum: 50
       responses:
-        '200':
+        "200":
           description: search results matching criteria
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  "$ref": "#/components/schemas/InventoryItem"
-        '400':
+                  $ref: '#/components/schemas/InventoryItem'
+        "400":
           description: bad input parameter
     post:
       tags:
         - admins
       summary: adds an inventory item
-      operationId: addInventory
       description: Adds an item to the system
-      responses:
-        '201':
-          description: item created
-        '400':
-          description: invalid input, object invalid
-        '409':
-          description: an existing item already exists
+      operationId: addInventory
       requestBody:
+        description: Inventory item to add
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - id
-                - name
-                - releaseDate
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
-                name:
-                  type: string
-                  example: Widget Adapter
-                releaseDate:
-                  type: string
-                  format: date-time
-                  example: '2016-08-29T09:12:33.001Z'
-        description: Inventory item to add
+              $ref: '#/components/schemas/InventoryItem'
+      responses:
+        "201":
+          description: item created
+        "400":
+          description: "invalid input, object invalid"
+        "409":
+          description: an existing item already exists
 components:
   schemas:
     InventoryItem:
-      type: object
       required:
         - id
-        - name
         - manufacturer
+        - name
         - releaseDate
+      type: object
       properties:
         id:
           type: string
@@ -114,12 +106,13 @@ components:
         releaseDate:
           type: string
           format: date-time
-          example: '2016-08-29T09:12:33.001Z'
+          example: 2016-08-29T09:12:33.001Z
         manufacturer:
-          "$ref": "#/components/schemas/Manufacturer"
+          $ref: '#/components/schemas/Manufacturer'
     Manufacturer:
       required:
         - name
+      type: object
       properties:
         name:
           type: string
@@ -131,4 +124,3 @@ components:
         phone:
           type: string
           example: 408-867-5309
-      type: object
