@@ -10,7 +10,11 @@ import { AxiosInstance } from 'axios';
   {{/each}}
 {{/each}}
 
-type Serializable = string | number | Date | boolean | object;
+type Payload = {
+  query?: Record<string, string | number | boolean>;
+  params?: Record<string, string | number | boolean>;
+  body?: Record<string, string | number | Date | boolean | object>;
+};
 
 export class ApiClient {
   constructor(private httpClient: AxiosInstance) {
@@ -29,7 +33,7 @@ export class ApiClient {
   }
   {{/each}}
 
-  private createUrl(url: string, data: {query?: Record<string, Serializable>, params?: Record<string, Serializable>, body?: Record<string, Serializable>}) {
+  private createUrl(url: string, data: Partial<Payload>) {
     const isNotNullish = ([key]: [string, unknown]) => key !== null && key !== undefined;
     const newUrl = Object.entries(data.params ?? {}).filter(isNotNullish).reduce((acc, [key, value]) => acc.replace(`{${key}}`, encodeURIComponent(value)), url);
     const queryStr = Object.entries(data.query ?? {}).filter(isNotNullish).reduce((acc, [key, value]) => acc.concat([key, encodeURIComponent(value)]), [] as [string, string][]).join('&');
