@@ -22,6 +22,7 @@ if (!flags.output) {
 }
 
 const openapi: OpenAPIV3.Document = yaml.load(fs.readFileSync(inputFile, { encoding: 'utf-8' })) as any;
+console.log(JSON.stringify(openapi, null, 2));
 fs.writeFileSync(outputFile, renderServer(openapi), { encoding: 'utf-8' });
 
 process.exit(0);
