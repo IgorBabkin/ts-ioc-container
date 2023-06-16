@@ -13,29 +13,23 @@ export interface HttpResponse<Payload = unknown> {
 
 export interface Ok<Payload> extends HttpResponse<Payload> {
   status: 200;
-};
+}
 
 export interface Created extends HttpResponse<undefined> {
   status: 203;
-};
+}
 
-{{#each paths}}
-  {{#if get}}
-    {{{render_template 'Route.hbs' get}}}
-  {{/if}}
-  {{#if post}}
-    {{{render_template 'Route.hbs' post}}}
-  {{/if}}
+{{#each paths as |path url|}}
+  {{#each (get_methods_obj path)}}
+    {{{render_template 'Route.hbs' this}}}
+  {{/each}}
 {{/each}}
 
 export type Operations = {
-{{#each paths}}
-  {{#if get}}
-  {{get.operationId}}: {{{render_template 'ServerRoute.hbs' get}}};
-  {{/if}}
-  {{#if post}}
-  {{post.operationId}}: {{{render_template 'ServerRoute.hbs' post}}};
-  {{/if}}
+{{#each paths as |path url|}}
+  {{#each (get_methods_obj path)}}
+    {{operationId}}: {{{render_template 'ServerRoute.hbs' this}}};
+  {{/each}}
 {{/each}}
 }
 

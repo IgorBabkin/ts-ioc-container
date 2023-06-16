@@ -1,0 +1,43 @@
+import { AxiosInstance } from 'axios';
+
+{{#each components.schemas}}
+  export type {{@key}} = {{render_template 'JsonSchema.hbs' this~}};
+{{/each}}
+
+{{#each paths as |path url|}}
+  {{#each (get_methods_obj path)}}
+    {{{render_template 'Route.hbs' this}}}
+  {{/each}}
+{{/each}}
+
+type Primitive = string | number | Date | boolean;
+
+export class ApiClient {
+  constructor(private httpClient: AxiosInstance) {
+  }
+
+{{#each paths as |path url|}}
+  {{#each (get_methods_obj path)}}
+  async {{operationId}}(data: {{payload_name operationId}}): Promise<{{#if (get_value_by_key responses '200')}}{{response_name operationId}}{{else}}void{{/if}}> {
+    const response = await this.httpClient.request({
+      method: '{{@key}}',
+      url: this.createUrl('{{url}}', data),
+      data,
+      headers: this.createHeaders(data),
+    });
+    return response.data;
+  }
+  {{/each}}
+
+  private createUrl(url: string, data: {query?: Record<string, Primitive>, params?: Record<string, Primitive>, body?: Record<string, Primitive>}) {
+    const isNotNullish = ([key]: [string, unknown]) => key !== null && key !== undefined;
+    const newUrl = Object.entries(data.params ?? {}).filter(isNotNullish).reduce((acc, [key, value]) => acc.replace(`{${key}}`, encodeURIComponent(value)), url);
+    const queryStr = Object.entries(data.query ?? {}).filter(isNotNullish).reduce((acc, [key, value]) => acc.concat([key, encodeURIComponent(value)]), [] as [string, string][]).join('&');
+    return queryStr ? `${newUrl}?${queryStr}` : `${newUrl}`;
+  }
+
+  private createHeaders(headers: Record<string, any>) {
+    return headers;
+  }
+{{/each}}
+}

@@ -3,7 +3,7 @@
 import * as process from 'process';
 import args from 'args';
 import * as fs from 'fs';
-import { renderServer } from './index';
+import { renderHttpClient } from './index';
 
 args.option('input', 'openapi file path').option('output', 'output file path');
 
@@ -20,6 +20,6 @@ if (!flags.output) {
 }
 
 const openapi = JSON.parse(fs.readFileSync(inputFile, { encoding: 'utf-8' }));
-fs.writeFileSync(outputFile, renderServer(openapi), { encoding: 'utf-8' });
+fs.writeFileSync(outputFile, renderHttpClient(openapi), { encoding: 'utf-8' });
 
 process.exit(0);

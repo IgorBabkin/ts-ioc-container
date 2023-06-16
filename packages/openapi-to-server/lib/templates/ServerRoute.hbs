@@ -1,7 +1,7 @@
 {{#if (get_value_by_key responses '200')}}
-IRoute<{{capitalize operationId}}Payload, Ok<{{capitalize operationId}}Response>>
+IRoute<{{payload_name operationId}}, Ok<{{response_name operationId}}>>
 {{else if (get_value_by_key responses '203')}}
-IRoute<{{capitalize operationId}}Payload, Created>
+IRoute<{{payload_name operationId}}, Created>
 {{else}}
-IRoute<{{capitalize operationId}}Payload, undefined>
+IRoute<{{payload_name operationId}}, undefined>
 {{/if}}

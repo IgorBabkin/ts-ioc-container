@@ -1,4 +1,4 @@
-export type {{capitalize operationId}}Payload = {
+export type {{payload_name operationId}} = {
   {{#if parameters}}
     {{#if (some_parameters parameters 'query')}}
     query: {{render_template 'Parameters.hbs' (filter_parameters parameters 'query')}}
@@ -13,8 +13,8 @@ export type {{capitalize operationId}}Payload = {
 };
 
 {{#if (get_value_by_key responses '200')}}
-export type {{capitalize operationId}}Response = {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '200.content.application/json.schema')}}};
+export type {{response_name operationId}} = {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '200.content.application/json.schema')}}};
 {{else if (get_value_by_key responses '203')}}
-export type {{capitalize operationId}}Response = {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '203.content.application/json.schema')}}};
+export type {{response_name operationId}} = {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '203.content.application/json.schema')}}};
 {{/if}}
 
