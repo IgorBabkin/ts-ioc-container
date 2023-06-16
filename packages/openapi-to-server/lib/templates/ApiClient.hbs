@@ -50,7 +50,7 @@ export class ApiClient {
   }
   {{/each}}
 
-  private createUrl(url: string, data: Partial<Payload>) {
+  private createUrl(pattern: string, {params = {}, query = {}}: Partial<Payload>) {
     const url = addPathParams(pattern, params ?? {});
     return addQueryParams(url, query ?? {});
   }
