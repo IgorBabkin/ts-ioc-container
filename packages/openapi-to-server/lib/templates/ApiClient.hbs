@@ -10,11 +10,28 @@ import { AxiosInstance } from 'axios';
   {{/each}}
 {{/each}}
 
+type Params = Record<string, string | number | boolean>;
+type Query = Record<string, string | number | boolean>;
+type Body = Record<string, string | number | Date | boolean | object>;
 type Payload = {
-  query?: Record<string, string | number | boolean>;
-  params?: Record<string, string | number | boolean>;
-  body?: Record<string, string | number | Date | boolean | object>;
+  query?: Query;
+  params?: Params;
+  body?: Body;
 };
+
+const isPresent = ([key]: [string, unknown]) => key !== null && key !== undefined;
+function addPathParams(url: string, params: Params): string {
+  return Object.entries(params)
+    .filter(isPresent)
+    .reduce((acc, [key, value]) => acc.replace(`{${key}}`, encodeURIComponent(value)), url);
+}
+function addQueryParams(url: string, query: Query): string {
+  const queryStr = Object.entries(query)
+    .filter(isPresent)
+    .reduce((acc, [key, value]) => acc.concat([key, encodeURIComponent(value)]), [] as [string, string][])
+    .join('&');
+  return queryStr ? `${url}?${queryStr}` : `${url}`
+}
 
 export class ApiClient {
   constructor(private httpClient: AxiosInstance) {
@@ -34,10 +51,8 @@ export class ApiClient {
   {{/each}}
 
   private createUrl(url: string, data: Partial<Payload>) {
-    const isNotNullish = ([key]: [string, unknown]) => key !== null && key !== undefined;
-    const newUrl = Object.entries(data.params ?? {}).filter(isNotNullish).reduce((acc, [key, value]) => acc.replace(`{${key}}`, encodeURIComponent(value)), url);
-    const queryStr = Object.entries(data.query ?? {}).filter(isNotNullish).reduce((acc, [key, value]) => acc.concat([key, encodeURIComponent(value)]), [] as [string, string][]).join('&');
-    return queryStr ? `${newUrl}?${queryStr}` : `${newUrl}`;
+    const url = addPathParams(pattern, params ?? {});
+    return addQueryParams(url, query ?? {});
   }
 
   private createHeaders(headers: Record<string, any>) {
