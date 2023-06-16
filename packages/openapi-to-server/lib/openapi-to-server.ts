@@ -21,8 +21,8 @@ if (!flags.output) {
     throw new Error('output file path is required');
 }
 
-const openapi: OpenAPIV3.Document = yaml.load(fs.readFileSync(inputFile, { encoding: 'utf-8' })) as any;
-console.log(JSON.stringify(openapi, null, 2));
-fs.writeFileSync(outputFile, renderServer(openapi), { encoding: 'utf-8' });
+const data: string = fs.readFileSync(inputFile, { encoding: 'utf-8' });
+const content: OpenAPIV3.Document = inputFile.search(/\.json$/) > 0 ? JSON.parse(data) : (yaml.load(data) as any);
+fs.writeFileSync(outputFile, renderServer(content), { encoding: 'utf-8' });
 
 process.exit(0);
