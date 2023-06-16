@@ -1,4 +1,5 @@
 import Handlebars from 'handlebars/runtime';
+import { OpenAPIV3 } from 'openapi-types';
 
 function capitalize(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
@@ -43,4 +44,19 @@ Handlebars.registerHelper('get_value_by_key', function (context: object, pathStr
 
 Handlebars.registerHelper('array', function (...args: unknown[]) {
     return args;
+});
+
+Handlebars.registerHelper('get_methods', function (items: OpenAPIV3.PathsObject) {
+    return Object.entries(items)
+        .map(([_, item]) => item!.put ?? item!.post ?? item!.get ?? item!.delete)
+        .filter(Boolean);
+});
+
+Handlebars.registerHelper('get_methods_obj', function (item: OpenAPIV3.PathItemObject) {
+    const output: Record<string, unknown> = {};
+    item.put && (output['put'] = item.put);
+    item.delete && (output['delete'] = item.delete);
+    item.post && (output['post'] = item.post);
+    item.get && (output['get'] = item.get);
+    return output;
 });
