@@ -3,8 +3,8 @@ import { isYAML, loadYAML } from '../utils/yaml';
 import { loadJSON, saveJSON } from '../utils/json';
 import { getFilenameWithoutPath, getPathToFileWithoutFileName } from '../utils/file';
 import path from 'path';
-import { renderServer } from '../index';
 import fs from 'fs';
+import { renderServer } from '../templates';
 
 type Props = {
     inputFile: string;

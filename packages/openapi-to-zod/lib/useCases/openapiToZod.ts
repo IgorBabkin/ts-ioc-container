@@ -1,8 +1,8 @@
 import { OpenAPIV3 } from 'openapi-types';
 import { isYAML, loadYAML } from '../utils/yaml';
 import { loadJSON } from '../utils/json';
-import { renderDocument } from '../index';
 import fs from 'fs';
+import { renderDocument } from '../templates';
 
 type Props = { inputFile: string; outputFile: string };
 

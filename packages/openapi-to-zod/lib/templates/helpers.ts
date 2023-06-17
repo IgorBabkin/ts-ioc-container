@@ -1,11 +1,10 @@
 import Handlebars from 'handlebars/runtime';
 import { OpenAPIV3 } from 'openapi-types';
 
-function capitalize(value: string) {
+Handlebars.registerHelper('capitalize', function (value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
-}
+});
 
-Handlebars.registerHelper('capitalize', capitalize);
 Handlebars.registerHelper('excludes', function (arr: string[] | undefined = [], value: string) {
     return !arr.includes(value);
 });
