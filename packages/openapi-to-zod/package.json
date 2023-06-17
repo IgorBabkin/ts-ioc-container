@@ -1,6 +1,6 @@
 {
     "name": "@ibabkin/openapi-to-zod",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Generates zod from openapi",
     "keywords": [
         "openapi",
