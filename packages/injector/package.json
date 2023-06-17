@@ -1,5 +1,5 @@
 {
-    "name": "@ibabkin/ts-constructor-injector",
+    "name": "ts-constructor-injector",
     "publishConfig": {
         "access": "public",
         "registry": "https://registry.npmjs.org/"

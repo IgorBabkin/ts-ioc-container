@@ -1,4 +1,4 @@
-import { forKey } from '@ibabkin/ts-ioc-container';
+import { forKey } from 'ts-ioc-container';
 
 @forKey('ILogger')
 export class Logger {

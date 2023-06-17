@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { constructor, Container, forKey, IContainer, IInjector, provider, Registration, asSingleton } from '../lib';
-import { resolve } from '@ibabkin/ts-constructor-injector';
+import { resolve } from 'ts-constructor-injector';
 
 const injector: IInjector = {
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {

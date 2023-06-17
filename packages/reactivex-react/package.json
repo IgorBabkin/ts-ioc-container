@@ -1,5 +1,5 @@
 {
-    "name": "@ibabkin/reactivex-react",
+    "name": "reactivex-react",
     "version": "5.3.3",
     "main": "cjs/index.js",
     "publishConfig": {

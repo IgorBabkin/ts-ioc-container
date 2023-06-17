@@ -1,5 +1,5 @@
 {
-    "name": "@ibabkin/ts-ioc-container",
+    "name": "ts-ioc-container",
     "version": "23.2.7",
     "description": "Typescript IoC container",
     "publishConfig": {
@@ -42,7 +42,7 @@
         "test": "jest"
     },
     "devDependencies": {
-        "@ibabkin/ts-constructor-injector": "^5.0.0",
+        "ts-constructor-injector": "^5.0.0",
         "@types/jest": "27.0.2",
         "jest": "27.2.3",
         "moq.ts": "^7.3.4",

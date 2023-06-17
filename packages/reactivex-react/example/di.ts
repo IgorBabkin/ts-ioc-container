@@ -1,5 +1,5 @@
-import { Container } from '@ibabkin/ts-ioc-container';
-import { resolve } from '@ibabkin/ts-constructor-injector';
+import { Container } from 'ts-ioc-container';
+import { resolve } from 'ts-constructor-injector';
 
 export function createRootContainer() {
     return new Container(

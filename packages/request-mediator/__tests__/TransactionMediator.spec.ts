@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { inject } from '@ibabkin/ts-constructor-injector';
-import { by, forKey, Provider, provider, Registration, asSingleton, perTags } from '@ibabkin/ts-ioc-container';
+import { inject } from 'ts-constructor-injector';
+import { by, forKey, Provider, provider, Registration, asSingleton, perTags } from 'ts-ioc-container';
 import { Context } from './context/Context';
 import {
     IQueryHandler,

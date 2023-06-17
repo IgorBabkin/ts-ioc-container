@@ -1,5 +1,5 @@
-import { constructor, Container, IContainer, IInjector, Provider, Resolvable } from '@ibabkin/ts-ioc-container';
-import { getHooks, hook, resolve } from '@ibabkin/ts-constructor-injector';
+import { constructor, Container, IContainer, IInjector, Provider, Resolvable } from 'ts-ioc-container';
+import { getHooks, hook, resolve } from 'ts-constructor-injector';
 import { IDependencyContainer, Scope } from '../lib';
 
 export const onDispose = hook('onDispose');

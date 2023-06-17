@@ -1,4 +1,4 @@
-import { constructor } from '@ibabkin/ts-constructor-injector';
+import { constructor } from 'ts-constructor-injector';
 
 export interface IErrorHandler<Context = undefined> {
     handle(error: unknown, context: Context): void;

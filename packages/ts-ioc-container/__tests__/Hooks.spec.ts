@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { asSingleton, by, constructor, Container, forKey, IContainer, IInjector, provider, Registration } from '../lib';
-import { getHooks, hook, inject, resolve } from '@ibabkin/ts-constructor-injector';
+import { getHooks, hook, inject, resolve } from 'ts-constructor-injector';
 
 const onConstruct = hook('onConstruct');
 const onDispose = hook('onDispose');
