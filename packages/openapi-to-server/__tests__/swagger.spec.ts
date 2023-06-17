@@ -23,6 +23,4 @@ describe('swagger', function () {
         });
         expect(fs.readFileSync(clientOutputFile)).toMatchSnapshot();
     });
-
-    it('openapiToZod', function () {});
 });
