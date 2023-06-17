@@ -1,0 +1,69 @@
+/inventory:
+  get:
+    tags:
+      - developers
+    summary: searches inventory
+    description: |
+      By passing in the appropriate options, you can search for
+      available inventory in the system
+    operationId: searchInventory
+    parameters:
+      - name: searchString
+        in: query
+        description: pass an optional search string for looking up inventory
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: skip
+        in: query
+        description: number of records to skip for pagination
+        required: false
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: maximum number of records to return
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 50
+          minimum: 0
+          type: integer
+          format: int32
+    responses:
+      "200":
+        description: search results matching criteria
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/InventoryItem'
+      "400":
+        description: bad input parameter
+  post:
+    tags:
+      - admins
+    summary: adds an inventory item
+    description: Adds an item to the system
+    operationId: addInventory
+    requestBody:
+      description: Inventory item to add
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InventoryItem'
+    responses:
+      "201":
+        description: item created
+      "400":
+        description: "invalid input, object invalid"
+      "409":
+        description: an existing item already exists

@@ -16,3 +16,6 @@ Handlebars.registerHelper('render_template', renderTemplate);
 
 export const renderServer = (doc: OpenAPIV3.Document) => renderTemplate('Server.hbs', doc);
 export const renderHttpClient = (doc: OpenAPIV3.Document) => renderTemplate('ApiClient.hbs', doc);
+
+export { openapiToServer } from './useCases/openapiToServer';
+export { openapiToClient } from './useCases/openapiToClient';

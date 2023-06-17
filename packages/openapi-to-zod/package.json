@@ -27,13 +27,13 @@
         "precompiled/**/*"
     ],
     "bin": {
-        "openapi-to-zod": "cjm/openapi-to-zod.js"
+        "openapi-to-zod": "cjm/useCases/openapiToZod.cli.js"
     },
     "scripts": {
         "build": "npm run clean && npm run compile",
         "test": "make-dir .generated && jest --passWithNoTests",
         "clean": "rimraf cjm",
-        "compile": "tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES6",
+        "compile": "tsc -p tsconfig.json --outDir cjm",
         "precompile": "make-dir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime"
     },
     "dependencies": {
@@ -42,6 +42,7 @@
         "js-yaml": "^4.1.0",
         "openapi-types": "^12.1.0",
         "typescript": "4.4.3",
+        "yaml-import": "^2.0.0",
         "zod": "^3.21.4"
     },
     "devDependencies": {

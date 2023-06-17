@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": "./lib",
     "lib": ["es2016"],
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "target": "ES6",
+    "module": "commonjs"
   },
   "include": [
     "lib"

@@ -1,15 +1,17 @@
-import { OpenAPIV3 } from 'openapi-types';
-import { renderDocument } from '../lib';
-import * as fs from 'fs';
-import yaml from 'js-yaml';
-import path from 'path';
+import { openapiToZod } from '../lib';
+import * as path from 'path';
+import fs from 'fs';
 
 describe('swagger', function () {
-    it('Generator', function () {
-        const api: OpenAPIV3.Document = yaml.load(
-            fs.readFileSync(path.resolve(__dirname, './swagger.yaml'), { encoding: 'utf-8' }),
-        ) as any;
-        fs.writeFileSync('.generated/output.ts', renderDocument(api));
-        expect(true).toEqual(true);
+    const inputFile = path.resolve(__dirname, 'swagger.yaml');
+    const outputFile = path.resolve(__dirname, '../.generated/validators.ts');
+
+    it('openapiToZod', function () {
+        openapiToZod({
+            inputFile: inputFile,
+            outputFile: outputFile,
+        });
+
+        expect(fs.readFileSync(outputFile)).toMatchSnapshot();
     });
 });

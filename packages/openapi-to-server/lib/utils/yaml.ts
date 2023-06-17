@@ -1,9 +1,7 @@
-import fs from 'fs';
-import yaml from 'js-yaml';
+import { read } from 'yaml-import';
 
 export function loadYAML<T>(inputFile: string): T {
-    const data: string = fs.readFileSync(inputFile, { encoding: 'utf-8' });
-    return yaml.load(data) as any;
+    return read(inputFile);
 }
 
 export function isYAML(inputFile: string): boolean {

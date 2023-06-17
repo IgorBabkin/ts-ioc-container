@@ -1,23 +1,28 @@
-import { OpenAPIV3 } from 'openapi-types';
-import { renderHttpClient, renderServer } from '../lib';
+import { openapiToClient, openapiToServer } from '../lib';
 import fs from 'fs';
-import yaml from 'js-yaml';
 import * as path from 'path';
 
 describe('swagger', function () {
+    const inputFile = path.resolve(__dirname, './swagger.yaml');
+    const serverOutputFile = path.resolve(__dirname, '../.generated/server.d.ts');
+    const clientOutputFile = path.resolve(__dirname, '../.generated/client.ts');
+
     it('Server', function () {
-        const api: OpenAPIV3.Document = yaml.load(
-            fs.readFileSync(path.resolve(__dirname, './swagger.yaml'), { encoding: 'utf-8' }),
-        ) as any;
-        fs.writeFileSync('.generated/output.d.ts', renderServer(api));
-        expect(true).toEqual(true);
+        openapiToServer({
+            inputFile: inputFile,
+            outputFile: serverOutputFile,
+            emitJSON: true,
+        });
+        expect(fs.readFileSync(serverOutputFile)).toMatchSnapshot();
     });
 
     it('Client', function () {
-        const api: OpenAPIV3.Document = yaml.load(
-            fs.readFileSync(path.resolve(__dirname, './swagger.yaml'), { encoding: 'utf-8' }),
-        ) as any;
-        fs.writeFileSync('.generated/client.ts', renderHttpClient(api));
-        expect(true).toEqual(true);
+        openapiToClient({
+            inputFile: inputFile,
+            outputFile: clientOutputFile,
+        });
+        expect(fs.readFileSync(clientOutputFile)).toMatchSnapshot();
     });
+
+    it('openapiToZod', function () {});
 });

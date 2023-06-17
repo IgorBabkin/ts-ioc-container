@@ -15,3 +15,4 @@ function renderTemplate(filename: string, data: unknown) {
 Handlebars.registerHelper('render_template', renderTemplate);
 
 export const renderDocument = (doc: OpenAPIV3.Document) => renderTemplate('Document.hbs', doc);
+export { openapiToZod } from './useCases/openapiToZod';

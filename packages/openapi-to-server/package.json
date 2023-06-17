@@ -29,15 +29,15 @@
         "precompiled/**/*"
     ],
     "bin": {
-        "openapi-to-server": "cjm/openapi-to-server.js",
-        "openapi-to-client": "cjm/openapi-to-client.js"
+        "openapi-to-server": "cjm/useCases/openapiToServer.cli.js",
+        "openapi-to-client": "cjm/useCases/openapiToClient.cli.js"
     },
     "scripts": {
         "build": "npm run clean && npm run compile",
         "test": "make-dir .generated && jest --passWithNoTests",
         "precompile": "make-dir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
         "clean": "rimraf cjm",
-        "compile": "tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES6"
+        "compile": "tsc -p tsconfig.json --outDir cjm"
     },
     "dependencies": {
         "args": "^5.0.3",
