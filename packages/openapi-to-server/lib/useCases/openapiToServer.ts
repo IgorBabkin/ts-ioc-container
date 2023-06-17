@@ -1,6 +1,6 @@
 import { OpenAPIV3 } from 'openapi-types';
 import { isYAML, loadYAML } from '../utils/yaml';
-import { loadJSON } from '../utils/json';
+import { loadJSON, saveJSON } from '../utils/json';
 import { getFilenameWithoutPath, getPathToFileWithoutFileName } from '../utils/file';
 import path from 'path';
 import { renderServer } from '../index';
@@ -17,10 +17,7 @@ export function openapiToServer({ inputFile, outputFile, emitJSON }: Props) {
     if (emitJSON && isYAML(inputFile)) {
         const inputFilename: string = getFilenameWithoutPath(inputFile);
         const outputPath: string = getPathToFileWithoutFileName(outputFile);
-        fs.writeFileSync(
-            path.resolve(outputPath, inputFilename.replace(/\.yaml$/, '.json')),
-            JSON.stringify(content, null, 2),
-        );
+        saveJSON(path.resolve(outputPath, inputFilename.replace(/\.yaml$/, '.json')), content);
     }
     fs.writeFileSync(outputFile, renderServer(content));
 }
