@@ -31,7 +31,7 @@
     "bin": {
         "openapi-to-server": "cjm/openapi-to-server.js",
         "openapi-to-client": "cjm/openapi-to-client.js",
-        "openapi-to-json": "cjm/openapi-to-client.js"
+        "openapi-to-json": "cjm/openapi-to-json.js"
     },
     "scripts": {
         "build": "npm run clean && npm run compile",
