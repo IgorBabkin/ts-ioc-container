@@ -4,7 +4,9 @@ import * as process from 'process';
 import args from 'args';
 import { openapiToServer } from './openapiToServer';
 
-args.option('input', 'openapi file path').option('output', 'output file path').option('emitJSON', 'generate JSON file');
+args.option('input', 'openapi file path')
+    .option('output', 'output file path')
+    .option('emit-json', 'generate JSON file');
 
 const flags = args.parse(process.argv);
 
@@ -18,7 +20,7 @@ if (!outputFile) {
     throw new Error('output file path is required');
 }
 
-const emitJSON = !!flags.emitJSON;
+const emitJSON = !!flags['emit-json'];
 
 openapiToServer({ inputFile, outputFile, emitJSON });
 process.exit(0);
