@@ -4,7 +4,7 @@ import { OpenAPIV3 } from 'openapi-types';
 
 require('../../precompiled/templates.js');
 
-export function renderTemplate(filename: string, data: unknown) {
+function renderTemplate(filename: string, data: unknown) {
     const template = Handlebars.templates[filename];
     if (!template) {
         throw new Error(`Template not found: ${filename}`);
