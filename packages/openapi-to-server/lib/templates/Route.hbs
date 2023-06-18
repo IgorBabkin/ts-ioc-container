@@ -14,13 +14,13 @@ export type {{payload_name operationId}} = {
 
 {{#if (get_value_by_key responses '200')}}
 export type {{response_name operationId}} = {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '200.content.application/json.schema')}}};
-{{else if (get_value_by_key responses '203')}}
-export type {{response_name operationId}} = {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '203.content.application/json.schema')}}};
+{{else if (get_value_by_key responses '201')}}
+export type {{response_name operationId}} = {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '201.content.application/json.schema')}}};
 {{/if}}
 
 {{#if (get_value_by_key responses '200')}}
 export type {{route_name operationId}} = IRoute<{{payload_name operationId}}, Ok<{{response_name operationId}}>>
-{{else if (get_value_by_key responses '203')}}
+{{else if (get_value_by_key responses '201')}}
 export type {{route_name operationId}} = IRoute<{{payload_name operationId}}, Created>
 {{else}}
 export type {{route_name operationId}} = IRoute<{{payload_name operationId}}, undefined>

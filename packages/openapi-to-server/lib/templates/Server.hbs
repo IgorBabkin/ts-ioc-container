@@ -20,7 +20,7 @@ export interface Ok<Payload> extends HttpResponse<Payload> {
 }
 
 export interface Created extends HttpResponse<undefined> {
-  status: 203;
+  status: 201;
 }
 
 {{#each paths as |path url|}}
