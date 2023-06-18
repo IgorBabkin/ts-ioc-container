@@ -1,7 +1,0 @@
-{{#if (get_value_by_key responses '200')}}
-IRoute<{{payload_name operationId}}, Ok<{{response_name operationId}}>>
-{{else if (get_value_by_key responses '203')}}
-IRoute<{{payload_name operationId}}, Created>
-{{else}}
-IRoute<{{payload_name operationId}}, undefined>
-{{/if}}

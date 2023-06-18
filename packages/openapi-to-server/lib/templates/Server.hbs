@@ -28,7 +28,7 @@ export interface Created extends HttpResponse<undefined> {
 export type Operations = {
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
-    {{operationId}}: {{{render_template 'ServerRoute.hbs' this}}};
+    {{operationId}}: {{route_name operationId}};
   {{/each}}
 {{/each}}
 }
