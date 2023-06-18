@@ -3,8 +3,11 @@ Generates validators for operation payloads from OpenAPI 3.0 specification using
 
 ## Usage
 
+- supported version of OpenAPI: 3.0.0
+- supports `yaml-import`
+
 ```bash
-openapi-to-zod --input ./swagger.json --output ./validators.ts
+openapi-to-zod --input ./swagger.yaml --output ./validators.ts
 ```
 
 ```typescript

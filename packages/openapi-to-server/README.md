@@ -4,10 +4,14 @@ Generates typescript interfaces for operations from OpenAPI 3.0 specification.
 ## Usage
 
 - supported version of OpenAPI: 3.0.0
+- supports `yaml-import`
+- `--json` - emit json file alongside with typescript file
 
 ```bash
-openapi-to-server --input ./swagger.json --output ./operations.d.ts
+openapi-to-server --input ./swagger.yaml --output ./operations.d.ts --json
 ```
+
+```typescript
 
 ```typescript
 import api from './swagger.json';
