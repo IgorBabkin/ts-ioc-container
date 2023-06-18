@@ -50,7 +50,7 @@ tags:
     description: Operations available to regular developers
 paths:
   !!import/merge
-    - routes.yaml
+    - paths.yaml
 
 components:
   schemas:
