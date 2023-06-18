@@ -1,6 +1,6 @@
 {
     "name": "ts-ioc-container",
-    "version": "23.2.8",
+    "version": "23.2.9",
     "description": "Typescript IoC container",
     "publishConfig": {
         "access": "public",
@@ -49,7 +49,7 @@
         "npm-run-all": "4.1.5",
         "reflect-metadata": "^0.1.13",
         "rimraf": "3.0.2",
-        "ts-constructor-injector": "^5.0.1",
+        "ts-constructor-injector": "^5.0.2",
         "ts-jest": "27.0.5",
         "typescript": "4.4.3"
     },
