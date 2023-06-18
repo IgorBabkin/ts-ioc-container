@@ -2,8 +2,12 @@
   export type {{@key}} = {{render_template 'JsonSchema.hbs' this}};
 {{/each}}
 
+export interface RouteOptions {
+  tags: string[];
+}
+
 export interface IRoute<Payload, Response> {
-  handle(payload: Payload): Promise<Response>;
+  handle(payload: Payload, options: RouteOptions): Promise<Response>;
 }
 
 export interface HttpResponse<Payload = unknown> {
