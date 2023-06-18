@@ -31,7 +31,7 @@
     },
     "scripts": {
         "build": "npm run clean && npm run compile",
-        "test": "make-dir .generated && jest --passWithNoTests",
+        "test": "make-dir .generated && jest --coverage",
         "clean": "rimraf cjm",
         "compile": "tsc -p tsconfig.json --outDir cjm",
         "precompile": "make-dir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime"

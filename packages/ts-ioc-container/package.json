@@ -39,7 +39,7 @@
         "build": "npm-run-all -p build:**",
         "coverage": "coveralls",
         "watch": "nodemon --watch ./lib --exec npm run build",
-        "test": "jest"
+        "test": "jest --coverage"
     },
     "devDependencies": {
         "@types/jest": "27.0.2",

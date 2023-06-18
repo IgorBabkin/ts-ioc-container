@@ -35,7 +35,7 @@
         "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
         "build": "npm-run-all -p build:**",
         "watch": "nodemon --watch ./lib --exec npm run build",
-        "test": "jest"
+        "test": "jest --coverage"
     },
     "devDependencies": {
         "@types/jest": "27.0.2",
