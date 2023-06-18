@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/npm/l/@ibabkin/openapi-to-server)
 
 ## Description
-Generates typescript interfaces for operations from OpenAPI 3.0 specification.
+Generates typescript interfaces for operations from OpenAPI 3.0 specification. Recommended to use with [@ibabkin/openapi-to-zod](https://www.npmjs.com/package/@ibabkin/openapi-to-zod)
 
 ## Usage
 
