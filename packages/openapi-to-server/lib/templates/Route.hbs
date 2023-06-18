@@ -17,9 +17,9 @@ export type {{response_name operationId}} = {{{render_template 'JsonSchema.hbs' 
 {{/if}}
 
 {{#if (get_value_by_key responses '200')}}
-export type {{route_name operationId}} = IRoute<{{payload_name operationId}}, Ok<{{response_name operationId}}>>
+export type {{route_name operationId}} = Route<{{payload_name operationId}}, Ok<{{response_name operationId}}>>
 {{else if (get_value_by_key responses '201')}}
-export type {{route_name operationId}} = IRoute<{{payload_name operationId}}, Created>
+export type {{route_name operationId}} = Route<{{payload_name operationId}}, Created>
 {{else}}
-export type {{route_name operationId}} = IRoute<{{payload_name operationId}}, undefined>
+export type {{route_name operationId}} = Route<{{payload_name operationId}}, undefined>
 {{/if}}

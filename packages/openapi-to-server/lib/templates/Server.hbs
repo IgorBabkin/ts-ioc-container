@@ -6,7 +6,7 @@ export interface RouteOptions {
   tags: string[];
 }
 
-export interface IRoute<Payload, Response> {
+export interface Route<Payload, Response> {
   handle(payload: Payload, options: RouteOptions): Promise<Response>;
 }
 
