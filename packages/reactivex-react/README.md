@@ -1,11 +1,11 @@
-# reactivex-react
-React hooks to observe values from RxJs Observable.
-
 [![NPM version:latest](https://img.shields.io/npm/v/reactivex-react/latest.svg?style=flat-square)](https://www.npmjs.com/package/reactivex-react)
 [![npm downloads](https://img.shields.io/npm/dt/reactivex-react.svg?style=flat-square)](https://www.npmjs.com/package/reactivex-react)
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 [![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/reactivex-react.svg)](https://www.npmjs.com/package/reactivex-react)
 [![License](https://img.shields.io/npm/l/reactivex-react)](https://www.npmjs.com/package/reactivex-react)
+
+# reactivex-react
+React hooks to observe values from RxJs Observable.
 
 ## Advantages
 

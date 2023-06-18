@@ -1,3 +1,8 @@
+![NPM version:latest](https://img.shields.io/npm/v/@ibabkin/openapi-to-zod/latest.svg?style=flat-square)
+![npm downloads](https://img.shields.io/npm/dt/@ibabkin/openapi-to-zod.svg?style=flat-square)
+[![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
+![License](https://img.shields.io/npm/l/@ibabkin/openapi-to-zod)
+
 ## Description
 Generates validators for operation payloads from OpenAPI 3.0 specification using Zod.
 

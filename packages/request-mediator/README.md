@@ -1,3 +1,10 @@
+![NPM version:latest](https://img.shields.io/npm/v/ts-request-mediator/latest.svg?style=flat-square)
+![npm downloads](https://img.shields.io/npm/dt/ts-request-mediator.svg?style=flat-square)
+![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/ts-request-mediator)
+[![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
+![License](https://img.shields.io/npm/l/ts-request-mediator)
+
+
 # Framework agnostic request mediator
 
 ## Advantages
