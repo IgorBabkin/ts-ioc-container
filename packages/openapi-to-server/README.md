@@ -17,8 +17,6 @@ openapi-to-server --input ./swagger.yaml --output ./operations.d.ts --json
 ```
 
 ```typescript
-
-```typescript
 import api from './swagger.json';
 import { OpenAPIV3 } from 'openapi-types';
 import { renderDocument } from '../lib';
