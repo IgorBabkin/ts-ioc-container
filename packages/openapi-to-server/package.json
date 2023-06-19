@@ -41,7 +41,6 @@
     },
     "dependencies": {
         "args": "^5.0.3",
-        "axios": "^1.4.0",
         "handlebars": "^4.7.7",
         "js-yaml": "^4.1.0",
         "yaml-import": "^2.0.0"
@@ -51,6 +50,7 @@
         "@types/jest": "27.0.2",
         "@types/js-yaml": "^4.0.5",
         "@types/node": "^17.0.21",
+        "axios": "^1.4.0",
         "jest": "27.2.3",
         "make-dir-cli": "^3.0.0",
         "openapi-types": "^12.1.0",
