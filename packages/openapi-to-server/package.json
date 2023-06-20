@@ -35,8 +35,10 @@
     "scripts": {
         "build": "npm run clean && npm run compile",
         "test": "make-dir .generated && jest --coverage",
+        "test:watch": "jest --coverage --watch",
         "precompile": "make-dir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
         "clean": "rimraf cjm",
+        "watch": "nodemon --watch lib --exec 'npm run compile'",
         "compile": "tsc -p tsconfig.json --outDir cjm"
     },
     "dependencies": {
@@ -53,6 +55,7 @@
         "axios": "^1.4.0",
         "jest": "27.2.3",
         "make-dir-cli": "^3.0.0",
+        "nodemon": "^2.0.22",
         "openapi-types": "^12.1.0",
         "rimraf": "3.0.2",
         "ts-jest": "27.0.5",

@@ -1,0 +1,14 @@
+{
+  "ignore": [
+    "**/*.spec.ts",
+    "**/__tests__",
+    ".git",
+    "node_modules",
+    ".generated",
+    "cjm"
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "ext": "ts,json,js,hbs"
+}
