@@ -22,7 +22,7 @@ export class ArgsProvider<T> extends ProviderDecorator<T> {
         return this.provider.resolve(container, ...this.argsFn(container), ...args);
     }
 
-    clone(): ProviderDecorator<T> {
+    clone(): ArgsProvider<T> {
         return new ArgsProvider(this.provider.clone(), this.argsFn);
     }
 }
