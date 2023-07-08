@@ -64,7 +64,7 @@ class App {
 }
 
 const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
-container.resolve(App).resolve.logger.name === 'Logger'; // true
+container.resolve(App).logger.name === 'Logger'; // true
 
 container.dispose();
 ```
@@ -72,7 +72,7 @@ container.dispose();
 ### Scopes
 Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application.
 
-- NOTICE: remember that when you scope doesn't have dependency then it will be resolved from parent container
+- NOTICE: remember that when scope doesn't have dependency then it will be resolved from parent container
 - NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope accordingly.
 
 ```typescript
