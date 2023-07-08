@@ -27,7 +27,7 @@ yarn add ts-ioc-container reflect-metadata
 
 ## Setup
 ### reflect-metadata
-Add it in main file of your project. It should be first line of code.
+Just put it in the main file of your project. It should be first line of the code.
 ```typescript
 import 'reflect-metadata';
 ```
@@ -42,11 +42,11 @@ import 'reflect-metadata';
 }
 ```
 
-## Container
-Container consists of:
+## Container `IContainer`
+It consists of 2 main parts:
 
-- Injector - injects dependencies to constructor
-- Providers - templates that create instances of dependencies
+- Providers - describes how to create instances of dependencies
+- Injector - describes how to inject dependencies to constructor
 
 ### Basic usage
 
@@ -70,7 +70,8 @@ container.dispose();
 ```
 
 ### Scopes
-- scope - is a container that can be created from another container. It's a sub-container.
+Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application.
+
 - NOTICE: when you create a scope of container then all providers are cloned to new scope. Every provider has method `clone` that clones itself.
 
 ```typescript
@@ -81,10 +82,11 @@ const scope = container.createScope();
 ```
 
 ### Tags
+Sometimes you want to mark some providers and resolve them only from certain scope.
 
-- tag - is a string that can be used mark each container and scope
+- tag - is a string that can be used to mark each container and scope
 - every provider can be registered per certain tags and cannot be resolved from container with other tags. Only from parent one with certain tags.
-- NOTICE: when you create a scope of container with tags which not includes in provider tags then this provider will not be cloned to new scope.
+- NOTICE: when you create a scope then we clone ONLY tags-matched providers.
 
 ```typescript
 import { Container, perTags, ReflectionInjector } from "ts-ioc-container";
@@ -96,6 +98,8 @@ scope.resolve('ILogger'); // it will be resolved from container, not from scope
 ```
 
 ### Instances
+Sometimes you want to get all instances from container and its scopes. For example, when you want to dispose all instances of container.
+
 - you can get instances from container and scope which were created by injector
 
 ```typescript
@@ -112,6 +116,8 @@ expect(container.getInstances().length).toBe(2);
 ```
 
 ### Disposing
+Sometimes you want to dispose container and all its scopes. For example, when you want to prevent memory leaks. Or you want to ensure that nobody can use container after it was disposed.
+
 - container can be disposed
 - when container is disposed then all scopes are disposed too
 - when container is disposed then it unregisters all providers and remove all instances
@@ -130,12 +136,15 @@ expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
 expect(container.getInstances().length).toBe(0);
 ```
 
-## Injectors
+## Injectors `IInjector`
+Injectors are used to describe how dependencies should be injected to constructor.
+
 - `ReflectionInjector` - injects dependencies using `@inject` decorator
 - `ProxyInjector` - injects dependencies as dictionary `Record<string, unknown>`
 - `SimpleInjector` - just passes container to constructor with others arguments
 
 ### Reflection injector
+This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `ReflectionInjector`.
 
 ```typescript
 import { Container, IContainer, IInjector, Provider, by, inject, resolve } from "ts-ioc-container";
@@ -167,6 +176,7 @@ app.run();
 ```
 
 ### Simple injector
+This type of injector just passes container to constructor with others arguments.
 
 ```typescript
 import { SimpleInjector, IContainer } from "ts-ioc-container";
@@ -197,6 +207,7 @@ app.run();
 ```
 
 ### Proxy injector
+This type of injector injects dependencies as dictionary `Record<string, unknown>`.
 
 ```typescript
 import { ProxyInjector, IContainer } from "ts-ioc-container";
@@ -226,9 +237,13 @@ const app = container.resolve(App);
 app.run();
 ```
 
-## Providers
-All providers are registered in container and cloned for every sub-scope.
+## Providers `IProvider<T>`
+Providers are used to describe how instances should be created. It has next basic methods:
+- `resolve` - creates instance with passed arguments
+- `clone` - we invoke it when we create a scope. It clones provider to new scope.
+- `isValid` - checks if provider can be resolved from container or cloned to container with certain tags
 
+There are next types of providers:
 - `Provider` - basic provider
 - `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
 - `TaggedProvider` - provider that can be resolved only from container with certain tags and their sub scopes
@@ -279,6 +294,7 @@ container.register('ILogger', Provider.fromClass(Logger));
 ```
 
 ### Singleton provider
+Sometimes you need to create only one instance of dependency per scope. For example, you want to create only one logger per scope.
 
 - Singleton provider creates only one instance in every scope where it's resolved.
 - NOTICE: if you create a scope 'A' of container 'root' then Logger of A !== Logger of root.
@@ -298,8 +314,8 @@ container.resolve('ILogger') !== scope.resolve('ILogger'); // true. NOTICE: beca
 ```
 
 ### Tagged provider
-You need tagged provider when you want to resolve provider only from container with certain tags and their sub scopes.
-It doesn't make a clones in scopes with tags that are not in provider's tags. Usually it's used with `SingletonProvider`.
+Sometimes you need to resolve provider only from container with certain tags and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
+- NOTICE: It doesn't make clones in not tagged-matched scopes. Usually it's used with `SingletonProvider`.
 
 ```typescript
 import { Provider, TaggedProvider, asSingleton, perTags } from "ts-ioc-container";
@@ -318,7 +334,7 @@ container.resolve('ILogger') === scope.resolve('ILogger'); // true
 ```
 
 ### Args provider
-- You need args provider when you want to pass arguments to constructor on step when you compose container.
+Sometimes you want to bind some arguments to provider. This is what `ArgsProvider` is for.
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
 ```typescript
@@ -341,8 +357,7 @@ container.resolve('ILogger', 'Main').name === 'Main'; // true
 ```
 
 ## Container modules
-
-if you want to encapsulate some logic to enrich container you can use `IContainerModule`.
+Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
 ```typescript
 import { Registration } from "ts-ioc-container";
@@ -365,7 +380,7 @@ const container = new Container(injector, { tags: ['root'] })
 ```
 
 ## Registration module (Provider + DependencyKey)
-It's built-in module that encapsulates logic of registration provider by dependency key `forKey`. Just a sugar
+Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
 
 ```typescript
 import { asSingleton, perTags, forKey, Registration, Provider } from "ts-ioc-container";
@@ -393,7 +408,7 @@ container.register('ILogger', Provider.fromClass(Logger));
 ```
 
 ## Hooks
-You can mark methods of your classes as hooks. It's useful when you want to do something after construct of dispose classes.
+Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
 ```typescript
 import {
@@ -444,8 +459,8 @@ for (const instance of container.getInstances()) {
 }
 ```
 
-## Mocking / Tests
-`AutoMockedContainer`. It will generate mocks for every dependency that you didn't define.
+## Mocking / Tests `AutoMockedContainer`
+Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
 import {
