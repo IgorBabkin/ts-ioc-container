@@ -1,26 +1,17 @@
 import 'reflect-metadata';
 import {
-    withArgs,
-    constructor,
+    asSingleton,
     Container,
     ContainerDisposedError,
     DependencyMissingKeyError,
     DependencyNotFoundError,
     forKey,
-    IContainer,
-    IInjector,
     Provider,
     provider,
+    ReflectionInjector,
     Registration,
-    asSingleton,
+    withArgs,
 } from '../lib';
-import { resolve } from 'ts-constructor-injector';
-
-const injector: IInjector = {
-    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-        return resolve(container)(value, ...deps);
-    },
-};
 
 @forKey('logger')
 class Logger {
@@ -29,7 +20,7 @@ class Logger {
 
 describe('IocContainer', function () {
     function createContainer() {
-        return new Container(injector);
+        return new Container(new ReflectionInjector());
     }
 
     it('should resolve dependency', function () {

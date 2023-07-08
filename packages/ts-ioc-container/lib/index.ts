@@ -1,5 +1,3 @@
-import { IContainer, InjectionToken } from './container/IContainer';
-
 export {
     IContainer,
     Resolvable,
@@ -12,7 +10,7 @@ export {
 export { constructor } from './utils';
 export { Container } from './container/Container';
 export { ResolveDependency, IProvider } from './provider/IProvider';
-export { IInjector } from './IInjector';
+export { IInjector } from './injector/IInjector';
 export { DependencyNotFoundError } from './container/DependencyNotFoundError';
 export { MethodNotImplementedError } from './container/MethodNotImplementedError';
 export { ContainerDisposedError } from './container/ContainerDisposedError';
@@ -23,8 +21,7 @@ export { perTags } from './provider/TaggedProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
 export { forKey, Registration } from './registration/Registration';
 export { DependencyMissingKeyError } from './registration/DependencyMissingKeyError';
-
-export const by =
-    <T>(key: InjectionToken<T>, ...args: unknown[]) =>
-    (c: IContainer) =>
-        c.resolve<T>(key, ...args);
+export { ReflectionInjector, inject, by } from './injector/ReflectionInjector';
+export { SimpleInjector } from './injector/SimpleInjector';
+export { ProxyInjector } from './injector/ProxyInjector';
+export { hook, getHooks } from './reflection';

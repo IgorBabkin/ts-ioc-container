@@ -1,13 +1,6 @@
 import 'reflect-metadata';
-import { AutoMockedContainer, by, constructor, Container, IContainer, IInjector, DependencyKey } from '../lib';
-import { inject, resolve } from 'ts-constructor-injector';
+import { AutoMockedContainer, by, Container, DependencyKey, inject, ReflectionInjector } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
-
-const injector: IInjector = {
-    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-        return resolve(container)(value, ...deps);
-    },
-};
 
 const ILogsRepoKey = Symbol('ILogsRepo');
 
@@ -75,7 +68,7 @@ describe('Automock', function () {
     });
 
     function createContainer() {
-        return new Container(injector, { parent: mockContainer });
+        return new Container(new ReflectionInjector(), { parent: mockContainer });
     }
 
     it('should automock all non defined dependencies', async function () {

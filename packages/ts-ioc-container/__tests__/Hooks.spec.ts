@@ -1,20 +1,35 @@
 import 'reflect-metadata';
-import { asSingleton, by, constructor, Container, forKey, IContainer, IInjector, provider, Registration } from '../lib';
-import { getHooks, hook, inject, resolve } from 'ts-constructor-injector';
+import {
+    asSingleton,
+    by,
+    constructor,
+    Container,
+    forKey,
+    getHooks,
+    hook,
+    IContainer,
+    IInjector,
+    inject,
+    provider,
+    ReflectionInjector,
+    Registration,
+} from '../lib';
 
 const onConstruct = hook('onConstruct');
 const onDispose = hook('onDispose');
 
-const injector: IInjector = {
+class MyInjector implements IInjector {
+    private injector = new ReflectionInjector();
+
     resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-        const instance = resolve(container)(value, ...deps);
+        const instance = this.injector.resolve(container, value, ...deps);
         for (const h of getHooks(instance, 'onConstruct')) {
             // @ts-ignore
             instance[h]();
         }
         return instance;
-    },
-};
+    }
+}
 
 @forKey('logsRepo')
 @provider(asSingleton())
@@ -51,7 +66,7 @@ class Logger {
 
 describe('Hooks', function () {
     function createContainer() {
-        return new Container(injector);
+        return new Container(new MyInjector());
     }
 
     it('should invoke hooks on all instances', async function () {

@@ -7,7 +7,7 @@ import {
     Tag,
     Tagged,
 } from './IContainer';
-import { IInjector } from '../IInjector';
+import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from './ContainerDisposedError';
