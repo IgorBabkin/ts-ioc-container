@@ -27,7 +27,7 @@ yarn add ts-ioc-container reflect-metadata
 
 ## Setup
 ### reflect-metadata
-Just put it in the main file of your project. It should be first line of the code.
+Just put it in the main file of your project. It should be the first line of the code.
 ```typescript
 import 'reflect-metadata';
 ```
@@ -72,7 +72,8 @@ container.dispose();
 ### Scopes
 Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application.
 
-- NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope. And every scope has method `hasTag` to check if it's valid for certain provider.
+- NOTICE: remember that when you scope doesn't have dependency then it will be resolved from parent container
+- NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope accordingly.
 
 ```typescript
 import { Container, ReflectionInjector } from "ts-ioc-container";
@@ -82,9 +83,9 @@ const scope = container.createScope();
 ```
 
 ### Tags
-Sometimes you want to mark some providers and resolve them only from certain scope.
+Sometimes you want to mark some providers and resolve them only from certain scope. So you can assign tags to providers and create scopes with certain tags. For that reason every scope has method `hasTag` which we invoke from provider to check if it's valid for certain scope.
 
-- tag - is a string that can be used to mark each container and scope
+- tag - is a string that we assign to provider and scope/container
 - every provider can be registered per certain tags and cannot be resolved from container with other tags. Only from parent one with certain tags.
 - NOTICE: when you create a scope then we clone ONLY tags-matched providers.
 
