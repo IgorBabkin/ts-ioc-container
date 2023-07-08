@@ -72,7 +72,7 @@ container.dispose();
 ### Scopes
 Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application.
 
-- NOTICE: when you create a scope of container then all providers are cloned to new scope. Every provider has method `clone` that clones itself.
+- NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope. And every scope has method `hasTag` to check if it's valid for certain provider.
 
 ```typescript
 import { Container, ReflectionInjector } from "ts-ioc-container";
