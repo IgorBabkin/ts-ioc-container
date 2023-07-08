@@ -1,16 +1,19 @@
-import { constructor, Container, IContainer, IInjector, Provider, Resolvable } from 'ts-ioc-container';
-import { getHooks, hook, resolve } from 'ts-constructor-injector';
+import {
+    constructor,
+    Container,
+    getHooks,
+    hook,
+    IContainer,
+    Provider,
+    ReflectionInjector,
+    Resolvable,
+} from 'ts-ioc-container';
 import { IDependencyContainer, Scope } from '../lib';
 
 export const onDispose = hook('onDispose');
-const injector: IInjector = {
-    resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-        return resolve(container)(value, ...deps);
-    },
-};
 
 export function createContainer(): IContainer {
-    return new Container(injector, { tags: [Scope.Application] });
+    return new Container(new ReflectionInjector(), { tags: [Scope.Application] });
 }
 
 export class ContainerAdapter implements IDependencyContainer {

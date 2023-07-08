@@ -1,13 +1,5 @@
-import { Container } from 'ts-ioc-container';
-import { resolve } from 'ts-constructor-injector';
+import { Container, ReflectionInjector } from 'ts-ioc-container';
 
 export function createRootContainer() {
-    return new Container(
-        {
-            resolve(container, value, ...deps) {
-                return resolve(container)(value, ...deps);
-            },
-        },
-        { tags: ['root'] },
-    );
+    return new Container(new ReflectionInjector(), { tags: ['root'] });
 }

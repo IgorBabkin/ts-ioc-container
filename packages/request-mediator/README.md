@@ -74,8 +74,7 @@ Example:
 ### Describe a use case
 
 ```typescript
-import { IQueryHandler, request, context, transaction, useService } from "ts-request-mediator";
-import { inject } from "ts-constructor-injector";
+import { IQueryHandler, request, context, transaction, useService, inject } from "ts-request-mediator";
 import { by } from "ts-ioc-container";
 
 @transaction
@@ -170,7 +169,6 @@ const todo = await mediator.send(CreateTodo, {title: 'Buy milk', description: '2
 
 ```typescript
 import { PrismaClient } from '@prisma/client';
-import { Fn } from 'ts-constructor-injector';
 import { forKey, Resolveable } from 'ts-ioc-container';
 import { ITransactionContextKey, ITransactionContext } from 'ts-request-mediator';
 import { perApplication } from '../../core/di';
@@ -187,7 +185,7 @@ export class PrismaTransactionContext implements ITransactionContext {
   }
 }
 
-export const prismaClient: Fn<Resolveable, PrismaClient> = (l) =>
+export const prismaClient = (c: Resolveable) =>
   l.resolve<PrismaTransactionContext>(ITransactionContextKey).dbClient;
 
 ```

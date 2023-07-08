@@ -1,4 +1,4 @@
-import { constructor } from 'ts-constructor-injector';
+type constructor<T> = new (...args: any[]) => T;
 
 export interface IErrorHandler<Context = undefined> {
     handle(error: unknown, context: Context): void;
