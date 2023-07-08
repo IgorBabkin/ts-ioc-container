@@ -19,13 +19,20 @@
 
 ## Install
 ```shell script
-npm install ts-ioc-container ts-constructor-injector reflect-metadata
+npm install ts-ioc-container reflect-metadata
 ```
 ```shell script
-yarn add ts-ioc-container ts-constructor-injector reflect-metadata
+yarn add ts-ioc-container reflect-metadata
 ```
 
-## tsconfig.json
+## Setup
+### reflect-metadata
+Add it in main file of your project. It should be first line of code.
+```typescript
+import 'reflect-metadata';
+```
+
+### tsconfig.json
 ```json
 {
   "compilerOptions": {
@@ -35,21 +42,103 @@ yarn add ts-ioc-container ts-constructor-injector reflect-metadata
 }
 ```
 
+## Container
+Container consists of:
 
-## Injector
-As long as injector is not part of container, you can implement injection on your choice (simple, proxy, based on reflection).
+- Injector - injects dependencies to constructor
+- Providers - templates that create instances of dependencies
 
-### Reflection injector (recommended)
+### Basic usage
 
 ```typescript
-import { Container, IContainer, IInjector, Provider, by } from "ts-request-mediator";
-import { inject, resolve } from "ts-constructor-injector";
+import 'reflect-metadata';
+import { Container } from "ts-ioc-container";
 
-const injector: IInjector = {
-  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
-    return resolve(container)(Target, ...deps);
-  },
-};
+class Logger {
+  public name = 'Logger';
+}
+
+class App {
+  constructor(@inject(by('ILogger')) public logger: ILogger) {
+  }
+}
+
+const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
+container.resolve(App).resolve.logger.name === 'Logger'; // true
+
+container.dispose();
+```
+
+### Scopes
+- scope - is a container that can be created from another container. It's a sub-container.
+- NOTICE: when you create a scope of container then all providers are cloned to new scope. Every provider has method `clone` that clones itself.
+
+```typescript
+import { Container, ReflectionInjector } from "ts-ioc-container";
+
+const container = new Container(new ReflectionInjector());
+const scope = container.createScope();
+```
+
+### Tags
+
+- tag - is a string that can be used mark each container and scope
+- every provider can be registered per certain tags and cannot be resolved from container with other tags. Only from parent one with certain tags.
+- NOTICE: when you create a scope of container with tags which not includes in provider tags then this provider will not be cloned to new scope.
+
+```typescript
+import { Container, perTags, ReflectionInjector } from "ts-ioc-container";
+
+const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register('ILogger', Provider.fromClass(Logger).pipe(perTags('root')));
+const scope = container.createScope(['child']);
+
+scope.resolve('ILogger'); // it will be resolved from container, not from scope
+```
+
+### Instances
+- you can get instances from container and scope which were created by injector
+
+```typescript
+import { Container, ReflectionInjector } from "ts-ioc-container";
+
+const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
+const scope = container.createScope();
+
+const logger1 = container.resolve('ILogger');
+const logger2 = scope.resolve('ILogger');
+
+expect(scope.getInstances().length).toBe(1);
+expect(container.getInstances().length).toBe(2);
+```
+
+### Disposing
+- container can be disposed
+- when container is disposed then all scopes are disposed too
+- when container is disposed then it unregisters all providers and remove all instances
+
+```typescript
+import { asSingleton, Container, perTags, ReflectionInjector, ContainerDisposedError } from "ts-ioc-container";
+
+const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register('ILogger', Provider.fromClass(Logger));
+const scope = container.createScope(['child']);
+
+const logger = scope.resolve('ILogger');
+container.dispose();
+
+expect(() => scope.resolve('ILogger')).toThrow(ContainerDisposedError);
+expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
+expect(container.getInstances().length).toBe(0);
+```
+
+## Injectors
+- `ReflectionInjector` - injects dependencies using `@inject` decorator
+- `ProxyInjector` - injects dependencies as dictionary `Record<string, unknown>`
+- `SimpleInjector` - just passes container to constructor with others arguments
+
+### Reflection injector
+
+```typescript
+import { Container, IContainer, IInjector, Provider, by, inject, resolve } from "ts-ioc-container";
 
 class Logger implements ILogger {
   info(message: string) {
@@ -58,15 +147,19 @@ class Logger implements ILogger {
 }
 
 class App {
-  constructor(@inject(by('ILogger')) private logger: ILogger) {
+  constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {
   }
+
+  // OR
+  // constructor(@inject(by('ILogger')) private logger: ILogger) {
+  // }
 
   run() {
     this.logger.info('Hello world');
   }
 }
 
-const container = new Container(injector)
+const container = new Container(new ReflectionInjector())
   .register('ILogger', Provider.fromClass(Logger));
 
 const app = container.resolve(App);
@@ -76,13 +169,7 @@ app.run();
 ### Simple injector
 
 ```typescript
-import { IContainer } from "ts-request-mediator";
-
-const injector: IInjector = {
-  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
-    return new Target(container, ...deps);
-  },
-};
+import { SimpleInjector, IContainer } from "ts-ioc-container";
 
 class Logger implements ILogger {
   info(message: string) {
@@ -96,13 +183,13 @@ class App {
   constructor(private container: IContainer) {
     this.logger = container.resolve('ILogger');
   }
-  
+
   run() {
     this.logger.info('Hello world');
   }
 }
 
-const container = new Container(injector)
+const container = new Container(new SimpleInjector())
   .register('ILogger', Provider.fromClass(Logger));
 
 const app = container.resolve(App);
@@ -112,24 +199,7 @@ app.run();
 ### Proxy injector
 
 ```typescript
-import { IContainer } from "ts-request-mediator";
-
-const injector: IInjector = {
-  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
-    const args = deps.reduce((acc, it) => ({ ...acc, ...it }), {});
-    const proxy = new Proxy(
-      {},
-      {
-        // eslint-disable-next-line @typescript-eslint/ban-types
-        get(target: {}, prop: string | symbol): any {
-          // eslint-disable-next-line no-prototype-builtins
-          return args.hasOwnProperty(prop) ? args[prop] : container.resolve(prop);
-        },
-      },
-    );
-    return new Target(proxy);
-  },
-};
+import { ProxyInjector, IContainer } from "ts-ioc-container";
 
 class Logger implements ILogger {
   info(message: string) {
@@ -140,182 +210,142 @@ class Logger implements ILogger {
 class App {
   private logger: ILogger;
 
-  constructor({logger}: {logger: ILogger}) {
+  constructor({ logger }: { logger: ILogger }) {
     this.logger = logger;
   }
-  
+
   run() {
     this.logger.info('Hello world');
   }
 }
 
-const container = new Container(injector)
+const container = new Container(new ProxyInjector())
   .register('logger', Provider.fromClass(Logger));
 
 const app = container.resolve(App);
 app.run();
 ```
 
-## Provider
+## Providers
+All providers are registered in container and cloned for every sub-scope.
 
-- `Provider.fromClass` - creates dependency provider from class
-- `.pipe` - decorates provider by features and returns new provider
-- `asSingleton()` - makes provider singleton (singleton in every scope)
-- `perTags(...tags: string[])` - makes provider available only in scope with certain tags and their sub scopes
-- `withArgs(...args: unknown[])` - passes arguments to constructor
-- `withArgsFn(fn: (scope: IContainer) => unknown[])` - passes arguments to constructor as function result
+- `Provider` - basic provider
+- `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
+- `TaggedProvider` - provider that can be resolved only from container with certain tags and their sub scopes
+- `ArgsProvider` - provider that encapsulates arguments to pass it to constructor.
+
+### Provider
+
+From function
 
 ```typescript
-import { Provider, asSingleton, perTags, withArgs, withArgsFn } from "ts-request-mediator";
+import { Provider } from "ts-ioc-container";
 
-const container = new Container(injector, { tags: ['root'] });
-container.register('ILogger', new Provider((container, ...args) => new Logger(...args)));
+container.register('ILogger', new Provider((container, ...args) => new Logger(container, ...args)));
+```
 
-// Available only in root scope and all his children
-container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root')));
+From class
 
-// Singleton per root tag and all his children
-container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')));
+```typescript
+import { Provider } from "ts-ioc-container";
 
-// singleton for scope with tag1 or tag2
-container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton(), perTags('tag1', 'tag2')));
+container.register('ILogger', Provider.fromClass(Logger));
+```
 
-// singleton in every scope
-container.register('ILogger', Provider.fromClass(Logger).pipe(withArgs('dev'), asSingleton()));
+From value
 
-// singleton in every scope
-container.register('ILogger', Provider.fromClass(Logger).pipe(withArgsFn((scope) => [scope.resolve('isTestEnv') ? 'dev' : 'prod']), asSingleton()));
+```typescript
+import { Provider } from "ts-ioc-container";
 
 container.register('ILogger', Provider.fromValue(new Logger()));
 ```
 
-## Registration module (Provider + DependencyKey)
+`pipe` - decorates provider by other providers
 
 ```typescript
-import { asSingleton, perTags, forKey, Registration } from "ts-request-mediator";
+import { asSingleton, perTags, Provider, SingletonProvider, TaggedProvider } from "ts-ioc-container";
 
-@forKey('ILogger')
-@provider(asSingleton(), perTags('root'))
-class Logger {
-  info(message: string) {
-    console.log(message);
-  }
-}
-
-const container = new Container(injector, { tags: ['root'] })
-  .add(Registration.fromClass(Logger));
-const logger = container.resolve<ILogger>('ILogger');
-logger.info('Hello world');
-```
-
-## Decorators
-
-```typescript
-import { asSingleton, perTags, forKey, by, Registration } from "ts-request-mediator";
-import { inject } from "ts-constructor-injector";
-
-@forKey('IEngine')
-@provider(asSingleton(), perTags('root'))
-class Engine {
-  constructor(@inject(by('ILogger')) private logger: ILogger) {
-  }
-}
+container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new SingletonProvider(provider)), (provider) => new TaggedProvider(provider, ['root']));
 
 // OR
+container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')));
 
-const perRoot = provider(asSingleton(), perTags('root'))
-
-@perRoot
-@forKey('IEngine')
-class Engine {
-  constructor(@inject(by('ILogger')) private logger: ILogger) {
-  }
-}
-
-const container = new Container(injector, { tags: ['root'] })
-  .add(Registration.fromClass(Engine));
-```
-
-## Hooks
-
-```typescript
-import {
-  Container,
-  IInjector,
-  ContainerHook,
-  Injector,
-  Registration,
-} from "ts-request-mediator";
-import { getHooks, hook } from "ts-constructor-injector";
-
-@forKey('ILogger')
-class Logger {
-  @hook('OnConstruct')
-  initialize() {
-    console.log('initialized');
-  }
-
-  @hook('OnDispose')
-  dispose() {
-    console.log('disposed');
-  }
-}
-
-const injector: IInjector = {
-  resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-    const instance = resolve(container)(value, ...deps);
-    for (const h of getHooks(instance, 'OnConstruct')) {
-      // @ts-ignore
-      instance[h]();
-    }
-    return instance;
-  },
-}
-
-const container = new Container(injector)
-  .add(Registration.fromClass(Logger));
-const logger = container.resolve<ILogger>('ILogger'); // initialized
-for (const instance of container.getInstances()) {
-  for (const h of getHooks(instance, 'OnDispose')) {
-    // @ts-ignore
-    instance[h]();
-  }
-}
-```
-
-## Scopes (child containers)
-
-- tags - you can add tag to scope and root container. And register provider per tag.
-
-```typescript
-import { composeDecorators } from "ts-constructor-injector";
-import { forKey, provider, Registration, asSingleton, perTags } from "ts-request-mediator";
-
-@forKey('IEngine')
-@provider(perTags('root'), asSingleton())
+// OR
+@provider(asSingleton(), perTags('root'))
 class Logger {
 }
 
-@forKey('IEngine')
-@provider(perTags('home'), asSingleton())
-class Engine {
-  constructor(@inject(by('ILogger')) private logger: ILogger) {
+container.register('ILogger', Provider.fromClass(Logger));
+```
+
+### Singleton provider
+
+- Singleton provider creates only one instance in every scope where it's resolved.
+- NOTICE: if you create a scope 'A' of container 'root' then Logger of A !== Logger of root.
+
+```typescript
+import { Provider, SingletonProvider, asSingleton } from "ts-ioc-container";
+
+container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new SingletonProvider(provider)));
+// OR
+container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton()));
+
+container.resolve('ILogger') === container.resolve('ILogger'); // true
+
+const scope = container.createScope();
+scope.resolve('ILogger') === scope.resolve('ILogger'); // true
+container.resolve('ILogger') !== scope.resolve('ILogger'); // true. NOTICE: because every provider is cloned for every child scope from parent one
+```
+
+### Tagged provider
+You need tagged provider when you want to resolve provider only from container with certain tags and their sub scopes.
+It doesn't make a clones in scopes with tags that are not in provider's tags. Usually it's used with `SingletonProvider`.
+
+```typescript
+import { Provider, TaggedProvider, asSingleton, perTags } from "ts-ioc-container";
+
+container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new TaggedProvider(provider, ['root'])));
+// OR
+container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root', 'parent')));
+
+// with sigleton
+container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root', 'parent')).pipe(asSingleton()));
+container.resolve('ILogger') === container.resolve('ILogger'); // true
+
+const scope = container.createScope();
+scope.resolve('ILogger') === scope.resolve('ILogger'); // true
+container.resolve('ILogger') === scope.resolve('ILogger'); // true
+```
+
+### Args provider
+- You need args provider when you want to pass arguments to constructor on step when you compose container.
+- NOTICE: args from this provider has higher priority than args from `resolve` method.
+
+```typescript
+import { Provider, ArgsProvider, withArgs, withArgsFn } from "ts-ioc-container";
+
+class Logger {
+  constructor(public type: string, public name: string) {
   }
 }
 
-const container = new Container(injector, { tags: ['root'] })
-  .add(Registration.fromClass(Logger))
-  .add(Registration.fromClass(Engine));
+container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new ArgsProvider(provider, () => ['FileLogger'])));
 
-const scope = container.createScope(['home', 'child']);
-const logger = scope.resolve('ILogger');
-scope.dispose();
+// OR
+container.register('ILogger', Provider.fromClass(Logger).pipe(withArgsFn(() => ['FileLogger'])));
+// OR
+container.register('ILogger', Provider.fromClass(Logger).pipe(withArgs('FileLogger')));
+
+container.resolve('ILogger', 'Main').type === 'FileLogger'; // true
+container.resolve('ILogger', 'Main').name === 'Main'; // true
 ```
 
 ## Container modules
 
+if you want to encapsulate some logic to enrich container you can use `IContainerModule`.
+
 ```typescript
-import { Registration } from "ts-request-mediator";
+import { Registration } from "ts-ioc-container";
 
 class Development implements IContainerModule {
   applyTo(container: IContainer): void {
@@ -334,14 +364,98 @@ const container = new Container(injector, { tags: ['root'] })
   .add(process.env.NODE_ENV === 'production' ? new Production() : new Development());
 ```
 
+## Registration module (Provider + DependencyKey)
+It's built-in module that encapsulates logic of registration provider by dependency key `forKey`. Just a sugar
+
+```typescript
+import { asSingleton, perTags, forKey, Registration, Provider } from "ts-ioc-container";
+
+@forKey('ILogger')
+@provider(asSingleton(), perTags('root'))
+class Logger {
+  info(message: string) {
+    console.log(message);
+  }
+}
+
+container.register(Registration.fromClass(Logger));
+
+// OR
+
+@provider(asSingleton(), perTags('root'))
+class Logger {
+  info(message: string) {
+    console.log(message);
+  }
+}
+
+container.register('ILogger', Provider.fromClass(Logger));
+```
+
+## Hooks
+You can mark methods of your classes as hooks. It's useful when you want to do something after construct of dispose classes.
+
+```typescript
+import {
+  Container,
+  IInjector,
+  ContainerHook,
+  Injector,
+  Registration,
+  getHooks,
+  hook,
+} from "ts-ioc-container";
+
+const onConstruct = hook('onConstruct');
+const onDispose = hook('onDispose');
+
+class MyInjector implements IInjector {
+  private injector = new ReflectionInjector();
+
+  resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
+    const instance = this.injector.resolve(container, value, ...deps);
+    for (const h of getHooks(instance, 'onConstruct')) {
+      // @ts-ignore
+      instance[h]();
+    }
+    return instance;
+  }
+}
+
+@forKey('ILogger')
+class Logger {
+  @hook('OnConstruct')
+  initialize() {
+    console.log('initialized');
+  }
+
+  @hook('OnDispose')
+  dispose() {
+    console.log('disposed');
+  }
+}
+
+const container = new Container(new MyInjector())
+  .add(Registration.fromClass(Logger));
+const logger = container.resolve<ILogger>('ILogger'); // initialized
+
+for (const instance of container.getInstances()) {
+  for (const h of getHooks(instance, 'onDispose')) {
+    // @ts-ignore
+    instance[h](); // disposed
+  }
+}
+```
+
 ## Mocking / Tests
+`AutoMockedContainer`. It will generate mocks for every dependency that you didn't define.
 
 ```typescript
 import {
   AutoMockedContainer,
   Container,
   DependencyKey,
-} from "ts-request-mediator";
+} from "ts-ioc-container";
 import { Mock } from "moq.ts";
 
 export class MoqContainer extends AutoMockedContainer {
@@ -349,10 +463,6 @@ export class MoqContainer extends AutoMockedContainer {
 
   resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
-  }
-
-  dispose(): void {
-    this.mocks.clear();
   }
 
   resolveMock<T>(key: DependencyKey): IMock<T> {

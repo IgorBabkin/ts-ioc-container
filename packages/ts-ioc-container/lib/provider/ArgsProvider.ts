@@ -5,11 +5,11 @@ import { MapFn } from '../utils';
 
 export type ArgsFn = (l: Resolvable) => unknown[];
 
-export function withArgs(...extraArgs: unknown[]): MapFn<IProvider> {
+export function withArgs<T = unknown>(...extraArgs: unknown[]): MapFn<IProvider<T>> {
     return (provider) => new ArgsProvider(provider, () => extraArgs);
 }
 
-export function withArgsFn(value: ArgsFn): MapFn<IProvider> {
+export function withArgsFn<T = unknown>(value: ArgsFn): MapFn<IProvider<T>> {
     return (provider) => new ArgsProvider(provider, value);
 }
 
