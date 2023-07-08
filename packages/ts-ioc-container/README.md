@@ -406,9 +406,6 @@ import {
   hook,
 } from "ts-ioc-container";
 
-const onConstruct = hook('onConstruct');
-const onDispose = hook('onDispose');
-
 class MyInjector implements IInjector {
   private injector = new ReflectionInjector();
 
@@ -424,12 +421,12 @@ class MyInjector implements IInjector {
 
 @forKey('ILogger')
 class Logger {
-  @hook('OnConstruct')
+  @hook('onConstruct')
   initialize() {
     console.log('initialized');
   }
 
-  @hook('OnDispose')
+  @hook('onDispose')
   dispose() {
     console.log('disposed');
   }
