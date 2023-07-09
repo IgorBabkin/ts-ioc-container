@@ -55,29 +55,14 @@ It consists of 2 main parts:
 ```
 
 ### Scopes
-Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application.
+Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application. You can assign tags to scope and provider and resolve dependencies only from certain scope.
 
 - NOTICE: remember that when scope doesn't have dependency then it will be resolved from parent container
 - NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope accordingly.
-
-```typescript
-{{{include_file './__tests__/readme/scopes.spec.ts'}}}
-```
-
-### Tags
-Sometimes you want to mark some providers and resolve them only from certain scope. So you can assign tags to providers and create scopes with certain tags. For that reason every scope has method `hasTag` which we invoke from provider to check if it's valid for certain scope.
-
-- tag - is a string that we assign to provider and scope/container
-- every provider can be registered per certain tags and cannot be resolved from container with other tags. Only from parent one with certain tags.
 - NOTICE: when you create a scope then we clone ONLY tags-matched providers.
 
 ```typescript
-import { Container, perTags, ReflectionInjector } from "ts-ioc-container";
-
-const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register('ILogger', Provider.fromClass(Logger).pipe(perTags('root')));
-const scope = container.createScope(['child']);
-
-scope.resolve('ILogger'); // it will be resolved from container, not from scope
+{{{include_file './__tests__/readme/scopes.spec.ts'}}}
 ```
 
 ### Instances
@@ -142,46 +127,8 @@ There are next types of providers:
 
 ### Provider
 
-From function
-
 ```typescript
-import { Provider } from "ts-ioc-container";
-
-container.register('ILogger', new Provider((container, ...args) => new Logger(container, ...args)));
-```
-
-From class
-
-```typescript
-import { Provider } from "ts-ioc-container";
-
-container.register('ILogger', Provider.fromClass(Logger));
-```
-
-From value
-
-```typescript
-import { Provider } from "ts-ioc-container";
-
-container.register('ILogger', Provider.fromValue(new Logger()));
-```
-
-`pipe` - decorates provider by other providers
-
-```typescript
-import { asSingleton, perTags, Provider, SingletonProvider, TaggedProvider } from "ts-ioc-container";
-
-container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new SingletonProvider(provider)), (provider) => new TaggedProvider(provider, ['root']));
-
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')));
-
-// OR
-@provider(asSingleton(), perTags('root'))
-class Logger {
-}
-
-container.register('ILogger', Provider.fromClass(Logger));
+{{{include_file './__tests__/readme/provider.spec.ts'}}}
 ```
 
 ### Singleton provider
@@ -219,22 +166,7 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
 ```typescript
-import { Provider, ArgsProvider, withArgs, withArgsFn } from "ts-ioc-container";
-
-class Logger {
-  constructor(public type: string, public name: string) {
-  }
-}
-
-container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new ArgsProvider(provider, () => ['FileLogger'])));
-
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(withArgsFn(() => ['FileLogger'])));
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(withArgs('FileLogger')));
-
-container.resolve('ILogger', 'Main').type === 'FileLogger'; // true
-container.resolve('ILogger', 'Main').name === 'Main'; // true
+{{{include_file './__tests__/ArgsProvider.spec.ts'}}}
 ```
 
 ## Container modules

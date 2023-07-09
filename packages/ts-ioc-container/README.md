@@ -73,31 +73,32 @@ describe('Basic usage', function () {
 ```
 
 ### Scopes
-Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application.
+Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application. You can assign tags to scope and provider and resolve dependencies only from certain scope.
 
 - NOTICE: remember that when scope doesn't have dependency then it will be resolved from parent container
 - NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope accordingly.
+- NOTICE: when you create a scope then we clone ONLY tags-matched providers.
 
 ```typescript
 import 'reflect-metadata';
 import {
   asSingleton,
-  perTags,
   Container,
-  Provider,
-  ReflectionInjector,
   DependencyNotFoundError,
+  forKey,
+  perTags,
+  provider,
+  ReflectionInjector,
+  Registration,
 } from 'ts-ioc-container';
 
+@forKey('ILogger')
+@provider(asSingleton(), perTags('child'))
 class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
-      'ILogger',
-      Provider.fromClass(Logger).pipe(asSingleton(), perTags('child')),
-    );
-
+    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
     const scope = container.createScope(['child']);
 
     expect(scope.resolve('ILogger')).toBe(scope.resolve('ILogger'));
@@ -105,22 +106,6 @@ describe('Scopes', function () {
   });
 });
 
-```
-
-### Tags
-Sometimes you want to mark some providers and resolve them only from certain scope. So you can assign tags to providers and create scopes with certain tags. For that reason every scope has method `hasTag` which we invoke from provider to check if it's valid for certain scope.
-
-- tag - is a string that we assign to provider and scope/container
-- every provider can be registered per certain tags and cannot be resolved from container with other tags. Only from parent one with certain tags.
-- NOTICE: when you create a scope then we clone ONLY tags-matched providers.
-
-```typescript
-import { Container, perTags, ReflectionInjector } from "ts-ioc-container";
-
-const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register('ILogger', Provider.fromClass(Logger).pipe(perTags('root')));
-const scope = container.createScope(['child']);
-
-scope.resolve('ILogger'); // it will be resolved from container, not from scope
 ```
 
 ### Instances
@@ -328,46 +313,41 @@ There are next types of providers:
 
 ### Provider
 
-From function
-
 ```typescript
-import { Provider } from "ts-ioc-container";
+import 'reflect-metadata';
+import { asSingleton, Container, perTags, Provider, ReflectionInjector } from 'ts-ioc-container';
 
-container.register('ILogger', new Provider((container, ...args) => new Logger(container, ...args)));
-```
+class Logger {}
 
-From class
+describe('Provider', function () {
+  it('can be registered as a function', function () {
+    const container = new Container(new ReflectionInjector()).register('logger', new Provider(() => new Logger()));
 
-```typescript
-import { Provider } from "ts-ioc-container";
+    expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
+  });
 
-container.register('ILogger', Provider.fromClass(Logger));
-```
+  it('can be registered as a value', function () {
+    const container = new Container(new ReflectionInjector()).register('logger', Provider.fromValue(new Logger()));
 
-From value
+    expect(container.resolve('logger')).toBe(container.resolve('logger'));
+  });
 
-```typescript
-import { Provider } from "ts-ioc-container";
+  it('can be registered as a class', function () {
+    const container = new Container(new ReflectionInjector()).register('logger', Provider.fromClass(Logger));
 
-container.register('ILogger', Provider.fromValue(new Logger()));
-```
+    expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
+  });
 
-`pipe` - decorates provider by other providers
+  it('can be featured by pipe method', function () {
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
+      'logger',
+      Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')),
+    );
 
-```typescript
-import { asSingleton, perTags, Provider, SingletonProvider, TaggedProvider } from "ts-ioc-container";
+    expect(root.resolve('logger')).toBe(root.resolve('logger'));
+  });
+});
 
-container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new SingletonProvider(provider)), (provider) => new TaggedProvider(provider, ['root']));
-
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')));
-
-// OR
-@provider(asSingleton(), perTags('root'))
-class Logger {
-}
-
-container.register('ILogger', Provider.fromClass(Logger));
 ```
 
 ### Singleton provider
@@ -437,22 +417,45 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
 ```typescript
-import { Provider, ArgsProvider, withArgs, withArgsFn } from "ts-ioc-container";
+import 'reflect-metadata';
+import { Container, forKey, withArgsFn, withArgs, ReflectionInjector, Registration } from 'ts-ioc-container';
 
+@forKey('logger')
 class Logger {
-  constructor(public type: string, public name: string) {
-  }
+  constructor(public name: string, public type?: string) {}
 }
 
-container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new ArgsProvider(provider, () => ['FileLogger'])));
+describe('ArgsProvider', function () {
+  function createContainer() {
+    return new Container(new ReflectionInjector());
+  }
 
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(withArgsFn(() => ['FileLogger'])));
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(withArgs('FileLogger')));
+  it('can assign argument function to provider', function () {
+    const root = createContainer().add(
+      Registration.fromClass(Logger).pipe(withArgsFn((container, ...args) => ['name'])),
+    );
 
-container.resolve('ILogger', 'Main').type === 'FileLogger'; // true
-container.resolve('ILogger', 'Main').name === 'Main'; // true
+    const logger = root.resolve<Logger>('logger');
+    expect(logger.name).toBe('name');
+  });
+
+  it('can assign argument to provider', function () {
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('name')));
+
+    const logger = root.resolve<Logger>('logger');
+    expect(logger.name).toBe('name');
+  });
+
+  it('should set provider arguments with highest priority in compare to resolve arguments', function () {
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('name')));
+
+    const logger = root.resolve<Logger>('logger', 'file');
+
+    expect(logger.name).toBe('name');
+    expect(logger.type).toBe('file');
+  });
+});
+
 ```
 
 ## Container modules

@@ -1,22 +1,22 @@
 import 'reflect-metadata';
 import {
   asSingleton,
-  perTags,
   Container,
-  Provider,
-  ReflectionInjector,
   DependencyNotFoundError,
+  forKey,
+  perTags,
+  provider,
+  ReflectionInjector,
+  Registration,
 } from 'ts-ioc-container';
 
+@forKey('ILogger')
+@provider(asSingleton(), perTags('child'))
 class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
-      'ILogger',
-      Provider.fromClass(Logger).pipe(asSingleton(), perTags('child')),
-    );
-
+    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
     const scope = container.createScope(['child']);
 
     expect(scope.resolve('ILogger')).toBe(scope.resolve('ILogger'));
