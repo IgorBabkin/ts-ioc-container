@@ -111,94 +111,21 @@ Injectors are used to describe how dependencies should be injected to constructo
 This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `ReflectionInjector`.
 
 ```typescript
-import { Container, IContainer, IInjector, Provider, by, inject, resolve } from "ts-ioc-container";
-
-class Logger implements ILogger {
-  info(message: string) {
-    console.log(message);
-  }
-}
-
-class App {
-  constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {
-  }
-
-  // OR
-  // constructor(@inject(by('ILogger')) private logger: ILogger) {
-  // }
-
-  run() {
-    this.logger.info('Hello world');
-  }
-}
-
-const container = new Container(new ReflectionInjector())
-  .register('ILogger', Provider.fromClass(Logger));
-
-const app = container.resolve(App);
-app.run();
+{{{include_file './__tests__/readme/reflectionInjector.spec.ts'}}}
 ```
 
 ### Simple injector
 This type of injector just passes container to constructor with others arguments.
 
 ```typescript
-import { SimpleInjector, IContainer } from "ts-ioc-container";
-
-class Logger implements ILogger {
-  info(message: string) {
-    console.log(message);
-  }
-}
-
-class App {
-  private logger: ILogger;
-
-  constructor(private container: IContainer) {
-    this.logger = container.resolve('ILogger');
-  }
-
-  run() {
-    this.logger.info('Hello world');
-  }
-}
-
-const container = new Container(new SimpleInjector())
-  .register('ILogger', Provider.fromClass(Logger));
-
-const app = container.resolve(App);
-app.run();
+{{{include_file './__tests__/SimpleInjector.spec.ts'}}}
 ```
 
 ### Proxy injector
 This type of injector injects dependencies as dictionary `Record<string, unknown>`.
 
 ```typescript
-import { ProxyInjector, IContainer } from "ts-ioc-container";
-
-class Logger implements ILogger {
-  info(message: string) {
-    console.log(message);
-  }
-}
-
-class App {
-  private logger: ILogger;
-
-  constructor({ logger }: { logger: ILogger }) {
-    this.logger = logger;
-  }
-
-  run() {
-    this.logger.info('Hello world');
-  }
-}
-
-const container = new Container(new ProxyInjector())
-  .register('logger', Provider.fromClass(Logger));
-
-const app = container.resolve(App);
-app.run();
+{{{include_file './__tests__/ProxyInjector.spec.ts'}}}
 ```
 
 ## Providers `IProvider<T>`
@@ -264,17 +191,7 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 - NOTICE: if you create a scope 'A' of container 'root' then Logger of A !== Logger of root.
 
 ```typescript
-import { Provider, SingletonProvider, asSingleton } from "ts-ioc-container";
-
-container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new SingletonProvider(provider)));
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(asSingleton()));
-
-container.resolve('ILogger') === container.resolve('ILogger'); // true
-
-const scope = container.createScope();
-scope.resolve('ILogger') === scope.resolve('ILogger'); // true
-container.resolve('ILogger') !== scope.resolve('ILogger'); // true. NOTICE: because every provider is cloned for every child scope from parent one
+{{{include_file './__tests__/Singleton.spec.ts'}}}
 ```
 
 ### Tagged provider
@@ -375,52 +292,7 @@ container.register('ILogger', Provider.fromClass(Logger));
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
 ```typescript
-import {
-  Container,
-  IInjector,
-  ContainerHook,
-  Injector,
-  Registration,
-  getHooks,
-  hook,
-} from "ts-ioc-container";
-
-class MyInjector implements IInjector {
-  private injector = new ReflectionInjector();
-
-  resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-    const instance = this.injector.resolve(container, value, ...deps);
-    for (const h of getHooks(instance, 'onConstruct')) {
-      // @ts-ignore
-      instance[h]();
-    }
-    return instance;
-  }
-}
-
-@forKey('ILogger')
-class Logger {
-  @hook('onConstruct')
-  initialize() {
-    console.log('initialized');
-  }
-
-  @hook('onDispose')
-  dispose() {
-    console.log('disposed');
-  }
-}
-
-const container = new Container(new MyInjector())
-  .add(Registration.fromClass(Logger));
-const logger = container.resolve<ILogger>('ILogger'); // initialized
-
-for (const instance of container.getInstances()) {
-  for (const h of getHooks(instance, 'onDispose')) {
-    // @ts-ignore
-    instance[h](); // disposed
-  }
-}
+{{{include_file '__tests__/Hooks.spec.ts'}}}
 ```
 
 ## Mocking / Tests `AutoMockedContainer`
