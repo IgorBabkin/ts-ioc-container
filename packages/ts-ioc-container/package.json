@@ -27,7 +27,7 @@
     "test": "__tests__"
   },
   "files": [
-    "cjs/**/*",
+    "cjm/**/*",
     "esm/**/*"
   ],
   "repository": {
@@ -35,7 +35,7 @@
     "url": "git+https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/ts-ioc-container"
   },
   "scripts": {
-    "build:cjs": "rimraf cjs && tsc -p tsconfig.production.json --outDir cjs --module CommonJS",
+    "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
     "build:readme": "ts-node --esm ./scripts/compileReadme.ts",
     "build": "npm-run-all -p build:**",
