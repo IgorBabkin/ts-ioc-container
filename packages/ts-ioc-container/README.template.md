@@ -51,25 +51,7 @@ It consists of 2 main parts:
 ### Basic usage
 
 ```typescript
-import 'reflect-metadata';
-import { by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container';
-
-describe('Basic usage', function () {
-    it('should inject dependencies', function () {
-        class Logger {
-            name = 'Logger';
-        }
-
-        class App {
-            constructor(@inject(by('ILogger')) public logger: Logger) {}
-        }
-
-        const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
-
-        expect(container.resolve(App).logger.name).toBe('Logger');
-    });
-});
-
+{{{include_file './__tests__/readme/basic.spec.ts'}}}
 ```
 
 ### Scopes
@@ -107,23 +89,7 @@ Sometimes you want to get all instances from container and its scopes. For examp
 - you can get instances from container and scope which were created by injector
 
 ```typescript
-import 'reflect-metadata';
-import { Container, Provider, ReflectionInjector } from 'ts-ioc-container';
-describe('Instances', function () {
-    it('should return injected instances', function () {
-        class Logger {}
-
-        const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
-        const scope = container.createScope();
-
-        const logger1 = container.resolve('ILogger');
-        const logger2 = scope.resolve('ILogger');
-
-        expect(scope.getInstances().length).toBe(1);
-        expect(container.getInstances().length).toBe(2);
-    });
-});
-
+{{{include_file './__tests__/readme/instances.spec.ts'}}}
 ```
 
 ### Disposing

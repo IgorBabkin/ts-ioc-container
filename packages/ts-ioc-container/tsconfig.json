@@ -1,11 +1,25 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./lib",
+    "target": "ES2017",
+    "module": "ESNext",
     "lib": ["es2016"],
-    "types": ["reflect-metadata", "jest", "node"]
+    "types": ["reflect-metadata", "jest", "node"],
+    "moduleResolution": "Node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitReturns": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true
   },
   "include": [
-    "lib"
+    "lib",
+    "__tests__",
+    "scripts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cjs",
+    "esm"
   ]
 }

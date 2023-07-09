@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": false,
+    "types": ["reflect-metadata"],
+    "declaration": true,
+    "sourceMap": true
+  },
+  "include": [
+    "lib"
+  ],
+  "exclude": [
+    "node_modules",
+    "cjs",
+    "esm"
+  ]
+}

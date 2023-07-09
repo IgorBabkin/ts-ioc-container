@@ -1,0 +1,23 @@
+{
+  "testMatch": [
+    "**/?(*.)+(spec|test).+(ts)"
+  ],
+  "transform": {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "tsConfig": "./tsconfig.json",
+        "isolatedModules": false
+      }
+    ]
+  },
+  "coveragePathIgnorePatterns": [
+    "/node_modules/",
+    "cjm/",
+    "esm/",
+    "scripts/"
+  ],
+  "moduleDirectories": [
+    "node_modules"
+  ]
+}
