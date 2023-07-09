@@ -440,39 +440,7 @@ for (const instance of container.getInstances()) {
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
-import {
-  AutoMockedContainer,
-  Container,
-  DependencyKey,
-} from "ts-ioc-container";
-import { Mock } from "moq.ts";
-
-export class MoqContainer extends AutoMockedContainer {
-  private mocks = new Map<DependencyKey, IMock<any>>();
-
-  resolve<T>(key: DependencyKey): T {
-    return this.resolveMock<T>(key).object();
-  }
-
-  resolveMock<T>(key: DependencyKey): IMock<T> {
-    if (!this.mocks.has(key)) {
-      this.mocks.set(key, new Mock());
-    }
-    return this.mocks.get(key) as IMock<T>;
-  }
-}
-
-describe('test', () => {
-  const mockContainer = new MoqContainer();
-  const container = new Container(injector, { parent: mockContainer });
-
-  const engineMock = mockContainer.resolveMock<IEngine>('IEngine');
-  engineMock.setup(i => i.getRegistrationNumber()).return('123');
-
-  const engine = container.resolve<IEngine>('IEngine');
-
-  expect(engine.getRegistrationNumber()).toBe('123');
-})
+{{{include_file '__tests__/readme/mocking.spec.ts'}}}
 ```
 
 
