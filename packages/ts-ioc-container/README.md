@@ -397,19 +397,22 @@ Sometimes you need to resolve provider only from container with certain tags and
 - NOTICE: It doesn't make clones in not tagged-matched scopes. Usually it's used with `SingletonProvider`.
 
 ```typescript
-import { Provider, TaggedProvider, asSingleton, perTags } from "ts-ioc-container";
+import 'reflect-metadata';
+import { asSingleton, Container, forKey, perTags, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
 
-container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new TaggedProvider(provider, ['root'])));
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root', 'parent')));
+@forKey('ILogger')
+@provider(asSingleton(), perTags('root'))
+class Logger {}
+describe('TaggedProvider', function () {
+  it('should return the same instance', function () {
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).add(
+      Registration.fromClass(Logger).pipe(perTags('root', 'parent')),
+    );
+    const child = root.createScope();
+    expect(root.resolve('ILogger')).toBe(child.resolve('ILogger'));
+  });
+});
 
-// with sigleton
-container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root', 'parent')).pipe(asSingleton()));
-container.resolve('ILogger') === container.resolve('ILogger'); // true
-
-const scope = container.createScope();
-scope.resolve('ILogger') === scope.resolve('ILogger'); // true
-container.resolve('ILogger') === scope.resolve('ILogger'); // true
 ```
 
 ### Args provider
@@ -462,51 +465,66 @@ describe('ArgsProvider', function () {
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
 ```typescript
-import { Registration } from "ts-ioc-container";
+import 'reflect-metadata';
+import { IContainerModule, Registration, IContainer, forKey, Container, ReflectionInjector } from 'ts-ioc-container';
 
-class Development implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.add(Registration.fromClass(DevLogger));
-  }
-}
+@forKey('ILogger')
+class Logger {}
+
+@forKey('ILogger')
+class TestLogger {}
 
 class Production implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.add(Registration.fromClass(ProdLogger));
+    container.add(Registration.fromClass(Logger));
   }
 }
 
-const container = new Container(injector, { tags: ['root'] })
-  .add(Registration.fromClass(Logger))
-  .add(process.env.NODE_ENV === 'production' ? new Production() : new Development());
+class Development implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container.add(Registration.fromClass(TestLogger));
+  }
+}
+
+describe('Container Modules', function () {
+  function createContainer(isProduction: boolean) {
+    return new Container(new ReflectionInjector()).add(isProduction ? new Production() : new Development());
+  }
+
+  it('should register production dependencies', function () {
+    const container = createContainer(true);
+
+    expect(container.resolve('ILogger')).toBeInstanceOf(Logger);
+  });
+
+  it('should register development dependencies', function () {
+    const container = createContainer(false);
+
+    expect(container.resolve('ILogger')).toBeInstanceOf(TestLogger);
+  });
+});
+
 ```
 
 ## Registration module (Provider + DependencyKey)
 Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
 
 ```typescript
-import { asSingleton, perTags, forKey, Registration, Provider } from "ts-ioc-container";
+import 'reflect-metadata';
+import { asSingleton, Container, forKey, perTags, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
 
 @forKey('ILogger')
 @provider(asSingleton(), perTags('root'))
-class Logger {
-  info(message: string) {
-    console.log(message);
-  }
-}
+class Logger {}
 
-container.register(Registration.fromClass(Logger));
+describe('Registration module', function () {
+  it('should bind dependency key to class', function () {
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
 
-// OR
+    expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
+  });
+});
 
-@provider(asSingleton(), perTags('root'))
-class Logger {
-  info(message: string) {
-    console.log(message);
-  }
-}
-
-container.register('ILogger', Provider.fromClass(Logger));
 ```
 
 ## Hooks

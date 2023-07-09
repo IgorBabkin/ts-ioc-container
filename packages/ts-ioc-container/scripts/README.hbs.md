@@ -146,19 +146,7 @@ Sometimes you need to resolve provider only from container with certain tags and
 - NOTICE: It doesn't make clones in not tagged-matched scopes. Usually it's used with `SingletonProvider`.
 
 ```typescript
-import { Provider, TaggedProvider, asSingleton, perTags } from "ts-ioc-container";
-
-container.register('ILogger', Provider.fromClass(Logger).pipe((provider) => new TaggedProvider(provider, ['root'])));
-// OR
-container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root', 'parent')));
-
-// with sigleton
-container.register('ILogger', Provider.fromClass(Logger).pipe(perTags('root', 'parent')).pipe(asSingleton()));
-container.resolve('ILogger') === container.resolve('ILogger'); // true
-
-const scope = container.createScope();
-scope.resolve('ILogger') === scope.resolve('ILogger'); // true
-container.resolve('ILogger') === scope.resolve('ILogger'); // true
+{{{include_file './__tests__/TaggedProvider.spec.ts'}}}
 ```
 
 ### Args provider
@@ -173,51 +161,14 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
 ```typescript
-import { Registration } from "ts-ioc-container";
-
-class Development implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.add(Registration.fromClass(DevLogger));
-  }
-}
-
-class Production implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.add(Registration.fromClass(ProdLogger));
-  }
-}
-
-const container = new Container(injector, { tags: ['root'] })
-  .add(Registration.fromClass(Logger))
-  .add(process.env.NODE_ENV === 'production' ? new Production() : new Development());
+{{{include_file './__tests__/readme/containerModule.spec.ts'}}}
 ```
 
 ## Registration module (Provider + DependencyKey)
 Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
 
 ```typescript
-import { asSingleton, perTags, forKey, Registration, Provider } from "ts-ioc-container";
-
-@forKey('ILogger')
-@provider(asSingleton(), perTags('root'))
-class Logger {
-  info(message: string) {
-    console.log(message);
-  }
-}
-
-container.register(Registration.fromClass(Logger));
-
-// OR
-
-@provider(asSingleton(), perTags('root'))
-class Logger {
-  info(message: string) {
-    console.log(message);
-  }
-}
-
-container.register('ILogger', Provider.fromClass(Logger));
+{{{include_file './__tests__/readme/registration.spec.ts'}}}
 ```
 
 ## Hooks
