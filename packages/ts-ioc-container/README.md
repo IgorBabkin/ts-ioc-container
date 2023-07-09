@@ -51,24 +51,24 @@ It consists of 2 main parts:
 ### Basic usage
 
 ```typescript
-import 'reflect-metadata';
-import { by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container';
+import 'reflect-metadata'
+import { by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container'
 
 describe('Basic usage', function () {
-    it('should inject dependencies', function () {
-        class Logger {
-            name = 'Logger';
-        }
+  it('should inject dependencies', function () {
+    class Logger {
+      name = 'Logger'
+    }
 
-        class App {
-            constructor(@inject(by('ILogger')) public logger: Logger) {}
-        }
+    class App {
+      constructor(@inject(by('ILogger')) public logger: Logger) {}
+    }
 
-        const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
+    const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger))
 
-        expect(container.resolve(App).logger.name).toBe('Logger');
-    });
-});
+    expect(container.resolve(App).logger.name).toBe('Logger')
+  })
+})
 
 ```
 
@@ -79,10 +79,32 @@ Sometimes you need to create a scope of container. For example, when you want to
 - NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope accordingly.
 
 ```typescript
-import { Container, ReflectionInjector } from "ts-ioc-container";
+import 'reflect-metadata';
+import {
+  asSingleton,
+  perTags,
+  Container,
+  Provider,
+  ReflectionInjector,
+  DependencyNotFoundError,
+} from 'ts-ioc-container';
 
-const container = new Container(new ReflectionInjector());
-const scope = container.createScope();
+class Logger {}
+
+describe('Scopes', function () {
+  it('should resolve dependencies from scope', function () {
+    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
+      'ILogger',
+      Provider.fromClass(Logger).pipe(asSingleton(), perTags('child')),
+    );
+
+    const scope = container.createScope(['child']);
+
+    expect(scope.resolve('ILogger')).toBe(scope.resolve('ILogger'));
+    expect(() => container.resolve('ILogger')).toThrow(DependencyNotFoundError);
+  });
+});
+
 ```
 
 ### Tags
@@ -107,22 +129,22 @@ Sometimes you want to get all instances from container and its scopes. For examp
 - you can get instances from container and scope which were created by injector
 
 ```typescript
-import 'reflect-metadata';
-import { Container, Provider, ReflectionInjector } from 'ts-ioc-container';
+import 'reflect-metadata'
+import { Container, Provider, ReflectionInjector } from 'ts-ioc-container'
 describe('Instances', function () {
-    it('should return injected instances', function () {
-        class Logger {}
+  it('should return injected instances', function () {
+    class Logger {}
 
-        const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
-        const scope = container.createScope();
+    const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger))
+    const scope = container.createScope()
 
-        const logger1 = container.resolve('ILogger');
-        const logger2 = scope.resolve('ILogger');
+    const logger1 = container.resolve('ILogger')
+    const logger2 = scope.resolve('ILogger')
 
-        expect(scope.getInstances().length).toBe(1);
-        expect(container.getInstances().length).toBe(2);
-    });
-});
+    expect(scope.getInstances().length).toBe(1)
+    expect(container.getInstances().length).toBe(2)
+  })
+})
 
 ```
 
@@ -134,17 +156,28 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 - when container is disposed then it unregisters all providers and remove all instances
 
 ```typescript
-import { asSingleton, Container, perTags, ReflectionInjector, ContainerDisposedError } from "ts-ioc-container";
+import 'reflect-metadata'
+import { Container, ContainerDisposedError, Provider, ReflectionInjector } from 'ts-ioc-container'
 
-const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register('ILogger', Provider.fromClass(Logger));
-const scope = container.createScope(['child']);
+class Logger {}
 
-const logger = scope.resolve('ILogger');
-container.dispose();
+describe('Disposing', function () {
+  it('should container and make it unavailable for the further usage', function () {
+    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
+      'ILogger',
+      Provider.fromClass(Logger),
+    )
+    const scope = container.createScope(['child'])
 
-expect(() => scope.resolve('ILogger')).toThrow(ContainerDisposedError);
-expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
-expect(container.getInstances().length).toBe(0);
+    const logger = scope.resolve('ILogger')
+    container.dispose()
+
+    expect(() => scope.resolve('ILogger')).toThrow(ContainerDisposedError)
+    expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError)
+    expect(container.getInstances().length).toBe(0)
+  })
+})
+
 ```
 
 ## Injectors `IInjector`
@@ -474,41 +507,41 @@ for (const instance of container.getInstances()) {
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
-import { AutoMockedContainer, Container, DependencyKey, ReflectionInjector } from 'ts-ioc-container';
-import { IMock, Mock } from 'moq.ts';
+import { AutoMockedContainer, Container, DependencyKey, ReflectionInjector } from 'ts-ioc-container'
+import { IMock, Mock } from 'moq.ts'
 
 export class MoqContainer extends AutoMockedContainer {
-    private mocks = new Map<DependencyKey, IMock<any>>();
+  private mocks = new Map<DependencyKey, IMock<any>>()
 
-    resolve<T>(key: DependencyKey): T {
-        return this.resolveMock<T>(key).object();
-    }
+  resolve<T>(key: DependencyKey): T {
+    return this.resolveMock<T>(key).object()
+  }
 
-    resolveMock<T>(key: DependencyKey): IMock<T> {
-        if (!this.mocks.has(key)) {
-            this.mocks.set(key, new Mock());
-        }
-        return this.mocks.get(key) as IMock<T>;
+  resolveMock<T>(key: DependencyKey): IMock<T> {
+    if (!this.mocks.has(key)) {
+      this.mocks.set(key, new Mock())
     }
+    return this.mocks.get(key) as IMock<T>
+  }
 }
 
 interface IEngine {
-    getRegistrationNumber(): string;
+  getRegistrationNumber(): string
 }
 
 describe('Mocking', () => {
-    it('should auto-mock dependencies', () => {
-        const mockContainer = new MoqContainer();
-        const container = new Container(new ReflectionInjector(), { parent: mockContainer });
+  it('should auto-mock dependencies', () => {
+    const mockContainer = new MoqContainer()
+    const container = new Container(new ReflectionInjector(), { parent: mockContainer })
 
-        const engineMock = mockContainer.resolveMock<IEngine>('IEngine');
-        engineMock.setup((i) => i.getRegistrationNumber()).returns('123');
+    const engineMock = mockContainer.resolveMock<IEngine>('IEngine')
+    engineMock.setup((i) => i.getRegistrationNumber()).returns('123')
 
-        const engine = container.resolve<IEngine>('IEngine');
+    const engine = container.resolve<IEngine>('IEngine')
 
-        expect(engine.getRegistrationNumber()).toBe('123');
-    });
-});
+    expect(engine.getRegistrationNumber()).toBe('123')
+  })
+})
 
 ```
 

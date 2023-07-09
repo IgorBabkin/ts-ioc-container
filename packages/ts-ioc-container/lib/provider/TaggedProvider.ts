@@ -3,7 +3,7 @@ import { ProviderDecorator } from './ProviderDecorator';
 import { Tag, Tagged } from '../container/IContainer';
 import { MapFn } from '../utils';
 
-export function perTags(...tags: Tag[]): MapFn<IProvider> {
+export function perTags<T = unknown>(...tags: Tag[]): MapFn<IProvider<T>> {
     return (provider) => new TaggedProvider(provider, tags);
 }
 

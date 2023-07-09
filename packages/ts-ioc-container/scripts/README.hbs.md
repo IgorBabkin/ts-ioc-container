@@ -61,10 +61,7 @@ Sometimes you need to create a scope of container. For example, when you want to
 - NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope accordingly.
 
 ```typescript
-import { Container, ReflectionInjector } from "ts-ioc-container";
-
-const container = new Container(new ReflectionInjector());
-const scope = container.createScope();
+{{{include_file './__tests__/readme/scopes.spec.ts'}}}
 ```
 
 ### Tags
@@ -100,17 +97,7 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 - when container is disposed then it unregisters all providers and remove all instances
 
 ```typescript
-import { asSingleton, Container, perTags, ReflectionInjector, ContainerDisposedError } from "ts-ioc-container";
-
-const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register('ILogger', Provider.fromClass(Logger));
-const scope = container.createScope(['child']);
-
-const logger = scope.resolve('ILogger');
-container.dispose();
-
-expect(() => scope.resolve('ILogger')).toThrow(ContainerDisposedError);
-expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
-expect(container.getInstances().length).toBe(0);
+{{{include_file './__tests__/readme/disposing.spec.ts'}}}
 ```
 
 ## Injectors `IInjector`
