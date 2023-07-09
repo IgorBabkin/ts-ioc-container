@@ -4,7 +4,7 @@
       "runner": "nx-cloud",
       "options": {
         "cacheableOperations": [
-          "build:cjs",
+          "build:cjm",
           "build:esm"
         ],
         "accessToken": "YmU0MjQ3MTMtM2RjNy00MWQxLTliZDMtYmFjZGI4NGI0MGEyfHJlYWQtd3JpdGU="
@@ -12,12 +12,12 @@
     }
   },
   "targetDefaults": {
-    "build:cjs": {
+    "build:cjm": {
       "dependsOn": [
-        "^build:cjs"
+        "^build:cjm"
       ],
       "outputs": [
-        "{projectRoot}/cjs"
+        "{projectRoot}/cjm"
       ]
     },
     "build:esm": {
@@ -33,7 +33,7 @@
         "^build"
       ],
       "outputs": [
-        "{projectRoot}/cjs",
+        "{projectRoot}/cjm",
         "{projectRoot}/esm"
       ]
     }

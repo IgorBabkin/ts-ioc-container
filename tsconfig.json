@@ -20,7 +20,7 @@
   ],
   "exclude": [
     "node_modules",
-    "cjs",
+    "cjm",
     "esm"
   ]
 }

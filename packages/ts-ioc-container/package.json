@@ -11,7 +11,7 @@
   "license": "ISC",
   "sideEffects": false,
   "type": "module",
-  "main": "cjs/index.js",
+  "main": "cjm/index.js",
   "types": "esm/index.d.ts",
   "module": "esm/index.js",
   "keywords": [

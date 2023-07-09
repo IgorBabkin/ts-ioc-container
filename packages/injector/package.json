@@ -10,7 +10,7 @@
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/injector",
   "license": "ISC",
   "sideEffects": false,
-  "main": "cjs/index.js",
+  "main": "cjm/index.js",
   "types": "esm/index.d.ts",
   "module": "esm/index.js",
   "keywords": [
@@ -27,11 +27,11 @@
     "test": "__tests__"
   },
   "files": [
-    "cjs/**/*",
+    "cjm/**/*",
     "esm/**/*"
   ],
   "scripts": {
-    "build:cjs": "rimraf cjs && tsc -p tsconfig.json --outDir cjs --module CommonJS --target ES5",
+    "build:cjm": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
     "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
     "build": "npm-run-all -p build:**",
     "watch": "nodemon --watch ./lib --exec npm run build",
