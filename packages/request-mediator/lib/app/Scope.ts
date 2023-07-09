@@ -1,6 +1,6 @@
 export enum Scope {
-    Application = 'Application',
-    Request = 'Request',
-    UseCase = 'UseCase',
-    Service = 'Service',
+  Application = 'Application',
+  Request = 'Request',
+  UseCase = 'UseCase',
+  Service = 'Service',
 }

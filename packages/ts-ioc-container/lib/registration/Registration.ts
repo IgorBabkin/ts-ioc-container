@@ -8,22 +8,22 @@ import { IProvider } from '../provider/IProvider';
 export const forKey = (key: DependencyKey): ClassDecorator => setProp('DependencyKey', key);
 
 export class Registration implements IContainerModule {
-    static fromClass(Target: constructor<unknown>): Registration {
-        const dependencyKey = getProp<DependencyKey>(Target, 'DependencyKey');
-        if (dependencyKey === undefined) {
-            throw new DependencyMissingKeyError(`Pls provide dependency key for ${Target.name}`);
-        }
-        return new Registration(dependencyKey, Provider.fromClass(Target));
+  static fromClass(Target: constructor<unknown>): Registration {
+    const dependencyKey = getProp<DependencyKey>(Target, 'DependencyKey');
+    if (dependencyKey === undefined) {
+      throw new DependencyMissingKeyError(`Pls provide dependency key for ${Target.name}`);
     }
+    return new Registration(dependencyKey, Provider.fromClass(Target));
+  }
 
-    constructor(private key: DependencyKey, private provider: IProvider) {}
+  constructor(private key: DependencyKey, private provider: IProvider) {}
 
-    pipe(...mappers: MapFn<IProvider>[]): this {
-        this.provider = this.provider.pipe(...mappers);
-        return this;
-    }
+  pipe(...mappers: MapFn<IProvider>[]): this {
+    this.provider = this.provider.pipe(...mappers);
+    return this;
+  }
 
-    applyTo(container: IContainer): void {
-        container.register(this.key, this.provider);
-    }
+  applyTo(container: IContainer): void {
+    container.register(this.key, this.provider);
+  }
 }

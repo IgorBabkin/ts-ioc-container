@@ -4,24 +4,24 @@ import { constructor } from '../utils';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 function getProp(target: object, key: string | symbol): unknown {
-    // @ts-ignore
-    return target[key];
+  // @ts-ignore
+  return target[key];
 }
 
 export class ProxyInjector implements IInjector {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    resolve<T>(container: IContainer, Target: constructor<T>, ...deps: object[]): T {
-        const args = deps.reduce((acc, it) => ({ ...acc, ...it }), {});
-        const proxy = new Proxy(
-            {},
-            {
-                // eslint-disable-next-line @typescript-eslint/ban-types
-                get(target: {}, prop: string | symbol): any {
-                    // eslint-disable-next-line no-prototype-builtins
-                    return args.hasOwnProperty(prop) ? getProp(args, prop) : container.resolve(prop);
-                },
-            },
-        );
-        return new Target(proxy);
-    }
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: object[]): T {
+    const args = deps.reduce((acc, it) => ({ ...acc, ...it }), {});
+    const proxy = new Proxy(
+      {},
+      {
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        get(target: {}, prop: string | symbol): any {
+          // eslint-disable-next-line no-prototype-builtins
+          return args.hasOwnProperty(prop) ? getProp(args, prop) : container.resolve(prop);
+        },
+      },
+    );
+    return new Target(proxy);
+  }
 }

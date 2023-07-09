@@ -1,9 +1,9 @@
 export class MethodNotImplementedError extends Error {
-    name = 'MethodNotImplementedError';
+  name = 'MethodNotImplementedError';
 
-    constructor(message?: string) {
-        super(message);
+  constructor(message?: string) {
+    super(message);
 
-        Object.setPrototypeOf(this, MethodNotImplementedError.prototype);
-    }
+    Object.setPrototypeOf(this, MethodNotImplementedError.prototype);
+  }
 }

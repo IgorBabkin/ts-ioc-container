@@ -5,25 +5,25 @@ import { IDependencyContainer } from '../di/IDependencyContainer';
 import { constructor } from '../others';
 
 export abstract class ScopedMediator<Context = unknown> implements IMediator<Context> {
-    protected abstract scopes: Scope[];
+  protected abstract scopes: Scope[];
 
-    constructor(private scope: IDependencyContainer) {}
+  constructor(private scope: IDependencyContainer) {}
 
-    async send<TQuery, TResponse>(
-        QueryHandler: constructor<IQueryHandler<TQuery, TResponse>>,
-        query: TQuery,
-        context?: Context,
-    ): Promise<TResponse> {
-        const scope = this.scope.createScope(this.scopes);
-        try {
-            const mediator = this.createMediator(scope);
-            const response = await mediator.send(QueryHandler, query, context);
-            await scope.onBeforeDispose();
-            return response;
-        } finally {
-            scope.dispose();
-        }
+  async send<TQuery, TResponse>(
+    QueryHandler: constructor<IQueryHandler<TQuery, TResponse>>,
+    query: TQuery,
+    context?: Context,
+  ): Promise<TResponse> {
+    const scope = this.scope.createScope(this.scopes);
+    try {
+      const mediator = this.createMediator(scope);
+      const response = await mediator.send(QueryHandler, query, context);
+      await scope.onBeforeDispose();
+      return response;
+    } finally {
+      scope.dispose();
     }
+  }
 
-    protected abstract createMediator(scope: IDependencyContainer): IMediator;
+  protected abstract createMediator(scope: IDependencyContainer): IMediator;
 }

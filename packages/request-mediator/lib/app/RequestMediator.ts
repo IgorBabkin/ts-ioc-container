@@ -11,25 +11,25 @@ import { IDependencyContainer } from '../di/IDependencyContainer';
 const createMetadataKey = <K extends keyof IHook>(key: K) => `RequestMediator/${key}`;
 
 export class RequestMediator extends ScopedMediator implements IHooksRepo {
-    protected scopes = [Scope.Request];
+  protected scopes = [Scope.Request];
 
-    protected createMediator(scope: IDependencyContainer): IMediator {
-        return new HookedMediator(new UseCaseMediator(scope), this);
-    }
+  protected createMediator(scope: IDependencyContainer): IMediator {
+    return new HookedMediator(new UseCaseMediator(scope), this);
+  }
 
-    getAfterHooks<TQuery, TResponse>(
-        UseCase: constructor<IQueryHandler<TQuery, TResponse>>,
-    ): constructor<IQueryHandler<TQuery, void>>[] {
-        return getProp(UseCase, createMetadataKey('after')) ?? [];
-    }
+  getAfterHooks<TQuery, TResponse>(
+    UseCase: constructor<IQueryHandler<TQuery, TResponse>>,
+  ): constructor<IQueryHandler<TQuery, void>>[] {
+    return getProp(UseCase, createMetadataKey('after')) ?? [];
+  }
 
-    getBeforeHooks<TQuery, TResponse>(
-        UseCase: constructor<IQueryHandler<TQuery, TResponse>>,
-    ): constructor<IQueryHandler<TQuery, void>>[] {
-        return getProp(UseCase, createMetadataKey('before')) ?? [];
-    }
+  getBeforeHooks<TQuery, TResponse>(
+    UseCase: constructor<IQueryHandler<TQuery, TResponse>>,
+  ): constructor<IQueryHandler<TQuery, void>>[] {
+    return getProp(UseCase, createMetadataKey('before')) ?? [];
+  }
 }
 
 export function request<K extends keyof IHook>(key: K, value: IHook[K]) {
-    return prop(createMetadataKey(key), value);
+  return prop(createMetadataKey(key), value);
 }

@@ -1,11 +1,11 @@
 export {
-    IContainer,
-    Resolvable,
-    IContainerModule,
-    isDependencyKey,
-    DependencyKey,
-    InjectionToken,
-    Tag,
+  IContainer,
+  Resolvable,
+  IContainerModule,
+  isDependencyKey,
+  DependencyKey,
+  InjectionToken,
+  Tag,
 } from './container/IContainer';
 export { constructor } from './utils';
 export { Container } from './container/Container';

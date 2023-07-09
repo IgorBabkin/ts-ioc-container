@@ -7,6 +7,6 @@ import { renderClient } from '../templates';
 type Props = { inputFile: string; outputFile: string };
 
 export function openapiToClient({ inputFile, outputFile }: Props) {
-    const content: OpenAPIV3.Document = isYAML(inputFile) ? loadYAML(inputFile) : loadJSON(inputFile);
-    fs.writeFileSync(outputFile, renderClient(content));
+  const content: OpenAPIV3.Document = isYAML(inputFile) ? loadYAML(inputFile) : loadJSON(inputFile);
+  fs.writeFileSync(outputFile, renderClient(content));
 }

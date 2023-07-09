@@ -1,15 +1,15 @@
 export class ContainerDisposedError extends Error {
-    static assert(isTrue: boolean, failMessage: string) {
-        if (!isTrue) {
-            throw new ContainerDisposedError(failMessage);
-        }
+  static assert(isTrue: boolean, failMessage: string) {
+    if (!isTrue) {
+      throw new ContainerDisposedError(failMessage);
     }
+  }
 
-    name = 'ContainerDisposedError';
+  name = 'ContainerDisposedError';
 
-    constructor(message: string) {
-        super(message);
+  constructor(message: string) {
+    super(message);
 
-        Object.setPrototypeOf(this, ContainerDisposedError.prototype);
-    }
+    Object.setPrototypeOf(this, ContainerDisposedError.prototype);
+  }
 }

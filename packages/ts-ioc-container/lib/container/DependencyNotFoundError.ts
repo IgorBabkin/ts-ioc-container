@@ -1,9 +1,9 @@
 export class DependencyNotFoundError extends Error {
-    name = 'DependencyNotFoundError';
+  name = 'DependencyNotFoundError';
 
-    constructor(message: string) {
-        super(message);
+  constructor(message: string) {
+    super(message);
 
-        Object.setPrototypeOf(this, DependencyNotFoundError.prototype);
-    }
+    Object.setPrototypeOf(this, DependencyNotFoundError.prototype);
+  }
 }

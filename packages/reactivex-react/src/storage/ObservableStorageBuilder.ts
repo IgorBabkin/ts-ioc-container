@@ -10,23 +10,23 @@ import { IObservableStorage } from './IObservableStorage';
 export type CleanMode = 'disable-reader' | 'destroy-reader';
 
 export class ObservableStorageBuilder {
-    private cleaner: ICleaner;
+  private cleaner: ICleaner;
 
-    static fromObserver(observer: ReaderObserver): ObservableStorageBuilder {
-        return new ObservableStorageBuilder(new ReaderRepository((obs$) => new ObservableReader(obs$, observer)));
-    }
+  static fromObserver(observer: ReaderObserver): ObservableStorageBuilder {
+    return new ObservableStorageBuilder(new ReaderRepository((obs$) => new ObservableReader(obs$, observer)));
+  }
 
-    constructor(private repository: IReaderRepository) {
-        this.cleaner = new DisableCleaner(repository);
-    }
+  constructor(private repository: IReaderRepository) {
+    this.cleaner = new DisableCleaner(repository);
+  }
 
-    changeCleanupMode(mode: CleanMode): this {
-        this.cleaner =
-            mode === 'destroy-reader' ? new DestroyCleaner(this.repository) : new DisableCleaner(this.repository);
-        return this;
-    }
+  changeCleanupMode(mode: CleanMode): this {
+    this.cleaner =
+      mode === 'destroy-reader' ? new DestroyCleaner(this.repository) : new DisableCleaner(this.repository);
+    return this;
+  }
 
-    build(): IObservableStorage {
-        return new ObservableStorage(this.repository, this.cleaner);
-    }
+  build(): IObservableStorage {
+    return new ObservableStorage(this.repository, this.cleaner);
+  }
 }

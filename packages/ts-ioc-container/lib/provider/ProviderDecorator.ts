@@ -3,19 +3,19 @@ import { IProvider } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
-    protected constructor(private decorated: IProvider<T>) {}
+  protected constructor(private decorated: IProvider<T>) {}
 
-    abstract clone(): IProvider<T>;
+  abstract clone(): IProvider<T>;
 
-    isValid(filters: Tagged): boolean {
-        return this.decorated.isValid(filters);
-    }
+  isValid(filters: Tagged): boolean {
+    return this.decorated.isValid(filters);
+  }
 
-    resolve(container: Resolvable, ...args: any[]): T {
-        return this.decorated.resolve(container, ...args);
-    }
+  resolve(container: Resolvable, ...args: any[]): T {
+    return this.decorated.resolve(container, ...args);
+  }
 
-    pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
-        return pipe(...mappers)(this);
-    }
+  pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
+    return pipe(...mappers)(this);
+  }
 }

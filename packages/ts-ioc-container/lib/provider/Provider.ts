@@ -6,30 +6,30 @@ import { getProp, setProp } from '../reflection';
 export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setProp('provider', mappers);
 
 export class Provider<T> implements IProvider<T> {
-    static fromClass<T>(Target: constructor<T>): IProvider<T> {
-        const mappers = getProp<MapFn<IProvider<T>>[]>(Target, 'provider') ?? [];
-        return new Provider((container, ...args) => container.resolve(Target, ...args)).pipe(...mappers);
-    }
+  static fromClass<T>(Target: constructor<T>): IProvider<T> {
+    const mappers = getProp<MapFn<IProvider<T>>[]>(Target, 'provider') ?? [];
+    return new Provider((container, ...args) => container.resolve(Target, ...args)).pipe(...mappers);
+  }
 
-    static fromValue<T>(value: T): Provider<T> {
-        return new Provider(() => value);
-    }
+  static fromValue<T>(value: T): Provider<T> {
+    return new Provider(() => value);
+  }
 
-    constructor(private readonly resolveDependency: ResolveDependency<T>) {}
+  constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
-    pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
-        return pipe(...mappers)(this);
-    }
+  pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
+    return pipe(...mappers)(this);
+  }
 
-    clone(): Provider<T> {
-        return new Provider(this.resolveDependency);
-    }
+  clone(): Provider<T> {
+    return new Provider(this.resolveDependency);
+  }
 
-    resolve(container: Resolvable, ...args: unknown[]): T {
-        return this.resolveDependency(container, ...args);
-    }
+  resolve(container: Resolvable, ...args: unknown[]): T {
+    return this.resolveDependency(container, ...args);
+  }
 
-    isValid(): boolean {
-        return true;
-    }
+  isValid(): boolean {
+    return true;
+  }
 }

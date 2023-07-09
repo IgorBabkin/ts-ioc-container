@@ -1,5 +1,5 @@
-import 'reflect-metadata'
-import { Container, ContainerDisposedError, Provider, ReflectionInjector } from 'ts-ioc-container'
+import 'reflect-metadata';
+import { Container, ContainerDisposedError, Provider, ReflectionInjector } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -8,14 +8,14 @@ describe('Disposing', function () {
     const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
       'ILogger',
       Provider.fromClass(Logger),
-    )
-    const scope = container.createScope(['child'])
+    );
+    const scope = container.createScope(['child']);
 
-    const logger = scope.resolve('ILogger')
-    container.dispose()
+    const logger = scope.resolve('ILogger');
+    container.dispose();
 
-    expect(() => scope.resolve('ILogger')).toThrow(ContainerDisposedError)
-    expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError)
-    expect(container.getInstances().length).toBe(0)
-  })
-})
+    expect(() => scope.resolve('ILogger')).toThrow(ContainerDisposedError);
+    expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
+    expect(container.getInstances().length).toBe(0);
+  });
+});

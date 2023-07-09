@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "commit": "git-cz",
-    "format": "prettier --write packages/**/*.ts",
+    "format": "prettier --write \"packages/**/*.ts\"",
     "lint": "eslint packages/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "test": "lerna run test --stream",

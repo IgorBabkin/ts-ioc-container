@@ -1,11 +1,11 @@
 import { Observable } from 'rxjs';
 
 export interface IObservableReader<T> {
-    readonly obs$: Observable<T>;
+  readonly obs$: Observable<T>;
 
-    enable(): this;
+  enable(): this;
 
-    disable(): this;
+  disable(): this;
 
-    current: T | undefined;
+  current: T | undefined;
 }

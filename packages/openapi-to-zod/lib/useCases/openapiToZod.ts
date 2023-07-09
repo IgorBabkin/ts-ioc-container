@@ -7,6 +7,6 @@ import { renderDocument } from '../templates';
 type Props = { inputFile: string; outputFile: string };
 
 export function openapiToZod({ inputFile, outputFile }: Props) {
-    const content: OpenAPIV3.Document = isYAML(inputFile) ? loadYAML(inputFile) : loadJSON(inputFile);
-    fs.writeFileSync(outputFile, renderDocument(content));
+  const content: OpenAPIV3.Document = isYAML(inputFile) ? loadYAML(inputFile) : loadJSON(inputFile);
+  fs.writeFileSync(outputFile, renderDocument(content));
 }

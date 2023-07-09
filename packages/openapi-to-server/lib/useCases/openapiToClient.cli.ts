@@ -10,12 +10,12 @@ const flags = args.parse(process.argv);
 
 const inputFile = flags.input;
 if (!inputFile) {
-    throw new Error('openapi file path is required');
+  throw new Error('openapi file path is required');
 }
 
 const outputFile = flags.output;
 if (!flags.output) {
-    throw new Error('output file path is required');
+  throw new Error('output file path is required');
 }
 
 openapiToClient({ inputFile, outputFile });

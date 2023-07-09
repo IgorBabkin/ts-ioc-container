@@ -1,9 +1,9 @@
 export class DependencyMissingKeyError extends Error {
-    name = 'DependencyMissingKeyError';
+  name = 'DependencyMissingKeyError';
 
-    constructor(message: string) {
-        super(message);
+  constructor(message: string) {
+    super(message);
 
-        Object.setPrototypeOf(this, DependencyMissingKeyError.prototype);
-    }
+    Object.setPrototypeOf(this, DependencyMissingKeyError.prototype);
+  }
 }

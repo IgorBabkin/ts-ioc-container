@@ -3,13 +3,13 @@ import { IObservableReader } from '../reader/IObservableReader';
 import { IDisposable } from '../../core/IDisposable';
 
 export interface IReaderRepository extends IDisposable {
-    findOrCreate<T>(obs$: Observable<T>): IObservableReader<T>;
+  findOrCreate<T>(obs$: Observable<T>): IObservableReader<T>;
 
-    find<T>(obs$: Observable<T>): IObservableReader<T>;
+  find<T>(obs$: Observable<T>): IObservableReader<T>;
 
-    dispose(): void;
+  dispose(): void;
 
-    remove<T>(obs$: IObservableReader<T>): void;
+  remove<T>(obs$: IObservableReader<T>): void;
 
-    getExcluded(includedObservables: Set<Observable<unknown>>): Set<Observable<unknown>>;
+  getExcluded(includedObservables: Set<Observable<unknown>>): Set<Observable<unknown>>;
 }

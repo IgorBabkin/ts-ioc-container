@@ -1,9 +1,9 @@
 export class ArgumentNullError extends Error {
-    name = 'ArgumentNullError';
+  name = 'ArgumentNullError';
 
-    constructor(message: string) {
-        super(message);
+  constructor(message: string) {
+    super(message);
 
-        Object.setPrototypeOf(this, ArgumentNullError.prototype);
-    }
+    Object.setPrototypeOf(this, ArgumentNullError.prototype);
+  }
 }

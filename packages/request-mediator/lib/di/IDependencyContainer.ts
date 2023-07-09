@@ -1,13 +1,13 @@
 import { constructor } from '../others';
 
 export interface IDependencyContainer {
-    registerValue(key: string | symbol, value: unknown): void;
+  registerValue(key: string | symbol, value: unknown): void;
 
-    createScope(tags: string[]): IDependencyContainer;
+  createScope(tags: string[]): IDependencyContainer;
 
-    resolve<T>(key: constructor<T> | symbol): T;
+  resolve<T>(key: constructor<T> | symbol): T;
 
-    dispose(): void;
+  dispose(): void;
 
-    onBeforeDispose(): Promise<void>;
+  onBeforeDispose(): Promise<void>;
 }
