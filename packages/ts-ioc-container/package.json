@@ -37,7 +37,7 @@
   "scripts": {
     "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
-    "build:readme": "ts-node --esm ./scripts/compileReadme.ts",
+    "build:readme": "ts-node --esm scripts/generateReadme/generateReadme.ts",
     "build": "npm-run-all -p build:**",
     "coverage": "coveralls",
     "watch": "nodemon --watch ./lib --exec npm run build",
