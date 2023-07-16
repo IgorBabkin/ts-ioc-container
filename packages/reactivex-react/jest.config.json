@@ -1,0 +1,24 @@
+{
+  "clearMocks": true,
+  "coverageDirectory": "coverage",
+  "coveragePathIgnorePatterns": [
+    "/node_modules/",
+    "/cjm/",
+    "/esm/",
+    "__tests__",
+    "/.husky/",
+    "/example/",
+    "/react/"
+  ],
+  "coverageProvider": "v8",
+  "moduleDirectories": [
+    "node_modules",
+    "<rootDir>/src"
+  ],
+  "testMatch": [
+    "**/__tests__/(*.)+(spec).ts?(x)"
+  ],
+  "transform": {
+    "^.+\\.tsx?$": "ts-jest"
+  }
+}
