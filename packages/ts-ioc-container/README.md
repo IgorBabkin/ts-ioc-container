@@ -548,9 +548,6 @@ import {
   Registration,
 } from '../lib';
 
-const onConstruct = hook('onConstruct');
-const onDispose = hook('onDispose');
-
 class MyInjector implements IInjector {
   private injector = new ReflectionInjector();
 
@@ -581,7 +578,7 @@ class Logger {
 
   constructor(@inject(by('logsRepo')) private logsRepo: LogsRepo) {}
 
-  @onConstruct
+  @hook('onConstruct')
   initialize() {
     this.isReady = true;
   }
@@ -590,7 +587,7 @@ class Logger {
     this.messages.push(message);
   }
 
-  @onDispose
+  @hook('onDispose')
   async save(): Promise<void> {
     this.logsRepo.saveLogs(this.messages);
     this.messages = [];
