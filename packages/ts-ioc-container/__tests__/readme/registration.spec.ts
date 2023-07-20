@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { asSingleton, Container, forKey, perTags, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
+import { singleton, Container, tags, provider, ReflectionInjector, Registration, key } from 'ts-ioc-container';
 
-@forKey('ILogger')
-@provider(asSingleton(), perTags('root'))
+@key('ILogger')
+@provider(singleton(), tags('root'))
 class Logger {}
 
 describe('Registration module', function () {

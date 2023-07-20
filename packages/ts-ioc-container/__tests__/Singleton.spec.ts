@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { asSingleton, Container, forKey, provider, ReflectionInjector, Registration } from '../lib';
+import { singleton, Container, key, provider, ReflectionInjector, Registration } from '../lib';
 
-@forKey('logger')
-@provider(asSingleton())
+@key('logger')
+@provider(singleton())
 class Logger {}
 
 describe('Singleton', function () {

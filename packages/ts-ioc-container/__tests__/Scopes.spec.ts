@@ -1,17 +1,17 @@
 import 'reflect-metadata';
 import {
-  asSingleton,
+  singleton,
   Container,
   ContainerDisposedError,
-  forKey,
-  perTags,
+  key,
+  tags,
   provider,
   ReflectionInjector,
   Registration,
 } from '../lib';
 
-@forKey('logger')
-@provider(asSingleton(), perTags('home'))
+@key('logger')
+@provider(singleton(), tags('home'))
 class Logger {}
 
 describe('Singleton', function () {

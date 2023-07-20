@@ -5,7 +5,7 @@ import { getProp, setProp } from '../reflection';
 import { Provider } from '../provider/Provider';
 import { IProvider } from '../provider/IProvider';
 
-export const forKey = (key: DependencyKey): ClassDecorator => setProp('DependencyKey', key);
+export const key = (value: DependencyKey): ClassDecorator => setProp('DependencyKey', value);
 
 export class Registration implements IContainerModule {
   static fromClass(Target: constructor<unknown>): Registration {

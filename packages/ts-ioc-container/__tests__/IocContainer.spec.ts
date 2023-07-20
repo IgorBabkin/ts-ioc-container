@@ -1,19 +1,19 @@
 import 'reflect-metadata';
 import {
-  asSingleton,
+  singleton,
   Container,
   ContainerDisposedError,
   DependencyMissingKeyError,
   DependencyNotFoundError,
-  forKey,
+  key,
   Provider,
   provider,
   ReflectionInjector,
   Registration,
-  withArgs,
+  args,
 } from '../lib';
 
-@forKey('logger')
+@key('logger')
 class Logger {
   constructor(public topic: string) {}
 }
@@ -83,13 +83,13 @@ describe('IocContainer', function () {
   });
 
   it('should keep argument for provider', function () {
-    const container = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('main')));
+    const container = createContainer().add(Registration.fromClass(Logger).pipe(args('main')));
 
     expect(container.resolve<Logger>('logger').topic).toBe('main');
   });
 
   it('should use builder decorators', function () {
-    @provider(asSingleton())
+    @provider(singleton())
     class Logger1 {}
 
     const container = createContainer().register('logger', Provider.fromClass(Logger1));

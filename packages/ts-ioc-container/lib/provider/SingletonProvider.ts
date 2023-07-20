@@ -5,7 +5,7 @@ import { MapFn } from '../utils';
 
 type Cache<T> = { value: T };
 
-export function asSingleton<T = unknown>(): MapFn<IProvider<T>> {
+export function singleton<T = unknown>(): MapFn<IProvider<T>> {
   return (provider) => new SingletonProvider(provider);
 }
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { Container, forKey, withArgsFn, withArgs, ReflectionInjector, Registration } from 'ts-ioc-container';
+import { Container, key, argsFn, args, ReflectionInjector, Registration } from 'ts-ioc-container';
 
-@forKey('logger')
+@key('logger')
 class Logger {
   constructor(public name: string, public type?: string) {}
 }
@@ -12,23 +12,21 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().add(
-      Registration.fromClass(Logger).pipe(withArgsFn((container, ...args) => ['name'])),
-    );
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('can assign argument to provider', function () {
-    const root = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('name')));
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
-    const root = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('name')));
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger', 'file');
 

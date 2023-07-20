@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, Provider, ProxyInjector, withArgs } from '../lib';
+import { Container, Provider, ProxyInjector, args } from '../lib';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -43,7 +43,7 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container(new ProxyInjector())
-      .register('App', Provider.fromClass(App).pipe(withArgs({ greetingTemplate })))
+      .register('App', Provider.fromClass(App).pipe(args({ greetingTemplate })))
       .register('logger', Provider.fromClass(Logger));
 
     const app = container.resolve<App>('App', { name: `world` });

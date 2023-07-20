@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { IContainerModule, Registration, IContainer, forKey, Container, ReflectionInjector } from 'ts-ioc-container';
+import { IContainerModule, Registration, IContainer, key, Container, ReflectionInjector } from 'ts-ioc-container';
 
-@forKey('ILogger')
+@key('ILogger')
 class Logger {}
 
-@forKey('ILogger')
+@key('ILogger')
 class TestLogger {}
 
 class Production implements IContainerModule {

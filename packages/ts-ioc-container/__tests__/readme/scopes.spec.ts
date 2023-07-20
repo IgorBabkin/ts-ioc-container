@@ -1,17 +1,17 @@
 import 'reflect-metadata';
 import {
-  asSingleton,
+  singleton,
   Container,
   DependencyNotFoundError,
-  forKey,
-  perTags,
+  key,
+  tags,
   provider,
   ReflectionInjector,
   Registration,
 } from 'ts-ioc-container';
 
-@forKey('ILogger')
-@provider(asSingleton(), perTags('child'))
+@key('ILogger')
+@provider(singleton(), tags('child'))
 class Logger {}
 
 describe('Scopes', function () {

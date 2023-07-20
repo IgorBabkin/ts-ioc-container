@@ -82,18 +82,18 @@ Sometimes you need to create a scope of container. For example, when you want to
 ```typescript
 import 'reflect-metadata';
 import {
-  asSingleton,
+  singleton,
   Container,
   DependencyNotFoundError,
-  forKey,
-  perTags,
+  key,
+  tags,
   provider,
   ReflectionInjector,
   Registration,
 } from 'ts-ioc-container';
 
-@forKey('ILogger')
-@provider(asSingleton(), perTags('child'))
+@key('ILogger')
+@provider(singleton(), tags('child'))
 class Logger {}
 
 describe('Scopes', function () {
@@ -245,7 +245,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 
 ```typescript
 import 'reflect-metadata';
-import { Container, Provider, ProxyInjector, withArgs } from '../lib';
+import { Container, Provider, ProxyInjector, args } from '../lib';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -289,7 +289,7 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container(new ProxyInjector())
-      .register('App', Provider.fromClass(App).pipe(withArgs({ greetingTemplate })))
+      .register('App', Provider.fromClass(App).pipe(args({ greetingTemplate })))
       .register('logger', Provider.fromClass(Logger));
 
     const app = container.resolve<App>('App', { name: `world` });
@@ -315,7 +315,7 @@ There are next types of providers:
 
 ```typescript
 import 'reflect-metadata';
-import { asSingleton, Container, perTags, Provider, ReflectionInjector } from 'ts-ioc-container';
+import { singleton, Container, tags, Provider, ReflectionInjector } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -341,7 +341,7 @@ describe('Provider', function () {
   it('can be featured by pipe method', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
       'logger',
-      Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')),
+      Provider.fromClass(Logger).pipe(singleton(), tags('root')),
     );
 
     expect(root.resolve('logger')).toBe(root.resolve('logger'));
@@ -358,10 +358,10 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 
 ```typescript
 import 'reflect-metadata';
-import { asSingleton, Container, forKey, provider, ReflectionInjector, Registration } from '../lib';
+import { singleton, Container, key, provider, ReflectionInjector, Registration } from '../lib';
 
-@forKey('logger')
-@provider(asSingleton())
+@key('logger')
+@provider(singleton())
 class Logger {}
 
 describe('Singleton', function () {
@@ -398,15 +398,15 @@ Sometimes you need to resolve provider only from container with certain tags and
 
 ```typescript
 import 'reflect-metadata';
-import { asSingleton, Container, forKey, perTags, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
+import { singleton, Container, key, tags, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
 
-@forKey('ILogger')
-@provider(asSingleton(), perTags('root'))
+@key('ILogger')
+@provider(singleton(), tags('root'))
 class Logger {}
 describe('TaggedProvider', function () {
   it('should return the same instance', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] }).add(
-      Registration.fromClass(Logger).pipe(perTags('root', 'parent')),
+      Registration.fromClass(Logger).pipe(tags('root', 'parent')),
     );
     const child = root.createScope();
     expect(root.resolve('ILogger')).toBe(child.resolve('ILogger'));
@@ -421,9 +421,9 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 
 ```typescript
 import 'reflect-metadata';
-import { Container, forKey, withArgsFn, withArgs, ReflectionInjector, Registration } from 'ts-ioc-container';
+import { Container, key, argsFn, args, ReflectionInjector, Registration } from 'ts-ioc-container';
 
-@forKey('logger')
+@key('logger')
 class Logger {
   constructor(public name: string, public type?: string) {}
 }
@@ -434,23 +434,21 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().add(
-      Registration.fromClass(Logger).pipe(withArgsFn((container, ...args) => ['name'])),
-    );
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('can assign argument to provider', function () {
-    const root = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('name')));
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
-    const root = createContainer().add(Registration.fromClass(Logger).pipe(withArgs('name')));
+    const root = createContainer().add(Registration.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger', 'file');
 
@@ -466,12 +464,12 @@ Sometimes you want to encapsulate registration logic in separate module. This is
 
 ```typescript
 import 'reflect-metadata';
-import { IContainerModule, Registration, IContainer, forKey, Container, ReflectionInjector } from 'ts-ioc-container';
+import { IContainerModule, Registration, IContainer, key, Container, ReflectionInjector } from 'ts-ioc-container';
 
-@forKey('ILogger')
+@key('ILogger')
 class Logger {}
 
-@forKey('ILogger')
+@key('ILogger')
 class TestLogger {}
 
 class Production implements IContainerModule {
@@ -511,10 +509,10 @@ Sometimes you need to keep dependency key with class together. For example, you 
 
 ```typescript
 import 'reflect-metadata';
-import { asSingleton, Container, forKey, perTags, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
+import { singleton, Container, tags, provider, ReflectionInjector, Registration, key } from 'ts-ioc-container';
 
-@forKey('ILogger')
-@provider(asSingleton(), perTags('root'))
+@key('ILogger')
+@provider(singleton(), tags('root'))
 class Logger {}
 
 describe('Registration module', function () {
@@ -533,11 +531,11 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 ```typescript
 import 'reflect-metadata';
 import {
-  asSingleton,
+  singleton,
   by,
   constructor,
   Container,
-  forKey,
+  key,
   getHooks,
   hook,
   IContainer,
@@ -561,8 +559,8 @@ class MyInjector implements IInjector {
   }
 }
 
-@forKey('logsRepo')
-@provider(asSingleton())
+@key('logsRepo')
+@provider(singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 
@@ -571,7 +569,7 @@ class LogsRepo {
   }
 }
 
-@forKey('logger')
+@key('logger')
 class Logger {
   isReady = false;
   private messages: string[] = [];

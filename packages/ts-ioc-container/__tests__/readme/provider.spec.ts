@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { asSingleton, Container, perTags, Provider, ReflectionInjector } from 'ts-ioc-container';
+import { singleton, Container, tags, Provider, ReflectionInjector } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -25,7 +25,7 @@ describe('Provider', function () {
   it('can be featured by pipe method', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
       'logger',
-      Provider.fromClass(Logger).pipe(asSingleton(), perTags('root')),
+      Provider.fromClass(Logger).pipe(singleton(), tags('root')),
     );
 
     expect(root.resolve('logger')).toBe(root.resolve('logger'));

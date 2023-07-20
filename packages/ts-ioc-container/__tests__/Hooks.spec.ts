@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import {
-  asSingleton,
+  singleton,
   by,
   constructor,
   Container,
-  forKey,
+  key,
   getHooks,
   hook,
   IContainer,
@@ -28,8 +28,8 @@ class MyInjector implements IInjector {
   }
 }
 
-@forKey('logsRepo')
-@provider(asSingleton())
+@key('logsRepo')
+@provider(singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 
@@ -38,7 +38,7 @@ class LogsRepo {
   }
 }
 
-@forKey('logger')
+@key('logger')
 class Logger {
   isReady = false;
   private messages: string[] = [];
