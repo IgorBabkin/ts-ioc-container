@@ -16,10 +16,10 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
-    const scope = container.createScope(['child']);
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
+    const child = root.createScope('child');
 
-    expect(scope.resolve('ILogger')).toBe(scope.resolve('ILogger'));
-    expect(() => container.resolve('ILogger')).toThrow(DependencyNotFoundError);
+    expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
+    expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);
   });
 });

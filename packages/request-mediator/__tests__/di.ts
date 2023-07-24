@@ -20,7 +20,7 @@ export class ContainerAdapter implements IDependencyContainer {
   constructor(private container: IContainer) {}
 
   createScope(tags: string[]): IDependencyContainer {
-    return new ContainerAdapter(this.container.createScope(tags));
+    return new ContainerAdapter(this.container.createScope(...tags));
   }
 
   dispose(): void {

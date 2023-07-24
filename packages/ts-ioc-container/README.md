@@ -98,11 +98,11 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
-    const scope = container.createScope(['child']);
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
+    const child = root.createScope('child');
 
-    expect(scope.resolve('ILogger')).toBe(scope.resolve('ILogger'));
-    expect(() => container.resolve('ILogger')).toThrow(DependencyNotFoundError);
+    expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
+    expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);
   });
 });
 
@@ -148,18 +148,18 @@ class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const container = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
       'ILogger',
       Provider.fromClass(Logger),
     );
-    const scope = container.createScope(['child']);
+    const child = root.createScope('child');
 
-    const logger = scope.resolve('ILogger');
-    container.dispose();
+    const logger = child.resolve('ILogger');
+    root.dispose();
 
-    expect(() => scope.resolve('ILogger')).toThrow(ContainerDisposedError);
-    expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
-    expect(container.getInstances().length).toBe(0);
+    expect(() => child.resolve('ILogger')).toThrow(ContainerDisposedError);
+    expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
+    expect(root.getInstances().length).toBe(0);
   });
 });
 
@@ -321,30 +321,30 @@ class Logger {}
 
 describe('Provider', function () {
   it('can be registered as a function', function () {
-    const container = new Container(new ReflectionInjector()).register('logger', new Provider(() => new Logger()));
+    const container = new Container(new ReflectionInjector()).register('ILogger', new Provider(() => new Logger()));
 
-    expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
+    expect(container.resolve('ILogger')).not.toBe(container.resolve('ILogger'));
   });
 
   it('can be registered as a value', function () {
-    const container = new Container(new ReflectionInjector()).register('logger', Provider.fromValue(new Logger()));
+    const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromValue(new Logger()));
 
-    expect(container.resolve('logger')).toBe(container.resolve('logger'));
+    expect(container.resolve('ILogger')).toBe(container.resolve('ILogger'));
   });
 
   it('can be registered as a class', function () {
-    const container = new Container(new ReflectionInjector()).register('logger', Provider.fromClass(Logger));
+    const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
 
-    expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
+    expect(container.resolve('ILogger')).not.toBe(container.resolve('ILogger'));
   });
 
   it('can be featured by pipe method', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
-      'logger',
+      'ILogger',
       Provider.fromClass(Logger).pipe(singleton(), tags('root')),
     );
 
-    expect(root.resolve('logger')).toBe(root.resolve('logger'));
+    expect(root.resolve('ILogger')).toBe(root.resolve('ILogger'));
   });
 });
 

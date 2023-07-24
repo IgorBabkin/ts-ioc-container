@@ -24,7 +24,7 @@ export interface IContainerModule {
 }
 
 export interface IContainer extends Resolvable {
-  createScope(tags?: Tag[]): IContainer;
+  createScope(...tags: Tag[]): IContainer;
 
   register(key: DependencyKey, value: IProvider): this;
 

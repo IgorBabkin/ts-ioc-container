@@ -48,7 +48,7 @@ export class Container implements IContainer, Tagged {
     return instance;
   }
 
-  createScope(tags: Tag[] = []): Container {
+  createScope(...tags: Tag[]): Container {
     this.validateContainer();
     const scope = new Container(this.injector, { parent: this, tags });
 
