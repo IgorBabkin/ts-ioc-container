@@ -8,4 +8,4 @@ yarn-error.log
 precompiled
 .generated
 .vscode
-.yarn
+.yarn/cache
