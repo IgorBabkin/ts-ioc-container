@@ -27,8 +27,8 @@ jobs:
             yarn -v
             yarn install --frozen-lockfile
 
-      - run: npm run build
-      - run: npm run test -- --no-progress && exit 0
+      - run: npm run build -- --no-progress
+      - run: npm run test -- --no-progress
 
       - save_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
