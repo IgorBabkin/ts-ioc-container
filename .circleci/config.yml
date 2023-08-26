@@ -20,17 +20,9 @@ jobs:
           install-yarn: true
           node-version: '18.17.0'
 
-      - run:
-          name: Install Dependencies
-          command: yarn install --immutable
-
-      - run:
-          name: Build packages
-          command: npm run build
-
-      - run:
-          name: Run tests
-          command: npm test
+      - run: yarn install --immutable
+      - run: npm run build
+      - run: npm run test
 
       - coveralls/upload:
           coverage_file: ./packages/injector/coverage/lcov.info
@@ -52,7 +44,6 @@ jobs:
           key: v1-deps-{{ checksum "yarn.lock" }}
           paths:
             - .yarn/cache
-            - .yarn/unplugged
 
 workflows:
   test:
