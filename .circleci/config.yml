@@ -23,8 +23,8 @@ jobs:
       - run:
           name: Yarn Set Version Stable
           command: |
-            npm install -g yarn || echo "Yarn may have already been installed."                                                                                            
-            yarn set version stable           
+            corepack enable
+            yarn -v
 
       - run:
           name: Install Dependencies
