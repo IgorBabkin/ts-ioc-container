@@ -21,11 +21,14 @@ jobs:
           node-version: '18.17.0'
 
       - run:
-          - corepack enable
-          - yarn -v
-          - yarn install --immutable
-          - npm run build
-          - npm run test
+          name: Install dependencies
+          command: |
+            corepack enable
+            yarn -v
+            yarn install --frozen-lockfile
+
+      - run: npm run build
+      - run: npm run test
 
       - save_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
