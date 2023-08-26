@@ -21,22 +21,11 @@ jobs:
           node-version: '18.17.0'
 
       - run:
-          name: Yarn Set Version Stable
-          command: |
-            corepack enable
-            yarn -v
-
-      - run:
-          name: Install Dependencies
-          command: yarn install --immutable
-
-      - run:
-          name: Build packages
-          command: npm run build
-
-      - run:
-          name: Run tests
-          command: npm test
+          - corepack enable
+          - yarn -v
+          - yarn install --immutable
+          - npm run build
+          - npm run test
 
       - save_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
