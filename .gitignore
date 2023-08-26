@@ -9,3 +9,4 @@ precompiled
 .generated
 .vscode
 .yarn/cache
+.yarn/install-state.gz
