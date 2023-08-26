@@ -52,5 +52,6 @@
     "lint-staged": "11.1.2",
     "prettier": "2.4.1"
   },
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "packageManager": "yarn@3.6.3"
 }
