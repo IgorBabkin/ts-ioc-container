@@ -33,7 +33,7 @@
   "scripts": {
     "build:cjm": "rimraf cjm && tsc -p tsconfig.json --outDir cjm --module CommonJS --target ES5",
     "build:esm": "rimraf esm && tsc -p tsconfig.json --outDir esm",
-    "build": "npm-run-all -p build:**",
+    "build": "npm run build:cjm && npm run build:esm",
     "watch": "nodemon --watch ./lib --exec npm run build",
     "test": "jest --coverage"
   },
@@ -42,7 +42,6 @@
     "jest": "27.2.3",
     "moq.ts": "^7.3.4",
     "nodemon": "^2.0.13",
-    "npm-run-all": "4.1.5",
     "rimraf": "3.0.2",
     "ts-ioc-container": "^24.1.0",
     "ts-jest": "27.0.5",

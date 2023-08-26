@@ -29,8 +29,8 @@
     "precompiled/**/*"
   ],
   "bin": {
-    "openapi-to-server": "cjm/useCases/openapiToServer.cli.js",
-    "openapi-to-client": "cjm/useCases/openapiToClient.cli.js"
+    "openapi-to-client": "cjm/useCases/openapiToClient.cli.js",
+    "openapi-to-server": "cjm/useCases/openapiToServer.cli.js"
   },
   "scripts": {
     "build": "npm run clean && npm run compile",

@@ -26,9 +26,7 @@
     "cjm/**/*",
     "precompiled/**/*"
   ],
-  "bin": {
-    "openapi-to-zod": "cjm/useCases/openapiToZod.cli.js"
-  },
+  "bin": "cjm/useCases/openapiToZod.cli.js",
   "scripts": {
     "build": "npm run clean && npm run compile",
     "test": "make-dir .generated && jest --coverage",
