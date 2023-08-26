@@ -18,7 +18,7 @@ jobs:
 
       - node/install:
           install-yarn: true
-          node-version: '16.20.0'
+          node-version: '18.17.0'
 
       - run: yarn install --immutable
       - run: npm run build
