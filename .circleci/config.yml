@@ -25,10 +25,10 @@ jobs:
           command: |
             corepack enable
             yarn -v
-            yarn install --frozen-lockfile
+            yarn install --immutable
 
-      - run: npm run build -- --no-progress
-      - run: npm run test -- --no-progress
+      - run: npm run build
+      - run: npm test
 
       - save_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
