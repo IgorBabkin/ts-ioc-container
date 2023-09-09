@@ -1,17 +1,8 @@
-import {
-  DependencyKey,
-  IContainer,
-  IContainerModule,
-  InjectionToken,
-  isDependencyKey,
-  Tag,
-  Tagged,
-} from './IContainer';
+import { DependencyKey, IContainer, IContainerModule, InjectionToken, isConstructor, Tag, Tagged } from './IContainer';
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from './ContainerDisposedError';
-import { constructor } from '../utils';
 
 export class Container implements IContainer, Tagged {
   private readonly providers = new Map<DependencyKey, IProvider>();
@@ -32,20 +23,17 @@ export class Container implements IContainer, Tagged {
     return this;
   }
 
-  resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T {
+  resolve<T>(token: InjectionToken<T>, ...args: unknown[]): T {
     this.validateContainer();
-    return isDependencyKey(key) ? this.resolveByProvider(key, ...args) : this.resolveByInjector(key, ...args);
-  }
 
-  private resolveByProvider<T>(key: string | symbol, ...args: unknown[]): T {
-    const provider = this.providers.get(key) as IProvider<T> | undefined;
-    return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(key, ...args);
-  }
+    if (isConstructor(token)) {
+      const instance = this.injector.resolve(this, token, ...args);
+      this.instances.add(instance);
+      return instance;
+    }
 
-  private resolveByInjector<T>(key: constructor<T>, ...args: unknown[]): T {
-    const instance = this.injector.resolve(this, key, ...args);
-    this.instances.add(instance);
-    return instance;
+    const provider = this.providers.get(token) as IProvider<T> | undefined;
+    return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(token, ...args);
   }
 
   createScope(...tags: Tag[]): Container {

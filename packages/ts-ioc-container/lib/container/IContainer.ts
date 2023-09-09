@@ -13,6 +13,10 @@ export function isDependencyKey<T>(token: InjectionToken<T>): token is Dependenc
   return ['string', 'symbol'].includes(typeof token);
 }
 
+export function isConstructor<T>(token: InjectionToken<T>): token is constructor<T> {
+  return typeof token === 'function';
+}
+
 export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 
 export interface Resolvable {
