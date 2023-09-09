@@ -1,8 +1,7 @@
 {
   "name": "root",
   "private": true,
-  "repository": "https://github.com/IgorBabkin/ServiceLocator.git",
-  "author": "ibabkin <ibabkin@goodgamestudios.com>",
+  "author": "ibabkin <igba14@gmail.com>",
   "license": "MIT",
   "workspaces": [
     "packages/*"
@@ -16,18 +15,11 @@
     "build": "lerna run build",
     "coverage": "lerna run coverage",
     "pre-commit": "lint-staged",
-    "commit-msg": "echo 'skipped'",
     "release": "yarn build && yarn test && lerna publish"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-lerna-changelog"
-    }
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   },
   "lint-staged": {
@@ -37,8 +29,6 @@
     ]
   },
   "devDependencies": {
-    "@commitlint/cli": "13.2.0",
-    "@commitlint/config-conventional": "13.2.0",
     "@nrwl/nx-cloud": "^16.0.5",
     "@typescript-eslint/eslint-plugin": "4.32.0",
     "@typescript-eslint/parser": "4.32.0",
