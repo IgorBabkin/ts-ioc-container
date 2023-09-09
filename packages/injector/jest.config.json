@@ -11,5 +11,10 @@
     "/cjm/",
     "/esm/"
   ],
-  "moduleDirectories": ["node_modules"]
+  "moduleDirectories": ["node_modules"],
+  "globals": {
+    "ts-jest": {
+      "isolatedModules": true
+    }
+  }
 }
