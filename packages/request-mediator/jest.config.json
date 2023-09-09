@@ -9,7 +9,8 @@
     "/node_modules/",
     "/fixtures/",
     "/cjm/",
-    "/esm/"
+    "/esm/",
+    "/__tests__/"
   ],
   "moduleDirectories": [
     "node_modules"

@@ -1,7 +1,7 @@
 import { Scope } from './Scope';
 import { IMediator } from '../mediator/IMediator';
 import { ITransaction, TransactionMediator } from '../mediator/transaction/TransactionMediator';
-import { SimpleMediator } from '../mediator/simple/SimpleMediator';
+import { SimpleMediator } from '../mediator/SimpleMediator';
 import { ScopedMediator } from '../mediator/ScopedMediator';
 import { IServiceMediatorKey, ServiceMediator } from './ServiceMediator';
 import { HookedMediator, IHook, IHooksRepo } from '../mediator/HookedMediator';

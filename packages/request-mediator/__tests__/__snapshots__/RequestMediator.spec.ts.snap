@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RequestMediator should invoke middleware 1`] = `
+Array [
+  "before",
+  "QueryHandler1",
+  "after",
+  "QueryHandler2",
+  "QueryHandler3",
+  "before",
+  "QueryHandler1",
+  "after",
+  "QueryHandler2",
+  "before",
+  "QueryHandler1",
+  "after",
+]
+`;
