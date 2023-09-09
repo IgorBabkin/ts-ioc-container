@@ -28,19 +28,26 @@ jobs:
             yarn install --immutable
 
       - run: npm run build
-      - run: npm test
+
+      - run: npm test -- --scope=ts-constructor-injector
 
       - coveralls/upload:
           coverage_file: ./packages/injector/coverage/lcov.info
           flag_name: 'ts-constructor-injector'
 
+      - run: npm test -- --scope=reactivex-react
+
       - coveralls/upload:
           coverage_file: ./packages/reactivex-react/coverage/lcov.info
           flag_name: 'reactivex-react'
 
+      - run: npm test -- --scope=ts-request-mediator
+
       - coveralls/upload:
           coverage_file: ./packages/request-mediator/coverage/lcov.info
           flag_name: 'ts-request-mediator'
+
+      - run: npm test -- --scope=ts-ioc-container
 
       - coveralls/upload:
           coverage_file: ./packages/ts-ioc-container/coverage/lcov.info
