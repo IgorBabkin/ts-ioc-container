@@ -1,13 +1,15 @@
 import { IProvider, ResolveDependency } from './IProvider';
 import { Resolvable } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
-import { getProp, setProp } from '../reflection';
+import { getMetadata, setMetadata } from '../metadata';
 
-export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setProp('provider', mappers);
+const PROVIDER_KEY = 'provider';
+
+export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(PROVIDER_KEY, mappers);
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
-    const mappers = getProp<MapFn<IProvider<T>>[]>(Target, 'provider') ?? [];
+    const mappers = getMetadata<MapFn<IProvider<T>>[]>(Target, PROVIDER_KEY) ?? [];
     return new Provider((container, ...args) => container.resolve(Target, ...args)).pipe(...mappers);
   }
 

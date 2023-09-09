@@ -24,4 +24,4 @@ export { DependencyMissingKeyError } from './registration/DependencyMissingKeyEr
 export { ReflectionInjector, inject, by } from './injector/ReflectionInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
-export { hook, getHooks } from './reflection';
+export { getHooks, hook } from './hook';
