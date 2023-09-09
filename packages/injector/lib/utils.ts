@@ -8,7 +8,9 @@ export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
   }
   const [b1, ...restBaseArr] = baseArr;
   const [i1, ...restInsertArr] = insertArr;
-  return b1 === undefined ? [i1].concat(merge(restBaseArr, restInsertArr)) : [b1].concat(merge(restBaseArr, insertArr));
+  return b1 === undefined
+    ? [i1].concat(merge(restBaseArr, restInsertArr))
+    : [b1 as T].concat(merge(restBaseArr, insertArr));
 }
 
 export const constant =

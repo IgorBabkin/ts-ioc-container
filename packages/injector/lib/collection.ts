@@ -1,5 +1,5 @@
 import { constructor } from './types';
-import { getProp, prop } from './reflection';
+import { getProp, prop } from './metadata';
 import { resolve } from './resolve';
 import { constant } from './utils';
 import { Write } from './pipeWrite';
