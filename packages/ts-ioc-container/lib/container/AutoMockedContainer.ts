@@ -1,7 +1,15 @@
-import { IContainer, InjectionToken, IProvider, MethodNotImplementedError, DependencyKey } from '../index';
+import {
+  IContainer,
+  InjectionToken,
+  IProvider,
+  MethodNotImplementedError,
+  DependencyKey,
+  Tag,
+  IContainerModule,
+} from '../index';
 
 export abstract class AutoMockedContainer implements IContainer {
-  createScope(): IContainer {
+  createScope(...tags: Tag[]): IContainer {
     throw new MethodNotImplementedError();
   }
 
@@ -13,7 +21,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return new Map();
   }
 
-  register(): this {
+  register(key: DependencyKey, value: IProvider): this {
     throw new MethodNotImplementedError();
   }
 
@@ -23,7 +31,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
   removeScope(): void {}
 
-  add(): this {
+  add(module: IContainerModule): this {
     throw new MethodNotImplementedError();
   }
 }

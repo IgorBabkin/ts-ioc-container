@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, Provider, ReflectionInjector } from 'ts-ioc-container';
+import { Container, Provider, ReflectionInjector } from '../../lib';
 describe('Instances', function () {
   it('should return injected instances', function () {
     class Logger {}

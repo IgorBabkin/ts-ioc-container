@@ -212,7 +212,7 @@ This type of injector just passes container to constructor with others arguments
 
 ```typescript
 import 'reflect-metadata';
-import { Container, IContainer, Provider, SimpleInjector } from '../lib';
+import { Container, IContainer, Provider, SimpleInjector } from 'ts-ioc-container';
 
 describe('SimpleInjector', function () {
   it('should pass container as first parameter', function () {
@@ -245,7 +245,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 
 ```typescript
 import 'reflect-metadata';
-import { Container, Provider, ProxyInjector, args } from '../lib';
+import { Container, Provider, ProxyInjector, args } from 'ts-ioc-container';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -358,7 +358,7 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, ReflectionInjector, Registration } from '../lib';
+import { singleton, Container, key, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
 
 @key('logger')
 @provider(singleton())
@@ -434,7 +434,7 @@ describe('ArgsProvider', function () {
   it('can assign argument function to provider', function () {
     const root = createContainer().add(Registration.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
 
-    const logger = root.resolve<Logger>('logger');
+    const logger = root.createScope().resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
@@ -542,13 +542,14 @@ import {
   provider,
   ReflectionInjector,
   Registration,
-} from '../lib';
+} from 'ts-ioc-container';
 
 class MyInjector implements IInjector {
   private injector = new ReflectionInjector();
 
   resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
     const instance = this.injector.resolve(container, value, ...deps);
+    // eslint-disable-next-line @typescript-eslint/ban-types
     for (const h of getHooks(instance, 'onConstruct')) {
       // @ts-ignore
       instance[h]();

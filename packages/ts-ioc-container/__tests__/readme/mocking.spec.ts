@@ -1,4 +1,4 @@
-import { AutoMockedContainer, Container, DependencyKey, ReflectionInjector } from 'ts-ioc-container';
+import { AutoMockedContainer, Container, DependencyKey, ReflectionInjector } from '../../lib';
 import { IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {

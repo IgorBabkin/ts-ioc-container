@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, key, argsFn, args, ReflectionInjector, Registration } from 'ts-ioc-container';
+import { Container, key, argsFn, args, ReflectionInjector, Registration } from '../lib';
 
 @key('logger')
 class Logger {
@@ -14,7 +14,7 @@ describe('ArgsProvider', function () {
   it('can assign argument function to provider', function () {
     const root = createContainer().add(Registration.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
 
-    const logger = root.resolve<Logger>('logger');
+    const logger = root.createScope().resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 

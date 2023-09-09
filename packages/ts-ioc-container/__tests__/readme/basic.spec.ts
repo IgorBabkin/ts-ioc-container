@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container';
+import { by, Container, inject, ReflectionInjector, Provider } from '../../lib';
 
 describe('Basic usage', function () {
   it('should inject dependencies', function () {
