@@ -41,7 +41,7 @@
     "build": "npm run build:cjm && npm run build:esm && npm run build:readme",
     "coverage": "coveralls",
     "watch": "nodemon --watch ./lib --exec npm run build",
-    "test": "jest --coverage"
+    "test": "jest --coverage --no-cache"
   },
   "devDependencies": {
     "@types/jest": "27.0.2",
