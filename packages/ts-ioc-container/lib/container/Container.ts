@@ -93,8 +93,8 @@ export class Container implements IContainer, Tagged {
   }
 }
 
-function cloneProviders(source: Container, target: Container) {
-  for (const [key, provider] of source.getProviders()) {
+function cloneProviders(source: IContainer, target: IContainer) {
+  for (const [key, provider] of source.getAllProviders()) {
     if (provider.isValid(target)) {
       target.register(key, provider.clone());
     }
