@@ -32,7 +32,7 @@ export interface IContainer extends Resolvable {
 
   register(key: DependencyKey, value: IProvider): this;
 
-  cloneProviders(target: IContainer): void;
+  cloneAndImportProvidersFrom(source: IContainer): void;
 
   removeScope(child: IContainer): void;
 

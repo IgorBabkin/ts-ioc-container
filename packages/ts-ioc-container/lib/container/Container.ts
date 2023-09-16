@@ -40,7 +40,7 @@ export class Container implements IContainer, Tagged {
     this.validateContainer();
 
     const scope = new Container(this.injector, { parent: this, tags });
-    scope.cloneProviders(this);
+    scope.cloneAndImportProvidersFrom(this);
     this.scopes.add(scope);
 
     return scope;
@@ -85,7 +85,7 @@ export class Container implements IContainer, Tagged {
   /**
    * @private
    */
-  clonååeProviders(source: IContainer): void {
+  cloneAndImportProvidersFrom(source: IContainer): void {
     for (const [key, provider] of source.getProviders()) {
       if (provider.isValid(this)) {
         this.providers.set(key, provider.clone());

@@ -28,7 +28,7 @@ export class EmptyContainer implements IContainer {
     return new Map();
   }
 
-  cloneProviders(): void {
+  cloneAndImportProvidersFrom(): void {
     throw new MethodNotImplementedError();
   }
 

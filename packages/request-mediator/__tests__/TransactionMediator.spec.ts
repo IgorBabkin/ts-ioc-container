@@ -81,7 +81,7 @@ describe('RequestMediator', () => {
     const logger = new Logger('logger', []);
     const container = createContainer()
       .register('Logger', Provider.fromValue(logger))
-      .add(Registration.fromClass(TestTransaction));
+      .use(Registration.fromClass(TestTransaction));
 
     const mediator = new RequestMediator(new ContainerAdapter(container));
 

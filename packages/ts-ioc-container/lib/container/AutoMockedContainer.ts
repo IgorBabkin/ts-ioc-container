@@ -17,7 +17,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
   dispose(): void {}
 
-  cloneProviders(): Map<DependencyKey, IProvider> {
+  cloneAndImportProvidersFrom(): Map<DependencyKey, IProvider> {
     return new Map();
   }
 
@@ -33,5 +33,13 @@ export abstract class AutoMockedContainer implements IContainer {
 
   use(module: IContainerModule): this {
     throw new MethodNotImplementedError();
+  }
+
+  getProviders(): Map<DependencyKey, IProvider> {
+    return new Map();
+  }
+
+  hasTag(tag: Tag): boolean {
+    return false;
   }
 }
