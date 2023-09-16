@@ -16,7 +16,7 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(Registration.fromClass(Logger));
     const child = root.createScope('child');
 
     expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));

@@ -24,13 +24,13 @@ describe('IocContainer', function () {
   }
 
   it('should resolve dependency', function () {
-    const container = createContainer().add(Registration.fromClass(Logger));
+    const container = createContainer().use(Registration.fromClass(Logger));
 
     expect(container.resolve('logger')).toBeInstanceOf(Logger);
   });
 
   it('should resolve unique dependency per every request', function () {
-    const container = createContainer().add(Registration.fromClass(Logger));
+    const container = createContainer().use(Registration.fromClass(Logger));
 
     expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
   });
@@ -40,11 +40,11 @@ describe('IocContainer', function () {
 
     class TestClass {}
 
-    expect(() => container.add(Registration.fromClass(TestClass))).toThrow(DependencyMissingKeyError);
+    expect(() => container.use(Registration.fromClass(TestClass))).toThrow(DependencyMissingKeyError);
   });
 
   it('should keep all instances', function () {
-    const container = createContainer().add(Registration.fromClass(Logger));
+    const container = createContainer().use(Registration.fromClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 
@@ -52,7 +52,7 @@ describe('IocContainer', function () {
   });
 
   it('should dispose all instances', function () {
-    const container = createContainer().add(Registration.fromClass(Logger));
+    const container = createContainer().use(Registration.fromClass(Logger));
 
     container.resolve('logger');
     container.dispose();
@@ -67,7 +67,7 @@ describe('IocContainer', function () {
   });
 
   it('should throw an error when trying to resolve a dependency of disposed container', function () {
-    const container = createContainer().add(Registration.fromClass(Logger));
+    const container = createContainer().use(Registration.fromClass(Logger));
 
     container.dispose();
 
@@ -79,11 +79,11 @@ describe('IocContainer', function () {
 
     container.dispose();
 
-    expect(() => container.add(Registration.fromClass(Logger))).toThrowError(ContainerDisposedError);
+    expect(() => container.use(Registration.fromClass(Logger))).toThrowError(ContainerDisposedError);
   });
 
   it('should keep argument for provider', function () {
-    const container = createContainer().add(Registration.fromClass(Logger).pipe(args('main')));
+    const container = createContainer().use(Registration.fromClass(Logger).pipe(args('main')));
 
     expect(container.resolve<Logger>('logger').topic).toBe('main');
   });

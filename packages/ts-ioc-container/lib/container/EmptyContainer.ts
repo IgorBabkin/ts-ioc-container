@@ -4,6 +4,10 @@ import { DependencyNotFoundError } from './DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 
 export class EmptyContainer implements IContainer {
+  hasTag(tag: Tag): boolean {
+    throw new MethodNotImplementedError();
+  }
+
   createScope(...tags: Tag[]): IContainer {
     throw new MethodNotImplementedError();
   }
@@ -24,13 +28,17 @@ export class EmptyContainer implements IContainer {
     return new Map();
   }
 
+  cloneProviders(): void {
+    throw new MethodNotImplementedError();
+  }
+
   getInstances(): unknown[] {
     return [];
   }
 
   removeScope(): void {}
 
-  add(module: IContainerModule): this {
+  use(module: IContainerModule): this {
     throw new MethodNotImplementedError();
   }
 }

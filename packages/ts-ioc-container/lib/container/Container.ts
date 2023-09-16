@@ -5,7 +5,7 @@ import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from './ContainerDisposedError';
 
 export class Container implements IContainer, Tagged {
-  private readonly providers = new Map<DependencyKey, IProvider>();
+  readonly providers = new Map<DependencyKey, IProvider>();
   private readonly tags: Tag[];
   private isDisposed = false;
   private parent: IContainer;
@@ -38,14 +38,9 @@ export class Container implements IContainer, Tagged {
 
   createScope(...tags: Tag[]): Container {
     this.validateContainer();
+
     const scope = new Container(this.injector, { parent: this, tags });
-
-    for (const [key, provider] of this.getProviders()) {
-      if (provider.isValid(scope)) {
-        scope.register(key, provider.clone());
-      }
-    }
-
+    scope.cloneProviders(this);
     this.scopes.add(scope);
 
     return scope;
@@ -63,10 +58,6 @@ export class Container implements IContainer, Tagged {
     this.instances.clear();
   }
 
-  getProviders(): Map<DependencyKey, IProvider> {
-    return new Map([...this.parent.getProviders(), ...this.providers]);
-  }
-
   getInstances(): unknown[] {
     const instances: unknown[] = Array.from(this.instances);
     for (const scope of this.scopes) {
@@ -75,19 +66,39 @@ export class Container implements IContainer, Tagged {
     return instances;
   }
 
-  removeScope(child: IContainer): void {
-    this.scopes.delete(child);
-  }
-
   hasTag(tag: Tag): boolean {
     return this.tags.includes(tag);
   }
 
-  add(module: IContainerModule): this {
+  use(module: IContainerModule): this {
     module.applyTo(this);
     return this;
   }
 
+  /**
+   * @private
+   */
+  getProviders(): Map<DependencyKey, IProvider> {
+    return new Map([...this.parent.getProviders(), ...this.providers]);
+  }
+
+  /**
+   * @private
+   */
+  clonååeProviders(source: IContainer): void {
+    for (const [key, provider] of source.getProviders()) {
+      if (provider.isValid(this)) {
+        this.providers.set(key, provider.clone());
+      }
+    }
+  }
+
+  /**
+   * @private
+   */
+  removeScope(child: IContainer): void {
+    this.scopes.delete(child);
+  }
   private validateContainer(): void {
     ContainerDisposedError.assert(!this.isDisposed, 'Container is already disposed');
   }

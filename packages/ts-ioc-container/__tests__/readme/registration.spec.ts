@@ -7,7 +7,7 @@ class Logger {}
 
 describe('Registration module', function () {
   it('should bind dependency key to class', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).add(Registration.fromClass(Logger));
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(Registration.fromClass(Logger));
 
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
   });

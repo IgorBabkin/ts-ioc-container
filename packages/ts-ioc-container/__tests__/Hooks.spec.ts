@@ -68,7 +68,7 @@ describe('Hooks', function () {
   }
 
   it('should invoke hooks on all instances', async function () {
-    const container = createContainer().add(Registration.fromClass(Logger)).add(Registration.fromClass(LogsRepo));
+    const container = createContainer().use(Registration.fromClass(Logger)).use(Registration.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
@@ -85,7 +85,7 @@ describe('Hooks', function () {
   });
 
   it('should make logger be ready on resolve', function () {
-    const container = createContainer().add(Registration.fromClass(Logger)).add(Registration.fromClass(LogsRepo));
+    const container = createContainer().use(Registration.fromClass(Logger)).use(Registration.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
 

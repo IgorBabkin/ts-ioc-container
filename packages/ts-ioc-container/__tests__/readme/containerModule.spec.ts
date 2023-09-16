@@ -9,19 +9,19 @@ class TestLogger {}
 
 class Production implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.add(Registration.fromClass(Logger));
+    container.use(Registration.fromClass(Logger));
   }
 }
 
 class Development implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.add(Registration.fromClass(TestLogger));
+    container.use(Registration.fromClass(TestLogger));
   }
 }
 
 describe('Container Modules', function () {
   function createContainer(isProduction: boolean) {
-    return new Container(new ReflectionInjector()).add(isProduction ? new Production() : new Development());
+    return new Container(new ReflectionInjector()).use(isProduction ? new Production() : new Development());
   }
 
   it('should register production dependencies', function () {

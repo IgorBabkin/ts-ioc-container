@@ -10,7 +10,7 @@ describe('EmptyContainer', function () {
   it('should raise an error when add a module', function () {
     const container = new EmptyContainer();
     expect(() =>
-      container.add({
+      container.use({
         applyTo(container: IContainer) {},
       }),
     ).toThrowError(MethodNotImplementedError);

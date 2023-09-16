@@ -106,7 +106,7 @@ describe('Automock', function () {
 
   it('should raise an error when try to add a module', () => {
     expect(() =>
-      mockContainer.add({
+      mockContainer.use({
         applyTo(container: IContainer) {},
       }),
     ).toThrowError(MethodNotImplementedError);
