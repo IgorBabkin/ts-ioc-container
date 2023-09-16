@@ -32,8 +32,6 @@ export interface IContainer extends Resolvable {
 
   register(key: DependencyKey, value: IProvider): this;
 
-  cloneAndImportProvidersFrom(source: IContainer): void;
-
   removeScope(child: IContainer): void;
 
   getInstances(): unknown[];
@@ -44,5 +42,5 @@ export interface IContainer extends Resolvable {
 
   hasTag(tag: Tag): boolean;
 
-  getProviders(): Map<DependencyKey, IProvider>;
+  getAllProviders(): Map<DependencyKey, IProvider>;
 }

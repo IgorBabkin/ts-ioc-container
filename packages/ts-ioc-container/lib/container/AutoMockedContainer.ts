@@ -35,7 +35,7 @@ export abstract class AutoMockedContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  getProviders(): Map<DependencyKey, IProvider> {
+  getAllProviders(): Map<DependencyKey, IProvider> {
     return new Map();
   }
 

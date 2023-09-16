@@ -24,7 +24,7 @@ export class EmptyContainer implements IContainer {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 
-  getProviders(): Map<DependencyKey, IProvider> {
+  getAllProviders(): Map<DependencyKey, IProvider> {
     return new Map();
   }
 
