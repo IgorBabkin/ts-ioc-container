@@ -20,7 +20,10 @@
     "container",
     "typescript",
     "ioc",
-    "di"
+    "di",
+    "scope",
+    "hook",
+    "inject"
   ],
   "directories": {
     "lib": "lib",
