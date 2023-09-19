@@ -38,6 +38,8 @@
     - [Basic usage](#basic-usage-1)
     - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey)
 - [Hooks](#hooks)
+    - [OnConstruct](#onconstruct)
+    - [OnDispose](#ondispose)
 - [Tests and Mocks](#tests-and-mocks)
 - [Errors](#errors)
 
@@ -551,11 +553,10 @@ describe('Registration module', function () {
 ## Hooks
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
+### OnConstruct
 ```typescript
 import 'reflect-metadata';
 import {
-  singleton,
-  by,
   constructor,
   Container,
   key,
@@ -563,11 +564,10 @@ import {
   hook,
   IContainer,
   IInjector,
-  inject,
-  provider,
   ReflectionInjector,
   Registration,
 } from 'ts-ioc-container';
+import * as console from 'console';
 
 class MyInjector implements IInjector {
   private injector = new ReflectionInjector();
@@ -583,6 +583,48 @@ class MyInjector implements IInjector {
   }
 }
 
+@key('logger')
+class Logger {
+  isReady = false;
+
+  @hook('onConstruct')
+  initialize() {
+    this.isReady = true;
+  }
+
+  log(message: string): void {
+    console.log(message);
+  }
+}
+
+describe('onConstruct', function () {
+  it('should make logger be ready on resolve', function () {
+    const container = new Container(new MyInjector()).use(Registration.fromClass(Logger));
+
+    const logger = container.resolve<Logger>('logger');
+
+    expect(logger.isReady).toBe(true);
+  });
+});
+
+```
+
+### OnDispose
+```typescript
+import 'reflect-metadata';
+import {
+  singleton,
+  by,
+  Container,
+  key,
+  getHooks,
+  hook,
+  inject,
+  provider,
+  Registration,
+  ReflectionInjector,
+} from 'ts-ioc-container';
+
 @key('logsRepo')
 @provider(singleton())
 class LogsRepo {
@@ -595,15 +637,9 @@ class LogsRepo {
 
 @key('logger')
 class Logger {
-  isReady = false;
   private messages: string[] = [];
 
   constructor(@inject(by('logsRepo')) private logsRepo: LogsRepo) {}
-
-  @hook('onConstruct')
-  initialize() {
-    this.isReady = true;
-  }
 
   log(message: string): void {
     this.messages.push(message);
@@ -616,13 +652,11 @@ class Logger {
   }
 }
 
-describe('Hooks', function () {
-  function createContainer() {
-    return new Container(new MyInjector());
-  }
-
+describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = createContainer().use(Registration.fromClass(Logger)).use(Registration.fromClass(LogsRepo));
+    const container = new Container(new ReflectionInjector())
+      .use(Registration.fromClass(Logger))
+      .use(Registration.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
@@ -636,14 +670,6 @@ describe('Hooks', function () {
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs).toContain('Hello');
-  });
-
-  it('should make logger be ready on resolve', function () {
-    const container = createContainer().use(Registration.fromClass(Logger)).use(Registration.fromClass(LogsRepo));
-
-    const logger = container.resolve<Logger>('logger');
-
-    expect(logger.isReady).toBe(true);
   });
 });
 

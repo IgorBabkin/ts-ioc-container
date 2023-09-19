@@ -38,6 +38,8 @@
     - [Basic usage](#basic-usage-1)
     - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey)
 - [Hooks](#hooks)
+    - [OnConstruct](#onconstruct)
+    - [OnDispose](#ondispose)
 - [Tests and Mocks](#tests-and-mocks)
 - [Errors](#errors)
 
@@ -199,8 +201,14 @@ Sometimes you need to keep dependency key with class together. For example, you 
 ## Hooks
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
+### OnConstruct
 ```typescript
-{{{include_file '__tests__/Hooks.spec.ts'}}}
+{{{include_file '__tests__/OnConstruct.spec.ts'}}}
+```
+
+### OnDispose
+```typescript
+{{{include_file '__tests__/OnDispose.spec.ts'}}}
 ```
 
 ## Tests and Mocks

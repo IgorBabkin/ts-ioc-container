@@ -2,32 +2,15 @@ import 'reflect-metadata';
 import {
   singleton,
   by,
-  constructor,
   Container,
   key,
   getHooks,
   hook,
-  IContainer,
-  IInjector,
   inject,
   provider,
-  ReflectionInjector,
   Registration,
+  ReflectionInjector,
 } from '../lib';
-
-class MyInjector implements IInjector {
-  private injector = new ReflectionInjector();
-
-  resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
-    const instance = this.injector.resolve(container, value, ...deps);
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    for (const h of getHooks(instance, 'onConstruct')) {
-      // @ts-ignore
-      instance[h]();
-    }
-    return instance;
-  }
-}
 
 @key('logsRepo')
 @provider(singleton())
@@ -41,15 +24,9 @@ class LogsRepo {
 
 @key('logger')
 class Logger {
-  isReady = false;
   private messages: string[] = [];
 
   constructor(@inject(by('logsRepo')) private logsRepo: LogsRepo) {}
-
-  @hook('onConstruct')
-  initialize() {
-    this.isReady = true;
-  }
 
   log(message: string): void {
     this.messages.push(message);
@@ -62,13 +39,11 @@ class Logger {
   }
 }
 
-describe('Hooks', function () {
-  function createContainer() {
-    return new Container(new MyInjector());
-  }
-
+describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = createContainer().use(Registration.fromClass(Logger)).use(Registration.fromClass(LogsRepo));
+    const container = new Container(new ReflectionInjector())
+      .use(Registration.fromClass(Logger))
+      .use(Registration.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
@@ -82,13 +57,5 @@ describe('Hooks', function () {
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs).toContain('Hello');
-  });
-
-  it('should make logger be ready on resolve', function () {
-    const container = createContainer().use(Registration.fromClass(Logger)).use(Registration.fromClass(LogsRepo));
-
-    const logger = container.resolve<Logger>('logger');
-
-    expect(logger.isReady).toBe(true);
   });
 });
