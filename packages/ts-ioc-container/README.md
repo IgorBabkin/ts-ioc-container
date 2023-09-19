@@ -19,7 +19,7 @@
 - composable and open to extend
 - awesome for testing (auto mocking)
 
-* * *
+## Content
 
 - [Setup](#setup)
 - [Container](#container)
