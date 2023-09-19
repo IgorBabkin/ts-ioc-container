@@ -2,7 +2,7 @@
 
 ![NPM version:latest](https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square)
 ![npm downloads](https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square)
-![npm package minimized gzipped size (select exports)](https://img.shields.io/bundlejs/size/ts-ioc-container)
+![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/ts-ioc-container)
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
