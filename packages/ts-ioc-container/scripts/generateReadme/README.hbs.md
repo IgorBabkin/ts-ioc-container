@@ -6,6 +6,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
+* * *
+
 ## Advantages
 - battle tested :boom:
 - written on `typescript`
@@ -17,7 +19,34 @@
 - composable and open to extend
 - awesome for testing (auto mocking)
 
-## Install
+* * *
+
+- [Setup](#setup)
+- [Container](#container)
+    - [Basic usage](#basic-usage)
+    - [Scopes](#scopes)
+    - [Instances](#instances)
+    - [Disposing](#disposing)
+- [Injectors](#injectors)
+    - [Reflection injector](#reflection-injector)
+    - [Simple injector](#simple-injector)
+    - [Proxy injector](#proxy-injector)
+- [Providers](#providers)
+    - [Provider](#provider)
+    - [Singleton provider](#singleton-provider)
+    - [Tagged provider](#tagged-provider)
+    - [Args provider](#args-provider)
+- [Container modules](#container-modules)
+    - [Basic usage](#basic-usage-1)
+    - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey)
+- [Hooks](#hooks)
+- [Tests and Mocks](#tests-and-mocks)
+- [Errors](#errors)
+
+* * *
+
+## Setup
+
 ```shell script
 npm install ts-ioc-container reflect-metadata
 ```
@@ -25,14 +54,12 @@ npm install ts-ioc-container reflect-metadata
 yarn add ts-ioc-container reflect-metadata
 ```
 
-## Setup
-### reflect-metadata
-Just put it in the main file of your project. It should be the first line of the code.
+Just put it in the entrypoint file of your project. It should be the first line of the code.
 ```typescript
 import 'reflect-metadata';
 ```
 
-### tsconfig.json
+And `tsconfig.json` should have next options:
 ```json
 {
   "compilerOptions": {
@@ -42,8 +69,10 @@ import 'reflect-metadata';
 }
 ```
 
-## Container `IContainer`
-It consists of 2 main parts:
+* * *
+
+## Container
+`IContainer` consists of 2 main parts:
 
 - Providers - describes how to create instances of dependencies
 - Injector - describes how to inject dependencies to constructor
@@ -85,8 +114,10 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 {{{include_file './__tests__/readme/disposing.spec.ts'}}}
 ```
 
-## Injectors `IInjector`
-Injectors are used to describe how dependencies should be injected to constructor.
+* * *
+
+## Injectors
+`IInjector` is used to describe how dependencies should be injected to constructor.
 
 - `ReflectionInjector` - injects dependencies using `@inject` decorator
 - `ProxyInjector` - injects dependencies as dictionary `Record<string, unknown>`
@@ -113,8 +144,10 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 {{{include_file './__tests__/ProxyInjector.spec.ts'}}}
 ```
 
-## Providers `IProvider<T>`
-Providers are used to describe how instances should be created. It has next basic methods:
+* * *
+
+## Providers
+`IProvider<T>` is used to describe how instances should be created. It has next basic methods:
 - `resolve` - creates instance with passed arguments
 - `clone` - we invoke it when we create a scope. It clones provider to new scope.
 - `isValid` - checks if provider can be resolved from container or cloned to container with certain tags
@@ -157,19 +190,25 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 {{{include_file './__tests__/ArgsProvider.spec.ts'}}}
 ```
 
+* * *
+
 ## Container modules
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
+
+### Basic usage
 
 ```typescript
 {{{include_file './__tests__/readme/containerModule.spec.ts'}}}
 ```
 
-## Registration module (Provider + DependencyKey)
+### Registration module (Provider + DependencyKey)
 Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
 
 ```typescript
 {{{include_file './__tests__/readme/registration.spec.ts'}}}
 ```
+
+* * *
 
 ## Hooks
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
@@ -178,13 +217,16 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 {{{include_file '__tests__/Hooks.spec.ts'}}}
 ```
 
-## Mocking / Tests `AutoMockedContainer`
+* * *
+
+## Tests and Mocks
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
 {{{include_file '__tests__/readme/mocking.spec.ts'}}}
 ```
 
+* * *
 
 ## Errors
 
