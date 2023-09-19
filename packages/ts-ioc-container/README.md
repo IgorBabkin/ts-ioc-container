@@ -6,8 +6,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
-* * *
-
 ## Advantages
 - battle tested :boom:
 - written on `typescript`
@@ -43,8 +41,6 @@
 - [Tests and Mocks](#tests-and-mocks)
 - [Errors](#errors)
 
-* * *
-
 ## Setup
 
 ```shell script
@@ -68,8 +64,6 @@ And `tsconfig.json` should have next options:
   }
 }
 ```
-
-* * *
 
 ## Container
 `IContainer` consists of 2 main parts:
@@ -193,8 +187,6 @@ describe('Disposing', function () {
 });
 
 ```
-
-* * *
 
 ## Injectors
 `IInjector` is used to describe how dependencies should be injected to constructor.
@@ -329,8 +321,6 @@ describe('ProxyInjector', function () {
 });
 
 ```
-
-* * *
 
 ## Providers
 `IProvider<T>` is used to describe how instances should be created. It has next basic methods:
@@ -490,8 +480,6 @@ describe('ArgsProvider', function () {
 
 ```
 
-* * *
-
 ## Container modules
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
@@ -559,8 +547,6 @@ describe('Registration module', function () {
 });
 
 ```
-
-* * *
 
 ## Hooks
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
@@ -663,8 +649,6 @@ describe('Hooks', function () {
 
 ```
 
-* * *
-
 ## Tests and Mocks
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
@@ -706,8 +690,6 @@ describe('Mocking', () => {
 });
 
 ```
-
-* * *
 
 ## Errors
 

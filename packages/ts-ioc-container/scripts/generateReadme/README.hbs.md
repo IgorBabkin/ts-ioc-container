@@ -6,8 +6,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
-* * *
-
 ## Advantages
 - battle tested :boom:
 - written on `typescript`
@@ -43,8 +41,6 @@
 - [Tests and Mocks](#tests-and-mocks)
 - [Errors](#errors)
 
-* * *
-
 ## Setup
 
 ```shell script
@@ -68,8 +64,6 @@ And `tsconfig.json` should have next options:
   }
 }
 ```
-
-* * *
 
 ## Container
 `IContainer` consists of 2 main parts:
@@ -114,8 +108,6 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 {{{include_file './__tests__/readme/disposing.spec.ts'}}}
 ```
 
-* * *
-
 ## Injectors
 `IInjector` is used to describe how dependencies should be injected to constructor.
 
@@ -143,8 +135,6 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 ```typescript
 {{{include_file './__tests__/ProxyInjector.spec.ts'}}}
 ```
-
-* * *
 
 ## Providers
 `IProvider<T>` is used to describe how instances should be created. It has next basic methods:
@@ -190,8 +180,6 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 {{{include_file './__tests__/ArgsProvider.spec.ts'}}}
 ```
 
-* * *
-
 ## Container modules
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
@@ -208,8 +196,6 @@ Sometimes you need to keep dependency key with class together. For example, you 
 {{{include_file './__tests__/readme/registration.spec.ts'}}}
 ```
 
-* * *
-
 ## Hooks
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
@@ -217,16 +203,12 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 {{{include_file '__tests__/Hooks.spec.ts'}}}
 ```
 
-* * *
-
 ## Tests and Mocks
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
 {{{include_file '__tests__/readme/mocking.spec.ts'}}}
 ```
-
-* * *
 
 ## Errors
 
