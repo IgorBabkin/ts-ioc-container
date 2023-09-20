@@ -32,7 +32,7 @@ class Logger {
     this.messages.push(message);
   }
 
-  @hook('onDispose')
+  @hook('onDispose') // <--- or extract it to @onDispose
   async save(): Promise<void> {
     this.logsRepo.saveLogs(this.messages);
     this.messages = [];

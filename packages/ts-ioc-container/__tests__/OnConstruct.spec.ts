@@ -30,7 +30,7 @@ class MyInjector implements IInjector {
 class Logger {
   isReady = false;
 
-  @hook('onConstruct')
+  @hook('onConstruct') // <--- or extract it to @onConstruct
   initialize() {
     this.isReady = true;
   }

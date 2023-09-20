@@ -26,7 +26,7 @@
     - [Instances](#instances)
     - [Disposing](#disposing)
 - [Injectors](#injectors)
-    - [Reflection injector](#reflection-injector)
+    - [Reflection injector](#reflection-injector) `@inject`
     - [Simple injector](#simple-injector)
     - [Proxy injector](#proxy-injector)
 - [Providers](#providers)
@@ -38,8 +38,8 @@
     - [Basic usage](#basic-usage-1)
     - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey)
 - [Hooks](#hooks)
-    - [OnConstruct](#onconstruct)
-    - [OnDispose](#ondispose)
+    - [OnConstruct](#onconstruct) `@onConstruct`
+    - [OnDispose](#ondispose) `@onDispose`
 - [Tests and Mocks](#tests-and-mocks)
 - [Errors](#errors)
 
@@ -587,7 +587,7 @@ class MyInjector implements IInjector {
 class Logger {
   isReady = false;
 
-  @hook('onConstruct')
+  @hook('onConstruct') // <--- or extract it to @onConstruct
   initialize() {
     this.isReady = true;
   }
@@ -645,7 +645,7 @@ class Logger {
     this.messages.push(message);
   }
 
-  @hook('onDispose')
+  @hook('onDispose') // <--- or extract it to @onDispose
   async save(): Promise<void> {
     this.logsRepo.saveLogs(this.messages);
     this.messages = [];

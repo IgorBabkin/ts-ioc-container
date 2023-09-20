@@ -26,7 +26,7 @@
     - [Instances](#instances)
     - [Disposing](#disposing)
 - [Injectors](#injectors)
-    - [Reflection injector](#reflection-injector)
+    - [Reflection injector](#reflection-injector) `@inject`
     - [Simple injector](#simple-injector)
     - [Proxy injector](#proxy-injector)
 - [Providers](#providers)
@@ -38,8 +38,8 @@
     - [Basic usage](#basic-usage-1)
     - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey)
 - [Hooks](#hooks)
-    - [OnConstruct](#onconstruct)
-    - [OnDispose](#ondispose)
+    - [OnConstruct](#onconstruct) `@onConstruct`
+    - [OnDispose](#ondispose) `@onDispose`
 - [Tests and Mocks](#tests-and-mocks)
 - [Errors](#errors)
 
