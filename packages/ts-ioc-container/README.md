@@ -30,14 +30,14 @@
     - [Simple injector](#simple-injector)
     - [Proxy injector](#proxy-injector)
 - [Providers](#providers)
-    - [Provider](#provider)
+    - [Provider](#provider) `@provider`
     - [Singleton provider](#singleton-provider)
     - [Tagged provider](#tagged-provider)
     - [Args provider](#args-provider)
 - [Container modules](#container-modules)
     - [Basic usage](#basic-usage-1)
-    - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey)
-- [Hooks](#hooks)
+    - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey) `@key`
+- [Hooks](#hooks) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
     - [OnDispose](#ondispose) `@onDispose`
 - [Tests and Mocks](#tests-and-mocks)
@@ -331,7 +331,7 @@ describe('ProxyInjector', function () {
 - `isValid` - checks if provider can be resolved from container or cloned to container with certain tags
 
 There are next types of providers:
-- `Provider` - basic provider
+- `Provider` - basic provider. It can be used with `@provider` decorator
 - `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
 - `TaggedProvider` - provider that can be resolved only from container with certain tags and their sub scopes
 - `ArgsProvider` - provider that encapsulates arguments to pass it to constructor.
