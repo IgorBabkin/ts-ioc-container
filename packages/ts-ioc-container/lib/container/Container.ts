@@ -40,7 +40,7 @@ export class Container implements IContainer, Tagged {
     this.validateContainer();
 
     const scope = new Container(this.injector, { parent: this, tags });
-    cloneProviders(this, scope);
+    scope.cloneValidProvidersFrom(this);
     this.scopes.add(scope);
 
     return scope;
@@ -78,6 +78,17 @@ export class Container implements IContainer, Tagged {
   /**
    * @private
    */
+  cloneValidProvidersFrom(source: IContainer): void {
+    for (const [key, provider] of source.getAllProviders()) {
+      if (provider.isValid(this)) {
+        this.providers.set(key, provider.clone());
+      }
+    }
+  }
+
+  /**
+   * @private
+   */
   getAllProviders(): Map<DependencyKey, IProvider> {
     return new Map([...this.parent.getAllProviders(), ...this.providers]);
   }
@@ -88,15 +99,8 @@ export class Container implements IContainer, Tagged {
   removeScope(child: IContainer): void {
     this.scopes.delete(child);
   }
+
   private validateContainer(): void {
     ContainerDisposedError.assert(!this.isDisposed, 'Container is already disposed');
-  }
-}
-
-function cloneProviders(source: IContainer, target: IContainer) {
-  for (const [key, provider] of source.getAllProviders()) {
-    if (provider.isValid(target)) {
-      target.register(key, provider.clone());
-    }
   }
 }
