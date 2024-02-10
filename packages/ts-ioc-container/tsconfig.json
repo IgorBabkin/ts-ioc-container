@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./lib",
     "target": "ES2017",
-    "module": "ESNext",
+    "module": "commonjs",
     "lib": ["es2016"],
     "types": ["reflect-metadata", "jest", "node"],
     "moduleResolution": "Node",

@@ -10,7 +10,6 @@
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/ts-ioc-container",
   "license": "ISC",
   "sideEffects": false,
-  "type": "module",
   "main": "cjm/index.js",
   "types": "esm/index.d.ts",
   "module": "esm/index.js",
@@ -40,7 +39,7 @@
   "scripts": {
     "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
-    "build:readme": "ts-node --esm scripts/generateReadme/generateReadme.ts",
+    "build:readme": "ts-node scripts/generateReadme/generateReadme.ts",
     "build": "npm run build:cjm && npm run build:esm && npm run build:readme",
     "coverage": "coveralls",
     "watch": "nodemon --watch ./lib --exec npm run build",
