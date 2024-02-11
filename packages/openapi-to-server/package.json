@@ -36,7 +36,7 @@
     "build": "npm run clean && npm run compile",
     "test": "make-dir .generated && jest --coverage",
     "test:watch": "jest --coverage --watch",
-    "precompile": "make-dir precompiled && handlebars -m lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
+    "precompile": "make-dir precompiled && handlebars lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
     "clean": "rimraf cjm",
     "watch": "nodemon --watch lib --exec 'npm run compile'",
     "compile": "tsc -p tsconfig.json --outDir cjm"

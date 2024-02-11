@@ -25,7 +25,7 @@ export interface Created extends HttpResponse<undefined> {
 
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
-    {{{render_template 'Route.hbs' this}}}
+    {{{render_template 'ServerRoute.hbs' this}}}
   {{/each}}
 {{/each}}
 

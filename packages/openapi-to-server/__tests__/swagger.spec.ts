@@ -2,11 +2,11 @@ import { openapiToClient, openapiToServer } from '../lib';
 import fs from 'fs';
 import * as path from 'path';
 
-describe('swagger', function () {
-  const inputFile = path.resolve(__dirname, './swagger.yaml');
-  const serverOutputFile = path.resolve(__dirname, '../.generated/server.d.ts');
-  const clientOutputFile = path.resolve(__dirname, '../.generated/client.ts');
+const inputFile = path.resolve(__dirname, './swagger.yaml');
+const serverOutputFile = path.resolve(__dirname, '../.generated/server.d.ts');
+const clientOutputDir = path.resolve(__dirname, '../.generated');
 
+describe('swagger', function () {
   it('Server', function () {
     openapiToServer({
       inputFile: inputFile,
@@ -19,8 +19,8 @@ describe('swagger', function () {
   it('Client', function () {
     openapiToClient({
       inputFile: inputFile,
-      outputFile: clientOutputFile,
+      outputDir: clientOutputDir,
     });
-    expect(fs.readFileSync(clientOutputFile)).toMatchSnapshot();
+    expect(fs.readFileSync(path.resolve(clientOutputDir, 'client.ts'))).toMatchSnapshot();
   });
 });

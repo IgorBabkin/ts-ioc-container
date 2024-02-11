@@ -3,6 +3,7 @@
 import * as process from 'process';
 import args from 'args';
 import { openapiToClient } from './openapiToClient';
+import path from 'path';
 
 args.option('input', 'openapi file path').option('output', 'output file path');
 
@@ -13,10 +14,10 @@ if (!inputFile) {
   throw new Error('openapi file path is required');
 }
 
-const outputFile = flags.output;
+const outputDir = flags.output;
 if (!flags.output) {
   throw new Error('output file path is required');
 }
 
-openapiToClient({ inputFile, outputFile });
+openapiToClient({ inputFile, outputDir });
 process.exit(0);

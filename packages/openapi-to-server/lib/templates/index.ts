@@ -14,5 +14,5 @@ function renderTemplate(filename: string, data: unknown) {
 
 Handlebars.registerHelper('render_template', renderTemplate);
 
-export const renderClient = (doc: OpenAPIV3.Document) => renderTemplate('ApiClient.hbs', doc);
+export const renderClient = (doc: OpenAPIV3.Document) => renderTemplate('Client.hbs', doc);
 export const renderServer = (doc: OpenAPIV3.Document) => renderTemplate('Server.hbs', doc);
