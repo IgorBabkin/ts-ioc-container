@@ -14,10 +14,10 @@ if (!inputFile) {
   throw new Error('openapi file path is required');
 }
 
-const outputDir = flags.output;
+const outputFile = flags.output;
 if (!flags.output) {
   throw new Error('output file path is required');
 }
 
-openapiToClient({ inputFile, outputDir });
+openapiToClient({ inputFile, outputFile });
 process.exit(0);

@@ -4,7 +4,7 @@ import * as path from 'path';
 
 const inputFile = path.resolve(__dirname, './swagger.yaml');
 const serverOutputFile = path.resolve(__dirname, '../.generated/server.d.ts');
-const clientOutputDir = path.resolve(__dirname, '../.generated');
+const clientOutputFile = path.resolve(__dirname, '../.generated/client.ts');
 
 describe('swagger', function () {
   it('Server', function () {
@@ -19,8 +19,8 @@ describe('swagger', function () {
   it('Client', function () {
     openapiToClient({
       inputFile: inputFile,
-      outputDir: clientOutputDir,
+      outputFile: clientOutputFile,
     });
-    expect(fs.readFileSync(path.resolve(clientOutputDir, 'client.ts'))).toMatchSnapshot();
+    expect(fs.readFileSync(clientOutputFile)).toMatchSnapshot();
   });
 });
