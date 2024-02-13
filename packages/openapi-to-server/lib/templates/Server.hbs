@@ -1,34 +1,18 @@
+import { Ok, Created, Route } from '@ibabkin/openapi-to-server';
+
+// Components
 {{#each components.schemas}}
   export type {{@key}} = {{render_template 'JsonSchema.hbs' this}};
 {{/each}}
 
-export interface RouteOptions {
-  tags: string[];
-}
-
-export interface Route<Payload, Response> {
-  handle(payload: Payload, options: RouteOptions): Promise<Response>;
-}
-
-export interface HttpResponse<Payload = unknown> {
-  status: number;
-  payload: Payload;
-}
-
-export interface Ok<Payload> extends HttpResponse<Payload> {
-  status: 200;
-}
-
-export interface Created extends HttpResponse<undefined> {
-  status: 201;
-}
-
+// Routes
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
     {{{render_template 'ServerRoute.hbs' this}}}
   {{/each}}
 {{/each}}
 
+// Operations
 export type Operations = {
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
