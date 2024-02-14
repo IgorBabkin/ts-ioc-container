@@ -9,6 +9,10 @@ import {
 } from '../index';
 
 export abstract class AutoMockedContainer implements IContainer {
+  getTokensByProvider(predicate: (provider: IProvider<unknown>) => boolean): DependencyKey[] {
+    return [];
+  }
+
   createScope(...tags: Tag[]): IContainer {
     throw new MethodNotImplementedError();
   }

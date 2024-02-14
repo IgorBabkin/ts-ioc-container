@@ -1,9 +1,18 @@
-import { Resolvable, Tagged } from '../container/IContainer';
+import { DependencyKey, Resolvable, Tagged } from '../container/IContainer';
 import { IProvider } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
+
+  addAliases(...aliases: DependencyKey[]): this {
+    this.decorated.addAliases(...aliases);
+    return this;
+  }
+
+  hasAlias(alias: DependencyKey): boolean {
+    return this.decorated.hasAlias(alias);
+  }
 
   abstract clone(): IProvider<T>;
 

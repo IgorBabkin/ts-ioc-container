@@ -4,6 +4,10 @@ import { DependencyNotFoundError } from './DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 
 export class EmptyContainer implements IContainer {
+  getTokensByProvider(predicate: (provider: IProvider<unknown>) => boolean): DependencyKey[] {
+    return [];
+  }
+
   hasTag(tag: Tag): boolean {
     throw new MethodNotImplementedError();
   }

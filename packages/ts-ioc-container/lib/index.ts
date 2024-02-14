@@ -9,7 +9,7 @@ export {
 } from './container/IContainer';
 export { constructor } from './utils';
 export { Container } from './container/Container';
-export { ResolveDependency, IProvider } from './provider/IProvider';
+export { ResolveDependency, IProvider, bySomeAlias, byAllAliases, alias, byKeys } from './provider/IProvider';
 export { IInjector } from './injector/IInjector';
 export { DependencyNotFoundError } from './container/DependencyNotFoundError';
 export { MethodNotImplementedError } from './container/MethodNotImplementedError';

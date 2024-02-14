@@ -36,6 +36,18 @@ export class Container implements IContainer, Tagged {
     return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(token, ...args);
   }
 
+  getTokensByProvider(predicate: (provider: IProvider) => boolean): DependencyKey[] {
+    const keys = new Set<DependencyKey>(this.parent.getTokensByProvider(predicate));
+
+    for (const [key, provider] of this.providers) {
+      if (predicate(provider)) {
+        keys.add(key);
+      }
+    }
+
+    return Array.from(keys);
+  }
+
   createScope(...tags: Tag[]): Container {
     this.validateContainer();
 

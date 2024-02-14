@@ -43,4 +43,6 @@ export interface IContainer extends Resolvable {
   hasTag(tag: Tag): boolean;
 
   getAllProviders(): Map<DependencyKey, IProvider>;
+
+  getTokensByProvider(predicate: (provider: IProvider) => boolean): DependencyKey[];
 }

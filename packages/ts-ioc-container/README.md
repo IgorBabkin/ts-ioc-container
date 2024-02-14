@@ -34,6 +34,7 @@
     - [Singleton provider](#singleton-provider)
     - [Tagged provider](#tagged-provider)
     - [Args provider](#args-provider)
+    - [Aliases](#aliases) `alias`
 - [Container modules](#container-modules)
     - [Basic usage](#basic-usage-1)
     - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey) `@key`
@@ -477,6 +478,49 @@ describe('ArgsProvider', function () {
 
     expect(logger.name).toBe('name');
     expect(logger.type).toBe('file');
+  });
+});
+
+```
+
+### Aliases
+Sometimes you want to register the same provider with different keys. This is what `Aliases` is for.
+- `@provider(alias('logger'))` helper assigns `logger` alias to provider.
+- `bySomeAlias('logger', 'a')` method resolves the same provider with different keys. (logger OR a)
+- `byAllAlias('logger', 'a')` method resolves to resolve the same provider with different keys. (logger AND a)
+
+```typescript
+import 'reflect-metadata';
+import { alias, bySomeAlias, Container, inject, Provider, provider, ReflectionInjector } from 'ts-ioc-container';
+
+describe('alias', () => {
+  it('should create an alias', () => {
+    interface ILogger {
+      name: string;
+    }
+
+    @provider(alias('ILogger'))
+    class FileLogger implements ILogger {
+      name = 'FileLogger';
+    }
+
+    @provider(alias('ILogger'))
+    class DbLogger implements ILogger {
+      name = 'DbLogger';
+    }
+
+    class App {
+      constructor(@inject(bySomeAlias('ILogger')) public loggers: ILogger[]) {}
+    }
+
+    const container = new Container(new ReflectionInjector())
+      .register('IFileLogger', Provider.fromClass(FileLogger))
+      .register('IDbLogger', Provider.fromClass(DbLogger));
+
+    const app = container.resolve(App);
+
+    expect(app.loggers[0]).toBeInstanceOf(FileLogger);
+    expect(app.loggers[1]).toBeInstanceOf(DbLogger);
   });
 });
 

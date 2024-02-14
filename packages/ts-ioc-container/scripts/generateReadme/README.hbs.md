@@ -34,6 +34,7 @@
     - [Singleton provider](#singleton-provider)
     - [Tagged provider](#tagged-provider)
     - [Args provider](#args-provider)
+    - [Aliases](#aliases) `alias`
 - [Container modules](#container-modules)
     - [Basic usage](#basic-usage-1)
     - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey) `@key`
@@ -180,6 +181,16 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 
 ```typescript
 {{{include_file './__tests__/ArgsProvider.spec.ts'}}}
+```
+
+### Aliases
+Sometimes you want to register the same provider with different keys. This is what `Aliases` is for.
+- `@provider(alias('logger'))` helper assigns `logger` alias to provider.
+- `bySomeAlias('logger', 'a')` method resolves the same provider with different keys. (logger OR a)
+- `byAllAlias('logger', 'a')` method resolves to resolve the same provider with different keys. (logger AND a)
+
+```typescript
+{{{include_file './__tests__/readme/alias.spec.ts'}}}
 ```
 
 ## Container modules
