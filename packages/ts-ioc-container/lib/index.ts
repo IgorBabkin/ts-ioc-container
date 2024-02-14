@@ -25,3 +25,4 @@ export { ReflectionInjector, inject, by } from './injector/ReflectionInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 export { getHooks, hook } from './hook';
+export { setMetadata, getMetadata } from './metadata';
