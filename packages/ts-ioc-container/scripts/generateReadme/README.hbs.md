@@ -186,8 +186,8 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 ### Aliases
 Sometimes you want to register the same provider with different keys. This is what `Aliases` is for.
 - `@provider(alias('logger'))` helper assigns `logger` alias to provider.
-- `bySomeAlias('logger', 'a')` method resolves the same provider with different keys. (logger OR a)
-- `byAllAlias('logger', 'a')` method resolves to resolve the same provider with different keys. (logger AND a)
+- `by.alias.some('logger', 'a')` method resolves the same provider with different keys. (logger OR a)
+- `by.alias.all('logger', 'a')` method resolves to resolve the same provider with different keys. (logger AND a)
 
 ```typescript
 {{{include_file './__tests__/readme/alias.spec.ts'}}}
