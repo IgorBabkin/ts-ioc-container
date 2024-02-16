@@ -15,7 +15,7 @@ export class Logger extends Context<string[]> {
 }
 
 class QueryHandler2 implements IQueryHandler<EmptyType, void> {
-  constructor(@inject(by('Logger')) private logger: Logger) {}
+  constructor(@inject(by.key('Logger')) private logger: Logger) {}
 
   handle(query: EmptyType): Promise<void> {
     this.logger.addLog('QueryHandler2');
@@ -24,7 +24,7 @@ class QueryHandler2 implements IQueryHandler<EmptyType, void> {
 }
 
 class QueryHandler1 implements IQueryHandler<EmptyType, void> {
-  constructor(@inject(by('Logger')) private logger: Logger) {}
+  constructor(@inject(by.key('Logger')) private logger: Logger) {}
 
   @before
   async before(): Promise<void> {
@@ -47,7 +47,7 @@ class QueryHandler1 implements IQueryHandler<EmptyType, void> {
 @useCase('before', [QueryHandler1])
 class QueryHandler3 implements IQueryHandler<EmptyType, void> {
   constructor(
-    @inject(by('Logger')) private logger: Logger,
+    @inject(by.key('Logger')) private logger: Logger,
     @inject(useService(QueryHandler1)) private queryHandler: QueryHandler1,
   ) {}
 

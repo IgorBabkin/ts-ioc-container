@@ -9,7 +9,7 @@ import {
   MethodNotImplementedError,
   Provider,
   ReflectionInjector,
-} from '../lib';
+} from 'ts-ioc-container';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
 const ILogsRepoKey = Symbol('ILogsRepo');
@@ -21,7 +21,7 @@ interface ILogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject(by(ILogsRepoKey)) private logsRepo: ILogsRepo) {}
+  constructor(@inject(by.key(ILogsRepoKey)) private logsRepo: ILogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);

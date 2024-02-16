@@ -87,7 +87,7 @@ describe('Basic usage', function () {
     }
 
     class App {
-      constructor(@inject(by('ILogger')) public logger: Logger) {}
+      constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
     const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
@@ -210,7 +210,7 @@ class Logger {
 }
 
 class App {
-  constructor(@inject(by('ILogger')) private logger: Logger) {}
+  constructor(@inject(by.key('ILogger')) private logger: Logger) {}
 
   // OR
   // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {
@@ -491,26 +491,26 @@ Sometimes you want to register the same provider with different keys. This is wh
 
 ```typescript
 import 'reflect-metadata';
-import { alias, bySomeAlias, Container, inject, Provider, provider, ReflectionInjector } from 'ts-ioc-container';
+import { alias, by, Container, inject, Provider, provider, ReflectionInjector } from 'ts-ioc-container';
 
 describe('alias', () => {
-  it('should create an alias', () => {
-    interface ILogger {
-      name: string;
-    }
+  interface ILogger {
+    name: string;
+  }
 
-    @provider(alias('ILogger'))
-    class FileLogger implements ILogger {
-      name = 'FileLogger';
-    }
+  @provider(alias('ILogger', 'a'))
+  class FileLogger implements ILogger {
+    name = 'FileLogger';
+  }
 
-    @provider(alias('ILogger'))
-    class DbLogger implements ILogger {
-      name = 'DbLogger';
-    }
+  @provider(alias('ILogger', 'b'))
+  class DbLogger implements ILogger {
+    name = 'DbLogger';
+  }
 
+  it('should resolve by some alias', () => {
     class App {
-      constructor(@inject(bySomeAlias('ILogger')) public loggers: ILogger[]) {}
+      constructor(@inject(by.alias.some('ILogger')) public loggers: ILogger[]) {}
     }
 
     const container = new Container(new ReflectionInjector())
@@ -521,6 +521,21 @@ describe('alias', () => {
 
     expect(app.loggers[0]).toBeInstanceOf(FileLogger);
     expect(app.loggers[1]).toBeInstanceOf(DbLogger);
+  });
+
+  it('should resolve by all alias', () => {
+    class App {
+      constructor(@inject(by.alias.all('ILogger', 'a')) public loggers: ILogger[]) {}
+    }
+
+    const container = new Container(new ReflectionInjector())
+      .register('IFileLogger', Provider.fromClass(FileLogger))
+      .register('IDbLogger', Provider.fromClass(DbLogger));
+
+    const app = container.resolve(App);
+
+    expect(app.loggers).toHaveLength(1);
+    expect(app.loggers[0]).toBeInstanceOf(FileLogger);
   });
 });
 
@@ -611,7 +626,6 @@ import {
   ReflectionInjector,
   Registration,
 } from 'ts-ioc-container';
-import * as console from 'console';
 
 class MyInjector implements IInjector {
   private injector = new ReflectionInjector();
@@ -619,7 +633,7 @@ class MyInjector implements IInjector {
   resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
     const instance = this.injector.resolve(container, value, ...deps);
     // eslint-disable-next-line @typescript-eslint/ban-types
-    for (const h of getHooks(instance, 'onConstruct')) {
+    for (const h of getHooks(instance as object, 'onConstruct')) {
       // @ts-ignore
       instance[h]();
     }
@@ -683,7 +697,7 @@ class LogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject(by('logsRepo')) private logsRepo: LogsRepo) {}
+  constructor(@inject(by.key('logsRepo')) private logsRepo: LogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);

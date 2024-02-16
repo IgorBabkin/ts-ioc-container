@@ -1,4 +1,4 @@
-import { isDependencyKey } from '../lib';
+import { isDependencyKey } from 'ts-ioc-container';
 
 describe('IContainer', function () {
   it('should accept a symbol as dependency key', function () {

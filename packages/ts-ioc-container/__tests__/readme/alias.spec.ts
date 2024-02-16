@@ -1,24 +1,24 @@
 import 'reflect-metadata';
-import { alias, bySomeAlias, Container, inject, Provider, provider, ReflectionInjector } from '../../lib';
+import { alias, by, Container, inject, Provider, provider, ReflectionInjector } from 'ts-ioc-container';
 
 describe('alias', () => {
-  it('should create an alias', () => {
-    interface ILogger {
-      name: string;
-    }
+  interface ILogger {
+    name: string;
+  }
 
-    @provider(alias('ILogger'))
-    class FileLogger implements ILogger {
-      name = 'FileLogger';
-    }
+  @provider(alias('ILogger', 'a'))
+  class FileLogger implements ILogger {
+    name = 'FileLogger';
+  }
 
-    @provider(alias('ILogger'))
-    class DbLogger implements ILogger {
-      name = 'DbLogger';
-    }
+  @provider(alias('ILogger', 'b'))
+  class DbLogger implements ILogger {
+    name = 'DbLogger';
+  }
 
+  it('should resolve by some alias', () => {
     class App {
-      constructor(@inject(bySomeAlias('ILogger')) public loggers: ILogger[]) {}
+      constructor(@inject(by.alias.some('ILogger')) public loggers: ILogger[]) {}
     }
 
     const container = new Container(new ReflectionInjector())
@@ -29,5 +29,20 @@ describe('alias', () => {
 
     expect(app.loggers[0]).toBeInstanceOf(FileLogger);
     expect(app.loggers[1]).toBeInstanceOf(DbLogger);
+  });
+
+  it('should resolve by all alias', () => {
+    class App {
+      constructor(@inject(by.alias.all('ILogger', 'a')) public loggers: ILogger[]) {}
+    }
+
+    const container = new Container(new ReflectionInjector())
+      .register('IFileLogger', Provider.fromClass(FileLogger))
+      .register('IDbLogger', Provider.fromClass(DbLogger));
+
+    const app = container.resolve(App);
+
+    expect(app.loggers).toHaveLength(1);
+    expect(app.loggers[0]).toBeInstanceOf(FileLogger);
   });
 });

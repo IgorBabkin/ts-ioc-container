@@ -8,7 +8,7 @@ describe('Basic usage', function () {
     }
 
     class App {
-      constructor(@inject(by('ILogger')) public logger: Logger) {}
+      constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
     const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));

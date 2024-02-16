@@ -10,7 +10,7 @@ import {
   provider,
   Registration,
   ReflectionInjector,
-} from '../lib';
+} from 'ts-ioc-container';
 
 @key('logsRepo')
 @provider(singleton())
@@ -26,7 +26,7 @@ class LogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject(by('logsRepo')) private logsRepo: LogsRepo) {}
+  constructor(@inject(by.key('logsRepo')) private logsRepo: LogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);

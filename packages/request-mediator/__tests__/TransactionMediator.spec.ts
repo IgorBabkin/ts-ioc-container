@@ -29,8 +29,8 @@ class TransactionContext implements ITransactionContext {
 
 class AfterHandler implements IQueryHandler<EmptyType, void> {
   constructor(
-    @inject(by('Logger')) private logger: Logger,
-    @inject(by(ITransactionContextKey)) private transactionContext: TransactionContext,
+    @inject(by.key('Logger')) private logger: Logger,
+    @inject(by.key(ITransactionContextKey)) private transactionContext: TransactionContext,
   ) {}
 
   async handle(query: EmptyType): Promise<void> {
@@ -41,8 +41,8 @@ class AfterHandler implements IQueryHandler<EmptyType, void> {
 
 class BeforeHandler implements IQueryHandler<EmptyType, void> {
   constructor(
-    @inject(by('Logger')) private logger: Logger,
-    @inject(by(ITransactionContextKey)) private transactionContext: TransactionContext,
+    @inject(by.key('Logger')) private logger: Logger,
+    @inject(by.key(ITransactionContextKey)) private transactionContext: TransactionContext,
   ) {}
 
   async handle(): Promise<void> {
@@ -56,8 +56,8 @@ class BeforeHandler implements IQueryHandler<EmptyType, void> {
 @request('after', [AfterHandler])
 class QueryHandler implements IQueryHandler<EmptyType, void> {
   constructor(
-    @inject(by('Logger')) private logger: Logger,
-    @inject(by(ITransactionContextKey)) private transactionContext: TransactionContext,
+    @inject(by.key('Logger')) private logger: Logger,
+    @inject(by.key(ITransactionContextKey)) private transactionContext: TransactionContext,
   ) {}
 
   async handle(query: EmptyType): Promise<void> {

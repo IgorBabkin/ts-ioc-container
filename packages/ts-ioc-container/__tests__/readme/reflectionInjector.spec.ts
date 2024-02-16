@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import { by, Container, inject, Provider, ReflectionInjector } from '../../lib';
+import { by, Container, inject, Provider, ReflectionInjector } from 'ts-ioc-container';
 
 class Logger {
   name = 'Logger';
 }
 
 class App {
-  constructor(@inject(by('ILogger')) private logger: Logger) {}
+  constructor(@inject(by.key('ILogger')) private logger: Logger) {}
 
   // OR
   // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {
