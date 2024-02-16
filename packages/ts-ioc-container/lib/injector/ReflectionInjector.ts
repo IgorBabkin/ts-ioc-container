@@ -1,16 +1,8 @@
 import { IInjector } from './IInjector';
-import { IContainer, InjectionToken } from '../container/IContainer';
+import { IContainer } from '../container/IContainer';
 import { constant, constructor, merge } from '../utils';
 
 type InjectFn<T = unknown> = (l: IContainer, ...args: unknown[]) => T;
-
-/**
- * @deprecated
- */
-export const by =
-  <T>(key: InjectionToken<T>, ...deps: unknown[]) =>
-  (c: IContainer, ...args: unknown[]) =>
-    c.resolve<T>(key, ...deps, ...args);
 
 const INJECT_KEY = 'INJECT_FN_LIST';
 
