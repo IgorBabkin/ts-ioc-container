@@ -17,9 +17,7 @@ export abstract class ScopedMediator<Context = unknown> implements IMediator<Con
     const scope = this.scope.createScope(this.scopes);
     try {
       const mediator = this.createMediator(scope);
-      const response = await mediator.send(QueryHandler, query, context);
-      await scope.onBeforeDispose();
-      return response;
+      return await mediator.send(QueryHandler, query, context);
     } finally {
       scope.dispose();
     }
