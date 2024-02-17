@@ -26,5 +26,5 @@ export { ReflectionInjector, inject } from './injector/ReflectionInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 export { getHooks, hook } from './hook';
-export { by } from './by';
+export { by, InstancePredicate } from './by';
 export { setMetadata, getMetadata } from './metadata';

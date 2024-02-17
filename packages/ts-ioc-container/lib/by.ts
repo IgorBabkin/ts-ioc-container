@@ -1,5 +1,8 @@
 import { DependencyKey, IContainer, InjectionToken } from './container/IContainer';
 
+export type InstancePredicate = (dep: unknown) => boolean;
+export const all: InstancePredicate = () => true;
+
 export const by = {
   alias: {
     some:
@@ -22,4 +25,9 @@ export const by = {
     <T>(key: InjectionToken<T>, ...deps: unknown[]) =>
     (c: IContainer, ...args: unknown[]) =>
       c.resolve<T>(key, ...deps, ...args),
+
+  instances:
+    (predicate: InstancePredicate = all) =>
+    (l: IContainer) =>
+      l.getInstances().filter(predicate),
 };
