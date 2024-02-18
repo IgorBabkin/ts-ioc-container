@@ -30,7 +30,7 @@ describe('Scopes', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] });
 
     class App {
-      constructor(@inject(by.createScope('child')) public scope: IContainer) {}
+      constructor(@inject(by.scope.create('child')) public scope: IContainer) {}
     }
 
     const app = root.resolve(App);

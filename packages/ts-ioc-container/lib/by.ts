@@ -52,17 +52,19 @@ export const by = {
     (l: IContainer) =>
       l.getInstances().filter(predicate),
 
-  /**
-   * Get the current scope
-   */
-  currentScope: (container: IContainer) => container,
+  scope: {
+    /**
+     * Get the current scope
+     */
+    current: (container: IContainer) => container,
 
-  /**
-   * Create a new scope with the given tags
-   * @param tags
-   */
-  createScope:
-    (...tags: string[]) =>
-    (l: IContainer) =>
-      l.createScope(...tags),
+    /**
+     * Create a new scope with the given tags
+     * @param tags
+     */
+    create:
+      (...tags: string[]) =>
+      (l: IContainer) =>
+        l.createScope(...tags),
+  },
 };

@@ -78,7 +78,7 @@ And `tsconfig.json` should have next options:
 
 ```typescript
 import 'reflect-metadata';
-import { IContainer, by, Container, inject, ReflectionInjector, Provider, Registration } from 'ts-ioc-container';
+import { IContainer, by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container';
 
 describe('Basic usage', function () {
   it('should inject dependencies', function () {
@@ -99,7 +99,7 @@ describe('Basic usage', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] });
 
     class App {
-      constructor(@inject(by.currentScope) public scope: IContainer) {}
+      constructor(@inject(by.scope.current) public scope: IContainer) {}
     }
 
     const app = root.resolve(App);
@@ -150,7 +150,7 @@ describe('Scopes', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] });
 
     class App {
-      constructor(@inject(by.createScope('child')) public scope: IContainer) {}
+      constructor(@inject(by.scope.create('child')) public scope: IContainer) {}
     }
 
     const app = root.resolve(App);
