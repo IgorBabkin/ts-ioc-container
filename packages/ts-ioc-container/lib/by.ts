@@ -30,4 +30,11 @@ export const by = {
     (predicate: InstancePredicate = all) =>
     (l: IContainer) =>
       l.getInstances().filter(predicate),
+
+  currentScope: (l: IContainer) => l,
+
+  createScope:
+    (...tags: string[]) =>
+    (l: IContainer) =>
+      l.createScope(...tags),
 };
