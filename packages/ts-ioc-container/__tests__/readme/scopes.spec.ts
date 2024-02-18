@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 import {
+  IContainer,
+  inject,
   singleton,
   Container,
   DependencyNotFoundError,
@@ -9,8 +11,7 @@ import {
   ReflectionInjector,
   Registration,
   by,
-} from '../../lib';
-import { IContainer, inject } from 'ts-ioc-container';
+} from 'ts-ioc-container';
 
 @key('ILogger')
 @provider(singleton(), tags('child'))
@@ -25,20 +26,8 @@ describe('Scopes', function () {
     expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);
   });
 
-  it('should inject current scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(Registration.fromClass(Logger));
-
-    class App {
-      constructor(@inject(by.currentScope) public scope: IContainer) {}
-    }
-
-    const app = root.resolve(App);
-
-    expect(app.scope).toBe(root);
-  });
-
   it('should inject new scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(Registration.fromClass(Logger));
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] });
 
     class App {
       constructor(@inject(by.createScope('child')) public scope: IContainer) {}

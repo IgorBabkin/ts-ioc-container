@@ -78,7 +78,7 @@ And `tsconfig.json` should have next options:
 
 ```typescript
 import 'reflect-metadata';
-import { by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container';
+import { IContainer, by, Container, inject, ReflectionInjector, Provider, Registration } from 'ts-ioc-container';
 
 describe('Basic usage', function () {
   it('should inject dependencies', function () {
@@ -94,6 +94,18 @@ describe('Basic usage', function () {
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
+
+  it('should inject current scope', function () {
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] });
+
+    class App {
+      constructor(@inject(by.currentScope) public scope: IContainer) {}
+    }
+
+    const app = root.resolve(App);
+
+    expect(app.scope).toBe(root);
+  });
 });
 
 ```
@@ -108,6 +120,8 @@ Sometimes you need to create a scope of container. For example, when you want to
 ```typescript
 import 'reflect-metadata';
 import {
+  IContainer,
+  inject,
   singleton,
   Container,
   DependencyNotFoundError,
@@ -118,7 +132,6 @@ import {
   Registration,
   by,
 } from 'ts-ioc-container';
-import { IContainer, inject } from 'ts-ioc-container';
 
 @key('ILogger')
 @provider(singleton(), tags('child'))
@@ -133,20 +146,8 @@ describe('Scopes', function () {
     expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);
   });
 
-  it('should inject current scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(Registration.fromClass(Logger));
-
-    class App {
-      constructor(@inject(by.currentScope) public scope: IContainer) {}
-    }
-
-    const app = root.resolve(App);
-
-    expect(app.scope).toBe(root);
-  });
-
   it('should inject new scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(Registration.fromClass(Logger));
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] });
 
     class App {
       constructor(@inject(by.createScope('child')) public scope: IContainer) {}

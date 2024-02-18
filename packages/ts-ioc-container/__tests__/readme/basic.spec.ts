@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { by, Container, inject, ReflectionInjector, Provider } from '../../lib';
+import { IContainer, by, Container, inject, ReflectionInjector, Provider, Registration } from 'ts-ioc-container';
 
 describe('Basic usage', function () {
   it('should inject dependencies', function () {
@@ -14,5 +14,17 @@ describe('Basic usage', function () {
     const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
+  });
+
+  it('should inject current scope', function () {
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] });
+
+    class App {
+      constructor(@inject(by.currentScope) public scope: IContainer) {}
+    }
+
+    const app = root.resolve(App);
+
+    expect(app.scope).toBe(root);
   });
 });
