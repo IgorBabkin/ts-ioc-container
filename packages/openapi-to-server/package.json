@@ -1,6 +1,6 @@
 {
   "name": "@ibabkin/openapi-to-server",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "description": "Generates server interface from openapi",
   "keywords": [
     "openapi",
