@@ -22,3 +22,8 @@ export function addQueryParams(url: string, query: Query): string {
     .join('&');
   return queryStr ? `${url}?${queryStr}` : `${url}`;
 }
+
+export const createUrl = (pattern: string, { params = {}, query = {} }: Partial<Payload>) => {
+  const url = addPathParams(pattern, params ?? {});
+  return addQueryParams(url, query ?? {});
+};

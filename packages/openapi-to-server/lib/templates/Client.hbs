@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import { addPathParams, Payload, addQueryParams } from '@ibabkin/openapi-to-server';
+import { createUrl, Payload } from '@ibabkin/openapi-to-server';
 
 // Components
 {{#each components.schemas}}
@@ -23,21 +23,11 @@ export class ApiClient {
   async {{operationId}}(data: {{payload_name operationId}}): Promise<{{#if (get_value_by_key responses '200')}}{{response_name operationId}}{{else}}void{{/if}}> {
     const response = await this.httpClient.request({
       method: '{{@key}}',
-      url: this.createUrl('{{url}}', data),
+      url: createUrl('{{url}}', data),
       data,
-      headers: this.createHeaders(data),
     });
     return response.data;
   }
   {{/each}}
-
-  private createUrl(pattern: string, {params = {}, query = {}}: Partial<Payload>) {
-    const url = addPathParams(pattern, params ?? {});
-    return addQueryParams(url, query ?? {});
-  }
-
-  private createHeaders(headers: Record<string, any>) {
-    return headers;
-  }
 {{/each}}
 }
