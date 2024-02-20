@@ -9,7 +9,7 @@ import {
   MethodNotImplementedError,
   Provider,
   ReflectionInjector,
-} from 'ts-ioc-container';
+} from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
 const ILogsRepoKey = Symbol('ILogsRepo');

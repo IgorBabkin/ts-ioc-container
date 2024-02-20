@@ -11,7 +11,7 @@ import {
   ReflectionInjector,
   Registration,
   by,
-} from 'ts-ioc-container';
+} from '../../lib';
 
 @key('ILogger')
 @provider(singleton(), tags('child'))

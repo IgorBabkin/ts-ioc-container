@@ -10,7 +10,7 @@ import {
   provider,
   Registration,
   ReflectionInjector,
-} from 'ts-ioc-container';
+} from '../lib';
 
 @key('logsRepo')
 @provider(singleton())

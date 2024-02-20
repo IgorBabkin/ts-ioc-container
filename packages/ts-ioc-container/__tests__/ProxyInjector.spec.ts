@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, Provider, ProxyInjector, args } from 'ts-ioc-container';
+import { Container, Provider, ProxyInjector, args } from '../lib';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {

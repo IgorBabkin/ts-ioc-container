@@ -11,7 +11,7 @@ import {
   ReflectionInjector,
   Registration,
   args,
-} from 'ts-ioc-container';
+} from '../lib';
 
 @key('logger')
 class Logger {

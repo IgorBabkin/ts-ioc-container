@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { inject, key, Registration, Container, ReflectionInjector, by } from 'ts-ioc-container';
+import { inject, key, Registration, Container, ReflectionInjector, by } from '../../lib';
 
 describe('Instances', function () {
   @key('ILogger')

@@ -8,7 +8,7 @@ import {
   provider,
   ReflectionInjector,
   Registration,
-} from 'ts-ioc-container';
+} from '../lib';
 
 @key('logger')
 @provider(singleton(), tags('home'))

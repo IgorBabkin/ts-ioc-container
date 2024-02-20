@@ -1,4 +1,4 @@
-import { IContainer, MethodNotImplementedError, Provider, EmptyContainer } from 'ts-ioc-container';
+import { IContainer, MethodNotImplementedError, Provider, EmptyContainer } from '../lib';
 
 describe('EmptyContainer', function () {
   it('should raise an error when create a scope', function () {

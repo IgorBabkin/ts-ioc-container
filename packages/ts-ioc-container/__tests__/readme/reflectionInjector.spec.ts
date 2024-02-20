@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { by, Container, inject, Provider, ReflectionInjector } from 'ts-ioc-container';
+import { by, Container, inject, Provider, ReflectionInjector } from '../../lib';
 
 class Logger {
   name = 'Logger';

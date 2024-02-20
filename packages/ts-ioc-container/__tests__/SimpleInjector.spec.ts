@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, IContainer, Provider, SimpleInjector } from 'ts-ioc-container';
+import { Container, IContainer, Provider, SimpleInjector } from '../lib';
 
 describe('SimpleInjector', function () {
   it('should pass container as first parameter', function () {

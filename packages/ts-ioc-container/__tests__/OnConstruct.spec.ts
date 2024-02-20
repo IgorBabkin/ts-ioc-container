@@ -9,7 +9,7 @@ import {
   IInjector,
   ReflectionInjector,
   Registration,
-} from 'ts-ioc-container';
+} from '../lib';
 
 class MyInjector implements IInjector {
   private injector = new ReflectionInjector();

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { alias, by, Container, inject, Provider, provider, ReflectionInjector } from 'ts-ioc-container';
+import { alias, by, Container, inject, Provider, provider, ReflectionInjector } from '../../lib';
 
 describe('alias', () => {
   interface ILogger {
