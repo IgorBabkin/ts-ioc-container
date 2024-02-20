@@ -30,7 +30,8 @@
   },
   "files": [
     "cjm/**/*",
-    "esm/**/*"
+    "esm/**/*",
+    "typings/**/*"
   ],
   "repository": {
     "type": "git",
