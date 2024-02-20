@@ -11,7 +11,7 @@
   "license": "ISC",
   "sideEffects": false,
   "main": "cjm/index.js",
-  "types": "esm/index.d.ts",
+  "types": "typings/index.d.ts",
   "module": "esm/index.js",
   "keywords": [
     "dependency-injection",
@@ -39,8 +39,9 @@
   "scripts": {
     "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
+    "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
     "build:readme": "ts-node scripts/generateReadme/generateReadme.ts",
-    "build": "npm run build:cjm && npm run build:esm && npm run build:readme",
+    "build": "npm run build:cjm && npm run build:esm && npm run build:types && npm run build:readme",
     "coverage": "coveralls",
     "watch": "nodemon --watch ./lib --exec npm run build",
     "test": "jest --coverage"

@@ -3,6 +3,7 @@ cjm
 esm
 coverage
 node_modules
+typings
 lerna-debug.log
 yarn-error.log
 precompiled
