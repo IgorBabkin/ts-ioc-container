@@ -1,19 +1,11 @@
-import {
-  IContainer,
-  InjectionToken,
-  IProvider,
-  MethodNotImplementedError,
-  DependencyKey,
-  Tag,
-  IContainerModule,
-} from '../index';
+import { IContainer, InjectionToken, IProvider, MethodNotImplementedError, DependencyKey } from '../index';
 
 export abstract class AutoMockedContainer implements IContainer {
-  getTokensByProvider(predicate: (provider: IProvider<unknown>) => boolean): DependencyKey[] {
+  getTokensByProvider(): DependencyKey[] {
     return [];
   }
 
-  createScope(...tags: Tag[]): IContainer {
+  createScope(): IContainer {
     throw new MethodNotImplementedError();
   }
 
@@ -21,11 +13,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
   dispose(): void {}
 
-  cloneAndImportProvidersFrom(): Map<DependencyKey, IProvider> {
-    return new Map();
-  }
-
-  register(key: DependencyKey, value: IProvider): this {
+  register(): this {
     throw new MethodNotImplementedError();
   }
 
@@ -35,7 +23,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
   removeScope(): void {}
 
-  use(module: IContainerModule): this {
+  use(): this {
     throw new MethodNotImplementedError();
   }
 
@@ -43,7 +31,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return new Map();
   }
 
-  hasTag(tag: Tag): boolean {
+  hasTag(): boolean {
     return false;
   }
 }

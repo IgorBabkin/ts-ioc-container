@@ -1,18 +1,18 @@
-import { DependencyKey, IContainer, IContainerModule, InjectionToken, Tag } from './IContainer';
+import { DependencyKey, IContainer, InjectionToken } from './IContainer';
 import { MethodNotImplementedError } from './MethodNotImplementedError';
 import { DependencyNotFoundError } from './DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 
 export class EmptyContainer implements IContainer {
-  getTokensByProvider(predicate: (provider: IProvider<unknown>) => boolean): DependencyKey[] {
+  getTokensByProvider(): DependencyKey[] {
     return [];
   }
 
-  hasTag(tag: Tag): boolean {
+  hasTag(): boolean {
     throw new MethodNotImplementedError();
   }
 
-  createScope(...tags: Tag[]): IContainer {
+  createScope(): IContainer {
     throw new MethodNotImplementedError();
   }
 
@@ -20,7 +20,7 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  register(key: DependencyKey, value: IProvider): this {
+  register(): this {
     throw new MethodNotImplementedError();
   }
 
@@ -32,17 +32,13 @@ export class EmptyContainer implements IContainer {
     return new Map();
   }
 
-  cloneAndImportProvidersFrom(): void {
-    throw new MethodNotImplementedError();
-  }
-
   getInstances(): unknown[] {
     return [];
   }
 
   removeScope(): void {}
 
-  use(module: IContainerModule): this {
+  use(): this {
     throw new MethodNotImplementedError();
   }
 }
