@@ -1,6 +1,6 @@
 import { DependencyKey, IContainer, InjectionToken } from './IContainer';
-import { MethodNotImplementedError } from './MethodNotImplementedError';
-import { DependencyNotFoundError } from './DependencyNotFoundError';
+import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
+import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 
 export class EmptyContainer implements IContainer {

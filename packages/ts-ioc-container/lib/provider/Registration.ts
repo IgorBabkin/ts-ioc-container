@@ -1,9 +1,9 @@
-import { DependencyMissingKeyError } from './DependencyMissingKeyError';
+import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
-import { Provider } from '../provider/Provider';
-import { IProvider } from '../provider/IProvider';
+import { Provider } from './Provider';
+import { IProvider } from './IProvider';
 
 const DEPENDENCY_KEY = 'DependencyKey';
 

@@ -2,7 +2,7 @@ import { DependencyKey, IContainer, IContainerModule, InjectionToken, isConstruc
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
-import { ContainerDisposedError } from './ContainerDisposedError';
+import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer, Tagged {
   readonly providers = new Map<DependencyKey, IProvider>();
