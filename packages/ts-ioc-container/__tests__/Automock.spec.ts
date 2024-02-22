@@ -4,10 +4,8 @@ import {
   by,
   Container,
   DependencyKey,
-  IContainer,
   inject,
   MethodNotImplementedError,
-  Provider,
   ReflectionInjector,
 } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
@@ -96,20 +94,8 @@ describe('Automock', function () {
     expect(() => container.dispose()).not.toThrowError();
   });
 
-  it('should raise an error when try to register dependency', () => {
-    expect(() => mockContainer.register('hey', Provider.fromValue('asda'))).toThrowError(MethodNotImplementedError);
-  });
-
   it('should raise an error when try to create a scope', () => {
     expect(() => mockContainer.createScope()).toThrowError(MethodNotImplementedError);
-  });
-
-  it('should raise an error when try to add a module', () => {
-    expect(() =>
-      mockContainer.use({
-        applyTo(container: IContainer) {},
-      }),
-    ).toThrowError(MethodNotImplementedError);
   });
 
   it('should return empty list of instances', function () {

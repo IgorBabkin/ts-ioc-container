@@ -2,11 +2,11 @@ import 'reflect-metadata';
 import { IContainer, by, Container, inject, ReflectionInjector, Provider } from '../../lib';
 
 describe('Basic usage', function () {
-  it('should inject dependencies', function () {
-    class Logger {
-      name = 'Logger';
-    }
+  class Logger {
+    name = 'Logger';
+  }
 
+  it('should inject dependencies', function () {
     class App {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
@@ -14,6 +14,18 @@ describe('Basic usage', function () {
     const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
+  });
+
+  it('should inject multiple dependencies', function () {
+    class App {
+      constructor(@inject(by.keys('ILogger1', 'ILogger2')) public loggers: Logger[]) {}
+    }
+
+    const container = new Container(new ReflectionInjector())
+      .register('ILogger1', Provider.fromClass(Logger))
+      .register('ILogger2', Provider.fromClass(Logger));
+
+    expect(container.resolve(App).loggers).toHaveLength(2);
   });
 
   it('should inject current scope', function () {

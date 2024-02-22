@@ -14,7 +14,7 @@ export abstract class AutoMockedContainer implements IContainer {
   dispose(): void {}
 
   register(): this {
-    throw new MethodNotImplementedError();
+    return this;
   }
 
   getInstances(): unknown[] {
@@ -24,7 +24,7 @@ export abstract class AutoMockedContainer implements IContainer {
   removeScope(): void {}
 
   use(): this {
-    throw new MethodNotImplementedError();
+    return this;
   }
 
   getAllProviders(): Map<DependencyKey, IProvider> {
