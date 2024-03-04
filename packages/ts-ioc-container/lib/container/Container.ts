@@ -1,18 +1,8 @@
-import {
-  DependencyKey,
-  IContainer,
-  IContainerModule,
-  InjectionToken,
-  IRegistrationOptions,
-  isConstructor,
-  Tag,
-  Tagged,
-} from './IContainer';
+import { DependencyKey, IContainer, IContainerModule, InjectionToken, isConstructor, Tag, Tagged } from './IContainer';
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
-import { OverrideGuard } from './OverrideGuard';
 
 export class Container implements IContainer, Tagged {
   readonly providers = new Map<DependencyKey, IProvider>();
@@ -21,18 +11,14 @@ export class Container implements IContainer, Tagged {
   private parent: IContainer;
   private scopes: Set<IContainer> = new Set();
   private instances: Set<unknown> = new Set();
-  private overrideGuard = new OverrideGuard();
 
   constructor(private readonly injector: IInjector, options: { parent?: IContainer; tags?: Tag[] } = {}) {
     this.parent = options.parent ?? new EmptyContainer();
     this.tags = options.tags ?? [];
   }
 
-  register(key: DependencyKey, provider: IProvider, { override }: IRegistrationOptions = {}): this {
+  register(key: DependencyKey, provider: IProvider): this {
     this.validateContainer();
-    if (!override) {
-      this.overrideGuard.applyTo(this, key);
-    }
     this.providers.set(key, provider);
     return this;
   }
@@ -101,8 +87,8 @@ export class Container implements IContainer, Tagged {
     return this;
   }
 
-  findProvider(key: string): IProvider | undefined {
-    return this.providers.get(key) ?? this.parent.findProvider(key);
+  hasDependency(key: DependencyKey): boolean {
+    return this.providers.has(key) ?? this.parent.hasDependency(key);
   }
 
   /**

@@ -34,7 +34,7 @@ export interface IRegistrationOptions {
 export interface IContainer extends Resolvable {
   createScope(...tags: Tag[]): IContainer;
 
-  register(key: DependencyKey, value: IProvider, options?: IRegistrationOptions): this;
+  register(key: DependencyKey, value: IProvider): this;
 
   removeScope(child: IContainer): void;
 
@@ -50,5 +50,5 @@ export interface IContainer extends Resolvable {
 
   getTokensByProvider(predicate: (provider: IProvider) => boolean): DependencyKey[];
 
-  findProvider(key: DependencyKey): IProvider | undefined;
+  hasDependency(key: DependencyKey): boolean;
 }
