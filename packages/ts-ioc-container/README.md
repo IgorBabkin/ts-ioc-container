@@ -141,7 +141,7 @@ describe('Basic usage', function () {
     expect(() => {
       new Container(new ReflectionInjector())
         .use(Registration.fromClass(Logger))
-        .use(Registration.fromClass(Logger).throwErrorOnConfict());
+        .use(Registration.fromClass(Logger).throwErrorOnConflict());
     }).toThrowError(RegistrationConflictError);
   });
 
@@ -161,7 +161,7 @@ describe('Basic usage', function () {
     expect(() => {
       new Container(new ReflectionInjector())
         .use(Registration.fromClass(Logger1))
-        .use(Registration.fromClass(Logger2).throwErrorOnConfict());
+        .use(Registration.fromClass(Logger2).throwErrorOnConflict());
     }).toThrowError(RegistrationConflictError);
   });
 

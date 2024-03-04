@@ -27,7 +27,7 @@ export class Registration implements IRegistration {
     return this;
   }
 
-  throwErrorOnConfict() {
+  throwErrorOnConflict() {
     return new ThrowErrorIfNoDependency(this);
   }
 

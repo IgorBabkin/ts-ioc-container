@@ -1,13 +1,11 @@
-import { DependencyKey, IContainer } from '../container/IContainer';
+import { IContainer } from '../container/IContainer';
 import { RegistrationConflictError } from '../errors/RegistrationConflictError';
 
-import { IRegistration } from './IRegistration';
+import { IRegistration, RegistrationDecorator } from './IRegistration';
 
-export class ThrowErrorIfNoDependency implements IRegistration {
-  constructor(private module: IRegistration) {}
-
-  getKey(): DependencyKey {
-    return this.module.getKey();
+export class ThrowErrorIfNoDependency extends RegistrationDecorator {
+  constructor(private module: IRegistration) {
+    super(module);
   }
 
   applyTo(container: IContainer): void {
