@@ -1,6 +1,5 @@
 import { IContainer } from '../container/IContainer';
 import { RegistrationConflictError } from '../errors/RegistrationConflictError';
-
 import { IRegistration, RegistrationDecorator } from './IRegistration';
 
 export class ThrowErrorIfNoDependency extends RegistrationDecorator {
@@ -8,11 +7,9 @@ export class ThrowErrorIfNoDependency extends RegistrationDecorator {
     super(module);
   }
 
-  applyTo(container: IContainer): void {
-    RegistrationConflictError.assert(
-      container.hasDependency(this.module.getKey()) === undefined,
-      `Provider for key ${this.module.getKey().toString()} is already registered`,
-    );
-    this.module.applyTo(container);
+  applyTo(c: IContainer): void {
+    const key = this.module.getKey();
+    RegistrationConflictError.assert(!c.hasDependency(key), `Provider for key ${key.toString()} is already registered`);
+    this.module.applyTo(c);
   }
 }
