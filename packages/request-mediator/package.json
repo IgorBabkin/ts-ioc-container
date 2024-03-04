@@ -1,6 +1,6 @@
 {
   "name": "ts-request-mediator",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Request mediator for server",
   "publishConfig": {
     "access": "public",
