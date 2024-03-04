@@ -1,4 +1,3 @@
-import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
@@ -12,10 +11,7 @@ export const key = (value: DependencyKey): ClassDecorator => setMetadata(DEPENDE
 export class Registration implements IContainerModule {
   static fromClass(Target: constructor<unknown>): Registration {
     const dependencyKey = getMetadata<DependencyKey>(Target, DEPENDENCY_KEY);
-    if (dependencyKey === undefined) {
-      throw new DependencyMissingKeyError(`Pls provide dependency key for ${Target.name}`);
-    }
-    return new Registration(dependencyKey, Provider.fromClass(Target));
+    return new Registration(dependencyKey ?? Target.name, Provider.fromClass(Target));
   }
 
   constructor(private key: DependencyKey, private provider: IProvider) {}

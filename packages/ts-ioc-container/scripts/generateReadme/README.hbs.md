@@ -232,7 +232,6 @@ Sometimes you need to automatically mock all dependencies in container. This is 
 ## Errors
 
 - [DependencyNotFoundError.ts](lib%2Fcontainer%2FDependencyNotFoundError.ts)
-- [DependencyMissingKeyError.ts](lib%2Fregistration%2FDependencyMissingKeyError.ts)
 - [MethodNotImplementedError.ts](lib%2FMethodNotImplementedError.ts)
 - [ContainerDisposedError.ts](lib%2Fcontainer%2FContainerDisposedError.ts)
 

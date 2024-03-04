@@ -35,12 +35,13 @@ describe('IocContainer', function () {
     expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
   });
 
-  it('should throws an error if provider key is not defined', function () {
-    const container = createContainer();
-
+  it('should register provider as constructor name if key is not provided', function () {
     class TestClass {}
 
-    expect(() => container.use(Registration.fromClass(TestClass))).toThrow(DependencyMissingKeyError);
+    const container = createContainer();
+    container.use(Registration.fromClass(TestClass));
+
+    expect(container.resolve('TestClass')).toBeInstanceOf(TestClass);
   });
 
   it('should keep all instances', function () {

@@ -21,7 +21,6 @@ export { singleton, SingletonProvider } from './provider/SingletonProvider';
 export { tags, TaggedProvider } from './provider/TaggedProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
 export { key, Registration } from './provider/Registration';
-export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { ReflectionInjector, inject } from './injector/ReflectionInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';

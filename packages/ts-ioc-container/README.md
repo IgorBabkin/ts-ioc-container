@@ -81,11 +81,11 @@ import 'reflect-metadata';
 import { IContainer, by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container';
 
 describe('Basic usage', function () {
-  it('should inject dependencies', function () {
-    class Logger {
-      name = 'Logger';
-    }
+  class Logger {
+    name = 'Logger';
+  }
 
+  it('should inject dependencies', function () {
     class App {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
@@ -93,6 +93,18 @@ describe('Basic usage', function () {
     const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
+  });
+
+  it('should inject multiple dependencies', function () {
+    class App {
+      constructor(@inject(by.keys('ILogger1', 'ILogger2')) public loggers: Logger[]) {}
+    }
+
+    const container = new Container(new ReflectionInjector())
+      .register('ILogger1', Provider.fromClass(Logger))
+      .register('ILogger2', Provider.fromClass(Logger));
+
+    expect(container.resolve(App).loggers).toHaveLength(2);
   });
 
   it('should inject current scope', function () {
@@ -539,51 +551,68 @@ Sometimes you want to register the same provider with different keys. This is wh
 
 ```typescript
 import 'reflect-metadata';
-import { alias, by, Container, inject, Provider, provider, ReflectionInjector } from 'ts-ioc-container';
+import { alias, by, Container, inject, provider, ReflectionInjector, Registration } from 'ts-ioc-container';
 
 describe('alias', () => {
-  interface ILogger {
-    name: string;
+  const IMiddlewareKey = Symbol('IMiddleware');
+  const middleware = provider(alias(IMiddlewareKey));
+
+  interface IMiddleware {
+    applyTo(application: IApplication): void;
   }
 
-  @provider(alias('ILogger', 'a'))
-  class FileLogger implements ILogger {
-    name = 'FileLogger';
+  interface IApplication {
+    use(module: IMiddleware): void;
+    markMiddlewareAsApplied(name: string): void;
   }
 
-  @provider(alias('ILogger', 'b'))
-  class DbLogger implements ILogger {
-    name = 'DbLogger';
+  @middleware
+  class LoggerMiddleware implements IMiddleware {
+    applyTo(application: IApplication): void {
+      application.markMiddlewareAsApplied('LoggerMiddleware');
+    }
+  }
+
+  @middleware
+  class ErrorHandlerMiddleware implements IMiddleware {
+    applyTo(application: IApplication): void {
+      application.markMiddlewareAsApplied('ErrorHandlerMiddleware');
+    }
   }
 
   it('should resolve by some alias', () => {
-    class App {
-      constructor(@inject(by.alias.some('ILogger')) public loggers: ILogger[]) {}
+    class App implements IApplication {
+      private appliedMiddleware: Set<string> = new Set();
+      constructor(@inject(by.alias.some(IMiddlewareKey)) public middleware: IMiddleware[]) {}
+
+      markMiddlewareAsApplied(name: string): void {
+        this.appliedMiddleware.add(name);
+      }
+
+      isMiddlewareApplied(name: string): boolean {
+        return this.appliedMiddleware.has(name);
+      }
+
+      use(module: IMiddleware): void {
+        module.applyTo(this);
+      }
+
+      run() {
+        for (const module of this.middleware) {
+          module.applyTo(this);
+        }
+      }
     }
 
     const container = new Container(new ReflectionInjector())
-      .register('IFileLogger', Provider.fromClass(FileLogger))
-      .register('IDbLogger', Provider.fromClass(DbLogger));
+      .use(Registration.fromClass(LoggerMiddleware))
+      .use(Registration.fromClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
+    app.run();
 
-    expect(app.loggers[0]).toBeInstanceOf(FileLogger);
-    expect(app.loggers[1]).toBeInstanceOf(DbLogger);
-  });
-
-  it('should resolve by all alias', () => {
-    class App {
-      constructor(@inject(by.alias.all('ILogger', 'a')) public loggers: ILogger[]) {}
-    }
-
-    const container = new Container(new ReflectionInjector())
-      .register('IFileLogger', Provider.fromClass(FileLogger))
-      .register('IDbLogger', Provider.fromClass(DbLogger));
-
-    const app = container.resolve(App);
-
-    expect(app.loggers).toHaveLength(1);
-    expect(app.loggers[0]).toBeInstanceOf(FileLogger);
+    expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
+    expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);
   });
 });
 
@@ -826,7 +855,6 @@ describe('Mocking', () => {
 ## Errors
 
 - [DependencyNotFoundError.ts](lib%2Fcontainer%2FDependencyNotFoundError.ts)
-- [DependencyMissingKeyError.ts](lib%2Fregistration%2FDependencyMissingKeyError.ts)
 - [MethodNotImplementedError.ts](lib%2FMethodNotImplementedError.ts)
 - [ContainerDisposedError.ts](lib%2Fcontainer%2FContainerDisposedError.ts)
 
