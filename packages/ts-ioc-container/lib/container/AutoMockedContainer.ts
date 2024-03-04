@@ -1,6 +1,10 @@
 import { IContainer, InjectionToken, IProvider, MethodNotImplementedError, DependencyKey } from '../index';
 
 export abstract class AutoMockedContainer implements IContainer {
+  findProvider(key: string): IProvider<unknown> | undefined {
+    return undefined;
+  }
+
   getTokensByProvider(): DependencyKey[] {
     return [];
   }

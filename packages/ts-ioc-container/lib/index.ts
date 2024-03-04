@@ -13,6 +13,7 @@ export { EmptyContainer } from './container/EmptyContainer';
 export { ResolveDependency, IProvider, alias } from './provider/IProvider';
 export { IInjector } from './injector/IInjector';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
+export { RegistrationConflictError } from './errors/RegistrationConflictError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { Provider, provider } from './provider/Provider';

@@ -78,7 +78,17 @@ And `tsconfig.json` should have next options:
 
 ```typescript
 import 'reflect-metadata';
-import { IContainer, by, Container, inject, ReflectionInjector, Provider } from 'ts-ioc-container';
+import {
+  IContainer,
+  by,
+  Container,
+  inject,
+  ReflectionInjector,
+  Provider,
+  RegistrationConflictError,
+  Registration,
+  key,
+} from 'ts-ioc-container';
 
 describe('Basic usage', function () {
   class Logger {
@@ -117,6 +127,68 @@ describe('Basic usage', function () {
     const app = root.resolve(App);
 
     expect(app.scope).toBe(root);
+  });
+
+  it('should raise an error when key is busy', () => {
+    expect(() => {
+      new Container(new ReflectionInjector())
+        .register('ILogger', Provider.fromClass(Logger))
+        .register('ILogger', Provider.fromClass(Logger));
+    }).toThrowError(RegistrationConflictError);
+  });
+
+  it('should not raise an error when key is busy', () => {
+    expect(() => {
+      new Container(new ReflectionInjector())
+        .register('ILogger', Provider.fromClass(Logger))
+        .register('ILogger', Provider.fromClass(Logger), { override: true });
+    }).not.toThrowError(RegistrationConflictError);
+  });
+
+  it('registration -> should raise an error when key is busy', () => {
+    expect(() => {
+      new Container(new ReflectionInjector()).use(Registration.fromClass(Logger)).use(Registration.fromClass(Logger));
+    }).toThrowError(RegistrationConflictError);
+  });
+
+  it('registration -> should not raise an error when key is busy', () => {
+    expect(() => {
+      new Container(new ReflectionInjector())
+        .use(Registration.fromClass(Logger))
+        .use(Registration.fromClass(Logger).options({ override: true }));
+    }).not.toThrowError(RegistrationConflictError);
+  });
+
+  it('@key -> should raise an error when key is busy', () => {
+    @key('Logger')
+    class Logger1 {}
+
+    @key('Logger')
+    class Logger2 {}
+
+    expect(() => {
+      new Container(new ReflectionInjector()).use(Registration.fromClass(Logger1)).use(Registration.fromClass(Logger2));
+    }).toThrowError(RegistrationConflictError);
+  });
+
+  it('@key -> should not raise an error when key is busy', () => {
+    @key('Logger')
+    class Logger1 {}
+
+    @key('Logger', { override: true })
+    class Logger2 {}
+
+    expect(() => {
+      new Container(new ReflectionInjector()).use(Registration.fromClass(Logger1)).use(Registration.fromClass(Logger2));
+    }).not.toThrowError(RegistrationConflictError);
+  });
+
+  it('registration -> should not raise an error when key is busy', () => {
+    expect(() => {
+      new Container(new ReflectionInjector())
+        .use(Registration.fromClass(Logger))
+        .use(Registration.fromClass(Logger).options({ override: true }));
+    }).not.toThrowError(RegistrationConflictError);
   });
 });
 

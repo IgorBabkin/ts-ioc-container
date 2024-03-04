@@ -4,6 +4,10 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 
 export class EmptyContainer implements IContainer {
+  findProvider(key: string): IProvider<unknown> | undefined {
+    return undefined;
+  }
+
   getTokensByProvider(): DependencyKey[] {
     return [];
   }

@@ -24,13 +24,17 @@ export interface Resolvable {
 }
 
 export interface IContainerModule {
-  applyTo(container: IContainer): void;
+  applyTo(container: IContainer, ...args: unknown[]): void;
+}
+
+export interface IRegistrationOptions {
+  override?: boolean;
 }
 
 export interface IContainer extends Resolvable {
   createScope(...tags: Tag[]): IContainer;
 
-  register(key: DependencyKey, value: IProvider): this;
+  register(key: DependencyKey, value: IProvider, options?: IRegistrationOptions): this;
 
   removeScope(child: IContainer): void;
 
@@ -45,4 +49,6 @@ export interface IContainer extends Resolvable {
   getAllProviders(): Map<DependencyKey, IProvider>;
 
   getTokensByProvider(predicate: (provider: IProvider) => boolean): DependencyKey[];
+
+  findProvider(key: DependencyKey): IProvider | undefined;
 }

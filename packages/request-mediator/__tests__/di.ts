@@ -28,7 +28,7 @@ export class ContainerAdapter implements IDependencyContainer {
   }
 
   registerValue(key: string | symbol, value: unknown): void {
-    this.container.register(key, Provider.fromValue(value));
+    this.container.register(key, Provider.fromValue(value), { override: true });
   }
 
   resolve<T>(key: constructor<T> | symbol): T {
