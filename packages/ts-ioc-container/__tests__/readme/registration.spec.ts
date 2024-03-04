@@ -1,14 +1,24 @@
 import 'reflect-metadata';
 import { singleton, Container, tags, provider, ReflectionInjector, Registration, key } from '../../lib';
 
-@key('ILogger')
-@provider(singleton(), tags('root'))
-class Logger {}
-
 describe('Registration module', function () {
-  it('should bind dependency key to class', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(Registration.fromClass(Logger));
+  const createContainer = () => new Container(new ReflectionInjector(), { tags: ['root'] });
+
+  it('should register dependency by @key', function () {
+    @key('ILogger')
+    @provider(singleton(), tags('root'))
+    class Logger {}
+
+    const root = createContainer().use(Registration.fromClass(Logger));
 
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
+  });
+
+  it('should register dependency by class name if @key is not provided', function () {
+    class FileLogger {}
+
+    const root = createContainer().use(Registration.fromClass(FileLogger));
+
+    expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
   });
 });
