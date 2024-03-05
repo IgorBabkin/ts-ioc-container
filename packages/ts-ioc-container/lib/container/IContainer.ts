@@ -24,7 +24,7 @@ export interface Resolvable {
 }
 
 export interface IContainerModule {
-  applyTo(container: IContainer, ...args: unknown[]): void;
+  applyTo(container: IContainer): void;
 }
 
 export interface IRegistrationOptions {

@@ -1,4 +1,4 @@
-import { DependencyKey, IContainer, InjectionToken } from './IContainer';
+import { DependencyKey, IContainer, IContainerModule, InjectionToken } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
@@ -24,7 +24,7 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  register(): this {
+  register(key: DependencyKey, value: IProvider): this {
     throw new MethodNotImplementedError();
   }
 
@@ -42,7 +42,7 @@ export class EmptyContainer implements IContainer {
 
   removeScope(): void {}
 
-  use(): this {
+  use(module: IContainerModule): this {
     throw new MethodNotImplementedError();
   }
 }

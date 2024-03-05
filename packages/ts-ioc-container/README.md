@@ -84,7 +84,6 @@ import {
   Container,
   inject,
   ReflectionInjector,
-  Provider,
   RegistrationConflictError,
   Registration,
   key,
@@ -100,7 +99,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
+    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).assignTo('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -111,8 +110,8 @@ describe('Basic usage', function () {
     }
 
     const container = new Container(new ReflectionInjector())
-      .register('ILogger1', Provider.fromClass(Logger))
-      .register('ILogger2', Provider.fromClass(Logger));
+      .use(Registration.fromClass(Logger).assignTo('ILogger1'))
+      .use(Registration.fromClass(Logger).assignTo('ILogger2'));
 
     expect(container.resolve(App).loggers).toHaveLength(2);
   });
@@ -132,8 +131,8 @@ describe('Basic usage', function () {
   it('should not raise an error when key is busy', () => {
     expect(() => {
       new Container(new ReflectionInjector())
-        .register('ILogger', Provider.fromClass(Logger))
-        .register('ILogger', Provider.fromClass(Logger));
+        .use(Registration.fromClass(Logger).assignTo('ILogger'))
+        .use(Registration.fromClass(Logger).assignTo('ILogger'));
     }).not.toThrowError(RegistrationConflictError);
   });
 
@@ -280,15 +279,14 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 
 ```typescript
 import 'reflect-metadata';
-import { Container, ContainerDisposedError, Provider, ReflectionInjector } from 'ts-ioc-container';
+import { Container, ContainerDisposedError, ReflectionInjector, Registration } from 'ts-ioc-container';
 
 class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).register(
-      'ILogger',
-      Provider.fromClass(Logger),
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(
+      Registration.fromClass(Logger).assignTo('ILogger'),
     );
     const child = root.createScope('child');
 
@@ -315,7 +313,7 @@ This type of injector uses `@inject` decorator to mark where dependencies should
 
 ```typescript
 import 'reflect-metadata';
-import { by, Container, inject, Provider, ReflectionInjector } from 'ts-ioc-container';
+import { by, Container, inject, ReflectionInjector, Registration } from 'ts-ioc-container';
 
 class Logger {
   name = 'Logger';
@@ -335,7 +333,7 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
+    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).assignTo('ILogger'));
 
     const app = container.resolve(App);
 
@@ -350,7 +348,7 @@ This type of injector just passes container to constructor with others arguments
 
 ```typescript
 import 'reflect-metadata';
-import { Container, IContainer, Provider, SimpleInjector } from 'ts-ioc-container';
+import { Container, IContainer, Registration, SimpleInjector } from 'ts-ioc-container';
 
 describe('SimpleInjector', function () {
   it('should pass container as first parameter', function () {
@@ -358,7 +356,7 @@ describe('SimpleInjector', function () {
       constructor(public container: IContainer) {}
     }
 
-    const container = new Container(new SimpleInjector()).register('App', Provider.fromClass(App));
+    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).assignTo('App'));
     const app = container.resolve<App>('App');
 
     expect(app.container).toBeInstanceOf(Container);
@@ -369,7 +367,7 @@ describe('SimpleInjector', function () {
       constructor(container: IContainer, public greeting: string) {}
     }
 
-    const container = new Container(new SimpleInjector()).register('App', Provider.fromClass(App));
+    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).assignTo('App'));
     const app = container.resolve<App>('App', 'Hello world');
 
     expect(app.greeting).toBe('Hello world');
@@ -383,7 +381,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 
 ```typescript
 import 'reflect-metadata';
-import { Container, Provider, ProxyInjector, args } from 'ts-ioc-container';
+import { Container, ProxyInjector, args, Registration } from 'ts-ioc-container';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -397,7 +395,7 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container(new ProxyInjector()).register('logger', Provider.fromClass(Logger));
+    const container = new Container(new ProxyInjector()).use(Registration.fromClass(Logger).assignTo('logger'));
 
     const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
@@ -427,8 +425,8 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container(new ProxyInjector())
-      .register('App', Provider.fromClass(App).pipe(args({ greetingTemplate })))
-      .register('logger', Provider.fromClass(Logger));
+      .use(Registration.fromClass(App).assignTo('App').pipe(args({ greetingTemplate })))
+      .use(Registration.fromClass(Logger).assignTo('logger'));
 
     const app = container.resolve<App>('App', { name: `world` });
     expect(app.greeting).toBe('Hello world');

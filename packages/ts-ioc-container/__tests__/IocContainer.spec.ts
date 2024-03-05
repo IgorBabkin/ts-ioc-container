@@ -3,10 +3,8 @@ import {
   singleton,
   Container,
   ContainerDisposedError,
-  DependencyMissingKeyError,
   DependencyNotFoundError,
   key,
-  Provider,
   provider,
   ReflectionInjector,
   Registration,
@@ -93,7 +91,7 @@ describe('IocContainer', function () {
     @provider(singleton())
     class Logger1 {}
 
-    const container = createContainer().register('logger', Provider.fromClass(Logger1));
+    const container = createContainer().use(Registration.fromClass(Logger1).assignTo('logger'));
 
     expect(container.resolve('logger')).toBe(container.resolve('logger'));
   });

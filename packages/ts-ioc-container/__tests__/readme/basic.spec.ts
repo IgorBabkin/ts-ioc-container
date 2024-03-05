@@ -5,7 +5,6 @@ import {
   Container,
   inject,
   ReflectionInjector,
-  Provider,
   RegistrationConflictError,
   Registration,
   key,
@@ -21,7 +20,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container(new ReflectionInjector()).register('ILogger', Provider.fromClass(Logger));
+    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).assignTo('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -32,8 +31,8 @@ describe('Basic usage', function () {
     }
 
     const container = new Container(new ReflectionInjector())
-      .register('ILogger1', Provider.fromClass(Logger))
-      .register('ILogger2', Provider.fromClass(Logger));
+      .use(Registration.fromClass(Logger).assignTo('ILogger1'))
+      .use(Registration.fromClass(Logger).assignTo('ILogger2'));
 
     expect(container.resolve(App).loggers).toHaveLength(2);
   });
@@ -53,8 +52,8 @@ describe('Basic usage', function () {
   it('should not raise an error when key is busy', () => {
     expect(() => {
       new Container(new ReflectionInjector())
-        .register('ILogger', Provider.fromClass(Logger))
-        .register('ILogger', Provider.fromClass(Logger));
+        .use(Registration.fromClass(Logger).assignTo('ILogger'))
+        .use(Registration.fromClass(Logger).assignTo('ILogger'));
     }).not.toThrowError(RegistrationConflictError);
   });
 
