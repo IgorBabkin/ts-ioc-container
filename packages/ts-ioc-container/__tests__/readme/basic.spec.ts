@@ -51,9 +51,7 @@ describe('Basic usage', function () {
 
   it('should not raise an error when key is busy', () => {
     expect(() => {
-      new Container(new ReflectionInjector())
-        .use(Registration.fromClass(Logger).assignTo('ILogger'))
-        .use(Registration.fromClass(Logger).assignTo('ILogger'));
+      new Container(new ReflectionInjector()).use(Registration.fromClass(Logger)).use(Registration.fromClass(Logger));
     }).not.toThrowError(RegistrationConflictError);
   });
 
