@@ -19,7 +19,7 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).assignTo('ILogger'));
+    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).to('ILogger'));
 
     const app = container.resolve(App);
 

@@ -22,7 +22,7 @@ export class Registration implements IRegistration {
     return this.key;
   }
 
-  assignTo(key: DependencyKey): this {
+  to(key: DependencyKey): this {
     this.key = key;
     return this;
   }

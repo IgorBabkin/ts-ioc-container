@@ -13,7 +13,7 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container(new ProxyInjector()).use(Registration.fromClass(Logger).assignTo('logger'));
+    const container = new Container(new ProxyInjector()).use(Registration.fromClass(Logger).to('logger'));
 
     const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
@@ -43,8 +43,8 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container(new ProxyInjector())
-      .use(Registration.fromClass(App).assignTo('App').pipe(args({ greetingTemplate })))
-      .use(Registration.fromClass(Logger).assignTo('logger'));
+      .use(Registration.fromClass(App).to('App').pipe(args({ greetingTemplate })))
+      .use(Registration.fromClass(Logger).to('logger'));
 
     const app = container.resolve<App>('App', { name: `world` });
     expect(app.greeting).toBe('Hello world');

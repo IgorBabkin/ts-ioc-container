@@ -6,7 +6,7 @@ class Logger {}
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(
-      Registration.fromClass(Logger).assignTo('ILogger'),
+      Registration.fromClass(Logger).to('ILogger'),
     );
     const child = root.createScope('child');
 

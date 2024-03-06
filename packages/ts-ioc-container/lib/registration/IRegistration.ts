@@ -5,7 +5,7 @@ import { IProvider } from '../provider/IProvider';
 export interface IRegistration extends IContainerModule {
   getKey(): DependencyKey;
 
-  assignTo(key: DependencyKey): this;
+  to(key: DependencyKey): this;
 
   pipe(...mappers: MapFn<IProvider>[]): this;
 }
@@ -17,8 +17,8 @@ export abstract class RegistrationDecorator implements IRegistration {
     return this.decorated.getKey();
   }
 
-  assignTo(key: DependencyKey): this {
-    this.decorated.assignTo(key);
+  to(key: DependencyKey): this {
+    this.decorated.to(key);
     return this;
   }
 

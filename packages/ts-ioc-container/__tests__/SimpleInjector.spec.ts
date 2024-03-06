@@ -7,7 +7,7 @@ describe('SimpleInjector', function () {
       constructor(public container: IContainer) {}
     }
 
-    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).assignTo('App'));
+    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).to('App'));
     const app = container.resolve<App>('App');
 
     expect(app.container).toBeInstanceOf(Container);
@@ -18,7 +18,7 @@ describe('SimpleInjector', function () {
       constructor(container: IContainer, public greeting: string) {}
     }
 
-    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).assignTo('App'));
+    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).to('App'));
     const app = container.resolve<App>('App', 'Hello world');
 
     expect(app.greeting).toBe('Hello world');

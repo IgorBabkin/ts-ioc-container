@@ -91,7 +91,7 @@ describe('IocContainer', function () {
     @provider(singleton())
     class Logger1 {}
 
-    const container = createContainer().use(Registration.fromClass(Logger1).assignTo('logger'));
+    const container = createContainer().use(Registration.fromClass(Logger1).to('logger'));
 
     expect(container.resolve('logger')).toBe(container.resolve('logger'));
   });

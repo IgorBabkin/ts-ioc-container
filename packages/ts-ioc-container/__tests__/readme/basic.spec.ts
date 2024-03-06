@@ -20,7 +20,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).assignTo('ILogger'));
+    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).to('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -31,8 +31,8 @@ describe('Basic usage', function () {
     }
 
     const container = new Container(new ReflectionInjector())
-      .use(Registration.fromClass(Logger).assignTo('ILogger1'))
-      .use(Registration.fromClass(Logger).assignTo('ILogger2'));
+      .use(Registration.fromClass(Logger).to('ILogger1'))
+      .use(Registration.fromClass(Logger).to('ILogger2'));
 
     expect(container.resolve(App).loggers).toHaveLength(2);
   });

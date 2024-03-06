@@ -99,7 +99,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).assignTo('ILogger'));
+    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).to('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -110,8 +110,8 @@ describe('Basic usage', function () {
     }
 
     const container = new Container(new ReflectionInjector())
-      .use(Registration.fromClass(Logger).assignTo('ILogger1'))
-      .use(Registration.fromClass(Logger).assignTo('ILogger2'));
+      .use(Registration.fromClass(Logger).to('ILogger1'))
+      .use(Registration.fromClass(Logger).to('ILogger2'));
 
     expect(container.resolve(App).loggers).toHaveLength(2);
   });
@@ -284,7 +284,7 @@ class Logger {}
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
     const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(
-      Registration.fromClass(Logger).assignTo('ILogger'),
+      Registration.fromClass(Logger).to('ILogger'),
     );
     const child = root.createScope('child');
 
@@ -331,7 +331,7 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).assignTo('ILogger'));
+    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).to('ILogger'));
 
     const app = container.resolve(App);
 
@@ -354,7 +354,7 @@ describe('SimpleInjector', function () {
       constructor(public container: IContainer) {}
     }
 
-    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).assignTo('App'));
+    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).to('App'));
     const app = container.resolve<App>('App');
 
     expect(app.container).toBeInstanceOf(Container);
@@ -365,7 +365,7 @@ describe('SimpleInjector', function () {
       constructor(container: IContainer, public greeting: string) {}
     }
 
-    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).assignTo('App'));
+    const container = new Container(new SimpleInjector()).use(Registration.fromClass(App).to('App'));
     const app = container.resolve<App>('App', 'Hello world');
 
     expect(app.greeting).toBe('Hello world');
@@ -393,7 +393,7 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container(new ProxyInjector()).use(Registration.fromClass(Logger).assignTo('logger'));
+    const container = new Container(new ProxyInjector()).use(Registration.fromClass(Logger).to('logger'));
 
     const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
@@ -423,8 +423,8 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container(new ProxyInjector())
-      .use(Registration.fromClass(App).assignTo('App').pipe(args({ greetingTemplate })))
-      .use(Registration.fromClass(Logger).assignTo('logger'));
+      .use(Registration.fromClass(App).to('App').pipe(args({ greetingTemplate })))
+      .use(Registration.fromClass(Logger).to('logger'));
 
     const app = container.resolve<App>('App', { name: `world` });
     expect(app.greeting).toBe('Hello world');
