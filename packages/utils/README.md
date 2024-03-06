@@ -4,15 +4,12 @@
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-constructor-injector)
 
-# ts-constructor-injector
-Dependency injection for typescript classes
-
 ## Install
 ```shell script
-npm install ts-constructor-injector reflect-metadata
+npm install @ibabkin/utils reflect-metadata
 ```
 ```shell script
-yarn add ts-constructor-injector reflect-metadata
+yarn add @ibabkin/utils reflect-metadata
 ```
 
 ## tsconfig.json
