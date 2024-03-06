@@ -27,7 +27,7 @@ yarn add ts-constructor-injector reflect-metadata
 
 ## Usage
 ```typescript
-import { inject, resolve } from "ts-constructor-injector";
+import { inject, resolve } from "@ibabkin/utils";
 
 class Logger {
   constructor(@inject(context => context.topic) private name: string) {
@@ -40,7 +40,7 @@ const logger = resolve({topic: 'main'})(Logger);
 ### Hooks
 
 ```typescript
-import { hook, getHooks } from "ts-constructor-injector";
+import { hook, getHooks } from "@ibabkin/utils";
 
 class Logger {
   @hook('onDispose')
@@ -60,7 +60,7 @@ class Logger {
 ### ErrorHandler
 
 ```typescript
-import { handleAsyncError } from "ts-constructor-injector";
+import { handleAsyncError } from "@ibabkin/utils";
 
 const prismaToDomainError: HandleErrorParams = (error, context) => {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {

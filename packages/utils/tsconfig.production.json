@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["reflect-metadata", "node"],
+    "module": "esnext",
+  },
+  "include": [
+    "lib"
+  ],
+}

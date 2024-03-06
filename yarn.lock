@@ -540,6 +540,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@ibabkin/utils@workspace:packages/utils":
+  version: 0.0.0-use.local
+  resolution: "@ibabkin/utils@workspace:packages/utils"
+  dependencies:
+    "@types/jest": 27.0.2
+    "@types/node": ^17.0.21
+    jest: 27.2.3
+    nodemon: ^2.0.13
+    reflect-metadata: ^0.1.13
+    rimraf: 3.0.2
+    ts-jest: 27.0.5
+    typescript: 4.4.3
+  peerDependencies:
+    reflect-metadata: ^0.1.13
+  languageName: unknown
+  linkType: soft
+
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
   resolution: "@isaacs/cliui@npm:8.0.2"
@@ -12305,23 +12322,6 @@ __metadata:
   checksum: 5b09f8e329e8f33c1111ef26906332ba7ba7248cde3e26fc054bb3d69f2858bf5feedca9559c572ff91f33e52977c28e0d41c387df6a02a633cbb8c2d8238627
   languageName: node
   linkType: hard
-
-"ts-constructor-injector@workspace:packages/injector":
-  version: 0.0.0-use.local
-  resolution: "ts-constructor-injector@workspace:packages/injector"
-  dependencies:
-    "@types/jest": 27.0.2
-    "@types/node": ^17.0.21
-    jest: 27.2.3
-    nodemon: ^2.0.13
-    reflect-metadata: ^0.1.13
-    rimraf: 3.0.2
-    ts-jest: 27.0.5
-    typescript: 4.4.3
-  peerDependencies:
-    reflect-metadata: ^0.1.13
-  languageName: unknown
-  linkType: soft
 
 "ts-ioc-container@^27.2.1, ts-ioc-container@workspace:packages/ts-ioc-container":
   version: 0.0.0-use.local

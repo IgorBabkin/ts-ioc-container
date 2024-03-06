@@ -15,7 +15,8 @@
     "build": "lerna run build",
     "coverage": "lerna run coverage",
     "pre-commit": "lint-staged",
-    "release": "yarn build && yarn test && lerna publish"
+    "release:publish": "lerna publish",
+    "release": "yarn build && yarn test && yarn release:publish"
   },
   "config": {
     "commitizen": {
