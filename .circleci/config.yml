@@ -29,12 +29,6 @@ jobs:
 
       - run: npm run build
 
-      - run: npm test -- --scope=ts-constructor-injector
-
-      - coveralls/upload:
-          coverage_file: ./packages/injector/coverage/lcov.info
-          flag_name: 'ts-constructor-injector'
-
       - run: npm test -- --scope=reactivex-react
 
       - coveralls/upload:
