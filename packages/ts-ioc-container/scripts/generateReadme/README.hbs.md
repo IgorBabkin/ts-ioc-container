@@ -30,14 +30,13 @@
     - [Simple injector](#simple-injector)
     - [Proxy injector](#proxy-injector)
 - [Providers](#providers)
+    - [Registration module (Provider + DependencyKey)](#registration-and-providers) `@key`
     - [Provider](#provider) `@provider`
     - [Singleton provider](#singleton-provider)
     - [Tagged provider](#tagged-provider)
     - [Args provider](#args-provider)
     - [Aliases](#aliases) `alias`
 - [Container modules](#container-modules)
-    - [Basic usage](#basic-usage-1)
-    - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey) `@key`
 - [Hooks](#hooks) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
     - [OnDispose](#ondispose) `@onDispose`
@@ -139,7 +138,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 {{{include_file './__tests__/ProxyInjector.spec.ts'}}}
 ```
 
-## Providers
+## Registration and Providers
 `IProvider<T>` is used to describe how instances should be created. It has next basic methods:
 - `resolve` - creates instance with passed arguments
 - `clone` - we invoke it when we create a scope. It clones provider to new scope.
@@ -150,6 +149,15 @@ There are next types of providers:
 - `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
 - `TaggedProvider` - provider that can be resolved only from container with certain tags and their sub scopes
 - `ArgsProvider` - provider that encapsulates arguments to pass it to constructor.
+
+`Registration` - just a helper to register provider with certain key. `(preferrably to use)`
+
+### Registration (Provider + DependencyKey)
+Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
+
+```typescript
+{{{include_file './__tests__/readme/registration.spec.ts'}}}
+```
 
 ### Provider
 
@@ -196,17 +204,8 @@ Sometimes you want to register the same provider with different keys. This is wh
 ## Container modules
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
-### Basic usage
-
 ```typescript
 {{{include_file './__tests__/readme/containerModule.spec.ts'}}}
-```
-
-### Registration module (Provider + DependencyKey)
-Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
-
-```typescript
-{{{include_file './__tests__/readme/registration.spec.ts'}}}
 ```
 
 ## Hooks

@@ -30,14 +30,13 @@
     - [Simple injector](#simple-injector)
     - [Proxy injector](#proxy-injector)
 - [Providers](#providers)
+    - [Registration module (Provider + DependencyKey)](#registration-and-providers) `@key`
     - [Provider](#provider) `@provider`
     - [Singleton provider](#singleton-provider)
     - [Tagged provider](#tagged-provider)
     - [Args provider](#args-provider)
     - [Aliases](#aliases) `alias`
 - [Container modules](#container-modules)
-    - [Basic usage](#basic-usage-1)
-    - [Registration module (Provider + DependencyKey)](#registration-module-provider--dependencykey) `@key`
 - [Hooks](#hooks) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
     - [OnDispose](#ondispose) `@onDispose`
@@ -382,7 +381,7 @@ describe('ProxyInjector', function () {
 
 ```
 
-## Providers
+## Registration and Providers
 `IProvider<T>` is used to describe how instances should be created. It has next basic methods:
 - `resolve` - creates instance with passed arguments
 - `clone` - we invoke it when we create a scope. It clones provider to new scope.
@@ -393,6 +392,58 @@ There are next types of providers:
 - `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
 - `TaggedProvider` - provider that can be resolved only from container with certain tags and their sub scopes
 - `ArgsProvider` - provider that encapsulates arguments to pass it to constructor.
+
+`Registration` - just a helper to register provider with certain key. `(preferrably to use)`
+
+### Registration (Provider + DependencyKey)
+Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
+
+```typescript
+import 'reflect-metadata';
+import { singleton, Container, tags, provider, ReflectionInjector, Registration as R, key } from 'ts-ioc-container';
+import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
+
+describe('Registration module', function () {
+  const createContainer = () => new Container(new ReflectionInjector(), { tags: ['root'] });
+
+  it('should register class', function () {
+    @key('ILogger')
+    @provider(singleton(), tags('root'))
+    class Logger {}
+
+    const root = createContainer().use(R.fromClass(Logger));
+
+    expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
+  });
+
+  it('should register value', function () {
+    const root = createContainer().use(R.fromValue('smth').to('ISmth'));
+
+    expect(root.resolve('ISmth')).toBe('smth');
+  });
+
+  it('should register fn', function () {
+    const root = createContainer().use(R.fromFn(() => 'smth').to('ISmth'));
+
+    expect(root.resolve('ISmth')).toBe('smth');
+  });
+
+  it('should raise an error if key is not provider', () => {
+    expect(() => {
+      createContainer().use(R.fromValue('smth'));
+    }).toThrowError(DependencyMissingKeyError);
+  });
+
+  it('should register dependency by class name if @key is not provided', function () {
+    class FileLogger {}
+
+    const root = createContainer().use(R.fromClass(FileLogger));
+
+    expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
+  });
+});
+
+```
 
 ### Provider
 
@@ -618,8 +669,6 @@ describe('alias', () => {
 ## Container modules
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
-### Basic usage
-
 ```typescript
 import 'reflect-metadata';
 import { IContainerModule, Registration as R, IContainer, key, Container, ReflectionInjector } from 'ts-ioc-container';
@@ -657,37 +706,6 @@ describe('Container Modules', function () {
     const container = createContainer(false);
 
     expect(container.resolve('ILogger')).toBeInstanceOf(TestLogger);
-  });
-});
-
-```
-
-### Registration module (Provider + DependencyKey)
-Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
-
-```typescript
-import 'reflect-metadata';
-import { singleton, Container, tags, provider, ReflectionInjector, Registration as R, key } from 'ts-ioc-container';
-
-describe('Registration module', function () {
-  const createContainer = () => new Container(new ReflectionInjector(), { tags: ['root'] });
-
-  it('should register dependency by @key', function () {
-    @key('ILogger')
-    @provider(singleton(), tags('root'))
-    class Logger {}
-
-    const root = createContainer().use(R.fromClass(Logger));
-
-    expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
-  });
-
-  it('should register dependency by class name if @key is not provided', function () {
-    class FileLogger {}
-
-    const root = createContainer().use(R.fromClass(FileLogger));
-
-    expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
   });
 });
 
