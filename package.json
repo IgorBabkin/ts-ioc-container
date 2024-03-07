@@ -27,7 +27,9 @@
   "lint-staged": {
     "*.{js,ts,tsx}": [
       "eslint --fix",
-      "prettier --write",
+      "prettier --write"
+    ],
+    "*.{spec.ts,hbs}": [
       "generate:docs"
     ]
   },
