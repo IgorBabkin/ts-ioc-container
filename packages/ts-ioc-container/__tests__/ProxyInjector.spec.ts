@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, ProxyInjector, args, Registration } from '../lib';
+import { Container, ProxyInjector, args, Registration as R } from '../lib';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -13,7 +13,7 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container(new ProxyInjector()).use(Registration.fromClass(Logger).to('logger'));
+    const container = new Container(new ProxyInjector()).use(R.fromClass(Logger).to('logger'));
 
     const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
@@ -43,8 +43,8 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container(new ProxyInjector())
-      .use(Registration.fromClass(App).to('App').pipe(args({ greetingTemplate })))
-      .use(Registration.fromClass(Logger).to('logger'));
+      .use(R.fromClass(App).to('App').pipe(args({ greetingTemplate })))
+      .use(R.fromClass(Logger).to('logger'));
 
     const app = container.resolve<App>('App', { name: `world` });
     expect(app.greeting).toBe('Hello world');

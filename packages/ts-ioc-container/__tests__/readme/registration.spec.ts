@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { singleton, Container, tags, provider, ReflectionInjector, Registration, key } from '../../lib';
+import { singleton, Container, tags, provider, ReflectionInjector, Registration as R, key } from '../../lib';
 
 describe('Registration module', function () {
   const createContainer = () => new Container(new ReflectionInjector(), { tags: ['root'] });
@@ -9,7 +9,7 @@ describe('Registration module', function () {
     @provider(singleton(), tags('root'))
     class Logger {}
 
-    const root = createContainer().use(Registration.fromClass(Logger));
+    const root = createContainer().use(R.fromClass(Logger));
 
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
   });
@@ -17,7 +17,7 @@ describe('Registration module', function () {
   it('should register dependency by class name if @key is not provided', function () {
     class FileLogger {}
 
-    const root = createContainer().use(Registration.fromClass(FileLogger));
+    const root = createContainer().use(R.fromClass(FileLogger));
 
     expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
   });

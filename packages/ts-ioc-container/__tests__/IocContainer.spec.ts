@@ -7,7 +7,7 @@ import {
   key,
   provider,
   ReflectionInjector,
-  Registration,
+  Registration as R,
   args,
 } from '../lib';
 
@@ -22,13 +22,13 @@ describe('IocContainer', function () {
   }
 
   it('should resolve dependency', function () {
-    const container = createContainer().use(Registration.fromClass(Logger));
+    const container = createContainer().use(R.fromClass(Logger));
 
     expect(container.resolve('logger')).toBeInstanceOf(Logger);
   });
 
   it('should resolve unique dependency per every request', function () {
-    const container = createContainer().use(Registration.fromClass(Logger));
+    const container = createContainer().use(R.fromClass(Logger));
 
     expect(container.resolve('logger')).not.toBe(container.resolve('logger'));
   });
@@ -37,13 +37,13 @@ describe('IocContainer', function () {
     class TestClass {}
 
     const container = createContainer();
-    container.use(Registration.fromClass(TestClass));
+    container.use(R.fromClass(TestClass));
 
     expect(container.resolve('TestClass')).toBeInstanceOf(TestClass);
   });
 
   it('should keep all instances', function () {
-    const container = createContainer().use(Registration.fromClass(Logger));
+    const container = createContainer().use(R.fromClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 
@@ -51,7 +51,7 @@ describe('IocContainer', function () {
   });
 
   it('should dispose all instances', function () {
-    const container = createContainer().use(Registration.fromClass(Logger));
+    const container = createContainer().use(R.fromClass(Logger));
 
     container.resolve('logger');
     container.dispose();
@@ -66,7 +66,7 @@ describe('IocContainer', function () {
   });
 
   it('should throw an error when trying to resolve a dependency of disposed container', function () {
-    const container = createContainer().use(Registration.fromClass(Logger));
+    const container = createContainer().use(R.fromClass(Logger));
 
     container.dispose();
 
@@ -78,11 +78,11 @@ describe('IocContainer', function () {
 
     container.dispose();
 
-    expect(() => container.use(Registration.fromClass(Logger))).toThrowError(ContainerDisposedError);
+    expect(() => container.use(R.fromClass(Logger))).toThrowError(ContainerDisposedError);
   });
 
   it('should keep argument for provider', function () {
-    const container = createContainer().use(Registration.fromClass(Logger).pipe(args('main')));
+    const container = createContainer().use(R.fromClass(Logger).pipe(args('main')));
 
     expect(container.resolve<Logger>('logger').topic).toBe('main');
   });
@@ -91,7 +91,7 @@ describe('IocContainer', function () {
     @provider(singleton())
     class Logger1 {}
 
-    const container = createContainer().use(Registration.fromClass(Logger1).to('logger'));
+    const container = createContainer().use(R.fromClass(Logger1).to('logger'));
 
     expect(container.resolve('logger')).toBe(container.resolve('logger'));
   });

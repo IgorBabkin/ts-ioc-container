@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { IContainerModule, Registration, IContainer, key, Container, ReflectionInjector } from '../../lib';
+import { IContainerModule, Registration as R, IContainer, key, Container, ReflectionInjector } from '../../lib';
 
 @key('ILogger')
 class Logger {}
@@ -9,13 +9,13 @@ class TestLogger {}
 
 class Production implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.use(Registration.fromClass(Logger));
+    container.use(R.fromClass(Logger));
   }
 }
 
 class Development implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.use(Registration.fromClass(TestLogger));
+    container.use(R.fromClass(TestLogger));
   }
 }
 

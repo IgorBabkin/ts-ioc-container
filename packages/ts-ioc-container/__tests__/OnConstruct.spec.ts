@@ -8,7 +8,7 @@ import {
   IContainer,
   IInjector,
   ReflectionInjector,
-  Registration,
+  Registration as R,
 } from '../lib';
 
 class MyInjector implements IInjector {
@@ -41,7 +41,7 @@ class Logger {
 
 describe('onConstruct', function () {
   it('should make logger be ready on resolve', function () {
-    const container = new Container(new MyInjector()).use(Registration.fromClass(Logger));
+    const container = new Container(new MyInjector()).use(R.fromClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 

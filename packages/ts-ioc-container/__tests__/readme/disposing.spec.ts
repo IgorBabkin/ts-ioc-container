@@ -1,13 +1,11 @@
 import 'reflect-metadata';
-import { Container, ContainerDisposedError, ReflectionInjector, Registration } from '../../lib';
+import { Container, ContainerDisposedError, ReflectionInjector, Registration as R } from '../../lib';
 
 class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(
-      Registration.fromClass(Logger).to('ILogger'),
-    );
+    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(R.fromClass(Logger).to('ILogger'));
     const child = root.createScope('child');
 
     const logger = child.resolve('ILogger');

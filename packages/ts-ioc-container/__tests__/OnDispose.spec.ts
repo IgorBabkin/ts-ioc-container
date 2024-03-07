@@ -8,7 +8,7 @@ import {
   hook,
   inject,
   provider,
-  Registration,
+  Registration as R,
   ReflectionInjector,
 } from '../lib';
 
@@ -41,9 +41,7 @@ class Logger {
 
 describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = new Container(new ReflectionInjector())
-      .use(Registration.fromClass(Logger))
-      .use(Registration.fromClass(LogsRepo));
+    const container = new Container(new ReflectionInjector()).use(R.fromClass(Logger)).use(R.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');

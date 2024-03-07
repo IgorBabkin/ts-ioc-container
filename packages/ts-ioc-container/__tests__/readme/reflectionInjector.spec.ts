@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { by, Container, inject, ReflectionInjector, Registration } from '../../lib';
+import { by, Container, inject, ReflectionInjector, Registration as R } from '../../lib';
 
 class Logger {
   name = 'Logger';
@@ -19,7 +19,7 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container(new ReflectionInjector()).use(Registration.fromClass(Logger).to('ILogger'));
+    const container = new Container(new ReflectionInjector()).use(R.fromClass(Logger).to('ILogger'));
 
     const app = container.resolve(App);
 

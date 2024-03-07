@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { alias, by, Container, inject, provider, ReflectionInjector, Registration } from '../../lib';
+import { alias, by, Container, inject, provider, ReflectionInjector, Registration as R } from '../../lib';
 
 describe('alias', () => {
   const IMiddlewareKey = Symbol('IMiddleware');
@@ -53,8 +53,8 @@ describe('alias', () => {
     }
 
     const container = new Container(new ReflectionInjector())
-      .use(Registration.fromClass(LoggerMiddleware))
-      .use(Registration.fromClass(ErrorHandlerMiddleware));
+      .use(R.fromClass(LoggerMiddleware))
+      .use(R.fromClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
