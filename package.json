@@ -17,7 +17,8 @@
     "coverage": "lerna run coverage",
     "pre-commit": "lint-staged",
     "release:publish": "lerna publish",
-    "release": "yarn build && yarn test && yarn release:publish"
+    "release": "yarn build && yarn test && yarn release:publish",
+    "prepare": "husky"
   },
   "config": {
     "commitizen": {
@@ -42,9 +43,9 @@
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "4.0.0",
     "git-cz": "^4.8.0",
-    "husky": "7.0.2",
+    "husky": "^9.0.11",
     "lerna": "^6.6.2",
-    "lint-staged": "11.1.2",
+    "lint-staged": "^15.2.2",
     "prettier": "2.4.1"
   },
   "version": "0.0.0",
