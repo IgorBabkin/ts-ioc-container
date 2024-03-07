@@ -15,7 +15,7 @@
     "build": "lerna run build",
     "generate:docs": "lerna run generate:docs",
     "coverage": "lerna run coverage",
-    "pre-commit": "lint-staged",
+    "pre-commit": "lerna run generate:docs && lint-staged",
     "release:publish": "lerna publish",
     "release": "yarn build && yarn test && yarn release:publish",
     "prepare": "husky"
@@ -29,9 +29,6 @@
     "*.{js,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
-    ],
-    "*.{spec.ts,hbs}": [
-      "generate:docs"
     ]
   },
   "devDependencies": {

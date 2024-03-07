@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { alias, by, Container, inject, provider, ReflectionInjector, Registration as R } from '../../lib';
 
-describe('alia', () => {
+describe('alias', () => {
   const IMiddlewareKey = Symbol('IMiddleware');
   const middleware = provider(alias(IMiddlewareKey));
 
