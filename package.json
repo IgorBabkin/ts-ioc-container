@@ -13,6 +13,7 @@
     "lint:fix": "yarn lint --fix",
     "test": "lerna run test",
     "build": "lerna run build",
+    "generate:docs": "lerna run generate:docs",
     "coverage": "lerna run coverage",
     "pre-commit": "lint-staged",
     "release:publish": "lerna publish",
@@ -26,7 +27,8 @@
   "lint-staged": {
     "*.{js,ts,tsx}": [
       "eslint --fix",
-      "prettier --write"
+      "prettier --write",
+      "generate:docs"
     ]
   },
   "devDependencies": {
