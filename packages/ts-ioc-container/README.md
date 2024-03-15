@@ -43,7 +43,7 @@
 - [Tests and Mocks](#tests-and-mocks)
 - [Errors](#errors)
 
-## Setup
+## Setu
 
 ```shell script
 npm install ts-ioc-container reflect-metadata

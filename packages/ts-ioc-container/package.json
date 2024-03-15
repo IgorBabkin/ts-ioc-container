@@ -41,7 +41,7 @@
     "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
     "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
-    "generate:docs": "ts-node scripts/generateReadme/generateReadme.ts",
+    "generate:docs": "ts-node scripts/generateReadme/generateReadme.ts && git add README.md",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "coverage": "coveralls",
     "watch": "nodemon --watch ./lib --exec npm run build",
