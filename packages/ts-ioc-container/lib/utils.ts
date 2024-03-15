@@ -6,19 +6,16 @@ export function pipe<T>(...mappers: MapFn<T>[]): MapFn<T> {
   return (value) => mappers.reduce((acc, current) => current(acc), value);
 }
 
-export function merge<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
-  if (baseArr.length === 0) {
-    return insertArr;
-  }
+export function fillEmptyIndexes<T>(baseArr: (T | undefined)[], insertArr: T[]): T[] {
+  const a = [...baseArr];
+  const b = [...insertArr];
 
-  if (insertArr.length === 0) {
-    return baseArr as T[];
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === undefined) {
+      a[i] = b.shift() as T;
+    }
   }
-  const [b1, ...restBaseArr] = baseArr;
-  const [i1, ...restInsertArr] = insertArr;
-  return b1 === undefined
-    ? [i1].concat(merge(restBaseArr, restInsertArr))
-    : [b1 as T].concat(merge(restBaseArr, insertArr));
+  return a.concat(b) as T[];
 }
 
 export const constant =

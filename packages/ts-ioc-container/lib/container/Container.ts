@@ -82,8 +82,10 @@ export class Container implements IContainer, Tagged {
     return this.tags.includes(tag);
   }
 
-  use(module: IContainerModule): this {
-    module.applyTo(this);
+  use(...modules: IContainerModule[]): this {
+    for (const module of modules) {
+      module.applyTo(this);
+    }
     return this;
   }
 

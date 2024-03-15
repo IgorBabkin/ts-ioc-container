@@ -42,7 +42,7 @@ export interface IContainer extends Resolvable {
 
   dispose(): void;
 
-  use(module: IContainerModule): this;
+  use(...modules: IContainerModule[]): this;
 
   hasTag(tag: Tag): boolean;
 
