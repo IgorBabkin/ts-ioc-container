@@ -1,3 +1,5 @@
+import { constructor } from './utils';
+
 export const setMetadata =
   <T>(key: string | symbol, value: T): ClassDecorator =>
   (target) => {
@@ -10,9 +12,13 @@ export function getMetadata<T>(target: Object, key: string | symbol): T | undefi
 }
 
 export const setParameterMetadata =
-  <T>(key: string | symbol, value: T): ParameterDecorator =>
+  (key: string | symbol, value: unknown): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
-    const metadata: T[] = Reflect.getOwnMetadata(key, target) ?? [];
+    const metadata: unknown[] = Reflect.getOwnMetadata(key, target) ?? [];
     metadata[parameterIndex] = value;
     Reflect.defineMetadata(key, metadata, target);
   };
+
+export const getParameterMetadata = (key: string | symbol, target: constructor<unknown>): unknown[] => {
+  return (Reflect.getOwnMetadata(key, target) as unknown[]) ?? [];
+};

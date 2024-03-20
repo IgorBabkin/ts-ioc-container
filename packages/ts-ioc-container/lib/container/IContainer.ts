@@ -27,10 +27,6 @@ export interface IContainerModule {
   applyTo(container: IContainer): void;
 }
 
-export interface IRegistrationOptions {
-  override?: boolean;
-}
-
 export interface IContainer extends Resolvable {
   createScope(...tags: Tag[]): IContainer;
 
