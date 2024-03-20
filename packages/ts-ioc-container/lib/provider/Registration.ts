@@ -1,15 +1,15 @@
-import { DependencyKey, IContainer } from '../container/IContainer';
+import { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { Provider } from './Provider';
 import { IProvider, ResolveDependency } from './IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 
-const DEPENDENCY_KEY = 'DependencyKey';
+const DEPENDENCY_KEY = 'DEPENDENCY_KEY';
 
 export const key = (value: DependencyKey) => setMetadata(DEPENDENCY_KEY, value);
 
-export class Registration<T> {
+export class Registration<T> implements IContainerModule {
   static fromClass<T>(Target: constructor<T>) {
     const dependencyKey = getMetadata<DependencyKey>(Target, DEPENDENCY_KEY);
     return new Registration(Provider.fromClass(Target), dependencyKey ?? Target.name);
