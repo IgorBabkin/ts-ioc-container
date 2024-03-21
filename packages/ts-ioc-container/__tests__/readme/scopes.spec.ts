@@ -8,7 +8,7 @@ import {
   key,
   tags,
   provider,
-  ReflectionInjector,
+  MetadataInjector,
   Registration as R,
   by,
 } from '../../lib';
@@ -19,7 +19,7 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] }).use(R.fromClass(Logger));
+    const root = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromClass(Logger));
     const child = root.createScope('child');
 
     expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
@@ -27,7 +27,7 @@ describe('Scopes', function () {
   });
 
   it('should inject new scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] });
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
 
     class App {
       constructor(@inject(by.scope.create('child')) public scope: IContainer) {}

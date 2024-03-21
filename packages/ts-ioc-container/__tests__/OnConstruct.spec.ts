@@ -7,12 +7,12 @@ import {
   hook,
   IContainer,
   IInjector,
-  ReflectionInjector,
+  MetadataInjector,
   Registration as R,
 } from '../lib';
 
 class MyInjector implements IInjector {
-  private injector = new ReflectionInjector();
+  private injector = new MetadataInjector();
 
   resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
     const instance = this.injector.resolve(container, value, ...deps);

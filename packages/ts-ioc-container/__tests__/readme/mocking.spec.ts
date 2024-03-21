@@ -1,4 +1,4 @@
-import { AutoMockedContainer, Container, DependencyKey, ReflectionInjector } from '../../lib';
+import { AutoMockedContainer, Container, DependencyKey, MetadataInjector } from '../../lib';
 import { IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
@@ -23,7 +23,7 @@ interface IEngine {
 describe('Mocking', () => {
   it('should auto-mock dependencies', () => {
     const mockContainer = new MoqContainer();
-    const container = new Container(new ReflectionInjector(), { parent: mockContainer });
+    const container = new Container(new MetadataInjector(), { parent: mockContainer });
 
     const engineMock = mockContainer.resolveMock<IEngine>('IEngine');
     engineMock.setup((i) => i.getRegistrationNumber()).returns('123');

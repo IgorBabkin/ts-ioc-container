@@ -26,7 +26,7 @@
     - [Instances](#instances)
     - [Disposing](#disposing)
 - [Injectors](#injectors)
-    - [Reflection injector](#reflection-injector) `@inject`
+    - [Metadata injector](#reflection-injector) `@inject`
     - [Simple injector](#simple-injector)
     - [Proxy injector](#proxy-injector)
 - [Providers](#providers)
@@ -113,15 +113,15 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 ## Injectors
 `IInjector` is used to describe how dependencies should be injected to constructor.
 
-- `ReflectionInjector` - injects dependencies using `@inject` decorator
+- `MetadataInjector` - injects dependencies using `@inject` decorator
 - `ProxyInjector` - injects dependencies as dictionary `Record<string, unknown>`
 - `SimpleInjector` - just passes container to constructor with others arguments
 
-### Reflection injector
-This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `ReflectionInjector`.
+### Metadata injector
+This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `MetadataInjector`.
 
 ```typescript
-{{{include_file './__tests__/readme/reflectionInjector.spec.ts'}}}
+{{{include_file './__tests__/readme/metadataInjector.spec.ts'}}}
 ```
 
 ### Simple injector

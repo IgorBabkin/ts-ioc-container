@@ -6,7 +6,7 @@ import {
   DependencyKey,
   inject,
   MethodNotImplementedError,
-  ReflectionInjector,
+  MetadataInjector,
 } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
@@ -76,7 +76,7 @@ describe('Automock', function () {
   });
 
   function createContainer() {
-    return new Container(new ReflectionInjector(), { parent: mockContainer });
+    return new Container(new MetadataInjector(), { parent: mockContainer });
   }
 
   it('should automock all non defined dependencies', async function () {

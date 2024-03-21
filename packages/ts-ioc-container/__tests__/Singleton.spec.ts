@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { singleton, Container, key, provider, ReflectionInjector, Registration as R } from '../lib';
+import { singleton, Container, key, provider, MetadataInjector, Registration as R } from '../lib';
 
 @key('logger')
 @provider(singleton())
@@ -7,7 +7,7 @@ class Logger {}
 
 describe('Singleton', function () {
   function createContainer() {
-    return new Container(new ReflectionInjector());
+    return new Container(new MetadataInjector());
   }
 
   it('should resolve the same container per every request', function () {

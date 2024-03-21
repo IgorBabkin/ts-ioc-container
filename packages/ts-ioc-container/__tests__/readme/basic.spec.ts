@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { IContainer, by, Container, inject, ReflectionInjector, Registration as R } from '../../lib';
+import { IContainer, by, Container, inject, MetadataInjector, Registration as R } from '../../lib';
 
 describe('Basic usage', function () {
   class Logger {
@@ -11,7 +11,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container(new ReflectionInjector()).use(R.fromClass(Logger).to('ILogger'));
+    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger).to('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -21,7 +21,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.keys('ILogger1', 'ILogger2')) public loggers: Logger[]) {}
     }
 
-    const container = new Container(new ReflectionInjector())
+    const container = new Container(new MetadataInjector())
       .use(R.fromClass(Logger).to('ILogger1'))
       .use(R.fromClass(Logger).to('ILogger2'));
 
@@ -29,7 +29,7 @@ describe('Basic usage', function () {
   });
 
   it('should inject current scope', function () {
-    const root = new Container(new ReflectionInjector(), { tags: ['root'] });
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
 
     class App {
       constructor(@inject(by.scope.current) public scope: IContainer) {}

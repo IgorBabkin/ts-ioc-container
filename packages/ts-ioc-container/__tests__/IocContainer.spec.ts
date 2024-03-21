@@ -6,7 +6,7 @@ import {
   DependencyNotFoundError,
   key,
   provider,
-  ReflectionInjector,
+  MetadataInjector,
   Registration as R,
   args,
 } from '../lib';
@@ -18,7 +18,7 @@ class Logger {
 
 describe('IocContainer', function () {
   function createContainer() {
-    return new Container(new ReflectionInjector());
+    return new Container(new MetadataInjector());
   }
 
   it('should resolve dependency', function () {

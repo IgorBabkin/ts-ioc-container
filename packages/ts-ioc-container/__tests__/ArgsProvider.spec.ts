@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, key, argsFn, args, ReflectionInjector, Registration as R } from '../lib';
+import { Container, key, argsFn, args, MetadataInjector, Registration as R } from '../lib';
 
 @key('logger')
 class Logger {
@@ -8,7 +8,7 @@ class Logger {
 
 describe('ArgsProvider', function () {
   function createContainer() {
-    return new Container(new ReflectionInjector());
+    return new Container(new MetadataInjector());
   }
 
   it('can assign argument function to provider', function () {
