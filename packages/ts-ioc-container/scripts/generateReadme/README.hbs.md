@@ -26,7 +26,7 @@
     - [Instances](#instances)
     - [Disposing](#disposing)
 - [Injectors](#injectors)
-    - [Metadata injector](#reflection-injector) `@inject`
+    - [Metadata injector](#metadata-injector) `@inject`
     - [Simple injector](#simple-injector)
     - [Proxy injector](#proxy-injector)
 - [Providers](#providers)
