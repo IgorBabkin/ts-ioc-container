@@ -5,7 +5,7 @@ import {
   hook,
   IContainer,
   Provider,
-  ReflectionInjector,
+  MetadataInjector,
   Resolvable,
 } from 'ts-ioc-container';
 import { IDependencyContainer, Scope } from '../lib';
@@ -13,7 +13,7 @@ import { IDependencyContainer, Scope } from '../lib';
 export const onDispose = hook('onDispose');
 
 export function createContainer(): IContainer {
-  return new Container(new ReflectionInjector(), { tags: [Scope.Application] });
+  return new Container(new MetadataInjector(), { tags: [Scope.Application] });
 }
 
 export class ContainerAdapter implements IDependencyContainer {
