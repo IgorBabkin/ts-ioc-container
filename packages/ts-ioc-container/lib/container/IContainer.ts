@@ -4,6 +4,7 @@ import { constructor } from '../utils';
 export type Tag = string;
 
 export interface Tagged {
+  readonly tags: Tag[];
   hasTag(tag: Tag): boolean;
 }
 
@@ -27,7 +28,7 @@ export interface IContainerModule {
   applyTo(container: IContainer): void;
 }
 
-export interface IContainer extends Resolvable {
+export interface IContainer extends Resolvable, Tagged {
   createScope(...tags: Tag[]): IContainer;
 
   register(key: DependencyKey, value: IProvider): this;
@@ -39,8 +40,6 @@ export interface IContainer extends Resolvable {
   dispose(): void;
 
   use(...modules: IContainerModule[]): this;
-
-  hasTag(tag: Tag): boolean;
 
   getAllProviders(): Map<DependencyKey, IProvider>;
 

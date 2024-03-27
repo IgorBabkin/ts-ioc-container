@@ -11,8 +11,8 @@ export const by = {
      */
     some:
       (...aliases: DependencyKey[]) =>
-      (с: IContainer, ...args: unknown[]) =>
-        с.getTokensByProvider((p) => aliases.some((alias) => p.hasAlias(alias))).map((t) => с.resolve(t, ...args)),
+      (c: IContainer, ...args: unknown[]) =>
+        c.getTokensByProvider((p) => aliases.some((alias) => p.hasAlias(alias))).map((t) => c.resolve(t, ...args)),
 
     /**
      * Get all instances that have all of the given aliases
@@ -20,8 +20,20 @@ export const by = {
      */
     all:
       (...aliases: DependencyKey[]) =>
-      (с: IContainer, ...args: unknown[]) =>
-        с.getTokensByProvider((p) => aliases.every((alias) => p.hasAlias(alias))).map((t) => с.resolve(t, ...args)),
+      (c: IContainer, ...args: unknown[]) =>
+        c.getTokensByProvider((p) => aliases.every((alias) => p.hasAlias(alias))).map((t) => c.resolve(t, ...args)),
+  },
+
+  scopedAliases: {
+    some: (c: IContainer, ...args: unknown[]) => {
+      const aliases = c.tags;
+      return by.alias.some(...aliases)(c, ...args);
+    },
+
+    all: (c: IContainer, ...args: unknown[]) => {
+      const aliases = c.tags;
+      return by.alias.all(...aliases)(c, ...args);
+    },
   },
 
   /**

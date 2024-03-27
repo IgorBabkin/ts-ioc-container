@@ -4,6 +4,8 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 
 export class EmptyContainer implements IContainer {
+  tags: string[] = [];
+
   hasDependency(key: string): boolean {
     return false;
   }

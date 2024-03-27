@@ -1,6 +1,8 @@
 import { IContainer, InjectionToken, IProvider, MethodNotImplementedError, DependencyKey } from '../index';
 
 export abstract class AutoMockedContainer implements IContainer {
+  tags: string[] = [];
+
   hasDependency(key: string): boolean {
     return false;
   }

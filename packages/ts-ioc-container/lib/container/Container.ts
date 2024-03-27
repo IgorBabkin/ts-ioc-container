@@ -6,7 +6,7 @@ import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer, Tagged {
   readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly tags: Tag[];
+  readonly tags: Tag[];
   private isDisposed = false;
   private parent: IContainer;
   private scopes: Set<IContainer> = new Set();
