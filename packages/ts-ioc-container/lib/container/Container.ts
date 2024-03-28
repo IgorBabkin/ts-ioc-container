@@ -1,12 +1,12 @@
-import { DependencyKey, IContainer, IContainerModule, InjectionToken, isConstructor, Tag, Tagged } from './IContainer';
+import { DependencyKey, IContainer, IContainerModule, InjectionToken, isConstructor, Tag } from './IContainer';
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
-export class Container implements IContainer, Tagged {
+export class Container implements IContainer {
   readonly providers = new Map<DependencyKey, IProvider>();
-  readonly tags: Tag[];
+  private readonly tags: Tag[];
   private isDisposed = false;
   private parent: IContainer;
   private scopes: Set<IContainer> = new Set();

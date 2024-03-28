@@ -3,11 +3,6 @@ import { constructor } from '../utils';
 
 export type Tag = string;
 
-export interface Tagged {
-  readonly tags: Tag[];
-  hasTag(tag: Tag): boolean;
-}
-
 export type DependencyKey = string | symbol;
 
 export function isDependencyKey<T>(token: InjectionToken<T>): token is DependencyKey {
@@ -28,7 +23,7 @@ export interface IContainerModule {
   applyTo(container: IContainer): void;
 }
 
-export interface IContainer extends Resolvable, Tagged {
+export interface IContainer extends Resolvable {
   createScope(...tags: Tag[]): IContainer;
 
   register(key: DependencyKey, value: IProvider): this;
@@ -46,4 +41,6 @@ export interface IContainer extends Resolvable, Tagged {
   getTokensByProvider(predicate: (provider: IProvider) => boolean): DependencyKey[];
 
   hasDependency(key: DependencyKey): boolean;
+
+  hasTag(tag: Tag): boolean;
 }

@@ -1,4 +1,4 @@
-import { DependencyKey, IContainer, Resolvable, Tagged } from '../container/IContainer';
+import { DependencyKey, IContainer, Resolvable } from '../container/IContainer';
 import { IProvider } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
