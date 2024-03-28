@@ -13,7 +13,9 @@ export class ObservableStorageBuilder {
   private cleaner: ICleaner;
 
   static fromObserver(observer: ReaderObserver): ObservableStorageBuilder {
-    return new ObservableStorageBuilder(new ReaderRepository((obs$) => new ObservableReader(obs$, observer)));
+    return new ObservableStorageBuilder(
+      new ReaderRepository((obs$, initial) => new ObservableReader(obs$, observer, initial)),
+    );
   }
 
   constructor(private repository: IReaderRepository) {

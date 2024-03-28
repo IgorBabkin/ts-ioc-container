@@ -1,12 +1,12 @@
-import { ObservableReader } from '../src';
 import { of, Subject } from 'rxjs';
 import { Mock, Times } from 'moq.ts';
+import { ObservableReader } from '../src/storage/reader/ObservableReader';
 
 describe('ObservableReader', () => {
   it('should keep current value of observable', () => {
     const obs$ = of(2);
 
-    const reader = new ObservableReader(obs$, () => {});
+    const reader = new ObservableReader(obs$, () => {}, 0);
     reader.enable();
 
     expect(reader.current).toBe(2);
@@ -16,7 +16,7 @@ describe('ObservableReader', () => {
     const obs$ = of(2);
     const mock = new Mock<(v: number) => void>();
 
-    const reader = new ObservableReader(obs$, mock.object());
+    const reader = new ObservableReader(obs$, mock.object(), 0);
     reader.enable();
 
     mock.verify((i) => i(2), Times.Never());
@@ -26,7 +26,7 @@ describe('ObservableReader', () => {
     const obs$ = new Subject<number>();
     const mock = new Mock<(v: number) => void>();
 
-    const reader = new ObservableReader(obs$, mock.object());
+    const reader = new ObservableReader(obs$, mock.object(), 0);
     reader.enable();
     obs$.next(2);
     obs$.next(2);
@@ -39,7 +39,7 @@ describe('ObservableReader', () => {
     const obs$ = new Subject<number>();
     const mock = new Mock<(v: number) => void>();
 
-    const reader = new ObservableReader(obs$, mock.object());
+    const reader = new ObservableReader(obs$, mock.object(), 0);
     reader.enable();
     obs$.next(1);
     reader.disable();
@@ -53,10 +53,10 @@ describe('ObservableReader', () => {
     const obs$ = new Subject<number>();
     const mock = new Mock<(v: number) => void>();
 
-    const reader = new ObservableReader(obs$, mock.object());
+    const reader = new ObservableReader(obs$, mock.object(), 0);
     obs$.next(2);
 
-    expect(reader.current).toBeUndefined();
+    expect(reader.current).toBe(0);
     mock.verify((i) => i(2), Times.Never());
   });
 
@@ -64,7 +64,7 @@ describe('ObservableReader', () => {
     const obs$ = new Subject<number>();
     const mock = new Mock<(v: number) => void>();
 
-    const reader = new ObservableReader(obs$, mock.object());
+    const reader = new ObservableReader(obs$, mock.object(), 0);
     reader.enable();
     obs$.next(1);
     reader.disable();
@@ -78,7 +78,7 @@ describe('ObservableReader', () => {
     const obs$ = new Subject<number>();
     const mock = new Mock<(v: number) => void>();
 
-    const reader = new ObservableReader(obs$, mock.object());
+    const reader = new ObservableReader(obs$, mock.object(), 0);
     reader.enable();
     obs$.next(1);
     reader.enable();

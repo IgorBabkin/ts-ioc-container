@@ -4,11 +4,14 @@ import { IObservableReader } from './IObservableReader';
 export type ReaderObserver = <T>(value: T) => void;
 
 export class ObservableReader<T> implements IObservableReader<T> {
-  current: T | undefined;
   private isEnabled = false;
   private subscription: Subscription | undefined;
 
-  constructor(readonly obs$: Observable<T>, private observer: (value: T) => void) {}
+  constructor(
+    readonly obs$: Observable<T>,
+    private observer: (value: T) => void,
+    public current: T,
+  ) {}
 
   disable(): this {
     this.isEnabled = false;

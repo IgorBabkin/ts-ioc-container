@@ -7,5 +7,5 @@ export interface IObservableReader<T> {
 
   disable(): this;
 
-  current: T | undefined;
+  current: T;
 }

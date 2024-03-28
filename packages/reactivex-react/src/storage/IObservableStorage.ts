@@ -4,5 +4,5 @@ import { Observable } from 'rxjs';
 export interface IObservableStorage extends IDisposable {
   cleanup(): void;
 
-  getValue<T>(obs$: Observable<T>): T | undefined;
+  getValue<T>(obs$: Observable<T>, initial: T): T;
 }

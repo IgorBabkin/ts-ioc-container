@@ -6,7 +6,10 @@ import { ICleaner } from './cleaner/ICleaner';
 export class ObservableStorage implements IObservableStorage {
   private activeObservables = new Set<Observable<unknown>>();
 
-  constructor(private readerRepository: IReaderRepository, private observableCleaner: ICleaner) {}
+  constructor(
+    private readerRepository: IReaderRepository,
+    private observableCleaner: ICleaner,
+  ) {}
 
   cleanup(): void {
     const inactiveObservables = this.readerRepository.getExcluded(this.activeObservables);
@@ -19,8 +22,8 @@ export class ObservableStorage implements IObservableStorage {
     this.activeObservables.clear();
   }
 
-  getValue<T>(obs$: Observable<T>): T | undefined {
+  getValue<T>(obs$: Observable<T>, initial: T): T {
     this.activeObservables.add(obs$);
-    return this.readerRepository.findOrCreate(obs$).enable().current;
+    return this.readerRepository.findOrCreate(obs$, initial).enable().current;
   }
 }

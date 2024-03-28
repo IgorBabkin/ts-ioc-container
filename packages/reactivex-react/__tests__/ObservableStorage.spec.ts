@@ -1,19 +1,17 @@
-import {
-  IReaderRepository,
-  ObservableNotFoundError,
-  ObservableReader,
-  ObservableStorageBuilder,
-  ReaderRepository,
-} from '../src';
+import { ObservableNotFoundError } from '../src';
 import { of } from 'rxjs';
 import { Times } from 'moq.ts';
 import { createMock } from './helpers';
+import { ReaderRepository } from '../src/storage/repository/ReaderRepository';
+import { ObservableReader } from '../src/storage/reader/ObservableReader';
+import { ObservableStorageBuilder } from '../src/storage/ObservableStorageBuilder';
+import { IReaderRepository } from '../src/storage/repository/IReaderRepository';
 
 describe('ObservableStorage', () => {
   let readerRepository: ReaderRepository;
 
   beforeEach(() => {
-    readerRepository = new ReaderRepository((obs$) => new ObservableReader(obs$, () => {}));
+    readerRepository = new ReaderRepository((obs$, initial) => new ObservableReader(obs$, () => {}, initial));
   });
 
   it('should disable inactive observables', () => {
@@ -22,12 +20,12 @@ describe('ObservableStorage', () => {
     const obs1$ = of(1);
     const obs2$ = of(2);
 
-    storage.getValue(obs1$);
-    storage.getValue(obs2$);
+    storage.getValue(obs1$, 0);
+    storage.getValue(obs2$, 0);
 
     storage.cleanup();
 
-    storage.getValue(obs1$);
+    storage.getValue(obs1$, 0);
     storage.cleanup();
 
     expect(() => readerRepository.find(obs1$)).not.toThrow(ObservableNotFoundError);
@@ -40,12 +38,12 @@ describe('ObservableStorage', () => {
     const obs1$ = of(1);
     const obs2$ = of(2);
 
-    storage.getValue(obs1$);
-    storage.getValue(obs2$);
+    storage.getValue(obs1$, 0);
+    storage.getValue(obs2$, 0);
 
     storage.cleanup();
 
-    storage.getValue(obs1$);
+    storage.getValue(obs1$, 0);
     storage.cleanup();
 
     expect(() => readerRepository.find(obs1$)).not.toThrow(ObservableNotFoundError);

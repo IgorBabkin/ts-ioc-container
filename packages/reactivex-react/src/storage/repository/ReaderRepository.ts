@@ -4,7 +4,7 @@ import { IObservableReader } from '../reader/IObservableReader';
 import { ObservableNotFoundError } from '../../errors/ObservableNotFoundError';
 import { MathSet } from '../../core/MathSet';
 
-export type CreateReader = <T>(obs$: Observable<T>) => IObservableReader<T>;
+export type CreateReader = <T>(obs$: Observable<T>, initial: T) => IObservableReader<T>;
 
 export class ReaderRepository implements IReaderRepository {
   private observables = new Map<Observable<unknown>, IObservableReader<unknown>>();
@@ -18,9 +18,9 @@ export class ReaderRepository implements IReaderRepository {
     return this.observables.get(obs$) as IObservableReader<T>;
   }
 
-  findOrCreate<T>(obs$: Observable<T>): IObservableReader<T> {
+  findOrCreate<T>(obs$: Observable<T>, initial: T): IObservableReader<T> {
     if (!this.observables.has(obs$)) {
-      this.observables.set(obs$, this.createReader(obs$));
+      this.observables.set(obs$, this.createReader(obs$, initial));
     }
     return this.observables.get(obs$) as IObservableReader<T>;
   }

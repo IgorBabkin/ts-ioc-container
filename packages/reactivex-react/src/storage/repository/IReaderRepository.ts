@@ -3,7 +3,7 @@ import { IObservableReader } from '../reader/IObservableReader';
 import { IDisposable } from '../../core/IDisposable';
 
 export interface IReaderRepository extends IDisposable {
-  findOrCreate<T>(obs$: Observable<T>): IObservableReader<T>;
+  findOrCreate<T>(obs$: Observable<T>, initial: T): IObservableReader<T>;
 
   find<T>(obs$: Observable<T>): IObservableReader<T>;
 
