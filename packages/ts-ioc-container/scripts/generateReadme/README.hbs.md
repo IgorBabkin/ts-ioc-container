@@ -147,7 +147,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 There are next types of providers:
 - `Provider` - basic provider. It can be used with `@provider` decorator
 - `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
-- `PredicateProvider` - provider that can be resolved only from container with certain tags and their sub scopes
+- `ScopeProvider` - provider that can be resolved only from container with certain tags and their sub scopes
 - `ArgsProvider` - provider that encapsulates arguments to pass it to constructor.
 
 `Registration` - just a helper to register provider with certain key. `(preferrably to use)`
@@ -180,7 +180,7 @@ Sometimes you need to resolve provider only from container which matches to cert
 - NOTICE: It doesn't make clones in not predicate-matched scopes. Usually it's used with `SingletonProvider`.
 
 ```typescript
-{{{include_file './__tests__/PredicateProvider.spec.ts'}}}
+{{{include_file './__tests__/ScopeProvider.spec.ts'}}}
 ```
 
 ### Args provider

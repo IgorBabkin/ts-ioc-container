@@ -5,11 +5,11 @@ import { MapFn } from '../utils';
 
 type ContainerPredicate = (c: IContainer) => boolean;
 
-export function whenScope<T = unknown>(predicate: ContainerPredicate): MapFn<IProvider<T>> {
-  return (provider) => new PredicateProvider(provider, predicate);
+export function scope<T = unknown>(predicate: ContainerPredicate): MapFn<IProvider<T>> {
+  return (provider) => new ScopeProvider(provider, predicate);
 }
 
-export class PredicateProvider<T> extends ProviderDecorator<T> {
+export class ScopeProvider<T> extends ProviderDecorator<T> {
   constructor(
     private provider: IProvider<T>,
     private predicate: ContainerPredicate,
@@ -17,8 +17,8 @@ export class PredicateProvider<T> extends ProviderDecorator<T> {
     super(provider);
   }
 
-  clone(): PredicateProvider<T> {
-    return new PredicateProvider(this.provider.clone(), this.predicate);
+  clone(): ScopeProvider<T> {
+    return new ScopeProvider(this.provider.clone(), this.predicate);
   }
 
   isValid(container: IContainer): boolean {
