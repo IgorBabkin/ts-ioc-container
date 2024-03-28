@@ -3,6 +3,7 @@
   "compilerOptions": {
     "types": ["reflect-metadata"],
     "module": "esnext",
+    "allowImportingTsExtensions": false
   },
   "include": [
     "lib"

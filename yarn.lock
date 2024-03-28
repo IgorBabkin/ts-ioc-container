@@ -509,7 +509,7 @@ __metadata:
     openapi-types: ^12.1.0
     rimraf: 3.0.2
     ts-jest: 27.0.5
-    typescript: 4.4.3
+    typescript: 5.4.3
     yaml-import: ^2.0.0
   bin:
     openapi-to-client: cjm/useCases/openapiToClient.cli.js
@@ -532,7 +532,7 @@ __metadata:
     openapi-types: ^12.1.0
     rimraf: 3.0.2
     ts-jest: 27.0.5
-    typescript: 4.4.3
+    typescript: 5.4.3
     yaml-import: ^2.0.0
     zod: ^3.21.4
   bin:
@@ -551,7 +551,7 @@ __metadata:
     reflect-metadata: ^0.1.13
     rimraf: 3.0.2
     ts-jest: 27.0.5
-    typescript: 4.4.3
+    typescript: 5.4.3
   peerDependencies:
     reflect-metadata: ^0.1.13
   languageName: unknown
@@ -10694,7 +10694,7 @@ __metadata:
     ts-jest: ^27.0.5
     ts-loader: ^9.2.6
     ts-node: ^10.2.1
-    typescript: ^4.4.3
+    typescript: 5.4.3
     webpack: ^5.88.2
     webpack-bundle-analyzer: ^4.9.0
     webpack-cli: ^5.1.4
@@ -12465,7 +12465,7 @@ __metadata:
     rimraf: 3.0.2
     ts-jest: 27.0.5
     ts-node: ^10.9.1
-    typescript: 4.4.3
+    typescript: 5.4.3
   languageName: unknown
   linkType: soft
 
@@ -12597,7 +12597,7 @@ __metadata:
     rimraf: 3.0.2
     ts-ioc-container: ^28.1.0
     ts-jest: 27.0.5
-    typescript: 4.4.3
+    typescript: 5.4.3
   peerDependencies:
     reflect-metadata: ^0.1.13
   languageName: unknown
@@ -12785,17 +12785,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:4.4.3":
-  version: 4.4.3
-  resolution: "typescript@npm:4.4.3"
+"typescript@npm:5.4.3":
+  version: 5.4.3
+  resolution: "typescript@npm:5.4.3"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 05823f21796d450531a7e4ab299715d38fd9ded0e4ce7400876053f4b5166ca3dde7a68cecfe72d9086039f03c0b6edba36516fb10ed83c5837d9600532ea4c2
+  checksum: d74d731527e35e64d8d2dcf2f897cf8cfbc3428be0ad7c48434218ba4ae41239f53be7c90714089db1068c05cae22436af2ecba71fd36ecc5e7a9118af060198
   languageName: node
   linkType: hard
 
-"typescript@npm:^3 || ^4, typescript@npm:^4.4.3":
+"typescript@npm:^3 || ^4":
   version: 4.9.5
   resolution: "typescript@npm:4.9.5"
   bin:
@@ -12805,17 +12805,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@4.4.3#~builtin<compat/typescript>":
-  version: 4.4.3
-  resolution: "typescript@patch:typescript@npm%3A4.4.3#~builtin<compat/typescript>::version=4.4.3&hash=bbeadb"
+"typescript@patch:typescript@5.4.3#~builtin<compat/typescript>":
+  version: 5.4.3
+  resolution: "typescript@patch:typescript@npm%3A5.4.3#~builtin<compat/typescript>::version=5.4.3&hash=f3b441"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 33a916819907e819430802c50405f18c187448d678696a81545f494a7ec16207f8c15340c945df62109bd1d951091a9f15f3d2eb931a3c889f962c8509017697
+  checksum: 3a62fe90aa79d68c9ce38ea5edb2957e62801c733b99f0e5a2b8b50922761f68f7d9a40d28c544b449866e81185cddb93cba2496d0ff3fa52ef5b1f8bcace38c
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^3 || ^4#~builtin<compat/typescript>, typescript@patch:typescript@^4.4.3#~builtin<compat/typescript>":
+"typescript@patch:typescript@^3 || ^4#~builtin<compat/typescript>":
   version: 4.9.5
   resolution: "typescript@patch:typescript@npm%3A4.9.5#~builtin<compat/typescript>::version=4.9.5&hash=289587"
   bin:
