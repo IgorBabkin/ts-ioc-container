@@ -15,7 +15,10 @@ describe('SimpleInjector', function () {
 
   it('should pass parameters alongside with container', function () {
     class App {
-      constructor(container: IContainer, public greeting: string) {}
+      constructor(
+        container: IContainer,
+        public greeting: string,
+      ) {}
     }
 
     const container = new Container(new SimpleInjector()).use(R.fromClass(App).to('App'));

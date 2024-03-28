@@ -13,7 +13,10 @@ export interface IHooksRepo {
 }
 
 export class HookedMediator implements IMediator {
-  constructor(private mediator: IMediator, private hooksRepo: IHooksRepo) {}
+  constructor(
+    private mediator: IMediator,
+    private hooksRepo: IHooksRepo,
+  ) {}
 
   async send<TQuery, TResponse>(
     UseCase: constructor<IQueryHandler<TQuery, TResponse>>,

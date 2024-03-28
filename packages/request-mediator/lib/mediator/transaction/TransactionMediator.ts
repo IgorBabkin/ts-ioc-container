@@ -9,7 +9,10 @@ export interface ITransaction {
 }
 
 export class TransactionMediator implements IMediator<ITransaction> {
-  constructor(private mediator: IMediator, private scope: IDependencyContainer) {}
+  constructor(
+    private mediator: IMediator,
+    private scope: IDependencyContainer,
+  ) {}
 
   async send<TResponse, TQuery>(
     QueryHandler: constructor<IQueryHandler<TQuery, TResponse>>,

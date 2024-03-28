@@ -8,7 +8,10 @@ export function tags<T = unknown>(...values: Tag[]): MapFn<IProvider<T>> {
 }
 
 export class TaggedProvider<T> extends ProviderDecorator<T> {
-  constructor(private provider: IProvider<T>, private readonly tags: Tag[]) {
+  constructor(
+    private provider: IProvider<T>,
+    private readonly tags: Tag[],
+  ) {
     super(provider);
   }
 

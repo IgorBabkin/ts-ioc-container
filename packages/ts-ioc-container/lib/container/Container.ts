@@ -12,7 +12,10 @@ export class Container implements IContainer, Tagged {
   private scopes: Set<IContainer> = new Set();
   private instances: Set<unknown> = new Set();
 
-  constructor(private readonly injector: IInjector, options: { parent?: IContainer; tags?: Tag[] } = {}) {
+  constructor(
+    private readonly injector: IInjector,
+    options: { parent?: IContainer; tags?: Tag[] } = {},
+  ) {
     this.parent = options.parent ?? new EmptyContainer();
     this.tags = options.tags ?? [];
   }

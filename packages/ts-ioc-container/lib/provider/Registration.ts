@@ -23,7 +23,10 @@ export class Registration<T> implements IContainerModule {
     return new Registration(new Provider(fn));
   }
 
-  constructor(private provider: IProvider<T>, private key?: DependencyKey) {}
+  constructor(
+    private provider: IProvider<T>,
+    private key?: DependencyKey,
+  ) {}
 
   to(key: DependencyKey): this {
     this.key = key;

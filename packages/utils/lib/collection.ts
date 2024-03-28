@@ -23,5 +23,4 @@ export const to =
 
 export const toWrite =
   <T>(...values: constructor<T>[]) =>
-  <Context>([context, logs]: Write<Context>): Write<T | undefined> =>
-    [to(...values)(context), logs.concat('toWrite')];
+  <Context>([context, logs]: Write<Context>): Write<T | undefined> => [to(...values)(context), logs.concat('toWrite')];

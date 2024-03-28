@@ -2,7 +2,10 @@ import { ContextNullError } from './ContextNullError';
 import { IContext } from './IContext';
 
 export class Context<T> implements IContext<T> {
-  constructor(private name: string, private value: T | null = null) {}
+  constructor(
+    private name: string,
+    private value: T | null = null,
+  ) {}
 
   getValue(): T {
     if (this.value === null) {

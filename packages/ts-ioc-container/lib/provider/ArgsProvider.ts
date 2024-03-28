@@ -14,7 +14,10 @@ export function argsFn<T = unknown>(value: ArgsFn): MapFn<IProvider<T>> {
 }
 
 export class ArgsProvider<T> extends ProviderDecorator<T> {
-  constructor(private provider: IProvider<T>, private argsFn: ArgsFn) {
+  constructor(
+    private provider: IProvider<T>,
+    private argsFn: ArgsFn,
+  ) {
     super(provider);
   }
 

@@ -6,7 +6,10 @@ function sleep(number: number) {
 
 class TestError extends Error {
   name = 'TestError';
-  constructor(public error: unknown, public context: { target: string; method: string }) {
+  constructor(
+    public error: unknown,
+    public context: { target: string; method: string },
+  ) {
     super('asdasd');
 
     Object.setPrototypeOf(this, TestError.prototype);
