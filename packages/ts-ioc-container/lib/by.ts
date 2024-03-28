@@ -24,18 +24,6 @@ export const by = {
         c.getTokensByProvider((p) => aliases.every((alias) => p.hasAlias(alias))).map((t) => c.resolve(t, ...args)),
   },
 
-  scopedAliases: {
-    some: (c: IContainer, ...args: unknown[]) => {
-      const aliases = c.tags;
-      return by.alias.some(...aliases)(c, ...args);
-    },
-
-    all: (c: IContainer, ...args: unknown[]) => {
-      const aliases = c.tags;
-      return by.alias.all(...aliases)(c, ...args);
-    },
-  },
-
   /**
    * Get all instances that match the given keys
    * @param keys
