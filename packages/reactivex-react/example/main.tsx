@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import * as React from 'react';
 import { render } from 'react-dom';
 import { AppView } from './AppView';
@@ -7,8 +8,8 @@ import { development } from './env/development';
 const container = development();
 
 render(
-    <ScopeContext.Provider value={container}>
-        <AppView />
-    </ScopeContext.Provider>,
-    document.getElementById('root'),
+  <ScopeContext.Provider value={container}>
+    <AppView />
+  </ScopeContext.Provider>,
+  document.getElementById('root'),
 );

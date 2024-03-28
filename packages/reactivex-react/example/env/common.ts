@@ -1,7 +1,7 @@
 import { createRootContainer } from '../di';
 import { Logger } from '../Logger';
-import { Registration } from 'ts-ioc-container';
+import { Registration as R } from 'ts-ioc-container';
 
 export function common() {
-  return createRootContainer().add(Registration.fromClass(Logger));
+  return createRootContainer().use(R.fromClass(Logger));
 }
