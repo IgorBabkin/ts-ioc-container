@@ -1,13 +1,8 @@
 {
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "version": "independent",
   "packages": [
     "packages/*"
   ],
-  "command": {
-    "publish": {
-      "graphType": "all"
-    }
-  },
-  "npmClient": "yarn",
-  "useWorkspaces": true,
-  "version": "independent"
+  "npmClient": "yarn"
 }
