@@ -1,5 +1,14 @@
 import 'reflect-metadata';
-import { singleton, Container, tags, provider, MetadataInjector, Registration as R, key } from '../../lib';
+import {
+  singleton,
+  Container,
+  provider,
+  MetadataInjector,
+  Registration as R,
+  key,
+  whenScope,
+  hasTags,
+} from '../../lib';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
@@ -7,7 +16,7 @@ describe('Registration module', function () {
 
   it('should register class', function () {
     @key('ILogger')
-    @provider(singleton(), tags('root'))
+    @provider(singleton(), whenScope(hasTags.someOf('root')))
     class Logger {}
 
     const root = createContainer().use(R.fromClass(Logger));

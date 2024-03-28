@@ -1,4 +1,4 @@
-import { DependencyKey, Resolvable, Tagged } from '../container/IContainer';
+import { DependencyKey, IContainer, Resolvable, Tagged } from '../container/IContainer';
 import { IProvider } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
@@ -16,8 +16,8 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
 
   abstract clone(): IProvider<T>;
 
-  isValid(filters: Tagged): boolean {
-    return this.decorated.isValid(filters);
+  isValid(container: IContainer): boolean {
+    return this.decorated.isValid(container);
   }
 
   resolve(container: Resolvable, ...args: any[]): T {

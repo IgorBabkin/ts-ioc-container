@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { singleton, Container, tags, Provider, MetadataInjector } from '../../lib';
+import { singleton, Container, Provider, MetadataInjector, whenScope, hasTags } from '../../lib';
 
 class Logger {}
 
@@ -25,7 +25,7 @@ describe('Provider', function () {
   it('can be featured by pipe method', function () {
     const root = new Container(new MetadataInjector(), { tags: ['root'] }).register(
       'ILogger',
-      Provider.fromClass(Logger).pipe(singleton(), tags('root')),
+      Provider.fromClass(Logger).pipe(singleton(), whenScope(hasTags.someOf('root'))),
     );
 
     expect(root.resolve('ILogger')).toBe(root.resolve('ILogger'));

@@ -4,14 +4,15 @@ import {
   Container,
   ContainerDisposedError,
   key,
-  tags,
   provider,
   MetadataInjector,
   Registration as R,
+  whenScope,
+  hasTags,
 } from '../lib';
 
 @key('logger')
-@provider(singleton(), tags('home'))
+@provider(singleton(), whenScope(hasTags.someOf('home')))
 class Logger {}
 
 describe('Singleton', function () {

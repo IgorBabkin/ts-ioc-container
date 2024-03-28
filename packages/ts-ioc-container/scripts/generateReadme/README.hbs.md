@@ -33,7 +33,7 @@
     - [Registration module (Provider + DependencyKey)](#registration-and-providers) `@key`
     - [Provider](#provider) `@provider`
     - [Singleton provider](#singleton-provider)
-    - [Tagged provider](#tagged-provider)
+    - [Predicate provider](#predicate-provider)
     - [Args provider](#args-provider)
     - [Aliases](#aliases) `alias`
 - [Container modules](#container-modules)
@@ -147,7 +147,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 There are next types of providers:
 - `Provider` - basic provider. It can be used with `@provider` decorator
 - `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
-- `TaggedProvider` - provider that can be resolved only from container with certain tags and their sub scopes
+- `PredicateProvider` - provider that can be resolved only from container with certain tags and their sub scopes
 - `ArgsProvider` - provider that encapsulates arguments to pass it to constructor.
 
 `Registration` - just a helper to register provider with certain key. `(preferrably to use)`
@@ -175,12 +175,12 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 {{{include_file './__tests__/Singleton.spec.ts'}}}
 ```
 
-### Tagged provider
-Sometimes you need to resolve provider only from container with certain tags and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
-- NOTICE: It doesn't make clones in not tagged-matched scopes. Usually it's used with `SingletonProvider`.
+### Predicate provider
+Sometimes you need to resolve provider only from container which matches to certain predicate and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
+- NOTICE: It doesn't make clones in not predicate-matched scopes. Usually it's used with `SingletonProvider`.
 
 ```typescript
-{{{include_file './__tests__/TaggedProvider.spec.ts'}}}
+{{{include_file './__tests__/PredicateProvider.spec.ts'}}}
 ```
 
 ### Args provider

@@ -6,15 +6,16 @@ import {
   Container,
   DependencyNotFoundError,
   key,
-  tags,
+  whenScope,
   provider,
   MetadataInjector,
   Registration as R,
   by,
+  hasTags,
 } from '../../lib';
 
 @key('ILogger')
-@provider(singleton(), tags('child'))
+@provider(singleton(), whenScope(hasTags.someOf('child')))
 class Logger {}
 
 describe('Scopes', function () {

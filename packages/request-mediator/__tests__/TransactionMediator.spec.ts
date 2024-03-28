@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { by, key, Provider, provider, Registration, singleton, tags, inject } from 'ts-ioc-container';
+import { by, key, Provider, provider, Registration, singleton, whenScope, hasTags, inject } from 'ts-ioc-container';
 import { Context } from './context/Context';
 import {
   IQueryHandler,
@@ -67,7 +67,7 @@ class QueryHandler implements IQueryHandler<EmptyType, void> {
 }
 
 @key(ITransactionContextKey)
-@provider(singleton(), tags(Scope.Application))
+@provider(singleton(), whenScope(hasTags.someOf(Scope.Application)))
 class TestTransaction implements ITransactionContext {
   constructor(private id: number = 0) {}
 
