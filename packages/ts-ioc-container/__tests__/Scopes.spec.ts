@@ -8,11 +8,10 @@ import {
   MetadataInjector,
   Registration as R,
   whenScope,
-  hasTags,
 } from '../lib';
 
 @key('logger')
-@provider(singleton(), whenScope(hasTags.someOf('home')))
+@provider(singleton(), whenScope((s) => s.hasTag('home')))
 class Logger {}
 
 describe('Singleton', function () {

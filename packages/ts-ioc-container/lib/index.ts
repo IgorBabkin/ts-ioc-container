@@ -18,7 +18,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { Provider, provider } from './provider/Provider';
 export { ArgsFn, argsFn, args, ArgsProvider } from './provider/ArgsProvider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
-export { whenScope, hasTags, PredicateProvider } from './provider/PredicateProvider';
+export { whenScope, PredicateProvider } from './provider/PredicateProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
 export { key, Registration } from './provider/Registration';
 export { MetadataInjector, inject } from './injector/MetadataInjector';

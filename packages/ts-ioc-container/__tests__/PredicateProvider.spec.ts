@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { singleton, Container, key, whenScope, hasTags, provider, MetadataInjector, Registration as R } from '../lib';
+import { singleton, Container, key, whenScope, provider, MetadataInjector, Registration as R } from '../lib';
 
 @key('ILogger')
-@provider(singleton(), whenScope(hasTags.someOf('root'))) // the same as .pipe(singleton(), tags('root'))
+@provider(singleton(), whenScope((s) => s.hasTag('root'))) // the same as .pipe(singleton(), tags('root'))
 class Logger {}
 describe('PredicateProvider', function () {
   it('should return the same instance', function () {

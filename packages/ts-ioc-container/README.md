@@ -142,11 +142,10 @@ import {
   MetadataInjector,
   Registration as R,
   by,
-  hasTags,
 } from 'ts-ioc-container';
 
 @key('ILogger')
-@provider(singleton(), whenScope(hasTags.someOf('child')))
+@provider(singleton(), whenScope((s) => s.hasTag('child')))
 class Logger {}
 
 describe('Scopes', function () {
@@ -404,16 +403,7 @@ Sometimes you need to keep dependency key with class together. For example, you 
 
 ```typescript
 import 'reflect-metadata';
-import {
-  singleton,
-  Container,
-  provider,
-  MetadataInjector,
-  Registration as R,
-  key,
-  whenScope,
-  hasTags,
-} from 'ts-ioc-container';
+import { singleton, Container, provider, MetadataInjector, Registration as R, key, whenScope } from 'ts-ioc-container';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
@@ -421,7 +411,7 @@ describe('Registration module', function () {
 
   it('should register class', function () {
     @key('ILogger')
-    @provider(singleton(), whenScope(hasTags.someOf('root')))
+    @provider(singleton(), whenScope((s) => s.hasTag('root')))
     class Logger {}
 
     const root = createContainer().use(R.fromClass(Logger));
@@ -462,7 +452,7 @@ describe('Registration module', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, Provider, MetadataInjector, whenScope, hasTags } from 'ts-ioc-container';
+import { singleton, Container, Provider, MetadataInjector, whenScope } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -488,7 +478,10 @@ describe('Provider', function () {
   it('can be featured by pipe method', function () {
     const root = new Container(new MetadataInjector(), { tags: ['root'] }).register(
       'ILogger',
-      Provider.fromClass(Logger).pipe(singleton(), whenScope(hasTags.someOf('root'))),
+      Provider.fromClass(Logger).pipe(
+        singleton(),
+        whenScope((s) => s.hasTag('root')),
+      ),
     );
 
     expect(root.resolve('ILogger')).toBe(root.resolve('ILogger'));
@@ -545,10 +538,10 @@ Sometimes you need to resolve provider only from container which matches to cert
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, whenScope, hasTags, provider, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { singleton, Container, key, whenScope, provider, MetadataInjector, Registration as R } from 'ts-ioc-container';
 
 @key('ILogger')
-@provider(singleton(), whenScope(hasTags.someOf('root'))) // the same as .pipe(singleton(), tags('root'))
+@provider(singleton(), whenScope((s) => s.hasTag('root'))) // the same as .pipe(singleton(), tags('root'))
 class Logger {}
 describe('PredicateProvider', function () {
   it('should return the same instance', function () {
