@@ -33,7 +33,7 @@
     - [Registration module (Provider + DependencyKey)](#registration-and-providers) `@key`
     - [Provider](#provider) `@provider`
     - [Singleton provider](#singleton-provider)
-    - [Predicate provider](#predicate-provider)
+    - [Scope provider](#scope-provider)
     - [Args provider](#args-provider)
     - [Aliases](#aliases) `alias`
 - [Container modules](#container-modules)
@@ -175,8 +175,8 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 {{{include_file './__tests__/Singleton.spec.ts'}}}
 ```
 
-### Predicate provider
-Sometimes you need to resolve provider only from container which matches to certain predicate and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
+### Scope provider
+Sometimes you need to resolve provider only from scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
 - NOTICE: It doesn't make clones in not predicate-matched scopes. Usually it's used with `SingletonProvider`.
 
 ```typescript

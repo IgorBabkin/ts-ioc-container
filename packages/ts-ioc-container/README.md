@@ -33,7 +33,7 @@
     - [Registration module (Provider + DependencyKey)](#registration-and-providers) `@key`
     - [Provider](#provider) `@provider`
     - [Singleton provider](#singleton-provider)
-    - [Predicate provider](#predicate-provider)
+    - [Scope provider](#scope-provider)
     - [Args provider](#args-provider)
     - [Aliases](#aliases) `alias`
 - [Container modules](#container-modules)
@@ -532,8 +532,8 @@ describe('Singleton', function () {
 
 ```
 
-### Predicate provider
-Sometimes you need to resolve provider only from container which matches to certain predicate and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
+### Scope provider
+Sometimes you need to resolve provider only from scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
 - NOTICE: It doesn't make clones in not predicate-matched scopes. Usually it's used with `SingletonProvider`.
 
 ```typescript
@@ -541,7 +541,7 @@ import 'reflect-metadata';
 import { singleton, Container, key, scope, provider, MetadataInjector, Registration as R } from 'ts-ioc-container';
 
 @key('ILogger')
-@provider(singleton(), scope((s) => s.hasTag('root'))) // the same as .pipe(singleton(), tags('root'))
+@provider(singleton(), scope((s) => s.hasTag('root'))) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
