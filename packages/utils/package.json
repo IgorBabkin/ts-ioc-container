@@ -4,7 +4,7 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Utilities",
   "author": "ibabkin <igba14@gmail.com>",
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/utils",
