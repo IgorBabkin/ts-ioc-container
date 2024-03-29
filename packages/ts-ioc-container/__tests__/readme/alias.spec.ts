@@ -31,7 +31,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(by.aliases((d) => d.hasAlias(IMiddlewareKey))) public middleware: IMiddleware[]) {}
+      constructor(@inject(by.provider((d) => d.hasAlias(IMiddlewareKey))) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);

@@ -10,11 +10,11 @@ import {
   MetadataInjector,
   Registration as R,
   by,
-  tags,
+  scope,
 } from '../../lib';
 
 @key('ILogger')
-@provider(singleton(), tags((s) => s.hasTag('child')))
+@provider(singleton(), scope((s) => s.hasTag('child')))
 class Logger {}
 
 describe('Scopes', function () {

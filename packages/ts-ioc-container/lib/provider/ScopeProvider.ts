@@ -5,7 +5,7 @@ import { MapFn } from '../utils';
 
 type ContainerPredicate = (c: IContainer) => boolean;
 
-export function tags<T = unknown>(predicate: (c: Tagged) => boolean): MapFn<IProvider<T>> {
+export function scope<T = unknown>(predicate: (c: Tagged) => boolean): MapFn<IProvider<T>> {
   return (provider) => new ScopeProvider(provider, predicate);
 }
 

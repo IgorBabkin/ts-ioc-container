@@ -5,8 +5,8 @@ export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
 
 export const by = {
-  aliases:
-    (predicate: (dep: Aliased) => boolean) =>
+  provider:
+    (predicate: (provider: Aliased) => boolean) =>
     (c: IContainer, ...args: unknown[]) =>
       c.getTokensByProvider(predicate).map((t) => c.resolve(t, ...args)),
 

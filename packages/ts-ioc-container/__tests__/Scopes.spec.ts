@@ -7,11 +7,11 @@ import {
   provider,
   MetadataInjector,
   Registration as R,
-  tags,
+  scope,
 } from '../lib';
 
 @key('logger')
-@provider(singleton(), tags((s) => s.hasTag('home')))
+@provider(singleton(), scope((s) => s.hasTag('home')))
 class Logger {}
 
 describe('Singleton', function () {

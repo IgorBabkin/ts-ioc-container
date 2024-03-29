@@ -141,11 +141,11 @@ import {
   MetadataInjector,
   Registration as R,
   by,
-  tags,
+  scope,
 } from 'ts-ioc-container';
 
 @key('ILogger')
-@provider(singleton(), tags((s) => s.hasTag('child')))
+@provider(singleton(), scope((s) => s.hasTag('child')))
 class Logger {}
 
 describe('Scopes', function () {
@@ -403,7 +403,7 @@ Sometimes you need to keep dependency key with class together. For example, you 
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, provider, MetadataInjector, Registration as R, key, tags } from 'ts-ioc-container';
+import { singleton, Container, provider, MetadataInjector, Registration as R, key, scope } from 'ts-ioc-container';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
@@ -411,7 +411,7 @@ describe('Registration module', function () {
 
   it('should register class', function () {
     @key('ILogger')
-    @provider(singleton(), tags((s) => s.hasTag('root')))
+    @provider(singleton(), scope((s) => s.hasTag('root')))
     class Logger {}
 
     const root = createContainer().use(R.fromClass(Logger));
@@ -452,7 +452,7 @@ describe('Registration module', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, Provider, MetadataInjector, tags } from 'ts-ioc-container';
+import { singleton, Container, Provider, MetadataInjector, scope } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -480,7 +480,7 @@ describe('Provider', function () {
       'ILogger',
       Provider.fromClass(Logger).pipe(
         singleton(),
-        tags((s) => s.hasTag('root')),
+        scope((s) => s.hasTag('root')),
       ),
     );
 
@@ -538,10 +538,10 @@ Sometimes you need to resolve provider only from scope which matches to certain 
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R, tags } from 'ts-ioc-container';
+import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope } from 'ts-ioc-container';
 
 @key('ILogger')
-@provider(singleton(), tags((s) => s.hasTag('root'))) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
+@provider(singleton(), scope((s) => s.hasTag('root'))) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
@@ -640,7 +640,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(by.aliases((d) => d.hasAlias(IMiddlewareKey))) public middleware: IMiddleware[]) {}
+      constructor(@inject(by.provider((d) => d.hasAlias(IMiddlewareKey))) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);
