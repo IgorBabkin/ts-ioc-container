@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { singleton, Container, Provider, MetadataInjector, scope } from '../../lib';
+import { singleton, Container, Provider, MetadataInjector, tags } from '../../lib';
 
 class Logger {}
 
@@ -27,7 +27,7 @@ describe('Provider', function () {
       'ILogger',
       Provider.fromClass(Logger).pipe(
         singleton(),
-        scope((s) => s.hasTag('root')),
+        tags((s) => s.hasTag('root')),
       ),
     );
 

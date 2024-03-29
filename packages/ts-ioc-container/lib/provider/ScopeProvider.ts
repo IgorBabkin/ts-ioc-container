@@ -1,11 +1,11 @@
 import { IProvider } from './IProvider';
 import { ProviderDecorator } from './ProviderDecorator';
-import { IContainer } from '../container/IContainer';
+import { IContainer, Tagged } from '../container/IContainer';
 import { MapFn } from '../utils';
 
 type ContainerPredicate = (c: IContainer) => boolean;
 
-export function scope<T = unknown>(predicate: ContainerPredicate): MapFn<IProvider<T>> {
+export function tags<T = unknown>(predicate: (c: Tagged) => boolean): MapFn<IProvider<T>> {
   return (provider) => new ScopeProvider(provider, predicate);
 }
 

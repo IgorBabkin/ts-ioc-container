@@ -1,4 +1,4 @@
-import { IProvider, ResolveDependency } from './IProvider';
+import { Alias, IProvider, ResolveDependency } from './IProvider';
 import { DependencyKey, Resolvable } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
@@ -17,7 +17,7 @@ export class Provider<T> implements IProvider<T> {
     return new Provider(() => value);
   }
 
-  private aliases: Set<DependencyKey> = new Set();
+  private aliases: Set<Alias> = new Set();
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
@@ -25,14 +25,14 @@ export class Provider<T> implements IProvider<T> {
     return pipe(...mappers)(this);
   }
 
-  addAliases(...aliases: DependencyKey[]): this {
+  addAliases(...aliases: Alias[]): this {
     for (const alias of aliases) {
       this.aliases.add(alias);
     }
     return this;
   }
 
-  hasAlias(alias: DependencyKey): boolean {
+  hasAlias(alias: Alias): boolean {
     return this.aliases.has(alias);
   }
 

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { alias, by, Container, inject, provider, MetadataInjector, Registration as R } from '../../lib';
 
 describe('alias', () => {
-  const IMiddlewareKey = Symbol('IMiddleware');
+  const IMiddlewareKey = 'IMiddleware';
   const middleware = provider(alias(IMiddlewareKey));
 
   interface IMiddleware {
@@ -31,7 +31,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(by.alias.some(IMiddlewareKey)) public middleware: IMiddleware[]) {}
+      constructor(@inject(by.aliases((d) => d.hasAlias(IMiddlewareKey))) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);

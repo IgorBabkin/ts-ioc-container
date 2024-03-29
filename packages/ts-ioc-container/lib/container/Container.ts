@@ -1,12 +1,12 @@
 import { DependencyKey, IContainer, IContainerModule, InjectionToken, isConstructor, Tag } from './IContainer';
 import { IInjector } from '../injector/IInjector';
-import { IProvider } from '../provider/IProvider';
+import { IProvider, ProviderPredicate } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer {
   readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly tags: Tag[];
+  private tags: Set<Tag>;
   private isDisposed = false;
   private parent: IContainer;
   private scopes: Set<IContainer> = new Set();
@@ -17,7 +17,7 @@ export class Container implements IContainer {
     options: { parent?: IContainer; tags?: Tag[] } = {},
   ) {
     this.parent = options.parent ?? new EmptyContainer();
-    this.tags = options.tags ?? [];
+    this.tags = new Set(options.tags ?? []);
   }
 
   register(key: DependencyKey, provider: IProvider): this {
@@ -39,7 +39,7 @@ export class Container implements IContainer {
     return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(token, ...args);
   }
 
-  getTokensByProvider(predicate: (provider: IProvider) => boolean): DependencyKey[] {
+  getTokensByProvider(predicate: ProviderPredicate): DependencyKey[] {
     const keys = new Set<DependencyKey>(this.parent.getTokensByProvider(predicate));
 
     for (const [key, provider] of this.providers) {
@@ -82,7 +82,7 @@ export class Container implements IContainer {
   }
 
   hasTag(tag: Tag): boolean {
-    return this.tags.includes(tag);
+    return this.tags.has(tag);
   }
 
   use(...modules: IContainerModule[]): this {

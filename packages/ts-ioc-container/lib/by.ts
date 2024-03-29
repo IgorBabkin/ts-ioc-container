@@ -1,28 +1,14 @@
-import { DependencyKey, IContainer, InjectionToken } from './container/IContainer';
+import { IContainer, InjectionToken } from './container/IContainer';
+import { Aliased } from './provider/IProvider';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
 
 export const by = {
-  alias: {
-    /**
-     * Get all instances that have at least one of the given aliases
-     * @param aliases
-     */
-    some:
-      (...aliases: DependencyKey[]) =>
-      (c: IContainer, ...args: unknown[]) =>
-        c.getTokensByProvider((p) => aliases.some((alias) => p.hasAlias(alias))).map((t) => c.resolve(t, ...args)),
-
-    /**
-     * Get all instances that have all of the given aliases
-     * @param aliases
-     */
-    all:
-      (...aliases: DependencyKey[]) =>
-      (c: IContainer, ...args: unknown[]) =>
-        c.getTokensByProvider((p) => aliases.every((alias) => p.hasAlias(alias))).map((t) => c.resolve(t, ...args)),
-  },
+  aliases:
+    (predicate: (dep: Aliased) => boolean) =>
+    (c: IContainer, ...args: unknown[]) =>
+      c.getTokensByProvider(predicate).map((t) => c.resolve(t, ...args)),
 
   /**
    * Get all instances that match the given keys
