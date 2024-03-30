@@ -1,16 +1,26 @@
-import { DependencyKey, IContainer, IContainerModule, InjectionToken, isConstructor, Tag } from './IContainer';
+import {
+  Alias,
+  AliasPredicate,
+  DependencyKey,
+  IContainer,
+  IContainerModule,
+  InjectionToken,
+  isConstructor,
+  Tag,
+} from './IContainer';
 import { IInjector } from '../injector/IInjector';
-import { IProvider, ProviderPredicate } from '../provider/IProvider';
+import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer {
-  readonly providers = new Map<DependencyKey, IProvider>();
+  private readonly providers = new Map<DependencyKey, IProvider>();
+  private readonly aliases: Map<DependencyKey, Alias[]> = new Map();
   private tags: Set<Tag>;
   private isDisposed = false;
   private parent: IContainer;
-  private scopes: Set<IContainer> = new Set();
-  private instances: Set<unknown> = new Set();
+  private scopes = new Set<IContainer>();
+  private instances = new Set<unknown>();
 
   constructor(
     private readonly injector: IInjector,
@@ -20,9 +30,14 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
   }
 
-  register(key: DependencyKey, provider: IProvider): this {
+  register(key: DependencyKey, provider: IProvider, aliases?: Alias[]): this {
     this.validateContainer();
+
     this.providers.set(key, provider);
+    if (aliases && aliases.length > 0) {
+      this.aliases.set(key, aliases);
+    }
+
     return this;
   }
 
@@ -37,18 +52,6 @@ export class Container implements IContainer {
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
     return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolve<T>(token, ...args);
-  }
-
-  getTokensByProvider(predicate: ProviderPredicate): DependencyKey[] {
-    const keys = new Set<DependencyKey>(this.parent.getTokensByProvider(predicate));
-
-    for (const [key, provider] of this.providers) {
-      if (predicate(provider)) {
-        keys.add(key);
-      }
-    }
-
-    return Array.from(keys);
   }
 
   createScope(...tags: Tag[]): Container {
@@ -94,6 +97,16 @@ export class Container implements IContainer {
 
   hasDependency(key: DependencyKey): boolean {
     return this.providers.has(key) ?? this.parent.hasDependency(key);
+  }
+
+  getKeysByAlias(predicate: AliasPredicate): DependencyKey[] {
+    const result = new Set<DependencyKey>(this.parent.getKeysByAlias(predicate));
+    for (const [key, aliases] of this.aliases.entries()) {
+      if (predicate(aliases)) {
+        result.add(key);
+      }
+    }
+    return Array.from(result);
   }
 
   /**

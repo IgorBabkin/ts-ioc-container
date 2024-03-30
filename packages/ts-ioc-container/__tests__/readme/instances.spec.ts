@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { inject, key, Registration as R, Container, MetadataInjector, by } from '../../lib';
+import { inject, key, Registration as R, Container, MetadataInjector, by, register } from '../../lib';
 
 describe('Instances', function () {
-  @key('ILogger')
+  @register(key('ILogger'))
   class Logger {}
 
   it('should return injected instances', () => {

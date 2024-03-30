@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import { singleton, Container, provider, MetadataInjector, Registration as R, key, scope } from '../../lib';
+import { singleton, Container, provider, MetadataInjector, Registration as R, key, scope, register } from '../../lib';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
   const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
 
   it('should register class', function () {
-    @key('ILogger')
+    @register(key('ILogger'))
     @provider(singleton(), scope((s) => s.hasTag('root')))
     class Logger {}
 

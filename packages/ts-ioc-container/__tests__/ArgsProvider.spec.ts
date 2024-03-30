@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { Container, key, argsFn, args, MetadataInjector, Registration as R } from '../lib';
+import { Container, key, argsFn, args, MetadataInjector, Registration as R, register } from '../lib';
 
-@key('logger')
+@register(key('logger'))
 class Logger {
   constructor(
     public name: string,

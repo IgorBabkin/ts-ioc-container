@@ -10,7 +10,7 @@ export {
 export { constructor } from './utils';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
-export { ResolveDependency, IProvider, alias } from './provider/IProvider';
+export { ResolveDependency, IProvider } from './provider/IProvider';
 export { IInjector } from './injector/IInjector';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
@@ -20,7 +20,7 @@ export { ArgsFn, argsFn, args, ArgsProvider } from './provider/ArgsProvider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
 export { scope, ScopeProvider } from './provider/ScopeProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
-export { key, Registration } from './provider/Registration';
+export { key, Registration, register, alias } from './provider/Registration';
 export { MetadataInjector, inject } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';

@@ -10,9 +10,10 @@ import {
   provider,
   Registration as R,
   MetadataInjector,
+  register,
 } from '../lib';
 
-@key('logsRepo')
+@register(key('logsRepo'))
 @provider(singleton())
 class LogsRepo {
   savedLogs: string[] = [];
@@ -22,7 +23,7 @@ class LogsRepo {
   }
 }
 
-@key('logger')
+@register(key('logger'))
 class Logger {
   private messages: string[] = [];
 

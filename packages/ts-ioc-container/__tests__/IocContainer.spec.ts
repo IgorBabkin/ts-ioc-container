@@ -9,9 +9,10 @@ import {
   MetadataInjector,
   Registration as R,
   args,
+  register,
 } from '../lib';
 
-@key('logger')
+@register(key('logger'))
 class Logger {
   constructor(public topic: string) {}
 }

@@ -1,14 +1,13 @@
 import { IContainer, InjectionToken, IProvider, MethodNotImplementedError, DependencyKey } from '../index';
+import { AliasPredicate } from './IContainer';
 
 export abstract class AutoMockedContainer implements IContainer {
-  tags: string[] = [];
+  getKeysByAlias(alias: AliasPredicate): DependencyKey[] {
+    return [];
+  }
 
   hasDependency(key: string): boolean {
     return false;
-  }
-
-  getTokensByProvider(): DependencyKey[] {
-    return [];
   }
 
   createScope(): IContainer {

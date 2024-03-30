@@ -142,9 +142,10 @@ import {
   Registration as R,
   by,
   scope,
+  register,
 } from 'ts-ioc-container';
 
-@key('ILogger')
+@register(key('ILogger'))
 @provider(singleton(), scope((s) => s.hasTag('child')))
 class Logger {}
 
@@ -180,10 +181,10 @@ Sometimes you want to get all instances from container and its scopes. For examp
 
 ```typescript
 import 'reflect-metadata';
-import { inject, key, Registration as R, Container, MetadataInjector, by } from 'ts-ioc-container';
+import { inject, key, Registration as R, Container, MetadataInjector, by, register } from 'ts-ioc-container';
 
 describe('Instances', function () {
-  @key('ILogger')
+  @register(key('ILogger'))
   class Logger {}
 
   it('should return injected instances', () => {
@@ -403,14 +404,14 @@ Sometimes you need to keep dependency key with class together. For example, you 
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, provider, MetadataInjector, Registration as R, key, scope } from 'ts-ioc-container';
+import { singleton, Container, provider, MetadataInjector, Registration as R, key, scope, register } from 'ts-ioc-container';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
   const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
 
   it('should register class', function () {
-    @key('ILogger')
+    @register(key('ILogger'))
     @provider(singleton(), scope((s) => s.hasTag('root')))
     class Logger {}
 
@@ -498,9 +499,9 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { singleton, Container, key, provider, MetadataInjector, Registration as R, register } from 'ts-ioc-container';
 
-@key('logger')
+@register(key('logger'))
 @provider(singleton())
 class Logger {}
 
@@ -538,9 +539,9 @@ Sometimes you need to resolve provider only from scope which matches to certain 
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope } from 'ts-ioc-container';
+import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope, register } from 'ts-ioc-container';
 
-@key('ILogger')
+@register(key('ILogger'))
 @provider(singleton(), scope((s) => s.hasTag('root'))) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {
@@ -559,9 +560,9 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 
 ```typescript
 import 'reflect-metadata';
-import { Container, key, argsFn, args, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { Container, key, argsFn, args, MetadataInjector, Registration as R, register } from 'ts-ioc-container';
 
-@key('logger')
+@register(key('logger'))
 class Logger {
   constructor(
     public name: string,
@@ -608,11 +609,11 @@ Sometimes you want to register the same provider with different keys. This is wh
 
 ```typescript
 import 'reflect-metadata';
-import { alias, by, Container, inject, provider, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { by, Container, inject, MetadataInjector, Registration as R, register, alias } from 'ts-ioc-container';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
-  const middleware = provider(alias(IMiddlewareKey));
+  const middleware = register(alias(IMiddlewareKey));
 
   interface IMiddleware {
     applyTo(application: IApplication): void;
@@ -640,7 +641,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(by.provider((d) => d.hasAlias(IMiddlewareKey))) public middleware: IMiddleware[]) {}
+      constructor(@inject(by.aliases((it) => it.includes(IMiddlewareKey))) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);
@@ -680,12 +681,12 @@ Sometimes you want to encapsulate registration logic in separate module. This is
 
 ```typescript
 import 'reflect-metadata';
-import { IContainerModule, Registration as R, IContainer, key, Container, MetadataInjector } from 'ts-ioc-container';
+import { IContainerModule, Registration as R, IContainer, key, Container, MetadataInjector, register } from 'ts-ioc-container';
 
-@key('ILogger')
+@register(key('ILogger'))
 class Logger {}
 
-@key('ILogger')
+@register(key('ILogger'))
 class TestLogger {}
 
 class Production implements IContainerModule {
@@ -736,6 +737,7 @@ import {
   IInjector,
   MetadataInjector,
   Registration as R,
+  register,
 } from 'ts-ioc-container';
 
 class MyInjector implements IInjector {
@@ -752,7 +754,7 @@ class MyInjector implements IInjector {
   }
 }
 
-@key('logger')
+@register(key('logger'))
 class Logger {
   isReady = false;
 
@@ -792,9 +794,10 @@ import {
   provider,
   Registration as R,
   MetadataInjector,
+  register,
 } from 'ts-ioc-container';
 
-@key('logsRepo')
+@register(key('logsRepo'))
 @provider(singleton())
 class LogsRepo {
   savedLogs: string[] = [];
@@ -804,7 +807,7 @@ class LogsRepo {
   }
 }
 
-@key('logger')
+@register(key('logger'))
 class Logger {
   private messages: string[] = [];
 

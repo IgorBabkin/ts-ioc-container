@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope } from '../lib';
+import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope, register } from '../lib';
 
-@key('ILogger')
+@register(key('ILogger'))
 @provider(singleton(), scope((s) => s.hasTag('root'))) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {

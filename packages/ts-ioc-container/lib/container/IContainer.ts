@@ -1,4 +1,4 @@
-import { IProvider, ProviderPredicate } from '../provider/IProvider';
+import { IProvider } from '../provider/IProvider';
 import { constructor } from '../utils';
 
 export type Tag = string;
@@ -27,10 +27,13 @@ export interface Tagged {
   hasTag(tag: Tag): boolean;
 }
 
+export type Alias = string;
+export type AliasPredicate = (aliases: Alias[]) => boolean;
+
 export interface IContainer extends Resolvable, Tagged {
   createScope(...tags: Tag[]): IContainer;
 
-  register(key: DependencyKey, value: IProvider): this;
+  register(key: DependencyKey, value: IProvider, aliases?: Alias[]): this;
 
   removeScope(child: IContainer): void;
 
@@ -42,7 +45,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   getAllProviders(): Map<DependencyKey, IProvider>;
 
-  getTokensByProvider(predicate: ProviderPredicate): DependencyKey[];
-
   hasDependency(key: DependencyKey): boolean;
+
+  getKeysByAlias(alias: AliasPredicate): DependencyKey[];
 }

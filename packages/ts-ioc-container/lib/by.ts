@@ -1,14 +1,27 @@
-import { IContainer, InjectionToken } from './container/IContainer';
-import { Aliased } from './provider/IProvider';
+import { AliasPredicate, DependencyKey, IContainer, InjectionToken } from './container/IContainer';
+import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
 
+export const resolveSilently =
+  (c: IContainer, ...args: unknown[]) =>
+  (key: DependencyKey) => {
+    try {
+      return c.resolve(key, ...args);
+    } catch (e) {
+      if (e instanceof DependencyNotFoundError) {
+        return undefined;
+      }
+      throw e;
+    }
+  };
+
 export const by = {
-  provider:
-    (predicate: (provider: Aliased) => boolean) =>
+  aliases:
+    (predicate: AliasPredicate) =>
     (c: IContainer, ...args: unknown[]) =>
-      c.getTokensByProvider(predicate).map((t) => c.resolve(t, ...args)),
+      c.getKeysByAlias(predicate).map(resolveSilently(c, ...args)),
 
   /**
    * Get all instances that match the given keys

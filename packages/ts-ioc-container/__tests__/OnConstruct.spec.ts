@@ -9,6 +9,7 @@ import {
   IInjector,
   MetadataInjector,
   Registration as R,
+  register,
 } from '../lib';
 
 class MyInjector implements IInjector {
@@ -25,7 +26,7 @@ class MyInjector implements IInjector {
   }
 }
 
-@key('logger')
+@register(key('logger'))
 class Logger {
   isReady = false;
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R } from '../lib';
+import { singleton, Container, key, provider, MetadataInjector, Registration as R, register } from '../lib';
 
-@key('logger')
+@register(key('logger'))
 @provider(singleton())
 class Logger {}
 

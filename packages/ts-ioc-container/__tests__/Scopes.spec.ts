@@ -8,9 +8,10 @@ import {
   MetadataInjector,
   Registration as R,
   scope,
+  register,
 } from '../lib';
 
-@key('logger')
+@register(key('logger'))
 @provider(singleton(), scope((s) => s.hasTag('home')))
 class Logger {}
 

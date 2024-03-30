@@ -11,9 +11,10 @@ import {
   Registration as R,
   by,
   scope,
+  register,
 } from '../../lib';
 
-@key('ILogger')
+@register(key('ILogger'))
 @provider(singleton(), scope((s) => s.hasTag('child')))
 class Logger {}
 
