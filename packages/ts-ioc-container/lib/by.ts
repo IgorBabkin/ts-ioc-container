@@ -3,6 +3,7 @@ import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
+export const isPresent = <T>(value: T | null | undefined): value is T => value !== null && value !== undefined;
 
 export const resolveSilently =
   (c: IContainer, ...args: unknown[]) =>
@@ -21,7 +22,10 @@ export const by = {
   aliases:
     (predicate: AliasPredicate) =>
     (c: IContainer, ...args: unknown[]) =>
-      c.getKeysByAlias(predicate).map(resolveSilently(c, ...args)),
+      c
+        .getKeysByAlias(predicate)
+        .map(resolveSilently(c, ...args))
+        .filter(isPresent),
 
   /**
    * Get all instances that match the given keys
