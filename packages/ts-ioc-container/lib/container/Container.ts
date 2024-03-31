@@ -8,13 +8,11 @@ import {
   isConstructor,
   ResolveOptions,
   Tag,
-  Tagged,
 } from './IContainer';
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
-import { constructor } from '../utils';
 
 export class Container implements IContainer {
   private readonly providers = new Map<DependencyKey, IProvider>();
@@ -48,19 +46,15 @@ export class Container implements IContainer {
     this.validateContainer();
 
     if (isConstructor(token)) {
-      return this.resolveByConstructor(token, ...args);
+      const instance = this.injector.resolve(this, token, ...args);
+      this.instances.add(instance);
+      return instance;
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
     return provider?.isVisible(this, child)
       ? provider.resolve(this, ...args)
       : this.parent.resolve<T>(token, { args, child });
-  }
-
-  private resolveByConstructor<T>(token: constructor<T>, ...args: unknown[]): T {
-    const instance = this.injector.resolve(this, token, ...args);
-    this.instances.add(instance);
-    return instance;
   }
 
   createScope(...tags: Tag[]): Container {
