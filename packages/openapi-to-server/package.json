@@ -51,7 +51,6 @@
     "@types/args": "^5.0.0",
     "@types/jest": "27.0.2",
     "@types/js-yaml": "^4.0.5",
-    "@types/node": "^17.0.21",
     "axios": "^1.4.0",
     "jest": "27.2.3",
     "make-dir-cli": "^3.0.0",
