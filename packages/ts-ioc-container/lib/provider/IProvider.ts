@@ -2,7 +2,7 @@ import { IContainer, Resolvable, Tagged } from '../container/IContainer';
 import { MapFn } from '../utils';
 
 export type ResolveDependency<T = unknown> = (container: Resolvable, ...args: unknown[]) => T;
-export type ChildrenPredicate = (c: Tagged) => boolean;
+export type VisibilityPredicate = (parent: Tagged, child: Tagged) => boolean;
 
 export interface IProvider<T = unknown> {
   clone(): IProvider<T>;
@@ -11,9 +11,9 @@ export interface IProvider<T = unknown> {
 
   isValidToClone(container: Tagged): boolean;
 
-  isValidToResolve(container: IContainer, child?: Tagged): boolean;
+  isVisible(parent: IContainer, child: Tagged): boolean;
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T>;
 
-  hideFromChildren(isHiddenForChildren: ChildrenPredicate): this;
+  setVisibility(isVisibleWhen: VisibilityPredicate): this;
 }

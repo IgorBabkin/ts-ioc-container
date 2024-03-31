@@ -16,7 +16,7 @@ export { IInjector } from './injector/IInjector';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
-export { Provider, provider, hideFromChildren } from './provider/Provider';
+export { Provider, provider, setVisibility } from './provider/Provider';
 export { ArgsFn, argsFn, args, ArgsProvider } from './provider/ArgsProvider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
 export { scope, ScopeProvider } from './provider/ScopeProvider';

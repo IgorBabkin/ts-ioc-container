@@ -51,7 +51,7 @@ export class Container implements IContainer {
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
-    return provider?.isValidToResolve(this)
+    return provider?.isVisible(this, this)
       ? provider.resolve(this, ...args)
       : this.parent.resolveFromChild<T>(this, token, ...args);
   }
@@ -64,7 +64,7 @@ export class Container implements IContainer {
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
-    return provider?.isValidToResolve(this, child)
+    return provider?.isVisible(this, child)
       ? provider.resolve(this, ...args)
       : this.parent.resolveFromChild<T>(child, token, ...args);
   }

@@ -1,10 +1,10 @@
-import { AutoMockedContainer, Container, DependencyKey, MetadataInjector } from '../../lib';
+import { AutoMockedContainer, Container, DependencyKey, MetadataInjector, Tagged } from '../../lib';
 import { IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolveFromChild<T>(key: DependencyKey): T {
+  resolveFromChild<T>(child: Tagged, key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 

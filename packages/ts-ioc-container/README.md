@@ -849,13 +849,13 @@ describe('onDispose', function () {
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
-import { AutoMockedContainer, Container, DependencyKey, MetadataInjector } from 'ts-ioc-container';
+import { AutoMockedContainer, Container, DependencyKey, MetadataInjector, Tagged } from 'ts-ioc-container';
 import { IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolveFromChild<T>(key: DependencyKey): T {
+  resolveFromChild<T>(child: Tagged, key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 
