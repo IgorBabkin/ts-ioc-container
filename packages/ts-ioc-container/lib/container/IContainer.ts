@@ -18,7 +18,7 @@ export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 export interface Resolvable {
   resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T;
 
-  resolveFromChild<T>(key: InjectionToken<T>, ...args: unknown[]): T;
+  resolveFromChild<T>(child: Tagged, key: InjectionToken<T>, ...args: unknown[]): T;
 }
 
 export interface IContainerModule {

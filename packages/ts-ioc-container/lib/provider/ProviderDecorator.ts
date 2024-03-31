@@ -1,12 +1,12 @@
-import { Resolvable, Tagged } from '../container/IContainer';
-import { IProvider } from './IProvider';
+import { IContainer, Resolvable, Tagged } from '../container/IContainer';
+import { ChildrenPredicate, IProvider } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
 
-  hideFromChildren(): this {
-    this.decorated.hideFromChildren();
+  hideFromChildren(predicate: ChildrenPredicate): this {
+    this.decorated.hideFromChildren(predicate);
     return this;
   }
 
@@ -16,8 +16,8 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.isValidToClone(container);
   }
 
-  isValidToResolve(container: Tagged, fromChild?: boolean): boolean {
-    return this.decorated.isValidToResolve(container, fromChild);
+  isValidToResolve(container: IContainer, child?: Tagged): boolean {
+    return this.decorated.isValidToResolve(container, child);
   }
 
   resolve(container: Resolvable, ...args: any[]): T {

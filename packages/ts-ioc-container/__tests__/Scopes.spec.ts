@@ -87,7 +87,7 @@ describe('Singleton', function () {
 
   it('should hide from children', () => {
     @register(key('logger'))
-    @provider(singleton(), scope((s) => s.hasTag('root')), hideFromChildren)
+    @provider(singleton(), scope((s) => s.hasTag('root')), hideFromChildren((child) => child.hasTag('child')))
     class FileLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromClass(FileLogger));

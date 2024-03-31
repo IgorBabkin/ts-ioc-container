@@ -1,4 +1,4 @@
-import { IProvider, ResolveDependency } from './IProvider';
+import { ChildrenPredicate, IProvider, ResolveDependency } from './IProvider';
 import { Resolvable, Tagged } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
@@ -6,7 +6,10 @@ import { getMetadata, setMetadata } from '../metadata';
 const PROVIDER_KEY = 'provider';
 
 export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(PROVIDER_KEY, mappers);
-export const hideFromChildren: MapFn<IProvider> = (p) => p.hideFromChildren();
+export const hideFromChildren =
+  (isHiddenForChildren: ChildrenPredicate): MapFn<IProvider> =>
+  (p) =>
+    p.hideFromChildren(isHiddenForChildren);
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -20,7 +23,7 @@ export class Provider<T> implements IProvider<T> {
 
   constructor(
     private readonly resolveDependency: ResolveDependency<T>,
-    private isHiddenFromChildren = false,
+    private isHiddenForChildren: ChildrenPredicate = () => false,
   ) {}
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
@@ -28,20 +31,20 @@ export class Provider<T> implements IProvider<T> {
   }
 
   clone(): Provider<T> {
-    return new Provider(this.resolveDependency, this.isHiddenFromChildren);
+    return new Provider(this.resolveDependency, this.isHiddenForChildren);
   }
 
   resolve(container: Resolvable, ...args: unknown[]): T {
     return this.resolveDependency(container, ...args);
   }
 
-  hideFromChildren(): this {
-    this.isHiddenFromChildren = true;
+  hideFromChildren(isHiddenForChildren: ChildrenPredicate): this {
+    this.isHiddenForChildren = isHiddenForChildren;
     return this;
   }
 
-  isValidToResolve(container: Tagged, fromChild?: boolean): boolean {
-    return !(this.isHiddenFromChildren && fromChild);
+  isValidToResolve(container: Tagged, child?: Tagged): boolean {
+    return child === undefined || !this.isHiddenForChildren(child);
   }
 
   isValidToClone(): boolean {

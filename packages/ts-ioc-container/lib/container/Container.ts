@@ -7,6 +7,7 @@ import {
   InjectionToken,
   isConstructor,
   Tag,
+  Tagged,
 } from './IContainer';
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
@@ -52,10 +53,10 @@ export class Container implements IContainer {
     const provider = this.providers.get(token) as IProvider<T> | undefined;
     return provider?.isValidToResolve(this)
       ? provider.resolve(this, ...args)
-      : this.parent.resolveFromChild<T>(token, ...args);
+      : this.parent.resolveFromChild<T>(this, token, ...args);
   }
 
-  resolveFromChild<T>(token: InjectionToken<T>, ...args: unknown[]): T {
+  resolveFromChild<T>(child: Tagged, token: InjectionToken<T>, ...args: unknown[]): T {
     this.validateContainer();
 
     if (isConstructor(token)) {
@@ -63,9 +64,9 @@ export class Container implements IContainer {
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
-    return provider?.isValidToResolve(this, true)
+    return provider?.isValidToResolve(this, child)
       ? provider.resolve(this, ...args)
-      : this.parent.resolveFromChild<T>(token, ...args);
+      : this.parent.resolveFromChild<T>(child, token, ...args);
   }
 
   private resolveByConstructor<T>(token: constructor<T>, ...args: unknown[]): T {

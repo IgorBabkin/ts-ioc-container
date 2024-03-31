@@ -1,12 +1,7 @@
-import {
-  IContainer,
-  InjectionToken,
-  IProvider,
-  MethodNotImplementedError,
-  DependencyKey,
-  DependencyNotFoundError,
-} from '../index';
-import { AliasPredicate } from './IContainer';
+import { AliasPredicate, DependencyKey, IContainer, InjectionToken, Tagged } from './IContainer';
+import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
+import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
+import { IProvider } from '../provider/IProvider';
 
 export abstract class AutoMockedContainer implements IContainer {
   getKeysByAlias(alias: AliasPredicate): DependencyKey[] {
@@ -25,7 +20,7 @@ export abstract class AutoMockedContainer implements IContainer {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 
-  abstract resolveFromChild<T>(key: InjectionToken<T>, ...args: unknown[]): T;
+  abstract resolveFromChild<T>(child: Tagged, key: InjectionToken<T>, ...args: unknown[]): T;
 
   dispose(): void {}
 
