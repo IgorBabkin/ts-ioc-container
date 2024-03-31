@@ -1,4 +1,4 @@
-import { VisibilityPredicate, IProvider, ResolveDependency } from './IProvider';
+import { ChildrenVisibilityPredicate, IProvider, ResolveDependency, ScopePredicate } from './IProvider';
 import { Resolvable, Tagged } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
@@ -6,10 +6,15 @@ import { getMetadata, setMetadata } from '../metadata';
 const PROVIDER_KEY = 'provider';
 
 export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(PROVIDER_KEY, mappers);
-export const setVisibility =
-  (isVisibleWhen: VisibilityPredicate): MapFn<IProvider> =>
+
+export const visible =
+  (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>
   (p) =>
     p.setVisibility(isVisibleWhen);
+
+export function scope<T = unknown>(predicate: ScopePredicate): MapFn<IProvider<T>> {
+  return (provider) => provider.setScopePredicate(predicate);
+}
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -23,7 +28,8 @@ export class Provider<T> implements IProvider<T> {
 
   constructor(
     private readonly resolveDependency: ResolveDependency<T>,
-    private isVisibleWhen: VisibilityPredicate = () => true,
+    private isVisibleWhen: ChildrenVisibilityPredicate = () => true,
+    private isValidWhen: ScopePredicate = () => true,
   ) {}
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
@@ -31,23 +37,28 @@ export class Provider<T> implements IProvider<T> {
   }
 
   clone(): Provider<T> {
-    return new Provider(this.resolveDependency, this.isVisibleWhen);
+    return new Provider(this.resolveDependency, this.isVisibleWhen, this.isValidWhen);
   }
 
   resolve(container: Resolvable, ...args: unknown[]): T {
     return this.resolveDependency(container, ...args);
   }
 
-  setVisibility(isVisibleWhen: VisibilityPredicate): this {
-    this.isVisibleWhen = isVisibleWhen;
+  setVisibility(predicate: ChildrenVisibilityPredicate): this {
+    this.isVisibleWhen = predicate;
+    return this;
+  }
+
+  setScopePredicate(isValidWhen: ScopePredicate): this {
+    this.isValidWhen = isValidWhen;
     return this;
   }
 
   isVisible(parent: Tagged, child: Tagged): boolean {
-    return this.isVisibleWhen(parent, child);
+    return this.isValidWhen(parent) && this.isVisibleWhen({ child, isParent: child === parent });
   }
 
-  isValidToClone(): boolean {
-    return true;
+  isValidToClone(container: Tagged): boolean {
+    return this.isValidWhen(container);
   }
 }

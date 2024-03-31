@@ -1,11 +1,16 @@
 import { IContainer, Resolvable, Tagged } from '../container/IContainer';
-import { VisibilityPredicate, IProvider } from './IProvider';
+import { ChildrenVisibilityPredicate, IProvider, ScopePredicate } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
 
-  setVisibility(predicate: VisibilityPredicate): this {
+  setScopePredicate(isValidWhen: ScopePredicate): this {
+    this.decorated.setScopePredicate(isValidWhen);
+    return this;
+  }
+
+  setVisibility(predicate: ChildrenVisibilityPredicate): this {
     this.decorated.setVisibility(predicate);
     return this;
   }

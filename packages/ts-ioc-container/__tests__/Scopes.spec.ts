@@ -9,7 +9,7 @@ import {
   Registration as R,
   scope,
   register,
-  setVisibility,
+  visible,
   DependencyNotFoundError,
 } from '../lib';
 
@@ -87,7 +87,7 @@ describe('Singleton', function () {
 
   it('should hide from children', () => {
     @register(key('logger'))
-    @provider(singleton(), scope((s) => s.hasTag('root')), setVisibility((parent, child) => parent === child))
+    @provider(singleton(), scope((s) => s.hasTag('root')), visible(({ isParent }) => isParent))
     class FileLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromClass(FileLogger));
@@ -96,5 +96,18 @@ describe('Singleton', function () {
 
     expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);
     expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
+  });
+
+  it('should be not visible from root', () => {
+    @register(key('logger'))
+    @provider(scope((s) => s.hasTag('child')))
+    class FileLogger {}
+
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromClass(FileLogger));
+
+    const child = parent.createScope('child');
+
+    expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
+    expect(child.resolve('logger')).toBeInstanceOf(FileLogger);
   });
 });
