@@ -6,6 +6,7 @@ export {
   DependencyKey,
   InjectionToken,
   Tag,
+  Tagged,
 } from './container/IContainer';
 export { constructor } from './utils';
 export { Container } from './container/Container';
