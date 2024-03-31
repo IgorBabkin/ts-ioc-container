@@ -1,11 +1,12 @@
 import { IProvider, ResolveDependency } from './IProvider';
-import { Resolvable } from '../container/IContainer';
+import { Resolvable, Tagged } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 
 const PROVIDER_KEY = 'provider';
 
 export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(PROVIDER_KEY, mappers);
+export const hideFromChildren: MapFn<IProvider> = (p) => p.hideFromChildren();
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -16,6 +17,8 @@ export class Provider<T> implements IProvider<T> {
   static fromValue<T>(value: T): Provider<T> {
     return new Provider(() => value);
   }
+
+  private isHiddenFromChildren = false;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
@@ -31,7 +34,12 @@ export class Provider<T> implements IProvider<T> {
     return this.resolveDependency(container, ...args);
   }
 
-  isValid(): boolean {
-    return true;
+  hideFromChildren(): this {
+    this.isHiddenFromChildren = true;
+    return this;
+  }
+
+  isValid(container: Tagged, fromChild = false): boolean {
+    return !(this.isHiddenFromChildren && fromChild);
   }
 }

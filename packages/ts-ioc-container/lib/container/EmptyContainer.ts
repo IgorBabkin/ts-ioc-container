@@ -32,6 +32,10 @@ export class EmptyContainer implements IContainer {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 
+  resolveFromChild<T>(key: InjectionToken<T>, ...args: unknown[]): T {
+    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
+  }
+
   getAllProviders(): Map<DependencyKey, IProvider> {
     return new Map();
   }

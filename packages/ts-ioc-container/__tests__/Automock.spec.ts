@@ -54,7 +54,7 @@ export function createMock<T>(): IMock<T> {
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolve<T>(key: DependencyKey): T {
+  resolveFromChild<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 
