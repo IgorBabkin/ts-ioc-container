@@ -31,7 +31,7 @@ describe('ArgsProvider', function () {
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
     const root = createContainer().use(R.fromClass(Logger).pipe(args('name')));
 
-    const logger = root.resolve<Logger>('logger', 'file');
+    const logger = root.resolve<Logger>('logger', { args: ['file'] });
 
     expect(logger.name).toBe('name');
     expect(logger.type).toBe('file');

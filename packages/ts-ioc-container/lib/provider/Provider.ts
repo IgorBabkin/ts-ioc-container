@@ -14,7 +14,7 @@ export const setVisibility =
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     const mappers = getMetadata<MapFn<IProvider<T>>[]>(Target, PROVIDER_KEY) ?? [];
-    return new Provider((container, ...args) => container.resolve(Target, ...args)).pipe(...mappers);
+    return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...mappers);
   }
 
   static fromValue<T>(value: T): Provider<T> {

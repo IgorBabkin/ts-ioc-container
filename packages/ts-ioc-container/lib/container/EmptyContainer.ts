@@ -1,4 +1,11 @@
-import { AliasPredicate, DependencyKey, IContainer, IContainerModule, InjectionToken, Tagged } from './IContainer';
+import {
+  AliasPredicate,
+  DependencyKey,
+  IContainer,
+  IContainerModule,
+  InjectionToken,
+  ResolveOptions,
+} from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
@@ -28,11 +35,7 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  resolve<T>(key: InjectionToken<T>): T {
-    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
-  }
-
-  resolveFromChild<T>(child: Tagged, key: InjectionToken<T>, ...args: unknown[]): T {
+  resolve<T>(key: InjectionToken<T>, options: ResolveOptions): T {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 

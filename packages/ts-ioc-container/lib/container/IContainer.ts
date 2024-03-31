@@ -15,10 +15,10 @@ export function isConstructor<T>(token: InjectionToken<T>): token is constructor
 
 export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 
-export interface Resolvable {
-  resolve<T>(key: InjectionToken<T>, ...args: unknown[]): T;
+export type ResolveOptions = { args?: unknown[]; child?: Tagged };
 
-  resolveFromChild<T>(child: Tagged, key: InjectionToken<T>, ...args: unknown[]): T;
+export interface Resolvable {
+  resolve<T>(key: InjectionToken<T>, options?: ResolveOptions): T;
 }
 
 export interface IContainerModule {

@@ -6,6 +6,7 @@ import {
   IContainerModule,
   InjectionToken,
   isConstructor,
+  ResolveOptions,
   Tag,
   Tagged,
 } from './IContainer';
@@ -43,20 +44,7 @@ export class Container implements IContainer {
     return this;
   }
 
-  resolve<T>(token: InjectionToken<T>, ...args: unknown[]): T {
-    this.validateContainer();
-
-    if (isConstructor(token)) {
-      return this.resolveByConstructor(token, ...args);
-    }
-
-    const provider = this.providers.get(token) as IProvider<T> | undefined;
-    return provider?.isVisible(this, this)
-      ? provider.resolve(this, ...args)
-      : this.parent.resolveFromChild<T>(this, token, ...args);
-  }
-
-  resolveFromChild<T>(child: Tagged, token: InjectionToken<T>, ...args: unknown[]): T {
+  resolve<T>(token: InjectionToken<T>, { args = [], child = this }: ResolveOptions = {}): T {
     this.validateContainer();
 
     if (isConstructor(token)) {
@@ -66,7 +54,7 @@ export class Container implements IContainer {
     const provider = this.providers.get(token) as IProvider<T> | undefined;
     return provider?.isVisible(this, child)
       ? provider.resolve(this, ...args)
-      : this.parent.resolveFromChild<T>(child, token, ...args);
+      : this.parent.resolve<T>(token, { args, child });
   }
 
   private resolveByConstructor<T>(token: constructor<T>, ...args: unknown[]): T {

@@ -5,9 +5,8 @@ import {
   Container,
   DependencyKey,
   inject,
-  MethodNotImplementedError,
   MetadataInjector,
-  Tagged,
+  MethodNotImplementedError,
 } from '../lib';
 import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction, Times } from 'moq.ts';
 
@@ -55,7 +54,7 @@ export function createMock<T>(): IMock<T> {
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolveFromChild<T>(child: Tagged, key: DependencyKey): T {
+  resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 

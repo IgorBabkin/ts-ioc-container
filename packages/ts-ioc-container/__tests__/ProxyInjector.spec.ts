@@ -46,7 +46,7 @@ describe('ProxyInjector', function () {
       .use(R.fromClass(App).to('App').pipe(args({ greetingTemplate })))
       .use(R.fromClass(Logger).to('logger'));
 
-    const app = container.resolve<App>('App', { name: `world` });
+    const app = container.resolve<App>('App', { args: [{ name: `world` }] });
     expect(app.greeting).toBe('Hello world');
   });
 });

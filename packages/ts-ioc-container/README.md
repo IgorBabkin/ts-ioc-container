@@ -318,7 +318,7 @@ describe('SimpleInjector', function () {
     }
 
     const container = new Container(new SimpleInjector()).use(R.fromClass(App).to('App'));
-    const app = container.resolve<App>('App', 'Hello world');
+    const app = container.resolve<App>('App', { args: ['Hello world'] });
 
     expect(app.greeting).toBe('Hello world');
   });
@@ -378,7 +378,7 @@ describe('ProxyInjector', function () {
       .use(R.fromClass(App).to('App').pipe(args({ greetingTemplate })))
       .use(R.fromClass(Logger).to('logger'));
 
-    const app = container.resolve<App>('App', { name: `world` });
+    const app = container.resolve<App>('App', { args: [{ name: `world` }] });
     expect(app.greeting).toBe('Hello world');
   });
 });
@@ -592,7 +592,7 @@ describe('ArgsProvider', function () {
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
     const root = createContainer().use(R.fromClass(Logger).pipe(args('name')));
 
-    const logger = root.resolve<Logger>('logger', 'file');
+    const logger = root.resolve<Logger>('logger', { args: ['file'] });
 
     expect(logger.name).toBe('name');
     expect(logger.type).toBe('file');
@@ -849,13 +849,13 @@ describe('onDispose', function () {
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
-import { AutoMockedContainer, Container, DependencyKey, MetadataInjector, Tagged } from 'ts-ioc-container';
+import { AutoMockedContainer, Container, DependencyKey, MetadataInjector } from 'ts-ioc-container';
 import { IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolveFromChild<T>(child: Tagged, key: DependencyKey): T {
+  resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 

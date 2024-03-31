@@ -9,7 +9,7 @@ export const resolveSilently =
   (c: IContainer, ...args: unknown[]) =>
   (key: DependencyKey) => {
     try {
-      return c.resolve(key, ...args);
+      return c.resolve(key, { args });
     } catch (e) {
       if (e instanceof DependencyNotFoundError) {
         return undefined;
@@ -34,7 +34,7 @@ export const by = {
   keys:
     (...keys: InjectionToken[]) =>
     (с: IContainer, ...args: unknown[]) =>
-      keys.map((t) => с.resolve(t, ...args)),
+      keys.map((t) => с.resolve(t, { args })),
 
   /**
    * Get the instance that matches the given key
@@ -44,7 +44,7 @@ export const by = {
   key:
     <T>(key: InjectionToken<T>, ...deps: unknown[]) =>
     (c: IContainer, ...args: unknown[]) =>
-      c.resolve<T>(key, ...deps, ...args),
+      c.resolve<T>(key, { args: [...deps, ...args] }),
 
   /**
    * Get all instances that match the given predicate
