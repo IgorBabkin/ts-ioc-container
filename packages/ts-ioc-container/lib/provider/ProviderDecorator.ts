@@ -12,8 +12,12 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
 
   abstract clone(): IProvider<T>;
 
-  isValid(container: Tagged): boolean {
-    return this.decorated.isValid(container);
+  isValidToClone(container: Tagged): boolean {
+    return this.decorated.isValidToClone(container);
+  }
+
+  isValidToResolve(container: Tagged, fromChild?: boolean): boolean {
+    return this.decorated.isValidToResolve(container, fromChild);
   }
 
   resolve(container: Resolvable, ...args: any[]): T {

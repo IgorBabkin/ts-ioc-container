@@ -50,7 +50,9 @@ export class Container implements IContainer {
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
-    return provider?.isValid(this) ? provider.resolve(this, ...args) : this.parent.resolveFromChild<T>(token, ...args);
+    return provider?.isValidToResolve(this)
+      ? provider.resolve(this, ...args)
+      : this.parent.resolveFromChild<T>(token, ...args);
   }
 
   resolveFromChild<T>(token: InjectionToken<T>, ...args: unknown[]): T {
@@ -61,7 +63,7 @@ export class Container implements IContainer {
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
-    return provider?.isValid(this, true)
+    return provider?.isValidToResolve(this, true)
       ? provider.resolve(this, ...args)
       : this.parent.resolveFromChild<T>(token, ...args);
   }
@@ -132,7 +134,7 @@ export class Container implements IContainer {
    */
   cloneValidProvidersFrom(source: IContainer): void {
     for (const [key, provider] of source.getAllProviders()) {
-      if (provider.isValid(this)) {
+      if (provider.isValidToClone(this)) {
         this.providers.set(key, provider.clone());
       }
     }

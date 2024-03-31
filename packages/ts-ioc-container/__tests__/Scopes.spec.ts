@@ -9,6 +9,8 @@ import {
   Registration as R,
   scope,
   register,
+  hideFromChildren,
+  DependencyNotFoundError,
 } from '../lib';
 
 @register(key('logger'))
@@ -81,5 +83,18 @@ describe('Singleton', function () {
     container.dispose();
 
     expect(container.getInstances().length).toBe(0);
+  });
+
+  it('should hide from children', () => {
+    @register(key('logger'))
+    @provider(singleton(), scope((s) => s.hasTag('root')), hideFromChildren)
+    class FileLogger {}
+
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromClass(FileLogger));
+
+    const child = parent.createScope('child');
+
+    expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);
+    expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
   });
 });

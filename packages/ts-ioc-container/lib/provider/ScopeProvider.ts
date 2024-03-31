@@ -21,7 +21,11 @@ export class ScopeProvider<T> extends ProviderDecorator<T> {
     return new ScopeProvider(this.provider.clone(), this.predicate);
   }
 
-  isValid(container: IContainer): boolean {
-    return this.predicate(container) && this.provider.isValid(container);
+  isValidToClone(container: IContainer): boolean {
+    return this.predicate(container) && this.provider.isValidToClone(container);
+  }
+
+  isValidToResolve(container: IContainer, fromChild?: boolean): boolean {
+    return this.predicate(container) && this.provider.isValidToResolve(container, fromChild);
   }
 }

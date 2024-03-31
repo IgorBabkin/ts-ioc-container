@@ -18,16 +18,17 @@ export class Provider<T> implements IProvider<T> {
     return new Provider(() => value);
   }
 
-  private isHiddenFromChildren = false;
-
-  constructor(private readonly resolveDependency: ResolveDependency<T>) {}
+  constructor(
+    private readonly resolveDependency: ResolveDependency<T>,
+    private isHiddenFromChildren = false,
+  ) {}
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
     return pipe(...mappers)(this);
   }
 
   clone(): Provider<T> {
-    return new Provider(this.resolveDependency);
+    return new Provider(this.resolveDependency, this.isHiddenFromChildren);
   }
 
   resolve(container: Resolvable, ...args: unknown[]): T {
@@ -39,7 +40,11 @@ export class Provider<T> implements IProvider<T> {
     return this;
   }
 
-  isValid(container: Tagged, fromChild = false): boolean {
+  isValidToResolve(container: Tagged, fromChild?: boolean): boolean {
     return !(this.isHiddenFromChildren && fromChild);
+  }
+
+  isValidToClone(): boolean {
+    return true;
   }
 }

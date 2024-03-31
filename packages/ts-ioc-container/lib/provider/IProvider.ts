@@ -8,7 +8,9 @@ export interface IProvider<T = unknown> {
 
   resolve(container: Resolvable, ...args: unknown[]): T;
 
-  isValid(container: Tagged, fromChild?: boolean): boolean;
+  isValidToClone(container: Tagged): boolean;
+
+  isValidToResolve(container: Tagged, fromChild?: boolean): boolean;
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T>;
 
