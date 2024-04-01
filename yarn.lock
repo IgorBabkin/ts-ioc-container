@@ -611,7 +611,7 @@ __metadata:
     ts-jest: 27.0.5
     typescript: 5.4.3
   peerDependencies:
-    reflect-metadata: ^0.1.13
+    reflect-metadata: ^0.2.2
   languageName: unknown
   linkType: soft
 
@@ -10924,6 +10924,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"reflect-metadata@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "reflect-metadata@npm:0.2.2"
+  checksum: a66c7b583e4efdd8f3c3124fbff33da2d0c86d8280617516308b32b2159af7a3698c961db3246387f56f6316b1d33a608f39bb2b49d813316dfc58f6d3bf3210
+  languageName: node
+  linkType: hard
+
 "regexp.prototype.flags@npm:^1.4.3":
   version: 1.5.0
   resolution: "regexp.prototype.flags@npm:1.5.0"
@@ -12447,7 +12454,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-ioc-container@^30.4.0, ts-ioc-container@workspace:packages/ts-ioc-container":
+"ts-ioc-container@^30.4.1, ts-ioc-container@workspace:packages/ts-ioc-container":
   version: 0.0.0-use.local
   resolution: "ts-ioc-container@workspace:packages/ts-ioc-container"
   dependencies:
@@ -12456,7 +12463,7 @@ __metadata:
     jest: 27.2.3
     moq.ts: ^7.3.4
     nodemon: ^2.0.13
-    reflect-metadata: ^0.1.13
+    reflect-metadata: ^0.2.2
     rimraf: 3.0.2
     ts-jest: 27.0.5
     ts-node: ^10.9.1
@@ -12591,11 +12598,11 @@ __metadata:
     moq.ts: ^7.3.4
     nodemon: ^2.0.13
     rimraf: 3.0.2
-    ts-ioc-container: ^30.4.0
+    ts-ioc-container: ^30.4.1
     ts-jest: 27.0.5
     typescript: 5.4.3
   peerDependencies:
-    reflect-metadata: ^0.1.13
+    reflect-metadata: ^0.2.2
   languageName: unknown
   linkType: soft
 
