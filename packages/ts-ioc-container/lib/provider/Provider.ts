@@ -1,5 +1,5 @@
 import { ChildrenVisibilityPredicate, IProvider, ResolveDependency, ScopePredicate } from './IProvider';
-import { Resolvable, Tagged } from '../container/IContainer';
+import { IContainer, Resolvable, Tagged } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 
@@ -40,7 +40,7 @@ export class Provider<T> implements IProvider<T> {
     return new Provider(this.resolveDependency, this.isVisibleWhen, this.isValidWhen);
   }
 
-  resolve(container: Resolvable, ...args: unknown[]): T {
+  resolve(container: IContainer, ...args: unknown[]): T {
     return this.resolveDependency(container, ...args);
   }
 

@@ -1,4 +1,4 @@
-import { Resolvable } from '../container/IContainer';
+import { IContainer } from '../container/IContainer';
 import { ProviderDecorator } from './ProviderDecorator';
 import { IProvider } from './IProvider';
 import { MapFn } from '../utils';
@@ -20,7 +20,7 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     return new SingletonProvider(this.provider.clone());
   }
 
-  resolve(container: Resolvable, ...args: unknown[]): T {
+  resolve(container: IContainer, ...args: unknown[]): T {
     this.instance = this.instance ?? { value: this.provider.resolve(container, ...args) };
     return this.instance.value;
   }

@@ -1,14 +1,14 @@
-import { Resolvable, Tagged } from '../container/IContainer';
+import { IContainer, Tagged } from '../container/IContainer';
 import { MapFn } from '../utils';
 
-export type ResolveDependency<T = unknown> = (container: Resolvable, ...args: unknown[]) => T;
+export type ResolveDependency<T = unknown> = (container: IContainer, ...args: unknown[]) => T;
 export type ChildrenVisibilityPredicate = (options: { child: Tagged; isParent: boolean }) => boolean;
 export type ScopePredicate = (c: Tagged) => boolean;
 
 export interface IProvider<T = unknown> {
   clone(): IProvider<T>;
 
-  resolve(container: Resolvable, ...args: unknown[]): T;
+  resolve(container: IContainer, ...args: unknown[]): T;
 
   isValidToClone(container: Tagged): boolean;
 

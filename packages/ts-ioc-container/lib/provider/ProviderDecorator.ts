@@ -1,4 +1,4 @@
-import { IContainer, Resolvable, Tagged } from '../container/IContainer';
+import { IContainer, Tagged } from '../container/IContainer';
 import { ChildrenVisibilityPredicate, IProvider, ScopePredicate } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
@@ -25,7 +25,7 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.isVisible(parent, child);
   }
 
-  resolve(container: Resolvable, ...args: any[]): T {
+  resolve(container: IContainer, ...args: any[]): T {
     return this.decorated.resolve(container, ...args);
   }
 
