@@ -50,6 +50,6 @@
     "typescript": "5.4.3"
   },
   "peerDependencies": {
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.2.2"
   }
 }
