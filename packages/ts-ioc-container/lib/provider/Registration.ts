@@ -1,5 +1,5 @@
 import { Alias, DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import { constructor, identity, isConstructor, MapFn, pipe } from '../utils';
+import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { Provider } from './Provider';
 import { IProvider, ResolveDependency } from './IProvider';
@@ -14,20 +14,22 @@ export class Registration<T = unknown> implements IContainerModule {
   }
 
   static fromValue<T>(value: T) {
-    const transform = isConstructor(value)
-      ? pipe(...(getMetadata<MapFn<Registration<T>>[]>(value, DEPENDENCY_KEY) ?? []))
-      : identity;
-    return transform(new Registration(Provider.fromValue(value)));
+    if (isConstructor(value)) {
+      const transform = pipe(...(getMetadata<MapFn<Registration<T>>[]>(value, DEPENDENCY_KEY) ?? []));
+      return transform(new Registration(Provider.fromValue(value), value.name));
+    }
+    return new Registration(Provider.fromValue(value));
   }
 
   static fromFn<T>(fn: ResolveDependency<T>) {
     return new Registration(new Provider(fn));
   }
 
+  private aliases: string[] = [];
+
   constructor(
     private provider: IProvider<T>,
     private key?: DependencyKey,
-    private aliases: string[] = [],
   ) {}
 
   to(key: DependencyKey): this {
