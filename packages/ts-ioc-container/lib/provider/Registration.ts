@@ -1,5 +1,5 @@
 import { Alias, DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import { constructor, MapFn, pipe } from '../utils';
+import { constructor, identity, isConstructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { Provider } from './Provider';
 import { IProvider, ResolveDependency } from './IProvider';
@@ -9,12 +9,15 @@ const DEPENDENCY_KEY = 'DEPENDENCY_KEY';
 
 export class Registration<T = unknown> implements IContainerModule {
   static fromClass<T>(Target: constructor<T>) {
-    const transform = pipe(...(getMetadata<MapFn<Registration>[]>(Target, DEPENDENCY_KEY) ?? []));
+    const transform = pipe(...(getMetadata<MapFn<Registration<T>>[]>(Target, DEPENDENCY_KEY) ?? []));
     return transform(new Registration(Provider.fromClass(Target), Target.name));
   }
 
   static fromValue<T>(value: T) {
-    return new Registration(Provider.fromValue(value));
+    const transform = isConstructor(value)
+      ? pipe(...(getMetadata<MapFn<Registration<T>>[]>(value, DEPENDENCY_KEY) ?? []))
+      : identity;
+    return transform(new Registration(Provider.fromValue(value)));
   }
 
   static fromFn<T>(fn: ResolveDependency<T>) {

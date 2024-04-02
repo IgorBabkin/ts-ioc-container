@@ -11,12 +11,12 @@ export {
 export { constructor } from './utils';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
-export { ResolveDependency, IProvider } from './provider/IProvider';
+export { ResolveDependency, IProvider, provider, scope, visible } from './provider/IProvider';
 export { IInjector } from './injector/IInjector';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
-export { Provider, provider, visible, scope } from './provider/Provider';
+export { Provider } from './provider/Provider';
 export { ArgsFn, argsFn, args, ArgsProvider } from './provider/ArgsProvider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';

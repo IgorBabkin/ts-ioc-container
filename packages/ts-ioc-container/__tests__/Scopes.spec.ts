@@ -11,6 +11,7 @@ import {
   register,
   visible,
   DependencyNotFoundError,
+  constructor,
 } from '../lib';
 
 @register(key('logger'))
@@ -109,5 +110,19 @@ describe('Singleton', function () {
 
     expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
     expect(child.resolve('logger')).toBeInstanceOf(FileLogger);
+  });
+
+  it('should register class as value and read metadata', () => {
+    @register(key('logger'))
+    @provider(scope((s) => s.hasTag('child')))
+    class FileLogger {}
+
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromValue(FileLogger));
+
+    const child = parent.createScope('child');
+
+    const LoggerClass = child.resolve<constructor<FileLogger>>('logger');
+    expect(new LoggerClass()).toBeInstanceOf(FileLogger);
+    expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
   });
 });

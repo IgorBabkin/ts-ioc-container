@@ -1,20 +1,7 @@
-import { ChildrenVisibilityPredicate, IProvider, ResolveDependency, ScopePredicate } from './IProvider';
-import { IContainer, Resolvable, Tagged } from '../container/IContainer';
-import { constructor, MapFn, pipe } from '../utils';
-import { getMetadata, setMetadata } from '../metadata';
-
-const PROVIDER_KEY = 'provider';
-
-export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(PROVIDER_KEY, mappers);
-
-export const visible =
-  (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>
-  (p) =>
-    p.setVisibility(isVisibleWhen);
-
-export function scope<T = unknown>(predicate: ScopePredicate): MapFn<IProvider<T>> {
-  return (provider) => provider.setScopePredicate(predicate);
-}
+import { ChildrenVisibilityPredicate, IProvider, PROVIDER_KEY, ResolveDependency, ScopePredicate } from './IProvider';
+import { IContainer, Tagged } from '../container/IContainer';
+import { constructor, isConstructor, MapFn, pipe } from '../utils';
+import { getMetadata } from '../metadata';
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -22,8 +9,9 @@ export class Provider<T> implements IProvider<T> {
     return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...mappers);
   }
 
-  static fromValue<T>(value: T): Provider<T> {
-    return new Provider(() => value);
+  static fromValue<T>(value: T): IProvider<T> {
+    const mappers = isConstructor(value) ? getMetadata<MapFn<IProvider<T>>[]>(value, PROVIDER_KEY) ?? [] : [];
+    return new Provider(() => value).pipe(...mappers);
   }
 
   constructor(

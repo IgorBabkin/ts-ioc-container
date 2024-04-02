@@ -23,3 +23,7 @@ export const constant =
   <T>(value: T) =>
   () =>
     value;
+
+export const identity = <T>(value: T): T => value;
+
+export const isConstructor = (T: unknown): T is constructor<unknown> => typeof T === 'function' && !!T.prototype;
