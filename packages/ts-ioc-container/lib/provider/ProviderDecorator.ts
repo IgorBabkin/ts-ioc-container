@@ -25,7 +25,7 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.isVisible(parent, child);
   }
 
-  resolve(container: IContainer, ...args: any[]): T {
+  resolve(container: IContainer, ...args: unknown[]): T {
     return this.decorated.resolve(container, ...args);
   }
 

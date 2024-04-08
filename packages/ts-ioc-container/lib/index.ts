@@ -17,6 +17,7 @@ export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { Provider } from './provider/Provider';
+export { ProviderDecorator } from './provider/ProviderDecorator';
 export { ArgsFn, argsFn, args, ArgsProvider } from './provider/ArgsProvider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
