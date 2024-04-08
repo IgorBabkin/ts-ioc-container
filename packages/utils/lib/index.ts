@@ -10,3 +10,4 @@ export { handleError, handleAsyncError, HandleErrorParams } from './errorHandler
 export { getHooks } from './hook';
 export { hook } from './hook';
 export { getAllFilenames } from './filesystem';
+export { getTags, setTags } from './tags';
