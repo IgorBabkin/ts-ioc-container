@@ -3,6 +3,8 @@ import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IProvider } from '../provider/IProvider';
 
 export abstract class AutoMockedContainer implements IContainer {
+  isDisposed = false;
+
   getKeysByAlias(alias: AliasPredicate): DependencyKey[] {
     return [];
   }

@@ -15,10 +15,10 @@ import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer {
+  isDisposed = false;
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly aliases: Map<DependencyKey, Alias[]> = new Map();
   private tags: Set<Tag>;
-  private isDisposed = false;
   private parent: IContainer;
   private scopes = new Set<IContainer>();
   private instances = new Set<unknown>();

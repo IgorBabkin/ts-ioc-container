@@ -33,6 +33,8 @@ export type Alias = string;
 export type AliasPredicate = (aliases: Alias[]) => boolean;
 
 export interface IContainer extends Resolvable, Tagged {
+  readonly isDisposed: boolean;
+
   createScope(...tags: Tag[]): IContainer;
 
   register(key: DependencyKey, value: IProvider, aliases?: Alias[]): this;
