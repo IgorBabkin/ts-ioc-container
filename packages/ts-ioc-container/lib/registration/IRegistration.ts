@@ -25,8 +25,8 @@ export const scope =
   (r) =>
     r.setScopePredicate(predicate);
 
-const DEPENDENCY_KEY = 'DEPENDENCY_KEY';
+const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
-  getMetadata<MapFn<IRegistration>[]>(Target, DEPENDENCY_KEY) ?? [];
+  getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: MapFn<IRegistration>[]) => setMetadata(DEPENDENCY_KEY, mappers);
+export const register = (...mappers: MapFn<IRegistration>[]) => setMetadata(METADATA_KEY, mappers);
