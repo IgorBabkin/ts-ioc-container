@@ -13,7 +13,7 @@ import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
-import { IRegistration } from '../provider/Registration.ts';
+import { IRegistration } from '../registration/IRegistration';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -126,9 +126,7 @@ export class Container implements IContainer {
    */
   applyRegistrationsFrom(source: IContainer): void {
     for (const registration of source.getRegistrations()) {
-      if (registration.isValidToApply(this)) {
-        registration.applyTo(this);
-      }
+      registration.applyTo(this);
     }
   }
 

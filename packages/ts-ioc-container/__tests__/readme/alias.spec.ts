@@ -53,8 +53,8 @@ describe('alias', () => {
     }
 
     const container = new Container(new MetadataInjector())
-      .use(R.fromClass(LoggerMiddleware))
-      .use(R.fromClass(ErrorHandlerMiddleware));
+      .addRegistration(R.fromClass(LoggerMiddleware))
+      .addRegistration(R.fromClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();

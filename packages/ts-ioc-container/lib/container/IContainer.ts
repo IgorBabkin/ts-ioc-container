@@ -1,6 +1,6 @@
 import { IProvider } from '../provider/IProvider';
 import { constructor } from '../utils';
-import { IRegistration } from '../provider/Registration.ts';
+import { IRegistration } from '../registration/IRegistration';
 
 export type Tag = string;
 
@@ -24,8 +24,6 @@ export interface Resolvable {
 
 export interface IContainerModule {
   applyTo(container: IContainer): void;
-
-  isValidToApply(scope: IContainer): boolean;
 }
 
 export interface Tagged {

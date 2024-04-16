@@ -6,7 +6,7 @@ describe('Instances', function () {
   class Logger {}
 
   it('should return injected instances', () => {
-    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(Logger));
     const scope = container.createScope();
 
     const logger1 = container.resolve('ILogger');
@@ -23,7 +23,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances(isLogger)) public loggers: Logger[]) {}
     }
 
-    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(Logger));
 
     const logger0 = container.resolve('ILogger');
     const logger1 = container.resolve('ILogger');

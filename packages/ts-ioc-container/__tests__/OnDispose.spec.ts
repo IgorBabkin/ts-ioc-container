@@ -42,7 +42,9 @@ class Logger {
 
 describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger)).use(R.fromClass(LogsRepo));
+    const container = new Container(new MetadataInjector())
+      .addRegistration(R.fromClass(Logger))
+      .addRegistration(R.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');

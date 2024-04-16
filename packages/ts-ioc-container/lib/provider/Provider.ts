@@ -1,4 +1,4 @@
-import { ChildrenVisibilityPredicate, IProvider, PROVIDER_KEY, ResolveDependency, ScopePredicate } from './IProvider';
+import { ChildrenVisibilityPredicate, IProvider, PROVIDER_KEY, ResolveDependency } from './IProvider';
 import { IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { getMetadata } from '../metadata';
@@ -17,15 +17,10 @@ export class Provider<T> implements IProvider<T> {
   constructor(
     private readonly resolveDependency: ResolveDependency<T>,
     private isVisibleWhen: ChildrenVisibilityPredicate = () => true,
-    private isValidWhen: ScopePredicate = () => true,
   ) {}
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
     return pipe(...mappers)(this);
-  }
-
-  clone(): Provider<T> {
-    return new Provider(this.resolveDependency, this.isVisibleWhen, this.isValidWhen);
   }
 
   resolve(container: IContainer, ...args: unknown[]): T {
@@ -37,16 +32,7 @@ export class Provider<T> implements IProvider<T> {
     return this;
   }
 
-  setScopePredicate(isValidWhen: ScopePredicate): this {
-    this.isValidWhen = isValidWhen;
-    return this;
-  }
-
   isVisible(parent: Tagged, child: Tagged): boolean {
-    return this.isValidWhen(parent) && this.isVisibleWhen({ child, isParent: child === parent });
-  }
-
-  isValidToClone(container: Tagged): boolean {
-    return this.isValidWhen(container);
+    return this.isVisibleWhen({ child, isParent: child === parent });
   }
 }

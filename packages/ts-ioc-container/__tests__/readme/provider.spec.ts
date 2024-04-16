@@ -25,10 +25,7 @@ describe('Provider', function () {
   it('can be featured by pipe method', function () {
     const root = new Container(new MetadataInjector(), { tags: ['root'] }).register(
       'ILogger',
-      Provider.fromClass(Logger).pipe(
-        singleton(),
-        scope((s) => s.hasTag('root')),
-      ),
+      Provider.fromClass(Logger).pipe(singleton()),
     );
 
     expect(root.resolve('ILogger')).toBe(root.resolve('ILogger'));

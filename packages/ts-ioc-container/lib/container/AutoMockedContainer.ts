@@ -1,6 +1,6 @@
 import { AliasPredicate, DependencyKey, IContainer, InjectionToken, ResolveOptions } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
-import { IProvider } from '../provider/IProvider';
+import { IRegistration } from '../registration/IRegistration';
 
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;
@@ -35,11 +35,15 @@ export abstract class AutoMockedContainer implements IContainer {
     return this;
   }
 
-  getRegistrations(): Map<DependencyKey, IProvider> {
-    return new Map();
+  getRegistrations() {
+    return [];
   }
 
   hasTag(): boolean {
     return false;
+  }
+
+  addRegistration(registration: IRegistration): this {
+    return this;
   }
 }

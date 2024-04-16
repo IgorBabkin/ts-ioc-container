@@ -9,7 +9,7 @@ import {
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
-import { IRegistration } from '../provider/Registration.ts';
+import { IRegistration } from '../registration/IRegistration';
 
 export class EmptyContainer implements IContainer {
   isDisposed = false;

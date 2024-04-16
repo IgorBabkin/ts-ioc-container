@@ -14,13 +14,13 @@ import {
   constructor,
 } from '../lib';
 
-@register(key('logger'))
-@provider(singleton(), scope((s) => s.hasTag('home')))
+@register(key('logger'), scope((s) => s.hasTag('home')))
+@provider(singleton())
 class Logger {}
 
 describe('Singleton', function () {
   it('should resolve the same dependency if provider registered per root', function () {
-    const container = new Container(new MetadataInjector(), { tags: ['home'] }).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector(), { tags: ['home'] }).addRegistration(R.fromClass(Logger));
 
     const child1 = container.createScope();
     const child2 = container.createScope();
@@ -29,7 +29,7 @@ describe('Singleton', function () {
   });
 
   it('should resolve unique dependency for every registered scope', function () {
-    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(Logger));
 
     const home1 = container.createScope('home');
     const home2 = container.createScope('home');
@@ -38,7 +38,7 @@ describe('Singleton', function () {
   });
 
   it('should resolve unique dependency if registered scope has another registered scope', function () {
-    const container = new Container(new MetadataInjector(), { tags: ['home'] }).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector(), { tags: ['home'] }).addRegistration(R.fromClass(Logger));
 
     const child1 = container.createScope('home');
 
@@ -46,7 +46,7 @@ describe('Singleton', function () {
   });
 
   it('should dispose all scopes', function () {
-    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(Logger));
 
     const child1 = container.createScope('home');
     const child2 = container.createScope('home');
@@ -61,7 +61,7 @@ describe('Singleton', function () {
   });
 
   it('should collect instances from all scopes', function () {
-    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(Logger));
 
     const childScope1 = container.createScope('home');
     const childScope2 = container.createScope('home');
@@ -75,7 +75,7 @@ describe('Singleton', function () {
   });
 
   it('should clear all instances on dispose', function () {
-    const container = new Container(new MetadataInjector()).use(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(Logger));
 
     const child1 = container.createScope('home');
     const child2 = container.createScope('home');
@@ -87,11 +87,11 @@ describe('Singleton', function () {
   });
 
   it('should hide from children', () => {
-    @register(key('logger'))
-    @provider(singleton(), scope((s) => s.hasTag('root')), visible(({ isParent }) => isParent))
+    @register(key('logger'), scope((s) => s.hasTag('root')))
+    @provider(singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromClass(FileLogger));
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
 
     const child = parent.createScope('child');
 
@@ -100,11 +100,10 @@ describe('Singleton', function () {
   });
 
   it('should be not visible from root', () => {
-    @register(key('logger'))
-    @provider(scope((s) => s.hasTag('child')))
+    @register(key('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromClass(FileLogger));
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
 
     const child = parent.createScope('child');
 
@@ -113,11 +112,10 @@ describe('Singleton', function () {
   });
 
   it('should register class as value and read metadata', () => {
-    @register(key('logger'))
-    @provider(scope((s) => s.hasTag('child')))
+    @register(key('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.fromValue(FileLogger));
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).addRegistration(R.fromValue(FileLogger));
 
     const child = parent.createScope('child');
 

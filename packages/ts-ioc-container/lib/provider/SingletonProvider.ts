@@ -16,10 +16,6 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     super(provider);
   }
 
-  clone(): SingletonProvider<T> {
-    return new SingletonProvider(this.provider.clone());
-  }
-
   resolve(container: IContainer, ...args: unknown[]): T {
     this.instance = this.instance ?? { value: this.provider.resolve(container, ...args) };
     return this.instance.value;
