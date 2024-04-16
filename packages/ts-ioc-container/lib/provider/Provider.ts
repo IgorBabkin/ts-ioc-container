@@ -1,16 +1,15 @@
-import { ChildrenVisibilityPredicate, IProvider, PROVIDER_KEY, ResolveDependency } from './IProvider';
+import { ChildrenVisibilityPredicate, getTransformers, IProvider, ResolveDependency } from './IProvider';
 import { IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
-import { getMetadata } from '../metadata';
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
-    const mappers = getMetadata<MapFn<IProvider<T>>[]>(Target, PROVIDER_KEY) ?? [];
-    return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...mappers);
+    const transformers = getTransformers(Target);
+    return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...transformers);
   }
 
   static fromValue<T>(value: T): IProvider<T> {
-    const mappers = isConstructor(value) ? getMetadata<MapFn<IProvider<T>>[]>(value, PROVIDER_KEY) ?? [] : [];
+    const mappers = isConstructor(value) ? getTransformers(value as constructor<T>) ?? [] : [];
     return new Provider(() => value).pipe(...mappers);
   }
 

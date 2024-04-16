@@ -1,22 +1,19 @@
 import { Alias, DependencyKey, IContainer } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
-import { getMetadata, setMetadata } from '../metadata';
 import { Provider } from '../provider/Provider';
 import { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
-import { IRegistration, ScopePredicate } from './IRegistration';
-
-const DEPENDENCY_KEY = 'DEPENDENCY_KEY';
+import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
 
 export class Registration<T = unknown> implements IRegistration {
   static fromClass<T>(Target: constructor<T>) {
-    const transform = pipe(...(getMetadata<MapFn<Registration<T>>[]>(Target, DEPENDENCY_KEY) ?? []));
+    const transform = pipe(...getTransformers(Target));
     return transform(new Registration(() => Provider.fromClass(Target), Target.name));
   }
 
   static fromValue<T>(value: T) {
     if (isConstructor(value)) {
-      const transform = pipe(...(getMetadata<MapFn<Registration<T>>[]>(value, DEPENDENCY_KEY) ?? []));
+      const transform = pipe(...getTransformers(value as constructor<T>));
       return transform(new Registration(() => Provider.fromValue(value), value.name));
     }
     return new Registration(() => Provider.fromValue(value));
@@ -69,5 +66,3 @@ export class Registration<T = unknown> implements IRegistration {
     return this;
   }
 }
-
-export const register = (...mappers: MapFn<IRegistration>[]) => setMetadata(DEPENDENCY_KEY, mappers);
