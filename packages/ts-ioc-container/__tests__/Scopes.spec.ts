@@ -123,4 +123,33 @@ describe('Singleton', function () {
     expect(new LoggerClass()).toBeInstanceOf(FileLogger);
     expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
   });
+
+  it('should override keys', () => {
+    @register(key('logger'), scope((s) => s.hasTag('root')))
+    class FileLogger {}
+
+    @register(key('logger'), scope((s) => s.hasTag('child')))
+    class DbLogger {}
+
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] })
+      .addRegistration(R.fromClass(FileLogger))
+      .addRegistration(R.fromClass(DbLogger));
+
+    const child = parent.createScope('child');
+
+    expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
+    expect(child.resolve('logger')).toBeInstanceOf(DbLogger);
+  });
+
+  it('should add registration to children', () => {
+    @register(key('logger'), scope((s) => s.hasTag('child')))
+    class DbLogger {}
+
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] });
+
+    const child = parent.createScope('child').addRegistration(R.fromClass(DbLogger));
+
+    expect(child.resolve('logger')).toBeInstanceOf(DbLogger);
+    expect(child.createScope().resolve('logger')).toBeInstanceOf(DbLogger);
+  });
 });
