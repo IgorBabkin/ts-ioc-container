@@ -9,7 +9,7 @@ import {
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
-import { IRegistration } from '../registration/IRegistration';
+import { IRegistration, key } from '../registration/IRegistration';
 
 export class EmptyContainer implements IContainer {
   isDisposed = false;
@@ -58,5 +58,9 @@ export class EmptyContainer implements IContainer {
 
   addRegistration(registration: IRegistration): this {
     return this;
+  }
+
+  getKeyByAlias(alias: AliasPredicate): DependencyKey {
+    throw new DependencyNotFoundError(`Cannot find by alias`);
   }
 }

@@ -55,4 +55,6 @@ export interface IContainer extends Resolvable, Tagged {
   hasDependency(key: DependencyKey): boolean;
 
   getKeysByAlias(alias: AliasPredicate): DependencyKey[];
+
+  getKeyByAlias(alias: AliasPredicate): DependencyKey;
 }

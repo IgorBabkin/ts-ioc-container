@@ -121,6 +121,15 @@ export class Container implements IContainer {
     return Array.from(result);
   }
 
+  getKeyByAlias(predicate: AliasPredicate): DependencyKey {
+    for (const [key, aliases] of this.aliases.entries()) {
+      if (predicate(aliases)) {
+        return key;
+      }
+    }
+    return this.parent.getKeyByAlias(predicate);
+  }
+
   /**
    * @private
    */

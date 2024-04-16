@@ -1,5 +1,14 @@
 import 'reflect-metadata';
-import { by, Container, inject, MetadataInjector, Registration as R, register, alias } from '../../lib';
+import {
+  by,
+  Container,
+  inject,
+  MetadataInjector,
+  Registration as R,
+  register,
+  alias,
+  DependencyNotFoundError,
+} from '../../lib';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
@@ -61,5 +70,15 @@ describe('alias', () => {
 
     expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
     expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);
+  });
+
+  it('should resolve by some alias', () => {
+    @register(alias('ILogger'))
+    class FileLogger {}
+
+    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(FileLogger));
+
+    expect(by.alias((aliases) => aliases.includes('ILogger'))(container)).toBeInstanceOf(FileLogger);
+    expect(() => by.alias((aliases) => aliases.includes('logger'))(container)).toThrowError(DependencyNotFoundError);
   });
 });

@@ -46,4 +46,8 @@ export abstract class AutoMockedContainer implements IContainer {
   addRegistration(registration: IRegistration): this {
     return this;
   }
+
+  getKeyByAlias(alias: AliasPredicate): DependencyKey {
+    throw new MethodNotImplementedError();
+  }
 }

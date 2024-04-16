@@ -28,6 +28,17 @@ export const by = {
         .filter(isPresent),
 
   /**
+   * Get the instance that matches the given alias or fail
+   * @param predicate
+   */
+  alias:
+    (predicate: AliasPredicate) =>
+    (c: IContainer, ...args: unknown[]) => {
+      const key = c.getKeyByAlias(predicate);
+      return c.resolve(key, { args });
+    },
+
+  /**
    * Get all instances that match the given keys
    * @param keys
    */
