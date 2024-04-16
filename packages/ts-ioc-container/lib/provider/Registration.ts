@@ -7,7 +7,9 @@ import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 
 const DEPENDENCY_KEY = 'DEPENDENCY_KEY';
 
-export class Registration<T = unknown> implements IContainerModule {
+export type IRegistration = IContainerModule;
+
+export class Registration<T = unknown> implements IRegistration {
   static fromClass<T>(Target: constructor<T>) {
     const transform = pipe(...(getMetadata<MapFn<Registration<T>>[]>(Target, DEPENDENCY_KEY) ?? []));
     return transform(new Registration(Provider.fromClass(Target), Target.name));

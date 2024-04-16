@@ -1,5 +1,6 @@
 import { IProvider } from '../provider/IProvider';
 import { constructor } from '../utils';
+import { IRegistration } from '../provider/Registration.ts';
 
 export type Tag = string;
 
@@ -23,6 +24,8 @@ export interface Resolvable {
 
 export interface IContainerModule {
   applyTo(container: IContainer): void;
+
+  isValidToApply(scope: IContainer): boolean;
 }
 
 export interface Tagged {
@@ -39,6 +42,8 @@ export interface IContainer extends Resolvable, Tagged {
 
   register(key: DependencyKey, value: IProvider, aliases?: Alias[]): this;
 
+  addRegistration(registration: IRegistration): this;
+
   removeScope(child: IContainer): void;
 
   getInstances(): unknown[];
@@ -47,7 +52,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   use(...modules: IContainerModule[]): this;
 
-  getAllProviders(): Map<DependencyKey, IProvider>;
+  getRegistrations(): IRegistration[];
 
   hasDependency(key: DependencyKey): boolean;
 

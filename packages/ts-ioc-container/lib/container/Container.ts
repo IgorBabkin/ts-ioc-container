@@ -13,6 +13,7 @@ import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
+import { IRegistration } from '../provider/Registration.ts';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -22,6 +23,7 @@ export class Container implements IContainer {
   private parent: IContainer;
   private scopes = new Set<IContainer>();
   private instances = new Set<unknown>();
+  private readonly registrations: IRegistration[] = [];
 
   constructor(
     private readonly injector: IInjector,
@@ -29,6 +31,12 @@ export class Container implements IContainer {
   ) {
     this.parent = options.parent ?? new EmptyContainer();
     this.tags = new Set(options.tags ?? []);
+  }
+
+  addRegistration(registration: IRegistration): this {
+    this.registrations.push(registration);
+    registration.applyTo(this);
+    return this;
   }
 
   register(key: DependencyKey, provider: IProvider, aliases?: Alias[]): this {
@@ -61,7 +69,7 @@ export class Container implements IContainer {
     this.validateContainer();
 
     const scope = new Container(this.injector, { parent: this, tags });
-    scope.cloneValidProvidersFrom(this);
+    scope.applyRegistrationsFrom(this);
     this.scopes.add(scope);
 
     return scope;
@@ -77,6 +85,7 @@ export class Container implements IContainer {
     }
     this.providers.clear();
     this.instances.clear();
+    this.registrations.splice(0, this.registrations.length);
   }
 
   getInstances(): unknown[] {
@@ -115,10 +124,10 @@ export class Container implements IContainer {
   /**
    * @private
    */
-  cloneValidProvidersFrom(source: IContainer): void {
-    for (const [key, provider] of source.getAllProviders()) {
-      if (provider.isValidToClone(this)) {
-        this.providers.set(key, provider.clone());
+  applyRegistrationsFrom(source: IContainer): void {
+    for (const registration of source.getRegistrations()) {
+      if (registration.isValidToApply(this)) {
+        registration.applyTo(this);
       }
     }
   }
@@ -126,8 +135,8 @@ export class Container implements IContainer {
   /**
    * @private
    */
-  getAllProviders(): Map<DependencyKey, IProvider> {
-    return new Map([...this.parent.getAllProviders(), ...this.providers]);
+  getRegistrations(): IRegistration[] {
+    return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
   /**

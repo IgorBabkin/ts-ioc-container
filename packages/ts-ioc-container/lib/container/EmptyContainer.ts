@@ -9,6 +9,7 @@ import {
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
+import { IRegistration } from '../provider/Registration.ts';
 
 export class EmptyContainer implements IContainer {
   isDisposed = false;
@@ -41,8 +42,8 @@ export class EmptyContainer implements IContainer {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 
-  getAllProviders(): Map<DependencyKey, IProvider> {
-    return new Map();
+  getRegistrations() {
+    return [];
   }
 
   getInstances(): unknown[] {
@@ -53,5 +54,9 @@ export class EmptyContainer implements IContainer {
 
   use(module: IContainerModule): this {
     throw new MethodNotImplementedError();
+  }
+
+  addRegistration(registration: IRegistration): this {
+    return this;
   }
 }
