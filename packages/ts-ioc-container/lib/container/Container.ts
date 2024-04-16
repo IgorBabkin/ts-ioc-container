@@ -134,7 +134,9 @@ export class Container implements IContainer {
    * @private
    */
   getRegistrations(): IRegistration[] {
-    return [...this.parent.getRegistrations(), ...this.registrations];
+    return this.registrations.length
+      ? this.parent.getRegistrations().concat(this.registrations)
+      : this.parent.getRegistrations();
   }
 
   /**

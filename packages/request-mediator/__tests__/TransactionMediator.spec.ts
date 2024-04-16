@@ -66,8 +66,8 @@ class QueryHandler implements IQueryHandler<EmptyType, void> {
   }
 }
 
-@register(key(ITransactionContextKey))
-@provider(singleton(), scope((s) => s.hasTag(Scope.Application)))
+@register(key(ITransactionContextKey), scope((s) => s.hasTag(Scope.Application)))
+@provider(singleton())
 class TestTransaction implements ITransactionContext {
   constructor(private id: number = 0) {}
 
