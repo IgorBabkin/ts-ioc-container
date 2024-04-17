@@ -21,3 +21,12 @@ export const setParameterMetadata =
 export const getParameterMetadata = (key: string | symbol, target: constructor<unknown>): unknown[] => {
   return (Reflect.getOwnMetadata(key, target) as unknown[]) ?? [];
 };
+
+export const setMethodMetadata =
+  (key: string, value: unknown): MethodDecorator =>
+  (target, propertyKey) => {
+    Reflect.defineMetadata(key, value, target.constructor, propertyKey);
+  };
+
+export const getMethodMetadata = (key: string, target: object, propertyKey: string): unknown =>
+  Reflect.getMetadata(key, target.constructor, propertyKey);

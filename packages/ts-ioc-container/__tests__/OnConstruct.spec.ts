@@ -18,7 +18,7 @@ class MyInjector implements IInjector {
   resolve<T>(container: IContainer, value: constructor<T>, ...deps: unknown[]): T {
     const instance = this.injector.resolve(container, value, ...deps);
     // eslint-disable-next-line @typescript-eslint/ban-types
-    for (const h of getHooks(instance as object, 'onConstruct')) {
+    for (const [h] of getHooks(instance as object, 'onConstruct')) {
       // @ts-ignore
       instance[h]();
     }

@@ -26,6 +26,13 @@ export { key, alias, IRegistration, scope, register } from './registration/IRegi
 export { MetadataInjector, inject } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
-export { getHooks, hook } from './hook';
+export { getHooks, hook, hasHooks } from './hook';
 export { by, InstancePredicate } from './by';
-export { setMetadata, getMetadata, setParameterMetadata } from './metadata';
+export {
+  setMetadata,
+  getMetadata,
+  setParameterMetadata,
+  setMethodMetadata,
+  getMethodMetadata,
+  getParameterMetadata,
+} from './metadata';

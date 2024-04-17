@@ -12,6 +12,7 @@ import {
   MetadataInjector,
   register,
 } from '../lib';
+import * as console from 'node:console';
 
 @register(key('logsRepo'))
 @provider(singleton())
@@ -51,7 +52,7 @@ describe('onDispose', function () {
 
     for (const instance of container.getInstances()) {
       // eslint-disable-next-line @typescript-eslint/ban-types
-      for (const h of getHooks(instance as object, 'onDispose')) {
+      for (const [h] of getHooks(instance as object, 'onDispose')) {
         // @ts-ignore
         await instance[h]();
       }
