@@ -48,7 +48,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   dispose(): void;
 
-  use(...modules: IContainerModule[]): this;
+  use(module: IContainerModule): this;
 
   getRegistrations(): IRegistration[];
 

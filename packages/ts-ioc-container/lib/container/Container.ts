@@ -100,10 +100,8 @@ export class Container implements IContainer {
     return this.tags.has(tag);
   }
 
-  use(...modules: IContainerModule[]): this {
-    for (const module of modules) {
-      module.applyTo(this);
-    }
+  use(module: IContainerModule): this {
+    module.applyTo(this);
     return this;
   }
 
@@ -143,9 +141,8 @@ export class Container implements IContainer {
    * @private
    */
   getRegistrations(): IRegistration[] {
-    return this.registrations.length
-      ? this.parent.getRegistrations().concat(this.registrations)
-      : this.parent.getRegistrations();
+    const registrations = this.parent.getRegistrations();
+    return this.registrations.length > 0 ? registrations.concat(this.registrations) : registrations;
   }
 
   /**
