@@ -5,7 +5,7 @@ import { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
 
-export class Registration<T = unknown> implements IRegistration {
+export class Registration<T = unknown> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {
     const transform = pipe(...getTransformers(Target));
     return transform(new Registration(() => Provider.fromClass(Target), Target.name));
