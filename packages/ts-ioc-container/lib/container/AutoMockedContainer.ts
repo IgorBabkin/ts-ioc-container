@@ -43,7 +43,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return false;
   }
 
-  addRegistration(registration: IRegistration): this {
+  add(registration: IRegistration): this {
     return this;
   }
 

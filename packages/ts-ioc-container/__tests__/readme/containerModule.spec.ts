@@ -9,13 +9,13 @@ class TestLogger {}
 
 class Production implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(Logger));
+    container.add(R.fromClass(Logger));
   }
 }
 
 class Development implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(TestLogger));
+    container.add(R.fromClass(TestLogger));
   }
 }
 

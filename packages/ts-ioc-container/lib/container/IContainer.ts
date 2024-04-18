@@ -40,7 +40,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   register(key: DependencyKey, value: IProvider, aliases?: Alias[]): this;
 
-  addRegistration(registration: IRegistration): this;
+  add(registration: IRegistration): this;
 
   removeScope(child: IContainer): void;
 

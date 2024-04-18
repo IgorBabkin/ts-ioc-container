@@ -62,8 +62,8 @@ describe('alias', () => {
     }
 
     const container = new Container(new MetadataInjector())
-      .addRegistration(R.fromClass(LoggerMiddleware))
-      .addRegistration(R.fromClass(ErrorHandlerMiddleware));
+      .add(R.fromClass(LoggerMiddleware))
+      .add(R.fromClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
@@ -76,7 +76,7 @@ describe('alias', () => {
     @register(alias('ILogger'))
     class FileLogger {}
 
-    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(FileLogger));
+    const container = new Container(new MetadataInjector()).add(R.fromClass(FileLogger));
 
     expect(by.alias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
     expect(() => by.alias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);

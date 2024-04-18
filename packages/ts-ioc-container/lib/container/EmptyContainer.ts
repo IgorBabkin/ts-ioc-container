@@ -56,7 +56,7 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  addRegistration(registration: IRegistration): this {
+  add(registration: IRegistration): this {
     return this;
   }
 

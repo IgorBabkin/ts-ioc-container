@@ -11,7 +11,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(Logger).to('ILogger'));
+    const container = new Container(new MetadataInjector()).add(R.fromClass(Logger).to('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -22,8 +22,8 @@ describe('Basic usage', function () {
     }
 
     const container = new Container(new MetadataInjector())
-      .addRegistration(R.fromClass(Logger).to('ILogger1'))
-      .addRegistration(R.fromClass(Logger).to('ILogger2'));
+      .add(R.fromClass(Logger).to('ILogger1'))
+      .add(R.fromClass(Logger).to('ILogger2'));
 
     expect(container.resolve(App).loggers).toHaveLength(2);
   });

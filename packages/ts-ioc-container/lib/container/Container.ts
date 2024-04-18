@@ -33,7 +33,7 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
   }
 
-  addRegistration(registration: IRegistration): this {
+  add(registration: IRegistration): this {
     this.registrations.push(registration);
     registration.applyTo(this);
     return this;

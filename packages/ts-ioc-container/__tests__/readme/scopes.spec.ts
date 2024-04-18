@@ -20,7 +20,7 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).addRegistration(R.fromClass(Logger));
+    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromClass(Logger));
     const child = root.createScope('child');
 
     expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
