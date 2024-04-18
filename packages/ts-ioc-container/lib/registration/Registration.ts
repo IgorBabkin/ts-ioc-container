@@ -61,7 +61,7 @@ export class Registration<T = unknown> implements IRegistration {
     container.register(this.key, this.createProvider(), this.aliases);
   }
 
-  setScopePredicate(isValidWhen: ScopePredicate): this {
+  when(isValidWhen: ScopePredicate): this {
     this.matchScope = isValidWhen;
     return this;
   }

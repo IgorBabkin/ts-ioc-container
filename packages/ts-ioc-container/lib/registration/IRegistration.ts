@@ -6,7 +6,7 @@ export type ScopePredicate = (c: Tagged) => boolean;
 
 export interface IRegistration extends IContainerModule {
   addAliases(...aliases: Alias[]): this;
-  setScopePredicate(isValidWhen: ScopePredicate): this;
+  when(isValidWhen: ScopePredicate): this;
   to(key: DependencyKey): this;
 }
 
@@ -23,7 +23,7 @@ export const alias =
 export const scope =
   (predicate: ScopePredicate): MapFn<IRegistration> =>
   (r) =>
-    r.setScopePredicate(predicate);
+    r.when(predicate);
 
 const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
