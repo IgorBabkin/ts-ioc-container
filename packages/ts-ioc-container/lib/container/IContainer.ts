@@ -31,7 +31,7 @@ export interface Tagged {
 }
 
 export type Alias = string;
-export type AliasPredicate = (aliases: Alias[]) => boolean;
+export type AliasPredicate = (aliases: Set<Alias>) => boolean;
 
 export interface IContainer extends Resolvable, Tagged {
   readonly isDisposed: boolean;

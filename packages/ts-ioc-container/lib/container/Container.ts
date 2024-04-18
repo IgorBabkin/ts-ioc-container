@@ -18,7 +18,7 @@ import { IRegistration } from '../registration/IRegistration';
 export class Container implements IContainer {
   isDisposed = false;
   private readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly aliases: Map<DependencyKey, Alias[]> = new Map();
+  private readonly aliases: Map<DependencyKey, Set<Alias>> = new Map();
   private tags: Set<Tag>;
   private parent: IContainer;
   private scopes = new Set<IContainer>();
@@ -44,7 +44,7 @@ export class Container implements IContainer {
 
     this.providers.set(key, provider);
     if (aliases && aliases.length > 0) {
-      this.aliases.set(key, aliases);
+      this.aliases.set(key, new Set(aliases));
     }
 
     return this;

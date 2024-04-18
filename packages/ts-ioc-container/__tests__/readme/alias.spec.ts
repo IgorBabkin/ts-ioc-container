@@ -40,7 +40,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(by.aliases((it) => it.includes(IMiddlewareKey))) public middleware: IMiddleware[]) {}
+      constructor(@inject(by.aliases((it) => it.has(IMiddlewareKey))) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);
@@ -78,7 +78,7 @@ describe('alias', () => {
 
     const container = new Container(new MetadataInjector()).addRegistration(R.fromClass(FileLogger));
 
-    expect(by.alias((aliases) => aliases.includes('ILogger'))(container)).toBeInstanceOf(FileLogger);
-    expect(() => by.alias((aliases) => aliases.includes('logger'))(container)).toThrowError(DependencyNotFoundError);
+    expect(by.alias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
+    expect(() => by.alias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
   });
 });
