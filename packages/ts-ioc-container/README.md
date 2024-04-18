@@ -29,11 +29,11 @@
     - [Metadata](#metadata) `@inject`
     - [Simple](#simple)
     - [Proxy](#proxy)
-    - [Visibility](#visibility) `visible`
 - [Provider](#provider) `@provider`
     - [Singleton](#singleton) `singleton`
     - [Arguments](#arguments) `args`
-- [Registration](#registration) `@registration`
+    - [Visibility](#visibility) `visible`
+- [Registration](#registration) `@registration(key('someKey'))`
     - [Scope](#scope) `scope`
     - [Alias](#alias) `alias`
 - [Module](#module)
