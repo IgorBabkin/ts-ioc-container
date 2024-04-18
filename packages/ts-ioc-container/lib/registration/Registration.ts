@@ -24,6 +24,7 @@ export class Registration<T = unknown> implements IRegistration {
   }
 
   private aliases: string[] = [];
+  private mappers: MapFn<IProvider<T>>[] = [];
 
   constructor(
     private createProvider: () => IProvider<T>,
@@ -44,8 +45,7 @@ export class Registration<T = unknown> implements IRegistration {
   }
 
   pipe(...mappers: MapFn<IProvider<T>>[]): this {
-    const fn = this.createProvider;
-    this.createProvider = () => fn().pipe(...mappers);
+    this.mappers.push(...mappers);
     return this;
   }
 
@@ -58,7 +58,7 @@ export class Registration<T = unknown> implements IRegistration {
       throw new DependencyMissingKeyError('No key provided for registration');
     }
 
-    container.register(this.key, this.createProvider(), this.aliases);
+    container.register(this.key, this.createProvider().pipe(...this.mappers), this.aliases);
   }
 
   when(isValidWhen: ScopePredicate): this {
