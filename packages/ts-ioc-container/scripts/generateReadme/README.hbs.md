@@ -22,26 +22,26 @@
 - [Setup](#setup)
 - [Container](#container)
     - [Basic usage](#basic-usage)
-    - [Scopes](#scopes)
+    - [Scope](#scope) `tags`
     - [Instances](#instances)
-    - [Disposing](#disposing)
-- [Injectors](#injectors)
-    - [Metadata injector](#metadata-injector) `@inject`
-    - [Simple injector](#simple-injector)
-    - [Proxy injector](#proxy-injector)
-- [Providers](#providers)
-    - [Registration module (Provider + DependencyKey)](#registration-and-providers) `@key`
-    - [Provider](#provider) `@provider`
-    - [Singleton provider](#singleton-provider)
-    - [Scope provider](#scope-provider)
-    - [Args provider](#args-provider)
-    - [Aliases](#aliases) `alias`
-- [Container modules](#container-modules)
-- [Hooks](#hooks) `@hook`
+    - [Dispose](#dispose)
+- [Injector](#injector)
+    - [Metadata](#metadata) `@inject`
+    - [Simple](#simple)
+    - [Proxy](#proxy)
+    - [Visibility](#visibility) `visible`
+- [Provider](#provider) `@provider`
+    - [Singleton](#singleton) `singleton`
+    - [Arguments](#arguments) `args`
+- [Registration](#registration) `@registration`
+    - [Scope](#scope) `scope`
+    - [Alias](#alias) `alias`
+- [Module](#module)
+- [Hook](#hook) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
     - [OnDispose](#ondispose) `@onDispose`
-- [Tests and Mocks](#tests-and-mocks)
-- [Errors](#errors)
+- [Mock](#mock)
+- [Error](#error)
 
 ## Setup
 
@@ -68,10 +68,11 @@ And `tsconfig.json` should have next options:
 ```
 
 ## Container
-`IContainer` consists of 2 main parts:
+`IContainer` consists of:
 
-- Providers - describes how to create instances of dependencies
-- Injector - describes how to inject dependencies to constructor
+- Provider is dependency factory which creates dependency
+- Injector describes how to inject dependencies to constructor
+- Registration is provider factory which registers provider in container
 
 ### Basic usage
 
@@ -79,7 +80,7 @@ And `tsconfig.json` should have next options:
 {{{include_file './__tests__/readme/basic.spec.ts'}}}
 ```
 
-### Scopes
+### Scope
 Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application. You can assign tags to scope and provider and resolve dependencies only from certain scope.
 
 - NOTICE: remember that when scope doesn't have dependency then it will be resolved from parent container
@@ -99,7 +100,7 @@ Sometimes you want to get all instances from container and its scopes. For examp
 {{{include_file './__tests__/readme/instances.spec.ts'}}}
 ```
 
-### Disposing
+### Dispose
 Sometimes you want to dispose container and all its scopes. For example, when you want to prevent memory leaks. Or you want to ensure that nobody can use container after it was disposed.
 
 - container can be disposed
@@ -110,62 +111,47 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 {{{include_file './__tests__/readme/disposing.spec.ts'}}}
 ```
 
-## Injectors
+## Injector
 `IInjector` is used to describe how dependencies should be injected to constructor.
 
 - `MetadataInjector` - injects dependencies using `@inject` decorator
 - `ProxyInjector` - injects dependencies as dictionary `Record<string, unknown>`
 - `SimpleInjector` - just passes container to constructor with others arguments
 
-### Metadata injector
+### Metadata
 This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `MetadataInjector`.
 
 ```typescript
 {{{include_file './__tests__/readme/metadataInjector.spec.ts'}}}
 ```
 
-### Simple injector
+### Simple
 This type of injector just passes container to constructor with others arguments.
 
 ```typescript
 {{{include_file './__tests__/SimpleInjector.spec.ts'}}}
 ```
 
-### Proxy injector
+### Proxy
 This type of injector injects dependencies as dictionary `Record<string, unknown>`.
 
 ```typescript
 {{{include_file './__tests__/ProxyInjector.spec.ts'}}}
 ```
 
-## Registration and Providers
-`IProvider<T>` is used to describe how instances should be created. It has next basic methods:
-- `resolve` - creates instance with passed arguments
-- `clone` - we invoke it when we create a scope. It clones provider to new scope.
-- `isValid` - checks if provider can be resolved from container or cloned to container with certain tags
+## Provider
+Provider is dependency factory which creates dependency.
 
-There are next types of providers:
-- `Provider` - basic provider. It can be used with `@provider` decorator
-- `SingletonProvider` - provider that creates only one instance in every scope where it's resolved
-- `ScopeProvider` - provider that can be resolved only from container with certain tags and their sub scopes
-- `ArgsProvider` - provider that encapsulates arguments to pass it to constructor.
-
-`Registration` - just a helper to register provider with certain key. `(preferrably to use)`
-
-### Registration (Provider + DependencyKey)
-Sometimes you need to keep dependency key with class together. For example, you want to register class with key 'ILogger' and you want to keep this key with class. This is what `Registration` is for.
-
-```typescript
-{{{include_file './__tests__/readme/registration.spec.ts'}}}
-```
-
-### Provider
+- `@provider()`
+- `Provider.fromClass(Logger)`
+- `Provider.fromValue(logger)`
+- `new Provider((container, ...args) => container.resolve(Logger, {args}))`
 
 ```typescript
 {{{include_file './__tests__/readme/provider.spec.ts'}}}
 ```
 
-### Singleton provider
+### Singleton
 Sometimes you need to create only one instance of dependency per scope. For example, you want to create only one logger per scope.
 
 - Singleton provider creates only one instance in every scope where it's resolved.
@@ -175,40 +161,66 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 {{{include_file './__tests__/Singleton.spec.ts'}}}
 ```
 
-### Scope provider
-Sometimes you need to resolve provider only from scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
-- NOTICE: It doesn't make clones in not predicate-matched scopes. Usually it's used with `SingletonProvider`.
-
-```typescript
-{{{include_file './__tests__/ScopeProvider.spec.ts'}}}
-```
-
-### Args provider
+### Arguments
 Sometimes you want to bind some arguments to provider. This is what `ArgsProvider` is for.
+- `@provider(args('someArgument'))`
+- `@provider(argsFn((container) => [container.resolve(Logger), 'someValue']))`
+- `Provider.fromClass(Logger).pipe(args('someArgument'))`
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
 ```typescript
 {{{include_file './__tests__/ArgsProvider.spec.ts'}}}
 ```
 
-### Aliases
-Sometimes you want to register the same provider with different keys. This is what `Aliases` is for.
-- `@provider(alias('logger'))` helper assigns `logger` alias to provider.
-- `by.alias.some('logger', 'a')` method resolves the same provider with different keys. (logger OR a)
-- `by.alias.all('logger', 'a')` method resolves to resolve the same provider with different keys. (logger AND a)
+### Visibility
+Sometimes you want to hide dependency if somebody wants to resolve it from certain scope
+- `@provider(visible(({ isParent, child }) => isParent || child.hasTag('root')))` - dependency will be accessible from scope `root` or from scope where it's registered
+- `Provider.fromClass(Logger).pipe(visible(({ isParent, child }) => isParent || child.hasTag('root')))`
+
+```typescript
+{{{include_file './__tests__/readme/visibility.spec.ts'}}}
+```
+
+## Registration
+Registration is provider factory which registers provider in container.
+- `@registration(key('logger'))`
+- `Registration.fromClass(Logger).to('logger')`
+- `Registration.fromClass(Logger)`
+- `Registration.fromValue(Logger)`
+- `Registration.fromFn((container, ...args) => container.resolve(Logger, {args}))`
+
+```typescript
+{{{include_file './__tests__/readme/registration.spec.ts'}}}
+```
+
+### Scope
+Sometimes you need to register provider only in scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
+- `@registration(scope((container) => container.hasTag('root'))` - register provider only in root scope
+- `Registration.fromClass(Logger).when((container) => container.hasTag('root'))`
+
+```typescript
+{{{include_file './__tests__/ScopeProvider.spec.ts'}}}
+```
+
+### Alias
+Alias is needed to group keys
+- `@registration(alias('logger'))` helper assigns `logger` alias to registration.
+- `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
+- `Registration.fromClass(Logger).addAliases('logger')`
 
 ```typescript
 {{{include_file './__tests__/readme/alias.spec.ts'}}}
 ```
 
-## Container modules
+
+## Module
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
 ```typescript
 {{{include_file './__tests__/readme/containerModule.spec.ts'}}}
 ```
 
-## Hooks
+## Hook
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
 ### OnConstruct
@@ -221,16 +233,17 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 {{{include_file '__tests__/OnDispose.spec.ts'}}}
 ```
 
-## Tests and Mocks
+## Mock
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
 {{{include_file '__tests__/readme/mocking.spec.ts'}}}
 ```
 
-## Errors
+## Error
 
-- [DependencyNotFoundError.ts](lib%2Fcontainer%2FDependencyNotFoundError.ts)
-- [MethodNotImplementedError.ts](lib%2FMethodNotImplementedError.ts)
-- [ContainerDisposedError.ts](lib%2Fcontainer%2FContainerDisposedError.ts)
+- [DependencyNotFoundError.ts](..%2F..%2Flib%2Ferrors%2FDependencyNotFoundError.ts)
+- [MethodNotImplementedError.ts](..%2F..%2Flib%2Ferrors%2FMethodNotImplementedError.ts)
+- [DependencyMissingKeyError.ts](..%2F..%2Flib%2Ferrors%2FDependencyMissingKeyError.ts)
+- [ContainerDisposedError.ts](..%2F..%2Flib%2Ferrors%2FContainerDisposedError.ts)
 
