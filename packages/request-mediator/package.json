@@ -1,6 +1,6 @@
 {
   "name": "ts-request-mediator",
-  "version": "1.0.54",
+  "version": "1.0.55",
   "description": "Request mediator for server",
   "publishConfig": {
     "access": "public",
@@ -43,7 +43,7 @@
     "moq.ts": "^7.3.4",
     "nodemon": "^2.0.13",
     "rimraf": "3.0.2",
-    "ts-ioc-container": "^31.1.4",
+    "ts-ioc-container": "^31.1.5",
     "ts-jest": "27.0.5",
     "typescript": "5.4.3"
   },
