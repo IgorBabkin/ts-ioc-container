@@ -33,7 +33,7 @@
     - [Singleton](#singleton) `singleton`
     - [Arguments](#arguments) `args`
     - [Visibility](#visibility) `visible`
-- [Registration](#registration) `@registration(key('someKey'))`
+- [Registration](#registration) `@register(key('someKey'))`
     - [Scope](#scope) `scope`
     - [Alias](#alias) `alias`
 - [Module](#module)
@@ -183,7 +183,7 @@ Sometimes you want to hide dependency if somebody wants to resolve it from certa
 
 ## Registration
 Registration is provider factory which registers provider in container.
-- `@registration(key('logger'))`
+- `@register(key('logger'))`
 - `Registration.fromClass(Logger).to('logger')`
 - `Registration.fromClass(Logger)`
 - `Registration.fromValue(Logger)`
@@ -195,7 +195,7 @@ Registration is provider factory which registers provider in container.
 
 ### Scope
 Sometimes you need to register provider only in scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
-- `@registration(scope((container) => container.hasTag('root'))` - register provider only in root scope
+- `@register(scope((container) => container.hasTag('root'))` - register provider only in root scope
 - `Registration.fromClass(Logger).when((container) => container.hasTag('root'))`
 
 ```typescript
@@ -204,7 +204,7 @@ Sometimes you need to register provider only in scope which matches to certain c
 
 ### Alias
 Alias is needed to group keys
-- `@registration(alias('logger'))` helper assigns `logger` alias to registration.
+- `@register(alias('logger'))` helper assigns `logger` alias to registration.
 - `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
 - `Registration.fromClass(Logger).addAliases('logger')`
 
