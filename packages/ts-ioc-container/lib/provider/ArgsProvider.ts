@@ -3,7 +3,7 @@ import { IContainer } from '../container/IContainer';
 import { IProvider } from './IProvider';
 import { MapFn } from '../utils';
 
-export type ArgsFn = (l: IContainer) => unknown[];
+export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
 
 export function args<T = unknown>(...extraArgs: unknown[]): MapFn<IProvider<T>> {
   return (provider) => new ArgsProvider(provider, () => extraArgs);
@@ -22,6 +22,6 @@ export class ArgsProvider<T> extends ProviderDecorator<T> {
   }
 
   resolve(container: IContainer, ...args: unknown[]): T {
-    return this.provider.resolve(container, ...this.argsFn(container), ...args);
+    return this.provider.resolve(container, ...this.argsFn(container, ...args), ...args);
   }
 }

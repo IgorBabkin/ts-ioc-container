@@ -482,7 +482,20 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 
 ```typescript
 import 'reflect-metadata';
-import { Container, key, argsFn, args, MetadataInjector, Registration as R, register } from 'ts-ioc-container';
+import {
+  args,
+  argsFn,
+  Container,
+  DependencyKey,
+  inject,
+  key,
+  MetadataInjector,
+  provider,
+  register,
+  Registration as R,
+  singleton,
+} from 'ts-ioc-container';
+import { CacheMap } from '../lib/provider/SingletonProvider.ts';
 
 @register(key('logger'))
 class Logger {
@@ -518,6 +531,90 @@ describe('ArgsProvider', function () {
 
     expect(logger.name).toBe('name');
     expect(logger.type).toBe('file');
+  });
+
+  it('should resolve dependency by passing arguments resolve from container by another argument', function () {
+    interface IRepository {
+      name: string;
+    }
+
+    @register(key('UserRepository'))
+    class UserRepository implements IRepository {
+      name = 'UserRepository';
+    }
+
+    @register(key('TodoRepository'))
+    class TodoRepository implements IRepository {
+      name = 'TodoRepository';
+    }
+
+    @register(key('EntityManager'))
+    @provider(argsFn((container, token) => [container.resolve(token as DependencyKey)]))
+    class EntityManager {
+      constructor(public repository: IRepository) {}
+    }
+
+    class Main {
+      constructor(
+        @inject((s) => s.resolve('EntityManager', { args: ['UserRepository'] })) public userEntities: EntityManager,
+        @inject((s) => s.resolve('EntityManager', { args: ['TodoRepository'] })) public todoEntities: EntityManager,
+      ) {}
+    }
+
+    const root = createContainer()
+      .add(R.fromClass(EntityManager))
+      .add(R.fromClass(UserRepository))
+      .add(R.fromClass(TodoRepository));
+    const main = root.resolve(Main);
+
+    expect(main.userEntities.repository).toBeInstanceOf(UserRepository);
+    expect(main.todoEntities.repository).toBeInstanceOf(TodoRepository);
+  });
+
+  it('should resolve memoized dependency by passing arguments resolve from container by another argument', function () {
+    interface IRepository {
+      name: string;
+    }
+
+    @register(key('UserRepository'))
+    class UserRepository implements IRepository {
+      name = 'UserRepository';
+    }
+
+    @register(key('TodoRepository'))
+    class TodoRepository implements IRepository {
+      name = 'TodoRepository';
+    }
+
+    @register(key('EntityManager'))
+    @provider(
+      argsFn((container, token) => [container.resolve(token as DependencyKey)]),
+      singleton(() => new CacheMap((...args: unknown[]) => args[0] as DependencyKey)),
+    )
+    class EntityManager {
+      constructor(public repository: IRepository) {}
+    }
+
+    class Main {
+      constructor(
+        @inject((s) => s.resolve('EntityManager', { args: ['UserRepository'] })) public userEntities: EntityManager,
+        @inject((s) => s.resolve('EntityManager', { args: ['TodoRepository'] })) public todoEntities: EntityManager,
+      ) {}
+    }
+
+    const root = createContainer()
+      .add(R.fromClass(EntityManager))
+      .add(R.fromClass(UserRepository))
+      .add(R.fromClass(TodoRepository));
+    const main = root.resolve(Main);
+
+    const userRepository = root.resolve<EntityManager>('EntityManager', { args: ['UserRepository'] }).repository;
+    expect(userRepository).toBeInstanceOf(UserRepository);
+    expect(main.userEntities.repository).toBe(userRepository);
+
+    const todoRepository = root.resolve<EntityManager>('EntityManager', { args: ['TodoRepository'] }).repository;
+    expect(todoRepository).toBeInstanceOf(TodoRepository);
+    expect(main.todoEntities.repository).toBe(todoRepository);
   });
 });
 
