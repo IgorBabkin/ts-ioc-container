@@ -14,7 +14,8 @@ import {
   register,
 } from '../../lib';
 
-@register(key('ILogger'), scope((s) => s.hasTag('child')), provider(singleton()))
+@register(key('ILogger'), scope((s) => s.hasTag('child')))
+@provider(singleton())
 class Logger {}
 
 describe('Scopes', function () {
