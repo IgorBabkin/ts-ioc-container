@@ -9,7 +9,7 @@ export interface IRegistration<T = unknown> extends IContainerModule {
   addAliases(...aliases: Alias[]): this;
   when(isValidWhen: ScopePredicate): this;
   to(key: DependencyKey): this;
-  pipe(...mappers: (MapFn<IRegistration<T>> | MapFn<IProvider<T>>)[]): IRegistration<T>;
+  pipe(...mappers: MapFn<IRegistration<T>>[]): IRegistration<T>;
   provider(...mappers: MapFn<IProvider<T>>[]): this;
 }
 
@@ -29,10 +29,10 @@ export const scope =
     r.when(predicate);
 
 const METADATA_KEY = 'registration';
-export const getTransformers = <T>(Target: constructor<T>) =>
-  getMetadata<MapFn<IRegistration<T>>[]>(Target, METADATA_KEY) ?? [];
+export const getTransformers = (Target: constructor<unknown>) =>
+  getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: (MapFn<IRegistration> | MapFn<IProvider>)[]) => setMetadata(METADATA_KEY, mappers);
+export const register = (...mappers: MapFn<IRegistration>[]) => setMetadata(METADATA_KEY, mappers);
 
 export const provider =
   (...mappers: MapFn<IProvider>[]): MapFn<IRegistration> =>

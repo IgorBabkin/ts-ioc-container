@@ -1,18 +1,19 @@
 import 'reflect-metadata';
 import {
-  constructor,
+  singleton,
   Container,
   ContainerDisposedError,
-  DependencyNotFoundError,
   key,
+  provider,
   MetadataInjector,
-  register,
   Registration as R,
   scope,
-  singleton,
+  register,
+  DependencyNotFoundError,
+  constructor,
 } from '../lib';
 
-@register(key('logger'), scope((s) => s.hasTag('home')), singleton())
+@register(key('logger'), scope((s) => s.hasTag('home')), provider(singleton()))
 class Logger {}
 
 describe('Singleton', function () {
@@ -93,6 +94,19 @@ describe('Singleton', function () {
 
     expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
     expect(child.resolve('logger')).toBeInstanceOf(FileLogger);
+  });
+
+  it('should register class as value and read metadata', () => {
+    @register(key('logger'), scope((s) => s.hasTag('child')))
+    class FileLogger {}
+
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromValue(FileLogger));
+
+    const child = parent.createScope('child');
+
+    const LoggerClass = child.resolve<constructor<FileLogger>>('logger');
+    expect(new LoggerClass()).toBeInstanceOf(FileLogger);
+    expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
   });
 
   it('should override keys', () => {
