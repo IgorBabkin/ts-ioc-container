@@ -13,7 +13,8 @@ import {
   constructor,
 } from '../lib';
 
-@register(key('logger'), scope((s) => s.hasTag('home')), provider(singleton()))
+@register(key('logger'), scope((s) => s.hasTag('home')))
+@provider(singleton())
 class Logger {}
 
 describe('Singleton', function () {

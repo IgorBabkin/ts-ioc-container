@@ -44,11 +44,7 @@ export class Registration<T = unknown> implements IRegistration<T> {
     return this;
   }
 
-  pipe(...mappers: MapFn<IRegistration<T>>[]): IRegistration<T> {
-    return pipe(...mappers)(this);
-  }
-
-  provider(...mappers: MapFn<IProvider<T>>[]): this {
+  pipe(...mappers: MapFn<IProvider<T>>[]): this {
     this.mappers.push(...mappers);
     return this;
   }
