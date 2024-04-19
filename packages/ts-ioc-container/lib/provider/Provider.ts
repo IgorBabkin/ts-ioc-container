@@ -1,10 +1,11 @@
-import { ChildrenVisibilityPredicate, IProvider, ResolveDependency } from './IProvider';
+import { ChildrenVisibilityPredicate, getTransformers, IProvider, ResolveDependency } from './IProvider';
 import { IContainer, Tagged } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
-    return new Provider((container, ...args) => container.resolve(Target, { args }));
+    const transformers = getTransformers(Target);
+    return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...transformers);
   }
 
   static fromValue<T>(value: T): IProvider<T> {
