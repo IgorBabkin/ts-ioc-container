@@ -7,12 +7,12 @@ import {
   inject,
   key,
   MetadataInjector,
+  MultiCache,
   provider,
   register,
   Registration as R,
   singleton,
 } from '../lib';
-import { CacheMap } from '../lib/provider/SingletonProvider.ts';
 
 @register(key('logger'))
 class Logger {
@@ -106,7 +106,7 @@ describe('ArgsProvider', function () {
     @register(key('EntityManager'))
     @provider(
       argsFn((container, token) => [container.resolve(token as DependencyKey)]),
-      singleton(() => new CacheMap((...args: unknown[]) => args[0] as DependencyKey)),
+      singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
     )
     class EntityManager {
       constructor(public repository: IRepository) {}
