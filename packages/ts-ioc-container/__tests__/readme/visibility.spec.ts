@@ -14,8 +14,14 @@ import {
 
 describe('Visibility', function () {
   it('should hide from children', () => {
-    @register(key('logger'), scope((s) => s.hasTag('root')))
-    @provider(singleton(), visible(({ isParent }) => isParent))
+    @register(
+      key('logger'),
+      scope((s) => s.hasTag('root')),
+      provider(
+        singleton(),
+        visible(({ isParent }) => isParent),
+      ),
+    )
     class FileLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromClass(FileLogger));

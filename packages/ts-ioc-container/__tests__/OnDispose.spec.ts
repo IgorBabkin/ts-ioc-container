@@ -1,21 +1,19 @@
 import 'reflect-metadata';
 import {
-  singleton,
   by,
   Container,
-  key,
   getHooks,
   hook,
   inject,
-  provider,
-  Registration as R,
+  key,
   MetadataInjector,
+  provider,
   register,
+  Registration as R,
+  singleton,
 } from '../lib';
-import * as console from 'node:console';
 
-@register(key('logsRepo'))
-@provider(singleton())
+@register(key('logsRepo'), provider(singleton()))
 class LogsRepo {
   savedLogs: string[] = [];
 
