@@ -138,7 +138,6 @@ import {
   Container,
   DependencyNotFoundError,
   key,
-  provider,
   MetadataInjector,
   Registration as R,
   by,
@@ -146,7 +145,7 @@ import {
   register,
 } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.hasTag('child')), provider(singleton()))
+@register(key('ILogger'), scope((s) => s.hasTag('child')), singleton())
 class Logger {}
 
 describe('Scopes', function () {
@@ -331,7 +330,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 
 ```typescript
 import 'reflect-metadata';
-import { Container, ProxyInjector, args, Registration as R, provider } from 'ts-ioc-container';
+import { args, Container, ProxyInjector, Registration as R } from 'ts-ioc-container';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -375,11 +374,7 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container(new ProxyInjector())
-      .add(
-        R.fromClass(App)
-          .to('App')
-          .pipe(provider(args({ greetingTemplate }))),
-      )
+      .add(R.fromClass(App).to('App').pipe(args({ greetingTemplate })))
       .add(R.fromClass(Logger).to('logger'));
 
     const app = container.resolve<App>('App', { args: [{ name: `world` }] });
@@ -442,9 +437,9 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R, register } from 'ts-ioc-container';
+import { singleton, Container, key, MetadataInjector, Registration as R, register } from 'ts-ioc-container';
 
-@register(key('logger'), provider(singleton()))
+@register(key('logger'), singleton())
 class Logger {}
 
 describe('Singleton', function () {
@@ -484,7 +479,7 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 
 ```typescript
 import 'reflect-metadata';
-import { Container, key, argsFn, args, MetadataInjector, Registration as R, register, provider } from 'ts-ioc-container';
+import { args, argsFn, Container, key, MetadataInjector, register, Registration as R } from 'ts-ioc-container';
 
 @register(key('logger'))
 class Logger {
@@ -500,21 +495,21 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(provider(argsFn((container, ...args) => ['name']))));
+    const root = createContainer().add(R.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
 
     const logger = root.createScope().resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('can assign argument to provider', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(provider(args('name'))));
+    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(provider(args('name'))));
+    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger', { args: ['file'] });
 
@@ -537,7 +532,6 @@ import {
   DependencyNotFoundError,
   key,
   MetadataInjector,
-  provider,
   register,
   Registration as R,
   scope,
@@ -547,14 +541,7 @@ import {
 
 describe('Visibility', function () {
   it('should hide from children', () => {
-    @register(
-      key('logger'),
-      scope((s) => s.hasTag('root')),
-      provider(
-        singleton(),
-        visible(({ isParent }) => isParent),
-      ),
-    )
+    @register(key('logger'), scope((s) => s.hasTag('root')), singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromClass(FileLogger));
@@ -578,14 +565,14 @@ Registration is provider factory which registers provider in container.
 
 ```typescript
 import 'reflect-metadata';
-import { Container, key, MetadataInjector, provider, register, Registration as R, scope, singleton } from 'ts-ioc-container';
+import { Container, key, MetadataInjector, register, Registration as R, scope, singleton } from 'ts-ioc-container';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
   const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
 
   it('should register class', function () {
-    @register(key('ILogger'), scope((s) => s.hasTag('root')), provider(singleton()))
+    @register(key('ILogger'), scope((s) => s.hasTag('root')), singleton())
     class Logger {}
 
     const root = createContainer().add(R.fromClass(Logger));
@@ -629,9 +616,9 @@ Sometimes you need to register provider only in scope which matches to certain c
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope, register } from 'ts-ioc-container';
+import { singleton, Container, key, MetadataInjector, Registration as R, scope, register } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.hasTag('root')), provider(singleton())) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
+@register(key('ILogger'), scope((s) => s.hasTag('root')), singleton()) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
@@ -853,13 +840,12 @@ import {
   inject,
   key,
   MetadataInjector,
-  provider,
   register,
   Registration as R,
   singleton,
 } from 'ts-ioc-container';
 
-@register(key('logsRepo'), provider(singleton()))
+@register(key('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 

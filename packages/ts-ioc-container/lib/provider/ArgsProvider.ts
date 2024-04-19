@@ -1,16 +1,16 @@
 import { ProviderDecorator } from './ProviderDecorator';
 import { IContainer } from '../container/IContainer';
-import { IProvider } from './IProvider';
+import { IProvider, markAsProvider } from './IProvider';
 import { MapFn } from '../utils';
 
 export type ArgsFn = (l: IContainer) => unknown[];
 
 export function args<T = unknown>(...extraArgs: unknown[]): MapFn<IProvider<T>> {
-  return (provider) => new ArgsProvider(provider, () => extraArgs);
+  return markAsProvider((provider) => new ArgsProvider(provider, () => extraArgs));
 }
 
 export function argsFn<T = unknown>(value: ArgsFn): MapFn<IProvider<T>> {
-  return (provider) => new ArgsProvider(provider, value);
+  return markAsProvider((provider) => new ArgsProvider(provider, value));
 }
 
 export class ArgsProvider<T> extends ProviderDecorator<T> {

@@ -25,3 +25,16 @@ export const constant =
     value;
 
 export const isConstructor = (T: unknown): T is constructor<unknown> => typeof T === 'function' && !!T.prototype;
+
+export function groupBy<T>(items: T[], predicate: (value: T) => boolean) {
+  const [a, b] = items.reduce(
+    ([a, b], item) => {
+      if (predicate(item)) {
+        return [a.concat(item), b];
+      }
+      return [a, b.concat(item)];
+    },
+    [[], []] as [T[], T[]],
+  );
+  return [a, b];
+}

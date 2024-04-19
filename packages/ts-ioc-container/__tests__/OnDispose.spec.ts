@@ -7,13 +7,12 @@ import {
   inject,
   key,
   MetadataInjector,
-  provider,
   register,
   Registration as R,
   singleton,
 } from '../lib';
 
-@register(key('logsRepo'), provider(singleton()))
+@register(key('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 

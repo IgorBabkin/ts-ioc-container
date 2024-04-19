@@ -1,15 +1,14 @@
 import 'reflect-metadata';
 import {
-  singleton,
+  args,
   Container,
   ContainerDisposedError,
   DependencyNotFoundError,
   key,
-  provider,
   MetadataInjector,
-  Registration as R,
-  args,
   register,
+  Registration as R,
+  singleton,
 } from '../lib';
 
 @register(key('logger'))
@@ -84,13 +83,13 @@ describe('IocContainer', function () {
   });
 
   it('should keep argument for provider', function () {
-    const container = createContainer().add(R.fromClass(Logger).pipe(provider(args('main'))));
+    const container = createContainer().add(R.fromClass(Logger).pipe(args('main')));
 
     expect(container.resolve<Logger>('logger').topic).toBe('main');
   });
 
   it('should use builder decorators', function () {
-    @register(provider(singleton()))
+    @register(singleton())
     class Logger1 {}
 
     const container = createContainer().add(R.fromClass(Logger1).to('logger'));

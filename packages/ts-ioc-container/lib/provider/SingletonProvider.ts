@@ -1,12 +1,12 @@
 import { IContainer } from '../container/IContainer';
 import { ProviderDecorator } from './ProviderDecorator';
-import { IProvider } from './IProvider';
+import { IProvider, markAsProvider } from './IProvider';
 import { MapFn } from '../utils';
 
 type Cache<T> = { value: T };
 
 export function singleton<T = unknown>(): MapFn<IProvider<T>> {
-  return (provider) => new SingletonProvider(provider);
+  return markAsProvider((provider) => new SingletonProvider(provider));
 }
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {

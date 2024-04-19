@@ -1,21 +1,16 @@
 import { Alias, DependencyKey, IContainer } from '../container/IContainer';
-import { constructor, isConstructor, MapFn, pipe } from '../utils';
+import { constructor, groupBy, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
-import { IProvider, ResolveDependency } from '../provider/IProvider';
+import { IProvider, isProviderMapper, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
 
 export class Registration<T = unknown> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {
-    const transform = pipe(...getTransformers(Target));
-    return transform(new Registration(() => Provider.fromClass(Target), Target.name));
+    return new Registration(() => Provider.fromClass(Target), Target.name).pipe(...getTransformers(Target));
   }
 
   static fromValue<T>(value: T) {
-    if (isConstructor(value)) {
-      const transform = pipe(...getTransformers(value as constructor<T>));
-      return transform(new Registration(() => Provider.fromValue(value), value.name));
-    }
     return new Registration(() => Provider.fromValue(value));
   }
 
@@ -25,11 +20,11 @@ export class Registration<T = unknown> implements IRegistration<T> {
 
   private aliases: string[] = [];
   private mappers: MapFn<IProvider<T>>[] = [];
+  private matchScope: ScopePredicate = () => true;
 
   constructor(
     private createProvider: () => IProvider<T>,
     private key?: DependencyKey,
-    private matchScope: ScopePredicate = () => true,
   ) {}
 
   to(key: DependencyKey): this {
@@ -44,8 +39,10 @@ export class Registration<T = unknown> implements IRegistration<T> {
     return this;
   }
 
-  pipe(...mappers: MapFn<IRegistration<T>>[]): IRegistration<T> {
-    return pipe(...mappers)(this);
+  pipe(...mappers: (MapFn<IRegistration<T>> | MapFn<IProvider<T>>)[]): IRegistration<T> {
+    const [providerMappers, registrationMappers] = groupBy(mappers, isProviderMapper);
+    this.mappers.push(...(providerMappers as MapFn<IProvider<T>>[]));
+    return pipe(...(registrationMappers as MapFn<IRegistration<T>>[]))(this);
   }
 
   provider(...mappers: MapFn<IProvider<T>>[]): this {

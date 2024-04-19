@@ -14,7 +14,16 @@ export interface IProvider<T = unknown> {
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
 }
 
-export const visible =
-  (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>
-  (p) =>
-    p.setVisibility(isVisibleWhen);
+export const markAsProvider = <T>(fn: MapFn<IProvider<T>>) => {
+  // @ts-ignore
+  fn.__provider = true;
+  return fn;
+};
+
+export const isProviderMapper = <T>(fn: unknown): fn is MapFn<IProvider<T>> => {
+  // @ts-ignore
+  return fn.__provider === true;
+};
+
+export const visible = (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>
+  markAsProvider((p) => p.setVisibility(isVisibleWhen));
