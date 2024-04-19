@@ -22,7 +22,7 @@ export { ArgsFn, argsFn, args, ArgsProvider } from './provider/ArgsProvider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
 export { Registration } from './registration/Registration';
-export { key, alias, IRegistration, scope, register } from './registration/IRegistration';
+export { key, alias, IRegistration, scope, register, provider } from './registration/IRegistration';
 export { MetadataInjector, inject } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';

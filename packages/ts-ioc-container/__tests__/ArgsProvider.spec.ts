@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { args, argsFn, Container, key, MetadataInjector, register, Registration as R } from '../lib';
+import { Container, key, argsFn, args, MetadataInjector, Registration as R, register, provider } from '../lib';
 
 @register(key('logger'))
 class Logger {
@@ -15,21 +15,21 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
+    const root = createContainer().add(R.fromClass(Logger).pipe(provider(argsFn((container, ...args) => ['name']))));
 
     const logger = root.createScope().resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('can assign argument to provider', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
+    const root = createContainer().add(R.fromClass(Logger).pipe(provider(args('name'))));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
+    const root = createContainer().add(R.fromClass(Logger).pipe(provider(args('name'))));
 
     const logger = root.resolve<Logger>('logger', { args: ['file'] });
 
