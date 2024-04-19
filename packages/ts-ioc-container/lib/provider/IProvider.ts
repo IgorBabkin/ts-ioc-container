@@ -1,6 +1,5 @@
 import { IContainer, Tagged } from '../container/IContainer';
-import { constructor, MapFn } from '../utils';
-import { getMetadata, setMetadata } from '../metadata';
+import { MapFn } from '../utils';
 
 export type ResolveDependency<T = unknown> = (container: IContainer, ...args: unknown[]) => T;
 export type ChildrenVisibilityPredicate = (options: { child: Tagged; isParent: boolean }) => boolean;
@@ -14,11 +13,6 @@ export interface IProvider<T = unknown> {
 
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
 }
-
-const METADATA_KEY = 'provider';
-export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(METADATA_KEY, mappers);
-export const getTransformers = <T>(Target: constructor<T>) =>
-  getMetadata<MapFn<IProvider<T>>[]>(Target, METADATA_KEY) ?? [];
 
 export const markAsProvider = <T>(fn: MapFn<IProvider<T>>) => {
   // @ts-ignore

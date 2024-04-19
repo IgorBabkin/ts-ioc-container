@@ -29,7 +29,7 @@
     - [Metadata](#metadata) `@inject`
     - [Simple](#simple)
     - [Proxy](#proxy)
-- [Provider](#provider)
+- [Provider](#provider) `provider`
     - [Singleton](#singleton) `singleton`
     - [Arguments](#arguments) `args`
     - [Visibility](#visibility) `visible`
@@ -387,6 +387,7 @@ describe('ProxyInjector', function () {
 ## Provider
 Provider is dependency factory which creates dependency.
 
+- `provider()`
 - `Provider.fromClass(Logger)`
 - `Provider.fromValue(logger)`
 - `new Provider((container, ...args) => container.resolve(Logger, {args}))`
@@ -471,8 +472,8 @@ describe('Singleton', function () {
 
 ### Arguments
 Sometimes you want to bind some arguments to provider. This is what `ArgsProvider` is for.
-- `args('someArgument')`
-- `argsFn((container) => [container.resolve(Logger), 'someValue'])`
+- `provider(args('someArgument'))`
+- `provider(argsFn((container) => [container.resolve(Logger), 'someValue']))`
 - `Provider.fromClass(Logger).pipe(args('someArgument'))`
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
@@ -521,7 +522,7 @@ describe('ArgsProvider', function () {
 
 ### Visibility
 Sometimes you want to hide dependency if somebody wants to resolve it from certain scope
-- `visible(({ isParent, child }) => isParent || child.hasTag('root'))` - dependency will be accessible from scope `root` or from scope where it's registered
+- `provider(visible(({ isParent, child }) => isParent || child.hasTag('root')))` - dependency will be accessible from scope `root` or from scope where it's registered
 - `Provider.fromClass(Logger).pipe(visible(({ isParent, child }) => isParent || child.hasTag('root')))`
 
 ```typescript

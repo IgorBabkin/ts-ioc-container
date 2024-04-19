@@ -11,7 +11,7 @@ export {
 export { constructor } from './utils';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
-export { ResolveDependency, IProvider, visible, provider } from './provider/IProvider';
+export { ResolveDependency, IProvider, visible } from './provider/IProvider';
 export { IInjector } from './injector/IInjector';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
