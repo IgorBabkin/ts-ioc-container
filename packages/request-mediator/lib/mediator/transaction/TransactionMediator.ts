@@ -20,11 +20,15 @@ export class TransactionMediator implements IMediator<ITransaction> {
     options: ITransaction = {},
   ): Promise<TResponse> {
     if (options.transaction || isTransaction(QueryHandler)) {
-      const transactionContext = this.scope.resolve<ITransactionContext>(ITransactionContextKey);
-      return transactionContext.execute((childTransactionContext) => {
-        this.scope.registerValue(ITransactionContextKey, childTransactionContext);
-        return this.mediator.send(QueryHandler, query);
-      });
+      const parentContext = this.scope.resolve<ITransactionContext>(ITransactionContextKey);
+      try {
+        return await parentContext.execute((childContext) => {
+          this.scope.registerValue(ITransactionContextKey, childContext);
+          return this.mediator.send(QueryHandler, query);
+        });
+      } finally {
+        this.scope.registerValue(ITransactionContextKey, parentContext);
+      }
     }
 
     return this.mediator.send(QueryHandler, query);

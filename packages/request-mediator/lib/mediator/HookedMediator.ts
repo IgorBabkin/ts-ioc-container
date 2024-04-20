@@ -40,3 +40,5 @@ export interface IHook {
   before: constructor<IQueryHandler<unknown, void>>[];
   after: constructor<IQueryHandler<unknown, void>>[];
 }
+
+export const createHookMetadataKey = <K extends keyof IHook>(prefix: string, key: K) => `${prefix}${key}`;

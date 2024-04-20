@@ -1,6 +1,5 @@
 import 'reflect-metadata';
-import { by, register, key, Provider, provider, Registration, singleton, scope, inject } from 'ts-ioc-container';
-import { Context } from './context/Context';
+import { by, inject, key, provider, register, Registration as R, scope, singleton } from 'ts-ioc-container';
 import {
   IQueryHandler,
   ITransactionContext,
@@ -11,11 +10,35 @@ import {
   transaction,
 } from '../lib';
 import { ContainerAdapter, createContainer, EmptyType } from './di';
+import { ILoggerKey, Logger } from './Logger';
 
-export class Logger extends Context<string[]> {
-  addLog(log: string): void {
-    const logs = this.getValue();
-    this.setValue(logs.concat(log));
+let id = 0;
+
+@register(key('Repo'), scope((s) => s.hasTag(Scope.Request)))
+@provider(singleton())
+class Repo {
+  private entities: string[] = [];
+  private id = id;
+  constructor(
+    @inject((s) => () => s.resolve(ITransactionContextKey)) private getTransaction: () => TransactionContext,
+    @inject(by.key(ILoggerKey)) private logger: Logger,
+  ) {
+    id++;
+  }
+
+  async findById(): Promise<void> {
+    const transaction = this.getTransaction();
+    this.entities.push('todo');
+    this.logger.addLog(
+      `Repo (${this.id}) -> findById [transactionId: ${transaction.id.toString()}], entities: ${this.entities.join(', ')}`,
+    );
+  }
+
+  async persist(): Promise<void> {
+    const transaction = this.getTransaction();
+    this.logger.addLog(
+      `Repo (${this.id}) -> persist [transactionId: ${transaction.id.toString()}], entities: ${this.entities.join(', ')}`,
+    );
   }
 }
 
@@ -27,42 +50,43 @@ class TransactionContext implements ITransactionContext {
   }
 }
 
+@transaction
 class AfterHandler implements IQueryHandler<EmptyType, void> {
   constructor(
-    @inject(by.key('Logger')) private logger: Logger,
+    @inject(by.key(ILoggerKey)) private logger: Logger,
+    @inject(by.key('Repo')) private repo: Repo,
     @inject(by.key(ITransactionContextKey)) private transactionContext: TransactionContext,
   ) {}
 
   async handle(query: EmptyType): Promise<void> {
-    this.logger.addLog(this.transactionContext.id.toString());
-    this.logger.addLog('AfterHandler');
+    this.logger.addLog(`AfterHandler - transactionId: ${this.transactionContext.id.toString()}`);
+    await this.repo.persist();
   }
 }
 
 class BeforeHandler implements IQueryHandler<EmptyType, void> {
   constructor(
-    @inject(by.key('Logger')) private logger: Logger,
+    @inject(by.key(ILoggerKey)) private logger: Logger,
     @inject(by.key(ITransactionContextKey)) private transactionContext: TransactionContext,
   ) {}
 
   async handle(): Promise<void> {
-    this.logger.addLog(this.transactionContext.id.toString());
-    this.logger.addLog('BeforeHandler');
+    this.logger.addLog(`BeforeHandler - transactionId: ${this.transactionContext.id.toString()}`);
   }
 }
 
-@transaction
 @request('before', [BeforeHandler])
 @request('after', [AfterHandler])
 class QueryHandler implements IQueryHandler<EmptyType, void> {
   constructor(
-    @inject(by.key('Logger')) private logger: Logger,
+    @inject(by.key(ILoggerKey)) private logger: Logger,
+    @inject(by.key('Repo')) private repo: Repo,
     @inject(by.key(ITransactionContextKey)) private transactionContext: TransactionContext,
   ) {}
 
   async handle(query: EmptyType): Promise<void> {
-    this.logger.addLog(this.transactionContext.id.toString());
-    this.logger.addLog('QueryHandler');
+    this.logger.addLog(`QueryHandler - transactionId: ${this.transactionContext.id.toString()}`);
+    await this.repo.findById();
   }
 }
 
@@ -76,17 +100,17 @@ class TestTransaction implements ITransactionContext {
   }
 }
 
-describe('RequestMediator', () => {
+describe('TransactionMediator', () => {
   it('should invoke middleware', async () => {
-    const logger = new Logger('logger', []);
     const container = createContainer()
-      .register('Logger', Provider.fromValue(logger))
-      .use(Registration.fromClass(TestTransaction));
+      .add(R.fromClass(Logger))
+      .add(R.fromClass(TestTransaction))
+      .add(R.fromClass(Repo));
 
     const mediator = new RequestMediator(new ContainerAdapter(container));
 
     await mediator.send(QueryHandler, {});
 
-    expect(logger.getValue()).toEqual(['0', 'BeforeHandler', '1', 'QueryHandler', '0', 'AfterHandler']);
+    expect(container.resolve<Logger>(ILoggerKey).getLogs()).toMatchSnapshot();
   });
 });

@@ -1,5 +1,3 @@
-import { IContainer, InjectionToken } from 'ts-ioc-container';
-
 export interface IContext<T> {
   getValue(): T;
 
@@ -7,8 +5,3 @@ export interface IContext<T> {
 
   hasValue(): boolean;
 }
-
-export const context =
-  <T>(key: InjectionToken<IContext<T>>) =>
-  (l: IContainer) =>
-    l.resolve<IContext<T>>(key).getValue();

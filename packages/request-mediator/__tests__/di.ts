@@ -1,16 +1,5 @@
-import {
-  constructor,
-  Container,
-  getHooks,
-  hook,
-  IContainer,
-  Provider,
-  MetadataInjector,
-  Resolvable,
-} from 'ts-ioc-container';
+import { constructor, Container, IContainer, MetadataInjector, Provider, Resolvable } from 'ts-ioc-container';
 import { IDependencyContainer, Scope } from '../lib';
-
-export const onDispose = hook('onDispose');
 
 export function createContainer(): IContainer {
   return new Container(new MetadataInjector(), { tags: [Scope.Application] });
@@ -33,16 +22,6 @@ export class ContainerAdapter implements IDependencyContainer {
 
   resolve<T>(key: constructor<T> | symbol): T {
     return this.container.resolve(key);
-  }
-
-  async onBeforeDispose(): Promise<void> {
-    for (const instance of this.container.getInstances()) {
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      for (const h of getHooks(instance as object, 'onDispose')) {
-        // @ts-ignore
-        await instance[h]();
-      }
-    }
   }
 }
 

@@ -2,17 +2,14 @@
 
 exports[`RequestMediator should invoke middleware 1`] = `
 Array [
-  "before",
-  "QueryHandler1",
-  "after",
-  "QueryHandler2",
-  "QueryHandler3",
-  "before",
-  "QueryHandler1",
-  "after",
-  "QueryHandler2",
-  "before",
-  "QueryHandler1",
-  "after",
+  "QueryHandler1 -> before",
+  "QueryHandler1 -> handle",
+  "QueryHandler1 -> after",
+  "QueryHandler2 -> handle",
+  "QueryHandler3 -> handle",
+  "QueryHandler2 -> handle",
+  "QueryHandler1 -> before",
+  "QueryHandler1 -> handle",
+  "QueryHandler1 -> after",
 ]
 `;

@@ -15,14 +15,20 @@ export class SimpleMediator implements IMediator {
 
     for (const methodName of getHooks(useCase, 'SimpleMediator/BeforeHook')) {
       // @ts-ignore
-      await useCase[methodName](query);
+      const r = useCase[methodName](query);
+      if (r instanceof Promise) {
+        await r;
+      }
     }
 
     const result = await useCase.handle(query);
 
     for (const methodName of getHooks(useCase, 'SimpleMediator/AfterHook')) {
       // @ts-ignore
-      await useCase[methodName](query, result);
+      const r = useCase[methodName](query, result);
+      if (r instanceof Promise) {
+        await r;
+      }
     }
 
     return result;
