@@ -33,9 +33,9 @@
     - [Singleton](#singleton) `singleton`
     - [Arguments](#arguments) `args`
     - [Visibility](#visibility) `visible`
+    - [Alias](#alias) `alias`
 - [Registration](#registration) `@register(key('someKey'))`
     - [Scope](#scope) `scope`
-    - [Alias](#alias) `alias`
 - [Module](#module)
 - [Hook](#hook) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
@@ -181,6 +181,17 @@ Sometimes you want to hide dependency if somebody wants to resolve it from certa
 {{{include_file './__tests__/readme/visibility.spec.ts'}}}
 ```
 
+### Alias
+Alias is needed to group keys
+- `@provider(alias('logger'))` helper assigns `logger` alias to registration.
+- `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
+- `Provider.fromClass(Logger).pipe(alias('logger'))`
+
+```typescript
+{{{include_file './__tests__/readme/alias.spec.ts'}}}
+```
+
+
 ## Registration
 Registration is provider factory which registers provider in container.
 - `@register(key('logger'))`
@@ -201,17 +212,6 @@ Sometimes you need to register provider only in scope which matches to certain c
 ```typescript
 {{{include_file './__tests__/ScopeProvider.spec.ts'}}}
 ```
-
-### Alias
-Alias is needed to group keys
-- `@register(alias('logger'))` helper assigns `logger` alias to registration.
-- `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
-- `Registration.fromClass(Logger).addAliases('logger')`
-
-```typescript
-{{{include_file './__tests__/readme/alias.spec.ts'}}}
-```
-
 
 ## Module
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.

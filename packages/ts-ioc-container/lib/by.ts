@@ -1,31 +1,13 @@
-import { AliasPredicate, DependencyKey, IContainer, InjectionToken } from './container/IContainer';
-import { DependencyNotFoundError } from './errors/DependencyNotFoundError';
+import { AliasPredicate, IContainer, InjectionToken } from './container/IContainer';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
-export const isPresent = <T>(value: T | null | undefined): value is T => value !== null && value !== undefined;
-
-export const resolveSilently =
-  (c: IContainer, ...args: unknown[]) =>
-  (key: DependencyKey) => {
-    try {
-      return c.resolve(key, { args });
-    } catch (e) {
-      if (e instanceof DependencyNotFoundError) {
-        return undefined;
-      }
-      throw e;
-    }
-  };
 
 export const by = {
   aliases:
     (predicate: AliasPredicate) =>
     (c: IContainer, ...args: unknown[]) =>
-      c
-        .getKeysByAlias(predicate)
-        .map(resolveSilently(c, ...args))
-        .filter(isPresent),
+      c.resolveManyByAlias(predicate, { args }).values(),
 
   /**
    * Get the instance that matches the given alias or fail
@@ -34,8 +16,7 @@ export const by = {
   alias:
     (predicate: AliasPredicate) =>
     (c: IContainer, ...args: unknown[]) => {
-      const key = c.getKeyByAlias(predicate);
-      return c.resolve(key, { args });
+      return c.resolveOneByAlias(predicate, { args });
     },
 
   /**

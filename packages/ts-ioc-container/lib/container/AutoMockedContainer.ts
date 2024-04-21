@@ -1,13 +1,10 @@
 import { AliasPredicate, DependencyKey, IContainer, InjectionToken, ResolveOptions } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
+import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;
-
-  getKeysByAlias(alias: AliasPredicate): DependencyKey[] {
-    return [];
-  }
 
   hasDependency(key: string): boolean {
     return false;
@@ -47,7 +44,15 @@ export abstract class AutoMockedContainer implements IContainer {
     return this;
   }
 
-  getKeyByAlias(alias: AliasPredicate): DependencyKey {
-    throw new MethodNotImplementedError();
+  resolveManyByAlias(
+    predicate: AliasPredicate,
+    options: ResolveOptions = {},
+    result: Map<DependencyKey, unknown> = new Map(),
+  ): Map<DependencyKey, unknown> {
+    return result;
+  }
+
+  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): T {
+    throw new DependencyNotFoundError(`Cannot find by alias`);
   }
 }

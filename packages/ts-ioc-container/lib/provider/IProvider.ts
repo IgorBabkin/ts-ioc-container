@@ -1,4 +1,4 @@
-import { IContainer, Tagged } from '../container/IContainer';
+import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 
@@ -13,12 +13,21 @@ export interface IProvider<T = unknown> {
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T>;
 
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
+
+  matchAliases(predicate: AliasPredicate): boolean;
+
+  addAliases(...aliases: Alias[]): this;
 }
 
 const METADATA_KEY = 'provider';
 export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(METADATA_KEY, mappers);
 export const getTransformers = <T>(Target: constructor<T>) =>
   getMetadata<MapFn<IProvider<T>>[]>(Target, METADATA_KEY) ?? [];
+
+export const alias =
+  (...aliases: Alias[]): MapFn<IProvider> =>
+  (r) =>
+    r.addAliases(...aliases);
 
 export const visible =
   (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>

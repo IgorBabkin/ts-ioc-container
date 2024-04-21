@@ -33,9 +33,9 @@
     - [Singleton](#singleton) `singleton`
     - [Arguments](#arguments) `args`
     - [Visibility](#visibility) `visible`
+    - [Alias](#alias) `alias`
 - [Registration](#registration) `@register(key('someKey'))`
     - [Scope](#scope) `scope`
-    - [Alias](#alias) `alias`
 - [Module](#module)
 - [Hook](#hook) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
@@ -657,6 +657,101 @@ describe('Visibility', function () {
 
 ```
 
+### Alias
+Alias is needed to group keys
+- `@provider(alias('logger'))` helper assigns `logger` alias to registration.
+- `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
+- `Provider.fromClass(Logger).pipe(alias('logger'))`
+
+```typescript
+import 'reflect-metadata';
+import {
+  alias,
+  by,
+  Container,
+  DependencyNotFoundError,
+  inject,
+  MetadataInjector,
+  provider,
+  Registration as R,
+} from 'ts-ioc-container';
+
+describe('alias', () => {
+  const IMiddlewareKey = 'IMiddleware';
+  const middleware = provider(alias(IMiddlewareKey));
+
+  interface IMiddleware {
+    applyTo(application: IApplication): void;
+  }
+
+  interface IApplication {
+    use(module: IMiddleware): void;
+    markMiddlewareAsApplied(name: string): void;
+  }
+
+  @middleware
+  class LoggerMiddleware implements IMiddleware {
+    applyTo(application: IApplication): void {
+      application.markMiddlewareAsApplied('LoggerMiddleware');
+    }
+  }
+
+  @middleware
+  class ErrorHandlerMiddleware implements IMiddleware {
+    applyTo(application: IApplication): void {
+      application.markMiddlewareAsApplied('ErrorHandlerMiddleware');
+    }
+  }
+
+  it('should resolve by some alias', () => {
+    class App implements IApplication {
+      private appliedMiddleware: Set<string> = new Set();
+      constructor(@inject(by.aliases((it) => it.has(IMiddlewareKey))) public middleware: IMiddleware[]) {}
+
+      markMiddlewareAsApplied(name: string): void {
+        this.appliedMiddleware.add(name);
+      }
+
+      isMiddlewareApplied(name: string): boolean {
+        return this.appliedMiddleware.has(name);
+      }
+
+      use(module: IMiddleware): void {
+        module.applyTo(this);
+      }
+
+      run() {
+        for (const module of this.middleware) {
+          module.applyTo(this);
+        }
+      }
+    }
+
+    const container = new Container(new MetadataInjector())
+      .add(R.fromClass(LoggerMiddleware))
+      .add(R.fromClass(ErrorHandlerMiddleware));
+
+    const app = container.resolve(App);
+    app.run();
+
+    expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
+    expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);
+  });
+
+  it('should resolve by some alias', () => {
+    @provider(alias('ILogger'))
+    class FileLogger {}
+
+    const container = new Container(new MetadataInjector()).add(R.fromClass(FileLogger));
+
+    expect(by.alias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
+    expect(() => by.alias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
+  });
+});
+
+```
+
+
 ## Registration
 Registration is provider factory which registers provider in container.
 - `@register(key('logger'))`
@@ -733,101 +828,6 @@ describe('ScopeProvider', function () {
 });
 
 ```
-
-### Alias
-Alias is needed to group keys
-- `@register(alias('logger'))` helper assigns `logger` alias to registration.
-- `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
-- `Registration.fromClass(Logger).addAliases('logger')`
-
-```typescript
-import 'reflect-metadata';
-import {
-  by,
-  Container,
-  inject,
-  MetadataInjector,
-  Registration as R,
-  register,
-  alias,
-  DependencyNotFoundError,
-} from 'ts-ioc-container';
-
-describe('alias', () => {
-  const IMiddlewareKey = 'IMiddleware';
-  const middleware = register(alias(IMiddlewareKey));
-
-  interface IMiddleware {
-    applyTo(application: IApplication): void;
-  }
-
-  interface IApplication {
-    use(module: IMiddleware): void;
-    markMiddlewareAsApplied(name: string): void;
-  }
-
-  @middleware
-  class LoggerMiddleware implements IMiddleware {
-    applyTo(application: IApplication): void {
-      application.markMiddlewareAsApplied('LoggerMiddleware');
-    }
-  }
-
-  @middleware
-  class ErrorHandlerMiddleware implements IMiddleware {
-    applyTo(application: IApplication): void {
-      application.markMiddlewareAsApplied('ErrorHandlerMiddleware');
-    }
-  }
-
-  it('should resolve by some alias', () => {
-    class App implements IApplication {
-      private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(by.aliases((it) => it.has(IMiddlewareKey))) public middleware: IMiddleware[]) {}
-
-      markMiddlewareAsApplied(name: string): void {
-        this.appliedMiddleware.add(name);
-      }
-
-      isMiddlewareApplied(name: string): boolean {
-        return this.appliedMiddleware.has(name);
-      }
-
-      use(module: IMiddleware): void {
-        module.applyTo(this);
-      }
-
-      run() {
-        for (const module of this.middleware) {
-          module.applyTo(this);
-        }
-      }
-    }
-
-    const container = new Container(new MetadataInjector())
-      .add(R.fromClass(LoggerMiddleware))
-      .add(R.fromClass(ErrorHandlerMiddleware));
-
-    const app = container.resolve(App);
-    app.run();
-
-    expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
-    expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);
-  });
-
-  it('should resolve by some alias', () => {
-    @register(alias('ILogger'))
-    class FileLogger {}
-
-    const container = new Container(new MetadataInjector()).add(R.fromClass(FileLogger));
-
-    expect(by.alias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
-    expect(() => by.alias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
-  });
-});
-
-```
-
 
 ## Module
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.

@@ -38,7 +38,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   createScope(...tags: Tag[]): IContainer;
 
-  register(key: DependencyKey, value: IProvider, aliases?: Alias[]): this;
+  register(key: DependencyKey, value: IProvider): this;
 
   add(registration: IRegistration): this;
 
@@ -54,7 +54,11 @@ export interface IContainer extends Resolvable, Tagged {
 
   hasDependency(key: DependencyKey): boolean;
 
-  getKeysByAlias(alias: AliasPredicate): DependencyKey[];
+  resolveManyByAlias(
+    predicate: AliasPredicate,
+    options?: ResolveOptions,
+    result?: Map<DependencyKey, unknown>,
+  ): Map<DependencyKey, unknown>;
 
-  getKeyByAlias(alias: AliasPredicate): DependencyKey;
+  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): T;
 }

@@ -1,4 +1,4 @@
-import { Alias, DependencyKey, IContainer } from '../container/IContainer';
+import { DependencyKey, IContainer } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import { IProvider, ResolveDependency } from '../provider/IProvider';
@@ -23,7 +23,6 @@ export class Registration<T = unknown> implements IRegistration<T> {
     return new Registration(() => new Provider(fn));
   }
 
-  private aliases: string[] = [];
   private mappers: MapFn<IProvider<T>>[] = [];
 
   constructor(
@@ -34,13 +33,6 @@ export class Registration<T = unknown> implements IRegistration<T> {
 
   to(key: DependencyKey): this {
     this.key = key;
-    return this;
-  }
-
-  addAliases(...aliases: Alias[]): this {
-    for (const alias of aliases) {
-      this.aliases.push(alias);
-    }
     return this;
   }
 
@@ -58,7 +50,7 @@ export class Registration<T = unknown> implements IRegistration<T> {
       throw new DependencyMissingKeyError('No key provided for registration');
     }
 
-    container.register(this.key, this.createProvider().pipe(...this.mappers), this.aliases);
+    container.register(this.key, this.createProvider().pipe(...this.mappers));
   }
 
   when(isValidWhen: ScopePredicate): this {

@@ -1,5 +1,4 @@
 import {
-  Alias,
   AliasPredicate,
   DependencyKey,
   IContainer,
@@ -18,7 +17,6 @@ import { IRegistration } from '../registration/IRegistration';
 export class Container implements IContainer {
   isDisposed = false;
   private readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly aliases: Map<DependencyKey, Set<Alias>> = new Map();
   private tags: Set<Tag>;
   private parent: IContainer;
   private scopes = new Set<IContainer>();
@@ -39,14 +37,9 @@ export class Container implements IContainer {
     return this;
   }
 
-  register(key: DependencyKey, provider: IProvider, aliases?: Alias[]): this {
+  register(key: DependencyKey, provider: IProvider): this {
     this.validateContainer();
-
     this.providers.set(key, provider);
-    if (aliases && aliases.length > 0) {
-      this.aliases.set(key, new Set(aliases));
-    }
-
     return this;
   }
 
@@ -109,23 +102,26 @@ export class Container implements IContainer {
     return this.providers.has(key) ?? this.parent.hasDependency(key);
   }
 
-  getKeysByAlias(predicate: AliasPredicate): DependencyKey[] {
-    const result = new Set<DependencyKey>(this.parent.getKeysByAlias(predicate));
-    for (const [key, aliases] of this.aliases.entries()) {
-      if (predicate(aliases)) {
-        result.add(key);
+  resolveManyByAlias(
+    predicate: AliasPredicate,
+    { args = [], child = this }: ResolveOptions = {},
+    result: Map<DependencyKey, unknown> = new Map(),
+  ): Map<DependencyKey, unknown> {
+    for (const [key, provider] of this.providers.entries()) {
+      if (!result.has(key) && provider.matchAliases(predicate) && provider.isVisible(this, child)) {
+        result.set(key, provider.resolve(this, ...args));
       }
     }
-    return Array.from(result);
+    return this.parent.resolveManyByAlias(predicate, { args, child }, result);
   }
 
-  getKeyByAlias(predicate: AliasPredicate): DependencyKey {
-    for (const [key, aliases] of this.aliases.entries()) {
-      if (predicate(aliases)) {
-        return key;
+  resolveOneByAlias<T>(predicate: AliasPredicate, { args = [], child = this }: ResolveOptions = {}): T {
+    for (const [, provider] of this.providers.entries()) {
+      if (provider.matchAliases(predicate) && provider.isVisible(this, child)) {
+        return provider.resolve(this, ...args) as T;
       }
     }
-    return this.parent.getKeyByAlias(predicate);
+    return this.parent.resolveOneByAlias<T>(predicate, { args, child });
   }
 
   /**

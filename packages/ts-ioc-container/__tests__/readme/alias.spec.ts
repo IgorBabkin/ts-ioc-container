@@ -1,18 +1,18 @@
 import 'reflect-metadata';
 import {
+  alias,
   by,
   Container,
+  DependencyNotFoundError,
   inject,
   MetadataInjector,
+  provider,
   Registration as R,
-  register,
-  alias,
-  DependencyNotFoundError,
 } from '../../lib';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
-  const middleware = register(alias(IMiddlewareKey));
+  const middleware = provider(alias(IMiddlewareKey));
 
   interface IMiddleware {
     applyTo(application: IApplication): void;
@@ -73,7 +73,7 @@ describe('alias', () => {
   });
 
   it('should resolve by some alias', () => {
-    @register(alias('ILogger'))
+    @provider(alias('ILogger'))
     class FileLogger {}
 
     const container = new Container(new MetadataInjector()).add(R.fromClass(FileLogger));

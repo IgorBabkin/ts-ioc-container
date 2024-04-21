@@ -14,10 +14,6 @@ import { IRegistration, key } from '../registration/IRegistration';
 export class EmptyContainer implements IContainer {
   isDisposed = false;
 
-  getKeysByAlias(alias: AliasPredicate): DependencyKey[] {
-    return [];
-  }
-
   hasDependency(key: string): boolean {
     return false;
   }
@@ -60,7 +56,15 @@ export class EmptyContainer implements IContainer {
     return this;
   }
 
-  getKeyByAlias(alias: AliasPredicate): DependencyKey {
+  resolveManyByAlias(
+    predicate: AliasPredicate,
+    options: ResolveOptions = {},
+    result: Map<DependencyKey, unknown> = new Map(),
+  ): Map<DependencyKey, unknown> {
+    return result;
+  }
+
+  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): T {
     throw new DependencyNotFoundError(`Cannot find by alias`);
   }
 }

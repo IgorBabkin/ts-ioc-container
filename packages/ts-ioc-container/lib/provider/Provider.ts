@@ -1,8 +1,10 @@
 import { ChildrenVisibilityPredicate, getTransformers, IProvider, ResolveDependency } from './IProvider';
-import { IContainer, Tagged } from '../container/IContainer';
+import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 
 export class Provider<T> implements IProvider<T> {
+  private aliases: Set<Alias> = new Set();
+
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     const transformers = getTransformers(Target);
     return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...transformers);
@@ -33,5 +35,16 @@ export class Provider<T> implements IProvider<T> {
 
   isVisible(parent: Tagged, child: Tagged): boolean {
     return this.isVisibleWhen({ child, isParent: child === parent });
+  }
+
+  matchAliases(predicate: AliasPredicate): boolean {
+    return this.aliases.size > 0 && predicate(this.aliases);
+  }
+
+  addAliases(...aliases: Alias[]): this {
+    for (const alias of aliases) {
+      this.aliases.add(alias);
+    }
+    return this;
   }
 }
