@@ -3,7 +3,7 @@ export interface RouteOptions {
 }
 
 export interface Route<Payload, Response> {
-  handle(payload: Payload, options: RouteOptions): Promise<Response>;
+  handle(payload: Payload): Promise<Response>;
 }
 
 export interface HttpResponse<Payload = unknown> {
