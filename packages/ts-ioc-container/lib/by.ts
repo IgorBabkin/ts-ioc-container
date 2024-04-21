@@ -15,9 +15,8 @@ export const by = {
    */
   alias:
     (predicate: AliasPredicate) =>
-    (c: IContainer, ...args: unknown[]) => {
-      return c.resolveOneByAlias(predicate, { args });
-    },
+    (c: IContainer, ...args: unknown[]) =>
+      c.resolveOneByAlias(predicate, { args }),
 
   /**
    * Get all instances that match the given keys
