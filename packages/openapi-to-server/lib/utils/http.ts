@@ -2,7 +2,9 @@ export interface RouteOptions {
   tags: string[];
 }
 
-export type Route<Payload, Response> = (payload: Payload) => Promise<Response>;
+export interface Route<Payload, Response> {
+  handle(payload: Payload): Promise<Response>;
+}
 
 export interface HttpResponse<Payload = unknown> {
   status: number;
