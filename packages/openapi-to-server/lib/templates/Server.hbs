@@ -16,7 +16,7 @@ import { Ok, Created, Route } from '@ibabkin/openapi-to-server';
 export type Operations = {
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
-    {{operationId}}: (...args: unknown[]) => {{route_name operationId}};
+    {{operationId}}: (...args: any[]) => {{route_name operationId}};
   {{/each}}
 {{/each}}
 }
