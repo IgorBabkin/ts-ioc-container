@@ -1,4 +1,4 @@
-import { Ok, Created, Route } from '@ibabkin/openapi-to-server';
+import { Ok, Created, Route, RouteOptions } from '@ibabkin/openapi-to-server';
 
 // Components
 {{#each components.schemas}}
@@ -16,7 +16,7 @@ import { Ok, Created, Route } from '@ibabkin/openapi-to-server';
 export type Operations = {
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
-    {{operationId}}: {{route_name operationId}};
+    {{operationId}}: (options: RouteOptions) => {{route_name operationId}};
   {{/each}}
 {{/each}}
 }
