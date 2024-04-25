@@ -1,9 +1,9 @@
-import { DependencyKey, IContainerModule, Tagged } from '../container/IContainer';
+import { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { IProvider } from '../provider/IProvider';
 
-export type ScopePredicate = (c: Tagged) => boolean;
+export type ScopePredicate = (s: IContainer) => boolean;
 
 export interface IRegistration<T = unknown> extends IContainerModule {
   when(isValidWhen: ScopePredicate): this;
