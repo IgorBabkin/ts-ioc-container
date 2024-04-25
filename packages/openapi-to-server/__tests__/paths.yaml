@@ -67,3 +67,22 @@
         description: "invalid input, object invalid"
       "409":
         description: an existing item already exists
+
+  delete:
+    tags:
+      - admins
+    summary: deletes an inventory item
+    description: Deletes an item from the system
+    operationId: deleteInventory
+    parameters:
+      - name: id
+        in: path
+        description: pass an optional search string for looking up inventory
+        required: true
+        schema:
+          type: string
+    responses:
+      "204":
+        description: search results matching criteria
+      "400":
+        description: "invalid input, object invalid"

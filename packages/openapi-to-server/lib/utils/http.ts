@@ -18,3 +18,7 @@ export interface Ok<Payload> extends HttpResponse<Payload> {
 export interface Created extends HttpResponse<undefined> {
   status: 201;
 }
+
+export interface NoContent extends HttpResponse<never> {
+  status: 204;
+}
