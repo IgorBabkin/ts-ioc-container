@@ -19,6 +19,6 @@ export interface Created extends HttpResponse<undefined> {
   status: 201;
 }
 
-export interface NoContent extends HttpResponse<never> {
+export interface NoContent extends HttpResponse<undefined> {
   status: 204;
 }
