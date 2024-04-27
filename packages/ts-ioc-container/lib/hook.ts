@@ -1,4 +1,4 @@
-import { ArgsFn } from './provider/ArgsProvider';
+import { ArgsFn } from './provider/IProvider';
 
 export const hook =
   (key: string | symbol, fn: ArgsFn = () => []): MethodDecorator =>

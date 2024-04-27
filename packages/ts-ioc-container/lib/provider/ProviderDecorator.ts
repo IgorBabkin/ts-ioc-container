@@ -1,5 +1,5 @@
 import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
-import { ChildrenVisibilityPredicate, IProvider } from './IProvider';
+import { ArgsFn, ChildrenVisibilityPredicate, IProvider } from './IProvider';
 import { MapFn, pipe } from '../utils';
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
@@ -28,6 +28,11 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
 
   addAliases(...aliases: Alias[]): this {
     this.decorated.addAliases(...aliases);
+    return this;
+  }
+
+  setArgs(argsFn: ArgsFn): this {
+    this.decorated.setArgs(argsFn);
     return this;
   }
 }

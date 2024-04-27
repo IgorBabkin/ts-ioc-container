@@ -1,10 +1,8 @@
-import { ChildrenVisibilityPredicate, getTransformers, IProvider, ResolveDependency } from './IProvider';
+import { ArgsFn, ChildrenVisibilityPredicate, getTransformers, IProvider, ResolveDependency } from './IProvider';
 import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 
 export class Provider<T> implements IProvider<T> {
-  private aliases: Set<Alias> = new Set();
-
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     const transformers = getTransformers(Target);
     return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...transformers);
@@ -15,21 +13,27 @@ export class Provider<T> implements IProvider<T> {
     return new Provider(() => value).pipe(...mappers);
   }
 
-  constructor(
-    private readonly resolveDependency: ResolveDependency<T>,
-    private isVisibleWhen: ChildrenVisibilityPredicate = () => true,
-  ) {}
+  private readonly aliases: Set<Alias> = new Set();
+  private argsFn: ArgsFn = () => [];
+  private isVisibleWhen: ChildrenVisibilityPredicate = () => true;
+
+  constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
     return pipe(...mappers)(this);
   }
 
   resolve(container: IContainer, ...args: unknown[]): T {
-    return this.resolveDependency(container, ...args);
+    return this.resolveDependency(container, ...this.argsFn(container, ...args), ...args);
   }
 
   setVisibility(predicate: ChildrenVisibilityPredicate): this {
     this.isVisibleWhen = predicate;
+    return this;
+  }
+
+  setArgs(argsFn: ArgsFn): this {
+    this.argsFn = argsFn;
     return this;
   }
 

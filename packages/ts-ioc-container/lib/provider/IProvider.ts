@@ -5,6 +5,16 @@ import { getMetadata, setMetadata } from '../metadata';
 export type ResolveDependency<T = unknown> = (container: IContainer, ...args: unknown[]) => T;
 export type ChildrenVisibilityPredicate = (options: { child: Tagged; isParent: boolean }) => boolean;
 
+export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
+
+export function args<T = unknown>(...extraArgs: unknown[]): MapFn<IProvider<T>> {
+  return (provider) => provider.setArgs(() => extraArgs);
+}
+
+export function argsFn<T = unknown>(fn: ArgsFn): MapFn<IProvider<T>> {
+  return (provider) => provider.setArgs(fn);
+}
+
 export interface IProvider<T = unknown> {
   resolve(container: IContainer, ...args: unknown[]): T;
 
@@ -13,6 +23,8 @@ export interface IProvider<T = unknown> {
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T>;
 
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
+
+  setArgs(argsFn: ArgsFn): this;
 
   matchAliases(predicate: AliasPredicate): boolean;
 
