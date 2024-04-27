@@ -1,6 +1,5 @@
 import { IContainer } from '../../container/IContainer';
-import { ProviderDecorator } from '../ProviderDecorator';
-import { IProvider } from '../IProvider';
+import { IProvider, ProviderDecorator } from '../IProvider';
 import { MapFn } from '../../utils';
 import { Cache } from './Cache';
 import { SingleCache } from './SingleCache';

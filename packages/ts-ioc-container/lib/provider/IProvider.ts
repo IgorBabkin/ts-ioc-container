@@ -1,5 +1,5 @@
 import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
-import { constructor, MapFn } from '../utils';
+import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 
 export type ResolveDependency<T = unknown> = (container: IContainer, ...args: unknown[]) => T;
@@ -45,3 +45,38 @@ export const visible =
   (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>
   (p) =>
     p.setVisibility(isVisibleWhen);
+
+export abstract class ProviderDecorator<T> implements IProvider<T> {
+  protected constructor(private decorated: IProvider<T>) {}
+
+  setVisibility(predicate: ChildrenVisibilityPredicate): this {
+    this.decorated.setVisibility(predicate);
+    return this;
+  }
+
+  isVisible(parent: IContainer, child: Tagged): boolean {
+    return this.decorated.isVisible(parent, child);
+  }
+
+  resolve(container: IContainer, ...args: unknown[]): T {
+    return this.decorated.resolve(container, ...args);
+  }
+
+  pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
+    return pipe(...mappers)(this);
+  }
+
+  matchAliases(predicate: AliasPredicate): boolean {
+    return this.decorated.matchAliases(predicate);
+  }
+
+  addAliases(...aliases: Alias[]): this {
+    this.decorated.addAliases(...aliases);
+    return this;
+  }
+
+  setArgs(argsFn: ArgsFn): this {
+    this.decorated.setArgs(argsFn);
+    return this;
+  }
+}
