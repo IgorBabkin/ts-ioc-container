@@ -12454,7 +12454,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-ioc-container@^31.7.0, ts-ioc-container@workspace:packages/ts-ioc-container":
+"ts-ioc-container@^31.8.0, ts-ioc-container@workspace:packages/ts-ioc-container":
   version: 0.0.0-use.local
   resolution: "ts-ioc-container@workspace:packages/ts-ioc-container"
   dependencies:
@@ -12598,7 +12598,7 @@ __metadata:
     moq.ts: ^7.3.4
     nodemon: ^2.0.13
     rimraf: 3.0.2
-    ts-ioc-container: ^31.7.0
+    ts-ioc-container: ^31.8.0
     ts-jest: 27.0.5
     typescript: 5.4.3
   peerDependencies:
