@@ -52,7 +52,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return result;
   }
 
-  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): T {
+  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T] {
     throw new DependencyNotFoundError(`Cannot find by alias`);
   }
 }

@@ -1,22 +1,48 @@
-import { AliasPredicate, IContainer, InjectionToken } from './container/IContainer';
+import { AliasPredicate, DependencyKey, IContainer, InjectionToken } from './container/IContainer';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
 
+export type IMemo = Map<string, DependencyKey[]>;
+export const IMemoKey = Symbol('IMemo');
+
 export const by = {
   aliases:
-    (predicate: AliasPredicate) =>
-    (c: IContainer, ...args: unknown[]) =>
-      c.resolveManyByAlias(predicate, { args }).values(),
+    (predicate: AliasPredicate, memoKey?: string) =>
+    (c: IContainer, ...args: unknown[]) => {
+      if (memoKey) {
+        const memo = c.resolve<IMemo>(IMemoKey);
+        const memoized = memo.get(memoKey);
+        if (memoized) {
+          return memoized.map((key) => c.resolve(key, { args }));
+        }
+        const result = c.resolveManyByAlias(predicate, { args });
+        memo.set(memoKey, Array.from(result.keys()));
+        return Array.from(result.values());
+      }
+      return Array.from(c.resolveManyByAlias(predicate, { args }).values());
+    },
 
   /**
    * Get the instance that matches the given alias or fail
    * @param predicate
+   * @param memoKey
    */
   alias:
-    (predicate: AliasPredicate) =>
-    (c: IContainer, ...args: unknown[]) =>
-      c.resolveOneByAlias(predicate, { args }),
+    (predicate: AliasPredicate, memoKey?: string) =>
+    (c: IContainer, ...args: unknown[]) => {
+      if (memoKey) {
+        const memo = c.resolve<IMemo>(IMemoKey);
+        const memoized = memo.get(memoKey);
+        if (memoized) {
+          return c.resolve(memoized[0], { args });
+        }
+        const [key, result] = c.resolveOneByAlias(predicate, { args });
+        memo.set(memoKey, [key]);
+        return result;
+      }
+      return c.resolveOneByAlias(predicate, { args })[1];
+    },
 
   /**
    * Get all instances that match the given keys

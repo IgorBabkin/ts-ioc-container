@@ -37,7 +37,7 @@ export { MetadataInjector, inject } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 export { getHooks, hook, hasHooks } from './hook';
-export { by, InstancePredicate } from './by';
+export { by, InstancePredicate, IMemo, IMemoKey } from './by';
 export {
   setMetadata,
   getMetadata,

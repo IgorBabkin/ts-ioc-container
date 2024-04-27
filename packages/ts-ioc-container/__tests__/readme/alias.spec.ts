@@ -4,10 +4,16 @@ import {
   by,
   Container,
   DependencyNotFoundError,
+  IMemo,
+  IMemoKey,
   inject,
+  key,
   MetadataInjector,
+  Provider,
   provider,
+  register,
   Registration as R,
+  scope,
 } from '../../lib';
 
 describe('alias', () => {
@@ -80,5 +86,54 @@ describe('alias', () => {
 
     expect(by.alias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
     expect(() => by.alias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
+  });
+
+  it('should resolve by memoized alias', () => {
+    @provider(alias('ILogger'))
+    @register(scope((s) => s.hasTag('root')))
+    class FileLogger {}
+
+    @provider(alias('ILogger'))
+    @register(scope((s) => s.hasTag('child')))
+    class DbLogger {}
+
+    const container = new Container(new MetadataInjector(), { tags: ['root'] })
+      .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
+      .add(R.fromClass(FileLogger))
+      .add(R.fromClass(DbLogger));
+
+    const result1 = by.alias((aliases) => aliases.has('ILogger'), 'ILogger')(container);
+    const child = container.createScope('child');
+    const result2 = by.alias((aliases) => aliases.has('ILogger'), 'ILogger')(child);
+    const result3 = by.alias((aliases) => aliases.has('ILogger'))(child);
+
+    expect(result1).toBeInstanceOf(FileLogger);
+    expect(result2).toBeInstanceOf(FileLogger);
+    expect(result3).toBeInstanceOf(DbLogger);
+  });
+
+  it('should resolve by memoized aliases', () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    interface ILogger {}
+
+    @provider(alias('ILogger'))
+    class FileLogger implements ILogger {}
+
+    @provider(alias('ILogger'))
+    class DbLogger implements ILogger {}
+
+    class App {
+      constructor(@inject(by.aliases((it) => it.has('ILogger'), 'ILogger')) public loggers: ILogger[]) {}
+    }
+
+    const container = new Container(new MetadataInjector())
+      .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
+      .add(R.fromClass(FileLogger));
+
+    const loggers = container.resolve(App).loggers;
+    container.add(R.fromClass(DbLogger));
+    const loggers2 = container.resolve(App).loggers;
+
+    expect(loggers).toEqual(loggers2);
   });
 });

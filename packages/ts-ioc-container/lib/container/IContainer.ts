@@ -60,5 +60,5 @@ export interface IContainer extends Resolvable, Tagged {
     result?: Map<DependencyKey, unknown>,
   ): Map<DependencyKey, unknown>;
 
-  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): T;
+  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T];
 }

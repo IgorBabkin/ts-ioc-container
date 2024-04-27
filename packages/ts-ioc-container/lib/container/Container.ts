@@ -115,10 +115,13 @@ export class Container implements IContainer {
     return this.parent.resolveManyByAlias(predicate, { args, child }, result);
   }
 
-  resolveOneByAlias<T>(predicate: AliasPredicate, { args = [], child = this }: ResolveOptions = {}): T {
-    for (const [, provider] of this.providers.entries()) {
+  resolveOneByAlias<T>(
+    predicate: AliasPredicate,
+    { args = [], child = this }: ResolveOptions = {},
+  ): [DependencyKey, T] {
+    for (const [key, provider] of this.providers.entries()) {
       if (provider.matchAliases(predicate) && provider.isVisible(this, child)) {
-        return provider.resolve(this, ...args) as T;
+        return [key, provider.resolve(this, ...args) as T];
       }
     }
     return this.parent.resolveOneByAlias<T>(predicate, { args, child });
