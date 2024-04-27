@@ -1,4 +1,4 @@
-import { AliasPredicate, DependencyKey, IContainer, InjectionToken } from './container/IContainer';
+import { DependencyKey, IContainer, InjectionToken } from './container/IContainer';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
@@ -8,40 +8,44 @@ export const IMemoKey = Symbol('IMemo');
 
 export const by = {
   aliases:
-    (predicate: AliasPredicate, memoKey?: string) =>
+    (predicate: (it: Set<string>, s: IContainer) => boolean, memoize?: (c: IContainer) => string) =>
     (c: IContainer, ...args: unknown[]) => {
+      const predicateFn = (aliases: Set<string>) => predicate(aliases, c);
+      const memoKey = memoize?.(c);
       if (memoKey) {
         const memo = c.resolve<IMemo>(IMemoKey);
         const memoized = memo.get(memoKey);
         if (memoized) {
           return memoized.map((key) => c.resolve(key, { args }));
         }
-        const result = c.resolveManyByAlias(predicate, { args });
+        const result = c.resolveManyByAlias(predicateFn, { args });
         memo.set(memoKey, Array.from(result.keys()));
         return Array.from(result.values());
       }
-      return Array.from(c.resolveManyByAlias(predicate, { args }).values());
+      return Array.from(c.resolveManyByAlias(predicateFn, { args }).values());
     },
 
   /**
    * Get the instance that matches the given alias or fail
    * @param predicate
-   * @param memoKey
+   * @param memoize
    */
   alias:
-    (predicate: AliasPredicate, memoKey?: string) =>
+    (predicate: (it: Set<string>, s: IContainer) => boolean, memoize?: (c: IContainer) => string) =>
     (c: IContainer, ...args: unknown[]) => {
+      const predicateFn = (aliases: Set<string>) => predicate(aliases, c);
+      const memoKey = memoize?.(c);
       if (memoKey) {
         const memo = c.resolve<IMemo>(IMemoKey);
         const memoized = memo.get(memoKey);
         if (memoized) {
           return c.resolve(memoized[0], { args });
         }
-        const [key, result] = c.resolveOneByAlias(predicate, { args });
+        const [key, result] = c.resolveOneByAlias(predicateFn, { args });
         memo.set(memoKey, [key]);
         return result;
       }
-      return c.resolveOneByAlias(predicate, { args })[1];
+      return c.resolveOneByAlias(predicateFn, { args })[1];
     },
 
   /**

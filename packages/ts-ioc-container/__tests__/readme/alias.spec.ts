@@ -7,7 +7,6 @@ import {
   IMemo,
   IMemoKey,
   inject,
-  key,
   MetadataInjector,
   Provider,
   provider,
@@ -15,6 +14,7 @@ import {
   Registration as R,
   scope,
 } from '../../lib';
+import { constant } from '../../lib/utils.ts';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
@@ -102,9 +102,9 @@ describe('alias', () => {
       .add(R.fromClass(FileLogger))
       .add(R.fromClass(DbLogger));
 
-    const result1 = by.alias((aliases) => aliases.has('ILogger'), 'ILogger')(container);
+    const result1 = by.alias((aliases) => aliases.has('ILogger'), constant('ILogger'))(container);
     const child = container.createScope('child');
-    const result2 = by.alias((aliases) => aliases.has('ILogger'), 'ILogger')(child);
+    const result2 = by.alias((aliases) => aliases.has('ILogger'), constant('ILogger'))(child);
     const result3 = by.alias((aliases) => aliases.has('ILogger'))(child);
 
     expect(result1).toBeInstanceOf(FileLogger);
@@ -123,7 +123,7 @@ describe('alias', () => {
     class DbLogger implements ILogger {}
 
     class App {
-      constructor(@inject(by.aliases((it) => it.has('ILogger'), 'ILogger')) public loggers: ILogger[]) {}
+      constructor(@inject(by.aliases((it) => it.has('ILogger'), constant('ILogger'))) public loggers: ILogger[]) {}
     }
 
     const container = new Container(new MetadataInjector())
