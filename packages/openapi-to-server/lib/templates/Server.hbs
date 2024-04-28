@@ -1,4 +1,4 @@
-import { Ok, Created, Route, NoContent } from '@ibabkin/openapi-to-server';
+import { Route, HttpResponse } from '@ibabkin/openapi-to-server';
 
 // Components
 {{#each components.schemas}}
@@ -21,3 +21,15 @@ export type Operations = {
 {{/each}}
 }
 
+type RoutesPayloads = {
+{{#each paths as |path url|}}
+  {{#each (get_methods_obj path)}}
+    {{operationId}}: {{payload_name operationId}};
+  {{/each}}
+{{/each}}
+}
+
+// Context
+export interface RequestContext {
+  getUrl<Key extends keyof RoutesPayloads>(key: Key, payload: RoutesPayloads[Key]): string;
+}

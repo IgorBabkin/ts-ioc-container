@@ -63,6 +63,11 @@
     responses:
       "201":
         description: item created
+        headers:
+          Location:
+            description: The location of the created resource
+            schema:
+              type: string
       "400":
         description: "invalid input, object invalid"
       "409":
