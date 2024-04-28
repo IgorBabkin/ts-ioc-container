@@ -9,6 +9,7 @@ export interface HttpHeaders {
 export interface HttpResponse {
   status: number;
   headers: Partial<HttpHeaders>;
+  body?: string;
 }
 
 export interface Route<Payload, Response extends HttpResponse> {
