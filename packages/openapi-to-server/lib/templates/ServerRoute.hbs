@@ -32,9 +32,6 @@ export interface {{response_name operationId}} extends HttpResponse {
 {{#if (get_value_by_key responses '200.content.application/json.schema')}}
   body: {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '200.content.application/json.schema')}}};
 {{/if}}
-{{#if (get_value_by_key responses '201.content.application/json.schema')}}
-  body: {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '201.content.application/json.schema')}}};
-{{/if}}
 }
 
 {{#if (get_value_by_key responses '200')}}
