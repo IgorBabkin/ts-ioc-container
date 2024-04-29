@@ -21,7 +21,7 @@ export type Operations = {
 {{/each}}
 }
 
-type RoutesPayloads = {
+export type RoutesPayloads = {
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
     {{operationId}}: {{payload_name operationId}};
