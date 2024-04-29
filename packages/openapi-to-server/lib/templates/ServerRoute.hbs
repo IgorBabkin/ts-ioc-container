@@ -16,16 +16,16 @@ export interface {{response_name operationId}} extends HttpResponse {
 {{#if (get_value_by_key responses '200')}}
   status: 200;
 {{/if}}
-{{#if (get_value_by_key responses '201')}}
-  status: 201;
+{{#if (get_value_by_key responses '302')}}
+  status: 302;
 {{/if}}
 {{#if (get_value_by_key responses '204')}}
   status: 204;
 {{/if}}
 
   headers: {
-  {{#if (get_value_by_key responses '201.headers.Location.schema')}}
-    Location: {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '201.headers.Location.schema')}}}
+  {{#if (get_value_by_key responses '302.headers.Location.schema')}}
+    Location: {{{render_template 'JsonSchema.hbs' (get_value_by_key responses '302.headers.Location.schema')}}}
   {{/if}}
   };
 
@@ -36,7 +36,7 @@ export interface {{response_name operationId}} extends HttpResponse {
 
 {{#if (get_value_by_key responses '200')}}
 export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}
-{{else if (get_value_by_key responses '201')}}
+{{else if (get_value_by_key responses '302')}}
 export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}
 {{else if (get_value_by_key responses '204')}}
 export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}

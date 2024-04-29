@@ -61,7 +61,7 @@
           schema:
             $ref: '#/components/schemas/InventoryItem'
     responses:
-      "201":
+      "302":
         description: item created
         content:
           application/json:

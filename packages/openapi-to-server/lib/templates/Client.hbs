@@ -29,15 +29,6 @@ export class ApiClient {
     {{/if}}
     });
 
-  {{#if (get_value_by_key this 'responses.201.headers.Location')}}
-    if (response.status === 201 && response.headers.location) {
-      return await this.httpClient.request({
-        method: 'get',
-        url: response.headers.location,
-      });
-    }
-  {{/if}}
-
     return response.data;
   }
   {{/each}}
