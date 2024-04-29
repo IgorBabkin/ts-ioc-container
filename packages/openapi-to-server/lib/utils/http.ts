@@ -19,5 +19,5 @@ export interface HttpResponse {
 }
 
 export interface Route<Payload, Response extends HttpResponse> {
-  handle(payload: Payload, options: RouteOptions): Promise<Response>;
+  handle(payload: Payload): Promise<Response>;
 }
