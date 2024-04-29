@@ -14,13 +14,13 @@ export type {{payload_name operationId}} = {
 
 export interface {{response_name operationId}} extends HttpResponse {
 {{#if (get_value_by_key responses '200')}}
-  status: 200;
+  status: HttpStatus.OK;
 {{/if}}
 {{#if (get_value_by_key responses '302')}}
-  status: 302;
+  status: HttpStatus.Found;
 {{/if}}
 {{#if (get_value_by_key responses '204')}}
-  status: 204;
+  status: HttpStatus.NoContent;
 {{/if}}
 
   headers: {

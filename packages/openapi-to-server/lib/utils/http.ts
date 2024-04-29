@@ -6,8 +6,14 @@ export interface HttpHeaders {
   Location: string;
 }
 
+export enum HttpStatus {
+  OK = 200,
+  NoContent = 204,
+  Found = 302,
+}
+
 export interface HttpResponse {
-  status: number;
+  status: HttpStatus;
   headers: Partial<HttpHeaders>;
   body?: unknown;
 }
