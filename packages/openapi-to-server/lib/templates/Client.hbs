@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosResponse } from 'axios';
 import { createUrl, Payload } from '@ibabkin/openapi-to-server';
 
 // Components
@@ -20,7 +20,7 @@ export class ApiClient {
 
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
-  async {{operationId}}(data: {{payload_name operationId}}): Promise<{{#if (get_value_by_key responses '200')}}{{response_name operationId}}{{else}}void{{/if}}> {
+  async {{operationId}}(data: {{payload_name operationId}}): Promise<{{response_name operationId}}> {
     const response = await this.httpClient.request({
       method: '{{@key}}',
       url: createUrl('{{url}}', data),
@@ -28,6 +28,16 @@ export class ApiClient {
       data: data.body,
     {{/if}}
     });
+
+  {{#if (get_value_by_key this 'responses.201.headers.Location')}}
+    if (response.status === 201 && response.headers.location) {
+      return await this.httpClient.request({
+        method: 'get',
+        url: response.headers.location,
+      });
+    }
+  {{/if}}
+
     return response.data;
   }
   {{/each}}

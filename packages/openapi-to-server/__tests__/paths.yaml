@@ -63,6 +63,10 @@
     responses:
       "201":
         description: item created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryItem'
         headers:
           Location:
             description: The location of the created resource
