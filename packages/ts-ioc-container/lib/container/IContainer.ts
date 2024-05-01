@@ -16,7 +16,7 @@ export function isConstructor<T>(token: InjectionToken<T>): token is constructor
 
 export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 
-export type ResolveOptions = { args?: unknown[]; child?: Tagged };
+export type ResolveOptions = { args?: unknown[]; child?: Tagged; lazy?: boolean };
 
 export interface Resolvable {
   resolve<T>(key: InjectionToken<T>, options?: ResolveOptions): T;

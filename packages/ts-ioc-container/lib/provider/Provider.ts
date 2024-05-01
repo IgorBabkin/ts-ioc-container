@@ -1,11 +1,18 @@
-import { ArgsFn, ChildrenVisibilityPredicate, getTransformers, IProvider, ResolveDependency } from './IProvider';
+import {
+  ArgsFn,
+  ChildrenVisibilityPredicate,
+  getTransformers,
+  IProvider,
+  ProviderResolveOptions,
+  ResolveDependency,
+} from './IProvider';
 import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     const transformers = getTransformers(Target);
-    return new Provider((container, ...args) => container.resolve(Target, { args })).pipe(...transformers);
+    return new Provider((container, options) => container.resolve(Target, options)).pipe(...transformers);
   }
 
   static fromValue<T>(value: T): IProvider<T> {
@@ -15,6 +22,7 @@ export class Provider<T> implements IProvider<T> {
 
   private readonly aliases: Set<Alias> = new Set();
   private argsFn: ArgsFn = () => [];
+  private isLazy = false;
   private isVisibleWhen: ChildrenVisibilityPredicate = () => true;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
@@ -23,12 +31,20 @@ export class Provider<T> implements IProvider<T> {
     return pipe(...mappers)(this);
   }
 
-  resolve(container: IContainer, ...args: unknown[]): T {
-    return this.resolveDependency(container, ...this.argsFn(container, ...args), ...args);
+  resolve(container: IContainer, { args, lazy }: ProviderResolveOptions): T {
+    return this.resolveDependency(container, {
+      args: [...this.argsFn(container, ...args), ...args],
+      lazy: lazy ?? this.isLazy ?? false,
+    });
   }
 
   setVisibility(predicate: ChildrenVisibilityPredicate): this {
     this.isVisibleWhen = predicate;
+    return this;
+  }
+
+  setLazy(lazy: boolean): this {
+    this.isLazy = lazy;
     return this;
   }
 

@@ -99,7 +99,7 @@ describe('Basic usage', function () {
 
   it('should inject multiple dependencies', function () {
     class App {
-      constructor(@inject(by.keys('ILogger1', 'ILogger2')) public loggers: Logger[]) {}
+      constructor(@inject(by.keys(['ILogger1', 'ILogger2'])) public loggers: Logger[]) {}
     }
 
     const container = new Container(new MetadataInjector())
@@ -770,9 +770,9 @@ describe('alias', () => {
       .add(R.fromClass(FileLogger))
       .add(R.fromClass(DbLogger));
 
-    const result1 = by.alias((aliases) => aliases.has('ILogger'), constant('ILogger'))(container);
+    const result1 = by.alias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(container);
     const child = container.createScope('child');
-    const result2 = by.alias((aliases) => aliases.has('ILogger'), constant('ILogger'))(child);
+    const result2 = by.alias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(child);
     const result3 = by.alias((aliases) => aliases.has('ILogger'))(child);
 
     expect(result1).toBeInstanceOf(FileLogger);
@@ -791,7 +791,9 @@ describe('alias', () => {
     class DbLogger implements ILogger {}
 
     class App {
-      constructor(@inject(by.aliases((it) => it.has('ILogger'), constant('ILogger'))) public loggers: ILogger[]) {}
+      constructor(
+        @inject(by.aliases((it) => it.has('ILogger'), { memoize: constant('ILogger') })) public loggers: ILogger[],
+      ) {}
     }
 
     const container = new Container(new MetadataInjector())

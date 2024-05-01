@@ -1,5 +1,5 @@
 import { IContainer } from '../../container/IContainer';
-import { IProvider, ProviderDecorator } from '../IProvider';
+import { IProvider, ProviderDecorator, ProviderResolveOptions } from '../IProvider';
 import { MapFn } from '../../utils';
 import { Cache } from './Cache';
 import { SingleCache } from './SingleCache';
@@ -16,11 +16,11 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     super(provider);
   }
 
-  resolve(container: IContainer, ...args: unknown[]): T {
-    const key = this.cache.getKey(...args);
+  resolve(container: IContainer, options: ProviderResolveOptions): T {
+    const key = this.cache.getKey(...options.args);
 
     if (!this.cache.hasValue(key)) {
-      this.cache.setValue(key, this.provider.resolve(container, ...args));
+      this.cache.setValue(key, this.provider.resolve(container, options));
     }
 
     return this.cache.getValue(key);

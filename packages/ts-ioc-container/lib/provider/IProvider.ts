@@ -2,7 +2,8 @@ import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContain
 import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 
-export type ResolveDependency<T = unknown> = (container: IContainer, ...args: unknown[]) => T;
+export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
+export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
 export type ChildrenVisibilityPredicate = (options: { child: Tagged; isParent: boolean }) => boolean;
 
 export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
@@ -15,8 +16,10 @@ export function argsFn<T = unknown>(fn: ArgsFn): MapFn<IProvider<T>> {
   return (provider) => provider.setArgs(fn);
 }
 
+export const lazy = <T>(provider: IProvider<T>): IProvider<T> => provider.setLazy(true);
+
 export interface IProvider<T = unknown> {
-  resolve(container: IContainer, ...args: unknown[]): T;
+  resolve(container: IContainer, options: ProviderResolveOptions): T;
 
   isVisible(parent: Tagged, child: Tagged): boolean;
 
@@ -29,6 +32,8 @@ export interface IProvider<T = unknown> {
   matchAliases(predicate: AliasPredicate): boolean;
 
   addAliases(...aliases: Alias[]): this;
+
+  setLazy(lazy: boolean): this;
 }
 
 const METADATA_KEY = 'provider';
@@ -58,8 +63,8 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.isVisible(parent, child);
   }
 
-  resolve(container: IContainer, ...args: unknown[]): T {
-    return this.decorated.resolve(container, ...args);
+  resolve(container: IContainer, options: ProviderResolveOptions): T {
+    return this.decorated.resolve(container, options);
   }
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
@@ -77,6 +82,11 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
 
   setArgs(argsFn: ArgsFn): this {
     this.decorated.setArgs(argsFn);
+    return this;
+  }
+
+  setLazy(lazy: boolean): this {
+    this.decorated.setLazy(lazy);
     return this;
   }
 }

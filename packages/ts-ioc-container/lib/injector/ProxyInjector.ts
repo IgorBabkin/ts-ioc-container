@@ -1,4 +1,4 @@
-import { IInjector } from './IInjector';
+import { IInjector, InjectOptions } from './IInjector';
 import { IContainer } from '../container/IContainer';
 import { constructor } from '../utils';
 
@@ -10,8 +10,8 @@ function getProp(target: object, key: string | symbol): unknown {
 
 export class ProxyInjector implements IInjector {
   // eslint-disable-next-line @typescript-eslint/ban-types
-  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: object[]): T {
-    const args = deps.reduce((acc, it) => ({ ...acc, ...it }), {});
+  resolve<T>(container: IContainer, Target: constructor<T>, { args: deps }: InjectOptions): T {
+    const args = (deps as object[]).reduce((acc, it) => ({ ...acc, ...it }), {});
     const proxy = new Proxy(
       {},
       {

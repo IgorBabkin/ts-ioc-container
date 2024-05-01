@@ -1,4 +1,4 @@
-import { IInjector } from './IInjector';
+import { IInjector, InjectOptions } from './IInjector';
 import { IContainer } from '../container/IContainer';
 import { constant, constructor, fillEmptyIndexes } from '../utils';
 import { setParameterMetadata, getParameterMetadata } from '../metadata';
@@ -10,7 +10,7 @@ const getInjectFns = (Target: constructor<unknown>) => getParameterMetadata(META
 export const inject = (fn: InjectFn): ParameterDecorator => setParameterMetadata(METADATA_KEY, fn);
 
 export class MetadataInjector implements IInjector {
-  resolve<T>(container: IContainer, Target: constructor<T>, ...deps: unknown[]): T {
+  resolve<T>(container: IContainer, Target: constructor<T>, { args: deps }: InjectOptions): T {
     const injectionFns = getInjectFns(Target);
     const args = fillEmptyIndexes(injectionFns, deps.map(constant)).map((fn) => fn(container));
     return new Target(...args);

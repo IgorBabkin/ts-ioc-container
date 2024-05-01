@@ -1,5 +1,5 @@
 import { IContainer } from '../container/IContainer';
-import { IProvider, ProviderDecorator } from './IProvider';
+import { IProvider, ProviderDecorator, ProviderResolveOptions } from './IProvider';
 
 export type DecorateFn<Instance> = (dep: Instance, scope: IContainer) => Instance;
 
@@ -11,8 +11,8 @@ export class DecoratorProvider<Instance> extends ProviderDecorator<Instance> {
     super(provider);
   }
 
-  resolve(scope: IContainer, ...args: unknown[]): Instance {
-    const dependency = this.provider.resolve(scope, ...args);
+  resolve(scope: IContainer, options: ProviderResolveOptions): Instance {
+    const dependency = this.provider.resolve(scope, options);
     return this.decorateFn(dependency, scope);
   }
 }

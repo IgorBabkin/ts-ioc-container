@@ -8,11 +8,12 @@ import {
   ResolveOptions,
   Tag,
 } from './IContainer';
-import { IInjector } from '../injector/IInjector';
+import { IInjector, InjectOptions } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { IRegistration } from '../registration/IRegistration';
+import { constructor, lazyInstance } from '../utils';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -43,19 +44,25 @@ export class Container implements IContainer {
     return this;
   }
 
-  resolve<T>(token: InjectionToken<T>, { args = [], child = this }: ResolveOptions = {}): T {
+  resolve<T>(token: InjectionToken<T>, { args = [], child = this, lazy }: ResolveOptions = {}): T {
     this.validateContainer();
 
     if (isConstructor(token)) {
-      const instance = this.injector.resolve(this, token, ...args);
-      this.instances.add(instance);
-      return instance;
+      return lazy
+        ? lazyInstance(() => this.resolveByInjector(token, { args }))
+        : this.resolveByInjector(token, { args });
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
     return provider?.isVisible(this, child)
-      ? provider.resolve(this, ...args)
-      : this.parent.resolve<T>(token, { args, child });
+      ? provider.resolve(this, { args, lazy })
+      : this.parent.resolve<T>(token, { args, child, lazy });
+  }
+
+  private resolveByInjector<T>(token: constructor<T>, options: InjectOptions): T {
+    const instance = this.injector.resolve(this, token, options);
+    this.instances.add(instance);
+    return instance;
   }
 
   createScope(...tags: Tag[]): Container {
@@ -104,27 +111,27 @@ export class Container implements IContainer {
 
   resolveManyByAlias(
     predicate: AliasPredicate,
-    { args = [], child = this }: ResolveOptions = {},
+    { args = [], child = this, lazy }: ResolveOptions = {},
     result: Map<DependencyKey, unknown> = new Map(),
   ): Map<DependencyKey, unknown> {
     for (const [key, provider] of this.providers.entries()) {
       if (!result.has(key) && provider.matchAliases(predicate) && provider.isVisible(this, child)) {
-        result.set(key, provider.resolve(this, ...args));
+        result.set(key, provider.resolve(this, { args, lazy }));
       }
     }
-    return this.parent.resolveManyByAlias(predicate, { args, child }, result);
+    return this.parent.resolveManyByAlias(predicate, { args, child, lazy }, result);
   }
 
   resolveOneByAlias<T>(
     predicate: AliasPredicate,
-    { args = [], child = this }: ResolveOptions = {},
+    { args = [], child = this, lazy }: ResolveOptions = {},
   ): [DependencyKey, T] {
     for (const [key, provider] of this.providers.entries()) {
       if (provider.matchAliases(predicate) && provider.isVisible(this, child)) {
-        return [key, provider.resolve(this, ...args) as T];
+        return [key, provider.resolve(this, { args, lazy }) as T];
       }
     }
-    return this.parent.resolveOneByAlias<T>(predicate, { args, child });
+    return this.parent.resolveOneByAlias<T>(predicate, { args, child, lazy });
   }
 
   /**

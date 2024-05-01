@@ -18,7 +18,7 @@ describe('Basic usage', function () {
 
   it('should inject multiple dependencies', function () {
     class App {
-      constructor(@inject(by.keys('ILogger1', 'ILogger2')) public loggers: Logger[]) {}
+      constructor(@inject(by.keys(['ILogger1', 'ILogger2'])) public loggers: Logger[]) {}
     }
 
     const container = new Container(new MetadataInjector())
