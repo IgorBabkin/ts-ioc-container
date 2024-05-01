@@ -34,7 +34,8 @@ export interface IProvider<T = unknown> {
 }
 
 const METADATA_KEY = 'provider';
-export const provider = (...mappers: MapFn<IProvider>[]): ClassDecorator => setMetadata(METADATA_KEY, mappers);
+export const provider = <Instance>(...mappers: MapFn<IProvider<Instance>>[]): ClassDecorator =>
+  setMetadata(METADATA_KEY, mappers);
 export const getTransformers = <T>(Target: constructor<T>) =>
   getMetadata<MapFn<IProvider<T>>[]>(Target, METADATA_KEY) ?? [];
 

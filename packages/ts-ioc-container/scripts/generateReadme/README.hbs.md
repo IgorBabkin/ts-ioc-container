@@ -25,6 +25,7 @@
     - [Scope](#scope) `tags`
     - [Instances](#instances)
     - [Dispose](#dispose)
+    - [Lazy](#lazy)
 - [Injector](#injector)
     - [Metadata](#metadata) `@inject`
     - [Simple](#simple)
@@ -34,7 +35,7 @@
     - [Arguments](#arguments) `args`
     - [Visibility](#visibility) `visible`
     - [Alias](#alias) `alias`
-    - [Lazy](#lazy) `lazy`
+    - [Decorator](#decorator)
 - [Registration](#registration) `@register`
     - [Key](#key) `key`
     - [Scope](#scope) `scope`
@@ -111,6 +112,13 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 
 ```typescript
 {{{include_file './__tests__/readme/disposing.spec.ts'}}}
+```
+
+### Lazy
+Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
+
+```typescript
+{{{include_file './__tests__/readme/lazy.spec.ts'}}}
 ```
 
 ## Injector
@@ -193,12 +201,12 @@ Alias is needed to group keys
 {{{include_file './__tests__/readme/alias.spec.ts'}}}
 ```
 
-### Lazy
-Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `LazyProvider` is for.
-- `@provider(lazy)`
+### Decorator
+Sometimes you want to decorate you class with some logic. This is what `DecoratorProvider` is for.
+- `@provider(decorate((instance, container) => new LoggerDecorator(instance)))`
 
 ```typescript
-{{{include_file './__tests__/readme/lazy.spec.ts'}}}
+{{{include_file './__tests__/readme/decorate.spec.ts'}}}
 ```
 
 ## Registration

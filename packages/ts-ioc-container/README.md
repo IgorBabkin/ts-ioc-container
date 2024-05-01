@@ -25,6 +25,7 @@
     - [Scope](#scope) `tags`
     - [Instances](#instances)
     - [Dispose](#dispose)
+    - [Lazy](#lazy)
 - [Injector](#injector)
     - [Metadata](#metadata) `@inject`
     - [Simple](#simple)
@@ -34,7 +35,7 @@
     - [Arguments](#arguments) `args`
     - [Visibility](#visibility) `visible`
     - [Alias](#alias) `alias`
-    - [Lazy](#lazy) `lazy`
+    - [Decorator](#decorator)
 - [Registration](#registration) `@register`
     - [Key](#key) `key`
     - [Scope](#scope) `scope`
@@ -246,6 +247,102 @@ describe('Disposing', function () {
     expect(() => child.resolve('ILogger')).toThrow(ContainerDisposedError);
     expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
     expect(root.getInstances().length).toBe(0);
+  });
+});
+
+```
+
+### Lazy
+Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
+
+```typescript
+import { by, Container, inject, MetadataInjector, provider, Registration as R, singleton } from 'ts-ioc-container';
+
+describe('lazy provider', () => {
+  @provider(singleton())
+  class Flag {
+    isSet = false;
+
+    set() {
+      this.isSet = true;
+    }
+  }
+
+  class Service {
+    name = 'Service';
+
+    constructor(@inject(by.key('Flag')) private flag: Flag) {
+      this.flag.set();
+    }
+
+    greet() {
+      return 'Hello';
+    }
+  }
+
+  class App {
+    constructor(@inject(by.key('Service', { lazy: true })) public service: Service) {}
+
+    run() {
+      return this.service.greet();
+    }
+  }
+
+  function createContainer() {
+    const container = new Container(new MetadataInjector());
+    container.add(R.fromClass(Flag)).add(R.fromClass(Service));
+    return container;
+  }
+
+  it('should not create an instance until method is not invoked', () => {
+    // Arrange
+    const container = createContainer();
+
+    // Act
+    const app = container.resolve(App);
+    const flag = container.resolve<Flag>('Flag');
+
+    // Assert
+    expect(flag.isSet).toBe(false);
+  });
+
+  it('should create an instance only when some method/property is invoked', () => {
+    // Arrange
+    const container = createContainer();
+
+    // Act
+    const app = container.resolve(App);
+    const flag = container.resolve<Flag>('Flag');
+
+    // Assert
+    expect(app.run()).toBe('Hello');
+    expect(flag.isSet).toBe(true);
+  });
+
+  it('should not create instance on every method invoked', () => {
+    // Arrange
+    const container = createContainer();
+
+    // Act
+    const app = container.resolve(App);
+
+    // Assert
+    expect(app.run()).toBe('Hello');
+    expect(app.run()).toBe('Hello');
+    expect(container.getInstances().filter((x) => x instanceof Service).length).toBe(1);
+  });
+
+  it('should create instance when property is invoked', () => {
+    // Arrange
+    const container = createContainer();
+
+    // Act
+    const app = container.resolve(App);
+    const flag = container.resolve<Flag>('Flag');
+
+    // Assert
+    expect(app.service.name).toBe('Service');
+    expect(flag.isSet).toBe(true);
   });
 });
 
@@ -810,90 +907,96 @@ describe('alias', () => {
 
 ```
 
-### Lazy
-Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `LazyProvider` is for.
-- `@provider(lazy)`
+### Decorator
+Sometimes you want to decorate you class with some logic. This is what `DecoratorProvider` is for.
+- `@provider(decorate((instance, container) => new LoggerDecorator(instance)))`
 
 ```typescript
-import { by, Container, inject, MetadataInjector, provider, Registration as R, singleton } from 'ts-ioc-container';
+import {
+  by,
+  Container,
+  decorate,
+  IContainer,
+  inject,
+  key,
+  MetadataInjector,
+  provider,
+  register,
+  Registration as R,
+  singleton,
+} from 'ts-ioc-container';
 
 describe('lazy provider', () => {
   @provider(singleton())
-  class Flag {
-    isSet = false;
+  class Logger {
+    private logs: string[] = [];
 
-    set() {
-      this.isSet = true;
+    log(message: string) {
+      this.logs.push(message);
+    }
+
+    printLogs() {
+      return this.logs.join(',');
     }
   }
 
-  class Service {
-    name = 'Service';
+  interface IRepository {
+    save(item: Todo): Promise<void>;
+  }
 
-    constructor(@inject(by.key('Flag')) private flag: Flag) {
-      this.flag.set();
+  interface Todo {
+    id: string;
+    text: string;
+  }
+
+  class LogRepository implements IRepository {
+    constructor(
+      private repository: IRepository,
+      @inject(by.key('Logger')) private logger: Logger,
+    ) {}
+
+    async save(item: Todo): Promise<void> {
+      this.logger.log(item.id);
+      return this.repository.save(item);
     }
+  }
 
-    greet() {
-      return 'Hello';
+  const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
+
+  @register(key('IRepository'))
+  @provider(decorate(logRepo))
+  class TodoRepository implements IRepository {
+    async save(item: Todo): Promise<void> {
+      console.log('Saving todo item', item);
+    }
+  }
+
+  class App {
+    constructor(@inject(by.key('IRepository')) public repository: IRepository) {}
+
+    async run() {
+      await this.repository.save({ id: '1', text: 'Hello' });
+      await this.repository.save({ id: '2', text: 'Hello' });
     }
   }
 
   function createContainer() {
     const container = new Container(new MetadataInjector());
-    container.add(R.fromClass(Flag)).add(R.fromClass(Service));
+    container.add(R.fromClass(TodoRepository)).add(R.fromClass(Logger));
     return container;
   }
 
-  it('should not create an instance until method is not invoked', () => {
+  it('should decorate repo by logger middleware', async () => {
     // Arrange
     const container = createContainer();
 
     // Act
-    const service = container.resolve<Service>('Service', { lazy: true });
-    const flag = container.resolve<Flag>('Flag');
+    const app = container.resolve(App);
+    const logger = container.resolve<Logger>('Logger');
+    await app.run();
 
     // Assert
-    expect(flag.isSet).toBe(false);
-  });
-
-  it('should create an instance only when some method/property is invoked', () => {
-    // Arrange
-    const container = createContainer();
-
-    // Act
-    const service = container.resolve<Service>('Service', { lazy: true });
-    const flag = container.resolve<Flag>('Flag');
-
-    // Assert
-    expect(service.greet()).toBe('Hello');
-    expect(flag.isSet).toBe(true);
-  });
-
-  it('should not create instance on every method invoked', () => {
-    // Arrange
-    const container = createContainer();
-
-    // Act
-    const service = container.resolve<Service>('Service', { lazy: true });
-
-    // Assert
-    expect(service.greet()).toBe('Hello');
-    expect(service.greet()).toBe('Hello');
-    expect(container.getInstances().filter((x) => x instanceof Service).length).toBe(1);
-  });
-
-  it('should create instance when property is invoked', () => {
-    // Arrange
-    const container = createContainer();
-
-    // Act
-    const service = container.resolve<Service>('Service', { lazy: true });
-    const flag = container.resolve<Flag>('Flag');
-
-    // Assert
-    expect(service.name).toBe('Service');
-    expect(flag.isSet).toBe(true);
+    expect(logger.printLogs()).toBe('1,2');
   });
 });
 
