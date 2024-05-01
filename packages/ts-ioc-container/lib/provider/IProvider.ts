@@ -61,8 +61,8 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.isVisible(parent, child);
   }
 
-  resolve(container: IContainer, options: ProviderResolveOptions): T {
-    return lazyInstance(() => this.resolveInstantly(container, options), options.lazy);
+  resolve(container: IContainer, { args, lazy }: ProviderResolveOptions): T {
+    return lazyInstance(() => this.resolveInstantly(container, { args }), lazy);
   }
 
   protected abstract resolveInstantly(container: IContainer, options: InstantDependencyOptions): T;
