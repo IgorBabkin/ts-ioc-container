@@ -25,17 +25,17 @@
     - [Scope](#scope) `tags`
     - [Instances](#instances)
     - [Dispose](#dispose)
-    - [Lazy](#lazy)
+    - [Lazy](#lazy) `lazy`
 - [Injector](#injector)
     - [Metadata](#metadata) `@inject`
     - [Simple](#simple)
     - [Proxy](#proxy)
 - [Provider](#provider) `@provider`
     - [Singleton](#singleton) `singleton`
-    - [Arguments](#arguments) `args`
+    - [Arguments](#arguments) `args` `argsFn`
     - [Visibility](#visibility) `visible`
     - [Alias](#alias) `alias`
-    - [Decorator](#decorator)
+    - [Decorator](#decorator) `decorate`
 - [Registration](#registration) `@register`
     - [Key](#key) `key`
     - [Scope](#scope) `scope`
