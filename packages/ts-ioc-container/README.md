@@ -9,7 +9,7 @@
 ## Advantages
 - battle tested :boom:
 - written on `typescript`
-- simple and lightweight (roughly it's just one file of **~100 lines**) :heart:
+- simple and lightweight :heart:
 - clean API :green_heart:
 - supports `tagged scopes`
 - fully test covered :100:
