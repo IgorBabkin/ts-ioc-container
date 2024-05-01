@@ -41,6 +41,11 @@ export class Registration<T = unknown> implements IRegistration<T> {
     return this;
   }
 
+  when(isValidWhen: ScopePredicate): this {
+    this.matchScope = isValidWhen;
+    return this;
+  }
+
   applyTo(container: IContainer): void {
     if (!this.matchScope(container)) {
       return;
@@ -51,10 +56,5 @@ export class Registration<T = unknown> implements IRegistration<T> {
     }
 
     container.register(this.key, this.createProvider().pipe(...this.mappers));
-  }
-
-  when(isValidWhen: ScopePredicate): this {
-    this.matchScope = isValidWhen;
-    return this;
   }
 }
