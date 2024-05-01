@@ -853,8 +853,7 @@ describe('lazy provider', () => {
     const flag = container.resolve<Flag>('Flag');
 
     // Assert
-    expect(service.greet()).toBe('Hello');
-    expect(flag.isSet).toBe(true);
+    expect(flag.isSet).toBe(false);
   });
 
   it('should create an instance only when some method/property is invoked', () => {
@@ -866,7 +865,8 @@ describe('lazy provider', () => {
     const flag = container.resolve<Flag>('Flag');
 
     // Assert
-    expect(flag.isSet).toBe(false);
+    expect(service.greet()).toBe('Hello');
+    expect(flag.isSet).toBe(true);
   });
 
   it('should not create instance on every method invoked', () => {
