@@ -34,7 +34,9 @@
     - [Arguments](#arguments) `args`
     - [Visibility](#visibility) `visible`
     - [Alias](#alias) `alias`
-- [Registration](#registration) `@register(key('someKey'))`
+    - [Lazy](#lazy) `lazy`
+- [Registration](#registration) `@register`
+    - [Key](#key) `key`
     - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
@@ -191,6 +193,13 @@ Alias is needed to group keys
 {{{include_file './__tests__/readme/alias.spec.ts'}}}
 ```
 
+### Lazy
+Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `LazyProvider` is for.
+- `@provider(lazy)`
+
+```typescript
+{{{include_file './__tests__/readme/lazy.spec.ts'}}}
+```
 
 ## Registration
 Registration is provider factory which registers provider in container.
@@ -199,6 +208,12 @@ Registration is provider factory which registers provider in container.
 - `Registration.fromClass(Logger)`
 - `Registration.fromValue(Logger)`
 - `Registration.fromFn((container, ...args) => container.resolve(Logger, {args}))`
+
+### Key
+Sometimes you want to register provider with certain key. This is what `key` is for.
+
+- by default, key is class name
+- you can assign the same key to different registrations
 
 ```typescript
 {{{include_file './__tests__/readme/registration.spec.ts'}}}

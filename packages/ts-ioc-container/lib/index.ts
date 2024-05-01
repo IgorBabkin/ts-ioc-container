@@ -1,3 +1,4 @@
+// Containers
 export {
   IContainer,
   Resolvable,
@@ -8,13 +9,17 @@ export {
   Tag,
   Tagged,
 } from './container/IContainer';
-export { constructor } from './utils';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
+export { AutoMockedContainer } from './container/AutoMockedContainer';
+
+// Injectors
 export { IInjector } from './injector/IInjector';
-export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
-export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
-export { ContainerDisposedError } from './errors/ContainerDisposedError';
+export { MetadataInjector, inject } from './injector/MetadataInjector';
+export { SimpleInjector } from './injector/SimpleInjector';
+export { ProxyInjector } from './injector/ProxyInjector';
+
+// Providers
 export {
   ResolveDependency,
   IProvider,
@@ -30,14 +35,21 @@ export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/singleton/SingletonProvider';
 export { MultiCache, multiCache } from './provider/singleton/MultiCache';
 export { Cache } from './provider/singleton/Cache';
-export { AutoMockedContainer } from './container/AutoMockedContainer';
+export { LazyProvider, lazy } from './provider/LazyProvider';
+
+// Registrations
 export { key, IRegistration, scope, register } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
-export { MetadataInjector, inject } from './injector/MetadataInjector';
-export { SimpleInjector } from './injector/SimpleInjector';
-export { ProxyInjector } from './injector/ProxyInjector';
+
+// Errors
+export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
+export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
+export { ContainerDisposedError } from './errors/ContainerDisposedError';
+
+// Others
 export { getHooks, hook, hasHooks } from './hook';
 export { by, InstancePredicate, IMemo, IMemoKey } from './by';
+export { constructor } from './utils';
 export {
   setMetadata,
   getMetadata,
