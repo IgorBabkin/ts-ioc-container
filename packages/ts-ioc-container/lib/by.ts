@@ -67,6 +67,24 @@ export const by = {
     (c: IContainer, ...args: unknown[]) =>
       c.resolve<T>(key, { args: [...deps, ...args] }),
 
+  lazy: {
+    key:
+      <T extends object>(key: InjectionToken<T>, ...deps: unknown[]) =>
+      (c: IContainer, ...args: unknown[]) => {
+        let instance: T | undefined;
+        return new Proxy(
+          {},
+          {
+            get: (_, prop) => {
+              instance = instance ?? c.resolve<T>(key, { args: [...deps, ...args] });
+              // @ts-ignore
+              return instance[prop];
+            },
+          },
+        ) as T;
+      },
+  },
+
   /**
    * Get all instances that match the given predicate
    * @param predicate

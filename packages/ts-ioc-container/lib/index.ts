@@ -35,7 +35,8 @@ export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/singleton/SingletonProvider';
 export { MultiCache, multiCache } from './provider/singleton/MultiCache';
 export { Cache } from './provider/singleton/Cache';
-export { LazyProvider, lazy } from './provider/LazyProvider';
+export { lazy } from './provider/LazyProvider';
+export { decorate, DecorateFn } from './provider/DecoratorProvider';
 
 // Registrations
 export { key, IRegistration, scope, register } from './registration/IRegistration';
