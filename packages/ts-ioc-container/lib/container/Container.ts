@@ -8,12 +8,11 @@ import {
   ResolveOptions,
   Tag,
 } from './IContainer';
-import { IInjector, InjectOptions } from '../injector/IInjector';
+import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { IRegistration } from '../registration/IRegistration';
-import { constructor, lazyInstance } from '../utils';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -48,21 +47,15 @@ export class Container implements IContainer {
     this.validateContainer();
 
     if (isConstructor(token)) {
-      return lazy
-        ? lazyInstance(() => this.resolveByInjector(token, { args }))
-        : this.resolveByInjector(token, { args });
+      const instance = this.injector.resolve(this, token, { args });
+      this.instances.add(instance);
+      return instance;
     }
 
     const provider = this.providers.get(token) as IProvider<T> | undefined;
     return provider?.isVisible(this, child)
       ? provider.resolve(this, { args, lazy })
       : this.parent.resolve<T>(token, { args, child, lazy });
-  }
-
-  private resolveByInjector<T>(token: constructor<T>, options: InjectOptions): T {
-    const instance = this.injector.resolve(this, token, options);
-    this.instances.add(instance);
-    return instance;
   }
 
   createScope(...tags: Tag[]): Container {

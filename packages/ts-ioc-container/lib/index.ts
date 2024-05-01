@@ -29,14 +29,12 @@ export {
   argsFn,
   args,
   ArgsFn,
-  lazy,
   ProviderDecorator,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/singleton/SingletonProvider';
 export { MultiCache, multiCache } from './provider/singleton/MultiCache';
 export { Cache } from './provider/singleton/Cache';
-export { makeProviderLazy } from './provider/LazyProvider';
 export { decorate, DecorateFn } from './provider/DecoratorProvider';
 
 // Registrations

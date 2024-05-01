@@ -7,7 +7,7 @@ import {
   ResolveDependency,
 } from './IProvider';
 import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
-import { constructor, isConstructor, MapFn, pipe } from '../utils';
+import { constructor, isConstructor, lazyInstance, MapFn, pipe } from '../utils';
 
 export class Provider<T> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -22,7 +22,6 @@ export class Provider<T> implements IProvider<T> {
 
   private readonly aliases: Set<Alias> = new Set();
   private argsFn: ArgsFn = () => [];
-  private isLazy = false;
   private isVisibleWhen: ChildrenVisibilityPredicate = () => true;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
@@ -32,19 +31,14 @@ export class Provider<T> implements IProvider<T> {
   }
 
   resolve(container: IContainer, { args, lazy }: ProviderResolveOptions): T {
-    return this.resolveDependency(container, {
-      args: [...this.argsFn(container, ...args), ...args],
-      lazy: lazy ?? this.isLazy ?? false,
-    });
+    return lazyInstance(
+      () => this.resolveDependency(container, { args: [...this.argsFn(container, ...args), ...args] }),
+      lazy,
+    );
   }
 
   setVisibility(predicate: ChildrenVisibilityPredicate): this {
     this.isVisibleWhen = predicate;
-    return this;
-  }
-
-  setLazy(lazy: boolean): this {
-    this.isLazy = lazy;
     return this;
   }
 

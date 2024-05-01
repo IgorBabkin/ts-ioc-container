@@ -1,4 +1,4 @@
-import { lazy, Container, inject, MetadataInjector, provider, Registration as R, singleton, by } from '../../lib';
+import { by, Container, inject, MetadataInjector, provider, Registration as R, singleton } from '../../lib';
 
 describe('lazy provider', () => {
   @provider(singleton())
@@ -10,7 +10,6 @@ describe('lazy provider', () => {
     }
   }
 
-  @provider(lazy)
   class Service {
     name = 'Service';
 
@@ -34,7 +33,7 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const service = container.resolve<Service>('Service');
+    const service = container.resolve<Service>('Service', { lazy: true });
     const flag = container.resolve<Flag>('Flag');
 
     // Assert
@@ -46,7 +45,7 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const service = container.resolve<Service>('Service');
+    const service = container.resolve<Service>('Service', { lazy: true });
     const flag = container.resolve<Flag>('Flag');
 
     // Assert
@@ -59,7 +58,7 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const service = container.resolve<Service>('Service');
+    const service = container.resolve<Service>('Service', { lazy: true });
 
     // Assert
     expect(service.greet()).toBe('Hello');
@@ -72,7 +71,7 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const service = container.resolve<Service>('Service');
+    const service = container.resolve<Service>('Service', { lazy: true });
     const flag = container.resolve<Flag>('Flag');
 
     // Assert

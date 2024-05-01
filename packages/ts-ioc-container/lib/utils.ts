@@ -26,7 +26,11 @@ export const constant =
 
 export const isConstructor = (T: unknown): T is constructor<unknown> => typeof T === 'function' && !!T.prototype;
 
-export function lazyInstance<T>(resolveInstance: () => T): T {
+export function lazyInstance<T>(resolveInstance: () => T, isLazy?: boolean): T {
+  if (!isLazy) {
+    return resolveInstance();
+  }
+
   let instance: T | undefined;
   return new Proxy(
     {},
