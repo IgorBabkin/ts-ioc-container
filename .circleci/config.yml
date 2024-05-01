@@ -35,12 +35,6 @@ jobs:
           coverage_file: ./packages/reactivex-react/coverage/lcov.info
           flag_name: 'reactivex-react'
 
-      - run: npm test -- --scope=ts-request-mediator
-
-      - coveralls/upload:
-          coverage_file: ./packages/request-mediator/coverage/lcov.info
-          flag_name: 'ts-request-mediator'
-
       - run: npm test -- --scope=ts-ioc-container
 
       - coveralls/upload:
