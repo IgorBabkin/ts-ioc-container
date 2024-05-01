@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import {
   alias,
-  by,
+  byAlias,
+  byAliases,
   Container,
   DependencyNotFoundError,
   IMemo,
@@ -46,7 +47,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(by.aliases((it) => it.has(IMiddlewareKey))) public middleware: IMiddleware[]) {}
+      constructor(@inject(byAliases((it) => it.has(IMiddlewareKey))) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);
@@ -84,8 +85,8 @@ describe('alias', () => {
 
     const container = new Container(new MetadataInjector()).add(R.fromClass(FileLogger));
 
-    expect(by.alias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
-    expect(() => by.alias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
+    expect(byAlias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
+    expect(() => byAlias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
   });
 
   it('should resolve by memoized alias', () => {
@@ -102,10 +103,10 @@ describe('alias', () => {
       .add(R.fromClass(FileLogger))
       .add(R.fromClass(DbLogger));
 
-    const result1 = by.alias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(container);
+    const result1 = byAlias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(container);
     const child = container.createScope('child');
-    const result2 = by.alias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(child);
-    const result3 = by.alias((aliases) => aliases.has('ILogger'))(child);
+    const result2 = byAlias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(child);
+    const result3 = byAlias((aliases) => aliases.has('ILogger'))(child);
 
     expect(result1).toBeInstanceOf(FileLogger);
     expect(result2).toBeInstanceOf(FileLogger);
@@ -124,7 +125,7 @@ describe('alias', () => {
 
     class App {
       constructor(
-        @inject(by.aliases((it) => it.has('ILogger'), { memoize: constant('ILogger') })) public loggers: ILogger[],
+        @inject(byAliases((it) => it.has('ILogger'), { memoize: constant('ILogger') })) public loggers: ILogger[],
       ) {}
     }
 

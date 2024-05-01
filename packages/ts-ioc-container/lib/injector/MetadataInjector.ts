@@ -3,7 +3,7 @@ import { IContainer } from '../container/IContainer';
 import { constant, constructor, fillEmptyIndexes } from '../utils';
 import { setParameterMetadata, getParameterMetadata } from '../metadata';
 
-type InjectFn<T = unknown> = (l: IContainer, ...args: unknown[]) => T;
+export type InjectFn<T = unknown> = (l: IContainer) => T;
 
 const METADATA_KEY = 'inject';
 const getInjectFns = (Target: constructor<unknown>) => getParameterMetadata(METADATA_KEY, Target) as InjectFn[];

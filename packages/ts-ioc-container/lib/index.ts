@@ -50,7 +50,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 
 // Others
 export { getHooks, hook, hasHooks } from './hook';
-export { by, InstancePredicate, IMemo, IMemoKey } from './by';
+export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
 export { constructor } from './utils';
 export {
   setMetadata,
