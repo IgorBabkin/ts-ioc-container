@@ -44,15 +44,15 @@
     "generate:docs": "ts-node scripts/generateReadme/generateReadme.ts && git add README.md",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "coverage": "coveralls",
-    "watch": "nodemon --watch ./lib --exec npm run build",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch"
   },
   "devDependencies": {
     "@types/jest": "27.0.2",
     "handlebars": "^4.7.7",
     "jest": "27.2.3",
     "moq.ts": "^7.3.4",
-    "nodemon": "^2.0.13",
     "reflect-metadata": "^0.2.2",
     "rimraf": "3.0.2",
     "ts-jest": "27.0.5",
