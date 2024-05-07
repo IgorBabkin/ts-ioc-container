@@ -41,6 +41,10 @@ export const getAutorunHooks = (target: object): Map<string, AutorunHandler> => 
     : new Map();
 };
 
+export const hasAutorunHooks = (target: object): boolean => {
+  return Reflect.hasMetadata(METADATA_KEY, target.constructor);
+};
+
 export const startAutorun = <Context extends AutorunContext>(
   target: object,
   scope: IContainer,

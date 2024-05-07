@@ -52,7 +52,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { getHooks, hook, hasHooks } from './hook';
 export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
 export { constructor } from './utils';
-export { autorun, startAutorun, AutorunContext } from './autorun';
+export { autorun, startAutorun, AutorunContext, hasAutorunHooks } from './autorun';
 export {
   setMetadata,
   getMetadata,
