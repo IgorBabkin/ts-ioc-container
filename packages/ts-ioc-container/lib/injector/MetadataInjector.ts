@@ -6,13 +6,25 @@ import { setParameterMetadata, getParameterMetadata } from '../metadata';
 export type InjectFn<T = unknown> = (l: IContainer) => T;
 
 const METADATA_KEY = 'inject';
-const getInjectFns = (Target: constructor<unknown>) => getParameterMetadata(METADATA_KEY, Target) as InjectFn[];
-export const inject = (fn: InjectFn): ParameterDecorator => setParameterMetadata(METADATA_KEY, fn);
+export const getInjectFns = (Target: constructor<unknown>, methodName?: string) =>
+  getParameterMetadata(metaKey(methodName), Target) as InjectFn[];
+
+const metaKey = (methodName = 'constructor') => `${METADATA_KEY}:${methodName}`;
+
+export const inject =
+  (fn: InjectFn): ParameterDecorator =>
+  (target, propertyKey, parameterIndex) =>
+    setParameterMetadata(metaKey(propertyKey as string), fn)(target, propertyKey, parameterIndex);
+
+export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
+  const argsFns = getInjectFns(Target, methodName);
+  return (scope: IContainer, ...deps: unknown[]): unknown[] =>
+    fillEmptyIndexes(argsFns, deps.map(constant)).map((fn) => fn(scope));
+};
 
 export class MetadataInjector implements IInjector {
   resolve<T>(container: IContainer, Target: constructor<T>, { args: deps }: InjectOptions): T {
-    const injectionFns = getInjectFns(Target);
-    const args = fillEmptyIndexes(injectionFns, deps.map(constant)).map((fn) => fn(container));
+    const args = resolveArgs(Target)(container, ...deps);
     return new Target(...args);
   }
 }

@@ -15,7 +15,7 @@ export { AutoMockedContainer } from './container/AutoMockedContainer';
 
 // Injectors
 export { IInjector } from './injector/IInjector';
-export { MetadataInjector, inject } from './injector/MetadataInjector';
+export { MetadataInjector, inject, resolveArgs, getInjectFns, InjectFn } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 
@@ -52,7 +52,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { getHooks, hook, hasHooks } from './hook';
 export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
 export { constructor } from './utils';
-export { autorun, startAutorun } from './utils/autorun';
+export { autorun, startAutorun, AutorunContext } from './autorun';
 export {
   setMetadata,
   getMetadata,

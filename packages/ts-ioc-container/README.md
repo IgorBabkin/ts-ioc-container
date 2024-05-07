@@ -1207,7 +1207,6 @@ import {
   MetadataInjector,
   register,
 } from 'ts-ioc-container';
-import * as console from 'node:console';
 
 @register(key('logsRepo'))
 @provider(singleton())
@@ -1225,7 +1224,7 @@ class Logger {
 
   constructor(@inject(by.key('logsRepo')) private logsRepo: LogsRepo) {}
 
-  log(message: string): void {
+  log(@inject(by.key('logsRepo')) message: string): void {
     this.messages.push(message);
   }
 

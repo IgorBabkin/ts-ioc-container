@@ -1,8 +1,24 @@
+import { constructor } from './utils';
+import { resolveArgs } from './injector/MetadataInjector';
+import { IContainer } from './container/IContainer';
+
 const METADATA_KEY = 'autorun';
 
-interface AutorunContext {
-  instance: object;
-  methodName: string;
+export class AutorunContext {
+  constructor(
+    public instance: object,
+    public methodName: string,
+    private scope: IContainer,
+  ) {}
+
+  resolveArgs(...args: unknown[]): unknown[] {
+    return resolveArgs(this.instance.constructor as constructor<unknown>, this.methodName)(this.scope, ...args);
+  }
+
+  invokeMethod({ args = this.resolveArgs() }: { args: unknown[] }): unknown {
+    // @ts-ignore
+    return this.instance[this.methodName](...args);
+  }
 }
 
 type AutorunHandler = <T extends AutorunContext>(context: T) => void;
@@ -27,9 +43,10 @@ export const getAutorunHooks = (target: object): Map<string, AutorunHandler> => 
 
 export const startAutorun = <Context extends AutorunContext>(
   target: object,
-  createContext: (props: { instance: object; methodName: string }) => Context = (c) => c as Context,
+  scope: IContainer,
+  createContext: (c: AutorunContext) => Context = (c) => c as Context,
 ) => {
   for (const [methodName, execute] of getAutorunHooks(target)) {
-    execute(createContext({ instance: target, methodName }));
+    execute(createContext(new AutorunContext(target, methodName, scope)));
   }
 };
