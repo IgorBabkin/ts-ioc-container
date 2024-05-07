@@ -8,7 +8,7 @@ export class AutorunContext {
   constructor(
     public instance: object,
     public methodName: string,
-    private scope: IContainer,
+    public scope: IContainer,
   ) {}
 
   resolveArgs(...args: unknown[]): unknown[] {
