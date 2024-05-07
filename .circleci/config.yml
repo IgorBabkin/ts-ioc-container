@@ -29,12 +29,6 @@ jobs:
 
       - run: npm run build
 
-      - run: npm test -- --scope=reactivex-react
-
-      - coveralls/upload:
-          coverage_file: ./packages/reactivex-react/coverage/lcov.info
-          flag_name: 'reactivex-react'
-
       - run: npm test -- --scope=ts-ioc-container
 
       - coveralls/upload:
