@@ -3,13 +3,13 @@ import {
   constructor,
   Container,
   key,
-  getHooks,
   hook,
   IContainer,
   IInjector,
   MetadataInjector,
   Registration as R,
   register,
+  executeHooks,
 } from '../lib';
 import { InjectOptions } from '../lib/injector/IInjector.ts';
 
@@ -18,11 +18,7 @@ class MyInjector implements IInjector {
 
   resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
     const instance = this.injector.resolve(container, value, options);
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    for (const [h] of getHooks(instance as object, 'onConstruct')) {
-      // @ts-ignore
-      instance[h]();
-    }
+    executeHooks(instance as object, 'onConstruct', { scope: container });
     return instance;
   }
 }
@@ -31,7 +27,7 @@ class MyInjector implements IInjector {
 class Logger {
   isReady = false;
 
-  @hook('onConstruct') // <--- or extract it to @onConstruct
+  @hook('onConstruct', (context) => context.invokeMethod({ args: [] })) // <--- or extract it to @onConstruct
   initialize() {
     this.isReady = true;
   }

@@ -11,6 +11,7 @@ import {
   Registration as R,
   MetadataInjector,
   register,
+  executeHooks,
 } from '../lib';
 
 @register(key('logsRepo'))
@@ -33,7 +34,7 @@ class Logger {
     this.messages.push(message);
   }
 
-  @hook('onDispose') // <--- or extract it to @onDispose
+  @hook('onDispose', (c) => c.invokeMethod({ args: [] })) // <--- or extract it to @onDispose
   async save(): Promise<void> {
     this.logsRepo.saveLogs(this.messages);
     this.messages = [];
@@ -48,11 +49,7 @@ describe('onDispose', function () {
     logger.log('Hello');
 
     for (const instance of container.getInstances()) {
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      for (const [h] of getHooks(instance as object, 'onDispose')) {
-        // @ts-ignore
-        await instance[h]();
-      }
+      executeHooks(instance as object, 'onDispose', { scope: container });
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs).toContain('Hello');
