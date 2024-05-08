@@ -25,7 +25,7 @@ type AutorunHandler = <T extends AutorunContext>(context: T) => void;
 
 const createStore = () => new Map<string, AutorunHandler>();
 
-export const autorun =
+export const auto =
   (execute: AutorunHandler): MethodDecorator =>
   (target, propertyKey) => {
     const hooks = Reflect.hasMetadata(METADATA_KEY, target.constructor)

@@ -1,9 +1,9 @@
-import { autorun, startAutorun } from '../../lib';
+import { auto, Container, MetadataInjector, startAutorun } from '../../lib';
 
 describe('autorun', () => {
   class Main {
     isDone = false;
-    @autorun(({ methodName, instance }) => {
+    @auto(({ methodName, instance }) => {
       // @ts-ignore
       instance[methodName].apply(instance);
     })
@@ -15,7 +15,7 @@ describe('autorun', () => {
   it('should run autorun function', () => {
     const main = new Main();
 
-    startAutorun(main);
+    startAutorun(main, new Container(new MetadataInjector()));
 
     expect(main.isDone).toBe(true);
   });
