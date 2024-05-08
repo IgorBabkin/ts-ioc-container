@@ -1,12 +1,13 @@
-import { auto, Container, MetadataInjector, startAutorun } from '../../lib';
+import { Container, executeHooks, Execution, hook, MetadataInjector } from '../../lib';
+
+const execute: Execution = (context) => context.invokeMethod({ args: [] });
+const auto = (fn: Execution) => hook('__autorun__', fn);
 
 describe('autorun', () => {
   class Main {
     isDone = false;
-    @auto(({ methodName, instance }) => {
-      // @ts-ignore
-      instance[methodName].apply(instance);
-    })
+
+    @auto(execute)
     loadFile() {
       this.isDone = true;
     }
@@ -15,7 +16,7 @@ describe('autorun', () => {
   it('should run autorun function', () => {
     const main = new Main();
 
-    startAutorun(main, new Container(new MetadataInjector()));
+    executeHooks(main, '__autorun__', { scope: new Container(new MetadataInjector()) });
 
     expect(main.isDone).toBe(true);
   });

@@ -49,10 +49,10 @@ export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 
 // Others
-export { getHooks, hook, hasHooks } from './hook';
+export { getHooks, hook, hasHooks, Execution, executeHooks } from './hooks/hook';
+export { ExecutionContext } from './hooks/ExecutionContext';
 export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
 export { constructor } from './utils';
-export { auto, startAutorun, AutorunContext, hasAutorunHooks } from './autorun';
 export {
   setMetadata,
   getMetadata,
