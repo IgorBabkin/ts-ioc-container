@@ -6,8 +6,8 @@ export type Execution = <T extends ExecutionContext>(context: T) => void;
 const createStore = () => new Map<string | symbol, Execution[]>();
 
 export const hook =
-  (key: string | symbol, ...fns: Execution[]): MethodDecorator =>
-  (target, propertyKey) => {
+  (key: string | symbol, ...fns: Execution[]) =>
+  (target: object, propertyKey: string | symbol) => {
     const hooks: Map<string | symbol, Execution[]> = Reflect.hasMetadata(key, target.constructor)
       ? Reflect.getMetadata(key, target.constructor)
       : createStore();

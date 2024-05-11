@@ -4,7 +4,6 @@ import {
   by,
   Container,
   key,
-  getHooks,
   hook,
   inject,
   provider,
@@ -26,6 +25,10 @@ class LogsRepo {
 
 @register(key('logger'))
 class Logger {
+  @hook('onDispose', ({ instance, methodName }) => {
+    // @ts-ignore
+    instance[methodName].push('world');
+  }) // <--- or extract it to @onDispose
   private messages: string[] = [];
 
   constructor(@inject(by.key('logsRepo')) private logsRepo: LogsRepo) {}
@@ -34,10 +37,13 @@ class Logger {
     this.messages.push(message);
   }
 
+  size(): number {
+    return this.messages.length;
+  }
+
   @hook('onDispose', (c) => c.invokeMethod({ args: [] })) // <--- or extract it to @onDispose
   async save(): Promise<void> {
     this.logsRepo.saveLogs(this.messages);
-    this.messages = [];
   }
 }
 
@@ -52,6 +58,6 @@ describe('onDispose', function () {
       executeHooks(instance as object, 'onDispose', { scope: container });
     }
 
-    expect(container.resolve<LogsRepo>('logsRepo').savedLogs).toContain('Hello');
+    expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
   });
 });
