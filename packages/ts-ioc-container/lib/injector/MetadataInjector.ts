@@ -11,10 +11,19 @@ export const getInjectFns = (Target: constructor<unknown>, methodName?: string) 
 
 const metaKey = (methodName = 'constructor') => `${METADATA_KEY}:${methodName}`;
 
+function isInstance(target: object) {
+  return Object.prototype.hasOwnProperty.call(target, 'constructor');
+}
+
 export const inject =
   (fn: InjectFn): ParameterDecorator =>
-  (target, propertyKey, parameterIndex) =>
-    setParameterMetadata(metaKey(propertyKey as string), fn)(target, propertyKey, parameterIndex);
+  (target, propertyKey, parameterIndex) => {
+    setParameterMetadata(metaKey(propertyKey as string), fn)(
+      isInstance(target) ? target.constructor : target,
+      propertyKey,
+      parameterIndex,
+    );
+  };
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const argsFns = getInjectFns(Target, methodName);
