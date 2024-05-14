@@ -1,7 +1,7 @@
 import { IContainer } from '../container/IContainer';
 import { ExecutionContext } from './ExecutionContext';
 
-export type Execution = <T extends ExecutionContext>(context: T) => void;
+export type Execution<T extends ExecutionContext = ExecutionContext> = (context: T) => void;
 
 const createStore = () => new Map<string | symbol, Execution[]>();
 
