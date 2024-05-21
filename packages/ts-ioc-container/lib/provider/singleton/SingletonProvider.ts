@@ -1,5 +1,5 @@
 import { IContainer } from '../../container/IContainer';
-import { InstantDependencyOptions, IProvider, ProviderDecorator } from '../IProvider';
+import { IProvider, ProviderDecorator, ProviderResolveOptions } from '../IProvider';
 import { MapFn } from '../../utils';
 import { Cache } from './Cache';
 import { SingleCache } from './SingleCache';
@@ -16,7 +16,7 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     super(provider);
   }
 
-  resolveInstantly(container: IContainer, options: InstantDependencyOptions): T {
+  resolve(container: IContainer, options: ProviderResolveOptions): T {
     const key = this.cache.getKey(...options.args);
 
     if (!this.cache.hasValue(key)) {

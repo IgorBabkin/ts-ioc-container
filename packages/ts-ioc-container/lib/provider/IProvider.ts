@@ -1,9 +1,8 @@
 import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
-import { constructor, lazyInstance, MapFn, pipe } from '../utils';
+import { constructor, MapFn, pipe } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
-export type InstantDependencyOptions = Omit<ProviderResolveOptions, 'lazy'>;
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
 export type ChildrenVisibilityPredicate = (options: { child: Tagged; isParent: boolean }) => boolean;
 
@@ -61,11 +60,9 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.isVisible(parent, child);
   }
 
-  resolve(container: IContainer, { args, lazy }: ProviderResolveOptions): T {
-    return lazyInstance(() => this.resolveInstantly(container, { args }), lazy);
+  resolve(container: IContainer, options: ProviderResolveOptions): T {
+    return this.decorated.resolve(container, options);
   }
-
-  protected abstract resolveInstantly(container: IContainer, options: InstantDependencyOptions): T;
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
     return pipe(...mappers)(this);
