@@ -14,6 +14,8 @@
 - supports `tagged scopes`
 - fully test covered :100:
 - can be used with decorators `@inject`
+- can [inject properties](#inject-property)
+- can inject [lazy dependencies](#lazy)
 - composable and open to extend
 - awesome for testing (auto mocking)
 
@@ -43,6 +45,7 @@
 - [Hook](#hook) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
     - [OnDispose](#ondispose) `@onDispose`
+    - [Inject Property](#inject-property)
 - [Mock](#mock)
 - [Error](#error)
 
@@ -357,6 +360,7 @@ describe('lazy provider', () => {
 
 ### Metadata
 This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `MetadataInjector`.
+Also you can [inject property.](#inject-property)
 
 ```typescript
 import 'reflect-metadata';
@@ -1250,6 +1254,29 @@ describe('onDispose', function () {
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
+  });
+});
+
+```
+
+### Inject property
+
+```typescript
+import { by, Container, executeHooks, hook, injectProp, MetadataInjector, Registration } from 'ts-ioc-container';
+
+describe('inject property', () => {
+  it('should inject property', () => {
+    class App {
+      @hook('onInit', injectProp(by.key('greeting')))
+      greeting!: string;
+    }
+    const expected = 'Hello world!';
+
+    const container = new Container(new MetadataInjector()).add(Registration.fromValue(expected).to('greeting'));
+    const app = container.resolve(App);
+    executeHooks(app, 'onInit', { scope: container });
+
+    expect(app.greeting).toBe(expected);
   });
 });
 

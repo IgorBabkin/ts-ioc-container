@@ -1,4 +1,4 @@
-import { resolveArgs } from '../injector/MetadataInjector';
+import { InjectFn, resolveArgs } from '../injector/MetadataInjector';
 import { IContainer } from '../container/IContainer';
 import { constructor } from 'utils';
 
@@ -16,5 +16,10 @@ export class ExecutionContext {
   invokeMethod({ args = this.resolveArgs() }: { args: unknown[] }): unknown {
     // @ts-ignore
     return this.instance[this.methodName](...args);
+  }
+
+  injectProperty(fn: InjectFn): void {
+    // @ts-ignore
+    this.instance[this.methodName] = fn(this.scope);
   }
 }

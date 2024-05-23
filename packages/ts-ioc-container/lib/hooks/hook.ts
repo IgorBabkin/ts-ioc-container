@@ -1,16 +1,20 @@
 import { IContainer } from '../container/IContainer';
 import { ExecutionContext } from './ExecutionContext';
+import { InjectFn } from '../injector/MetadataInjector';
 
 export type Execution<T extends ExecutionContext = ExecutionContext> = (context: T) => void;
 
-const createStore = () => new Map<string | symbol, Execution[]>();
+export const injectProp =
+  (fn: InjectFn): Execution =>
+  (context) =>
+    context.injectProperty(fn);
 
 export const hook =
   (key: string | symbol, ...fns: Execution[]) =>
   (target: object, propertyKey: string | symbol) => {
     const hooks: Map<string | symbol, Execution[]> = Reflect.hasMetadata(key, target.constructor)
       ? Reflect.getMetadata(key, target.constructor)
-      : createStore();
+      : new Map();
     hooks.set(propertyKey, (hooks.get(propertyKey) ?? []).concat(fns));
     Reflect.defineMetadata(key, hooks, target.constructor); // eslint-disable-line @typescript-eslint/ban-types
   };

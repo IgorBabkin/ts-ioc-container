@@ -47,9 +47,11 @@ export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 
-// Others
-export { getHooks, hook, hasHooks, Execution, executeHooks } from './hooks/hook';
+// Hooks
+export { getHooks, hook, hasHooks, Execution, executeHooks, injectProp } from './hooks/hook';
 export { ExecutionContext } from './hooks/ExecutionContext';
+
+// Others
 export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
 export { constructor } from './utils';
 export {

@@ -14,6 +14,8 @@
 - supports `tagged scopes`
 - fully test covered :100:
 - can be used with decorators `@inject`
+- can [inject properties](#inject-property)
+- can inject [lazy dependencies](#lazy)
 - composable and open to extend
 - awesome for testing (auto mocking)
 
@@ -43,6 +45,7 @@
 - [Hook](#hook) `@hook`
     - [OnConstruct](#onconstruct) `@onConstruct`
     - [OnDispose](#ondispose) `@onDispose`
+    - [Inject Property](#inject-property)
 - [Mock](#mock)
 - [Error](#error)
 
@@ -130,6 +133,7 @@ Sometimes you want to create dependency only when somebody want to invoke it's m
 
 ### Metadata
 This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `MetadataInjector`.
+Also you can [inject property.](#inject-property)
 
 ```typescript
 {{{include_file './__tests__/readme/metadataInjector.spec.ts'}}}
@@ -254,6 +258,12 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 ### OnDispose
 ```typescript
 {{{include_file '__tests__/OnDispose.spec.ts'}}}
+```
+
+### Inject property
+
+```typescript
+{{{include_file '__tests__/readme/injectProp.spec.ts'}}}
 ```
 
 ## Mock
