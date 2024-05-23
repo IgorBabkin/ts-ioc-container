@@ -1,13 +1,9 @@
 import { IContainer } from '../container/IContainer';
 import { ExecutionContext } from './ExecutionContext';
-import { InjectFn } from '../injector/MetadataInjector';
+import { InjectFn, resolveArgs } from '../injector/MetadataInjector';
+import { constructor } from '../utils';
 
 export type Execution<T extends ExecutionContext = ExecutionContext> = (context: T) => void;
-
-export const injectProp =
-  (fn: InjectFn): Execution =>
-  (context) =>
-    context.injectProperty(fn);
 
 export const hook =
   (key: string | symbol, ...fns: Execution[]) =>
@@ -41,3 +37,29 @@ export const executeHooks = <Context extends ExecutionContext>(
     }
   }
 };
+
+export const injectProp =
+  (fn: InjectFn): Execution =>
+  (context) =>
+    context.injectProperty(fn);
+
+export const invokeExecution =
+  ({
+    handleError,
+    handleResult,
+  }: {
+    handleError: (e: Error, s: IContainer) => void;
+    handleResult: (result: unknown, context: ExecutionContext) => void;
+  }): Execution =>
+  (context) => {
+    const args = resolveArgs(
+      context.instance.constructor as constructor<unknown>,
+      context.methodName as string,
+    )(context.scope);
+    try {
+      const result = context.invokeMethod({ args });
+      handleResult(result, context);
+    } catch (e) {
+      handleError(e as Error, context.scope);
+    }
+  };

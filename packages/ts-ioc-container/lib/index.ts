@@ -48,7 +48,7 @@ export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 
 // Hooks
-export { getHooks, hook, hasHooks, Execution, executeHooks, injectProp } from './hooks/hook';
+export { getHooks, hook, hasHooks, Execution, executeHooks, injectProp, invokeExecution } from './hooks/hook';
 export { ExecutionContext } from './hooks/ExecutionContext';
 
 // Others

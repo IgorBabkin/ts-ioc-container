@@ -46,6 +46,7 @@
     - [OnConstruct](#onconstruct) `@onConstruct`
     - [OnDispose](#ondispose) `@onDispose`
     - [Inject Property](#inject-property)
+    - [Inject Method](#inject-method)
 - [Mock](#mock)
 - [Error](#error)
 
@@ -264,6 +265,12 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 
 ```typescript
 {{{include_file '__tests__/readme/injectProp.spec.ts'}}}
+```
+
+### Inject method
+    
+```typescript
+{{{include_file '__tests__/readme/injectMethod.spec.ts'}}}
 ```
 
 ## Mock
