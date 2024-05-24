@@ -10,8 +10,7 @@
     "emitDecoratorMetadata": true,
     "noImplicitReturns": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "allowImportingTsExtensions": true,
+    "strict": true
   },
   "include": [
     "lib",

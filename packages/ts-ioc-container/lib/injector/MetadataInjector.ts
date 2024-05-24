@@ -1,7 +1,7 @@
 import { IInjector, InjectOptions } from './IInjector';
 import { IContainer } from '../container/IContainer';
 import { constructor } from '../utils';
-import { resolveArgs } from './inject.ts';
+import { resolveArgs } from './inject';
 
 export class MetadataInjector implements IInjector {
   resolve<T>(scope: IContainer, Target: constructor<T>, { args: deps }: InjectOptions): T {

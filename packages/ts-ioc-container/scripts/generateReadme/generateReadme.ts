@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import Handlebars from 'handlebars';
-import './handlebarsHelpers.ts';
+import './handlebarsHelpers';
 
 const content = fs.readFileSync('scripts/generateReadme/README.hbs.md', 'utf8');
 const template = Handlebars.compile(content);

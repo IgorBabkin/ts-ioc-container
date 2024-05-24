@@ -50,7 +50,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 
 // Hooks
 export { getHooks, hook, hasHooks, Hook, executeHooks, runHooks, injectProp, invokeExecution } from './hooks/hook';
-export { HookContext } from './hooks/HookContext.ts';
+export { HookContext, InjectFn } from './hooks/HookContext';
 
 // Others
 export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
@@ -63,4 +63,3 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
-export { InjectFn } from './hooks/HookContext.ts';

@@ -785,7 +785,7 @@ import {
   Registration as R,
   scope,
 } from 'ts-ioc-container';
-import { constant } from '../../lib/utils.ts';
+import { constant } from '../../lib/utils';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';

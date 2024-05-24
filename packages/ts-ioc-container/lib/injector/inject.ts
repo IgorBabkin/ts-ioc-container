@@ -1,7 +1,7 @@
-import { getParameterMetadata, setParameterMetadata } from '../metadata.ts';
-import { constant, constructor, fillEmptyIndexes, isInstance } from '../utils.ts';
-import { IContainer } from '../container/IContainer.ts';
-import { hookMetaKey, InjectFn } from '../hooks/HookContext.ts';
+import { getParameterMetadata, setParameterMetadata } from '../metadata';
+import { constant, constructor, fillEmptyIndexes, isInstance } from '../utils';
+import { IContainer } from '../container/IContainer';
+import { hookMetaKey, InjectFn } from '../hooks/HookContext';
 
 export const inject =
   (fn: InjectFn): ParameterDecorator =>
