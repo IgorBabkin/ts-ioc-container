@@ -40,4 +40,12 @@ export function lazyProxy<T>(resolveInstance: () => T): T {
   ) as T;
 }
 
-export const promisify = (arg: unknown) => (arg instanceof Promise ? arg : Promise.resolve(arg));
+export const promisify = <T>(arg: T | Promise<T>): Promise<T> => (arg instanceof Promise ? arg : Promise.resolve(arg));
+
+export interface InstanceOfClass<T = unknown> {
+  new (...args: unknown[]): T;
+}
+
+export function isInstance(target: object): target is InstanceOfClass<unknown> {
+  return Object.prototype.hasOwnProperty.call(target, 'constructor');
+}

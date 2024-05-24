@@ -1,4 +1,4 @@
-import { by, Container, executeHooks, hook, inject, invokeExecution, MetadataInjector, Registration } from '../../lib';
+import { by, Container, runHooks, hook, inject, invokeExecution, MetadataInjector, Registration } from '../../lib';
 
 describe('inject method', () => {
   const sleep = (number: number) => new Promise((resolve) => setTimeout(resolve, number));
@@ -16,7 +16,7 @@ describe('inject method', () => {
 
     const container = new Container(new MetadataInjector()).add(Registration.fromValue(expected).to('greeting'));
     const app = container.resolve(App);
-    await executeHooks(app, 'onInit', { scope: container, handleError: jest.fn() });
+    await runHooks(app, 'onInit', { scope: container, handleError: jest.fn() });
 
     expect(app.greeting).toBe(expected);
   });
@@ -36,7 +36,7 @@ describe('inject method', () => {
       .add(Registration.fromFn(() => sleep(25).then(() => 'world')).to('person'));
 
     const app = container.resolve(App);
-    await executeHooks(app, 'onInit', { scope: container, handleError: jest.fn() });
+    await runHooks(app, 'onInit', { scope: container, handleError: jest.fn() });
 
     expect(app.greeting).toBe('Hello,world');
   });

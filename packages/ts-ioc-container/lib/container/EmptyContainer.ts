@@ -42,7 +42,7 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
-  getInstances(): unknown[] {
+  getInstances(): object[] {
     return [];
   }
 

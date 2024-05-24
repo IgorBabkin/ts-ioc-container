@@ -22,7 +22,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return this;
   }
 
-  getInstances(): unknown[] {
+  getInstances(): object[] {
     return [];
   }
 

@@ -14,8 +14,9 @@ export { EmptyContainer } from './container/EmptyContainer';
 export { AutoMockedContainer } from './container/AutoMockedContainer';
 
 // Injectors
-export { IInjector } from './injector/IInjector';
-export { MetadataInjector, inject, resolveArgs, getInjectFns, InjectFn } from './injector/MetadataInjector';
+export { inject, resolveArgs } from './injector/inject';
+export { IInjector, InjectOptions } from './injector/IInjector';
+export { MetadataInjector } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 
@@ -48,8 +49,8 @@ export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 
 // Hooks
-export { getHooks, hook, hasHooks, Execution, executeHooks, injectProp, invokeExecution } from './hooks/hook';
-export { ExecutionContext } from './hooks/ExecutionContext';
+export { getHooks, hook, hasHooks, Hook, executeHooks, runHooks, injectProp, invokeExecution } from './hooks/hook';
+export { HookContext } from './hooks/HookContext.ts';
 
 // Others
 export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
@@ -62,3 +63,4 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
+export { InjectFn } from './hooks/HookContext.ts';

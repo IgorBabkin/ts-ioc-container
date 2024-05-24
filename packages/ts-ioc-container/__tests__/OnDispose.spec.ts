@@ -1,16 +1,16 @@
 import 'reflect-metadata';
 import {
-  singleton,
   by,
   Container,
-  key,
   hook,
   inject,
-  provider,
-  Registration as R,
+  key,
   MetadataInjector,
+  provider,
   register,
-  executeHooks,
+  Registration as R,
+  runHooks,
+  singleton,
 } from '../lib';
 
 @register(key('logsRepo'))
@@ -41,7 +41,9 @@ class Logger {
     return this.messages.length;
   }
 
-  @hook('onDispose', (c) => c.invokeMethod({ args: [] })) // <--- or extract it to @onDispose
+  @hook('onDispose', (c) => {
+    c.invokeMethod({ args: [] });
+  }) // <--- or extract it to @onDispose
   async save(): Promise<void> {
     this.logsRepo.saveLogs(this.messages);
   }
@@ -55,7 +57,7 @@ describe('onDispose', function () {
     logger.log('Hello');
 
     for (const instance of container.getInstances()) {
-      executeHooks(instance as object, 'onDispose', { scope: container });
+      void runHooks(instance as object, 'onDispose', { scope: container, handleError: jest.fn() });
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');

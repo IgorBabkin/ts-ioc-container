@@ -1,24 +1,22 @@
 import { IContainer } from '../container/IContainer';
-import { ExecutionContext } from './ExecutionContext';
-import { InjectFn } from '../injector/MetadataInjector';
+import { createHookContext, IHookContext, InjectFn } from './HookContext';
 import { promisify } from '../utils';
 
-export type Execution<T extends ExecutionContext = ExecutionContext> = (context: T) => void | Promise<void>;
+export type Hook<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
 
-type HookList = Execution[];
-type Hooks = Map<string, HookList>;
+type HooksOfClass = Map<string, Hook[]>;
 
 export const hook =
-  (key: string | symbol, ...fns: HookList) =>
+  (key: string | symbol, ...fns: Hook[]) =>
   (target: object, propertyKey: string | symbol) => {
-    const hooks: Hooks = Reflect.hasMetadata(key, target.constructor)
+    const hooks: HooksOfClass = Reflect.hasMetadata(key, target.constructor)
       ? Reflect.getMetadata(key, target.constructor)
       : new Map();
     hooks.set(propertyKey as string, (hooks.get(propertyKey as string) ?? []).concat(fns));
     Reflect.defineMetadata(key, hooks, target.constructor); // eslint-disable-line @typescript-eslint/ban-types
   };
 
-export function getHooks(target: object, key: string | symbol): Hooks {
+export function getHooks(target: object, key: string | symbol): HooksOfClass {
   return Reflect.hasMetadata(key, target.constructor) ? Reflect.getMetadata(key, target.constructor) : new Map();
 }
 
@@ -26,40 +24,45 @@ export function hasHooks(target: object, key: string | symbol): boolean {
   return Reflect.hasMetadata(key, target.constructor);
 }
 
-export const executeHooks = <Context extends ExecutionContext>(
+export const runHooks = (
   target: object,
   key: string | symbol,
   {
     scope,
-    decorateContext = (c) => c as Context,
+    createContext = createHookContext,
     handleError,
   }: {
     scope: IContainer;
-    decorateContext?: (c: ExecutionContext) => Context;
+    createContext?: typeof createHookContext;
     handleError: (e: Error, s: IContainer) => void;
   },
 ) => {
   const hooks = Array.from(getHooks(target, key).entries());
-  const createContext = (methodName: string) => decorateContext(new ExecutionContext(target, methodName, scope));
-  const runExecution = (execute: Execution, context: Context) =>
+  const runExecution = (execute: Hook, context: IHookContext) =>
     promisify(execute(context)).catch((e) => handleError(e, scope));
 
   return Promise.all(
     hooks.flatMap(([methodName, executions]) =>
-      executions.map((execute) => runExecution(execute, createContext(methodName))),
+      executions.map((execute) => runExecution(execute, createContext(target, scope, methodName))),
     ),
   );
 };
 
 export const injectProp =
-  (fn: InjectFn): Execution =>
+  (fn: InjectFn): Hook =>
   (context) =>
     context.injectProperty(fn);
 
-type HandleResult = (result: unknown, context: ExecutionContext) => void | Promise<void>;
+type HandleResult = (result: unknown, context: IHookContext) => void | Promise<void>;
 export const invokeExecution =
-  ({ handleResult }: { handleResult: HandleResult }): Execution =>
+  ({ handleResult }: { handleResult: HandleResult }): Hook =>
   async (context) => {
     const args = await Promise.all(context.resolveArgs().map(promisify));
     return handleResult(context.invokeMethod({ args }), context);
   };
+
+/**
+ * @deprecated Use `runHooks` instead
+ * @TODO: Remove in v33
+ */
+export const executeHooks = runHooks;

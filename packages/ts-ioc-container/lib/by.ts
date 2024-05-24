@@ -1,6 +1,7 @@
 import { DependencyKey, IContainer, InjectionToken } from './container/IContainer';
 import { ProviderResolveOptions } from './provider/IProvider';
-import { InjectFn } from './injector/MetadataInjector';
+
+import { InjectFn } from './hooks/HookContext.ts';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;

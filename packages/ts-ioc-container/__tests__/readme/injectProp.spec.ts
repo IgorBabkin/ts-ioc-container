@@ -1,4 +1,4 @@
-import { by, Container, executeHooks, hook, injectProp, MetadataInjector, Registration } from '../../lib';
+import { by, Container, hook, injectProp, MetadataInjector, Registration, runHooks } from '../../lib';
 
 describe('inject property', () => {
   it('should inject property', () => {
@@ -10,7 +10,7 @@ describe('inject property', () => {
 
     const container = new Container(new MetadataInjector()).add(Registration.fromValue(expected).to('greeting'));
     const app = container.resolve(App);
-    executeHooks(app, 'onInit', { scope: container });
+    runHooks(app as object, 'onInit', { scope: container, handleError: jest.fn() });
 
     expect(app.greeting).toBe(expected);
   });

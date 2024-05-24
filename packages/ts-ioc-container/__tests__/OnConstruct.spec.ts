@@ -2,23 +2,23 @@ import 'reflect-metadata';
 import {
   constructor,
   Container,
-  key,
   hook,
   IContainer,
   IInjector,
+  InjectOptions,
+  key,
   MetadataInjector,
-  Registration as R,
   register,
-  executeHooks,
+  Registration as R,
+  runHooks,
 } from '../lib';
-import { InjectOptions } from '../lib/injector/IInjector.ts';
 
 class MyInjector implements IInjector {
   private injector = new MetadataInjector();
 
   resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
     const instance = this.injector.resolve(container, value, options);
-    executeHooks(instance as object, 'onConstruct', { scope: container });
+    void runHooks(instance as object, 'onConstruct', { scope: container, handleError: jest.fn() });
     return instance;
   }
 }
@@ -27,7 +27,9 @@ class MyInjector implements IInjector {
 class Logger {
   isReady = false;
 
-  @hook('onConstruct', (context) => context.invokeMethod({ args: [] })) // <--- or extract it to @onConstruct
+  @hook('onConstruct', (context) => {
+    context.invokeMethod({ args: [] });
+  }) // <--- or extract it to @onConstruct
   initialize() {
     this.isReady = true;
   }

@@ -20,7 +20,7 @@ export class Container implements IContainer {
   private tags: Set<Tag>;
   private parent: IContainer;
   private scopes = new Set<IContainer>();
-  private instances = new Set<unknown>();
+  private instances = new Set<object>();
   private readonly registrations: IRegistration[] = [];
 
   constructor(
@@ -48,7 +48,7 @@ export class Container implements IContainer {
 
     if (isConstructor(token)) {
       const instance = this.injector.resolve(this, token, { args });
-      this.instances.add(instance);
+      this.instances.add(instance as object);
       return instance;
     }
 
@@ -81,8 +81,8 @@ export class Container implements IContainer {
     this.registrations.splice(0, this.registrations.length);
   }
 
-  getInstances(): unknown[] {
-    const instances: unknown[] = Array.from(this.instances);
+  getInstances(): object[] {
+    const instances: object[] = Array.from(this.instances);
     for (const scope of this.scopes) {
       instances.push(...scope.getInstances());
     }
