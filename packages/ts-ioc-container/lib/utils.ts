@@ -39,3 +39,5 @@ export function lazyProxy<T>(resolveInstance: () => T): T {
     },
   ) as T;
 }
+
+export const promisify = (arg: unknown) => (arg instanceof Promise ? arg : Promise.resolve(arg));
