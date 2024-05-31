@@ -1,4 +1,4 @@
-import { Container, runHooks, Hook, hook, MetadataInjector } from '../../lib';
+import { Container, Hook, hook, MetadataInjector, runHooks } from '../../lib';
 
 const execute: Hook = (context) => {
   context.invokeMethod({ args: [] });
@@ -18,7 +18,7 @@ describe('autorun', () => {
   it('should run autorun function', () => {
     const main = new Main();
 
-    void runHooks(main, '__autorun__', { scope: new Container(new MetadataInjector()), handleError: jest.fn() });
+    runHooks(main, '__autorun__', { scope: new Container(new MetadataInjector()) });
 
     expect(main.isDone).toBe(true);
   });

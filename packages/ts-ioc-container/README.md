@@ -1161,7 +1161,7 @@ class MyInjector implements IInjector {
 
   resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
     const instance = this.injector.resolve(container, value, options);
-    void runHooks(instance as object, 'onConstruct', { scope: container, handleError: jest.fn() });
+    runHooks(instance as object, 'onConstruct', { scope: container });
     return instance;
   }
 }
@@ -1255,7 +1255,7 @@ describe('onDispose', function () {
     logger.log('Hello');
 
     for (const instance of container.getInstances()) {
-      void runHooks(instance as object, 'onDispose', { scope: container, handleError: jest.fn() });
+      runHooks(instance as object, 'onDispose', { scope: container });
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
@@ -1267,7 +1267,7 @@ describe('onDispose', function () {
 ### Inject property
 
 ```typescript
-import { by, Container, hook, injectProp, MetadataInjector, Registration, runHooks } from 'ts-ioc-container';
+import { by, Container, hook, injectProp, MetadataInjector, Registration, runHooksAsync } from 'ts-ioc-container';
 
 describe('inject property', () => {
   it('should inject property', () => {
@@ -1279,7 +1279,7 @@ describe('inject property', () => {
 
     const container = new Container(new MetadataInjector()).add(Registration.fromValue(expected).to('greeting'));
     const app = container.resolve(App);
-    runHooks(app as object, 'onInit', { scope: container, handleError: jest.fn() });
+    runHooksAsync(app as object, 'onInit', { scope: container });
 
     expect(app.greeting).toBe(expected);
   });
@@ -1290,7 +1290,7 @@ describe('inject property', () => {
 ### Inject method
     
 ```typescript
-import { by, Container, runHooks, hook, inject, invokeExecution, MetadataInjector, Registration } from 'ts-ioc-container';
+import { by, Container, hook, inject, invokeExecution, MetadataInjector, Registration, runHooksAsync } from 'ts-ioc-container';
 
 describe('inject method', () => {
   const sleep = (number: number) => new Promise((resolve) => setTimeout(resolve, number));
@@ -1308,7 +1308,7 @@ describe('inject method', () => {
 
     const container = new Container(new MetadataInjector()).add(Registration.fromValue(expected).to('greeting'));
     const app = container.resolve(App);
-    await runHooks(app, 'onInit', { scope: container, handleError: jest.fn() });
+    await runHooksAsync(app, 'onInit', { scope: container });
 
     expect(app.greeting).toBe(expected);
   });
@@ -1328,7 +1328,7 @@ describe('inject method', () => {
       .add(Registration.fromFn(() => sleep(25).then(() => 'world')).to('person'));
 
     const app = container.resolve(App);
-    await runHooks(app, 'onInit', { scope: container, handleError: jest.fn() });
+    await runHooksAsync(app, 'onInit', { scope: container });
 
     expect(app.greeting).toBe('Hello,world');
   });

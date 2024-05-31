@@ -30,16 +30,33 @@ export const runHooks = (
   {
     scope,
     createContext = createHookContext,
-    handleError,
   }: {
     scope: IContainer;
     createContext?: typeof createHookContext;
-    handleError: (e: Error, s: IContainer) => void;
   },
 ) => {
   const hooks = Array.from(getHooks(target, key).entries());
-  const runExecution = (execute: Hook, context: IHookContext) =>
-    promisify(execute(context)).catch((e) => handleError(e, scope));
+
+  for (const [methodName, executions] of hooks) {
+    for (const execute of executions) {
+      execute(createContext(target, scope, methodName));
+    }
+  }
+};
+
+export const runHooksAsync = (
+  target: object,
+  key: string | symbol,
+  {
+    scope,
+    createContext = createHookContext,
+  }: {
+    scope: IContainer;
+    createContext?: typeof createHookContext;
+  },
+) => {
+  const hooks = Array.from(getHooks(target, key).entries());
+  const runExecution = (execute: Hook, context: IHookContext) => promisify(execute(context));
 
   return Promise.all(
     hooks.flatMap(([methodName, executions]) =>
@@ -60,9 +77,3 @@ export const invokeExecution =
     const args = await Promise.all(context.resolveArgs().map(promisify));
     return handleResult(context.invokeMethod({ args }), context);
   };
-
-/**
- * @deprecated Use `runHooks` instead
- * @TODO: Remove in v33
- */
-export const executeHooks = runHooks;

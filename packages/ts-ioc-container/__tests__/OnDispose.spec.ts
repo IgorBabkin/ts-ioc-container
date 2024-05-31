@@ -57,7 +57,7 @@ describe('onDispose', function () {
     logger.log('Hello');
 
     for (const instance of container.getInstances()) {
-      void runHooks(instance as object, 'onDispose', { scope: container, handleError: jest.fn() });
+      runHooks(instance as object, 'onDispose', { scope: container });
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');

@@ -18,7 +18,7 @@ class MyInjector implements IInjector {
 
   resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
     const instance = this.injector.resolve(container, value, options);
-    void runHooks(instance as object, 'onConstruct', { scope: container, handleError: jest.fn() });
+    runHooks(instance as object, 'onConstruct', { scope: container });
     return instance;
   }
 }
