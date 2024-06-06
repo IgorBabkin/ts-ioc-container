@@ -267,12 +267,6 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 {{{include_file '__tests__/readme/injectProp.spec.ts'}}}
 ```
 
-### Inject method
-    
-```typescript
-{{{include_file '__tests__/readme/injectMethod.spec.ts'}}}
-```
-
 ## Mock
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 

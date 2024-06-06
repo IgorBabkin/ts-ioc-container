@@ -69,11 +69,3 @@ export const injectProp =
   (fn: InjectFn): Hook =>
   (context) =>
     context.injectProperty(fn);
-
-type HandleResult = (result: unknown, context: IHookContext) => void | Promise<void>;
-export const invokeExecution =
-  ({ handleResult }: { handleResult: HandleResult }): Hook =>
-  async (context) => {
-    const args = await Promise.all(context.resolveArgs().map(promisify));
-    return handleResult(context.invokeMethod({ args }), context);
-  };
