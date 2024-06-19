@@ -5,8 +5,10 @@ import {
   IContainerModule,
   InjectionToken,
   isConstructor,
+  MatchTags,
   ResolveOptions,
   Tag,
+  TagPath,
 } from './IContainer';
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
@@ -125,6 +127,31 @@ export class Container implements IContainer {
       }
     }
     return this.parent.resolveOneByAlias<T>(predicate, { args, child, lazy });
+  }
+
+  getPath(): TagPath {
+    return [...this.parent.getPath(), Array.from(this.tags)];
+  }
+
+  findScopeByPath(tags: TagPath, matchTags: MatchTags): IContainer | undefined {
+    const [currentTags, ...rest] = tags;
+
+    if (!matchTags(this, currentTags)) {
+      return undefined;
+    }
+
+    for (const scope of this.scopes) {
+      const found = scope.findScopeByPath(rest, matchTags);
+      if (found) {
+        return found;
+      }
+    }
+
+    if (rest.length === 0) {
+      return this;
+    }
+
+    return undefined;
   }
 
   /**

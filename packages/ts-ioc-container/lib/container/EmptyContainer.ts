@@ -4,7 +4,9 @@ import {
   IContainer,
   IContainerModule,
   InjectionToken,
+  MatchTags,
   ResolveOptions,
+  TagPath,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
@@ -13,6 +15,14 @@ import { IRegistration, key } from '../registration/IRegistration';
 
 export class EmptyContainer implements IContainer {
   isDisposed = false;
+
+  getPath(): TagPath {
+    return [];
+  }
+
+  findScopeByPath(path: TagPath, matchTags: MatchTags): IContainer | undefined {
+    return undefined;
+  }
 
   hasDependency(key: string): boolean {
     return false;

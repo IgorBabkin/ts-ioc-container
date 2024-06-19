@@ -30,6 +30,12 @@ export interface Tagged {
   hasTag(tag: Tag): boolean;
 }
 
+export type TagPath = Array<Tag[]>;
+
+export type MatchTags = (scope: IContainer, tags: Tag[]) => boolean;
+export const serializeTagsPath = (path: TagPath) => path.map((tags) => tags.join(',')).join('/');
+export const parseTagsPath = (path: string): TagPath => path.split('/').map((tags) => tags.split(','));
+
 export type Alias = string;
 export type AliasPredicate = (aliases: Set<Alias>) => boolean;
 
@@ -53,6 +59,10 @@ export interface IContainer extends Resolvable, Tagged {
   getRegistrations(): IRegistration[];
 
   hasDependency(key: DependencyKey): boolean;
+
+  getPath(): TagPath;
+
+  findScopeByPath(path: TagPath, matchTags: MatchTags): IContainer | undefined;
 
   resolveManyByAlias(
     predicate: AliasPredicate,
