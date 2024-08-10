@@ -6,7 +6,7 @@ import {
   ProviderResolveOptions,
   ResolveDependency,
 } from './IProvider';
-import { Alias, AliasPredicate, IContainer, Tagged } from '../container/IContainer';
+import { Alias, AliasPredicate, DependencyKey, IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, lazyProxy, MapFn, pipe } from '../utils';
 
 export class Provider<T> implements IProvider<T> {
@@ -20,6 +20,7 @@ export class Provider<T> implements IProvider<T> {
     return new Provider(() => value).pipe(...mappers);
   }
 
+  key?: DependencyKey;
   private readonly aliases: Set<Alias> = new Set();
   private argsFn: ArgsFn = () => [];
   private isVisibleWhen: ChildrenVisibilityPredicate = () => true;
