@@ -27,6 +27,8 @@ export interface IContainerModule {
 }
 
 export interface Tagged {
+  readonly id: string;
+  readonly level: number;
   hasTag(tag: Tag): boolean;
 }
 
@@ -41,6 +43,8 @@ export type AliasPredicate = (aliases: Set<Alias>) => boolean;
 
 export interface IContainer extends Resolvable, Tagged {
   readonly isDisposed: boolean;
+
+  tags: Set<Tag>;
 
   createScope(...tags: Tag[]): IContainer;
 
@@ -71,4 +75,8 @@ export interface IContainer extends Resolvable, Tagged {
   ): Map<DependencyKey, unknown>;
 
   resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T];
+
+  hasInstance(value: object): boolean;
+
+  hasOwnInstance(value: object): boolean;
 }

@@ -68,4 +68,4 @@ export const runHooksAsync = (
 export const injectProp =
   (fn: InjectFn): Hook =>
   (context) =>
-    context.injectProperty(fn);
+    context.setProperty(fn);

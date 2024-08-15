@@ -6,15 +6,28 @@ import {
   InjectionToken,
   MatchTags,
   ResolveOptions,
+  Tag,
   TagPath,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
-import { IRegistration, key } from '../registration/IRegistration';
+import { IRegistration } from '../registration/IRegistration';
 
 export class EmptyContainer implements IContainer {
+  hasInstance(value: object): boolean {
+    throw new Error('Method not implemented.');
+  }
+
+  hasOwnInstance(value: object): boolean {
+    throw new Error('Method not implemented.');
+  }
+
   isDisposed = false;
+  level = -1;
+  id = 'empty';
+
+  tags = new Set<Tag>();
 
   getPath(): TagPath {
     return [];

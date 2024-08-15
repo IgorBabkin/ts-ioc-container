@@ -12,6 +12,12 @@ import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
 export abstract class AutoMockedContainer implements IContainer {
+  tags: Set<string> = new Set();
+
+  id = '0';
+
+  level = 0;
+
   isDisposed = false;
 
   getPath(): TagPath {
@@ -70,5 +76,13 @@ export abstract class AutoMockedContainer implements IContainer {
 
   resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T] {
     throw new DependencyNotFoundError(`Cannot find by alias`);
+  }
+
+  hasInstance(value: object): boolean {
+    throw new Error('Method not implemented.');
+  }
+
+  hasOwnInstance(value: object): boolean {
+    throw new Error('Method not implemented.');
   }
 }

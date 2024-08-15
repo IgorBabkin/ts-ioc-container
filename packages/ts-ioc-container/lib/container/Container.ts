@@ -15,22 +15,33 @@ import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { IRegistration } from '../registration/IRegistration';
+import { Counter } from './Counter';
 
 export class Container implements IContainer {
   isDisposed = false;
   private readonly providers = new Map<DependencyKey, IProvider>();
-  private tags: Set<Tag>;
+  readonly tags: Set<Tag>;
   private parent: IContainer;
   private scopes = new Set<IContainer>();
   private instances = new Set<object>();
   private readonly registrations: IRegistration[] = [];
+  readonly id: string;
+  readonly level: number;
+  private readonly counter: Counter;
 
   constructor(
     private readonly injector: IInjector,
-    options: { parent?: IContainer; tags?: Tag[] } = {},
+    {
+      parent = new EmptyContainer(),
+      tags = [],
+      counter = new Counter(),
+    }: { parent?: IContainer; tags?: Tag[]; counter?: Counter } = {},
   ) {
-    this.parent = options.parent ?? new EmptyContainer();
-    this.tags = new Set(options.tags ?? []);
+    this.parent = parent;
+    this.tags = new Set(tags ?? []);
+    this.counter = counter;
+    this.id = counter.next();
+    this.level = this.parent.level + 1;
   }
 
   add(registration: IRegistration): this {
@@ -63,7 +74,7 @@ export class Container implements IContainer {
   createScope(...tags: Tag[]): Container {
     this.validateContainer();
 
-    const scope = new Container(this.injector, { parent: this, tags });
+    const scope = new Container(this.injector, { parent: this, tags, counter: this.counter });
     scope.applyRegistrationsFrom(this);
     this.scopes.add(scope);
 
@@ -169,6 +180,14 @@ export class Container implements IContainer {
   getRegistrations(): IRegistration[] {
     const registrations = this.parent.getRegistrations();
     return this.registrations.length > 0 ? registrations.concat(this.registrations) : registrations;
+  }
+
+  hasInstance(value: object): boolean {
+    return this.instances.has(value) || this.parent.hasInstance(value);
+  }
+
+  hasOwnInstance(value: object): boolean {
+    return this.instances.has(value);
   }
 
   /**

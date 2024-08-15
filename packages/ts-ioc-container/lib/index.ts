@@ -9,8 +9,6 @@ export {
   Tag,
   Tagged,
   TagPath,
-  serializeTagsPath,
-  parseTagsPath,
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';

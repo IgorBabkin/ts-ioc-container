@@ -13,7 +13,9 @@ export interface IHookContext {
 
   invokeMethod({ args }: { args?: unknown[] }): unknown;
 
-  injectProperty(fn: InjectFn): void;
+  setProperty(fn: InjectFn): void;
+
+  getProperty(): unknown;
 }
 
 export class HookContext implements IHookContext {
@@ -32,9 +34,14 @@ export class HookContext implements IHookContext {
     return this.instance[this.methodName](...args);
   }
 
-  injectProperty(fn: InjectFn): void {
+  setProperty(fn: InjectFn): void {
     // @ts-ignore
     this.instance[this.methodName] = fn(this.scope);
+  }
+
+  getProperty(): unknown {
+    // @ts-ignore
+    return this.instance[this.methodName as any];
   }
 }
 
