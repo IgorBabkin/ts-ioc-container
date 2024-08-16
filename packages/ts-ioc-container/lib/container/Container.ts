@@ -94,12 +94,19 @@ export class Container implements IContainer {
     this.registrations.splice(0, this.registrations.length);
   }
 
-  getInstances(): object[] {
-    const instances: object[] = Array.from(this.instances);
-    for (const scope of this.scopes) {
-      instances.push(...scope.getInstances());
+  getInstances(direction: 'parent' | 'child' = 'child'): object[] {
+    switch (direction) {
+      case 'parent': {
+        return [...this.instances.values(), ...this.parent.getInstances('parent')];
+      }
+      case 'child': {
+        const instances: object[] = [...this.instances.values()];
+        for (const scope of this.scopes) {
+          instances.push(...scope.getInstances('child'));
+        }
+        return instances;
+      }
     }
-    return instances;
   }
 
   hasTag(tag: Tag): boolean {

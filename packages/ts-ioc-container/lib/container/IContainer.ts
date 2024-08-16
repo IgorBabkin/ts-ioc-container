@@ -54,7 +54,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   removeScope(child: IContainer): void;
 
-  getInstances(): object[];
+  getInstances(direction?: 'parent' | 'child'): object[];
 
   dispose(): void;
 
