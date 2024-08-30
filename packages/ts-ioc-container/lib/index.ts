@@ -41,7 +41,7 @@ export { Cache } from './provider/singleton/Cache';
 export { decorate, DecorateFn } from './provider/DecoratorProvider';
 
 // Registrations
-export { key, IRegistration, scope, register } from './registration/IRegistration';
+export { key, IRegistration, ReturnTypeOfRegistration, scope, register } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
 // Errors
@@ -54,7 +54,7 @@ export { getHooks, hook, hasHooks, Hook, runHooks, runHooksAsync, injectProp } f
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others
-export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
+export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases, dependencyKey } from './by';
 export { constructor } from './utils';
 export {
   setMetadata,

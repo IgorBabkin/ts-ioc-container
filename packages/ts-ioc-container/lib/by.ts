@@ -2,6 +2,10 @@ import { DependencyKey, IContainer, InjectionToken } from './container/IContaine
 import { ProviderResolveOptions } from './provider/IProvider';
 
 import { InjectFn } from './hooks/HookContext';
+import { IRegistration } from './registration/IRegistration';
+import { Registration } from './registration/Registration';
+import { Provider } from './provider/Provider';
+import { generateUUID } from './utils';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
@@ -79,4 +83,12 @@ export const by = {
       (l: IContainer) =>
         l.createScope(...tags),
   },
+};
+
+export const dependencyKey = <T>(key: DependencyKey = generateUUID()) => {
+  return {
+    register: (fn: (s: IContainer, ...args: unknown[]) => T): IRegistration<T> =>
+      new Registration(() => new Provider<T>(fn), key),
+    resolve: (s: IContainer, ...args: unknown[]) => by.key<T>(key)(s, ...args),
+  };
 };

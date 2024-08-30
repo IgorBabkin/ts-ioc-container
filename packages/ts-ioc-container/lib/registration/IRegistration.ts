@@ -11,6 +11,8 @@ export interface IRegistration<T = unknown> extends IContainerModule {
   pipe(...mappers: MapFn<IProvider<T>>[]): this;
 }
 
+export type ReturnTypeOfRegistration<T> = T extends IRegistration<infer R> ? R : never;
+
 export const key =
   (key: DependencyKey): MapFn<IRegistration> =>
   (r) =>
