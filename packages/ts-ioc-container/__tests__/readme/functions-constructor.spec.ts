@@ -1,6 +1,6 @@
-import { Container, useRegistrationBuilder, MetadataInjector, singleton } from '../../lib';
+import { Container, depKey, MetadataInjector, singleton } from '../../lib';
 
-const ICarKey = useRegistrationBuilder<
+const ICarKey = depKey<
   Promise<{
     isDriving(): boolean;
     drive(): void;
@@ -8,7 +8,7 @@ const ICarKey = useRegistrationBuilder<
   }>
 >();
 
-const ILoggerKey = useRegistrationBuilder<
+const ILoggerKey = depKey<
   Promise<{
     info(...messages: string[]): boolean;
   }>

@@ -54,7 +54,7 @@ export { getHooks, hook, hasHooks, Hook, runHooks, runHooksAsync, injectProp } f
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others
-export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases, useRegistrationBuilder } from './by';
+export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases, depKey } from './by';
 export { constructor } from './utils';
 export {
   setMetadata,

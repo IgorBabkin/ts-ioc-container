@@ -85,7 +85,7 @@ export const by = {
   },
 };
 
-export const useRegistrationBuilder = <T>(key: DependencyKey = generateUUID()) => {
+export const depKey = <T>(key: DependencyKey = generateUUID()) => {
   let isValidWhen: ScopePredicate;
   const mappers: MapFn<IProvider<T>>[] = [];
 
