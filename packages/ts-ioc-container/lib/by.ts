@@ -1,11 +1,11 @@
 import { DependencyKey, IContainer, InjectionToken } from './container/IContainer';
-import { ProviderResolveOptions } from './provider/IProvider';
+import { IProvider, ProviderResolveOptions } from './provider/IProvider';
 
 import { InjectFn } from './hooks/HookContext';
-import { IRegistration } from './registration/IRegistration';
+import { IRegistration, ScopePredicate } from './registration/IRegistration';
 import { Registration } from './registration/Registration';
 import { Provider } from './provider/Provider';
-import { generateUUID } from './utils';
+import { generateUUID, MapFn } from './utils';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
@@ -85,10 +85,34 @@ export const by = {
   },
 };
 
-export const dependencyKey = <T>(key: DependencyKey = generateUUID()) => {
+export const useRegistrationBuilder = <T>(key: DependencyKey = generateUUID()) => {
+  let isValidWhen: ScopePredicate;
+  const mappers: MapFn<IProvider<T>>[] = [];
+
   return {
-    register: (fn: (s: IContainer, ...args: unknown[]) => T): IRegistration<T> =>
-      new Registration(() => new Provider<T>(fn), key),
+    register: (fn: (s: IContainer, ...args: unknown[]) => T): IRegistration<T> => {
+      const registration = new Registration(() => new Provider<T>(fn), key).pipe(...mappers);
+      if (isValidWhen) {
+        registration.when(isValidWhen);
+      }
+      return registration;
+    },
+
     resolve: (s: IContainer, ...args: unknown[]) => by.key<T>(key)(s, ...args),
+
+    pipe(...values: MapFn<IProvider<T>>[]) {
+      mappers.push(...values);
+      return this;
+    },
+
+    to(target: DependencyKey) {
+      key = target;
+      return this;
+    },
+
+    when(value: ScopePredicate) {
+      isValidWhen = value;
+      return this;
+    },
   };
 };
