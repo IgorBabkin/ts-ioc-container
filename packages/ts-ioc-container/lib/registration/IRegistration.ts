@@ -5,7 +5,7 @@ import { IProvider } from '../provider/IProvider';
 
 export type ScopePredicate = (s: IContainer) => boolean;
 
-export interface IRegistration<T = unknown> extends IContainerModule {
+export interface IRegistration<T = any> extends IContainerModule {
   when(isValidWhen: ScopePredicate): this;
   to(key: DependencyKey): this;
   pipe(...mappers: MapFn<IProvider<T>>[]): this;

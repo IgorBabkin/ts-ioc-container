@@ -9,7 +9,7 @@ import {
 import { Alias, AliasPredicate, DependencyKey, IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, lazyProxy, MapFn, pipe } from '../utils';
 
-export class Provider<T> implements IProvider<T> {
+export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     const transformers = getTransformers(Target);
     return new Provider((container, options) => container.resolve(Target, options)).pipe(...transformers);

@@ -16,7 +16,7 @@ export function argsFn<T = unknown>(fn: ArgsFn): MapFn<IProvider<T>> {
   return (provider) => provider.setArgs(fn);
 }
 
-export interface IProvider<T = unknown> {
+export interface IProvider<T = any> {
   key?: DependencyKey;
 
   resolve(container: IContainer, options: ProviderResolveOptions): T;
