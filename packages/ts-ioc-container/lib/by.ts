@@ -86,6 +86,7 @@ export const by = {
 };
 
 export type DepKey<T> = {
+  assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
   resolve: (s: IContainer, ...args: unknown[]) => T;
   pipe(...values: MapFn<IProvider<T>>[]): DepKey<T>;
@@ -98,6 +99,14 @@ export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {
   const mappers: MapFn<IProvider<T>>[] = [];
 
   return {
+    assignTo: (registration: IRegistration<T>) => {
+      registration.pipe(...mappers).to(key);
+      if (isValidWhen) {
+        registration.when(isValidWhen);
+      }
+      return registration;
+    },
+
     register: (fn: (s: IContainer, ...args: unknown[]) => T): IRegistration<T> => {
       const registration = new Registration(() => new Provider<T>(fn), key).pipe(...mappers);
       if (isValidWhen) {
