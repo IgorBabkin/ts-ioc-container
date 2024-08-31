@@ -85,7 +85,15 @@ export const by = {
   },
 };
 
-export const depKey = <T>(key: DependencyKey = generateUUID()) => {
+export type DepKey<T> = {
+  register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
+  resolve: (s: IContainer, ...args: unknown[]) => T;
+  pipe(...values: MapFn<IProvider<T>>[]): DepKey<T>;
+  to(target: DependencyKey): DepKey<T>;
+  when(value: ScopePredicate): DepKey<T>;
+};
+
+export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {
   let isValidWhen: ScopePredicate;
   const mappers: MapFn<IProvider<T>>[] = [];
 
