@@ -8,7 +8,6 @@ export {
   InjectionToken,
   Tag,
   Tagged,
-  TagPath,
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';

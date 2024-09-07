@@ -32,12 +32,10 @@ export interface Tagged {
   hasTag(tag: Tag): boolean;
 }
 
-export type TagPath = Array<Tag[]>;
-
-export type MatchTags = (scope: IContainer, tags: Tag[]) => boolean;
-
 export type Alias = string;
 export type AliasPredicate = (aliases: Set<Alias>) => boolean;
+
+export type ReduceFn<TResult> = (acc: TResult, container: IContainer) => TResult;
 
 export interface IContainer extends Resolvable, Tagged {
   readonly isDisposed: boolean;
@@ -62,9 +60,11 @@ export interface IContainer extends Resolvable, Tagged {
 
   hasDependency(key: DependencyKey): boolean;
 
-  getPath(): TagPath;
+  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult;
 
-  findScopeByPath(path: TagPath, matchTags: MatchTags): IContainer | undefined;
+  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined;
+
+  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined;
 
   resolveManyByAlias(
     predicate: AliasPredicate,

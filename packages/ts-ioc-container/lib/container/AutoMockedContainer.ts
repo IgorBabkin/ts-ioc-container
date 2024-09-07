@@ -1,12 +1,4 @@
-import {
-  AliasPredicate,
-  DependencyKey,
-  IContainer,
-  InjectionToken,
-  MatchTags,
-  ResolveOptions,
-  TagPath,
-} from './IContainer';
+import { AliasPredicate, DependencyKey, IContainer, InjectionToken, ReduceFn, ResolveOptions } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
@@ -20,11 +12,11 @@ export abstract class AutoMockedContainer implements IContainer {
 
   isDisposed = false;
 
-  getPath(): TagPath {
-    return [];
+  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
+    return undefined;
   }
 
-  findScopeByPath(path: TagPath, matchTags: MatchTags): IContainer | undefined {
+  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined {
     return undefined;
   }
 
@@ -46,6 +38,10 @@ export abstract class AutoMockedContainer implements IContainer {
 
   getInstances(): object[] {
     return [];
+  }
+
+  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult {
+    return initial;
   }
 
   removeScope(): void {}

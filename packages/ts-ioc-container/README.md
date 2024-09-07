@@ -151,6 +151,7 @@ import {
   by,
   scope,
   register,
+  Tag,
 } from 'ts-ioc-container';
 
 @register(key('ILogger'), scope((s) => s.hasTag('child')))
@@ -177,6 +178,23 @@ describe('Scopes', function () {
 
     expect(app.scope).not.toBe(root);
     expect(app.scope.hasTag('child')).toBe(true);
+  });
+
+  it('should get path by reduceToRoot', () => {
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const child = root.createScope('child');
+    const grandChild = child.createScope('grandChild');
+    const collectTags = (acc: Array<Tag[]>, c: IContainer) => [...acc, Array.from(c.tags)];
+
+    const tagsPath = grandChild.reduceToRoot(collectTags, []);
+    expect(tagsPath).toEqual([['root'], ['child'], ['grandChild']]);
+    const actual = root.findChild((s) => {
+      const current = tagsPath.shift() ?? [];
+      const a = current.every((t) => s.hasTag(t));
+      const b = tagsPath.length === 0;
+      return a && b;
+    });
+    expect(actual).toBe(grandChild);
   });
 });
 

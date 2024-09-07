@@ -4,10 +4,9 @@ import {
   IContainer,
   IContainerModule,
   InjectionToken,
-  MatchTags,
+  ReduceFn,
   ResolveOptions,
   Tag,
-  TagPath,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
@@ -29,11 +28,15 @@ export class EmptyContainer implements IContainer {
 
   tags = new Set<Tag>();
 
-  getPath(): TagPath {
-    return [];
+  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult {
+    return initial;
   }
 
-  findScopeByPath(path: TagPath, matchTags: MatchTags): IContainer | undefined {
+  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
+    return undefined;
+  }
+
+  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined {
     return undefined;
   }
 

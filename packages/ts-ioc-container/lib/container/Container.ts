@@ -5,10 +5,9 @@ import {
   IContainerModule,
   InjectionToken,
   isConstructor,
-  MatchTags,
+  ReduceFn,
   ResolveOptions,
   Tag,
-  TagPath,
 } from './IContainer';
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
@@ -95,18 +94,15 @@ export class Container implements IContainer {
   }
 
   getInstances(direction: 'parent' | 'child' = 'child'): object[] {
-    switch (direction) {
-      case 'parent': {
-        return [...this.instances.values(), ...this.parent.getInstances('parent')];
-      }
-      case 'child': {
-        const instances: object[] = [...this.instances.values()];
-        for (const scope of this.scopes) {
-          instances.push(...scope.getInstances('child'));
-        }
-        return instances;
-      }
+    if (direction === 'parent') {
+      return this.parent.getInstances('parent').concat([...this.instances.values()]);
     }
+
+    const instances: object[] = [...this.instances.values()];
+    for (const scope of this.scopes) {
+      instances.push(...scope.getInstances('child'));
+    }
+    return instances;
   }
 
   hasTag(tag: Tag): boolean {
@@ -147,29 +143,26 @@ export class Container implements IContainer {
     return this.parent.resolveOneByAlias<T>(predicate, { args, child, lazy });
   }
 
-  getPath(): TagPath {
-    return [...this.parent.getPath(), Array.from(this.tags)];
+  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult {
+    return fn(this.parent.reduceToRoot(fn, initial), this);
   }
 
-  findScopeByPath(tags: TagPath, matchTags: MatchTags): IContainer | undefined {
-    const [currentTags, ...rest] = tags;
-
-    if (!matchTags(this, currentTags)) {
-      return undefined;
-    }
-
-    for (const scope of this.scopes) {
-      const found = scope.findScopeByPath(rest, matchTags);
-      if (found) {
-        return found;
-      }
-    }
-
-    if (rest.length === 0) {
+  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
+    if (matchFn(this)) {
       return this;
     }
 
+    for (const scope of this.scopes) {
+      const child = scope.findChild(matchFn);
+      if (child) {
+        return child;
+      }
+    }
     return undefined;
+  }
+
+  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined {
+    return matchFn(this) ? this : this.parent.findParent(matchFn);
   }
 
   /**
