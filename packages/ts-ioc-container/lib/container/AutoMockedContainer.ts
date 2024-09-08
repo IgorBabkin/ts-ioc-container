@@ -7,6 +7,7 @@ export abstract class AutoMockedContainer implements IContainer {
   id = '0';
   level = 0;
   tags: Set<string> = new Set();
+  isDisposed = false;
 
   findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
     return undefined;
@@ -71,10 +72,6 @@ export abstract class AutoMockedContainer implements IContainer {
   }
 
   hasInstance(value: object): boolean {
-    throw new MethodNotImplementedError();
-  }
-
-  hasOwnInstance(value: object): boolean {
     throw new MethodNotImplementedError();
   }
 }

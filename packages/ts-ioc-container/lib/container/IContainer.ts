@@ -38,7 +38,9 @@ export type AliasPredicate = (aliases: Set<Alias>) => boolean;
 export type ReduceScope<TResult> = (acc: TResult, container: IContainer) => TResult;
 
 export interface IContainer extends Resolvable, Tagged {
-  tags: Set<Tag>;
+  readonly tags: Set<Tag>;
+
+  readonly isDisposed: boolean;
 
   createScope(...tags: Tag[]): IContainer;
 

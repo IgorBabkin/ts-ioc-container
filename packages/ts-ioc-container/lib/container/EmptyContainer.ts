@@ -17,12 +17,9 @@ export class EmptyContainer implements IContainer {
   level = -1;
   id = 'empty';
   tags = new Set<Tag>();
+  isDisposed = false;
 
   hasInstance(value: object): boolean {
-    throw new MethodNotImplementedError();
-  }
-
-  hasOwnInstance(value: object): boolean {
     throw new MethodNotImplementedError();
   }
 

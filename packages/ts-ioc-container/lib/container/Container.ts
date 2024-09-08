@@ -17,12 +17,12 @@ import { IRegistration } from '../registration/IRegistration';
 import { Counter } from './Counter';
 
 export class Container implements IContainer {
+  isDisposed = false;
   readonly id: string;
   readonly tags: Set<Tag>;
   readonly level: number;
 
   private parent: IContainer;
-  private isDisposed = false;
 
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly scopes = new Set<IContainer>();
