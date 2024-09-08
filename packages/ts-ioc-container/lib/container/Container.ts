@@ -5,7 +5,7 @@ import {
   IContainerModule,
   InjectionToken,
   isConstructor,
-  ReduceFn,
+  ReduceScope,
   ResolveOptions,
   Tag,
 } from './IContainer';
@@ -17,15 +17,17 @@ import { IRegistration } from '../registration/IRegistration';
 import { Counter } from './Counter';
 
 export class Container implements IContainer {
-  isDisposed = false;
-  private readonly providers = new Map<DependencyKey, IProvider>();
-  readonly tags: Set<Tag>;
-  private parent: IContainer;
-  private scopes = new Set<IContainer>();
-  private instances = new Set<object>();
-  private readonly registrations: IRegistration[] = [];
   readonly id: string;
+  readonly tags: Set<Tag>;
   readonly level: number;
+
+  private parent: IContainer;
+  private isDisposed = false;
+
+  private readonly providers = new Map<DependencyKey, IProvider>();
+  private readonly scopes = new Set<IContainer>();
+  private readonly instances = new Set<object>();
+  private readonly registrations: IRegistration[] = [];
   private readonly counter: Counter;
 
   constructor(
@@ -143,7 +145,7 @@ export class Container implements IContainer {
     return this.parent.resolveOneByAlias<T>(predicate, { args, child, lazy });
   }
 
-  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult {
+  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult {
     return fn(this.parent.reduceToRoot(fn, initial), this);
   }
 
@@ -165,6 +167,14 @@ export class Container implements IContainer {
     return matchFn(this) ? this : this.parent.findParent(matchFn);
   }
 
+  hasInstance(value: object, direction: 'parent' | 'child'): boolean {
+    if (direction === 'parent') {
+      return this.instances.has(value) || this.parent.hasInstance(value, 'parent');
+    }
+
+    return this.instances.has(value) || Array.from(this.scopes).some((scope) => scope.hasInstance(value, 'child'));
+  }
+
   /**
    * @private
    */
@@ -180,14 +190,6 @@ export class Container implements IContainer {
   getRegistrations(): IRegistration[] {
     const registrations = this.parent.getRegistrations();
     return this.registrations.length > 0 ? registrations.concat(this.registrations) : registrations;
-  }
-
-  hasInstance(value: object): boolean {
-    return this.instances.has(value) || this.parent.hasInstance(value);
-  }
-
-  hasOwnInstance(value: object): boolean {
-    return this.instances.has(value);
   }
 
   /**

@@ -1,16 +1,12 @@
-import { AliasPredicate, DependencyKey, IContainer, InjectionToken, ReduceFn, ResolveOptions } from './IContainer';
+import { AliasPredicate, DependencyKey, IContainer, InjectionToken, ReduceScope, ResolveOptions } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
 export abstract class AutoMockedContainer implements IContainer {
-  tags: Set<string> = new Set();
-
   id = '0';
-
   level = 0;
-
-  isDisposed = false;
+  tags: Set<string> = new Set();
 
   findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
     return undefined;
@@ -40,7 +36,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return [];
   }
 
-  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult {
+  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult {
     return initial;
   }
 
@@ -75,10 +71,10 @@ export abstract class AutoMockedContainer implements IContainer {
   }
 
   hasInstance(value: object): boolean {
-    throw new Error('Method not implemented.');
+    throw new MethodNotImplementedError();
   }
 
   hasOwnInstance(value: object): boolean {
-    throw new Error('Method not implemented.');
+    throw new MethodNotImplementedError();
   }
 }

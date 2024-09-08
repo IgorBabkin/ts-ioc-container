@@ -35,11 +35,9 @@ export interface Tagged {
 export type Alias = string;
 export type AliasPredicate = (aliases: Set<Alias>) => boolean;
 
-export type ReduceFn<TResult> = (acc: TResult, container: IContainer) => TResult;
+export type ReduceScope<TResult> = (acc: TResult, container: IContainer) => TResult;
 
 export interface IContainer extends Resolvable, Tagged {
-  readonly isDisposed: boolean;
-
   tags: Set<Tag>;
 
   createScope(...tags: Tag[]): IContainer;
@@ -60,7 +58,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   hasDependency(key: DependencyKey): boolean;
 
-  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult;
+  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult;
 
   findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined;
 
@@ -74,7 +72,5 @@ export interface IContainer extends Resolvable, Tagged {
 
   resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T];
 
-  hasInstance(value: object): boolean;
-
-  hasOwnInstance(value: object): boolean;
+  hasInstance(value: object, direction: 'parent' | 'child'): boolean;
 }

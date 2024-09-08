@@ -4,7 +4,7 @@ import {
   IContainer,
   IContainerModule,
   InjectionToken,
-  ReduceFn,
+  ReduceScope,
   ResolveOptions,
   Tag,
 } from './IContainer';
@@ -14,21 +14,19 @@ import { IProvider } from '../provider/IProvider';
 import { IRegistration } from '../registration/IRegistration';
 
 export class EmptyContainer implements IContainer {
+  level = -1;
+  id = 'empty';
+  tags = new Set<Tag>();
+
   hasInstance(value: object): boolean {
-    throw new Error('Method not implemented.');
+    throw new MethodNotImplementedError();
   }
 
   hasOwnInstance(value: object): boolean {
-    throw new Error('Method not implemented.');
+    throw new MethodNotImplementedError();
   }
 
-  isDisposed = false;
-  level = -1;
-  id = 'empty';
-
-  tags = new Set<Tag>();
-
-  reduceToRoot<TResult>(fn: ReduceFn<TResult>, initial: TResult): TResult {
+  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult {
     return initial;
   }
 

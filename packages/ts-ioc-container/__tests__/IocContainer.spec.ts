@@ -71,7 +71,6 @@ describe('IocContainer', function () {
 
     container.dispose();
 
-    expect(container.isDisposed).toBe(true);
     expect(() => container.resolve('logger')).toThrowError(ContainerDisposedError);
   });
 
