@@ -97,10 +97,10 @@ export class Container implements IContainer {
 
   getInstances(direction: 'parent' | 'child' = 'child'): object[] {
     if (direction === 'parent') {
-      return this.parent.getInstances('parent').concat([...this.instances.values()]);
+      return [...this.parent.getInstances('parent'), ...this.instances];
     }
 
-    const instances: object[] = [...this.instances.values()];
+    const instances: object[] = Array.from(this.instances);
     for (const scope of this.scopes) {
       instances.push(...scope.getInstances('child'));
     }
@@ -188,8 +188,7 @@ export class Container implements IContainer {
    * @private
    */
   getRegistrations(): IRegistration[] {
-    const registrations = this.parent.getRegistrations();
-    return this.registrations.length > 0 ? registrations.concat(this.registrations) : registrations;
+    return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
   /**
