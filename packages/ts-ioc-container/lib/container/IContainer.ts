@@ -52,6 +52,8 @@ export interface IContainer extends Resolvable, Tagged {
 
   getInstances(direction?: 'parent' | 'child'): object[];
 
+  getOwnInstances(): object[];
+
   dispose(): void;
 
   use(module: IContainerModule): this;

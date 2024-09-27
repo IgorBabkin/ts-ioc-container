@@ -107,6 +107,10 @@ export class Container implements IContainer {
     return instances;
   }
 
+  getOwnInstances(): object[] {
+    return Array.from(this.instances);
+  }
+
   hasTag(tag: Tag): boolean {
     return this.tags.has(tag);
   }

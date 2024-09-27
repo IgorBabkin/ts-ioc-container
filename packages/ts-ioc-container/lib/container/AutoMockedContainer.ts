@@ -37,6 +37,10 @@ export abstract class AutoMockedContainer implements IContainer {
     return [];
   }
 
+  getOwnInstances(): object[] {
+    return [];
+  }
+
   reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult {
     return initial;
   }

@@ -67,6 +67,10 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
+  getOwnInstances(): object[] {
+    return [];
+  }
+
   removeScope(): void {}
 
   use(module: IContainerModule): this {
