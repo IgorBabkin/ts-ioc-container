@@ -30,12 +30,14 @@ export const runHooks = (
   {
     scope,
     createContext = createHookContext,
+    predicate = () => true,
   }: {
     scope: IContainer;
     createContext?: typeof createHookContext;
+    predicate?: (methodName: string) => boolean;
   },
 ) => {
-  const hooks = Array.from(getHooks(target, key).entries());
+  const hooks = Array.from(getHooks(target, key).entries()).filter(([methodName]) => predicate(methodName));
 
   for (const [methodName, executions] of hooks) {
     for (const execute of executions) {
@@ -50,18 +52,21 @@ export const runHooksAsync = (
   {
     scope,
     createContext = createHookContext,
+    predicate = () => true,
   }: {
     scope: IContainer;
     createContext?: typeof createHookContext;
+    predicate?: (methodName: string) => boolean;
   },
 ) => {
-  const hooks = Array.from(getHooks(target, key).entries());
+  const hooks = Array.from(getHooks(target, key).entries()).filter(([methodName]) => predicate(methodName));
   const runExecution = (execute: Hook, context: IHookContext) => promisify(execute(context));
 
   return Promise.all(
-    hooks.flatMap(([methodName, executions]) =>
-      executions.map((execute) => runExecution(execute, createContext(target, scope, methodName))),
-    ),
+    hooks.flatMap(([methodName, executions]) => {
+      const context = createContext(target, scope, methodName);
+      return executions.map((execute) => runExecution(execute, context));
+    }),
   );
 };
 
