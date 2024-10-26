@@ -40,7 +40,14 @@ export { Cache } from './provider/singleton/Cache';
 export { decorate, DecorateFn } from './provider/DecoratorProvider';
 
 // Registrations
-export { key, IRegistration, ReturnTypeOfRegistration, scope, register } from './registration/IRegistration';
+export {
+  key,
+  IRegistration,
+  ReturnTypeOfRegistration,
+  scope,
+  register,
+  redirectFrom,
+} from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
 // Errors

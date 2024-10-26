@@ -86,12 +86,14 @@ export const by = {
 };
 
 export type DepKey<T> = {
+  key: DependencyKey;
   assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
   resolve: (s: IContainer, ...args: unknown[]) => T;
   pipe(...values: MapFn<IProvider<T>>[]): DepKey<T>;
   to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
+  redirectFrom: (registration: IRegistration<T>) => IRegistration<T>;
 };
 
 export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {
@@ -99,18 +101,20 @@ export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {
   const mappers: MapFn<IProvider<T>>[] = [];
 
   return {
+    key,
+
     assignTo: (registration: IRegistration<T>) => {
-      registration.pipe(...mappers).to(key);
+      let reg: IRegistration<T> = registration.pipe(...mappers).to(key);
       if (isValidWhen) {
-        registration.when(isValidWhen);
+        reg = registration.when(isValidWhen);
       }
-      return registration;
+      return reg;
     },
 
     register: (fn: (s: IContainer, ...args: unknown[]) => T): IRegistration<T> => {
-      const registration = new Registration(() => new Provider<T>(fn), key).pipe(...mappers);
+      let registration: IRegistration<T> = new Registration(() => new Provider<T>(fn), key).pipe(...mappers);
       if (isValidWhen) {
-        registration.when(isValidWhen);
+        registration = registration.when(isValidWhen);
       }
       return registration;
     },
@@ -131,5 +135,7 @@ export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {
       isValidWhen = value;
       return this;
     },
+
+    redirectFrom: (registration) => registration.redirectFrom(key),
   };
 };

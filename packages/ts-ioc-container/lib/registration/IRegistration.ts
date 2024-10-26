@@ -26,6 +26,12 @@ export const key =
     return registration;
   };
 
+export const redirectFrom =
+  (redirectKey: DependencyKey): MapFn<IRegistration> =>
+  (r) => {
+    return r.redirectFrom(redirectKey);
+  };
+
 export const scope =
   (predicate: ScopePredicate): MapFn<IRegistration> =>
   (r) =>
