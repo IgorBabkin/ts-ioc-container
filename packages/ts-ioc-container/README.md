@@ -1083,6 +1083,17 @@ describe('Registration module', function () {
 
     expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
   });
+
+  it('should assign additional key which redirects to original one', function () {
+    @register(key('ILogger', 'Logger'))
+    @provider(singleton())
+    class Logger {}
+
+    const root = createContainer().add(R.fromClass(Logger));
+
+    expect(root.resolve('Logger')).toBeInstanceOf(Logger);
+    expect(root.resolve('Logger')).toBe(root.resolve('ILogger'));
+  });
 });
 
 ```

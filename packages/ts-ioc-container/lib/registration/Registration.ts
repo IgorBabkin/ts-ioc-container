@@ -6,6 +6,8 @@ import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
 
 export class Registration<T = any> implements IRegistration<T> {
+  private redirectKeys: Set<DependencyKey> = new Set();
+
   static fromClass<T>(Target: constructor<T>) {
     const transform = pipe(...getTransformers(Target));
     return transform(new Registration(() => Provider.fromClass(Target), Target.name));
@@ -36,6 +38,11 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
+  redirectFrom(key: DependencyKey): this {
+    this.redirectKeys.add(key);
+    return this;
+  }
+
   pipe(...mappers: MapFn<IProvider<T>>[]): this {
     this.mappers.push(...mappers);
     return this;
@@ -55,6 +62,11 @@ export class Registration<T = any> implements IRegistration<T> {
       throw new DependencyMissingKeyError('No key provided for registration');
     }
 
-    container.register(this.key, this.createProvider(this.key).pipe(...this.mappers));
+    const key = this.key;
+
+    container.register(key, this.createProvider(key).pipe(...this.mappers));
+    for (const redirectKey of this.redirectKeys) {
+      container.register(redirectKey, new Provider((s) => s.resolve(key)));
+    }
   }
 }

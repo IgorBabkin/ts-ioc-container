@@ -9,14 +9,22 @@ export interface IRegistration<T = any> extends IContainerModule {
   when(isValidWhen: ScopePredicate): this;
   to(key: DependencyKey): this;
   pipe(...mappers: MapFn<IProvider<T>>[]): this;
+
+  redirectFrom(key: DependencyKey): this;
 }
 
 export type ReturnTypeOfRegistration<T> = T extends IRegistration<infer R> ? R : never;
 
 export const key =
-  (key: DependencyKey): MapFn<IRegistration> =>
-  (r) =>
-    r.to(key);
+  (...keys: DependencyKey[]): MapFn<IRegistration> =>
+  (r) => {
+    const [originalKey, ...redirectKeys] = keys;
+    let registration: IRegistration = r.to(originalKey);
+    for (const key of redirectKeys) {
+      registration = registration.redirectFrom(key);
+    }
+    return registration;
+  };
 
 export const scope =
   (predicate: ScopePredicate): MapFn<IRegistration> =>
