@@ -1,13 +1,19 @@
 import { IContainer } from '../container/IContainer';
-import { createHookContext, IHookContext, InjectFn } from './HookContext';
-import { promisify } from '../utils';
+import { CreateHookContext, createHookContext, IHookContext, InjectFn } from './HookContext';
+import { constructor, isConstructor, promisify } from '../utils';
 
-export type Hook<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
+export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
+export interface HookClass<T extends IHookContext = IHookContext> {
+  execute(context: Omit<T, 'scope'>): void | Promise<void>;
+}
+const isHookClassConstructor = (execute: HookFn | constructor<HookClass>): execute is constructor<HookClass> => {
+  return isConstructor(execute) && execute.prototype.execute;
+};
 
-type HooksOfClass = Map<string, Hook[]>;
+type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
 
 export const hook =
-  (key: string | symbol, ...fns: Hook[]) =>
+  (key: string | symbol, ...fns: (HookFn | constructor<HookClass>)[]) =>
   (target: object, propertyKey: string | symbol) => {
     const hooks: HooksOfClass = Reflect.hasMetadata(key, target.constructor)
       ? Reflect.getMetadata(key, target.constructor)
@@ -33,7 +39,7 @@ export const runHooks = (
     predicate = () => true,
   }: {
     scope: IContainer;
-    createContext?: typeof createHookContext;
+    createContext?: CreateHookContext;
     predicate?: (methodName: string) => boolean;
   },
 ) => {
@@ -41,7 +47,12 @@ export const runHooks = (
 
   for (const [methodName, executions] of hooks) {
     for (const execute of executions) {
-      execute(createContext(target, scope, methodName));
+      const context = createContext(target, scope, methodName);
+      if (isHookClassConstructor(execute)) {
+        scope.resolve(execute).execute(context);
+      } else {
+        execute(context);
+      }
     }
   }
 };
@@ -60,7 +71,10 @@ export const runHooksAsync = (
   },
 ) => {
   const hooks = Array.from(getHooks(target, key).entries()).filter(([methodName]) => predicate(methodName));
-  const runExecution = (execute: Hook, context: IHookContext) => promisify(execute(context));
+  const runExecution = (execute: HookFn | constructor<HookClass>, context: IHookContext) =>
+    isHookClassConstructor(execute)
+      ? promisify(context.scope.resolve(execute).execute(context))
+      : promisify(execute(context));
 
   return Promise.all(
     hooks.flatMap(([methodName, executions]) => {
@@ -71,6 +85,6 @@ export const runHooksAsync = (
 };
 
 export const injectProp =
-  (fn: InjectFn): Hook =>
+  (fn: InjectFn): HookFn =>
   (context) =>
     context.setProperty(fn);

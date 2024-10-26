@@ -45,7 +45,8 @@ export class HookContext implements IHookContext {
   }
 }
 
-export const createHookContext = (Target: object, scope: IContainer, methodName = 'constructor'): IHookContext =>
+export type CreateHookContext = (Target: object, scope: IContainer, methodName?: string) => IHookContext;
+export const createHookContext: CreateHookContext = (Target, scope, methodName = 'constructor') =>
   new HookContext(Target, scope, methodName);
 
 export const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;

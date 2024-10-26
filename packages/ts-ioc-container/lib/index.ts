@@ -49,7 +49,7 @@ export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 
 // Hooks
-export { getHooks, hook, hasHooks, Hook, runHooks, runHooksAsync, injectProp } from './hooks/hook';
+export { getHooks, hook, hasHooks, HookFn, HookClass, runHooks, runHooksAsync, injectProp } from './hooks/hook';
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others

@@ -1,9 +1,9 @@
-import { Container, Hook, hook, MetadataInjector, runHooks } from '../../lib';
+import { Container, HookFn, hook, MetadataInjector, runHooks } from '../../lib';
 
-const execute: Hook = (context) => {
+const execute: HookFn = (context) => {
   context.invokeMethod({ args: [] });
 };
-const auto = (fn: Hook) => hook('__autorun__', fn);
+const auto = (fn: HookFn) => hook('__autorun__', fn);
 
 describe('autorun', () => {
   class Main {
