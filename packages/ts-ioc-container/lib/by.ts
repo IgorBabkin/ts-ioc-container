@@ -104,7 +104,7 @@ export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {
     key,
 
     assignTo: (registration: IRegistration<T>) => {
-      let reg: IRegistration<T> = registration.pipe(...mappers).to(key);
+      let reg: IRegistration<T> = registration.pipe(...mappers).fromKey(key);
       if (isValidWhen) {
         reg = registration.when(isValidWhen);
       }

@@ -68,7 +68,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container(new MetadataInjector());
-    container.add(R.fromClass(TodoRepository)).add(R.fromClass(Logger));
+    container.add(R.toClass(TodoRepository)).add(R.toClass(Logger));
     return container;
   }
 

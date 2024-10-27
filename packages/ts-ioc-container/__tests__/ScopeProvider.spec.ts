@@ -6,7 +6,7 @@ import { singleton, Container, key, provider, MetadataInjector, Registration as 
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromClass(Logger));
+    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger));
     const child = root.createScope();
     expect(root.resolve('ILogger')).toBe(child.resolve('ILogger'));
   });

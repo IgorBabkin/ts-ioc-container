@@ -18,7 +18,7 @@ describe('Visibility', function () {
     @provider(singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromClass(FileLogger));
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
 
     const child = parent.createScope('child');
 

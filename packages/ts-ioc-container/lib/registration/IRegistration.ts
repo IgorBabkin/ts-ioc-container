@@ -7,10 +7,10 @@ export type ScopePredicate = (s: IContainer) => boolean;
 
 export interface IRegistration<T = any> extends IContainerModule {
   when(isValidWhen: ScopePredicate): this;
-  to(key: DependencyKey): this;
+  fromKey(key: DependencyKey): this;
   pipe(...mappers: MapFn<IProvider<T>>[]): this;
 
-  redirectFrom(key: DependencyKey): this;
+  redirectFrom(...keys: DependencyKey[]): this;
 }
 
 export type ReturnTypeOfRegistration<T> = T extends IRegistration<infer R> ? R : never;
@@ -19,18 +19,13 @@ export const key =
   (...keys: DependencyKey[]): MapFn<IRegistration> =>
   (r) => {
     const [originalKey, ...redirectKeys] = keys;
-    let registration: IRegistration = r.to(originalKey);
-    for (const key of redirectKeys) {
-      registration = registration.redirectFrom(key);
-    }
-    return registration;
+    return r.fromKey(originalKey).redirectFrom(...redirectKeys);
   };
 
 export const redirectFrom =
-  (redirectKey: DependencyKey): MapFn<IRegistration> =>
-  (r) => {
-    return r.redirectFrom(redirectKey);
-  };
+  (...keys: DependencyKey[]): MapFn<IRegistration> =>
+  (r) =>
+    r.redirectFrom(...keys);
 
 export const scope =
   (predicate: ScopePredicate): MapFn<IRegistration> =>

@@ -41,7 +41,7 @@ class Logger {
 
 describe('onConstruct', function () {
   it('should make logger be ready on resolve', function () {
-    const container = new Container(new MyInjector()).add(R.fromClass(Logger));
+    const container = new Container(new MyInjector()).add(R.toClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 

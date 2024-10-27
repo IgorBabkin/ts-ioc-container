@@ -8,12 +8,12 @@ import { getTransformers, IRegistration, ScopePredicate } from './IRegistration'
 export class Registration<T = any> implements IRegistration<T> {
   private redirectKeys: Set<DependencyKey> = new Set();
 
-  static fromClass<T>(Target: constructor<T>) {
+  static toClass<T>(Target: constructor<T>) {
     const transform = pipe(...getTransformers(Target));
     return transform(new Registration(() => Provider.fromClass(Target), Target.name));
   }
 
-  static fromValue<T>(value: T) {
+  static toValue<T>(value: T) {
     if (isConstructor(value)) {
       const transform = pipe(...getTransformers(value as constructor<T>));
       return transform(new Registration(() => Provider.fromValue(value), value.name));
@@ -21,12 +21,12 @@ export class Registration<T = any> implements IRegistration<T> {
     return new Registration(() => Provider.fromValue(value));
   }
 
-  static fromFn<T>(fn: ResolveDependency<T>) {
+  static toFn<T>(fn: ResolveDependency<T>) {
     return new Registration(() => new Provider(fn));
   }
 
-  static redirectTo<T>(key: DependencyKey) {
-    return new Registration<T>(() => Provider.redirectTo(key));
+  static toKey<T>(key: DependencyKey) {
+    return new Registration<T>(() => Provider.fromKey(key));
   }
 
   private mappers: MapFn<IProvider<T>>[] = [];
@@ -37,13 +37,15 @@ export class Registration<T = any> implements IRegistration<T> {
     private matchScope: ScopePredicate = () => true,
   ) {}
 
-  to(key: DependencyKey): this {
+  fromKey(key: DependencyKey): this {
     this.key = key;
     return this;
   }
 
-  redirectFrom(key: DependencyKey): this {
-    this.redirectKeys.add(key);
+  redirectFrom(...keys: DependencyKey[]): this {
+    for (const key of keys) {
+      this.redirectKeys.add(key);
+    }
     return this;
   }
 

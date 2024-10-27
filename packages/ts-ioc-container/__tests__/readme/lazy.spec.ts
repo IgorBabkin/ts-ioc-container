@@ -32,7 +32,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container(new MetadataInjector());
-    container.add(R.fromClass(Flag)).add(R.fromClass(Service));
+    container.add(R.toClass(Flag)).add(R.toClass(Service));
     return container;
   }
 

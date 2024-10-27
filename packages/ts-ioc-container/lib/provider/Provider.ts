@@ -20,7 +20,7 @@ export class Provider<T = any> implements IProvider<T> {
     return new Provider(() => value).pipe(...mappers);
   }
 
-  static redirectTo<T>(key: DependencyKey) {
+  static fromKey<T>(key: DependencyKey) {
     return new Provider<T>((c) => c.resolve(key));
   }
 

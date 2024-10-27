@@ -69,8 +69,8 @@ describe('alias', () => {
     }
 
     const container = new Container(new MetadataInjector())
-      .add(R.fromClass(LoggerMiddleware))
-      .add(R.fromClass(ErrorHandlerMiddleware));
+      .add(R.toClass(LoggerMiddleware))
+      .add(R.toClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
@@ -83,7 +83,7 @@ describe('alias', () => {
     @provider(alias('ILogger'))
     class FileLogger {}
 
-    const container = new Container(new MetadataInjector()).add(R.fromClass(FileLogger));
+    const container = new Container(new MetadataInjector()).add(R.toClass(FileLogger));
 
     expect(byAlias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
     expect(() => byAlias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
@@ -100,8 +100,8 @@ describe('alias', () => {
 
     const container = new Container(new MetadataInjector(), { tags: ['root'] })
       .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
-      .add(R.fromClass(FileLogger))
-      .add(R.fromClass(DbLogger));
+      .add(R.toClass(FileLogger))
+      .add(R.toClass(DbLogger));
 
     const result1 = byAlias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(container);
     const child = container.createScope('child');
@@ -131,10 +131,10 @@ describe('alias', () => {
 
     const container = new Container(new MetadataInjector())
       .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
-      .add(R.fromClass(FileLogger));
+      .add(R.toClass(FileLogger));
 
     const loggers = container.resolve(App).loggers;
-    container.add(R.fromClass(DbLogger));
+    container.add(R.toClass(DbLogger));
     const loggers2 = container.resolve(App).loggers;
 
     expect(loggers).toEqual(loggers2);

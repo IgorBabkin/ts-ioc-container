@@ -19,7 +19,7 @@ class Logger {}
 
 describe('Singleton', function () {
   it('should resolve the same dependency if provider registered per root', function () {
-    const container = new Container(new MetadataInjector(), { tags: ['home'] }).add(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector(), { tags: ['home'] }).add(R.toClass(Logger));
 
     const child1 = container.createScope();
     const child2 = container.createScope();
@@ -28,7 +28,7 @@ describe('Singleton', function () {
   });
 
   it('should resolve unique dependency for every registered scope', function () {
-    const container = new Container(new MetadataInjector()).add(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
     const home1 = container.createScope('home');
     const home2 = container.createScope('home');
@@ -37,7 +37,7 @@ describe('Singleton', function () {
   });
 
   it('should resolve unique dependency if registered scope has another registered scope', function () {
-    const container = new Container(new MetadataInjector(), { tags: ['home'] }).add(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector(), { tags: ['home'] }).add(R.toClass(Logger));
 
     const child1 = container.createScope('home');
 
@@ -45,7 +45,7 @@ describe('Singleton', function () {
   });
 
   it('should dispose all scopes', function () {
-    const container = new Container(new MetadataInjector()).add(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
     const child1 = container.createScope('home');
     const child2 = container.createScope('home');
@@ -60,7 +60,7 @@ describe('Singleton', function () {
   });
 
   it('should collect instances from all scopes', function () {
-    const container = new Container(new MetadataInjector()).add(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
     const childScope1 = container.createScope('home');
     const childScope2 = container.createScope('home');
@@ -74,7 +74,7 @@ describe('Singleton', function () {
   });
 
   it('should clear all instances on dispose', function () {
-    const container = new Container(new MetadataInjector()).add(R.fromClass(Logger));
+    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
     const child1 = container.createScope('home');
     const child2 = container.createScope('home');
@@ -89,7 +89,7 @@ describe('Singleton', function () {
     @register(key('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromClass(FileLogger));
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
 
     const child = parent.createScope('child');
 
@@ -101,7 +101,7 @@ describe('Singleton', function () {
     @register(key('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.fromValue(FileLogger));
+    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toValue(FileLogger));
 
     const child = parent.createScope('child');
 
@@ -118,8 +118,8 @@ describe('Singleton', function () {
     class DbLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] })
-      .add(R.fromClass(FileLogger))
-      .add(R.fromClass(DbLogger));
+      .add(R.toClass(FileLogger))
+      .add(R.toClass(DbLogger));
 
     const child = parent.createScope('child');
 
@@ -133,7 +133,7 @@ describe('Singleton', function () {
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] });
 
-    const child = parent.createScope('child').add(R.fromClass(DbLogger));
+    const child = parent.createScope('child').add(R.toClass(DbLogger));
 
     expect(child.resolve('logger')).toBeInstanceOf(DbLogger);
     expect(child.createScope().resolve('logger')).toBeInstanceOf(DbLogger);
