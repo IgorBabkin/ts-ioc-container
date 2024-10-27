@@ -25,6 +25,10 @@ export class Registration<T = any> implements IRegistration<T> {
     return new Registration(() => new Provider(fn));
   }
 
+  static redirectTo<T>(key: DependencyKey) {
+    return new Registration<T>(() => Provider.redirectTo(key));
+  }
+
   private mappers: MapFn<IProvider<T>>[] = [];
 
   constructor(
