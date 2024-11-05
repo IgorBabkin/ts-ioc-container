@@ -37,12 +37,14 @@ export type AliasPredicate = (aliases: Set<Alias>) => boolean;
 
 export type ReduceScope<TResult> = (acc: TResult, container: IContainer) => TResult;
 
+export type CreateScopeOptions = { tags?: Tag[]; idempotent?: boolean };
+
 export interface IContainer extends Resolvable, Tagged {
   readonly tags: Set<Tag>;
 
   readonly isDisposed: boolean;
 
-  createScope(...tags: Tag[]): IContainer;
+  createScope(options?: CreateScopeOptions): IContainer;
 
   register(key: DependencyKey, value: IProvider): this;
 
@@ -67,6 +69,8 @@ export interface IContainer extends Resolvable, Tagged {
   findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined;
 
   findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined;
+
+  matchTags(tags: Tag[]): boolean;
 
   resolveManyByAlias(
     predicate: AliasPredicate,

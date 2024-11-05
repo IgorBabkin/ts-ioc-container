@@ -30,8 +30,8 @@ describe('Singleton', function () {
   it('should resolve unique dependency for every registered scope', function () {
     const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
-    const home1 = container.createScope('home');
-    const home2 = container.createScope('home');
+    const home1 = container.createScope({ tags: ['home'] });
+    const home2 = container.createScope({ tags: ['home'] });
 
     expect(home1.resolve('logger')).not.toBe(home2.resolve('logger'));
   });
@@ -39,7 +39,7 @@ describe('Singleton', function () {
   it('should resolve unique dependency if registered scope has another registered scope', function () {
     const container = new Container(new MetadataInjector(), { tags: ['home'] }).add(R.toClass(Logger));
 
-    const child1 = container.createScope('home');
+    const child1 = container.createScope({ tags: ['home'] });
 
     expect(child1.resolve('logger')).not.toBe(container.resolve('logger'));
   });
@@ -47,8 +47,8 @@ describe('Singleton', function () {
   it('should dispose all scopes', function () {
     const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
-    const child1 = container.createScope('home');
-    const child2 = container.createScope('home');
+    const child1 = container.createScope({ tags: ['home'] });
+    const child2 = container.createScope({ tags: ['home'] });
 
     child1.resolve('logger');
     child2.resolve('logger');
@@ -62,8 +62,8 @@ describe('Singleton', function () {
   it('should collect instances from all scopes', function () {
     const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
-    const childScope1 = container.createScope('home');
-    const childScope2 = container.createScope('home');
+    const childScope1 = container.createScope({ tags: ['home'] });
+    const childScope2 = container.createScope({ tags: ['home'] });
 
     const logger1 = childScope1.resolve('logger');
     const logger2 = childScope2.resolve('logger');
@@ -76,8 +76,8 @@ describe('Singleton', function () {
   it('should clear all instances on dispose', function () {
     const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
 
-    const child1 = container.createScope('home');
-    const child2 = container.createScope('home');
+    const child1 = container.createScope({ tags: ['home'] });
+    const child2 = container.createScope({ tags: ['home'] });
     child1.resolve('logger');
     child2.resolve('logger');
     container.dispose();
@@ -91,7 +91,7 @@ describe('Singleton', function () {
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
 
-    const child = parent.createScope('child');
+    const child = parent.createScope({ tags: ['child'] });
 
     expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
     expect(child.resolve('logger')).toBeInstanceOf(FileLogger);
@@ -103,7 +103,7 @@ describe('Singleton', function () {
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toValue(FileLogger));
 
-    const child = parent.createScope('child');
+    const child = parent.createScope({ tags: ['child'] });
 
     const LoggerClass = child.resolve<constructor<FileLogger>>('logger');
     expect(new LoggerClass()).toBeInstanceOf(FileLogger);
@@ -121,7 +121,7 @@ describe('Singleton', function () {
       .add(R.toClass(FileLogger))
       .add(R.toClass(DbLogger));
 
-    const child = parent.createScope('child');
+    const child = parent.createScope({ tags: ['child'] });
 
     expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
     expect(child.resolve('logger')).toBeInstanceOf(DbLogger);
@@ -133,7 +133,7 @@ describe('Singleton', function () {
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] });
 
-    const child = parent.createScope('child').add(R.toClass(DbLogger));
+    const child = parent.createScope({ tags: ['child'] }).add(R.toClass(DbLogger));
 
     expect(child.resolve('logger')).toBeInstanceOf(DbLogger);
     expect(child.createScope().resolve('logger')).toBeInstanceOf(DbLogger);

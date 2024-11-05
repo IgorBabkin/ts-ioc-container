@@ -1,4 +1,12 @@
-import { AliasPredicate, DependencyKey, IContainer, InjectionToken, ReduceScope, ResolveOptions } from './IContainer';
+import {
+  AliasPredicate,
+  DependencyKey,
+  IContainer,
+  InjectionToken,
+  ReduceScope,
+  ResolveOptions,
+  Tag,
+} from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
@@ -77,5 +85,9 @@ export abstract class AutoMockedContainer implements IContainer {
 
   hasInstance(value: object): boolean {
     throw new MethodNotImplementedError();
+  }
+
+  matchTags(tags: Tag[]): boolean {
+    return false;
   }
 }

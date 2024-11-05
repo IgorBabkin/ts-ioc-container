@@ -20,7 +20,7 @@ describe('Visibility', function () {
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
 
-    const child = parent.createScope('child');
+    const child = parent.createScope({ tags: ['child'] });
 
     expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);
     expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);

@@ -92,4 +92,8 @@ export class EmptyContainer implements IContainer {
   resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T] {
     throw new DependencyNotFoundError(`Cannot find by alias`);
   }
+
+  matchTags(tags: Tag[]): boolean {
+    return false;
+  }
 }

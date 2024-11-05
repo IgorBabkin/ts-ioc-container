@@ -104,7 +104,7 @@ describe('alias', () => {
       .add(R.toClass(DbLogger));
 
     const result1 = byAlias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(container);
-    const child = container.createScope('child');
+    const child = container.createScope({ tags: ['child'] });
     const result2 = byAlias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(child);
     const result3 = byAlias((aliases) => aliases.has('ILogger'))(child);
 

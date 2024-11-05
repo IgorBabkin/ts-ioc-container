@@ -1,4 +1,4 @@
-import { DependencyKey, IContainer, InjectionToken } from './container/IContainer';
+import { CreateScopeOptions, DependencyKey, IContainer, InjectionToken } from './container/IContainer';
 import { IProvider, ProviderResolveOptions } from './provider/IProvider';
 
 import { InjectFn } from './hooks/HookContext';
@@ -78,10 +78,7 @@ export const by = {
   scope: {
     current: (container: IContainer) => container,
 
-    create:
-      (...tags: string[]) =>
-      (l: IContainer) =>
-        l.createScope(...tags),
+    create: (options: CreateScopeOptions) => (l: IContainer) => l.createScope(options),
   },
 };
 

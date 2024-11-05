@@ -1,5 +1,6 @@
 import {
   AliasPredicate,
+  CreateScopeOptions,
   DependencyKey,
   IContainer,
   IContainerModule,
@@ -72,8 +73,20 @@ export class Container implements IContainer {
       : this.parent.resolve<T>(token, { args, child, lazy });
   }
 
-  createScope(...tags: Tag[]): Container {
+  matchTags(tags: Tag[]): boolean {
+    return this.tags.size === tags.length && tags.every((tag) => this.tags.has(tag));
+  }
+
+  createScope({ tags = [], idempotent }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
+
+    if (idempotent) {
+      for (const scope of this.scopes) {
+        if (scope.matchTags(tags)) {
+          return scope;
+        }
+      }
+    }
 
     const scope = new Container(this.injector, { parent: this, tags, counter: this.counter });
     scope.applyRegistrationsFrom(this);
