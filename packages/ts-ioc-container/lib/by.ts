@@ -82,7 +82,7 @@ export const by = {
   },
 };
 
-export type DepKey<T> = {
+export type DepKey<T = unknown> = {
   key: DependencyKey;
   assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
@@ -91,6 +91,10 @@ export type DepKey<T> = {
   to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
   redirectFrom: (registration: IRegistration<T>) => IRegistration<T>;
+};
+
+export const isDepKey = <T>(key: unknown): key is DepKey<T> => {
+  return typeof key === 'object' && key !== null && 'key' in key;
 };
 
 export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {

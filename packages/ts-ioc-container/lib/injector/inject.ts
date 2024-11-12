@@ -2,11 +2,12 @@ import { getParameterMetadata, setParameterMetadata } from '../metadata';
 import { constant, constructor, fillEmptyIndexes, isInstance } from '../utils';
 import { IContainer } from '../container/IContainer';
 import { hookMetaKey, InjectFn } from '../hooks/HookContext';
+import { DepKey, isDepKey } from '../by';
 
 export const inject =
-  (fn: InjectFn): ParameterDecorator =>
+  (fn: InjectFn | DepKey): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
-    setParameterMetadata(hookMetaKey(propertyKey as string), fn)(
+    setParameterMetadata(hookMetaKey(propertyKey as string), isDepKey(fn) ? fn.resolve : fn)(
       isInstance(target) ? target.constructor : target,
       propertyKey,
       parameterIndex,
