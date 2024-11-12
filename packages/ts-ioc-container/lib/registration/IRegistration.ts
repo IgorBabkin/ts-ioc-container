@@ -2,12 +2,15 @@ import { DependencyKey, IContainer, IContainerModule } from '../container/IConta
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { IProvider } from '../provider/IProvider';
+import { DepKey, isDepKey } from '../by';
 
 export type ScopePredicate = (s: IContainer) => boolean;
 
 export interface IRegistration<T = any> extends IContainerModule {
   when(isValidWhen: ScopePredicate): this;
+
   fromKey(key: DependencyKey): this;
+
   pipe(...mappers: MapFn<IProvider<T>>[]): this;
 
   redirectFrom(...keys: DependencyKey[]): this;
@@ -36,4 +39,14 @@ const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: MapFn<IRegistration>[]) => setMetadata(METADATA_KEY, mappers);
+export const register = (...mappers: (MapFn<IRegistration> | DepKey<unknown>)[]) =>
+  setMetadata(
+    METADATA_KEY,
+    mappers.map((m, index) => {
+      if (isDepKey(m)) {
+        return index === 0 ? m.register : m.redirectFrom;
+      }
+
+      return m;
+    }),
+  );
