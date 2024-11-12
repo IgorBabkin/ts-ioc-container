@@ -1,18 +1,18 @@
 import { IProvider } from '../provider/IProvider';
-import { constructor } from '../utils';
+import { constructor, MapFn } from '../utils';
 import { IRegistration } from '../registration/IRegistration';
 
 export type Tag = string;
 
 export type DependencyKey = string | symbol;
 
-export function isDependencyKey<T>(token: InjectionToken<T>): token is DependencyKey {
+export function isDependencyKey(token: constructor<any> | DependencyKey | MapFn<any>): token is DependencyKey {
   return ['string', 'symbol'].includes(typeof token);
 }
 
-export function isConstructor<T>(token: InjectionToken<T>): token is constructor<T> {
-  return typeof token === 'function';
-}
+export const isConstructor = <T>(T: constructor<T> | unknown): T is constructor<T> => {
+  return typeof T === 'function' && !!T.prototype && !!T.prototype.constructor;
+};
 
 export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 

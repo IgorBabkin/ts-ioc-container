@@ -1,4 +1,4 @@
-import { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
+import { DependencyKey, IContainer, IContainerModule, isDependencyKey } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { IProvider } from '../provider/IProvider';
@@ -39,12 +39,16 @@ const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: (MapFn<IRegistration> | DepKey<any>)[]) =>
+export const register = (...mappers: (MapFn<IRegistration> | DepKey<any> | DependencyKey)[]) =>
   setMetadata(
     METADATA_KEY,
     mappers.map((m, index) => {
       if (isDepKey(m)) {
         return index === 0 ? m.register : m.redirectFrom;
+      }
+
+      if (isDependencyKey(m)) {
+        return (r: IRegistration) => (index === 0 ? r.fromKey(m) : r.redirectFrom(m));
       }
 
       return m;
