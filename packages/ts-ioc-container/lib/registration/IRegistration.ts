@@ -39,7 +39,7 @@ const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: (MapFn<IRegistration> | DepKey<unknown>)[]) =>
+export const register = (...mappers: (MapFn<IRegistration> | DepKey<any>)[]) =>
   setMetadata(
     METADATA_KEY,
     mappers.map((m, index) => {
