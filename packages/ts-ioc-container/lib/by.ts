@@ -82,7 +82,7 @@ export const by = {
   },
 };
 
-export type DepKey<T = unknown> = {
+export type DepKey<T> = {
   key: DependencyKey;
   assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;

@@ -5,7 +5,7 @@ import { hookMetaKey, InjectFn } from '../hooks/HookContext';
 import { DepKey, isDepKey } from '../by';
 
 export const inject =
-  (fn: InjectFn | DepKey): ParameterDecorator =>
+  <T>(fn: InjectFn | DepKey<T>): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
     setParameterMetadata(hookMetaKey(propertyKey as string), isDepKey(fn) ? fn.resolve : fn)(
       isInstance(target) ? target.constructor : target,
