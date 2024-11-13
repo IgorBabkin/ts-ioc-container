@@ -91,6 +91,7 @@ export const injectProp =
 
 export const onConstruct = (fn: HookFn) => hook('onConstruct', fn);
 export const runOnConstructHooks = (target: object, scope: IContainer) => runHooks(target, 'onConstruct', { scope });
+
 export const onDispose = hook('onDispose', (context) => {
   context.invokeMethod({});
 });
