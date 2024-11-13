@@ -1,6 +1,14 @@
 export type IObserver<T> = (data: T) => void;
 export type IUnsubscribe = () => void;
 
+export class EventDisposedError extends Error {
+  static assert(condition: boolean, message: string): void {
+    if (!condition) {
+      throw new EventDisposedError(message);
+    }
+  }
+}
+
 export class TypedEvent<T> {
   static fromPromise<T>(promise: Promise<T>) {
     const event = new TypedEvent();
@@ -12,13 +20,16 @@ export class TypedEvent<T> {
   }
 
   private observerStorage: Array<IObserver<T>> = [];
+  private isDisposed = false;
 
   on(observer: IObserver<T>): IUnsubscribe {
+    this.validate();
     this.observerStorage.push(observer);
     return () => this.off(observer);
   }
 
   once(observer: IObserver<T>): IUnsubscribe {
+    this.validate();
     const onceObserver: IObserver<T> = (data) => {
       observer(data);
       this.off(onceObserver);
@@ -28,10 +39,12 @@ export class TypedEvent<T> {
   }
 
   off(observer: IObserver<T>): void {
+    this.validate();
     this.observerStorage = this.observerStorage.filter((o) => o !== observer);
   }
 
   emit(data: T): void {
+    this.validate();
     this.observerStorage.forEach((o) => o(data));
   }
 
@@ -40,6 +53,14 @@ export class TypedEvent<T> {
   }
 
   dispose(): void {
+    this.validate();
+    this.isDisposed = true;
     this.observerStorage = [];
+  }
+
+  private validate(): void {
+    if (this.isDisposed) {
+      throw new EventDisposedError('Event is disposed');
+    }
   }
 }
