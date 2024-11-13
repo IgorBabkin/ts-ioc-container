@@ -69,6 +69,8 @@ export {
   injectProp,
   onDispose,
   onConstruct,
+  runOnConstructHooks,
+  runOnDisposeHooks,
 } from './hooks/hook';
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 

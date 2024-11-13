@@ -90,6 +90,8 @@ export const injectProp =
     context.setProperty(fn);
 
 export const onConstruct = (fn: HookFn) => hook('onConstruct', fn);
+export const runOnConstructHooks = (target: object, scope: IContainer) => runHooks(target, 'onConstruct', { scope });
 export const onDispose = hook('onDispose', (context) => {
   context.invokeMethod({});
 });
+export const runOnDisposeHooks = (target: object, scope: IContainer) => runHooks(target, 'onDispose', { scope });
