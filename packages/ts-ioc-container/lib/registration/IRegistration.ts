@@ -44,7 +44,7 @@ export const register = (...mappers: (MapFn<IRegistration> | DepKey<any> | Depen
     METADATA_KEY,
     mappers.map((m, index) => {
       if (isDepKey(m)) {
-        return index === 0 ? m.register : m.redirectFrom;
+        return index === 0 ? m.assignTo.bind(m) : m.redirectFrom.bind(m);
       }
 
       if (isDependencyKey(m)) {
