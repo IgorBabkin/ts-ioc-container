@@ -54,6 +54,7 @@ export { Registration } from './registration/Registration';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
+export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 
 // Hooks
 export { getHooks, hook, hasHooks, HookFn, HookClass, runHooks, runHooksAsync, injectProp } from './hooks/hook';

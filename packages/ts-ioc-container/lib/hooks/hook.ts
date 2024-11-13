@@ -1,6 +1,7 @@
 import { IContainer } from '../container/IContainer';
 import { CreateHookContext, createHookContext, IHookContext, InjectFn } from './HookContext';
 import { constructor, isConstructor, promisify } from '../utils';
+import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
 
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
 export interface HookClass<T extends IHookContext = IHookContext> {
@@ -48,10 +49,9 @@ export const runHooks = (
   for (const [methodName, executions] of hooks) {
     for (const execute of executions) {
       const context = createContext(target, scope, methodName);
-      if (isHookClassConstructor(execute)) {
-        scope.resolve(execute).execute(context);
-      } else {
-        execute(context);
+      const result = isHookClassConstructor(execute) ? scope.resolve(execute).execute(context) : execute(context);
+      if (result instanceof Promise) {
+        throw new UnexpectedHookResultError(`Hook ${methodName} returned a promise, use runHooksAsync instead`);
       }
     }
   }
