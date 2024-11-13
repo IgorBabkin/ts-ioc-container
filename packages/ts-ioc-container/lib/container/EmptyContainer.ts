@@ -78,7 +78,12 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
-  removeScope(): void {}
+  removeScope(): void {
+    this.onConstruct.dispose();
+    this.onDispose.dispose();
+    this.onScopeCreated.dispose();
+    this.onScopeRemoved.dispose();
+  }
 
   use(module: IContainerModule): this {
     throw new MethodNotImplementedError();
