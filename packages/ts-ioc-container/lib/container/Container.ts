@@ -55,6 +55,14 @@ export class Container implements IContainer {
     return this.parent.onDispose;
   }
 
+  get onScopeCreated(): TypedEvent<IContainer> {
+    return this.parent.onScopeCreated;
+  }
+
+  get onScopeRemoved(): TypedEvent<IContainer> {
+    return this.parent.onScopeRemoved;
+  }
+
   add(registration: IRegistration): this {
     this.registrations.push(registration);
     registration.applyTo(this);
@@ -101,6 +109,7 @@ export class Container implements IContainer {
     const scope = new Container(this.injector, { parent: this, tags, counter: this.counter });
     scope.applyRegistrationsFrom(this);
     this.scopes.add(scope);
+    this.onScopeCreated.emit(scope);
 
     return scope;
   }
@@ -110,6 +119,8 @@ export class Container implements IContainer {
     this.onConstruct.dispose();
     this.onDispose.emit(this);
     this.onDispose.dispose();
+    this.onScopeCreated.dispose();
+    this.onScopeRemoved.dispose();
     this.isDisposed = true;
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
@@ -226,6 +237,7 @@ export class Container implements IContainer {
    */
   removeScope(child: IContainer): void {
     this.scopes.delete(child);
+    this.onScopeRemoved.emit(child);
   }
 
   private validateContainer(): void {

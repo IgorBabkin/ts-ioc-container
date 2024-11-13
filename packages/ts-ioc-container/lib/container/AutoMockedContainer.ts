@@ -21,6 +21,8 @@ export abstract class AutoMockedContainer implements IContainer {
 
   onConstruct = new TypedEvent<Instance>();
   onDispose = new TypedEvent<IContainer>();
+  onScopeCreated = new TypedEvent<IContainer>();
+  onScopeRemoved = new TypedEvent<IContainer>();
 
   findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
     return undefined;

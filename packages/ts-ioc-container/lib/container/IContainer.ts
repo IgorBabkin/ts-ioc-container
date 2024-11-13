@@ -53,6 +53,10 @@ export interface IContainer extends Resolvable, Tagged {
 
   onConstruct: TypedEvent<Instance>;
 
+  onScopeCreated: TypedEvent<IContainer>;
+
+  onScopeRemoved: TypedEvent<IContainer>;
+
   createScope(options?: CreateScopeOptions): IContainer;
 
   register(key: DependencyKey, value: IProvider): this;

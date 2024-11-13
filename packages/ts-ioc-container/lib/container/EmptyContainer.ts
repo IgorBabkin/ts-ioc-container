@@ -23,6 +23,8 @@ export class EmptyContainer implements IContainer {
 
   onConstruct = new TypedEvent<Instance>();
   onDispose = new TypedEvent<IContainer>();
+  onScopeCreated = new TypedEvent<IContainer>();
+  onScopeRemoved = new TypedEvent<IContainer>();
 
   hasInstance(value: object): boolean {
     throw new MethodNotImplementedError();
