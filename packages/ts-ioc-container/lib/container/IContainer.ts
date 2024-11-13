@@ -1,6 +1,7 @@
 import { IProvider } from '../provider/IProvider';
 import { constructor, MapFn } from '../utils';
 import { IRegistration } from '../registration/IRegistration';
+import { TypedEvent } from '../TypedEvent';
 
 export type Tag = string;
 
@@ -29,6 +30,7 @@ export interface IContainerModule {
 export interface Tagged {
   readonly id: string;
   readonly level: number;
+
   hasTag(tag: Tag): boolean;
 }
 
@@ -39,10 +41,17 @@ export type ReduceScope<TResult> = (acc: TResult, container: IContainer) => TRes
 
 export type CreateScopeOptions = { tags?: Tag[]; idempotent?: boolean };
 
+export type Branded<T, Brand> = T & { _brand: Brand };
+export type Instance = Branded<object, 'Instance'>;
+
 export interface IContainer extends Resolvable, Tagged {
   readonly tags: Set<Tag>;
 
   readonly isDisposed: boolean;
+
+  onDispose: TypedEvent<IContainer>;
+
+  onConstruct: TypedEvent<Instance>;
 
   createScope(options?: CreateScopeOptions): IContainer;
 

@@ -4,6 +4,7 @@ import {
   IContainer,
   IContainerModule,
   InjectionToken,
+  Instance,
   ReduceScope,
   ResolveOptions,
   Tag,
@@ -12,12 +13,16 @@ import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 import { IRegistration } from '../registration/IRegistration';
+import { TypedEvent } from '../TypedEvent';
 
 export class EmptyContainer implements IContainer {
   level = -1;
   id = 'empty';
   tags = new Set<Tag>();
   isDisposed = false;
+
+  onConstruct = new TypedEvent<Instance>();
+  onDispose = new TypedEvent<IContainer>();
 
   hasInstance(value: object): boolean {
     throw new MethodNotImplementedError();

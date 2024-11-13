@@ -3,6 +3,7 @@ import {
   DependencyKey,
   IContainer,
   InjectionToken,
+  Instance,
   ReduceScope,
   ResolveOptions,
   Tag,
@@ -10,12 +11,16 @@ import {
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
+import { TypedEvent } from '../TypedEvent';
 
 export abstract class AutoMockedContainer implements IContainer {
   id = '0';
   level = 0;
   tags: Set<string> = new Set();
   isDisposed = false;
+
+  onConstruct = new TypedEvent<Instance>();
+  onDispose = new TypedEvent<IContainer>();
 
   findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
     return undefined;

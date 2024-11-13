@@ -8,6 +8,7 @@ export {
   InjectionToken,
   Tag,
   Tagged,
+  Instance,
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
@@ -57,12 +58,23 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 
 // Hooks
-export { getHooks, hook, hasHooks, HookFn, HookClass, runHooks, runHooksAsync, injectProp } from './hooks/hook';
+export {
+  getHooks,
+  hook,
+  hasHooks,
+  HookFn,
+  HookClass,
+  runHooks,
+  runHooksAsync,
+  injectProp,
+  onDispose,
+  onConstruct,
+} from './hooks/hook';
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others
 export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases, depKey, DepKey } from './by';
-export { constructor } from './utils';
+export { constructor, Branded } from './utils';
 export {
   setMetadata,
   getMetadata,
@@ -71,3 +83,4 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
+export { TypedEvent } from './TypedEvent';

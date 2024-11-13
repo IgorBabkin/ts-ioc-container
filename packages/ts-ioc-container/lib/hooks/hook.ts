@@ -88,3 +88,8 @@ export const injectProp =
   (fn: InjectFn): HookFn =>
   (context) =>
     context.setProperty(fn);
+
+export const onConstruct = (fn: HookFn) => hook('onConstruct', fn);
+export const onDispose = hook('onDispose', (context) => {
+  context.invokeMethod({});
+});

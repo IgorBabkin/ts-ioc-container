@@ -5,6 +5,7 @@ import {
   IContainer,
   IContainerModule,
   InjectionToken,
+  Instance,
   isConstructor,
   ReduceScope,
   ResolveOptions,
@@ -13,21 +14,21 @@ import {
 import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
-import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { IRegistration } from '../registration/IRegistration';
 import { Counter } from './Counter';
+import { TypedEvent } from '../TypedEvent';
+import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer {
   isDisposed = false;
   readonly id: string;
   readonly tags: Set<Tag>;
   readonly level: number;
-
   private parent: IContainer;
 
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly scopes = new Set<IContainer>();
-  private readonly instances = new Set<object>();
+  private readonly instances = new Set<Instance>();
   private readonly registrations: IRegistration[] = [];
   private readonly counter: Counter;
 
@@ -44,6 +45,14 @@ export class Container implements IContainer {
     this.counter = counter;
     this.id = counter.next();
     this.level = this.parent.level + 1;
+  }
+
+  get onConstruct(): TypedEvent<Instance> {
+    return this.parent.onConstruct;
+  }
+
+  get onDispose(): TypedEvent<IContainer> {
+    return this.parent.onDispose;
   }
 
   add(registration: IRegistration): this {
@@ -63,7 +72,8 @@ export class Container implements IContainer {
 
     if (isConstructor(token)) {
       const instance = this.injector.resolve(this, token, { args });
-      this.instances.add(instance as object);
+      this.instances.add(instance as Instance);
+      this.onConstruct.emit(instance as Instance);
       return instance;
     }
 
@@ -97,6 +107,7 @@ export class Container implements IContainer {
 
   dispose(): void {
     this.validateContainer();
+    this.onDispose.emit(this);
     this.isDisposed = true;
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
@@ -184,7 +195,7 @@ export class Container implements IContainer {
     return matchFn(this) ? this : this.parent.findParent(matchFn);
   }
 
-  hasInstance(value: object, direction: 'parent' | 'child'): boolean {
+  hasInstance(value: Instance, direction: 'parent' | 'child'): boolean {
     if (direction === 'parent') {
       return this.instances.has(value) || this.parent.hasInstance(value, 'parent');
     }

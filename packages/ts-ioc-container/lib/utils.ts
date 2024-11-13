@@ -2,6 +2,8 @@ export type constructor<T> = new (...args: any[]) => T;
 
 export type MapFn<T> = (value: T) => T;
 
+export type Branded<T, Brand> = T & { _brand: Brand };
+
 export const pipe =
   <T>(...mappers: MapFn<T>[]): MapFn<T> =>
   (value) =>
