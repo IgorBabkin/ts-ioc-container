@@ -116,13 +116,13 @@ export class Container implements IContainer {
 
   dispose(): void {
     this.validateContainer();
+    for (const scope of this.scopes) {
+      scope.dispose();
+    }
     this.onDispose.emit(this);
     this.isDisposed = true;
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
-    for (const scope of this.scopes) {
-      scope.dispose();
-    }
     this.providers.clear();
     this.instances.clear();
     this.registrations.splice(0, this.registrations.length);
