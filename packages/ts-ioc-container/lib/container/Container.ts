@@ -107,7 +107,9 @@ export class Container implements IContainer {
 
   dispose(): void {
     this.validateContainer();
+    this.onConstruct.dispose();
     this.onDispose.emit(this);
+    this.onDispose.dispose();
     this.isDisposed = true;
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
