@@ -34,7 +34,7 @@ export class Registration<T = any> implements IRegistration<T> {
   constructor(
     private createProvider: (key: DependencyKey) => IProvider<T>,
     private key?: DependencyKey,
-    private matchScope: ScopePredicate = () => true,
+    private scopePredicates: ScopePredicate[] = [],
   ) {}
 
   fromKey(key: DependencyKey): this {
@@ -54,9 +54,17 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  when(isValidWhen: ScopePredicate): this {
-    this.matchScope = isValidWhen;
+  when(...predicates: ScopePredicate[]): this {
+    this.scopePredicates.push(...predicates);
     return this;
+  }
+
+  private matchScope(container: IContainer): boolean {
+    if (this.scopePredicates.length === 0) {
+      return true;
+    }
+    const [first, ...rest] = this.scopePredicates;
+    return rest.reduce((prev, curr) => curr(container, prev), first(container));
   }
 
   applyTo(container: IContainer): void {

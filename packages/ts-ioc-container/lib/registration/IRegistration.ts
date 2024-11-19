@@ -4,10 +4,10 @@ import { getMetadata, setMetadata } from '../metadata';
 import { IProvider } from '../provider/IProvider';
 import { DepKey, isDepKey } from '../by';
 
-export type ScopePredicate = (s: IContainer) => boolean;
+export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
 
 export interface IRegistration<T = any> extends IContainerModule {
-  when(isValidWhen: ScopePredicate): this;
+  when(...predicates: ScopePredicate[]): this;
 
   fromKey(key: DependencyKey): this;
 
@@ -31,9 +31,9 @@ export const redirectFrom =
     r.redirectFrom(...keys);
 
 export const scope =
-  (predicate: ScopePredicate): MapFn<IRegistration> =>
+  (...predicates: ScopePredicate[]): MapFn<IRegistration> =>
   (r) =>
-    r.when(predicate);
+    r.when(...predicates);
 
 const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
