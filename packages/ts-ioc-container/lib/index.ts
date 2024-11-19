@@ -48,6 +48,7 @@ export {
   scope,
   register,
   redirectFrom,
+  ScopePredicate,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
