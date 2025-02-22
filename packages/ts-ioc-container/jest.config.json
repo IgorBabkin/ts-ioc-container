@@ -6,7 +6,7 @@
     "^.+\\.tsx?$": [
       "ts-jest",
       {
-        "tsConfig": "./tsconfig.json",
+        "tsconfig": "./tsconfig.json",
         "isolatedModules": false
       }
     ]
@@ -21,11 +21,5 @@
   "moduleDirectories": [
     "node_modules"
   ],
-  "globals": {
-    "ts-jest": {
-      "isolatedModules": true
-    }
-  },
-  "setupFiles": [
-    "<rootDir>/jest.setup.ts"]
+  "setupFiles": ["<rootDir>/jest.setup.ts"]
 }

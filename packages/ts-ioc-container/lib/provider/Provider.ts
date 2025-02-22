@@ -16,7 +16,7 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   static fromValue<T>(value: T): IProvider<T> {
-    const mappers = isConstructor(value) ? getTransformers(value as constructor<T>) ?? [] : [];
+    const mappers = isConstructor(value) ? (getTransformers(value as constructor<T>) ?? []) : [];
     return new Provider(() => value).pipe(...mappers);
   }
 

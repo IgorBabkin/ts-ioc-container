@@ -3,7 +3,13 @@
     "**/?(*.)+(spec|test).+(ts)"
   ],
   "transform": {
-    "^.+\\.tsx?$": "ts-jest"
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "tsconfig": "./tsconfig.json",
+        "isolatedModules": false
+      }
+    ]
   },
   "coveragePathIgnorePatterns": [
     "/node_modules/",
@@ -11,10 +17,5 @@
     "/cjm/",
     "/esm/"
   ],
-  "moduleDirectories": ["node_modules"],
-  "globals": {
-    "ts-jest": {
-      "isolatedModules": true
-    }
-  }
+  "moduleDirectories": ["node_modules"]
 }

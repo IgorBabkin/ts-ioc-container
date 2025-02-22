@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`swagger openapiToZod 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     105,
     109,
     112,

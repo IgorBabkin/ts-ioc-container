@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`swagger Client 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     105,
     109,
     112,
@@ -1633,8 +1633,8 @@ Object {
 `;
 
 exports[`swagger Server 1`] = `
-Object {
-  "data": Array [
+{
+  "data": [
     105,
     109,
     112,

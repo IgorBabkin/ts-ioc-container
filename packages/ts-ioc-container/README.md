@@ -1001,9 +1001,7 @@ describe('lazy provider', () => {
   @register(key('IRepository'))
   @provider(decorate(logRepo))
   class TodoRepository implements IRepository {
-    async save(item: Todo): Promise<void> {
-      console.log('Saving todo item', item);
-    }
+    async save(item: Todo): Promise<void> {}
   }
 
   class App {

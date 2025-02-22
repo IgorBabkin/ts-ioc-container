@@ -37,17 +37,17 @@
     "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "watch": "nodemon --watch ./lib --exec npm run build",
-    "test": "jest --coverage"
+    "test": "jest"
   },
   "devDependencies": {
-    "@types/jest": "27.0.2",
+    "@types/jest": "29.5.14",
     "@types/node": "^17.0.21",
-    "jest": "27.2.3",
+    "jest": "29.7.0",
     "nodemon": "^2.0.13",
     "reflect-metadata": "^0.1.13",
     "rimraf": "3.0.2",
-    "ts-jest": "27.0.5",
-    "typescript": "5.4.3"
+    "ts-jest": "29.2.5",
+    "typescript": "5.7.3"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.2.2"

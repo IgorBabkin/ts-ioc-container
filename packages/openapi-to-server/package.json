@@ -34,7 +34,7 @@
   },
   "scripts": {
     "build": "npm run clean && npm run compile",
-    "test": "make-dir .generated && jest --coverage",
+    "test": "make-dir .generated && jest",
     "test:watch": "jest --coverage --watch",
     "precompile": "make-dir precompiled && handlebars lib/templates/*.hbs -f precompiled/templates.js -c handlebars/runtime",
     "clean": "rimraf cjm",
@@ -49,15 +49,15 @@
   },
   "devDependencies": {
     "@types/args": "^5.0.0",
-    "@types/jest": "27.0.2",
+    "@types/jest": "29.5.14",
     "@types/js-yaml": "^4.0.5",
-    "axios": "^1.4.0",
-    "jest": "27.2.3",
+    "axios": "^1.7.9",
+    "jest": "29.7.0",
     "make-dir-cli": "^3.0.0",
     "nodemon": "^2.0.22",
     "openapi-types": "^12.1.0",
     "rimraf": "3.0.2",
-    "ts-jest": "27.0.5",
-    "typescript": "5.4.3"
+    "ts-jest": "29.2.5",
+    "typescript": "5.7.3"
   }
 }

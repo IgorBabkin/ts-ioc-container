@@ -20,7 +20,6 @@ const useLogger = ILoggerKey.register(async (s) => {
   await sleep(50);
   return {
     info: (...messages: string[]) => {
-      console.log(...messages);
       return true;
     },
   };
