@@ -60,7 +60,7 @@ export class TypedEvent<T> {
 
   private validate(): void {
     if (this.isDisposed) {
-      throw new EventDisposedError('Event is disposed');
+      throw new EventDisposedError('Event is already disposed');
     }
   }
 }
