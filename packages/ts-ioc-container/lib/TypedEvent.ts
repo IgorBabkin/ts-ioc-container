@@ -10,8 +10,8 @@ export class EventDisposedError extends Error {
 }
 
 export class TypedEvent<T> {
-  static fromPromise<T>(promise: Promise<T>) {
-    const event = new TypedEvent();
+  static fromPromise<T>(promise: Promise<T>): TypedEvent<T> {
+    const event = new TypedEvent<T>();
     promise.then((value) => {
       event.emit(value);
       event.dispose();
