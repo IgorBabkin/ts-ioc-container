@@ -73,10 +73,10 @@ export const by = {
   instances:
     (predicate: InstancePredicate = all) =>
     (c: IContainer) => {
-      const result = new Set<Instance>(c.instances);
+      const result = new Set<Instance>(c.getInstances());
 
-      for (const scope of c.scopes) {
-        for (const instance of scope.instances) {
+      for (const scope of c.getScopes()) {
+        for (const instance of scope.getInstances()) {
           result.add(instance);
         }
       }

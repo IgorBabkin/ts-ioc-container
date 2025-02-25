@@ -27,13 +27,11 @@ export interface IContainerModule {
 }
 
 export interface Tagged {
-  readonly tags: Set<Tag>;
+  hasTag(tag: Tag): boolean;
 }
 
 export type Alias = string;
 export type AliasPredicate = (aliases: Set<Alias>) => boolean;
-
-export type ReduceScope<TResult> = (acc: TResult, container: IContainer) => TResult;
 
 export type CreateScopeOptions = { tags?: Tag[] };
 
@@ -59,11 +57,11 @@ export interface IContainer extends Resolvable, Tagged {
 
   hasProvider(key: DependencyKey): boolean;
 
-  readonly parent: IContainer | undefined;
+  getParent(): IContainer | undefined;
 
-  scopes: Set<IContainer>;
+  getScopes(): IContainer[];
 
-  instances: Set<Instance>;
+  getInstances(): Instance[];
 
   resolveManyByAlias(
     predicate: AliasPredicate,

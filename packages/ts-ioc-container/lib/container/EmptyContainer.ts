@@ -4,7 +4,6 @@ import {
   IContainer,
   IContainerModule,
   InjectionToken,
-  Instance,
   ResolveOptions,
   Tag,
 } from './IContainer';
@@ -14,14 +13,24 @@ import { IProvider } from '../provider/IProvider';
 import { IRegistration } from '../registration/IRegistration';
 
 export class EmptyContainer implements IContainer {
-  parent: IContainer | undefined;
-  scopes: Set<IContainer> = new Set();
-  instances: Set<Instance> = new Set();
-  tags = new Set<Tag>();
-  isDisposed = false;
+  get isDisposed(): boolean {
+    throw new MethodNotImplementedError();
+  }
 
   hasProvider(key: string): boolean {
     return false;
+  }
+
+  getParent() {
+    return undefined;
+  }
+
+  getScopes() {
+    return [];
+  }
+
+  getInstances() {
+    return [];
   }
 
   createScope(): IContainer {
@@ -38,6 +47,10 @@ export class EmptyContainer implements IContainer {
 
   resolve<T>(key: InjectionToken<T>, options: ResolveOptions): T {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
+  }
+
+  hasTag(tag: Tag): boolean {
+    return false;
   }
 
   getRegistrations() {

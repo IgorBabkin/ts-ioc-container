@@ -153,7 +153,7 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.tags.has('child')))
+@register(key('ILogger'), scope((s) => s.hasTag('child')))
 @provider(singleton())
 class Logger {}
 
@@ -176,7 +176,7 @@ describe('Scopes', function () {
     const app = root.resolve(App);
 
     expect(app.scope).not.toBe(root);
-    expect(app.scope.tags.has('child')).toBe(true);
+    expect(app.scope.hasTag('child')).toBe(true);
   });
 });
 
@@ -333,7 +333,7 @@ describe('lazy provider', () => {
     // Assert
     expect(app.run()).toBe('Hello');
     expect(app.run()).toBe('Hello');
-    expect(Array.from(container.instances).filter((x) => x instanceof Service).length).toBe(1);
+    expect(Array.from(container.getInstances()).filter((x) => x instanceof Service).length).toBe(1);
   });
 
   it('should create instance when property is invoked', () => {
@@ -746,7 +746,7 @@ import {
 
 describe('Visibility', function () {
   it('should hide from children', () => {
-    @register(key('logger'), scope((s) => s.tags.has('root')))
+    @register(key('logger'), scope((s) => s.hasTag('root')))
     @provider(singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
@@ -861,11 +861,11 @@ describe('alias', () => {
 
   it('should resolve by memoized alias', () => {
     @provider(alias('ILogger'))
-    @register(scope((s) => s.tags.has('root')))
+    @register(scope((s) => s.hasTag('root')))
     class FileLogger {}
 
     @provider(alias('ILogger'))
-    @register(scope((s) => s.tags.has('child')))
+    @register(scope((s) => s.hasTag('child')))
     class DbLogger {}
 
     const container = new Container(new MetadataInjector(), { tags: ['root'] })
@@ -1029,7 +1029,7 @@ describe('Registration module', function () {
   const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
 
   it('should register class', function () {
-    @register(key('ILogger'), scope((s) => s.tags.has('root')))
+    @register(key('ILogger'), scope((s) => s.hasTag('root')))
     @provider(singleton())
     class Logger {}
 
@@ -1087,7 +1087,7 @@ Sometimes you need to register provider only in scope which matches to certain c
 import 'reflect-metadata';
 import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope, register } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.tags.has('root')))
+@register(key('ILogger'), scope((s) => s.hasTag('root')))
 @provider(singleton()) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {

@@ -18,29 +18,24 @@ import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer {
   isDisposed = false;
-  parent: IContainer;
-  readonly scopes = new Set<IContainer>();
-  readonly instances = new Set<Instance>();
-  readonly tags: Set<Tag>;
-
+  private parent: IContainer;
+  private readonly scopes = new Set<IContainer>();
+  private readonly instances = new Set<Instance>();
+  private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly registrations: Set<IRegistration> = new Set();
-
-  private readonly onDispose: (container: IContainer) => void;
-  private readonly onConstruct: (instance: Instance) => void;
+  private readonly onDispose: (scope: IContainer) => void;
 
   constructor(
     private readonly injector: IInjector,
     options: {
       parent?: IContainer;
       tags?: Tag[];
-      onDispose?: (container: IContainer) => void;
-      onConstruct?: (instance: Instance) => void;
+      onDispose?: (scope: IContainer) => void;
     } = {},
   ) {
     this.parent = options.parent ?? new EmptyContainer();
     this.tags = new Set(options.tags ?? []);
-    this.onConstruct = options.onConstruct ?? (() => {});
     this.onDispose = options.onDispose ?? (() => {});
   }
 
@@ -62,7 +57,6 @@ export class Container implements IContainer {
     if (isConstructor(token)) {
       const instance = this.injector.resolve(this, token, { args });
       this.instances.add(instance as Instance);
-      this.onConstruct(instance as Instance);
       return instance;
     }
 
@@ -87,13 +81,13 @@ export class Container implements IContainer {
     for (const scope of this.scopes) {
       scope.dispose();
     }
-    this.onDispose(this);
     this.isDisposed = true;
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
     this.providers.clear();
     this.instances.clear();
     this.registrations.clear();
+    this.onDispose(this);
   }
 
   use(module: IContainerModule): this {
@@ -128,6 +122,22 @@ export class Container implements IContainer {
       }
     }
     return this.parent.resolveOneByAlias<T>(predicate, { args, child, lazy });
+  }
+
+  getParent() {
+    return this.parent;
+  }
+
+  getScopes() {
+    return [...this.scopes];
+  }
+
+  getInstances() {
+    return [...this.instances];
+  }
+
+  hasTag(tag: Tag) {
+    return this.tags.has(tag);
   }
 
   /**

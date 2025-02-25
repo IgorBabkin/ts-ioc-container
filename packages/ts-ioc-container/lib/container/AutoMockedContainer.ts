@@ -1,13 +1,9 @@
-import { AliasPredicate, DependencyKey, IContainer, InjectionToken, Instance, ResolveOptions } from './IContainer';
+import { AliasPredicate, DependencyKey, IContainer, InjectionToken, Instance, ResolveOptions, Tag } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
 export abstract class AutoMockedContainer implements IContainer {
-  parent: IContainer | undefined;
-  scopes: Set<IContainer> = new Set();
-  instances: Set<Instance> = new Set();
-  tags: Set<string> = new Set();
   isDisposed = false;
 
   hasProvider(key: string): boolean {
@@ -26,8 +22,20 @@ export abstract class AutoMockedContainer implements IContainer {
     return this;
   }
 
-  getInstances(): object[] {
+  getParent() {
+    return undefined;
+  }
+
+  getScopes() {
     return [];
+  }
+
+  getInstances(): Instance[] {
+    return [];
+  }
+
+  hasTag(tag: Tag): boolean {
+    return false;
   }
 
   removeScope(): void {}

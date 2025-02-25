@@ -71,7 +71,7 @@ describe('lazy provider', () => {
     // Assert
     expect(app.run()).toBe('Hello');
     expect(app.run()).toBe('Hello');
-    expect(Array.from(container.instances).filter((x) => x instanceof Service).length).toBe(1);
+    expect(Array.from(container.getInstances()).filter((x) => x instanceof Service).length).toBe(1);
   });
 
   it('should create instance when property is invoked', () => {

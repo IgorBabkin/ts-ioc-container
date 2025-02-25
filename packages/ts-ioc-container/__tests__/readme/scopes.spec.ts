@@ -14,7 +14,7 @@ import {
   singleton,
 } from '../../lib';
 
-@register(key('ILogger'), scope((s) => s.tags.has('child')))
+@register(key('ILogger'), scope((s) => s.hasTag('child')))
 @provider(singleton())
 class Logger {}
 
@@ -37,6 +37,6 @@ describe('Scopes', function () {
     const app = root.resolve(App);
 
     expect(app.scope).not.toBe(root);
-    expect(app.scope.tags.has('child')).toBe(true);
+    expect(app.scope.hasTag('child')).toBe(true);
   });
 });
