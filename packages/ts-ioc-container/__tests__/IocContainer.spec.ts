@@ -10,6 +10,7 @@ import {
   Registration as R,
   args,
   register,
+  by,
 } from '../lib';
 
 @register(key('logger'))
@@ -48,7 +49,7 @@ describe('IocContainer', function () {
 
     const logger = container.resolve<Logger>('logger');
 
-    expect(container.getInstances()).toContain(logger);
+    expect(by.instances()(container)).toContain(logger);
   });
 
   it('should dispose all instances', function () {
@@ -57,7 +58,7 @@ describe('IocContainer', function () {
     container.resolve('logger');
     container.dispose();
 
-    expect(container.getInstances().length).toBe(0);
+    expect(by.instances()(container).length).toBe(0);
   });
 
   it('should throw an error if provider is not registered', function () {

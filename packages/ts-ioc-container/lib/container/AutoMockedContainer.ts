@@ -1,38 +1,16 @@
-import {
-  AliasPredicate,
-  DependencyKey,
-  IContainer,
-  InjectionToken,
-  Instance,
-  ReduceScope,
-  ResolveOptions,
-  Tag,
-} from './IContainer';
+import { AliasPredicate, DependencyKey, IContainer, InjectionToken, Instance, ResolveOptions } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { TypedEvent } from '../TypedEvent';
 
 export abstract class AutoMockedContainer implements IContainer {
-  id = '0';
-  level = 0;
+  parent: IContainer | undefined;
+  scopes: Set<IContainer> = new Set();
+  instances: Set<Instance> = new Set();
   tags: Set<string> = new Set();
   isDisposed = false;
 
-  onConstruct = new TypedEvent<Instance>();
-  onDispose = new TypedEvent<IContainer>();
-  onScopeCreated = new TypedEvent<IContainer>();
-  onScopeRemoved = new TypedEvent<IContainer>();
-
-  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
-    return undefined;
-  }
-
-  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined {
-    return undefined;
-  }
-
-  hasDependency(key: string): boolean {
+  hasProvider(key: string): boolean {
     return false;
   }
 
@@ -52,14 +30,6 @@ export abstract class AutoMockedContainer implements IContainer {
     return [];
   }
 
-  getOwnInstances(): object[] {
-    return [];
-  }
-
-  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult {
-    return initial;
-  }
-
   removeScope(): void {}
 
   use(): this {
@@ -68,10 +38,6 @@ export abstract class AutoMockedContainer implements IContainer {
 
   getRegistrations() {
     return [];
-  }
-
-  hasTag(): boolean {
-    return false;
   }
 
   add(registration: IRegistration): this {
@@ -88,13 +54,5 @@ export abstract class AutoMockedContainer implements IContainer {
 
   resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T] {
     throw new DependencyNotFoundError(`Cannot find by alias`);
-  }
-
-  hasInstance(value: object): boolean {
-    throw new MethodNotImplementedError();
-  }
-
-  matchTags(tags: Tag[]): boolean {
-    return false;
   }
 }

@@ -44,7 +44,7 @@
     "generate:docs": "ts-node scripts/generateReadme/generateReadme.ts && git add README.md",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "coverage": "coveralls",
-    "test": "jest",
+    "test": "jest --coverage",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch"
   },

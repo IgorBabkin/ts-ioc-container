@@ -86,4 +86,3 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
-export { TypedEvent, EventDisposedError, IObserver, IUnsubscribe } from './TypedEvent';

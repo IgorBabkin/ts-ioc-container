@@ -91,11 +91,11 @@ describe('alias', () => {
 
   it('should resolve by memoized alias', () => {
     @provider(alias('ILogger'))
-    @register(scope((s) => s.hasTag('root')))
+    @register(scope((s) => s.tags.has('root')))
     class FileLogger {}
 
     @provider(alias('ILogger'))
-    @register(scope((s) => s.hasTag('child')))
+    @register(scope((s) => s.tags.has('child')))
     class DbLogger {}
 
     const container = new Container(new MetadataInjector(), { tags: ['root'] })

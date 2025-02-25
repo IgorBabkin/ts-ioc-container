@@ -5,7 +5,6 @@ import {
   IContainerModule,
   InjectionToken,
   Instance,
-  ReduceScope,
   ResolveOptions,
   Tag,
 } from './IContainer';
@@ -13,41 +12,16 @@ import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 import { IRegistration } from '../registration/IRegistration';
-import { TypedEvent } from '../TypedEvent';
 
 export class EmptyContainer implements IContainer {
-  level = -1;
-  id = 'empty';
+  parent: IContainer | undefined;
+  scopes: Set<IContainer> = new Set();
+  instances: Set<Instance> = new Set();
   tags = new Set<Tag>();
   isDisposed = false;
 
-  onConstruct = new TypedEvent<Instance>();
-  onDispose = new TypedEvent<IContainer>();
-  onScopeCreated = new TypedEvent<IContainer>();
-  onScopeRemoved = new TypedEvent<IContainer>();
-
-  hasInstance(value: object): boolean {
-    throw new MethodNotImplementedError();
-  }
-
-  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult {
-    return initial;
-  }
-
-  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
-    return undefined;
-  }
-
-  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined {
-    return undefined;
-  }
-
-  hasDependency(key: string): boolean {
+  hasProvider(key: string): boolean {
     return false;
-  }
-
-  hasTag(): boolean {
-    throw new MethodNotImplementedError();
   }
 
   createScope(): IContainer {
@@ -70,20 +44,7 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
-  getInstances(): object[] {
-    return [];
-  }
-
-  getOwnInstances(): object[] {
-    return [];
-  }
-
-  removeScope(): void {
-    this.onConstruct.dispose();
-    this.onDispose.dispose();
-    this.onScopeCreated.dispose();
-    this.onScopeRemoved.dispose();
-  }
+  removeScope(): void {}
 
   use(module: IContainerModule): this {
     throw new MethodNotImplementedError();
@@ -103,9 +64,5 @@ export class EmptyContainer implements IContainer {
 
   resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T] {
     throw new DependencyNotFoundError(`Cannot find by alias`);
-  }
-
-  matchTags(tags: Tag[]): boolean {
-    return false;
   }
 }

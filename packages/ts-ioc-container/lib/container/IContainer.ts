@@ -1,7 +1,6 @@
 import { IProvider } from '../provider/IProvider';
 import { constructor, MapFn } from '../utils';
 import { IRegistration } from '../registration/IRegistration';
-import { TypedEvent } from '../TypedEvent';
 
 export type Tag = string;
 
@@ -28,10 +27,7 @@ export interface IContainerModule {
 }
 
 export interface Tagged {
-  readonly id: string;
-  readonly level: number;
-
-  hasTag(tag: Tag): boolean;
+  readonly tags: Set<Tag>;
 }
 
 export type Alias = string;
@@ -39,23 +35,13 @@ export type AliasPredicate = (aliases: Set<Alias>) => boolean;
 
 export type ReduceScope<TResult> = (acc: TResult, container: IContainer) => TResult;
 
-export type CreateScopeOptions = { tags?: Tag[]; idempotent?: boolean };
+export type CreateScopeOptions = { tags?: Tag[] };
 
 export type Branded<T, Brand> = T & { _brand: Brand };
 export type Instance = Branded<object, 'Instance'>;
 
 export interface IContainer extends Resolvable, Tagged {
-  readonly tags: Set<Tag>;
-
   readonly isDisposed: boolean;
-
-  onDispose: TypedEvent<IContainer>;
-
-  onConstruct: TypedEvent<Instance>;
-
-  onScopeCreated: TypedEvent<IContainer>;
-
-  onScopeRemoved: TypedEvent<IContainer>;
 
   createScope(options?: CreateScopeOptions): IContainer;
 
@@ -65,25 +51,19 @@ export interface IContainer extends Resolvable, Tagged {
 
   removeScope(child: IContainer): void;
 
-  getInstances(direction?: 'parent' | 'child'): object[];
-
-  getOwnInstances(): object[];
-
   dispose(): void;
 
   use(module: IContainerModule): this;
 
   getRegistrations(): IRegistration[];
 
-  hasDependency(key: DependencyKey): boolean;
+  hasProvider(key: DependencyKey): boolean;
 
-  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult;
+  readonly parent: IContainer | undefined;
 
-  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined;
+  scopes: Set<IContainer>;
 
-  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined;
-
-  matchTags(tags: Tag[]): boolean;
+  instances: Set<Instance>;
 
   resolveManyByAlias(
     predicate: AliasPredicate,
@@ -92,6 +72,4 @@ export interface IContainer extends Resolvable, Tagged {
   ): Map<DependencyKey, unknown>;
 
   resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T];
-
-  hasInstance(value: object, direction: 'parent' | 'child'): boolean;
 }

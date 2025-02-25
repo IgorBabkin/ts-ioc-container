@@ -12,8 +12,8 @@ describe('Instances', function () {
     const logger1 = container.resolve('ILogger');
     const logger2 = scope.resolve('ILogger');
 
-    expect(scope.getInstances().length).toBe(1);
-    expect(container.getInstances().length).toBe(2);
+    expect(by.instances()(scope).length).toBe(1);
+    expect(by.instances()(container).length).toBe(2);
   });
 
   it('should return injected instances by decorator', () => {

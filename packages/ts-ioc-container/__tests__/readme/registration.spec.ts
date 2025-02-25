@@ -6,7 +6,7 @@ describe('Registration module', function () {
   const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
 
   it('should register class', function () {
-    @register(key('ILogger'), scope((s) => s.hasTag('root')))
+    @register(key('ILogger'), scope((s) => s.tags.has('root')))
     @provider(singleton())
     class Logger {}
 

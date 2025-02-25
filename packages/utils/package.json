@@ -37,7 +37,7 @@
     "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "watch": "nodemon --watch ./lib --exec npm run build",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

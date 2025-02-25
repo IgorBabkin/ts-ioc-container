@@ -7,7 +7,6 @@ import {
   InjectionToken,
   Instance,
   isConstructor,
-  ReduceScope,
   ResolveOptions,
   Tag,
 } from './IContainer';
@@ -15,56 +14,38 @@ import { IInjector } from '../injector/IInjector';
 import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { IRegistration } from '../registration/IRegistration';
-import { Counter } from './Counter';
-import { TypedEvent } from '../TypedEvent';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 
 export class Container implements IContainer {
   isDisposed = false;
-  readonly id: string;
+  parent: IContainer;
+  readonly scopes = new Set<IContainer>();
+  readonly instances = new Set<Instance>();
   readonly tags: Set<Tag>;
-  readonly level: number;
-  private parent: IContainer;
 
   private readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly scopes = new Set<IContainer>();
-  private readonly instances = new Set<Instance>();
-  private readonly registrations: IRegistration[] = [];
-  private readonly counter: Counter;
+  private readonly registrations: Set<IRegistration> = new Set();
+
+  private readonly onDispose: (container: IContainer) => void;
+  private readonly onConstruct: (instance: Instance) => void;
 
   constructor(
     private readonly injector: IInjector,
-    {
-      parent = new EmptyContainer(),
-      tags = [],
-      counter = new Counter(),
-    }: { parent?: IContainer; tags?: Tag[]; counter?: Counter } = {},
+    options: {
+      parent?: IContainer;
+      tags?: Tag[];
+      onDispose?: (container: IContainer) => void;
+      onConstruct?: (instance: Instance) => void;
+    } = {},
   ) {
-    this.parent = parent;
-    this.tags = new Set(tags ?? []);
-    this.counter = counter;
-    this.id = counter.next();
-    this.level = this.parent.level + 1;
-  }
-
-  get onConstruct(): TypedEvent<Instance> {
-    return this.parent.onConstruct;
-  }
-
-  get onDispose(): TypedEvent<IContainer> {
-    return this.parent.onDispose;
-  }
-
-  get onScopeCreated(): TypedEvent<IContainer> {
-    return this.parent.onScopeCreated;
-  }
-
-  get onScopeRemoved(): TypedEvent<IContainer> {
-    return this.parent.onScopeRemoved;
+    this.parent = options.parent ?? new EmptyContainer();
+    this.tags = new Set(options.tags ?? []);
+    this.onConstruct = options.onConstruct ?? (() => {});
+    this.onDispose = options.onDispose ?? (() => {});
   }
 
   add(registration: IRegistration): this {
-    this.registrations.push(registration);
+    this.registrations.add(registration);
     registration.applyTo(this);
     return this;
   }
@@ -81,7 +62,7 @@ export class Container implements IContainer {
     if (isConstructor(token)) {
       const instance = this.injector.resolve(this, token, { args });
       this.instances.add(instance as Instance);
-      this.onConstruct.emit(instance as Instance);
+      this.onConstruct(instance as Instance);
       return instance;
     }
 
@@ -91,25 +72,12 @@ export class Container implements IContainer {
       : this.parent.resolve<T>(token, { args, child, lazy });
   }
 
-  matchTags(tags: Tag[]): boolean {
-    return this.tags.size === tags.length && tags.every((tag) => this.tags.has(tag));
-  }
-
-  createScope({ tags = [], idempotent }: CreateScopeOptions = {}): IContainer {
+  createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
-    if (idempotent) {
-      for (const scope of this.scopes) {
-        if (scope.matchTags(tags)) {
-          return scope;
-        }
-      }
-    }
-
-    const scope = new Container(this.injector, { parent: this, tags, counter: this.counter });
+    const scope = new Container(this.injector, { parent: this, tags });
     scope.applyRegistrationsFrom(this);
     this.scopes.add(scope);
-    this.onScopeCreated.emit(scope);
 
     return scope;
   }
@@ -119,33 +87,13 @@ export class Container implements IContainer {
     for (const scope of this.scopes) {
       scope.dispose();
     }
-    this.onDispose.emit(this);
+    this.onDispose(this);
     this.isDisposed = true;
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
     this.providers.clear();
     this.instances.clear();
-    this.registrations.splice(0, this.registrations.length);
-  }
-
-  getInstances(direction: 'parent' | 'child' = 'child'): object[] {
-    if (direction === 'parent') {
-      return [...this.parent.getInstances('parent'), ...this.instances];
-    }
-
-    const instances: object[] = Array.from(this.instances);
-    for (const scope of this.scopes) {
-      instances.push(...scope.getInstances('child'));
-    }
-    return instances;
-  }
-
-  getOwnInstances(): object[] {
-    return Array.from(this.instances);
-  }
-
-  hasTag(tag: Tag): boolean {
-    return this.tags.has(tag);
+    this.registrations.clear();
   }
 
   use(module: IContainerModule): this {
@@ -153,8 +101,8 @@ export class Container implements IContainer {
     return this;
   }
 
-  hasDependency(key: DependencyKey): boolean {
-    return this.providers.has(key) ?? this.parent.hasDependency(key);
+  hasProvider(key: DependencyKey): boolean {
+    return this.providers.has(key) ?? this.parent.hasProvider(key);
   }
 
   resolveManyByAlias(
@@ -182,40 +130,10 @@ export class Container implements IContainer {
     return this.parent.resolveOneByAlias<T>(predicate, { args, child, lazy });
   }
 
-  reduceToRoot<TResult>(fn: ReduceScope<TResult>, initial: TResult): TResult {
-    return fn(this.parent.reduceToRoot(fn, initial), this);
-  }
-
-  findChild(matchFn: (s: IContainer) => boolean): IContainer | undefined {
-    if (matchFn(this)) {
-      return this;
-    }
-
-    for (const scope of this.scopes) {
-      const child = scope.findChild(matchFn);
-      if (child) {
-        return child;
-      }
-    }
-    return undefined;
-  }
-
-  findParent(matchFn: (s: IContainer) => boolean): IContainer | undefined {
-    return matchFn(this) ? this : this.parent.findParent(matchFn);
-  }
-
-  hasInstance(value: Instance, direction: 'parent' | 'child'): boolean {
-    if (direction === 'parent') {
-      return this.instances.has(value) || this.parent.hasInstance(value, 'parent');
-    }
-
-    return this.instances.has(value) || Array.from(this.scopes).some((scope) => scope.hasInstance(value, 'child'));
-  }
-
   /**
    * @private
    */
-  applyRegistrationsFrom(source: IContainer): void {
+  applyRegistrationsFrom(source: Container): void {
     for (const registration of source.getRegistrations()) {
       registration.applyTo(this);
     }
@@ -233,7 +151,6 @@ export class Container implements IContainer {
    */
   removeScope(child: IContainer): void {
     this.scopes.delete(child);
-    this.onScopeRemoved.emit(child);
   }
 
   private validateContainer(): void {

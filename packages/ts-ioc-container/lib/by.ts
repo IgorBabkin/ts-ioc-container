@@ -1,4 +1,4 @@
-import { CreateScopeOptions, DependencyKey, IContainer, InjectionToken } from './container/IContainer';
+import { CreateScopeOptions, DependencyKey, IContainer, InjectionToken, Instance } from './container/IContainer';
 import { IProvider, ProviderResolveOptions } from './provider/IProvider';
 
 import { InjectFn } from './hooks/HookContext';
@@ -72,8 +72,17 @@ export const by = {
 
   instances:
     (predicate: InstancePredicate = all) =>
-    (l: IContainer) =>
-      l.getInstances().filter(predicate),
+    (c: IContainer) => {
+      const result = new Set<Instance>(c.instances);
+
+      for (const scope of c.scopes) {
+        for (const instance of scope.instances) {
+          result.add(instance);
+        }
+      }
+
+      return Array.from(result).filter(predicate);
+    },
 
   scope: {
     current: (container: IContainer) => container,

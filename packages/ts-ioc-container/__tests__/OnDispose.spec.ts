@@ -56,7 +56,7 @@ describe('onDispose', function () {
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
 
-    for (const instance of container.getInstances()) {
+    for (const instance of by.instances()(container)) {
       runHooks(instance as object, 'onDispose', { scope: container });
     }
 

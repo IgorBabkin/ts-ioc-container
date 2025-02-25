@@ -139,22 +139,21 @@ Sometimes you need to create a scope of container. For example, when you want to
 ```typescript
 import 'reflect-metadata';
 import {
-  IContainer,
-  inject,
-  singleton,
+  by,
   Container,
   DependencyNotFoundError,
+  IContainer,
+  inject,
   key,
-  provider,
   MetadataInjector,
-  Registration as R,
-  by,
-  scope,
+  provider,
   register,
-  Tag,
+  Registration as R,
+  scope,
+  singleton,
 } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.hasTag('child')))
+@register(key('ILogger'), scope((s) => s.tags.has('child')))
 @provider(singleton())
 class Logger {}
 
@@ -177,35 +176,7 @@ describe('Scopes', function () {
     const app = root.resolve(App);
 
     expect(app.scope).not.toBe(root);
-    expect(app.scope.hasTag('child')).toBe(true);
-  });
-
-  it('should get path by reduceToRoot', () => {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
-    const child = root.createScope({ tags: ['child'] });
-    const grandChild = child.createScope({ tags: ['grandChild'] });
-    const collectTags = (acc: Array<Tag[]>, c: IContainer) => [...acc, Array.from(c.tags)];
-
-    const tagsPath = grandChild.reduceToRoot(collectTags, []);
-    expect(tagsPath).toEqual([['root'], ['child'], ['grandChild']]);
-    const actual = root.findChild((s) => {
-      const current = tagsPath.shift() ?? [];
-      const a = current.every((t) => s.hasTag(t));
-      const b = tagsPath.length === 0;
-      return a && b;
-    });
-    expect(actual).toBe(grandChild);
-  });
-
-  it('should be able to create scope idempotently', () => {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
-
-    const child1 = root.createScope({ tags: ['child', 'a'], idempotent: true });
-    const child2 = root.createScope({ tags: ['child', 'a'], idempotent: true });
-    const child3 = root.createScope({ tags: ['child'], idempotent: true });
-
-    expect(child1).toBe(child2);
-    expect(child3).not.toBe(child2);
+    expect(app.scope.tags.has('child')).toBe(true);
   });
 });
 
@@ -231,8 +202,8 @@ describe('Instances', function () {
     const logger1 = container.resolve('ILogger');
     const logger2 = scope.resolve('ILogger');
 
-    expect(scope.getInstances().length).toBe(1);
-    expect(container.getInstances().length).toBe(2);
+    expect(by.instances()(scope).length).toBe(1);
+    expect(by.instances()(container).length).toBe(2);
   });
 
   it('should return injected instances by decorator', () => {
@@ -265,7 +236,7 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 
 ```typescript
 import 'reflect-metadata';
-import { Container, ContainerDisposedError, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { by, Container, ContainerDisposedError, MetadataInjector, Registration as R } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -279,7 +250,7 @@ describe('Disposing', function () {
 
     expect(() => child.resolve('ILogger')).toThrow(ContainerDisposedError);
     expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
-    expect(root.getInstances().length).toBe(0);
+    expect(by.instances()(root).length).toBe(0);
   });
 });
 
@@ -362,7 +333,7 @@ describe('lazy provider', () => {
     // Assert
     expect(app.run()).toBe('Hello');
     expect(app.run()).toBe('Hello');
-    expect(container.getInstances().filter((x) => x instanceof Service).length).toBe(1);
+    expect(Array.from(container.instances).filter((x) => x instanceof Service).length).toBe(1);
   });
 
   it('should create instance when property is invoked', () => {
@@ -775,7 +746,7 @@ import {
 
 describe('Visibility', function () {
   it('should hide from children', () => {
-    @register(key('logger'), scope((s) => s.hasTag('root')))
+    @register(key('logger'), scope((s) => s.tags.has('root')))
     @provider(singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
@@ -890,11 +861,11 @@ describe('alias', () => {
 
   it('should resolve by memoized alias', () => {
     @provider(alias('ILogger'))
-    @register(scope((s) => s.hasTag('root')))
+    @register(scope((s) => s.tags.has('root')))
     class FileLogger {}
 
     @provider(alias('ILogger'))
-    @register(scope((s) => s.hasTag('child')))
+    @register(scope((s) => s.tags.has('child')))
     class DbLogger {}
 
     const container = new Container(new MetadataInjector(), { tags: ['root'] })
@@ -1058,7 +1029,7 @@ describe('Registration module', function () {
   const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
 
   it('should register class', function () {
-    @register(key('ILogger'), scope((s) => s.hasTag('root')))
+    @register(key('ILogger'), scope((s) => s.tags.has('root')))
     @provider(singleton())
     class Logger {}
 
@@ -1116,7 +1087,7 @@ Sometimes you need to register provider only in scope which matches to certain c
 import 'reflect-metadata';
 import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope, register } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.hasTag('root')))
+@register(key('ILogger'), scope((s) => s.tags.has('root')))
 @provider(singleton()) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {
@@ -1292,7 +1263,7 @@ describe('onDispose', function () {
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
 
-    for (const instance of container.getInstances()) {
+    for (const instance of by.instances()(container)) {
       runHooks(instance as object, 'onDispose', { scope: container });
     }
 

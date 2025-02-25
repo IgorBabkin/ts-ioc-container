@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, ContainerDisposedError, MetadataInjector, Registration as R } from '../../lib';
+import { by, Container, ContainerDisposedError, MetadataInjector, Registration as R } from '../../lib';
 
 class Logger {}
 
@@ -13,6 +13,6 @@ describe('Disposing', function () {
 
     expect(() => child.resolve('ILogger')).toThrow(ContainerDisposedError);
     expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
-    expect(root.getInstances().length).toBe(0);
+    expect(by.instances()(root).length).toBe(0);
   });
 });

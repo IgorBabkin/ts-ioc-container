@@ -11,9 +11,10 @@ import {
   register,
   DependencyNotFoundError,
   constructor,
+  by,
 } from '../lib';
 
-@register(key('logger'), scope((s) => s.hasTag('home')))
+@register(key('logger'), scope((s) => s.tags.has('home')))
 @provider(singleton())
 class Logger {}
 
@@ -67,7 +68,7 @@ describe('Singleton', function () {
 
     const logger1 = childScope1.resolve('logger');
     const logger2 = childScope2.resolve('logger');
-    const instances = container.getInstances();
+    const instances = by.instances()(container);
 
     expect(instances).toContain(logger1);
     expect(instances).toContain(logger2);
@@ -82,11 +83,11 @@ describe('Singleton', function () {
     child2.resolve('logger');
     container.dispose();
 
-    expect(container.getInstances().length).toBe(0);
+    expect(by.instances()(container).length).toBe(0);
   });
 
   it('should be not visible from root', () => {
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register(key('logger'), scope((s) => s.tags.has('child')))
     class FileLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
@@ -98,7 +99,7 @@ describe('Singleton', function () {
   });
 
   it('should register class as value and read metadata', () => {
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register(key('logger'), scope((s) => s.tags.has('child')))
     class FileLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toValue(FileLogger));
@@ -111,10 +112,10 @@ describe('Singleton', function () {
   });
 
   it('should override keys', () => {
-    @register(key('logger'), scope((s) => s.hasTag('root')))
+    @register(key('logger'), scope((s) => s.tags.has('root')))
     class FileLogger {}
 
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register(key('logger'), scope((s) => s.tags.has('child')))
     class DbLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] })
@@ -128,7 +129,7 @@ describe('Singleton', function () {
   });
 
   it('should add registration to children', () => {
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register(key('logger'), scope((s) => s.tags.has('child')))
     class DbLogger {}
 
     const parent = new Container(new MetadataInjector(), { tags: ['root'] });
