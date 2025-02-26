@@ -1,5 +1,0 @@
-z.object({
-{{#each this}}
-  {{name}}: {{render_template 'JsonSchema.hbs' schema~}}{{#if (is_equal this.required false)}}.optional(){{/if}},
-{{/each}}
-})

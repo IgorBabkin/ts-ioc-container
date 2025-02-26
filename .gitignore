@@ -11,3 +11,5 @@ precompiled
 .vscode
 .yarn/cache
 .yarn/install-state.gz
+yarn.log
+

@@ -2,43 +2,39 @@ version: 2.1
 orbs:
   node: circleci/node@5.1.0
   coveralls: coveralls/coveralls@2.1.2
-jobs:
-  test:
+
+executors:
+  node-executor:
     docker:
       - image: cimg/base:stable
-
     environment:
       NODE_ENV: test
 
+jobs:
+  test:
+    executor: node-executor
     steps:
       - checkout
 
       - restore_cache:
-          key: v1-deps-{{ checksum "yarn.lock" }}
+          key: v1-deps-{{ checksum "package-lock.json" }}
 
       - node/install:
-          install-yarn: true
-          node-version: '20.12.0'
+          node-version: '22.14.0'
 
-      - run:
-          name: Install dependencies
-          command: |
-            corepack enable
-            yarn -v
-            yarn install --immutable
+      - run: npm ci
 
       - run: npm run build
 
-      - run: npm test -- --scope=ts-ioc-container
+      - run: npm test
 
       - coveralls/upload:
-          coverage_file: ./packages/ts-ioc-container/coverage/lcov.info
-          flag_name: 'ts-io-container'
+          coverage_file: ./coverage/lcov.info
 
       - save_cache:
-          key: v1-deps-{{ checksum "yarn.lock" }}
+          key: v1-deps-{{ checksum "package-lock.json" }}
           paths:
-            - .yarn/cache
+            - node_modules
 
 workflows:
   test:
