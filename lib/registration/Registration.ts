@@ -78,7 +78,9 @@ export class Registration<T = any> implements IRegistration<T> {
 
     const key = this.key;
 
-    container.register(key, this.createProvider(key).pipe(...this.mappers));
+    const provider = this.createProvider(key).pipe(...this.mappers);
+    container.register(key, provider);
+
     for (const redirectKey of this.redirectKeys) {
       container.register(redirectKey, new Provider((s) => s.resolve(key)));
     }

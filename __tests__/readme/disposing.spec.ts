@@ -5,7 +5,7 @@ class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger).fromKey('ILogger'));
+    const root = new Container(new MetadataInjector(), { tags: ['root'] }).use(R.toClass(Logger).fromKey('ILogger'));
     const child = root.createScope({ tags: ['child'] });
 
     const logger = child.resolve('ILogger');
