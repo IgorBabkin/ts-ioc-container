@@ -5,7 +5,7 @@ import { InjectFn } from './hooks/HookContext';
 import { IRegistration, ScopePredicate } from './registration/IRegistration';
 import { Registration } from './registration/Registration';
 import { Provider } from './provider/Provider';
-import { generateUUID, MapFn } from './utils';
+import { MapFn } from './utils';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;
@@ -106,7 +106,7 @@ export const isDepKey = <T>(key: unknown): key is DepKey<T> => {
   return typeof key === 'object' && key !== null && 'key' in key;
 };
 
-export const depKey = <T>(key: DependencyKey = generateUUID()): DepKey<T> => {
+export const depKey = <T>(key: DependencyKey): DepKey<T> => {
   let isValidWhen: ScopePredicate;
   const mappers: MapFn<IProvider<T>>[] = [];
 
