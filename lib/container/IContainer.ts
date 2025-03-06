@@ -49,7 +49,10 @@ export interface IContainer extends Resolvable, Tagged {
 
   removeScope(child: IContainer): void;
 
-  dispose(): void;
+  /**
+   * @param options - cascade must be true by default
+   */
+  dispose(options?: { cascade?: boolean }): void;
 
   use(module: IContainerModule): this;
 
@@ -62,6 +65,11 @@ export interface IContainer extends Resolvable, Tagged {
   getScopes(): IContainer[];
 
   getInstances(): Instance[];
+
+  /**
+   * Detaches container from parent
+   */
+  detach(): void;
 
   resolveManyByAlias(
     predicate: AliasPredicate,

@@ -13,6 +13,8 @@ import { IProvider } from '../provider/IProvider';
 import { IRegistration } from '../registration/IRegistration';
 
 export class EmptyContainer implements IContainer {
+  detach(): void {}
+
   get isDisposed(): boolean {
     throw new MethodNotImplementedError();
   }

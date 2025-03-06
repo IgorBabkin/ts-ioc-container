@@ -76,22 +76,32 @@ export class Container implements IContainer {
     return scope;
   }
 
-  dispose(): void {
+  dispose(options: { cascade?: boolean } = {}): void {
+    const { cascade = true } = options;
     this.validateContainer();
     this.isDisposed = true;
 
     // Dispose all scopes
     for (const scope of this.scopes) {
-      scope.dispose();
+      if (cascade) {
+        scope.dispose(options);
+      } else {
+        scope.detach();
+      }
     }
+
+    // Unbind from parent
+    this.parent.removeScope(this);
+    this.parent = new EmptyContainer();
 
     // Drop internal state to prevent memory leaks
     this.registrations.clear();
     this.providers.clear();
     this.instances.forEach((instance) => this.onDispose(instance));
     this.instances.clear();
+  }
 
-    // Remove references to parent and scopes to prevent memory leaks
+  detach(): void {
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
   }
