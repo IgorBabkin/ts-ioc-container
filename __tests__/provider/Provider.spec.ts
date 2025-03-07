@@ -1,10 +1,5 @@
 import 'reflect-metadata';
-import { IContainer } from '../../lib/container/IContainer';
-import { Container } from '../../lib/container/Container';
-import { Provider } from '../../lib/provider/Provider';
-import { SimpleInjector } from '../../lib/injector/SimpleInjector';
-import { IProvider, getTransformers, ProviderResolveOptions } from '../../lib/provider/IProvider';
-import { Registration } from '../../lib/registration/Registration';
+import { Container, IContainer, IProvider, Provider, Registration, SimpleInjector } from '../../lib';
 
 describe('Provider', () => {
   let container: IContainer;
@@ -59,6 +54,71 @@ describe('Provider', () => {
       // Resolve the provider - should return the class itself, not an instance
       const result = provider.resolve(container, { args: [] });
       expect(result).toBe(TestClass);
+    });
+
+    it('should create provider from constructor value without transformers', () => {
+      // Create a class without transformers
+      class TestClassWithoutTransformers {
+        getValue() {
+          return 'value-without-transformers';
+        }
+      }
+
+      // Ensure no transformers are defined (explicitly clear metadata if any)
+      Reflect.defineMetadata('provider', undefined, TestClassWithoutTransformers);
+
+      // Create a provider from the class as a value
+      // This will exercise the branch where getRegistrationTransformers returns undefined
+      // and the ?? [] fallback is used
+      const provider = Provider.fromValue(TestClassWithoutTransformers);
+
+      // Verify the provider is created
+      expect(provider).toBeInstanceOf(Provider);
+
+      // Resolve the provider - should return the class itself, not an instance
+      const result = provider.resolve(container, { args: [] });
+      expect(result).toBe(TestClassWithoutTransformers);
+    });
+
+    it('should create provider from constructor value with null metadata', () => {
+      // Create a class
+      class TestClassWithNullMetadata {
+        getValue() {
+          return 'value-with-null-metadata';
+        }
+      }
+
+      // Set null metadata to specifically test the ?? [] branch
+      Reflect.defineMetadata('provider', null, TestClassWithNullMetadata);
+
+      // Create a provider from the class as a value
+      // This will exercise the branch where getRegistrationTransformers returns null
+      // and the ?? [] fallback is used
+      const provider = Provider.fromValue(TestClassWithNullMetadata);
+
+      // Verify the provider is created
+      expect(provider).toBeInstanceOf(Provider);
+
+      // Resolve the provider - should return the class itself, not an instance
+      const result = provider.resolve(container, { args: [] });
+      expect(result).toBe(TestClassWithNullMetadata);
+    });
+
+    it('should create provider from a function with prototype that has no metadata', () => {
+      // Create a function with a prototype but no metadata
+      function TestFunction() {}
+      TestFunction.prototype = { test: true };
+
+      // This will exercise the branch where isConstructor returns true
+      // but there are no transformers defined
+      const provider = Provider.fromValue(TestFunction);
+
+      // Verify the provider is created
+      expect(provider).toBeInstanceOf(Provider);
+
+      // Resolve the provider
+      const result = provider.resolve(container, { args: [] });
+      expect(result).toBe(TestFunction);
     });
 
     it('should create provider from non-constructor value', () => {

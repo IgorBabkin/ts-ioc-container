@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Container, key, MetadataInjector, provider, register, Registration as R, scope, singleton } from '../../lib';
-import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
+import { DependencyMissingKeyError } from '../../lib';
 
 describe('Registration module', function () {
   const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });

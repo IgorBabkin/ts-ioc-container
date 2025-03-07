@@ -1,15 +1,17 @@
 import 'reflect-metadata';
 import {
   Container,
-  DependencyKey,
+  getRegistrationTransformers,
   IContainer,
-  IRegistration,
+  key,
   MetadataInjector,
   Provider,
+  redirectFrom,
+  register,
   Registration,
+  scope,
   ScopePredicate,
 } from '../lib';
-import { getTransformers, key, redirectFrom, register, scope } from '../lib/registration/IRegistration';
 
 describe('IRegistration', () => {
   let container: Container;
@@ -248,19 +250,19 @@ describe('IRegistration', () => {
     });
   });
 
-  describe('getTransformers and register', () => {
+  describe('getRegistrationTransformers and register', () => {
     it('should get transformers from metadata', () => {
       @register(key('class-key'))
       class TestClass {}
 
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
       expect(transformers).toHaveLength(1);
     });
 
     it('should return empty array when no transformers exist', () => {
       class NoTransformers {}
 
-      const transformers = getTransformers(NoTransformers);
+      const transformers = getRegistrationTransformers(NoTransformers);
       expect(transformers).toEqual([]);
     });
 
@@ -273,7 +275,7 @@ describe('IRegistration', () => {
       class TestClass {}
 
       // Verify that transformers were added to the class
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
       expect(transformers.length).toBeGreaterThan(0);
 
       // This passes as long as the decorator adds transformers to the class
@@ -288,7 +290,7 @@ describe('IRegistration', () => {
       class TestWithSymbol {}
 
       // Get the transformers and verify they were added
-      const transformers = getTransformers(TestWithSymbol);
+      const transformers = getRegistrationTransformers(TestWithSymbol);
       expect(transformers.length).toBe(2);
 
       // Add a registration with this class to verify the transformers work

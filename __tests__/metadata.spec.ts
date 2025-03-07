@@ -6,7 +6,7 @@ import {
   setMetadata,
   setMethodMetadata,
   setParameterMetadata,
-} from '../lib/metadata';
+} from '../lib';
 
 describe('metadata', () => {
   describe('setMethodMetadata and getMethodMetadata', () => {

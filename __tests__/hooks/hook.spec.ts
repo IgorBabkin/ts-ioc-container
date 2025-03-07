@@ -1,17 +1,9 @@
 import 'reflect-metadata';
-import { Container } from '../../lib/container/Container';
-import { IContainer } from '../../lib/container/IContainer';
-import {
-  hook,
-  onConstruct,
-  onDispose,
-  runOnConstructHooks,
-  runOnDisposeHooks,
-  injectProp,
-  runHooks,
-} from '../../lib/hooks/hook';
-import { SimpleInjector } from '../../lib/injector/SimpleInjector';
-import { IHookContext } from '../../lib/hooks/HookContext';
+import { Container, Registration } from '../../lib';
+import { IContainer } from '../../lib';
+import { hook, onConstruct, onDispose, runOnConstructHooks, runOnDisposeHooks, injectProp, runHooks } from '../../lib';
+import { SimpleInjector } from '../../lib';
+import { IHookContext } from '../../lib';
 
 describe('hook', () => {
   let container: IContainer;
@@ -211,6 +203,10 @@ describe('hook', () => {
 
       // Add hook using the hook class
       hook('customHook', TestHookClass)(TestClass.prototype, methodName);
+
+      // Register the hook class with the container
+      // This is crucial for covering line 75 in hook.ts
+      container.add(Registration.toClass(TestHookClass));
 
       // Create an instance
       const instance = new TestClass();

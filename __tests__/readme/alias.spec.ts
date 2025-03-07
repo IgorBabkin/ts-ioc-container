@@ -15,7 +15,7 @@ import {
   Registration as R,
   scope,
 } from '../../lib';
-import { constant } from '../../lib/utils';
+import { constant } from '../../lib';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';

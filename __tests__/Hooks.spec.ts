@@ -14,7 +14,7 @@ import {
   runHooksAsync,
   UnexpectedHookResultError,
 } from '../lib';
-import { createHookContext, hookMetaKey } from '../lib/hooks/HookContext';
+import { createHookContext, hookMetaKey } from '../lib';
 
 describe('Hooks', () => {
   let container: IContainer;

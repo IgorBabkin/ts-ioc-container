@@ -1,4 +1,4 @@
-import { fillEmptyIndexes } from '../lib/utils';
+import { fillEmptyIndexes } from '../lib';
 
 describe('utils', () => {
   it('should merge arrays', function () {

@@ -3,19 +3,19 @@ import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
-import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
+import { getRegistrationTransformers, IRegistration, ScopePredicate } from './IRegistration';
 
 export class Registration<T = any> implements IRegistration<T> {
   private redirectKeys: Set<DependencyKey> = new Set();
 
   static toClass<T>(Target: constructor<T>) {
-    const transform = pipe(...getTransformers(Target));
+    const transform = pipe(...getRegistrationTransformers(Target));
     return transform(new Registration(() => Provider.fromClass(Target), Target.name));
   }
 
   static toValue<T>(value: T) {
     if (isConstructor(value)) {
-      const transform = pipe(...getTransformers(value as constructor<T>));
+      const transform = pipe(...getRegistrationTransformers(value as constructor<T>));
       return transform(new Registration(() => Provider.fromValue(value), value.name));
     }
     return new Registration(() => Provider.fromValue(value));

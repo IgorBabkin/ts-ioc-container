@@ -1,11 +1,11 @@
 import 'reflect-metadata';
-import { IContainer } from '../../lib/container/IContainer';
-import { Container } from '../../lib/container/Container';
-import { SimpleInjector } from '../../lib/injector/SimpleInjector';
-import { getTransformers, register } from '../../lib/registration/IRegistration';
-import { Registration } from '../../lib/registration/Registration';
-import { Provider } from '../../lib/provider/Provider';
-import { depKey } from '../../lib/by';
+import { IContainer } from '../../lib';
+import { Container } from '../../lib';
+import { SimpleInjector } from '../../lib';
+import { getRegistrationTransformers, register } from '../../lib';
+import { Registration } from '../../lib';
+import { Provider } from '../../lib';
+import { depKey } from '../../lib';
 
 describe('IRegistration', () => {
   let container: IContainer;
@@ -20,7 +20,7 @@ describe('IRegistration', () => {
       class TestClass {}
 
       // Get transformers
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
 
       // Verify no transformers are returned or empty array
       expect(transformers?.length || 0).toBe(0);
@@ -35,7 +35,7 @@ describe('IRegistration', () => {
       Reflect.defineMetadata('registration', [transformer], TestClass);
 
       // Get transformers
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
 
       // Verify transformers are returned
       expect(transformers).toEqual([transformer]);
@@ -53,7 +53,7 @@ describe('IRegistration', () => {
       class TestClass {}
 
       // Get the transformers
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
       expect(transformers).toHaveLength(2);
 
       // Create a registration
@@ -76,7 +76,7 @@ describe('IRegistration', () => {
       class TestClass {}
 
       // Get the transformers
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
       expect(transformers).toHaveLength(1);
 
       // Create a registration
@@ -110,7 +110,7 @@ describe('IRegistration', () => {
       class TestClass {}
 
       // Get the transformers
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
       expect(transformers).toHaveLength(2);
 
       // Create a registration
@@ -155,7 +155,7 @@ describe('IRegistration', () => {
       class TestClass {}
 
       // Get the transformers
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
       expect(transformers).toHaveLength(1);
 
       // Create a registration
@@ -180,7 +180,7 @@ describe('IRegistration', () => {
       class TestClass {}
 
       // Get the transformers
-      const transformers = getTransformers(TestClass);
+      const transformers = getRegistrationTransformers(TestClass);
       expect(transformers).toHaveLength(2);
 
       // Create a registration

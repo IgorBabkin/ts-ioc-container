@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { inject, resolveArgs } from '../../lib/injector/inject';
-import { IContainer } from '../../lib/container/IContainer';
-import { Container } from '../../lib/container/Container';
-import { SimpleInjector } from '../../lib/injector/SimpleInjector';
-import { depKey } from '../../lib/by';
-import { Registration } from '../../lib/registration/Registration';
+import { inject, resolveArgs } from '../../lib';
+import { IContainer } from '../../lib';
+import { Container } from '../../lib';
+import { SimpleInjector } from '../../lib';
+import { depKey } from '../../lib';
+import { Registration } from '../../lib';
 
 describe('inject', () => {
   let container: IContainer;

@@ -1,4 +1,4 @@
-import { UnexpectedHookResultError } from '../lib/errors/UnexpectedHookResultError';
+import { UnexpectedHookResultError } from '../lib';
 
 describe('UnexpectedHookResultError', () => {
   it('should create an error with the correct name', () => {

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { MultiCache, multiCache } from '../../../lib/provider/singleton/MultiCache';
+import { MultiCache, multiCache } from '../../../lib';
 
 describe('MultiCache', () => {
   it('should store and retrieve values', () => {

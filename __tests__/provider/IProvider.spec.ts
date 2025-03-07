@@ -1,15 +1,9 @@
 import 'reflect-metadata';
-import { IContainer, Tagged, AliasPredicate } from '../../lib/container/IContainer';
-import { Container } from '../../lib/container/Container';
-import {
-  IProvider,
-  ProviderDecorator,
-  ProviderResolveOptions,
-  ChildrenVisibilityPredicate,
-  ArgsFn,
-} from '../../lib/provider/IProvider';
-import { Provider } from '../../lib/provider/Provider';
-import { SimpleInjector } from '../../lib/injector/SimpleInjector';
+import { IContainer, Tagged, AliasPredicate } from '../../lib';
+import { Container } from '../../lib';
+import { IProvider, ProviderDecorator, ProviderResolveOptions, ChildrenVisibilityPredicate, ArgsFn } from '../../lib';
+import { Provider } from '../../lib';
+import { SimpleInjector } from '../../lib';
 
 describe('IProvider', () => {
   let container: IContainer;

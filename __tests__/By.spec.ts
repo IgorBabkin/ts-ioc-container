@@ -1,19 +1,19 @@
 import 'reflect-metadata';
 import {
+  all,
   by,
+  byAlias,
+  byAliases,
   Container,
-  DepKey,
+  depKey,
   IMemo,
   IMemoKey,
-  IRegistration,
+  Instance,
+  isDepKey,
   MetadataInjector,
   Provider,
   Registration,
 } from '../lib';
-
-import { all, byAlias, byAliases, depKey, isDepKey } from '../lib/by';
-import { IProvider } from '../lib/provider/IProvider';
-import { Instance } from '../lib/container/IContainer';
 
 describe('by.ts', () => {
   let container: Container;
