@@ -50,7 +50,7 @@ export class EmptyContainer implements IContainer {
   }
 
   hasTag(tag: Tag): boolean {
-    return false;
+    throw new MethodNotImplementedError();
   }
 
   getRegistrations() {
@@ -64,7 +64,7 @@ export class EmptyContainer implements IContainer {
   }
 
   add(registration: IRegistration): this {
-    return this;
+    throw new MethodNotImplementedError();
   }
 
   resolveManyByAlias(

@@ -76,7 +76,7 @@ export {
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others
-export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases, depKey, DepKey } from './by';
+export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
 export { constructor, Branded } from './utils';
 export {
   setMetadata,
@@ -86,3 +86,5 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
+export { depKey } from './isDepKey';
+export { DepKey } from './isDepKey';

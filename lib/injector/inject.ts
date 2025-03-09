@@ -2,7 +2,7 @@ import { getParameterMetadata, setParameterMetadata } from '../metadata';
 import { constant, constructor, fillEmptyIndexes, isInstance } from '../utils';
 import { IContainer } from '../container/IContainer';
 import { hookMetaKey, InjectFn } from '../hooks/HookContext';
-import { DepKey, isDepKey } from '../by';
+import { DepKey, isDepKey } from '../isDepKey';
 
 export const inject =
   <T>(fn: InjectFn | DepKey<T>): ParameterDecorator =>

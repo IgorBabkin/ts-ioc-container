@@ -13,6 +13,8 @@
   },
   "coveragePathIgnorePatterns": [
     "/node_modules/",
+    "/__tests__/",
+    "/lib/container/AutoMockedContainer.ts",
     "cjm/",
     "esm/",
     "typings/",
