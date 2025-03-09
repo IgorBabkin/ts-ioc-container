@@ -4,8 +4,6 @@ import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
 export abstract class AutoMockedContainer implements IContainer {
-  detach(): void {}
-
   isDisposed = false;
 
   hasProvider(key: string): boolean {
