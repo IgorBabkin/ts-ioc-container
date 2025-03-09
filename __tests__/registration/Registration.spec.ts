@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { IContainer } from '../../lib';
-import { Container } from '../../lib';
-import { SimpleInjector } from '../../lib';
-import { Registration } from '../../lib';
-import { Provider } from '../../lib';
-import { DependencyMissingKeyError } from '../../lib';
+import { IContainer } from '../../lib/container/IContainer';
+import { Container } from '../../lib/container/Container';
+import { SimpleInjector } from '../../lib/injector/SimpleInjector';
+import { Registration } from '../../lib/registration/Registration';
+import { Provider } from '../../lib/provider/Provider';
+import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration', () => {
   let container: IContainer;

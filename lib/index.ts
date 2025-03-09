@@ -9,7 +9,6 @@ export {
   Tag,
   Tagged,
   Instance,
-  AliasPredicate,
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
@@ -34,8 +33,6 @@ export {
   ArgsFn,
   ProviderDecorator,
   ProviderResolveOptions,
-  getTransformers,
-  ChildrenVisibilityPredicate,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/singleton/SingletonProvider';
@@ -52,7 +49,6 @@ export {
   register,
   redirectFrom,
   ScopePredicate,
-  getRegistrationTransformers,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
@@ -61,7 +57,6 @@ export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
-export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 
 // Hooks
 export {
@@ -78,11 +73,11 @@ export {
   runOnConstructHooks,
   runOnDisposeHooks,
 } from './hooks/hook';
-export { HookContext, InjectFn, IHookContext, createHookContext, hookMetaKey } from './hooks/HookContext';
+export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others
-export { by, all, isDepKey, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases, depKey, DepKey } from './by';
-export { constructor, Branded, constant, fillEmptyIndexes } from './utils';
+export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases, depKey, DepKey } from './by';
+export { constructor, Branded } from './utils';
 export {
   setMetadata,
   getMetadata,

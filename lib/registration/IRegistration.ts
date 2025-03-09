@@ -36,7 +36,7 @@ export const scope =
     r.when(...predicates);
 
 const METADATA_KEY = 'registration';
-export const getRegistrationTransformers = (Target: constructor<unknown>) =>
+export const getTransformers = (Target: constructor<unknown>) =>
   getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
 export const register = (...mappers: (MapFn<IRegistration> | DepKey<any> | DependencyKey)[]) =>
