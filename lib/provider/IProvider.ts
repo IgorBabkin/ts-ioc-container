@@ -17,6 +17,8 @@ export function argsFn<T = unknown>(fn: ArgsFn): MapFn<IProvider<T>> {
 }
 
 export interface IProvider<T = any> {
+  key?: DependencyKey;
+
   resolve(container: IContainer, options: ProviderResolveOptions): T;
 
   isVisible(parent: Tagged, child: Tagged): boolean;
@@ -50,6 +52,14 @@ export const visible =
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
+
+  get key(): DependencyKey | undefined {
+    return this.decorated.key;
+  }
+
+  set key(value: DependencyKey | undefined) {
+    this.decorated.key = value;
+  }
 
   setVisibility(predicate: ChildrenVisibilityPredicate): this {
     this.decorated.setVisibility(predicate);

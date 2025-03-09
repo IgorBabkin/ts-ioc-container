@@ -24,6 +24,7 @@ export class Provider<T = any> implements IProvider<T> {
     return new Provider<T>((c) => c.resolve(key));
   }
 
+  key?: DependencyKey;
   private readonly aliases: Set<Alias> = new Set();
   private argsFn: ArgsFn = () => [];
   private isVisibleWhen: ChildrenVisibilityPredicate = () => true;
