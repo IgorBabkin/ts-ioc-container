@@ -6,13 +6,13 @@ const ICarKey = depKey<
     drive(): void;
     stop(): void;
   }>
->('ICar');
+>();
 
 const ILoggerKey = depKey<
   Promise<{
     info(...messages: string[]): boolean;
   }>
->('ILogger');
+>();
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
