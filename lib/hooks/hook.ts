@@ -85,15 +85,9 @@ export const runHooksAsync = (
 };
 
 export const injectProp =
-  (fn: InjectFn, propName?: string): HookFn =>
-  (context) => {
-    if (propName) {
-      // @ts-ignore
-      context.instance[propName] = fn(context.scope);
-    } else {
-      context.setProperty(fn);
-    }
-  };
+  (fn: InjectFn): HookFn =>
+  (context) =>
+    context.setProperty(fn);
 
 export const onConstruct = (fn: HookFn) => hook('onConstruct', fn);
 export const runOnConstructHooks = (target: object, scope: IContainer) => runHooks(target, 'onConstruct', { scope });
