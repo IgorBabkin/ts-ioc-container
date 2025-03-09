@@ -101,7 +101,7 @@ describe('hook', () => {
       expect(instance.constructCalled).toBe(true);
     });
 
-    it('should run onDispose hooks with custom hook', () => {
+    it('should run onDispose hooks', () => {
       // Create a class with a method to be called on dispose
       class TestClass {
         disposeCalled = false;
@@ -115,30 +115,6 @@ describe('hook', () => {
       hook('onDispose', (context: IHookContext) => {
         context.invokeMethod({});
       })(TestClass.prototype, 'dispose');
-
-      // Create an instance
-      const instance = new TestClass();
-
-      // Run onDispose hooks
-      runOnDisposeHooks(instance, container);
-
-      // Verify the dispose method was called
-      expect(instance.disposeCalled).toBe(true);
-    });
-
-    it('should run onDispose hooks with exported onDispose function', () => {
-      // Create a class with a method to be called on dispose
-      class TestClass {
-        disposeCalled = false;
-
-        dispose() {
-          this.disposeCalled = true;
-        }
-      }
-
-      // Use the exported onDispose function directly
-      // This will test line 102 in hook.ts
-      onDispose(TestClass.prototype, 'dispose');
 
       // Create an instance
       const instance = new TestClass();

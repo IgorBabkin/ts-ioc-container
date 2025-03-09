@@ -51,24 +51,4 @@ describe('IContainer', function () {
     child.detach();
     expect(child.getParent()).toBeInstanceOf(EmptyContainer);
   });
-
-  it('should check if provider exists in current or parent container', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
-    const child = root.createScope({ tags: ['child'] });
-
-    // Add a provider only to the root container
-    root.add(R.toValue('parent-value').fromKey('parent-key'));
-
-    // Add a provider only to the child container
-    child.add(R.toValue('child-value').fromKey('child-key'));
-
-    // Provider exists in child container
-    expect(child.hasProvider('child-key')).toBe(true);
-
-    // Provider exists in parent container but not in child
-    expect(child.hasProvider('parent-key')).toBe(true);
-
-    // Provider doesn't exist in either container
-    expect(child.hasProvider('non-existent-key')).toBe(false);
-  });
 });

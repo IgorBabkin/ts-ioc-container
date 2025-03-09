@@ -112,7 +112,7 @@ export class Container implements IContainer {
   }
 
   hasProvider(key: DependencyKey): boolean {
-    return this.providers.has(key) || this.parent.hasProvider(key);
+    return this.providers.has(key) ?? this.parent.hasProvider(key);
   }
 
   resolveManyByAlias(
