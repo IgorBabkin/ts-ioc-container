@@ -24,20 +24,19 @@ export class Container implements IContainer {
   private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly registrations: Set<IRegistration> = new Set();
-  private readonly onDispose: (instance: Instance) => void;
+  private readonly onDispose: (scope: IContainer) => void;
 
   constructor(
     private readonly injector: IInjector,
-    options: { parent?: IContainer; tags?: Tag[]; onDispose?: (instance: Instance) => void } = {},
+    options: {
+      parent?: IContainer;
+      tags?: Tag[];
+      onDispose?: (scope: IContainer) => void;
+    } = {},
   ) {
     this.parent = options.parent ?? new EmptyContainer();
-    this.tags = new Set(options.tags);
+    this.tags = new Set(options.tags ?? []);
     this.onDispose = options.onDispose ?? (() => {});
-
-    // apply registrations from parent
-    for (const registration of this.parent.getRegistrations()) {
-      registration.applyTo(this);
-    }
   }
 
   add(registration: IRegistration): this {
@@ -70,7 +69,8 @@ export class Container implements IContainer {
   createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
-    const scope = new Container(this.injector, { parent: this, tags, onDispose: this.onDispose });
+    const scope = new Container(this.injector, { parent: this, tags });
+    scope.applyRegistrationsFrom(this);
     this.scopes.add(scope);
 
     return scope;
@@ -78,22 +78,16 @@ export class Container implements IContainer {
 
   dispose(): void {
     this.validateContainer();
-    this.isDisposed = true;
-
-    // Dispose all scopes
     for (const scope of this.scopes) {
       scope.dispose();
     }
-
-    // Drop internal state to prevent memory leaks
-    this.registrations.clear();
-    this.providers.clear();
-    this.instances.forEach((instance) => this.onDispose(instance));
-    this.instances.clear();
-
-    // Remove references to parent and scopes to prevent memory leaks
+    this.isDisposed = true;
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
+    this.providers.clear();
+    this.instances.clear();
+    this.registrations.clear();
+    this.onDispose(this);
   }
 
   use(module: IContainerModule): this {
@@ -144,6 +138,15 @@ export class Container implements IContainer {
 
   hasTag(tag: Tag) {
     return this.tags.has(tag);
+  }
+
+  /**
+   * @private
+   */
+  applyRegistrationsFrom(source: Container): void {
+    for (const registration of source.getRegistrations()) {
+      registration.applyTo(this);
+    }
   }
 
   /**
