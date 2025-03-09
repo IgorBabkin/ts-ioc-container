@@ -69,7 +69,7 @@ export class Container implements IContainer {
   createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
-    const scope = new Container(this.injector, { parent: this, tags });
+    const scope = new Container(this.injector, { parent: this, tags, onDispose: this.onDispose });
     scope.applyRegistrationsFrom(this);
     this.scopes.add(scope);
 
@@ -78,16 +78,22 @@ export class Container implements IContainer {
 
   dispose(): void {
     this.validateContainer();
-    for (const scope of this.scopes) {
-      scope.dispose();
-    }
     this.isDisposed = true;
+
+    // Detach from parent
     this.parent.removeScope(this);
     this.parent = new EmptyContainer();
+
+    // Reset the state
     this.providers.clear();
     this.instances.clear();
     this.registrations.clear();
     this.onDispose(this);
+
+    // Dispose all scopes
+    for (const scope of this.scopes) {
+      scope.dispose();
+    }
   }
 
   use(module: IContainerModule): this {
