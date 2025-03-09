@@ -32,11 +32,11 @@ describe('hooks', () => {
 
   it('should throw an error if runHooks is used for async hooks', async () => {
     class MyClass {
-      isStarted = false;
+      instanciated = false;
 
       @hook('syncBefore', executeAsync)
       start() {
-        this.isStarted = true;
+        this.instanciated = true;
       }
     }
 
