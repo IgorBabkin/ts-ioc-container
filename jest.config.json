@@ -16,8 +16,7 @@
     "cjm/",
     "esm/",
     "typings/",
-    "scripts/",
-    "__tests__"
+    "scripts/"
   ],
   "moduleDirectories": [
     "node_modules"
