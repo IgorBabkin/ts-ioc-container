@@ -35,9 +35,8 @@ export {
   ProviderResolveOptions,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
-export { singleton, SingletonProvider } from './provider/singleton/SingletonProvider';
-export { MultiCache, multiCache } from './provider/singleton/MultiCache';
-export { Cache } from './provider/singleton/Cache';
+export { singleton, SingletonProvider } from './provider/SingletonProvider';
+export { Cache } from './provider/Cache';
 export { decorate, DecorateFn } from './provider/DecoratorProvider';
 
 // Registrations
@@ -88,3 +87,5 @@ export {
 } from './metadata';
 export { depKey } from './isDepKey';
 export { DepKey } from './isDepKey';
+export { multiCache } from './provider/Cache';
+export { MultiCache } from './provider/Cache';

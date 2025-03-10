@@ -24,6 +24,7 @@ export class Container implements IContainer {
   private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly registrations: Set<IRegistration> = new Set();
+  private readonly onConstruct: (instance: Instance) => void;
   private readonly onDispose: (scope: IContainer) => void;
 
   constructor(
@@ -31,11 +32,13 @@ export class Container implements IContainer {
     options: {
       parent?: IContainer;
       tags?: Tag[];
+      onConstruct?: (instance: Instance) => void;
       onDispose?: (scope: IContainer) => void;
     } = {},
   ) {
     this.parent = options.parent ?? new EmptyContainer();
     this.tags = new Set(options.tags ?? []);
+    this.onConstruct = options.onConstruct ?? (() => {});
     this.onDispose = options.onDispose ?? (() => {});
   }
 
@@ -57,6 +60,7 @@ export class Container implements IContainer {
     if (isConstructor(token)) {
       const instance = this.injector.resolve(this, token, { args });
       this.instances.add(instance as Instance);
+      this.onConstruct(instance as Instance);
       return instance;
     }
 
