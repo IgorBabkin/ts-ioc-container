@@ -49,7 +49,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   removeScope(child: IContainer): void;
 
-  dispose(): void;
+  dispose(options?: { cascade?: boolean }): void;
 
   use(module: IContainerModule): this;
 

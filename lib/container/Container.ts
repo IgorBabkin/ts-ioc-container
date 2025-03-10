@@ -80,7 +80,7 @@ export class Container implements IContainer {
     return scope;
   }
 
-  dispose(): void {
+  dispose({ cascade = true }: { cascade?: boolean } = {}): void {
     this.validateContainer();
     this.isDisposed = true;
 
@@ -94,9 +94,11 @@ export class Container implements IContainer {
     this.registrations.clear();
     this.onDispose(this);
 
-    // Dispose all scopes
-    for (const scope of this.scopes) {
-      scope.dispose();
+    if (cascade) {
+      // Dispose all scopes
+      for (const scope of this.scopes) {
+        scope.dispose({ cascade });
+      }
     }
   }
 
