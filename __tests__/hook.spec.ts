@@ -1,4 +1,17 @@
-import { Container, hook, HookFn, MetadataInjector, runHooks, runHooksAsync, UnexpectedHookResultError } from '../lib';
+import {
+  Container,
+  hook,
+  HookFn,
+  MetadataInjector,
+  runHooks,
+  onConstruct,
+  onDispose,
+  UnexpectedHookResultError,
+  runOnConstructHooks,
+  runOnDisposeHooks,
+  runHooksAsync,
+  hasHooks,
+} from '../lib';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
@@ -44,5 +57,64 @@ describe('hooks', () => {
     const instance = root.resolve(MyClass);
 
     expect(() => runHooks(instance, 'syncBefore', { scope: root })).toThrowError(UnexpectedHookResultError);
+  });
+
+  it('should test hooks', () => {
+    class Logger {
+      isStarted = false;
+      isDisposed = false;
+
+      @onConstruct(execute)
+      initialize(): void {
+        this.isStarted = true;
+      }
+
+      @onDispose
+      destroy(): void {
+        this.isDisposed = true;
+      }
+    }
+
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const instance = root.resolve(Logger);
+
+    runOnConstructHooks(instance, root);
+    runOnDisposeHooks(instance, root);
+
+    expect(instance.isStarted).toBe(true);
+    expect(instance.isDisposed).toBe(true);
+  });
+
+  it('should test runHooksAsync', async () => {
+    class Logger {
+      isStarted = false;
+
+      @hook('onStart', async (c) => {
+        await sleep(100);
+        c.invokeMethod({ args: c.resolveArgs() });
+      })
+      initialize(): void {
+        this.isStarted = true;
+      }
+
+      @hook('onStart', async (c) => {
+        await sleep(100);
+        c.invokeMethod({ args: c.resolveArgs() });
+      })
+      dispose(): void {
+        this.isStarted = false;
+      }
+    }
+
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const instance = root.resolve(Logger);
+
+    await runHooksAsync(instance, 'onStart', {
+      scope: root,
+      predicate: (methodName) => methodName === 'initialize',
+    });
+
+    expect(instance.isStarted).toBe(true);
+    expect(hasHooks(instance, 'onStart')).toBe(true);
   });
 });

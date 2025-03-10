@@ -85,7 +85,7 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
-export { depKey } from './isDepKey';
-export { DepKey } from './isDepKey';
+export { depKey } from './DepKey';
+export { DepKey } from './DepKey';
 export { multiCache } from './provider/Cache';
 export { MultiCache } from './provider/Cache';

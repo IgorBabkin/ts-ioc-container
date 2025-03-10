@@ -16,14 +16,17 @@ const ILoggerKey = depKey<
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const useLogger = ILoggerKey.register(async (s) => {
-  await sleep(50);
-  return {
-    info: (...messages: string[]) => {
-      return true;
-    },
-  };
-}).pipe(singleton());
+const useLogger = ILoggerKey.when((s) => s.hasTag('root'))
+  .to('ILogger')
+  .register(async (s) => {
+    await sleep(50);
+    return {
+      info: (...messages: string[]) => {
+        return true;
+      },
+    };
+  })
+  .pipe(singleton());
 
 const useCar = ICarKey.register(async (s) => {
   let isDriving = false;

@@ -1,4 +1,19 @@
-import { Container, IContainer, isDependencyKey, MetadataInjector } from '../lib';
+import {
+  Container,
+  DependencyNotFoundError,
+  depKey,
+  IContainer,
+  IProvider,
+  isDependencyKey,
+  MetadataInjector,
+  Provider,
+  ProviderDecorator,
+  redirectFrom,
+  register,
+  Registration as R,
+  singleton,
+} from '../lib';
+import { isDepKey } from '../lib/DepKey';
 
 describe('IContainer', function () {
   it('should accept a symbol as dependency key', function () {
@@ -36,5 +51,72 @@ describe('IContainer', function () {
     expect(isRootDisposed).toBe(true);
     expect(isChild1Disposed).toBe(true);
     expect(isChild2Disposed).toBe(true);
+  });
+
+  it('should assign a dependency key to a registration', function () {
+    interface ILogger {}
+
+    const ILoggerKey = depKey<ILogger>('ILogger')
+      .when((c) => c.hasTag('child1'))
+      .pipe(singleton());
+
+    const ILoggerKey2 = depKey<ILogger>('ILogger2');
+    const ILoggerKey3 = depKey<ILogger>('ILogger3');
+
+    @register(ILoggerKey.assignTo, ILoggerKey2.redirectFrom, ILoggerKey3, 'ILogger4', redirectFrom('ILogger5'))
+    class FileLogger {}
+
+    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
+    const child1 = root.createScope({ tags: ['child1'] });
+    const child2 = root.createScope({ tags: ['child2'] });
+
+    expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey2.resolve(child1));
+    expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey3.resolve(child1));
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger4'));
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger5'));
+    expect(() => ILoggerKey.resolve(child2)).toThrow(DependencyNotFoundError);
+  });
+
+  it('should test register decorator', function () {
+    interface ILogger {}
+
+    const ILoggerKey = depKey<ILogger>('ILogger');
+
+    @register(ILoggerKey)
+    class FileLogger {}
+
+    @register('INormalizer')
+    class Normalizer {}
+
+    const root = new Container(new MetadataInjector(), { tags: ['root'] })
+      .add(R.toClass(FileLogger))
+      .add(R.toClass(Normalizer));
+
+    expect(ILoggerKey.resolve(root)).toBeInstanceOf(FileLogger);
+    expect(root.resolve('INormalizer')).toBeInstanceOf(Normalizer);
+  });
+
+  it('should test isDepKey', function () {
+    interface ILogger {}
+
+    const ILoggerKey = depKey<ILogger>('ILogger')
+      .when((c) => c.hasTag('child1'))
+      .pipe(singleton());
+
+    expect(isDepKey(ILoggerKey)).toBe(true);
+  });
+
+  it('should test provider decorator', function () {
+    class MyProvider extends ProviderDecorator<string> {
+      constructor() {
+        super(new Provider((c, { args }) => `hello ${args[0]}`));
+      }
+    }
+
+    const provider = new MyProvider().setArgs(() => ['world']).addAliases('greeting');
+    const root = new Container(new MetadataInjector(), { tags: ['root'] }).register('myProvider', provider);
+
+    expect(root.resolve('myProvider')).toBe('hello world');
+    expect(root.resolveOneByAlias((p) => p.has('greeting'))[1]).toBe('hello world');
   });
 });

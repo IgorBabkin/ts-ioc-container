@@ -32,7 +32,7 @@ export class Registration<T = any> implements IRegistration<T> {
   private mappers: MapFn<IProvider<T>>[] = [];
 
   constructor(
-    private createProvider: (key: DependencyKey) => IProvider<T>,
+    private createProvider: () => IProvider<T>,
     private key?: DependencyKey,
     private scopePredicates: ScopePredicate[] = [],
   ) {}
@@ -78,7 +78,7 @@ export class Registration<T = any> implements IRegistration<T> {
 
     const key = this.key;
 
-    container.register(key, this.createProvider(key).pipe(...this.mappers));
+    container.register(key, this.createProvider().pipe(...this.mappers));
     for (const redirectKey of this.redirectKeys) {
       container.register(redirectKey, new Provider((s) => s.resolve(key)));
     }
