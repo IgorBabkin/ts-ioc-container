@@ -17,6 +17,10 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
+  detachFromParent() {
+    throw new MethodNotImplementedError();
+  }
+
   hasProvider(key: string): boolean {
     return false;
   }

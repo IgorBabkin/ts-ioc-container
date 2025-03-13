@@ -19,11 +19,11 @@ import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 export class Container implements IContainer {
   isDisposed = false;
   private parent: IContainer;
-  private readonly scopes = new Set<IContainer>();
-  private readonly instances = new Set<Instance>();
+  private readonly scopes: IContainer[] = [];
+  private readonly instances: Instance[] = [];
   private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly registrations: Set<IRegistration> = new Set();
+  private readonly registrations: IRegistration[] = [];
   private readonly onConstruct: (instance: Instance) => void;
   private readonly onDispose: (scope: IContainer) => void;
 
@@ -43,7 +43,7 @@ export class Container implements IContainer {
   }
 
   add(registration: IRegistration): this {
-    this.registrations.add(registration);
+    this.registrations.push(registration);
     registration.applyTo(this);
     return this;
   }
@@ -59,7 +59,7 @@ export class Container implements IContainer {
 
     if (isConstructor(token)) {
       const instance = this.injector.resolve(this, token, { args });
-      this.instances.add(instance as Instance);
+      this.instances.push(instance as Instance);
       this.onConstruct(instance as Instance);
       return instance;
     }
@@ -75,7 +75,7 @@ export class Container implements IContainer {
 
     const scope = new Container(this.injector, { parent: this, tags, onDispose: this.onDispose });
     scope.applyRegistrationsFrom(this);
-    this.scopes.add(scope);
+    this.scopes.push(scope);
 
     return scope;
   }
@@ -90,16 +90,24 @@ export class Container implements IContainer {
 
     // Reset the state
     this.providers.clear();
-    this.instances.clear();
-    this.registrations.clear();
+    this.instances.splice(0, this.instances.length);
+    this.registrations.splice(0, this.registrations.length);
     this.onDispose(this);
 
-    if (cascade) {
-      // Dispose all scopes
-      for (const scope of this.scopes) {
-        scope.dispose({ cascade });
+    // Dispose all scopes
+    while (this.scopes.length > 0) {
+      const scope = this.scopes[0];
+      if (cascade) {
+        scope.dispose({ cascade: true });
+      } else {
+        scope.detachFromParent();
       }
     }
+  }
+
+  detachFromParent() {
+    this.parent.removeScope(this);
+    this.parent = new EmptyContainer();
   }
 
   use(module: IContainerModule): this {
@@ -172,7 +180,8 @@ export class Container implements IContainer {
    * @private
    */
   removeScope(child: IContainer): void {
-    this.scopes.delete(child);
+    const index = this.scopes.indexOf(child);
+    this.scopes.splice(index, 1);
   }
 
   private validateContainer(): void {

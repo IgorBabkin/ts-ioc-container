@@ -46,7 +46,7 @@ describe('Singleton', function () {
   });
 
   it('should dispose all scopes', function () {
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
+    const container = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger));
 
     const child1 = container.createScope({ tags: ['home'] });
     const child2 = container.createScope({ tags: ['home'] });

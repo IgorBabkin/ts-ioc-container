@@ -18,6 +18,10 @@ export abstract class AutoMockedContainer implements IContainer {
 
   dispose(): void {}
 
+  detachFromParent() {
+    throw new MethodNotImplementedError();
+  }
+
   register(): this {
     return this;
   }
