@@ -236,7 +236,7 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 
 ```typescript
 import 'reflect-metadata';
-import { by, Container, ContainerDisposedError, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { by, Container, ContainerDisposedError, EmptyContainer, MetadataInjector, Registration as R } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -251,6 +251,17 @@ describe('Disposing', function () {
     expect(() => child.resolve('ILogger')).toThrow(ContainerDisposedError);
     expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
     expect(by.instances()(root).length).toBe(0);
+  });
+
+  it('should dispose without cascade', function () {
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const child1 = root.createScope({ tags: ['child1'] });
+
+    root.dispose({ cascade: false });
+
+    expect(root.isDisposed).toBe(true);
+    expect(child1.isDisposed).toBe(false);
+    expect(child1.getParent()).toBeInstanceOf(EmptyContainer);
   });
 });
 
@@ -884,7 +895,6 @@ describe('alias', () => {
   });
 
   it('should resolve by memoized aliases', () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
     interface ILogger {}
 
     @provider(alias('ILogger'))
