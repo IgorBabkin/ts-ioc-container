@@ -9,6 +9,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
+import prevCoverageResults from './prev-coverage-result.json';
+import coverageConfig from './coverage-config.json';
 
 // Define coverage summary interface
 interface CoverageSummary {
@@ -20,25 +22,11 @@ interface CoverageSummary {
   };
 }
 
-// Define coverage threshold interface
-interface CoverageThreshold {
-  statements: number;
-  branches: number;
-  functions: number;
-  lines: number;
-}
-
-// Path to the thresholds JSON file
-const thresholdsPath = path.join(__dirname, 'coverage-thresholds.json');
-
 /**
  * Main function to check coverage
  */
 function checkCoverage(): number {
   try {
-    // Read current thresholds
-    const COVERAGE_THRESHOLD = JSON.parse(fs.readFileSync(thresholdsPath, 'utf8')) as CoverageThreshold;
-
     // Run tests with coverage
     execSync('npx jest --coverage --coverageReporters=json-summary', { stdio: 'inherit' });
 
@@ -51,20 +39,20 @@ function checkCoverage(): number {
     // Check if coverage is below thresholds
     const failures: string[] = [];
 
-    if (total.statements.pct < COVERAGE_THRESHOLD.statements) {
-      failures.push(`Statements coverage dropped: ${total.statements.pct}% < ${COVERAGE_THRESHOLD.statements}%`);
+    if (prevCoverageResults.statements - total.statements.pct > coverageConfig.threshold.statements) {
+      failures.push(`Statements coverage dropped more than ${coverageConfig.threshold.statements}%`);
     }
 
-    if (total.branches.pct < COVERAGE_THRESHOLD.branches) {
-      failures.push(`Branches coverage dropped: ${total.branches.pct}% < ${COVERAGE_THRESHOLD.branches}%`);
+    if (prevCoverageResults.branches - total.branches.pct > coverageConfig.threshold.branches) {
+      failures.push(`Branches coverage dropped more than ${coverageConfig.threshold.branches}%`);
     }
 
-    if (total.functions.pct < COVERAGE_THRESHOLD.functions) {
-      failures.push(`Functions coverage dropped: ${total.functions.pct}% < ${COVERAGE_THRESHOLD.functions}%`);
+    if (prevCoverageResults.functions - total.functions.pct > coverageConfig.threshold.functions) {
+      failures.push(`Functions coverage dropped more than ${coverageConfig.threshold.functions}%`);
     }
 
-    if (total.lines.pct < COVERAGE_THRESHOLD.lines) {
-      failures.push(`Lines coverage dropped: ${total.lines.pct}% < ${COVERAGE_THRESHOLD.lines}%`);
+    if (prevCoverageResults.lines - total.lines.pct > coverageConfig.threshold.lines) {
+      failures.push(`Lines coverage dropped more than ${coverageConfig.threshold.lines}%`);
     }
 
     if (failures.length > 0) {
