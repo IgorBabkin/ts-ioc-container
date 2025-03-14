@@ -27,7 +27,7 @@ interface CoverageThreshold {
 }
 
 // Path to the thresholds JSON file
-const thresholdsPath = path.join(__dirname, 'coverage-thresholds.json');
+const thresholdsPath = path.join(__dirname, 'prev-coverage-result.json');
 // Path to the coverage summary file
 const coverageSummaryPath = path.join(__dirname, '..', 'coverage/coverage-summary.json');
 
