@@ -1,1 +1,1 @@
-bun scripts/update-coverage-thresholds.ts
+bun scripts/update-coverage-results.ts
