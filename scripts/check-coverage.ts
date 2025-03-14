@@ -64,7 +64,17 @@ function checkCoverage(): number {
       return 1;
     }
 
-    console.log('✅ Test coverage is maintained or improved!');
+    console.log('\n✅ Test coverage check passed! ✅');
+    console.log('┌───────────────────────────────────────────┐');
+    console.log('│                                           │');
+    console.log('│   🎯 Coverage results remain strong! 🎯   │');
+    console.log('│                                           │');
+    console.log('└───────────────────────────────────────────┘');
+    console.log('\nCurrent Coverage Metrics:');
+    console.log(`  ✓ Statements: ${total.statements.pct.toFixed(2)}%`);
+    console.log(`  ✓ Branches:   ${total.branches.pct.toFixed(2)}%`);
+    console.log(`  ✓ Functions:  ${total.functions.pct.toFixed(2)}%`);
+    console.log(`  ✓ Lines:      ${total.lines.pct.toFixed(2)}%`);
     return 0;
   } catch (error) {
     console.error('Error running coverage check:', (error as Error).message);

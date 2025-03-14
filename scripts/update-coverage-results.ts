@@ -45,9 +45,9 @@ function readResults(): CoverageResults {
 function saveResults(results: CoverageResults): void {
   try {
     fs.writeFileSync(resultsPath, JSON.stringify(results, null, 2), 'utf8');
-    console.log('Updated coverage results saved to:', resultsPath);
+    console.log('💾 Coverage results saved successfully to:', resultsPath);
   } catch (error) {
-    console.error('Error saving results file:', (error as Error).message);
+    console.error('❌ Error saving results file:', (error as Error).message);
   }
 }
 
@@ -58,7 +58,7 @@ function updateThresholds(): void {
   try {
     // Check if coverage summary exists
     if (!fs.existsSync(coverageSummaryPath)) {
-      console.log('No coverage summary found. Skipping threshold update.');
+      console.log('⚠️ No coverage summary found. Skipping threshold update.');
       return;
     }
 
@@ -87,13 +87,54 @@ function updateThresholds(): void {
     if (hasChanged) {
       // Save the updated results
       saveResults(newResults);
-      console.log('Coverage results have been updated:');
-      console.log(`- Statements: ${currentThresholds.statements}% -> ${newResults.statements}%`);
-      console.log(`- Branches: ${currentThresholds.branches}% -> ${newResults.branches}%`);
-      console.log(`- Functions: ${currentThresholds.functions}% -> ${newResults.functions}%`);
-      console.log(`- Lines: ${currentThresholds.lines}% -> ${newResults.lines}%`);
+
+      console.log('┌─────────────────────────────────────────────┐');
+      console.log('│                                             │');
+      console.log('│   📈 Coverage results have been updated! 📈    │');
+      console.log('│                                             │');
+      console.log('└─────────────────────────────────────────────┘');
+
+      console.log('\nCoverage Changes:');
+
+      // Display statements with appropriate emoji
+      const statementsChange = newResults.statements - currentThresholds.statements;
+      const statementsEmoji = statementsChange > 0 ? '🔼' : statementsChange < 0 ? '🔽' : '➡️';
+      console.log(
+        `  ${statementsEmoji} Statements: ${currentThresholds.statements.toFixed(2)}% → ${newResults.statements.toFixed(2)}% (${statementsChange > 0 ? '+' : ''}${statementsChange.toFixed(2)}%)`,
+      );
+
+      // Display branches with appropriate emoji
+      const branchesChange = newResults.branches - currentThresholds.branches;
+      const branchesEmoji = branchesChange > 0 ? '🔼' : branchesChange < 0 ? '🔽' : '➡️';
+      console.log(
+        `  ${branchesEmoji} Branches:   ${currentThresholds.branches.toFixed(2)}% → ${newResults.branches.toFixed(2)}% (${branchesChange > 0 ? '+' : ''}${branchesChange.toFixed(2)}%)`,
+      );
+
+      // Display functions with appropriate emoji
+      const functionsChange = newResults.functions - currentThresholds.functions;
+      const functionsEmoji = functionsChange > 0 ? '🔼' : functionsChange < 0 ? '🔽' : '➡️';
+      console.log(
+        `  ${functionsEmoji} Functions:  ${currentThresholds.functions.toFixed(2)}% → ${newResults.functions.toFixed(2)}% (${functionsChange > 0 ? '+' : ''}${functionsChange.toFixed(2)}%)`,
+      );
+
+      // Display lines with appropriate emoji
+      const linesChange = newResults.lines - currentThresholds.lines;
+      const linesEmoji = linesChange > 0 ? '🔼' : linesChange < 0 ? '🔽' : '➡️';
+      console.log(
+        `  ${linesEmoji} Lines:      ${currentThresholds.lines.toFixed(2)}% → ${newResults.lines.toFixed(2)}% (${linesChange > 0 ? '+' : ''}${linesChange.toFixed(2)}%)`,
+      );
     } else {
-      console.log('Coverage results remain unchanged.');
+      console.log('┌─────────────────────────────────────────────┐');
+      console.log('│                                             │');
+      console.log('│   🛡️  Coverage results remain unchanged! 🛡️    │');
+      console.log('│                                             │');
+      console.log('└─────────────────────────────────────────────┘');
+
+      console.log('\nCurrent Coverage Metrics:');
+      console.log(`  ✓ Statements: ${newResults.statements.toFixed(2)}%`);
+      console.log(`  ✓ Branches:   ${newResults.branches.toFixed(2)}%`);
+      console.log(`  ✓ Functions:  ${newResults.functions.toFixed(2)}%`);
+      console.log(`  ✓ Lines:      ${newResults.lines.toFixed(2)}%`);
     }
   } catch (error) {
     console.error('Error updating coverage results:', (error as Error).message);
