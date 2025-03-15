@@ -119,4 +119,28 @@ describe('IContainer', function () {
     expect(root.resolve('myProvider')).toBe('hello world');
     expect(root.resolveOneByAlias((p) => p.has('greeting'))[1]).toBe('hello world');
   });
+
+  it('should getInstances from all scopes by default = cascade is true', function () {
+    class FileLogger {}
+
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const child1 = root.createScope({ tags: ['child1'] });
+
+    const logger1 = root.resolve(FileLogger);
+    const logger2 = child1.resolve(FileLogger);
+
+    expect(root.getInstances()).toEqual([logger1, logger2]);
+  });
+
+  it('should getInstances only from current scope if cascade is false', () => {
+    class FileLogger {}
+
+    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const child1 = root.createScope({ tags: ['child1'] });
+
+    const logger1 = root.resolve(FileLogger);
+    const logger2 = child1.resolve(FileLogger);
+
+    expect(root.getInstances({ cascade: false })).toEqual([logger1]);
+  });
 });

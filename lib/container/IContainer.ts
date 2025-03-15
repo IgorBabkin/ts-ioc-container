@@ -61,7 +61,7 @@ export interface IContainer extends Resolvable, Tagged {
 
   getScopes(): IContainer[];
 
-  getInstances(): Instance[];
+  getInstances(options?: { cascade?: boolean }): Instance[];
 
   resolveManyByAlias(
     predicate: AliasPredicate,

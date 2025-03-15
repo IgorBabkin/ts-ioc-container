@@ -152,8 +152,16 @@ export class Container implements IContainer {
     return [...this.scopes];
   }
 
-  getInstances() {
-    return [...this.instances];
+  getInstances({ cascade = true }: { cascade?: boolean } = {}) {
+    const result = [...this.instances];
+    if (cascade) {
+      for (const scope of this.scopes) {
+        for (const instance of scope.getInstances({ cascade })) {
+          result.push(instance);
+        }
+      }
+    }
+    return result;
   }
 
   hasTag(tag: Tag) {
