@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * This script checks that test coverage doesn't drop below the baseline.
@@ -31,7 +31,7 @@ function checkCoverage(): number {
     execSync('npx jest --coverage --coverageReporters=json-summary', { stdio: 'inherit' });
 
     // Read the coverage summary
-    const coverageSummaryPath = path.join(__dirname, '..', 'coverage/coverage-summary.json');
+    const coverageSummaryPath = path.join(__dirname, '../..', 'coverage/coverage-summary.json');
     const coverageSummary: CoverageSummary = JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8'));
 
     const total = coverageSummary.total;

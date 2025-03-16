@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * This script updates the coverage results based on the latest test run.
@@ -29,7 +29,7 @@ interface CoverageResults {
 // Path to the results JSON file
 const resultsPath = path.join(__dirname, 'prev-coverage-result.json');
 // Path to the coverage summary file
-const coverageSummaryPath = path.join(__dirname, '..', 'coverage/coverage-summary.json');
+const coverageSummaryPath = path.join(__dirname, '../../', 'coverage/coverage-summary.json');
 
 // Read the coverage results from the JSON file
 function readResults(): CoverageResults {

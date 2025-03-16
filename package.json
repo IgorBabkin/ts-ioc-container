@@ -41,7 +41,9 @@
     "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
     "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
-    "generate:docs": "bun scripts/generateReadme/generateReadme.ts && git add README.md",
+    "generate:docs": "scripts/generate-readme/generate-readme.ts && git add README.md",
+    "test-coverage:check": "scripts/test-coverage/check-coverage.ts",
+    "test-coverage:update": "scripts/test-coverage/update-coverage-results.ts",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "coverage": "coveralls",
     "test": "jest --coverage",
@@ -77,7 +79,7 @@
     "*.{js,ts,tsx}": [
       "eslint --fix",
       "prettier --write",
-      "bun scripts/check-coverage.ts"
+      "npm run test-coverage:check"
     ]
   },
   "gitHead": "ae10f302c7e0f55196b42669040735112479a854",
