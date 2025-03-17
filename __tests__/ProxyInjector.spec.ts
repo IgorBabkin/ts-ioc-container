@@ -13,7 +13,7 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container(new ProxyInjector()).add(R.toClass(Logger).fromKey('logger'));
+    const container = new Container({ injector: new ProxyInjector() }).add(R.toClass(Logger).fromKey('logger'));
 
     const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
@@ -42,7 +42,7 @@ describe('ProxyInjector', function () {
 
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
-    const container = new Container(new ProxyInjector())
+    const container = new Container({ injector: new ProxyInjector() })
       .add(R.toClass(App).fromKey('App').pipe(args({ greetingTemplate })))
       .add(R.toClass(Logger).fromKey('logger'));
 

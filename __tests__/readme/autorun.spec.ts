@@ -1,4 +1,4 @@
-import { Container, HookFn, hook, MetadataInjector, runHooks } from '../../lib';
+import { Container, HookFn, hook, runHooks } from '../../lib';
 
 const execute: HookFn = (context) => {
   context.invokeMethod({ args: [] });
@@ -18,7 +18,7 @@ describe('autorun', () => {
   it('should run autorun function', () => {
     const main = new Main();
 
-    runHooks(main, '__autorun__', { scope: new Container(new MetadataInjector()) });
+    runHooks(main, '__autorun__', { scope: new Container() });
 
     expect(main.isDone).toBe(true);
   });

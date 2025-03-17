@@ -20,7 +20,7 @@ class Logger {}
 
 describe('Singleton', function () {
   it('should resolve the same dependency if provider registered per root', function () {
-    const container = new Container(new MetadataInjector(), { tags: ['home'] }).add(R.toClass(Logger));
+    const container = new Container({ tags: ['home'] }).add(R.toClass(Logger));
 
     const child1 = container.createScope();
     const child2 = container.createScope();
@@ -29,7 +29,7 @@ describe('Singleton', function () {
   });
 
   it('should resolve unique dependency for every registered scope', function () {
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
+    const container = new Container().add(R.toClass(Logger));
 
     const home1 = container.createScope({ tags: ['home'] });
     const home2 = container.createScope({ tags: ['home'] });
@@ -38,7 +38,7 @@ describe('Singleton', function () {
   });
 
   it('should resolve unique dependency if registered scope has another registered scope', function () {
-    const container = new Container(new MetadataInjector(), { tags: ['home'] }).add(R.toClass(Logger));
+    const container = new Container({ tags: ['home'] }).add(R.toClass(Logger));
 
     const child1 = container.createScope({ tags: ['home'] });
 
@@ -46,7 +46,7 @@ describe('Singleton', function () {
   });
 
   it('should dispose all scopes', function () {
-    const container = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger));
+    const container = new Container({ tags: ['root'] }).add(R.toClass(Logger));
 
     const child1 = container.createScope({ tags: ['home'] });
     const child2 = container.createScope({ tags: ['home'] });
@@ -61,7 +61,7 @@ describe('Singleton', function () {
   });
 
   it('should collect instances from all scopes', function () {
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
+    const container = new Container().add(R.toClass(Logger));
 
     const childScope1 = container.createScope({ tags: ['home'] });
     const childScope2 = container.createScope({ tags: ['home'] });
@@ -75,7 +75,7 @@ describe('Singleton', function () {
   });
 
   it('should clear all instances on dispose', function () {
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
+    const container = new Container().add(R.toClass(Logger));
 
     const child1 = container.createScope({ tags: ['home'] });
     const child2 = container.createScope({ tags: ['home'] });
@@ -90,7 +90,7 @@ describe('Singleton', function () {
     @register(key('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
+    const parent = new Container({ tags: ['root'] }).add(R.toClass(FileLogger));
 
     const child = parent.createScope({ tags: ['child'] });
 
@@ -102,7 +102,7 @@ describe('Singleton', function () {
     @register(key('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toValue(FileLogger));
+    const parent = new Container({ tags: ['root'] }).add(R.toValue(FileLogger));
 
     const child = parent.createScope({ tags: ['child'] });
 
@@ -118,9 +118,7 @@ describe('Singleton', function () {
     @register(key('logger'), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] })
-      .add(R.toClass(FileLogger))
-      .add(R.toClass(DbLogger));
+    const parent = new Container({ tags: ['root'] }).add(R.toClass(FileLogger)).add(R.toClass(DbLogger));
 
     const child = parent.createScope({ tags: ['child'] });
 
@@ -132,7 +130,7 @@ describe('Singleton', function () {
     @register(key('logger'), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] });
+    const parent = new Container({ tags: ['root'] });
 
     const child = parent.createScope({ tags: ['child'] }).add(R.toClass(DbLogger));
 

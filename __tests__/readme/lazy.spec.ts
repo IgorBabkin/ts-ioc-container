@@ -1,4 +1,4 @@
-import { by, Container, inject, MetadataInjector, provider, Registration as R, singleton } from '../../lib';
+import { by, Container, inject, provider, Registration as R, singleton } from '../../lib';
 
 describe('lazy provider', () => {
   @provider(singleton())
@@ -31,7 +31,7 @@ describe('lazy provider', () => {
   }
 
   function createContainer() {
-    const container = new Container(new MetadataInjector());
+    const container = new Container();
     container.add(R.toClass(Flag)).add(R.toClass(Service));
     return container;
   }

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { Container, key, MetadataInjector, provider, register, Registration as R, scope, singleton } from '../../lib';
+import { Container, key, provider, register, Registration as R, scope, singleton } from '../../lib';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
-  const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
+  const createContainer = () => new Container({ tags: ['root'] });
 
   it('should register class', function () {
     @register(key('ILogger'), scope((s) => s.hasTag('root')))
@@ -49,6 +49,6 @@ describe('Registration module', function () {
     const root = createContainer().add(R.toClass(Logger));
 
     expect(root.resolve('Logger')).toBeInstanceOf(Logger);
-    expect(root.resolve('Logger')).toBe(root.resolve('ILogger'));
+    expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 });

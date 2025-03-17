@@ -5,7 +5,6 @@ import {
   IContainer,
   inject,
   key,
-  MetadataInjector,
   provider,
   register,
   Registration as R,
@@ -65,7 +64,7 @@ describe('lazy provider', () => {
   }
 
   function createContainer() {
-    const container = new Container(new MetadataInjector());
+    const container = new Container();
     container.add(R.toClass(TodoRepository)).add(R.toClass(Logger));
     return container;
   }

@@ -1,4 +1,4 @@
-import { Container, depKey, MetadataInjector, singleton } from '../../lib';
+import { Container, depKey, singleton } from '../../lib';
 
 const ICarKey = depKey<
   Promise<{
@@ -48,7 +48,7 @@ const useCar = ICarKey.register(async (s) => {
 
 describe('function constructor', () => {
   it('should create an instance', async () => {
-    const scope = new Container(new MetadataInjector(), { tags: ['root'] });
+    const scope = new Container({ tags: ['root'] });
     scope.add(useCar);
     scope.add(useLogger);
 

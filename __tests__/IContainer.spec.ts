@@ -41,7 +41,7 @@ describe('IContainer', function () {
       }
     };
 
-    const container = new Container(new MetadataInjector(), { tags: ['root'], onDispose });
+    const container = new Container({ tags: ['root'], onDispose });
 
     const child1 = container.createScope({ tags: ['child1'] });
     const child2 = container.createScope({ tags: ['child2'] });
@@ -66,7 +66,7 @@ describe('IContainer', function () {
     @register(ILoggerKey.assignTo, ILoggerKey2.redirectFrom, ILoggerKey3, 'ILogger4', redirectFrom('ILogger5'))
     class FileLogger {}
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
+    const root = new Container({ tags: ['root'] }).add(R.toClass(FileLogger));
     const child1 = root.createScope({ tags: ['child1'] });
     const child2 = root.createScope({ tags: ['child2'] });
 
@@ -88,9 +88,7 @@ describe('IContainer', function () {
     @register('INormalizer')
     class Normalizer {}
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] })
-      .add(R.toClass(FileLogger))
-      .add(R.toClass(Normalizer));
+    const root = new Container({ tags: ['root'] }).add(R.toClass(FileLogger)).add(R.toClass(Normalizer));
 
     expect(ILoggerKey.resolve(root)).toBeInstanceOf(FileLogger);
     expect(root.resolve('INormalizer')).toBeInstanceOf(Normalizer);
@@ -114,7 +112,7 @@ describe('IContainer', function () {
     }
 
     const provider = new MyProvider().setArgs(() => ['world']).addAliases('greeting');
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).register('myProvider', provider);
+    const root = new Container({ tags: ['root'] }).register('myProvider', provider);
 
     expect(root.resolve('myProvider')).toBe('hello world');
     expect(root.resolveOneByAlias((p) => p.has('greeting'))[1]).toBe('hello world');
@@ -123,7 +121,7 @@ describe('IContainer', function () {
   it('should getInstances from all scopes by default = cascade is true', function () {
     class FileLogger {}
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
     const child1 = root.createScope({ tags: ['child1'] });
 
     const logger1 = root.resolve(FileLogger);
@@ -135,7 +133,7 @@ describe('IContainer', function () {
   it('should getInstances only from current scope if cascade is false', () => {
     class FileLogger {}
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
     const child1 = root.createScope({ tags: ['child1'] });
 
     const logger1 = root.resolve(FileLogger);

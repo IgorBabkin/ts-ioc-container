@@ -1,4 +1,4 @@
-import { by, Container, hook, injectProp, MetadataInjector, Registration, runHooks, runHooksAsync } from '../../lib';
+import { by, Container, hook, injectProp, Registration, runHooks, runHooksAsync } from '../../lib';
 
 describe('inject property', () => {
   it('should inject property', () => {
@@ -8,7 +8,7 @@ describe('inject property', () => {
     }
     const expected = 'Hello world!';
 
-    const container = new Container(new MetadataInjector()).add(Registration.toValue(expected).fromKey('greeting'));
+    const container = new Container().add(Registration.toValue(expected).fromKey('greeting'));
     const app = container.resolve(App);
     runHooks(app as object, 'onInit', { scope: container });
 

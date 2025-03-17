@@ -3,7 +3,6 @@ import {
   Container,
   DependencyNotFoundError,
   key,
-  MetadataInjector,
   provider,
   register,
   Registration as R,
@@ -18,7 +17,7 @@ describe('Visibility', function () {
     @provider(singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
+    const parent = new Container({ tags: ['root'] }).add(R.toClass(FileLogger));
 
     const child = parent.createScope({ tags: ['child'] });
 

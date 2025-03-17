@@ -24,7 +24,7 @@ class Logger {
 
 describe('ArgsProvider', function () {
   function createContainer() {
-    return new Container(new MetadataInjector());
+    return new Container();
   }
 
   it('can assign argument function to provider', function () {

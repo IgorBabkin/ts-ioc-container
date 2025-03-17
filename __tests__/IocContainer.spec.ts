@@ -20,7 +20,7 @@ class Logger {
 
 describe('IocContainer', function () {
   function createContainer() {
-    return new Container(new MetadataInjector());
+    return new Container();
   }
 
   it('should resolve dependency', function () {

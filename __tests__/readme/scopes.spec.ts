@@ -6,7 +6,6 @@ import {
   IContainer,
   inject,
   key,
-  MetadataInjector,
   provider,
   register,
   Registration as R,
@@ -20,7 +19,7 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger));
+    const root = new Container({ tags: ['root'] }).add(R.toClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
@@ -28,7 +27,7 @@ describe('Scopes', function () {
   });
 
   it('should inject new scope', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
 
     class App {
       constructor(@inject(by.scope.create({ tags: ['child'] })) public scope: IContainer) {}

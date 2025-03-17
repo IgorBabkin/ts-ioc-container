@@ -8,7 +8,6 @@ import {
   IMemo,
   IMemoKey,
   inject,
-  MetadataInjector,
   Provider,
   provider,
   register,
@@ -68,9 +67,7 @@ describe('alias', () => {
       }
     }
 
-    const container = new Container(new MetadataInjector())
-      .add(R.toClass(LoggerMiddleware))
-      .add(R.toClass(ErrorHandlerMiddleware));
+    const container = new Container().add(R.toClass(LoggerMiddleware)).add(R.toClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
@@ -83,7 +80,7 @@ describe('alias', () => {
     @provider(alias('ILogger'))
     class FileLogger {}
 
-    const container = new Container(new MetadataInjector()).add(R.toClass(FileLogger));
+    const container = new Container().add(R.toClass(FileLogger));
 
     expect(byAlias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
     expect(() => byAlias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
@@ -98,7 +95,7 @@ describe('alias', () => {
     @register(scope((s) => s.hasTag('child')))
     class DbLogger {}
 
-    const container = new Container(new MetadataInjector(), { tags: ['root'] })
+    const container = new Container({ tags: ['root'] })
       .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
       .add(R.toClass(FileLogger))
       .add(R.toClass(DbLogger));
@@ -128,7 +125,7 @@ describe('alias', () => {
       ) {}
     }
 
-    const container = new Container(new MetadataInjector())
+    const container = new Container()
       .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
       .add(R.toClass(FileLogger));
 

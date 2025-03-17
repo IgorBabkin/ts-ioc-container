@@ -35,7 +35,7 @@ describe('hooks', () => {
       }
     }
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
     runHooks(instance, 'syncBefore', { scope: root });
@@ -53,7 +53,7 @@ describe('hooks', () => {
       }
     }
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
     expect(() => runHooks(instance, 'syncBefore', { scope: root })).toThrowError(UnexpectedHookResultError);
@@ -75,7 +75,7 @@ describe('hooks', () => {
       }
     }
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
     const instance = root.resolve(Logger);
 
     runOnConstructHooks(instance, root);
@@ -106,7 +106,7 @@ describe('hooks', () => {
       }
     }
 
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
     const instance = root.resolve(Logger);
 
     await runHooksAsync(instance, 'onStart', {

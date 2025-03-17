@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { IContainerModule, Registration as R, IContainer, key, Container, MetadataInjector, register } from '../../lib';
+import { IContainerModule, Registration as R, IContainer, key, Container, register } from '../../lib';
 
 @register(key('ILogger'))
 class Logger {}
@@ -21,7 +21,7 @@ class Development implements IContainerModule {
 
 describe('Container Modules', function () {
   function createContainer(isProduction: boolean) {
-    return new Container(new MetadataInjector()).use(isProduction ? new Production() : new Development());
+    return new Container().use(isProduction ? new Production() : new Development());
   }
 
   it('should register production dependencies', function () {

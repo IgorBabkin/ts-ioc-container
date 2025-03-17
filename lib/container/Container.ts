@@ -15,6 +15,7 @@ import { IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
+import { MetadataInjector } from '../injector/MetadataInjector';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -26,16 +27,18 @@ export class Container implements IContainer {
   private readonly registrations: IRegistration[] = [];
   private readonly onConstruct: (instance: Instance, scope: IContainer) => void;
   private readonly onDispose: (scope: IContainer) => void;
+  private readonly injector: IInjector;
 
   constructor(
-    private readonly injector: IInjector,
     options: {
+      injector?: IInjector;
       parent?: IContainer;
       tags?: Tag[];
       onConstruct?: (instance: Instance, scope: IContainer) => void;
       onDispose?: (scope: IContainer) => void;
     } = {},
   ) {
+    this.injector = options.injector ?? new MetadataInjector();
     this.parent = options.parent ?? new EmptyContainer();
     this.tags = new Set(options.tags ?? []);
     this.onConstruct = options.onConstruct ?? (() => {});
@@ -73,7 +76,7 @@ export class Container implements IContainer {
   createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
-    const scope = new Container(this.injector, { parent: this, tags, onDispose: this.onDispose });
+    const scope = new Container({ injector: this.injector, parent: this, tags, onDispose: this.onDispose });
     scope.applyRegistrationsFrom(this);
     this.scopes.push(scope);
 

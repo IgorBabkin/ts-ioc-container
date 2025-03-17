@@ -56,7 +56,7 @@ describe('Automock', function () {
   });
 
   function createContainer() {
-    return new Container(new MetadataInjector(), { parent: mockContainer });
+    return new Container({ parent: mockContainer });
   }
 
   it('should automock all non defined dependencies', async function () {
