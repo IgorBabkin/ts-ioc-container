@@ -85,7 +85,7 @@ And `tsconfig.json` should have next options:
 
 ```typescript
 import 'reflect-metadata';
-import { IContainer, by, Container, inject, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { IContainer, by, Container, inject, Registration as R } from 'ts-ioc-container';
 
 describe('Basic usage', function () {
   class Logger {
@@ -97,7 +97,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.key('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger).fromKey('ILogger'));
+    const container = new Container().add(R.toClass(Logger).fromKey('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -107,7 +107,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.keys(['ILogger1', 'ILogger2'])) public loggers: Logger[]) {}
     }
 
-    const container = new Container(new MetadataInjector())
+    const container = new Container()
       .add(R.toClass(Logger).fromKey('ILogger1'))
       .add(R.toClass(Logger).fromKey('ILogger2'));
 
@@ -115,7 +115,7 @@ describe('Basic usage', function () {
   });
 
   it('should inject current scope', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
 
     class App {
       constructor(@inject(by.scope.current) public scope: IContainer) {}
@@ -145,7 +145,6 @@ import {
   IContainer,
   inject,
   key,
-  MetadataInjector,
   provider,
   register,
   Registration as R,
@@ -159,7 +158,7 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger));
+    const root = new Container({ tags: ['root'] }).add(R.toClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
@@ -167,7 +166,7 @@ describe('Scopes', function () {
   });
 
   it('should inject new scope', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
 
     class App {
       constructor(@inject(by.scope.create({ tags: ['child'] })) public scope: IContainer) {}
@@ -189,14 +188,14 @@ Sometimes you want to get all instances from container and its scopes. For examp
 
 ```typescript
 import 'reflect-metadata';
-import { inject, key, Registration as R, Container, MetadataInjector, by, register } from 'ts-ioc-container';
+import { inject, key, Registration as R, Container, by, register } from 'ts-ioc-container';
 
 describe('Instances', function () {
   @register(key('ILogger'))
   class Logger {}
 
   it('should return injected instances', () => {
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
+    const container = new Container().add(R.toClass(Logger));
     const scope = container.createScope();
 
     const logger1 = container.resolve('ILogger');
@@ -213,7 +212,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances(isLogger)) public loggers: Logger[]) {}
     }
 
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger));
+    const container = new Container().add(R.toClass(Logger));
 
     const logger0 = container.resolve('ILogger');
     const logger1 = container.resolve('ILogger');
@@ -236,13 +235,13 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 
 ```typescript
 import 'reflect-metadata';
-import { by, Container, ContainerDisposedError, EmptyContainer, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { by, Container, ContainerDisposedError, EmptyContainer, Registration as R } from 'ts-ioc-container';
 
 class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger).fromKey('ILogger'));
+    const root = new Container({ tags: ['root'] }).add(R.toClass(Logger).fromKey('ILogger'));
     const child = root.createScope({ tags: ['child'] });
 
     const logger = child.resolve('ILogger');
@@ -254,7 +253,7 @@ describe('Disposing', function () {
   });
 
   it('should dispose without cascade', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] });
+    const root = new Container({ tags: ['root'] });
     const child1 = root.createScope({ tags: ['child1'] });
 
     root.dispose({ cascade: false });
@@ -271,7 +270,7 @@ describe('Disposing', function () {
 Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
 
 ```typescript
-import { by, Container, inject, MetadataInjector, provider, Registration as R, singleton } from 'ts-ioc-container';
+import { by, Container, inject, provider, Registration as R, singleton } from 'ts-ioc-container';
 
 describe('lazy provider', () => {
   @provider(singleton())
@@ -304,7 +303,7 @@ describe('lazy provider', () => {
   }
 
   function createContainer() {
-    const container = new Container(new MetadataInjector());
+    const container = new Container();
     container.add(R.toClass(Flag)).add(R.toClass(Service));
     return container;
   }
@@ -376,7 +375,7 @@ Also you can [inject property.](#inject-property)
 
 ```typescript
 import 'reflect-metadata';
-import { by, Container, inject, MetadataInjector, Registration as R } from 'ts-ioc-container';
+import { by, Container, inject, Registration as R } from 'ts-ioc-container';
 
 class Logger {
   name = 'Logger';
@@ -396,7 +395,7 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger).fromKey('ILogger'));
+    const container = new Container().add(R.toClass(Logger).fromKey('ILogger'));
 
     const app = container.resolve(App);
 
@@ -419,7 +418,7 @@ describe('SimpleInjector', function () {
       constructor(public container: IContainer) {}
     }
 
-    const container = new Container(new SimpleInjector()).add(R.toClass(App).fromKey('App'));
+    const container = new Container({ injector: new SimpleInjector() }).add(R.toClass(App).fromKey('App'));
     const app = container.resolve<App>('App');
 
     expect(app.container).toBeInstanceOf(Container);
@@ -433,7 +432,7 @@ describe('SimpleInjector', function () {
       ) {}
     }
 
-    const container = new Container(new SimpleInjector()).add(R.toClass(App).fromKey('App'));
+    const container = new Container({ injector: new SimpleInjector() }).add(R.toClass(App).fromKey('App'));
     const app = container.resolve<App>('App', { args: ['Hello world'] });
 
     expect(app.greeting).toBe('Hello world');
@@ -461,7 +460,7 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container(new ProxyInjector()).add(R.toClass(Logger).fromKey('logger'));
+    const container = new Container({ injector: new ProxyInjector() }).add(R.toClass(Logger).fromKey('logger'));
 
     const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
@@ -490,7 +489,7 @@ describe('ProxyInjector', function () {
 
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
-    const container = new Container(new ProxyInjector())
+    const container = new Container({ injector: new ProxyInjector() })
       .add(R.toClass(App).fromKey('App').pipe(args({ greetingTemplate })))
       .add(R.toClass(Logger).fromKey('logger'));
 
@@ -511,34 +510,31 @@ Provider is dependency factory which creates dependency.
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, Provider, MetadataInjector, scope } from 'ts-ioc-container';
+import { singleton, Container, Provider, scope } from 'ts-ioc-container';
 
 class Logger {}
 
 describe('Provider', function () {
   it('can be registered as a function', function () {
-    const container = new Container(new MetadataInjector()).register('ILogger', new Provider(() => new Logger()));
+    const container = new Container().register('ILogger', new Provider(() => new Logger()));
 
     expect(container.resolve('ILogger')).not.toBe(container.resolve('ILogger'));
   });
 
   it('can be registered as a value', function () {
-    const container = new Container(new MetadataInjector()).register('ILogger', Provider.fromValue(new Logger()));
+    const container = new Container().register('ILogger', Provider.fromValue(new Logger()));
 
     expect(container.resolve('ILogger')).toBe(container.resolve('ILogger'));
   });
 
   it('can be registered as a class', function () {
-    const container = new Container(new MetadataInjector()).register('ILogger', Provider.fromClass(Logger));
+    const container = new Container().register('ILogger', Provider.fromClass(Logger));
 
     expect(container.resolve('ILogger')).not.toBe(container.resolve('ILogger'));
   });
 
   it('can be featured by pipe method', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).register(
-      'ILogger',
-      Provider.fromClass(Logger).pipe(singleton()),
-    );
+    const root = new Container({ tags: ['root'] }).register('ILogger', Provider.fromClass(Logger).pipe(singleton()));
 
     expect(root.resolve('ILogger')).toBe(root.resolve('ILogger'));
   });
@@ -554,7 +550,7 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R, register } from 'ts-ioc-container';
+import { singleton, Container, key, provider, Registration as R, register } from 'ts-ioc-container';
 
 @register(key('logger'))
 @provider(singleton())
@@ -562,7 +558,7 @@ class Logger {}
 
 describe('Singleton', function () {
   function createContainer() {
-    return new Container(new MetadataInjector());
+    return new Container();
   }
 
   it('should resolve the same container per every request', function () {
@@ -622,7 +618,7 @@ class Logger {
 
 describe('ArgsProvider', function () {
   function createContainer() {
-    return new Container(new MetadataInjector());
+    return new Container();
   }
 
   it('can assign argument function to provider', function () {
@@ -746,7 +742,6 @@ import {
   Container,
   DependencyNotFoundError,
   key,
-  MetadataInjector,
   provider,
   register,
   Registration as R,
@@ -761,7 +756,7 @@ describe('Visibility', function () {
     @provider(singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
-    const parent = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(FileLogger));
+    const parent = new Container({ tags: ['root'] }).add(R.toClass(FileLogger));
 
     const child = parent.createScope({ tags: ['child'] });
 
@@ -789,7 +784,6 @@ import {
   IMemo,
   IMemoKey,
   inject,
-  MetadataInjector,
   Provider,
   provider,
   register,
@@ -849,9 +843,7 @@ describe('alias', () => {
       }
     }
 
-    const container = new Container(new MetadataInjector())
-      .add(R.toClass(LoggerMiddleware))
-      .add(R.toClass(ErrorHandlerMiddleware));
+    const container = new Container().add(R.toClass(LoggerMiddleware)).add(R.toClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
@@ -864,7 +856,7 @@ describe('alias', () => {
     @provider(alias('ILogger'))
     class FileLogger {}
 
-    const container = new Container(new MetadataInjector()).add(R.toClass(FileLogger));
+    const container = new Container().add(R.toClass(FileLogger));
 
     expect(byAlias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
     expect(() => byAlias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
@@ -879,7 +871,7 @@ describe('alias', () => {
     @register(scope((s) => s.hasTag('child')))
     class DbLogger {}
 
-    const container = new Container(new MetadataInjector(), { tags: ['root'] })
+    const container = new Container({ tags: ['root'] })
       .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
       .add(R.toClass(FileLogger))
       .add(R.toClass(DbLogger));
@@ -909,7 +901,7 @@ describe('alias', () => {
       ) {}
     }
 
-    const container = new Container(new MetadataInjector())
+    const container = new Container()
       .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
       .add(R.toClass(FileLogger));
 
@@ -935,7 +927,6 @@ import {
   IContainer,
   inject,
   key,
-  MetadataInjector,
   provider,
   register,
   Registration as R,
@@ -995,7 +986,7 @@ describe('lazy provider', () => {
   }
 
   function createContainer() {
-    const container = new Container(new MetadataInjector());
+    const container = new Container();
     container.add(R.toClass(TodoRepository)).add(R.toClass(Logger));
     return container;
   }
@@ -1032,11 +1023,11 @@ Sometimes you want to register provider with certain key. This is what `key` is 
 
 ```typescript
 import 'reflect-metadata';
-import { Container, key, MetadataInjector, provider, register, Registration as R, scope, singleton } from 'ts-ioc-container';
+import { Container, key, provider, register, Registration as R, scope, singleton } from 'ts-ioc-container';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
-  const createContainer = () => new Container(new MetadataInjector(), { tags: ['root'] });
+  const createContainer = () => new Container({ tags: ['root'] });
 
   it('should register class', function () {
     @register(key('ILogger'), scope((s) => s.hasTag('root')))
@@ -1082,7 +1073,7 @@ describe('Registration module', function () {
     const root = createContainer().add(R.toClass(Logger));
 
     expect(root.resolve('Logger')).toBeInstanceOf(Logger);
-    expect(root.resolve('Logger')).toBe(root.resolve('ILogger'));
+    expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 });
 
@@ -1095,14 +1086,14 @@ Sometimes you need to register provider only in scope which matches to certain c
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, MetadataInjector, Registration as R, scope, register } from 'ts-ioc-container';
+import { singleton, Container, key, provider, Registration as R, scope, register } from 'ts-ioc-container';
 
 @register(key('ILogger'), scope((s) => s.hasTag('root')))
 @provider(singleton()) // the same as .pipe(singleton(), scope((s) => s.hasTag('root')))
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
-    const root = new Container(new MetadataInjector(), { tags: ['root'] }).add(R.toClass(Logger));
+    const root = new Container({ tags: ['root'] }).add(R.toClass(Logger));
     const child = root.createScope();
     expect(root.resolve('ILogger')).toBe(child.resolve('ILogger'));
   });
@@ -1115,7 +1106,7 @@ Sometimes you want to encapsulate registration logic in separate module. This is
 
 ```typescript
 import 'reflect-metadata';
-import { IContainerModule, Registration as R, IContainer, key, Container, MetadataInjector, register } from 'ts-ioc-container';
+import { IContainerModule, Registration as R, IContainer, key, Container, register } from 'ts-ioc-container';
 
 @register(key('ILogger'))
 class Logger {}
@@ -1137,7 +1128,7 @@ class Development implements IContainerModule {
 
 describe('Container Modules', function () {
   function createContainer(isProduction: boolean) {
-    return new Container(new MetadataInjector()).use(isProduction ? new Production() : new Development());
+    return new Container().use(isProduction ? new Production() : new Development());
   }
 
   it('should register production dependencies', function () {
@@ -1203,7 +1194,7 @@ class Logger {
 
 describe('onConstruct', function () {
   it('should make logger be ready on resolve', function () {
-    const container = new Container(new MyInjector()).add(R.toClass(Logger));
+    const container = new Container({ injector: new MyInjector() }).add(R.toClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 
@@ -1268,7 +1259,7 @@ class Logger {
 
 describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = new Container(new MetadataInjector()).add(R.toClass(Logger)).add(R.toClass(LogsRepo));
+    const container = new Container().add(R.toClass(Logger)).add(R.toClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
@@ -1286,7 +1277,7 @@ describe('onDispose', function () {
 ### Inject property
 
 ```typescript
-import { by, Container, hook, injectProp, MetadataInjector, Registration, runHooks, runHooksAsync } from 'ts-ioc-container';
+import { by, Container, hook, injectProp, Registration, runHooks, runHooksAsync } from 'ts-ioc-container';
 
 describe('inject property', () => {
   it('should inject property', () => {
@@ -1296,7 +1287,7 @@ describe('inject property', () => {
     }
     const expected = 'Hello world!';
 
-    const container = new Container(new MetadataInjector()).add(Registration.toValue(expected).fromKey('greeting'));
+    const container = new Container().add(Registration.toValue(expected).fromKey('greeting'));
     const app = container.resolve(App);
     runHooks(app as object, 'onInit', { scope: container });
 
@@ -1310,7 +1301,7 @@ describe('inject property', () => {
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
-import { AutoMockedContainer, Container, DependencyKey, MetadataInjector } from 'ts-ioc-container';
+import { AutoMockedContainer, Container, DependencyKey } from 'ts-ioc-container';
 import { IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
@@ -1335,7 +1326,7 @@ interface IEngine {
 describe('Mocking', () => {
   it('should auto-mock dependencies', () => {
     const mockContainer = new MoqContainer();
-    const container = new Container(new MetadataInjector(), { parent: mockContainer });
+    const container = new Container({ parent: mockContainer });
 
     const engineMock = mockContainer.resolveMock<IEngine>('IEngine');
     engineMock.setup((i) => i.getRegistrationNumber()).returns('123');

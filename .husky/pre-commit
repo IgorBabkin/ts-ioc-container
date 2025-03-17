@@ -1,1 +1,2 @@
+npm run generate:docs
 lint-staged
