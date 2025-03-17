@@ -10,7 +10,7 @@ export type DepKey<T> = {
   key: DependencyKey;
   assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
-  resolve: (s: IContainer, ...args: unknown[]) => T;
+  resolve: (s: IContainer) => T;
   pipe(...values: MapFn<IProvider<T>>[]): DepKey<T>;
   to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
@@ -44,7 +44,7 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return registration;
     },
 
-    resolve: (s: IContainer, ...args: unknown[]) => by.key<T>(key)(s, ...args),
+    resolve: by.key<T>(key),
 
     pipe(...values: MapFn<IProvider<T>>[]) {
       mappers.push(...values);

@@ -59,17 +59,17 @@ export const byAlias =
 
 export const by = {
   keys:
-    (keys: InjectionToken[], { lazy }: Pick<ProviderResolveOptions, 'lazy'> = {}) =>
-    (c: IContainer, ...args: unknown[]) =>
-      keys.map((t) => c.resolve(t, { args, lazy })),
+    (keys: InjectionToken[], { lazy }: Pick<ProviderResolveOptions, 'lazy'> = {}): InjectFn =>
+    (c: IContainer) =>
+      keys.map((t) => c.resolve(t, { lazy })),
 
   key:
-    <T>(key: InjectionToken<T>, { args: deps = [], lazy }: { args?: unknown[]; lazy?: boolean } = {}) =>
-    (c: IContainer, ...args: unknown[]) =>
-      c.resolve<T>(key, { args: [...deps, ...args], lazy }),
+    <T>(key: InjectionToken<T>, { args = [], lazy }: { args?: unknown[]; lazy?: boolean } = {}): InjectFn<T> =>
+    (c: IContainer) =>
+      c.resolve<T>(key, { args, lazy }),
 
   instances:
-    (predicate: InstancePredicate = all) =>
+    (predicate: InstancePredicate = all): InjectFn<unknown[]> =>
     (c: IContainer) => {
       const result = new Set<Instance>(c.getInstances());
 
