@@ -8,10 +8,10 @@ describe('Basic usage', function () {
 
   it('should inject dependencies', function () {
     class App {
-      constructor(@inject(by.keyOne('ILogger')) public logger: Logger) {}
+      constructor(@inject(by.one('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container().add(R.fromClass(Logger).assignToKey('ILogger'));
+    const container = new Container().addRegistration(R.fromClass(Logger).assignToKey('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });

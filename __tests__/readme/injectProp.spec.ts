@@ -8,7 +8,7 @@ describe('inject property', () => {
     }
     const expected = 'Hello world!';
 
-    const container = new Container().add(Registration.fromValue(expected).assignToKey('greeting'));
+    const container = new Container().addRegistration(Registration.fromValue(expected).assignToKey('greeting'));
     const app = container.resolve(App);
     runHooks(app as object, 'onInit', { scope: container });
 

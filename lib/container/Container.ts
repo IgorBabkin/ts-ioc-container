@@ -51,7 +51,7 @@ export class Container implements IContainer {
     this.onResolve = options.onResolve ?? DEFAULT_CONTAINER_RESOLVER;
   }
 
-  add(registration: IRegistration): this {
+  addRegistration(registration: IRegistration): this {
     this.registrations.add(registration);
     registration.applyTo(this);
     return this;
@@ -172,7 +172,7 @@ export class Container implements IContainer {
     this.parent = new EmptyContainer();
   }
 
-  use(module: IContainerModule): this {
+  useModule(module: IContainerModule): this {
     module.applyTo(this);
     return this;
   }

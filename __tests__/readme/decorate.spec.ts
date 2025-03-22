@@ -64,7 +64,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container();
-    container.add(R.fromClass(TodoRepository)).add(R.fromClass(Logger));
+    container.addRegistration(R.fromClass(TodoRepository)).addRegistration(R.fromClass(Logger));
     return container;
   }
 

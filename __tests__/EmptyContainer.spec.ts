@@ -22,7 +22,7 @@ describe('EmptyContainer', () => {
         container.register('key', Provider.fromValue(1));
       }
     }
-    expect(() => container.use(new MyModule())).toThrowError(MethodNotImplementedError);
+    expect(() => container.useModule(new MyModule())).toThrowError(MethodNotImplementedError);
   });
   //
   it('should raise an error when dispose a container', () => {
@@ -52,7 +52,7 @@ describe('EmptyContainer', () => {
   //
   it('should raise an error when adding registration', () => {
     const container = new EmptyContainer();
-    expect(() => container.add(Registration.fromValue(1))).toThrowError(MethodNotImplementedError);
+    expect(() => container.addRegistration(Registration.fromValue(1))).toThrowError(MethodNotImplementedError);
   });
   //
   // it('should raise an error when resolving a dependency', () => {

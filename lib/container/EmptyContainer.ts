@@ -65,11 +65,11 @@ export class EmptyContainer implements IContainer {
 
   removeScope(): void {}
 
-  use(module: IContainerModule): this {
+  useModule(module: IContainerModule): this {
     throw new MethodNotImplementedError();
   }
 
-  add(registration: IRegistration): this {
+  addRegistration(registration: IRegistration): this {
     throw new MethodNotImplementedError();
   }
 

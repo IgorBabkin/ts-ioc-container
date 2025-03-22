@@ -52,7 +52,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
   removeScope(): void {}
 
-  use(): this {
+  useModule(): this {
     return this;
   }
 
@@ -60,7 +60,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return [];
   }
 
-  add(registration: IRegistration): this {
+  addRegistration(registration: IRegistration): this {
     return this;
   }
 

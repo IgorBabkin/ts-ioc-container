@@ -94,10 +94,10 @@ describe('Basic usage', function () {
 
   it('should inject dependencies', function () {
     class App {
-      constructor(@inject(by.keyOne('ILogger')) public logger: Logger) {}
+      constructor(@inject(by.one('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container().add(R.fromClass(Logger).assignToKey('ILogger'));
+    const container = new Container().addRegistration(R.fromClass(Logger).assignToKey('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
   });
@@ -145,7 +145,7 @@ class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
@@ -186,7 +186,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances()) public loggers: Logger[]) {}
     }
 
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     const logger1 = root.resolve('ILogger');
@@ -204,7 +204,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances().cascade(false)) public loggers: Logger[]) {}
     }
 
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     const logger1 = root.resolve('ILogger');
@@ -222,7 +222,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances(isLogger)) public loggers: Logger[]) {}
     }
 
-    const container = new Container().add(R.fromClass(Logger));
+    const container = new Container().addRegistration(R.fromClass(Logger));
 
     const logger0 = container.resolve('ILogger');
     const logger1 = container.resolve('ILogger');
@@ -251,7 +251,7 @@ class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger).assignToKey('ILogger'));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger).assignToKey('ILogger'));
     const child = root.createScope({ tags: ['child'] });
 
     const logger = child.resolve('ILogger');
@@ -314,7 +314,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container();
-    container.add(R.fromClass(Flag)).add(R.fromClass(Service));
+    container.addRegistration(R.fromClass(Flag)).addRegistration(R.fromClass(Service));
     return container;
   }
 
@@ -405,7 +405,7 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container().add(R.fromClass(Logger).assignToKey('ILogger'));
+    const container = new Container().addRegistration(R.fromClass(Logger).assignToKey('ILogger'));
 
     const app = container.resolve(App);
 
@@ -428,7 +428,9 @@ describe('SimpleInjector', function () {
       constructor(public container: IContainer) {}
     }
 
-    const container = new Container({ injector: new SimpleInjector() }).add(R.fromClass(App).assignToKey('App'));
+    const container = new Container({ injector: new SimpleInjector() }).addRegistration(
+      R.fromClass(App).assignToKey('App'),
+    );
     const app = container.resolve<App>('App');
 
     expect(app.container).toBeInstanceOf(Container);
@@ -442,7 +444,9 @@ describe('SimpleInjector', function () {
       ) {}
     }
 
-    const container = new Container({ injector: new SimpleInjector() }).add(R.fromClass(App).assignToKey('App'));
+    const container = new Container({ injector: new SimpleInjector() }).addRegistration(
+      R.fromClass(App).assignToKey('App'),
+    );
     const app = container.resolve<App>('App', { args: ['Hello world'] });
 
     expect(app.greeting).toBe('Hello world');
@@ -470,7 +474,9 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container({ injector: new ProxyInjector() }).add(R.fromClass(Logger).assignToKey('logger'));
+    const container = new Container({ injector: new ProxyInjector() }).addRegistration(
+      R.fromClass(Logger).assignToKey('logger'),
+    );
 
     const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
@@ -500,8 +506,8 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container({ injector: new ProxyInjector() })
-      .add(R.fromClass(App).assignToKey('App').pipe(args({ greetingTemplate })))
-      .add(R.fromClass(Logger).assignToKey('logger'));
+      .addRegistration(R.fromClass(App).assignToKey('App').pipe(args({ greetingTemplate })))
+      .addRegistration(R.fromClass(Logger).assignToKey('logger'));
 
     const app = container.resolve<App>('App', { args: [{ name: `world` }] });
     expect(app.greeting).toBe('Hello world');
@@ -530,7 +536,7 @@ describe('ProxyInjector', function () {
       // Always return the mock array for simplicity
       return [mockLogger];
     });
-    mockContainer.add(R.fromClass(Service).assignToKey('service'));
+    mockContainer.addRegistration(R.fromClass(Service).assignToKey('service'));
 
     const app = mockContainer.resolve(App);
     console.log('App loggers:', app.loggers);
@@ -759,20 +765,20 @@ describe('Singleton', function () {
   }
 
   it('should resolve the same container per every request', function () {
-    const container = createContainer().add(R.fromClass(Logger));
+    const container = createContainer().addRegistration(R.fromClass(Logger));
 
     expect(container.resolve('logger')).toBe(container.resolve('logger'));
   });
 
   it('should resolve different dependency per scope', function () {
-    const container = createContainer().add(R.fromClass(Logger));
+    const container = createContainer().addRegistration(R.fromClass(Logger));
     const child = container.createScope();
 
     expect(container.resolve('logger')).not.toBe(child.resolve('logger'));
   });
 
   it('should resolve the same dependency for scope', function () {
-    const container = createContainer().add(R.fromClass(Logger));
+    const container = createContainer().addRegistration(R.fromClass(Logger));
     const child = container.createScope();
 
     expect(child.resolve('logger')).toBe(child.resolve('logger'));
@@ -819,21 +825,21 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
+    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
 
     const logger = root.createScope().resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('can assign argument to provider', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
+    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
-    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
+    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger', { args: ['file'] });
 
@@ -869,9 +875,9 @@ describe('ArgsProvider', function () {
     }
 
     const root = createContainer()
-      .add(R.fromClass(EntityManager))
-      .add(R.fromClass(UserRepository))
-      .add(R.fromClass(TodoRepository));
+      .addRegistration(R.fromClass(EntityManager))
+      .addRegistration(R.fromClass(UserRepository))
+      .addRegistration(R.fromClass(TodoRepository));
     const main = root.resolve(Main);
 
     expect(main.userEntities.repository).toBeInstanceOf(UserRepository);
@@ -912,9 +918,9 @@ describe('ArgsProvider', function () {
     }
 
     const root = createContainer()
-      .add(R.fromClass(EntityManager))
-      .add(R.fromClass(UserRepository))
-      .add(R.fromClass(TodoRepository));
+      .addRegistration(R.fromClass(EntityManager))
+      .addRegistration(R.fromClass(UserRepository))
+      .addRegistration(R.fromClass(TodoRepository));
     const main = root.resolve(Main);
 
     const userRepository = root.resolve<EntityManager>('EntityManager', { args: ['UserRepository'] }).repository;
@@ -960,7 +966,7 @@ describe('Visibility', function () {
     )
     class FileLogger {}
 
-    const parent = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger));
+    const parent = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
 
     const child = parent.createScope({ tags: ['child'] });
 
@@ -1032,7 +1038,9 @@ describe('alias', () => {
       }
     }
 
-    const container = new Container().add(R.fromClass(LoggerMiddleware)).add(R.fromClass(ErrorHandlerMiddleware));
+    const container = new Container()
+      .addRegistration(R.fromClass(LoggerMiddleware))
+      .addRegistration(R.fromClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
@@ -1045,7 +1053,7 @@ describe('alias', () => {
     @register(alias('ILogger'))
     class FileLogger {}
 
-    const container = new Container().add(R.fromClass(FileLogger));
+    const container = new Container().addRegistration(R.fromClass(FileLogger));
 
     expect(by.one('ILogger').resolve(container)).toBeInstanceOf(FileLogger);
     expect(() => by.one('logger').resolve(container)).toThrowError(DependencyNotFoundError);
@@ -1058,7 +1066,9 @@ describe('alias', () => {
     @register(alias('ILogger'), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
-    const container = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger)).add(R.fromClass(DbLogger));
+    const container = new Container({ tags: ['root'] })
+      .addRegistration(R.fromClass(FileLogger))
+      .addRegistration(R.fromClass(DbLogger));
 
     const result1 = by.one('ILogger').resolve(container);
     const child = container.createScope({ tags: ['child'] });
@@ -1081,10 +1091,10 @@ describe('alias', () => {
       constructor(@inject(by.aliasOne('ILogger')) public loggers: ILogger[]) {}
     }
 
-    const container = new Container().add(R.fromClass(FileLogger));
+    const container = new Container().addRegistration(R.fromClass(FileLogger));
 
     const loggers = container.resolve(App).loggers;
-    container.add(R.fromClass(DbLogger));
+    container.addRegistration(R.fromClass(DbLogger));
     const loggers2 = container.resolve(App).loggers;
 
     expect(loggers).toEqual(loggers2);
@@ -1164,7 +1174,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container();
-    container.add(R.fromClass(TodoRepository)).add(R.fromClass(Logger));
+    container.addRegistration(R.fromClass(TodoRepository)).addRegistration(R.fromClass(Logger));
     return container;
   }
 
@@ -1210,33 +1220,33 @@ describe('Registration module', function () {
     @register(key('ILogger'), scope((s) => s.hasTag('root')), provider(singleton()))
     class Logger {}
 
-    const root = createContainer().add(R.fromClass(Logger));
+    const root = createContainer().addRegistration(R.fromClass(Logger));
 
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 
   it('should register value', function () {
-    const root = createContainer().add(R.fromValue('smth').assignToKey('ISmth'));
+    const root = createContainer().addRegistration(R.fromValue('smth').assignToKey('ISmth'));
 
     expect(root.resolve('ISmth')).toBe('smth');
   });
 
   it('should register fn', function () {
-    const root = createContainer().add(R.fromFn(() => 'smth').assignToKey('ISmth'));
+    const root = createContainer().addRegistration(R.fromFn(() => 'smth').assignToKey('ISmth'));
 
     expect(root.resolve('ISmth')).toBe('smth');
   });
 
   it('should raise an error if key is not provider', () => {
     expect(() => {
-      createContainer().add(R.fromValue('smth'));
+      createContainer().addRegistration(R.fromValue('smth'));
     }).toThrowError(DependencyMissingKeyError);
   });
 
   it('should register dependency by class name if @key is not provided', function () {
     class FileLogger {}
 
-    const root = createContainer().add(R.fromClass(FileLogger));
+    const root = createContainer().addRegistration(R.fromClass(FileLogger));
 
     expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
   });
@@ -1245,7 +1255,7 @@ describe('Registration module', function () {
     @register(key('ILogger', 'Logger'), provider(singleton()))
     class Logger {}
 
-    const root = createContainer().add(R.fromClass(Logger));
+    const root = createContainer().addRegistration(R.fromClass(Logger));
 
     expect(root.resolve('Logger')).toBeInstanceOf(Logger);
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
@@ -1267,7 +1277,7 @@ import { singleton, Container, key, provider, Registration as R, scope, register
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope();
     expect(root.resolve('ILogger')).toBe(child.resolve('ILogger'));
   });
@@ -1290,19 +1300,19 @@ class TestLogger {}
 
 class Production implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.add(R.fromClass(Logger));
+    container.addRegistration(R.fromClass(Logger));
   }
 }
 
 class Development implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.add(R.fromClass(TestLogger));
+    container.addRegistration(R.fromClass(TestLogger));
   }
 }
 
 describe('Container Modules', function () {
   function createContainer(isProduction: boolean) {
-    return new Container().use(isProduction ? new Production() : new Development());
+    return new Container().useModule(isProduction ? new Production() : new Development());
   }
 
   it('should register production dependencies', function () {
@@ -1368,7 +1378,7 @@ class Logger {
 
 describe('onConstruct', function () {
   it('should make logger be ready on resolve', function () {
-    const container = new Container({ injector: new MyInjector() }).add(R.fromClass(Logger));
+    const container = new Container({ injector: new MyInjector() }).addRegistration(R.fromClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 
@@ -1420,7 +1430,7 @@ class Logger {
 
 describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = new Container().add(R.fromClass(Logger)).add(R.fromClass(LogsRepo));
+    const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
@@ -1448,7 +1458,7 @@ describe('inject property', () => {
     }
     const expected = 'Hello world!';
 
-    const container = new Container().add(Registration.fromValue(expected).assignToKey('greeting'));
+    const container = new Container().addRegistration(Registration.fromValue(expected).assignToKey('greeting'));
     const app = container.resolve(App);
     runHooks(app as object, 'onInit', { scope: container });
 

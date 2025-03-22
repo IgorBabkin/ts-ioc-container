@@ -10,7 +10,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances()) public loggers: Logger[]) {}
     }
 
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     const logger1 = root.resolve('ILogger');
@@ -28,7 +28,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances().cascade(false)) public loggers: Logger[]) {}
     }
 
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     const logger1 = root.resolve('ILogger');
@@ -46,7 +46,7 @@ describe('Instances', function () {
       constructor(@inject(by.instances(isLogger)) public loggers: Logger[]) {}
     }
 
-    const container = new Container().add(R.fromClass(Logger));
+    const container = new Container().addRegistration(R.fromClass(Logger));
 
     const logger0 = container.resolve('ILogger');
     const logger1 = container.resolve('ILogger');

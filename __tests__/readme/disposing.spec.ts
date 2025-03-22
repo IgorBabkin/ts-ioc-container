@@ -5,7 +5,7 @@ class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger).assignToKey('ILogger'));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger).assignToKey('ILogger'));
     const child = root.createScope({ tags: ['child'] });
 
     const logger = child.resolve('ILogger');

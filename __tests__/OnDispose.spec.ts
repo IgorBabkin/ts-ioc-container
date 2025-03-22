@@ -38,7 +38,7 @@ class Logger {
 
 describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = new Container().add(R.fromClass(Logger)).add(R.fromClass(LogsRepo));
+    const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');

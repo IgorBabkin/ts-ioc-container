@@ -66,7 +66,7 @@ describe('IContainer', function () {
     @register(ILoggerKey.assignTo, ILoggerKey2.alias, ILoggerKey3, 'ILogger4', alias('ILogger5'))
     class FileLogger {}
 
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger));
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
     const child1 = root.createScope({ tags: ['child1'] });
     const child2 = root.createScope({ tags: ['child2'] });
 
@@ -88,7 +88,9 @@ describe('IContainer', function () {
     @register('INormalizer')
     class Normalizer {}
 
-    const root = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger)).add(R.fromClass(Normalizer));
+    const root = new Container({ tags: ['root'] })
+      .addRegistration(R.fromClass(FileLogger))
+      .addRegistration(R.fromClass(Normalizer));
 
     expect(ILoggerKey.resolve(root)).toBeInstanceOf(FileLogger);
     expect(root.resolve('INormalizer')).toBeInstanceOf(Normalizer);

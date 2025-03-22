@@ -52,7 +52,9 @@ describe('alias', () => {
       }
     }
 
-    const container = new Container().add(R.fromClass(LoggerMiddleware)).add(R.fromClass(ErrorHandlerMiddleware));
+    const container = new Container()
+      .addRegistration(R.fromClass(LoggerMiddleware))
+      .addRegistration(R.fromClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
@@ -65,7 +67,7 @@ describe('alias', () => {
     @register(alias('ILogger'))
     class FileLogger {}
 
-    const container = new Container().add(R.fromClass(FileLogger));
+    const container = new Container().addRegistration(R.fromClass(FileLogger));
 
     expect(by.one('ILogger').resolve(container)).toBeInstanceOf(FileLogger);
     expect(() => by.one('logger').resolve(container)).toThrowError(DependencyNotFoundError);
@@ -78,7 +80,9 @@ describe('alias', () => {
     @register(alias('ILogger'), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
-    const container = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger)).add(R.fromClass(DbLogger));
+    const container = new Container({ tags: ['root'] })
+      .addRegistration(R.fromClass(FileLogger))
+      .addRegistration(R.fromClass(DbLogger));
 
     const result1 = by.one('ILogger').resolve(container);
     const child = container.createScope({ tags: ['child'] });
@@ -101,10 +105,10 @@ describe('alias', () => {
       constructor(@inject(by.aliasOne('ILogger')) public loggers: ILogger[]) {}
     }
 
-    const container = new Container().add(R.fromClass(FileLogger));
+    const container = new Container().addRegistration(R.fromClass(FileLogger));
 
     const loggers = container.resolve(App).loggers;
-    container.add(R.fromClass(DbLogger));
+    container.addRegistration(R.fromClass(DbLogger));
     const loggers2 = container.resolve(App).loggers;
 
     expect(loggers).toEqual(loggers2);

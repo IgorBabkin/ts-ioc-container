@@ -32,7 +32,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container();
-    container.add(R.fromClass(Flag)).add(R.fromClass(Service));
+    container.addRegistration(R.fromClass(Flag)).addRegistration(R.fromClass(Service));
     return container;
   }
 

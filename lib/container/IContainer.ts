@@ -57,13 +57,13 @@ export interface IContainer extends Tagged {
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 
-  add(registration: IRegistration): this;
+  addRegistration(registration: IRegistration): this;
 
   removeScope(child: IContainer): void;
 
   dispose(options?: { cascade?: boolean }): void;
 
-  use(module: IContainerModule): this;
+  useModule(module: IContainerModule): this;
 
   getRegistrations(): IRegistration[];
 

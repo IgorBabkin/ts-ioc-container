@@ -9,33 +9,33 @@ describe('Registration module', function () {
     @register(key('ILogger'), scope((s) => s.hasTag('root')), provider(singleton()))
     class Logger {}
 
-    const root = createContainer().add(R.fromClass(Logger));
+    const root = createContainer().addRegistration(R.fromClass(Logger));
 
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 
   it('should register value', function () {
-    const root = createContainer().add(R.fromValue('smth').assignToKey('ISmth'));
+    const root = createContainer().addRegistration(R.fromValue('smth').assignToKey('ISmth'));
 
     expect(root.resolve('ISmth')).toBe('smth');
   });
 
   it('should register fn', function () {
-    const root = createContainer().add(R.fromFn(() => 'smth').assignToKey('ISmth'));
+    const root = createContainer().addRegistration(R.fromFn(() => 'smth').assignToKey('ISmth'));
 
     expect(root.resolve('ISmth')).toBe('smth');
   });
 
   it('should raise an error if key is not provider', () => {
     expect(() => {
-      createContainer().add(R.fromValue('smth'));
+      createContainer().addRegistration(R.fromValue('smth'));
     }).toThrowError(DependencyMissingKeyError);
   });
 
   it('should register dependency by class name if @key is not provided', function () {
     class FileLogger {}
 
-    const root = createContainer().add(R.fromClass(FileLogger));
+    const root = createContainer().addRegistration(R.fromClass(FileLogger));
 
     expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
   });
@@ -44,7 +44,7 @@ describe('Registration module', function () {
     @register(key('ILogger', 'Logger'), provider(singleton()))
     class Logger {}
 
-    const root = createContainer().add(R.fromClass(Logger));
+    const root = createContainer().addRegistration(R.fromClass(Logger));
 
     expect(root.resolve('Logger')).toBeInstanceOf(Logger);
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);

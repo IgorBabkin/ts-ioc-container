@@ -49,8 +49,8 @@ const useCar = ICarKey.register(async (s) => {
 describe('function constructor', () => {
   it('should create an instance', async () => {
     const scope = new Container({ tags: ['root'] });
-    scope.add(useCar);
-    scope.add(useLogger);
+    scope.addRegistration(useCar);
+    scope.addRegistration(useLogger);
 
     const car = await ICarKey.resolve(scope);
 
