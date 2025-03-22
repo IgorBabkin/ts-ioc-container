@@ -1,4 +1,4 @@
-import { DependencyKey, IContainer, IContainerModule, isDependencyKey } from '../container/IContainer';
+import { Alias, DependencyKey, IContainer, IContainerModule, isDependencyKey } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { IProvider } from '../provider/IProvider';
@@ -9,26 +9,19 @@ export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
 export interface IRegistration<T = any> extends IContainerModule {
   when(...predicates: ScopePredicate[]): this;
 
-  fromKey(key: DependencyKey): this;
+  assignToKey(key: DependencyKey): this;
 
   pipe(...mappers: MapFn<IProvider<T>>[]): this;
 
-  redirectFrom(...keys: DependencyKey[]): this;
+  assignToAliases(...aliases: DependencyKey[]): this;
 }
 
 export type ReturnTypeOfRegistration<T> = T extends IRegistration<infer R> ? R : never;
 
 export const key =
-  (...keys: DependencyKey[]): MapFn<IRegistration> =>
-  (r) => {
-    const [originalKey, ...redirectKeys] = keys;
-    return r.fromKey(originalKey).redirectFrom(...redirectKeys);
-  };
-
-export const redirectFrom =
-  (...keys: DependencyKey[]): MapFn<IRegistration> =>
+  (...[originalKey, ...aliases]: DependencyKey[]): MapFn<IRegistration> =>
   (r) =>
-    r.redirectFrom(...keys);
+    r.assignToKey(originalKey).assignToAliases(...aliases);
 
 export const scope =
   (...predicates: ScopePredicate[]): MapFn<IRegistration> =>
@@ -42,15 +35,17 @@ export const getTransformers = (Target: constructor<unknown>) =>
 export const register = (...mappers: (MapFn<IRegistration> | DepKey<any> | DependencyKey)[]) =>
   setMetadata(
     METADATA_KEY,
-    mappers.map((m, index) => {
-      if (isDepKey(m)) {
-        return index === 0 ? m.assignTo.bind(m) : m.redirectFrom.bind(m);
-      }
-
-      if (isDependencyKey(m)) {
-        return (r: IRegistration) => (index === 0 ? r.fromKey(m) : r.redirectFrom(m));
-      }
-
-      return m;
-    }),
+    mappers.map((m, index) =>
+      isDepKey(m)
+        ? index === 0
+          ? m.assignTo.bind(m)
+          : m.alias.bind(m)
+        : isDependencyKey(m)
+          ? (r: IRegistration) => (index === 0 ? r.assignToKey(m) : r.assignToAliases(m))
+          : m,
+    ),
   );
+export const alias =
+  (...aliases: Alias[]): MapFn<IRegistration> =>
+  (r) =>
+    r.assignToAliases(...aliases);

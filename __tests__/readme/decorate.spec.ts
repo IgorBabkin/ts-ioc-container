@@ -12,7 +12,7 @@ import {
 } from '../../lib';
 
 describe('lazy provider', () => {
-  @provider(singleton())
+  @register(provider(singleton()))
   class Logger {
     private logs: string[] = [];
 
@@ -37,7 +37,7 @@ describe('lazy provider', () => {
   class LogRepository implements IRepository {
     constructor(
       private repository: IRepository,
-      @inject(by.key('Logger')) private logger: Logger,
+      @inject(by.one('Logger').lazy()) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {
@@ -48,14 +48,13 @@ describe('lazy provider', () => {
 
   const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
 
-  @register(key('IRepository'))
-  @provider(decorate(logRepo))
+  @register(key('IRepository'), provider(decorate(logRepo)))
   class TodoRepository implements IRepository {
     async save(item: Todo): Promise<void> {}
   }
 
   class App {
-    constructor(@inject(by.key('IRepository')) public repository: IRepository) {}
+    constructor(@inject(by.one('IRepository')) public repository: IRepository) {}
 
     async run() {
       await this.repository.save({ id: '1', text: 'Hello' });
@@ -65,7 +64,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container();
-    container.add(R.toClass(TodoRepository)).add(R.toClass(Logger));
+    container.add(R.fromClass(TodoRepository)).add(R.fromClass(Logger));
     return container;
   }
 

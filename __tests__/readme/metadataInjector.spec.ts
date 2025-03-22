@@ -6,7 +6,7 @@ class Logger {
 }
 
 class App {
-  constructor(@inject(by.key('ILogger')) private logger: Logger) {}
+  constructor(@inject(by.one('ILogger')) private logger: Logger) {}
 
   // OR
   // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {
@@ -19,7 +19,7 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container().add(R.toClass(Logger).fromKey('ILogger'));
+    const container = new Container().add(R.fromClass(Logger).assignToKey('ILogger'));
 
     const app = container.resolve(App);
 

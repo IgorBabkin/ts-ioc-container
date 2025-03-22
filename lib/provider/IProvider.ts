@@ -1,6 +1,7 @@
-import { Alias, AliasPredicate, DependencyKey, IContainer, Tagged } from '../container/IContainer';
+import { IContainer, Tagged } from '../container/IContainer';
 import { constructor, MapFn, pipe } from '../utils';
-import { getMetadata, setMetadata } from '../metadata';
+import { getMetadata } from '../metadata';
+import { IRegistration } from '../registration/IRegistration';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
@@ -26,22 +27,16 @@ export interface IProvider<T = any> {
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
 
   setArgs(argsFn: ArgsFn): this;
-
-  matchAliases(predicate: AliasPredicate): boolean;
-
-  addAliases(...aliases: Alias[]): this;
 }
 
 const METADATA_KEY = 'provider';
-export const provider = <Instance>(...mappers: MapFn<IProvider<Instance>>[]): ClassDecorator =>
-  setMetadata(METADATA_KEY, mappers);
+export const provider =
+  (...mappers: MapFn<IProvider>[]): MapFn<IRegistration> =>
+  (r) =>
+    r.pipe(...mappers);
+
 export const getTransformers = <T>(Target: constructor<T>) =>
   getMetadata<MapFn<IProvider<T>>[]>(Target, METADATA_KEY) ?? [];
-
-export const alias =
-  (...aliases: Alias[]): MapFn<IProvider> =>
-  (r) =>
-    r.addAliases(...aliases);
 
 export const visible =
   (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>
@@ -66,15 +61,6 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
 
   pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
     return pipe(...mappers)(this);
-  }
-
-  matchAliases(predicate: AliasPredicate): boolean {
-    return this.decorated.matchAliases(predicate);
-  }
-
-  addAliases(...aliases: Alias[]): this {
-    this.decorated.addAliases(...aliases);
-    return this;
   }
 
   setArgs(argsFn: ArgsFn): this {

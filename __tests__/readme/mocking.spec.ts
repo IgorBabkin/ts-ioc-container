@@ -14,6 +14,22 @@ export class MoqContainer extends AutoMockedContainer {
     }
     return this.mocks.get(key) as IMock<T>;
   }
+
+  resolveByClass<T>(target: any, options?: { args?: unknown[] }): T {
+    throw new Error('Method not implemented.');
+  }
+
+  resolveOneByKey<T>(key: DependencyKey): T {
+    return this.resolveMock<T>(key).object();
+  }
+
+  resolveMany<T>(alias: DependencyKey): T[] {
+    throw new Error('Method not implemented.');
+  }
+
+  resolveOneByAlias<T>(key: DependencyKey): T {
+    throw new Error('Method not implemented.');
+  }
 }
 
 interface IEngine {

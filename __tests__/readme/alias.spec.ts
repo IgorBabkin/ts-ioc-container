@@ -1,24 +1,9 @@
 import 'reflect-metadata';
-import {
-  alias,
-  byAlias,
-  byAliases,
-  Container,
-  DependencyNotFoundError,
-  IMemo,
-  IMemoKey,
-  inject,
-  Provider,
-  provider,
-  register,
-  Registration as R,
-  scope,
-} from '../../lib';
-import { constant } from '../../lib/utils';
+import { alias, by, Container, DependencyNotFoundError, inject, register, Registration as R, scope } from '../../lib';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
-  const middleware = provider(alias(IMiddlewareKey));
+  const middleware = register(alias(IMiddlewareKey));
 
   interface IMiddleware {
     applyTo(application: IApplication): void;
@@ -46,7 +31,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(byAliases((it) => it.has(IMiddlewareKey))) public middleware: IMiddleware[]) {}
+      constructor(@inject(by.many(IMiddlewareKey)) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);
@@ -67,7 +52,7 @@ describe('alias', () => {
       }
     }
 
-    const container = new Container().add(R.toClass(LoggerMiddleware)).add(R.toClass(ErrorHandlerMiddleware));
+    const container = new Container().add(R.fromClass(LoggerMiddleware)).add(R.fromClass(ErrorHandlerMiddleware));
 
     const app = container.resolve(App);
     app.run();
@@ -77,60 +62,49 @@ describe('alias', () => {
   });
 
   it('should resolve by some alias', () => {
-    @provider(alias('ILogger'))
+    @register(alias('ILogger'))
     class FileLogger {}
 
-    const container = new Container().add(R.toClass(FileLogger));
+    const container = new Container().add(R.fromClass(FileLogger));
 
-    expect(byAlias((aliases) => aliases.has('ILogger'))(container)).toBeInstanceOf(FileLogger);
-    expect(() => byAlias((aliases) => aliases.has('logger'))(container)).toThrowError(DependencyNotFoundError);
+    expect(by.one('ILogger').resolve(container)).toBeInstanceOf(FileLogger);
+    expect(() => by.one('logger').resolve(container)).toThrowError(DependencyNotFoundError);
   });
 
-  it('should resolve by memoized alias', () => {
-    @provider(alias('ILogger'))
-    @register(scope((s) => s.hasTag('root')))
+  it('should resolve by alias', () => {
+    @register(alias('ILogger'), scope((s) => s.hasTag('root')))
     class FileLogger {}
 
-    @provider(alias('ILogger'))
-    @register(scope((s) => s.hasTag('child')))
+    @register(alias('ILogger'), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
-    const container = new Container({ tags: ['root'] })
-      .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
-      .add(R.toClass(FileLogger))
-      .add(R.toClass(DbLogger));
+    const container = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger)).add(R.fromClass(DbLogger));
 
-    const result1 = byAlias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(container);
+    const result1 = by.one('ILogger').resolve(container);
     const child = container.createScope({ tags: ['child'] });
-    const result2 = byAlias((aliases) => aliases.has('ILogger'), { memoize: constant('ILogger') })(child);
-    const result3 = byAlias((aliases) => aliases.has('ILogger'))(child);
+    const result2 = by.one('ILogger').resolve(child);
 
     expect(result1).toBeInstanceOf(FileLogger);
-    expect(result2).toBeInstanceOf(FileLogger);
-    expect(result3).toBeInstanceOf(DbLogger);
+    expect(result2).toBeInstanceOf(DbLogger);
   });
 
-  it('should resolve by memoized aliases', () => {
+  it('should resolve by aliases', () => {
     interface ILogger {}
 
-    @provider(alias('ILogger'))
+    @register(alias('ILogger'))
     class FileLogger implements ILogger {}
 
-    @provider(alias('ILogger'))
+    @register(alias('ILogger'))
     class DbLogger implements ILogger {}
 
     class App {
-      constructor(
-        @inject(byAliases((it) => it.has('ILogger'), { memoize: constant('ILogger') })) public loggers: ILogger[],
-      ) {}
+      constructor(@inject(by.aliasOne('ILogger')) public loggers: ILogger[]) {}
     }
 
-    const container = new Container()
-      .register(IMemoKey, Provider.fromValue<IMemo>(new Map()))
-      .add(R.toClass(FileLogger));
+    const container = new Container().add(R.fromClass(FileLogger));
 
     const loggers = container.resolve(App).loggers;
-    container.add(R.toClass(DbLogger));
+    container.add(R.fromClass(DbLogger));
     const loggers2 = container.resolve(App).loggers;
 
     expect(loggers).toEqual(loggers2);

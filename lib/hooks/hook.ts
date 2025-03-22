@@ -2,6 +2,8 @@ import { IContainer } from '../container/IContainer';
 import { CreateHookContext, createHookContext, IHookContext, InjectFn } from './HookContext';
 import { constructor, isConstructor, promisify } from '../utils';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
+import { IInjectFnResolver } from '../injector/IInjector';
+import { toInjectFn } from '../injector/inject';
 
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
 export interface HookClass<T extends IHookContext = IHookContext> {
@@ -49,7 +51,9 @@ export const runHooks = (
   for (const [methodName, executions] of hooks) {
     for (const execute of executions) {
       const context = createContext(target, scope, methodName);
-      const result = isHookClassConstructor(execute) ? scope.resolve(execute).execute(context) : execute(context);
+      const result = isHookClassConstructor(execute)
+        ? scope.resolveByClass(execute).execute(context)
+        : execute(context);
       if (result instanceof Promise) {
         throw new UnexpectedHookResultError(`Hook ${methodName} returned a promise, use runHooksAsync instead`);
       }
@@ -73,7 +77,7 @@ export const runHooksAsync = (
   const hooks = Array.from(getHooks(target, key).entries()).filter(([methodName]) => predicate(methodName));
   const runExecution = (execute: HookFn | constructor<HookClass>, context: IHookContext) =>
     isHookClassConstructor(execute)
-      ? promisify(context.scope.resolve(execute).execute(context))
+      ? promisify(context.scope.resolveByClass(execute).execute(context))
       : promisify(execute(context));
 
   return Promise.all(
@@ -85,9 +89,9 @@ export const runHooksAsync = (
 };
 
 export const injectProp =
-  (fn: InjectFn): HookFn =>
+  (fn: InjectFn | IInjectFnResolver<unknown>): HookFn =>
   (context) =>
-    context.setProperty(fn);
+    context.setProperty(toInjectFn(fn));
 
 export const onConstruct = (fn: HookFn) => hook('onConstruct', fn);
 export const runOnConstructHooks = (target: object, scope: IContainer) => runHooks(target, 'onConstruct', { scope });

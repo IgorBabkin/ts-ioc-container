@@ -4,17 +4,16 @@ import { IRegistration, ScopePredicate } from './registration/IRegistration';
 import { IProvider } from './provider/IProvider';
 import { Registration } from './registration/Registration';
 import { Provider } from './provider/Provider';
-import { by } from './by';
+import { IInjectFnResolver } from './injector/IInjector';
 
-export type DepKey<T> = {
+export type DepKey<T> = IInjectFnResolver<T> & {
   key: DependencyKey;
   assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
-  resolve: (s: IContainer) => T;
   pipe(...values: MapFn<IProvider<T>>[]): DepKey<T>;
   to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
-  redirectFrom: (registration: IRegistration<T>) => IRegistration<T>;
+  alias: (registration: IRegistration<T>) => IRegistration<T>;
 };
 
 export const isDepKey = <T>(key: unknown): key is DepKey<T> => {
@@ -29,7 +28,7 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
     key,
 
     assignTo: (registration: IRegistration<T>) => {
-      let reg: IRegistration<T> = registration.pipe(...mappers).fromKey(key);
+      let reg: IRegistration<T> = registration.pipe(...mappers).assignToKey(key);
       if (isValidWhen) {
         reg = registration.when(isValidWhen);
       }
@@ -44,7 +43,7 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return registration;
     },
 
-    resolve: by.key<T>(key),
+    resolve: (s: IContainer): T => s.resolve(key),
 
     pipe(...values: MapFn<IProvider<T>>[]) {
       mappers.push(...values);
@@ -61,6 +60,6 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return this;
     },
 
-    redirectFrom: (registration) => registration.redirectFrom(key),
+    alias: (registration) => registration.assignToAliases(key),
   };
 };

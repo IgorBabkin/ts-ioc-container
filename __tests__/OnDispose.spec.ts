@@ -1,20 +1,7 @@
 import 'reflect-metadata';
-import {
-  by,
-  Container,
-  hook,
-  inject,
-  key,
-  MetadataInjector,
-  provider,
-  register,
-  Registration as R,
-  runHooks,
-  singleton,
-} from '../lib';
+import { by, Container, hook, inject, key, provider, register, Registration as R, runHooks, singleton } from '../lib';
 
-@register(key('logsRepo'))
-@provider(singleton())
+@register(key('logsRepo'), provider(singleton()))
 class LogsRepo {
   savedLogs: string[] = [];
 
@@ -31,9 +18,9 @@ class Logger {
   }) // <--- or extract it to @onDispose
   private messages: string[] = [];
 
-  constructor(@inject(by.key('logsRepo')) private logsRepo: LogsRepo) {}
+  constructor(@inject(by.one('logsRepo')) private logsRepo: LogsRepo) {}
 
-  log(@inject(by.key('logsRepo')) message: string): void {
+  log(@inject(by.one('logsRepo')) message: string): void {
     this.messages.push(message);
   }
 
@@ -51,12 +38,12 @@ class Logger {
 
 describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
-    const container = new Container().add(R.toClass(Logger)).add(R.toClass(LogsRepo));
+    const container = new Container().add(R.fromClass(Logger)).add(R.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
 
-    for (const instance of by.instances()(container)) {
+    for (const instance of by.instances().resolve(container)) {
       runHooks(instance as object, 'onDispose', { scope: container });
     }
 

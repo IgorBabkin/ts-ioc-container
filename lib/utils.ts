@@ -51,3 +51,5 @@ export interface InstanceOfClass<T = unknown> {
 export function isInstance(target: object): target is InstanceOfClass<unknown> {
   return Object.prototype.hasOwnProperty.call(target, 'constructor');
 }
+
+export const lastOf = <T>(arr: T[]): T => arr[arr.length - 1];

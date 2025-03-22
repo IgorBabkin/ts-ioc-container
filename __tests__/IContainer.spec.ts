@@ -1,14 +1,14 @@
 import {
+  alias,
+  by,
   Container,
   DependencyNotFoundError,
   depKey,
   IContainer,
-  IProvider,
+  inject,
   isDependencyKey,
-  MetadataInjector,
   Provider,
   ProviderDecorator,
-  redirectFrom,
   register,
   Registration as R,
   singleton,
@@ -63,10 +63,10 @@ describe('IContainer', function () {
     const ILoggerKey2 = depKey<ILogger>('ILogger2');
     const ILoggerKey3 = depKey<ILogger>('ILogger3');
 
-    @register(ILoggerKey.assignTo, ILoggerKey2.redirectFrom, ILoggerKey3, 'ILogger4', redirectFrom('ILogger5'))
+    @register(ILoggerKey.assignTo, ILoggerKey2.alias, ILoggerKey3, 'ILogger4', alias('ILogger5'))
     class FileLogger {}
 
-    const root = new Container({ tags: ['root'] }).add(R.toClass(FileLogger));
+    const root = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger));
     const child1 = root.createScope({ tags: ['child1'] });
     const child2 = root.createScope({ tags: ['child2'] });
 
@@ -88,7 +88,7 @@ describe('IContainer', function () {
     @register('INormalizer')
     class Normalizer {}
 
-    const root = new Container({ tags: ['root'] }).add(R.toClass(FileLogger)).add(R.toClass(Normalizer));
+    const root = new Container({ tags: ['root'] }).add(R.fromClass(FileLogger)).add(R.fromClass(Normalizer));
 
     expect(ILoggerKey.resolve(root)).toBeInstanceOf(FileLogger);
     expect(root.resolve('INormalizer')).toBeInstanceOf(Normalizer);
@@ -111,11 +111,11 @@ describe('IContainer', function () {
       }
     }
 
-    const provider = new MyProvider().setArgs(() => ['world']).addAliases('greeting');
-    const root = new Container({ tags: ['root'] }).register('myProvider', provider);
+    const provider = new MyProvider().setArgs(() => ['world']);
+    const root = new Container({ tags: ['root'] }).register('myProvider', provider, { aliases: ['greeting'] });
 
     expect(root.resolve('myProvider')).toBe('hello world');
-    expect(root.resolveOneByAlias((p) => p.has('greeting'))[1]).toBe('hello world');
+    expect(root.resolve('greeting')).toBe('hello world');
   });
 
   it('should getInstances from all scopes by default = cascade is true', function () {
@@ -140,5 +140,41 @@ describe('IContainer', function () {
     const logger2 = child1.resolve(FileLogger);
 
     expect(root.getInstances({ cascade: false })).toEqual([logger1]);
+  });
+
+  it('should create instance and inject it', () => {
+    class Logger {
+      name = 'Logger';
+      messages: string[] = [];
+
+      info(msg: string) {
+        this.messages.push(msg);
+      }
+
+      output(): string {
+        return this.messages.join('');
+      }
+    }
+    class TestApp {
+      constructor(@inject(by.classOne(Logger)) private logger: Logger) {}
+
+      run() {
+        this.logger.info('Start');
+      }
+
+      stop() {
+        this.logger.info('Stop');
+      }
+
+      display() {
+        return this.logger.output();
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const app = root.resolveByClass(TestApp);
+    app.run();
+    app.stop();
+    expect(app.display()).toEqual('StartStop');
   });
 });

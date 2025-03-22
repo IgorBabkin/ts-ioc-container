@@ -28,21 +28,21 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().add(R.toClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
+    const root = createContainer().add(R.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
 
     const logger = root.createScope().resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('can assign argument to provider', function () {
-    const root = createContainer().add(R.toClass(Logger).pipe(args('name')));
+    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
-    const root = createContainer().add(R.toClass(Logger).pipe(args('name')));
+    const root = createContainer().add(R.fromClass(Logger).pipe(args('name')));
 
     const logger = root.resolve<Logger>('logger', { args: ['file'] });
 
@@ -65,8 +65,7 @@ describe('ArgsProvider', function () {
       name = 'TodoRepository';
     }
 
-    @register(key('EntityManager'))
-    @provider(argsFn((container, token) => [container.resolve(token as DependencyKey)]))
+    @register(key('EntityManager'), provider(argsFn((container, token) => [container.resolve(token as DependencyKey)])))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
@@ -79,9 +78,9 @@ describe('ArgsProvider', function () {
     }
 
     const root = createContainer()
-      .add(R.toClass(EntityManager))
-      .add(R.toClass(UserRepository))
-      .add(R.toClass(TodoRepository));
+      .add(R.fromClass(EntityManager))
+      .add(R.fromClass(UserRepository))
+      .add(R.fromClass(TodoRepository));
     const main = root.resolve(Main);
 
     expect(main.userEntities.repository).toBeInstanceOf(UserRepository);
@@ -103,10 +102,12 @@ describe('ArgsProvider', function () {
       name = 'TodoRepository';
     }
 
-    @register(key('EntityManager'))
-    @provider(
-      argsFn((container, token) => [container.resolve(token as DependencyKey)]),
-      singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
+    @register(
+      key('EntityManager'),
+      provider(
+        argsFn((container, token) => [container.resolve(token as DependencyKey)]),
+        singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
+      ),
     )
     class EntityManager {
       constructor(public repository: IRepository) {}
@@ -120,9 +121,9 @@ describe('ArgsProvider', function () {
     }
 
     const root = createContainer()
-      .add(R.toClass(EntityManager))
-      .add(R.toClass(UserRepository))
-      .add(R.toClass(TodoRepository));
+      .add(R.fromClass(EntityManager))
+      .add(R.fromClass(UserRepository))
+      .add(R.fromClass(TodoRepository));
     const main = root.resolve(Main);
 
     const userRepository = root.resolve<EntityManager>('EntityManager', { args: ['UserRepository'] }).repository;

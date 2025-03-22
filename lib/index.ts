@@ -27,7 +27,6 @@ export {
   IProvider,
   provider,
   visible,
-  alias,
   argsFn,
   args,
   ArgsFn,
@@ -46,7 +45,6 @@ export {
   ReturnTypeOfRegistration,
   scope,
   register,
-  redirectFrom,
   ScopePredicate,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
@@ -75,7 +73,7 @@ export {
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others
-export { by, InstancePredicate, IMemo, IMemoKey, byAlias, byAliases } from './by';
+export { by } from './resolvers/by';
 export { constructor, Branded } from './utils';
 export {
   setMetadata,
@@ -88,3 +86,5 @@ export {
 export { depKey, DepKey } from './DepKey';
 export { multiCache } from './provider/Cache';
 export { MultiCache } from './provider/Cache';
+export { InstancePredicate } from './resolvers/InjectionResolver';
+export { alias } from './registration/IRegistration';

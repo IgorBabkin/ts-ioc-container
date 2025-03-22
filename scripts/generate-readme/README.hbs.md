@@ -32,7 +32,7 @@
     - [Metadata](#metadata) `@inject`
     - [Simple](#simple)
     - [Proxy](#proxy)
-- [Provider](#provider) `@provider`
+- [Provider](#provider) `provider`
     - [Singleton](#singleton) `singleton`
     - [Arguments](#arguments) `args` `argsFn`
     - [Visibility](#visibility) `visible`
@@ -157,7 +157,7 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 ## Provider
 Provider is dependency factory which creates dependency.
 
-- `@provider()`
+- `provider()`
 - `Provider.fromClass(Logger)`
 - `Provider.fromValue(logger)`
 - `new Provider((container, ...args) => container.resolve(Logger, {args}))`
@@ -178,8 +178,8 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 
 ### Arguments
 Sometimes you want to bind some arguments to provider. This is what `ArgsProvider` is for.
-- `@provider(args('someArgument'))`
-- `@provider(argsFn((container) => [container.resolve(Logger), 'someValue']))`
+- `provider(args('someArgument'))`
+- `provider(argsFn((container) => [container.resolve(Logger), 'someValue']))`
 - `Provider.fromClass(Logger).pipe(args('someArgument'))`
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
@@ -189,7 +189,7 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 
 ### Visibility
 Sometimes you want to hide dependency if somebody wants to resolve it from certain scope
-- `@provider(visible(({ isParent, child }) => isParent || child.hasTag('root')))` - dependency will be accessible from scope `root` or from scope where it's registered
+- `provider(visible(({ isParent, child }) => isParent || child.hasTag('root')))` - dependency will be accessible from scope `root` or from scope where it's registered
 - `Provider.fromClass(Logger).pipe(visible(({ isParent, child }) => isParent || child.hasTag('root')))`
 
 ```typescript
@@ -198,7 +198,7 @@ Sometimes you want to hide dependency if somebody wants to resolve it from certa
 
 ### Alias
 Alias is needed to group keys
-- `@provider(alias('logger'))` helper assigns `logger` alias to registration.
+- `@register(alias('logger'))` helper assigns `logger` alias to registration.
 - `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
 - `Provider.fromClass(Logger).pipe(alias('logger'))`
 
@@ -208,7 +208,7 @@ Alias is needed to group keys
 
 ### Decorator
 Sometimes you want to decorate you class with some logic. This is what `DecoratorProvider` is for.
-- `@provider(decorate((instance, container) => new LoggerDecorator(instance)))`
+- `provider(decorate((instance, container) => new LoggerDecorator(instance)))`
 
 ```typescript
 {{{include_file './__tests__/readme/decorate.spec.ts'}}}

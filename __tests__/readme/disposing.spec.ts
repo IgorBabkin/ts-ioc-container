@@ -5,7 +5,7 @@ class Logger {}
 
 describe('Disposing', function () {
   it('should container and make it unavailable for the further usage', function () {
-    const root = new Container({ tags: ['root'] }).add(R.toClass(Logger).fromKey('ILogger'));
+    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger).assignToKey('ILogger'));
     const child = root.createScope({ tags: ['child'] });
 
     const logger = child.resolve('ILogger');
@@ -13,7 +13,7 @@ describe('Disposing', function () {
 
     expect(() => child.resolve('ILogger')).toThrow(ContainerDisposedError);
     expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
-    expect(by.instances()(root).length).toBe(0);
+    expect(by.instances().resolve(root).length).toBe(0);
   });
 
   it('should dispose without cascade', function () {

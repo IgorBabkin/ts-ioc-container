@@ -1,7 +1,17 @@
-import { AliasPredicate, DependencyKey, IContainer, InjectionToken, Instance, ResolveOptions, Tag } from './IContainer';
+import {
+  AliasPredicate,
+  DependencyKey,
+  IContainer,
+  InjectionToken,
+  Instance,
+  ResolveManyOptions,
+  ResolveOneOptions,
+  Tag,
+} from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
+import { constructor } from '../utils';
 
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;
@@ -13,8 +23,6 @@ export abstract class AutoMockedContainer implements IContainer {
   createScope(): IContainer {
     throw new MethodNotImplementedError();
   }
-
-  abstract resolve<T>(key: InjectionToken<T>, options?: ResolveOptions): T;
 
   dispose(): void {}
 
@@ -56,15 +64,13 @@ export abstract class AutoMockedContainer implements IContainer {
     return this;
   }
 
-  resolveManyByAlias(
-    predicate: AliasPredicate,
-    options: ResolveOptions = {},
-    result: Map<DependencyKey, unknown> = new Map(),
-  ): Map<DependencyKey, unknown> {
-    return result;
-  }
+  abstract resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 
-  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T] {
-    throw new DependencyNotFoundError(`Cannot find by alias`);
-  }
+  abstract resolveByClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
+
+  abstract resolveOneByKey<T>(keyOrAlias: DependencyKey, options?: ResolveOneOptions): T;
+
+  abstract resolveOneByAlias<T>(keyOrAlias: DependencyKey, options?: ResolveOneOptions): T;
+
+  abstract resolve<T>(alias: constructor<T> | DependencyKey, options?: ResolveManyOptions): T;
 }

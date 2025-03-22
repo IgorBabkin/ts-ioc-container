@@ -1,4 +1,4 @@
-import { DependencyKey, IContainer } from '../container/IContainer';
+import { Alias, DependencyKey, IContainer } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import { IProvider, ResolveDependency } from '../provider/IProvider';
@@ -6,14 +6,12 @@ import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
 
 export class Registration<T = any> implements IRegistration<T> {
-  private redirectKeys: Set<DependencyKey> = new Set();
-
-  static toClass<T>(Target: constructor<T>) {
+  static fromClass<T>(Target: constructor<T>) {
     const transform = pipe(...getTransformers(Target));
     return transform(new Registration(() => Provider.fromClass(Target), Target.name));
   }
 
-  static toValue<T>(value: T) {
+  static fromValue<T>(value: T) {
     if (isConstructor(value)) {
       const transform = pipe(...getTransformers(value as constructor<T>));
       return transform(new Registration(() => Provider.fromValue(value), value.name));
@@ -21,15 +19,16 @@ export class Registration<T = any> implements IRegistration<T> {
     return new Registration(() => Provider.fromValue(value));
   }
 
-  static toFn<T>(fn: ResolveDependency<T>) {
+  static fromFn<T>(fn: ResolveDependency<T>) {
     return new Registration(() => new Provider(fn));
   }
 
-  static toKey<T>(key: DependencyKey) {
+  static fromKey<T>(key: DependencyKey) {
     return new Registration<T>(() => Provider.fromKey(key));
   }
 
   private mappers: MapFn<IProvider<T>>[] = [];
+  private aliases: Set<DependencyKey> = new Set();
 
   constructor(
     private createProvider: () => IProvider<T>,
@@ -37,14 +36,14 @@ export class Registration<T = any> implements IRegistration<T> {
     private scopePredicates: ScopePredicate[] = [],
   ) {}
 
-  fromKey(key: DependencyKey): this {
+  assignToKey(key: DependencyKey): this {
     this.key = key;
     return this;
   }
 
-  redirectFrom(...keys: DependencyKey[]): this {
-    for (const key of keys) {
-      this.redirectKeys.add(key);
+  assignToAliases(...aliases: Alias[]): this {
+    for (const alias of aliases) {
+      this.aliases.add(alias);
     }
     return this;
   }
@@ -76,11 +75,7 @@ export class Registration<T = any> implements IRegistration<T> {
       throw new DependencyMissingKeyError('No key provided for registration');
     }
 
-    const key = this.key;
-
-    container.register(key, this.createProvider().pipe(...this.mappers));
-    for (const redirectKey of this.redirectKeys) {
-      container.register(redirectKey, new Provider((s) => s.resolve(key)));
-    }
+    const provider = this.createProvider();
+    container.register(this.key, provider.pipe(...this.mappers), { aliases: [...this.aliases] });
   }
 }

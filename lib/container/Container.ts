@@ -1,13 +1,11 @@
 import {
-  AliasPredicate,
   CreateScopeOptions,
   DependencyKey,
   IContainer,
   IContainerModule,
-  InjectionToken,
   Instance,
-  isConstructor,
-  ResolveOptions,
+  RegisterOptions,
+  ResolveOneOptions,
   Tag,
 } from './IContainer';
 import { IInjector } from '../injector/IInjector';
@@ -16,17 +14,23 @@ import { EmptyContainer } from './EmptyContainer';
 import { IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
+import { constructor } from '../utils';
+import { ProviderMap } from './ProviderMap';
+import { ContainerResolver, DEFAULT_CONTAINER_RESOLVER } from './ContainerResolver';
+import { AliasMap } from './AliasMap';
 
 export class Container implements IContainer {
   isDisposed = false;
   private parent: IContainer;
-  private readonly scopes: IContainer[] = [];
-  private readonly instances: Instance[] = [];
+  private readonly scopes = new Set<IContainer>();
+  private readonly instances = new Set<Instance>();
   private readonly tags: Set<Tag>;
-  private readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly registrations: IRegistration[] = [];
+  private readonly providerMap = new ProviderMap();
+  private readonly aliasMap = new AliasMap();
+  private readonly registrations = new Set<IRegistration>();
   private readonly onConstruct: (instance: Instance, scope: IContainer) => void;
   private readonly onDispose: (scope: IContainer) => void;
+  private readonly onResolve: ContainerResolver = DEFAULT_CONTAINER_RESOLVER;
   private readonly injector: IInjector;
 
   constructor(
@@ -36,6 +40,7 @@ export class Container implements IContainer {
       tags?: Tag[];
       onConstruct?: (instance: Instance, scope: IContainer) => void;
       onDispose?: (scope: IContainer) => void;
+      onResolve?: ContainerResolver;
     } = {},
   ) {
     this.injector = options.injector ?? new MetadataInjector();
@@ -43,42 +48,95 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
     this.onConstruct = options.onConstruct ?? (() => {});
     this.onDispose = options.onDispose ?? (() => {});
+    this.onResolve = options.onResolve ?? DEFAULT_CONTAINER_RESOLVER;
   }
 
   add(registration: IRegistration): this {
-    this.registrations.push(registration);
+    this.registrations.add(registration);
     registration.applyTo(this);
     return this;
   }
 
-  register(key: DependencyKey, provider: IProvider): this {
+  register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
     this.validateContainer();
-    this.providers.set(key, provider);
+    this.providerMap.register(key, provider);
+    this.aliasMap.deleteKeyFromAliases(key);
+    this.aliasMap.addAliases(key, aliases);
     return this;
   }
 
-  resolve<T>(token: InjectionToken<T>, { args = [], child = this, lazy }: ResolveOptions = {}): T {
+  resolve<T>(keyOrAlias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
+    return this.onResolve(this, keyOrAlias, options);
+  }
+
+  resolveMany<T>(
+    alias: DependencyKey,
+    { args = [], child = this, lazy, excluded = [] }: ResolveOneOptions & { excluded?: DependencyKey[] } = {},
+  ): T[] {
     this.validateContainer();
 
-    if (isConstructor(token)) {
-      const instance = this.injector.resolve(this, token, { args });
-      this.instances.push(instance as Instance);
-      this.onConstruct(instance as Instance, this);
-      return instance;
-    }
+    const providersKeys = this.aliasMap.findManyKeysByAlias(alias, new Set(excluded));
 
-    const provider = this.providers.get(token) as IProvider<T> | undefined;
+    const key2VisibleProvider = providersKeys
+      .map<[DependencyKey, IProvider<T>]>((k) => [k, this.providerMap.findOneByKeyOrFail(k)])
+      .filter(([k, provider]) => provider.isVisible(this, child));
+
+    const key2Dependency = new Map<DependencyKey, T>(
+      key2VisibleProvider.map(([k, provider]) => [k, provider.resolve(this, { args, lazy })]),
+    );
+
+    const parentDeps = this.parent.resolveMany<T>(alias, {
+      args,
+      child,
+      lazy,
+      excludedKeys: [...excluded, ...key2Dependency.keys()],
+    });
+    return [...key2Dependency.values(), ...parentDeps];
+  }
+
+  resolveByClass<T>(token: constructor<T>, { args = [] }: { args?: unknown[] } = {}): T {
+    this.validateContainer();
+
+    const instance = this.injector.resolve(this, token, { args });
+    this.instances.add(instance as Instance);
+    this.onConstruct(instance as Instance, this);
+    return instance;
+  }
+
+  resolveOneByKey<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+    this.validateContainer();
+
+    const provider = this.providerMap.findOneByKey<T>(keyOrAlias);
+
     return provider?.isVisible(this, child)
       ? provider.resolve(this, { args, lazy })
-      : this.parent.resolve<T>(token, { args, child, lazy });
+      : this.parent.resolveOneByKey<T>(keyOrAlias, { args, child, lazy });
+  }
+
+  resolveOneByAlias<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+    this.validateContainer();
+
+    const key = this.aliasMap.findLastKeyByAlias(keyOrAlias);
+    const provider = key !== undefined ? this.providerMap.findOneByKeyOrFail<T>(key) : undefined;
+
+    return provider?.isVisible(this, child)
+      ? provider.resolve(this, { args, lazy })
+      : this.parent.resolveOneByAlias<T>(keyOrAlias, { args, child, lazy });
   }
 
   createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
-    const scope = new Container({ injector: this.injector, parent: this, tags, onDispose: this.onDispose });
+    const scope = new Container({
+      injector: this.injector,
+      parent: this,
+      tags,
+      onDispose: this.onDispose,
+      onResolve: this.onResolve,
+      onConstruct: this.onConstruct,
+    });
     scope.applyRegistrationsFrom(this);
-    this.scopes.push(scope);
+    this.scopes.add(scope);
 
     return scope;
   }
@@ -92,14 +150,15 @@ export class Container implements IContainer {
     this.parent = new EmptyContainer();
 
     // Reset the state
-    this.providers.clear();
-    this.instances.splice(0, this.instances.length);
-    this.registrations.splice(0, this.registrations.length);
+    this.providerMap.destroy();
+    this.aliasMap.destroy();
+    this.instances.clear();
+    this.registrations.clear();
     this.onDispose(this);
 
     // Dispose all scopes
-    while (this.scopes.length > 0) {
-      const scope = this.scopes[0];
+    while (this.scopes.size > 0) {
+      const scope = this.scopes.values().next().value!;
       if (cascade) {
         scope.dispose({ cascade: true });
       } else {
@@ -118,33 +177,8 @@ export class Container implements IContainer {
     return this;
   }
 
-  hasProvider(key: DependencyKey): boolean {
-    return this.providers.has(key) ?? this.parent.hasProvider(key);
-  }
-
-  resolveManyByAlias(
-    predicate: AliasPredicate,
-    { args = [], child = this, lazy }: ResolveOptions = {},
-    result: Map<DependencyKey, unknown> = new Map(),
-  ): Map<DependencyKey, unknown> {
-    for (const [key, provider] of this.providers.entries()) {
-      if (!result.has(key) && provider.matchAliases(predicate) && provider.isVisible(this, child)) {
-        result.set(key, provider.resolve(this, { args, lazy }));
-      }
-    }
-    return this.parent.resolveManyByAlias(predicate, { args, child, lazy }, result);
-  }
-
-  resolveOneByAlias<T>(
-    predicate: AliasPredicate,
-    { args = [], child = this, lazy }: ResolveOptions = {},
-  ): [DependencyKey, T] {
-    for (const [key, provider] of this.providers.entries()) {
-      if (provider.matchAliases(predicate) && provider.isVisible(this, child)) {
-        return [key, provider.resolve(this, { args, lazy }) as T];
-      }
-    }
-    return this.parent.resolveOneByAlias<T>(predicate, { args, child, lazy });
+  hasProvider(keyOrAlias: DependencyKey): boolean {
+    return this.providerMap.has(keyOrAlias) || this.aliasMap.has(keyOrAlias) || this.parent.hasProvider(keyOrAlias);
   }
 
   getParent() {
@@ -156,15 +190,9 @@ export class Container implements IContainer {
   }
 
   getInstances({ cascade = true }: { cascade?: boolean } = {}) {
-    const result = [...this.instances];
-    if (cascade) {
-      for (const scope of this.scopes) {
-        for (const instance of scope.getInstances({ cascade })) {
-          result.push(instance);
-        }
-      }
-    }
-    return result;
+    return cascade
+      ? [...this.instances, ...[...this.scopes].flatMap((s) => s.getInstances({ cascade }))]
+      : [...this.instances];
   }
 
   hasTag(tag: Tag) {
@@ -191,8 +219,7 @@ export class Container implements IContainer {
    * @private
    */
   removeScope(child: IContainer): void {
-    const index = this.scopes.indexOf(child);
-    this.scopes.splice(index, 1);
+    this.scopes.delete(child);
   }
 
   private validateContainer(): void {

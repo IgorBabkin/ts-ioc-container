@@ -4,13 +4,15 @@ import {
   IContainer,
   IContainerModule,
   InjectionToken,
-  ResolveOptions,
+  ResolveManyOptions,
+  ResolveOneOptions,
   Tag,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { IProvider } from '../provider/IProvider';
 import { IRegistration } from '../registration/IRegistration';
+import { constructor } from '../utils';
 
 export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {
@@ -27,6 +29,10 @@ export class EmptyContainer implements IContainer {
 
   getParent() {
     return undefined;
+  }
+
+  resolveByClass<T>(token: constructor<T>, options?: { args?: [] }): T {
+    throw new MethodNotImplementedError();
   }
 
   getScopes() {
@@ -49,10 +55,6 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  resolve<T>(key: InjectionToken<T>, options: ResolveOptions): T {
-    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
-  }
-
   hasTag(tag: Tag): boolean {
     throw new MethodNotImplementedError();
   }
@@ -71,15 +73,19 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  resolveManyByAlias(
-    predicate: AliasPredicate,
-    options: ResolveOptions = {},
-    result: Map<DependencyKey, unknown> = new Map(),
-  ): Map<DependencyKey, unknown> {
-    return result;
+  resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
+    return [];
   }
 
-  resolveOneByAlias<T>(predicate: AliasPredicate, options?: ResolveOptions): [DependencyKey, T] {
-    throw new DependencyNotFoundError(`Cannot find by alias`);
+  resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveManyOptions): T {
+    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
+  }
+
+  resolveOneByKey<T>(key: DependencyKey, options?: ResolveOneOptions): T {
+    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
+  }
+
+  resolveOneByAlias<T>(key: DependencyKey, options?: ResolveOneOptions): T {
+    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 }

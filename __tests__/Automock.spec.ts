@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import {
   AutoMockedContainer,
   by,
+  constructor,
   Container,
   DependencyKey,
   inject,
@@ -10,6 +11,7 @@ import {
 } from '../lib';
 import { IMock, It, Times } from 'moq.ts';
 import { createMock } from './utils';
+import { ResolveManyOptions, ResolveOneOptions } from '../lib/container/IContainer';
 
 const ILogsRepoKey = Symbol('ILogsRepo');
 
@@ -20,7 +22,7 @@ interface ILogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject(by.key(ILogsRepoKey)) private logsRepo: ILogsRepo) {}
+  constructor(@inject(by.one(ILogsRepoKey)) private logsRepo: ILogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);
@@ -36,6 +38,22 @@ export class MoqContainer extends AutoMockedContainer {
 
   resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
+  }
+
+  resolveByClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T {
+    throw new MethodNotImplementedError();
+  }
+
+  resolveOneByKey<T>(key: DependencyKey, options?: ResolveOneOptions): T {
+    return this.resolveMock<T>(key).object();
+  }
+
+  resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
+    throw new MethodNotImplementedError();
+  }
+
+  resolveOneByAlias<T>(key: DependencyKey, options?: ResolveOneOptions): T {
+    throw new MethodNotImplementedError();
   }
 
   resolveMock<T>(key: DependencyKey): IMock<T> {

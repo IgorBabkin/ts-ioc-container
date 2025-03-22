@@ -6,13 +6,13 @@ import {
   ProviderResolveOptions,
   ResolveDependency,
 } from './IProvider';
-import { Alias, AliasPredicate, DependencyKey, IContainer, Tagged } from '../container/IContainer';
+import { DependencyKey, IContainer, Tagged } from '../container/IContainer';
 import { constructor, isConstructor, lazyProxy, MapFn, pipe } from '../utils';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     const transformers = getTransformers(Target);
-    return new Provider((container, options) => container.resolve(Target, options)).pipe(...transformers);
+    return new Provider((container, options) => container.resolveByClass(Target, options)).pipe(...transformers);
   }
 
   static fromValue<T>(value: T): IProvider<T> {
@@ -24,7 +24,6 @@ export class Provider<T = any> implements IProvider<T> {
     return new Provider<T>((c) => c.resolve(key));
   }
 
-  private readonly aliases: Set<Alias> = new Set();
   private argsFn: ArgsFn = () => [];
   private isVisibleWhen: ChildrenVisibilityPredicate = () => true;
 
@@ -35,10 +34,8 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   resolve(container: IContainer, { args, lazy: isLazy }: ProviderResolveOptions): T {
-    const resolveDependency = () => {
-      const deps = [...this.argsFn(container, ...args), ...args];
-      return this.resolveDependency(container, { args: deps });
-    };
+    const resolveDependency = () =>
+      this.resolveDependency(container, { args: [...this.argsFn(container, ...args), ...args] });
     return isLazy ? lazyProxy(resolveDependency) : resolveDependency();
   }
 
@@ -54,16 +51,5 @@ export class Provider<T = any> implements IProvider<T> {
 
   isVisible(parent: Tagged, child: Tagged): boolean {
     return this.isVisibleWhen({ child, isParent: child === parent });
-  }
-
-  matchAliases(predicate: AliasPredicate): boolean {
-    return this.aliases.size > 0 && predicate(this.aliases);
-  }
-
-  addAliases(...aliases: Alias[]): this {
-    for (const alias of aliases) {
-      this.aliases.add(alias);
-    }
-    return this;
   }
 }

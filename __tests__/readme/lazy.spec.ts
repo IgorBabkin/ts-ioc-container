@@ -1,7 +1,7 @@
-import { by, Container, inject, provider, Registration as R, singleton } from '../../lib';
+import { by, Container, inject, provider, register, Registration as R, singleton } from '../../lib';
 
 describe('lazy provider', () => {
-  @provider(singleton())
+  @register(provider(singleton()))
   class Flag {
     isSet = false;
 
@@ -13,7 +13,7 @@ describe('lazy provider', () => {
   class Service {
     name = 'Service';
 
-    constructor(@inject(by.key('Flag')) private flag: Flag) {
+    constructor(@inject(by.one('Flag')) private flag: Flag) {
       this.flag.set();
     }
 
@@ -23,7 +23,7 @@ describe('lazy provider', () => {
   }
 
   class App {
-    constructor(@inject(by.key('Service', { lazy: true })) public service: Service) {}
+    constructor(@inject(by.one('Service').lazy()) public service: Service) {}
 
     run() {
       return this.service.greet();
@@ -32,7 +32,7 @@ describe('lazy provider', () => {
 
   function createContainer() {
     const container = new Container();
-    container.add(R.toClass(Flag)).add(R.toClass(Service));
+    container.add(R.fromClass(Flag)).add(R.fromClass(Service));
     return container;
   }
 

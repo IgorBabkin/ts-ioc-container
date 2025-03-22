@@ -52,7 +52,7 @@ describe('EmptyContainer', () => {
   //
   it('should raise an error when adding registration', () => {
     const container = new EmptyContainer();
-    expect(() => container.add(Registration.toValue(1))).toThrowError(MethodNotImplementedError);
+    expect(() => container.add(Registration.fromValue(1))).toThrowError(MethodNotImplementedError);
   });
   //
   // it('should raise an error when resolving a dependency', () => {
@@ -90,10 +90,10 @@ describe('EmptyContainer', () => {
   //   expect(() => container.removeScope()).not.toThrow();
   // });
   //
-  // it('should return the provided result map for resolveManyByAlias', () => {
+  // it('should return the provided result map for resolveMany', () => {
   //   const container = new EmptyContainer();
   //   const resultMap = new Map();
-  //   const result = container.resolveManyByAlias(() => true, {}, resultMap);
+  //   const result = container.resolveMany(() => true, {}, resultMap);
   //   expect(result).toBe(resultMap);
   // });
 });

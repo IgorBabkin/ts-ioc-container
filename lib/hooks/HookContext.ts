@@ -2,7 +2,7 @@ import { resolveArgs } from '../injector/inject';
 import { IContainer } from '../container/IContainer';
 import { constructor } from '../utils';
 
-export type InjectFn<T = unknown> = (l: IContainer) => T;
+export type InjectFn<T = unknown> = (s: IContainer) => T;
 
 export interface IHookContext {
   instance: object;

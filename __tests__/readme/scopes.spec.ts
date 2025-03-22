@@ -13,13 +13,12 @@ import {
   singleton,
 } from '../../lib';
 
-@register(key('ILogger'), scope((s) => s.hasTag('child')))
-@provider(singleton())
+@register(key('ILogger'), scope((s) => s.hasTag('child')), provider(singleton()))
 class Logger {}
 
 describe('Scopes', function () {
   it('should resolve dependencies from scope', function () {
-    const root = new Container({ tags: ['root'] }).add(R.toClass(Logger));
+    const root = new Container({ tags: ['root'] }).add(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
     expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));

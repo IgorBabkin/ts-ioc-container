@@ -15,7 +15,11 @@ export class ProxyInjector implements IInjector {
       {
         get(target: {}, prop: string | symbol): any {
           // eslint-disable-next-line no-prototype-builtins
-          return args.hasOwnProperty(prop) ? getProp(args, prop) : container.resolve(prop);
+          return args.hasOwnProperty(prop)
+            ? getProp(args, prop)
+            : prop.toString().search(/array/gi) >= 0
+              ? container.resolveMany(prop)
+              : container.resolve(prop);
         },
       },
     );

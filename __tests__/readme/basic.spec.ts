@@ -8,24 +8,12 @@ describe('Basic usage', function () {
 
   it('should inject dependencies', function () {
     class App {
-      constructor(@inject(by.key('ILogger')) public logger: Logger) {}
+      constructor(@inject(by.keyOne('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container().add(R.toClass(Logger).fromKey('ILogger'));
+    const container = new Container().add(R.fromClass(Logger).assignToKey('ILogger'));
 
     expect(container.resolve(App).logger.name).toBe('Logger');
-  });
-
-  it('should inject multiple dependencies', function () {
-    class App {
-      constructor(@inject(by.keys(['ILogger1', 'ILogger2'])) public loggers: Logger[]) {}
-    }
-
-    const container = new Container()
-      .add(R.toClass(Logger).fromKey('ILogger1'))
-      .add(R.toClass(Logger).fromKey('ILogger2'));
-
-    expect(container.resolve(App).loggers).toHaveLength(2);
   });
 
   it('should inject current scope', function () {
