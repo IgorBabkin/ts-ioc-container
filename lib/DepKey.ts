@@ -13,7 +13,7 @@ export type DepKey<T> = IInjectFnResolver<T> & {
   pipe(...values: MapFn<IProvider<T>>[]): DepKey<T>;
   to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
-  alias: (registration: IRegistration<T>) => IRegistration<T>;
+  asAlias: (registration: IRegistration<T>) => IRegistration<T>;
 };
 
 export const isDepKey = <T>(key: unknown): key is DepKey<T> => {
@@ -60,6 +60,6 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return this;
     },
 
-    alias: (registration) => registration.assignToAliases(key),
+    asAlias: (r) => r.assignToAliases(key),
   };
 };

@@ -39,7 +39,7 @@ export const register = (...mappers: (MapFn<IRegistration> | DepKey<any> | Depen
       isDepKey(m)
         ? index === 0
           ? (r: IRegistration) => m.assignTo(r)
-          : (r: IRegistration) => m.alias(r)
+          : (r: IRegistration) => m.asAlias(r)
         : isDependencyKey(m)
           ? index === 0
             ? (r: IRegistration) => r.assignToKey(m)

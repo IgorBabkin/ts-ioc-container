@@ -63,7 +63,7 @@ describe('IContainer', function () {
     const ILoggerKey2 = depKey<ILogger>('ILogger2');
     const ILoggerKey3 = depKey<ILogger>('ILogger3');
 
-    @register(ILoggerKey.assignTo, ILoggerKey2.alias, ILoggerKey3, 'ILogger4', alias('ILogger5'))
+    @register(ILoggerKey.assignTo, ILoggerKey2.asAlias, ILoggerKey3, 'ILogger4', alias('ILogger5'))
     class FileLogger {}
 
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
