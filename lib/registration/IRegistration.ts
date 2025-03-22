@@ -48,6 +48,6 @@ export const register = (...mappers: (MapFn<IRegistration> | DepKey<any> | Depen
     ),
   );
 export const alias =
-  (...aliases: (DependencyKey | DepKey<unknown>)[]): MapFn<IRegistration> =>
+  (...aliases: (DependencyKey | DepKey<any>)[]): MapFn<IRegistration> =>
   (r) =>
     r.assignToAliases(...aliases.map((a) => (isDependencyKey(a) ? a : a.key)));
