@@ -6,7 +6,7 @@ describe('Registration module', function () {
   const createContainer = () => new Container({ tags: ['root'] });
 
   it('should register class', function () {
-    @register(key('ILogger'), scope((s) => s.hasTag('root')), provider(singleton()))
+    @register('ILogger', scope((s) => s.hasTag('root')), provider(singleton()))
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
@@ -41,7 +41,7 @@ describe('Registration module', function () {
   });
 
   it('should assign additional key which redirects to original one', function () {
-    @register(key('ILogger', 'Logger'), provider(singleton()))
+    @register('ILogger', 'Logger', provider(singleton()))
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));

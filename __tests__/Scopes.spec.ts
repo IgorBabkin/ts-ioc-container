@@ -14,7 +14,7 @@ import {
   by,
 } from '../lib';
 
-@register(key('logger'), scope((s) => s.hasTag('home')), provider(singleton()))
+@register('logger', scope((s) => s.hasTag('home')), provider(singleton()))
 class Logger {}
 
 describe('Singleton', function () {
@@ -86,7 +86,7 @@ describe('Singleton', function () {
   });
 
   it('should be not visible from root', () => {
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register('logger', scope((s) => s.hasTag('child')))
     class FileLogger {}
 
     const parent = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
@@ -98,7 +98,7 @@ describe('Singleton', function () {
   });
 
   it('should register class as value and read metadata', () => {
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register('logger', scope((s) => s.hasTag('child')))
     class FileLogger {}
 
     const parent = new Container({ tags: ['root'] }).addRegistration(R.fromValue(FileLogger));
@@ -111,10 +111,10 @@ describe('Singleton', function () {
   });
 
   it('should override keys', () => {
-    @register(key('logger'), scope((s) => s.hasTag('root')))
+    @register('logger', scope((s) => s.hasTag('root')))
     class FileLogger {}
 
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register('logger', scope((s) => s.hasTag('child')))
     class DbLogger {}
 
     const parent = new Container({ tags: ['root'] })
@@ -128,7 +128,7 @@ describe('Singleton', function () {
   });
 
   it('should add registration to children', () => {
-    @register(key('logger'), scope((s) => s.hasTag('child')))
+    @register('logger', scope((s) => s.hasTag('child')))
     class DbLogger {}
 
     const parent = new Container({ tags: ['root'] });

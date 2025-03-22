@@ -140,7 +140,7 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.hasTag('child')), provider(singleton()))
+@register('ILogger', scope((s) => s.hasTag('child')), provider(singleton()))
 class Logger {}
 
 describe('Scopes', function () {
@@ -756,7 +756,7 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 import 'reflect-metadata';
 import { singleton, Container, key, provider, Registration as R, register } from 'ts-ioc-container';
 
-@register(key('logger'), provider(singleton()))
+@register('logger', provider(singleton()))
 class Logger {}
 
 describe('Singleton', function () {
@@ -811,7 +811,7 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
-@register(key('logger'))
+@register('logger')
 class Logger {
   constructor(
     public name: string,
@@ -852,17 +852,17 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(key('UserRepository'))
+    @register('UserRepository')
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(key('TodoRepository'))
+    @register('TodoRepository')
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
 
-    @register(key('EntityManager'), provider(argsFn((container, token) => [container.resolve(token as DependencyKey)])))
+    @register('EntityManager', provider(argsFn((container, token) => [container.resolve(token as DependencyKey)])))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
@@ -889,12 +889,12 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(key('UserRepository'))
+    @register('UserRepository')
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(key('TodoRepository'))
+    @register('TodoRepository')
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
@@ -1158,7 +1158,7 @@ describe('lazy provider', () => {
 
   const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
 
-  @register(key('IRepository'), provider(decorate(logRepo)))
+  @register('IRepository', provider(decorate(logRepo)))
   class TodoRepository implements IRepository {
     async save(item: Todo): Promise<void> {}
   }
@@ -1196,7 +1196,7 @@ describe('lazy provider', () => {
 
 ## Registration
 Registration is provider factory which registers provider in container.
-- `@register(key('logger'))`
+- `@register('logger')`
 - `Registration.fromClass(Logger).to('logger')`
 - `Registration.fromClass(Logger)`
 - `Registration.fromValue(Logger)`
@@ -1217,7 +1217,7 @@ describe('Registration module', function () {
   const createContainer = () => new Container({ tags: ['root'] });
 
   it('should register class', function () {
-    @register(key('ILogger'), scope((s) => s.hasTag('root')), provider(singleton()))
+    @register('ILogger', scope((s) => s.hasTag('root')), provider(singleton()))
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
@@ -1252,7 +1252,7 @@ describe('Registration module', function () {
   });
 
   it('should assign additional key which redirects to original one', function () {
-    @register(key('ILogger', 'Logger'), provider(singleton()))
+    @register('ILogger', 'Logger', provider(singleton()))
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
@@ -1273,7 +1273,7 @@ Sometimes you need to register provider only in scope which matches to certain c
 import 'reflect-metadata';
 import { singleton, Container, key, provider, Registration as R, scope, register } from 'ts-ioc-container';
 
-@register(key('ILogger'), scope((s) => s.hasTag('root')), provider(singleton()))
+@register('ILogger', scope((s) => s.hasTag('root')), provider(singleton()))
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
@@ -1292,10 +1292,10 @@ Sometimes you want to encapsulate registration logic in separate module. This is
 import 'reflect-metadata';
 import { IContainerModule, Registration as R, IContainer, key, Container, register } from 'ts-ioc-container';
 
-@register(key('ILogger'))
+@register('ILogger')
 class Logger {}
 
-@register(key('ILogger'))
+@register('ILogger')
 class TestLogger {}
 
 class Production implements IContainerModule {
@@ -1360,7 +1360,7 @@ class MyInjector implements IInjector {
   }
 }
 
-@register(key('logger'))
+@register('logger')
 class Logger {
   isReady = false;
 
@@ -1393,7 +1393,7 @@ describe('onConstruct', function () {
 import 'reflect-metadata';
 import { by, Container, hook, inject, key, provider, register, Registration as R, runHooks, singleton } from 'ts-ioc-container';
 
-@register(key('logsRepo'), provider(singleton()))
+@register('logsRepo', provider(singleton()))
 class LogsRepo {
   savedLogs: string[] = [];
 
@@ -1402,7 +1402,7 @@ class LogsRepo {
   }
 }
 
-@register(key('logger'))
+@register('logger')
 class Logger {
   @hook('onDispose', ({ instance, methodName }) => {
     // @ts-ignore

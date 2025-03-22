@@ -13,7 +13,7 @@ import {
   singleton,
 } from '../../lib';
 
-@register(key('ILogger'), scope((s) => s.hasTag('child')), provider(singleton()))
+@register('ILogger', scope((s) => s.hasTag('child')), provider(singleton()))
 class Logger {}
 
 describe('Scopes', function () {

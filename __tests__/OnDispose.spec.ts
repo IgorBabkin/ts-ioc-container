@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { by, Container, hook, inject, key, provider, register, Registration as R, runHooks, singleton } from '../lib';
 
-@register(key('logsRepo'), provider(singleton()))
+@register('logsRepo', provider(singleton()))
 class LogsRepo {
   savedLogs: string[] = [];
 
@@ -10,7 +10,7 @@ class LogsRepo {
   }
 }
 
-@register(key('logger'))
+@register('logger')
 class Logger {
   @hook('onDispose', ({ instance, methodName }) => {
     // @ts-ignore

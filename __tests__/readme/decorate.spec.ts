@@ -48,7 +48,7 @@ describe('lazy provider', () => {
 
   const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
 
-  @register(key('IRepository'), provider(decorate(logRepo)))
+  @register('IRepository', provider(decorate(logRepo)))
   class TodoRepository implements IRepository {
     async save(item: Todo): Promise<void> {}
   }

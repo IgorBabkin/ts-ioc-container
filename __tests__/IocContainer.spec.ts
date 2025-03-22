@@ -1,19 +1,17 @@
 import 'reflect-metadata';
 import {
-  singleton,
+  args,
+  by,
   Container,
   ContainerDisposedError,
   DependencyNotFoundError,
-  key,
   provider,
-  MetadataInjector,
-  Registration as R,
-  args,
   register,
-  by,
+  Registration as R,
+  singleton,
 } from '../lib';
 
-@register(key('logger'))
+@register('logger')
 class Logger {
   constructor(public topic: string) {}
 }

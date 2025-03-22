@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { IContainerModule, Registration as R, IContainer, key, Container, register } from '../../lib';
 
-@register(key('ILogger'))
+@register('ILogger')
 class Logger {}
 
-@register(key('ILogger'))
+@register('ILogger')
 class TestLogger {}
 
 class Production implements IContainerModule {

@@ -216,7 +216,7 @@ Sometimes you want to decorate you class with some logic. This is what `Decorato
 
 ## Registration
 Registration is provider factory which registers provider in container.
-- `@register(key('logger'))`
+- `@register('logger')`
 - `Registration.fromClass(Logger).to('logger')`
 - `Registration.fromClass(Logger)`
 - `Registration.fromValue(Logger)`

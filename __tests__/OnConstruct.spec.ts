@@ -23,7 +23,7 @@ class MyInjector implements IInjector {
   }
 }
 
-@register(key('logger'))
+@register('logger')
 class Logger {
   isReady = false;
 

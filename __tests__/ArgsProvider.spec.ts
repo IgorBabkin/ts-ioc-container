@@ -14,7 +14,7 @@ import {
   singleton,
 } from '../lib';
 
-@register(key('logger'))
+@register('logger')
 class Logger {
   constructor(
     public name: string,
@@ -55,17 +55,17 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(key('UserRepository'))
+    @register('UserRepository')
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(key('TodoRepository'))
+    @register('TodoRepository')
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
 
-    @register(key('EntityManager'), provider(argsFn((container, token) => [container.resolve(token as DependencyKey)])))
+    @register('EntityManager', provider(argsFn((container, token) => [container.resolve(token as DependencyKey)])))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
@@ -92,12 +92,12 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(key('UserRepository'))
+    @register('UserRepository')
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(key('TodoRepository'))
+    @register('TodoRepository')
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
