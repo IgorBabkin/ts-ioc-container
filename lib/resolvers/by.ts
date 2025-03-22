@@ -7,18 +7,21 @@ import { constructor } from '../utils';
 import { ClassResolver } from './ClassResolver';
 import { AliasOneResolver } from './AliasOneResolver';
 import { OneResolver } from './OneResolver';
-import { DepKey } from '../DepKey';
+import { DepKey, isDepKey } from '../DepKey';
 
 export const by = {
-  many: <T>(alias: DependencyKey | DepKey<T>) => new AliasManyResolver<T>(isDependencyKey(alias) ? alias : alias.key),
+  many: <T>(target: DependencyKey | DepKey<T>) =>
+    new AliasManyResolver<T>(isDependencyKey(target) ? target : target.key),
 
-  one: <T>(key: DependencyKey | constructor<T>) => new OneResolver<T>(key),
+  one: <T>(target: DependencyKey | constructor<T> | DepKey<T>) =>
+    new OneResolver<T>(isDepKey<T>(target) ? target.key : target),
 
-  aliasOne: <T>(alias: DependencyKey) => new AliasOneResolver<T>(alias),
+  aliasOne: <T>(target: DependencyKey | DepKey<T>) =>
+    new AliasOneResolver<T>(isDepKey<T>(target) ? target.key : target),
 
   classOne: <T>(Target: constructor<T>) => new ClassResolver<T>(Target),
 
-  keyOne: <T>(Target: DependencyKey) => new KeyResolver<T>(Target),
+  keyOne: <T>(target: DependencyKey | DepKey<T>) => new KeyResolver<T>(isDepKey<T>(target) ? target.key : target),
 
   instances: (predicate: InstancePredicate = all) => new InstancesResolver(predicate),
 
