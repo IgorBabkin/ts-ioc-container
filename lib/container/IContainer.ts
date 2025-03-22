@@ -1,12 +1,12 @@
 import { IProvider } from '../provider/IProvider';
-import { constructor, MapFn } from '../utils';
+import { constructor } from '../utils';
 import { IRegistration } from '../registration/IRegistration';
 
 export type Tag = string;
 
 export type DependencyKey = string | symbol;
 
-export function isDependencyKey(token: constructor<any> | DependencyKey | MapFn<any>): token is DependencyKey {
+export function isDependencyKey(token: unknown): token is DependencyKey {
   return ['string', 'symbol'].includes(typeof token);
 }
 
@@ -31,8 +31,7 @@ export interface Tagged {
   hasTag(tag: Tag): boolean;
 }
 
-export type Alias = string;
-export type AliasPredicate = (aliases: Set<Alias>) => boolean;
+export type AliasPredicate = (aliases: Set<DependencyKey>) => boolean;
 
 export type CreateScopeOptions = { tags?: Tag[] };
 

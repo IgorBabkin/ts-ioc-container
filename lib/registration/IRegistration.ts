@@ -1,4 +1,4 @@
-import { Alias, DependencyKey, IContainer, IContainerModule, isDependencyKey } from '../container/IContainer';
+import { DependencyKey, IContainer, IContainerModule, isDependencyKey } from '../container/IContainer';
 import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { IProvider } from '../provider/IProvider';
@@ -48,6 +48,6 @@ export const register = (...mappers: (MapFn<IRegistration> | DepKey<any> | Depen
     ),
   );
 export const alias =
-  (...aliases: Alias[]): MapFn<IRegistration> =>
+  (...aliases: (DependencyKey | DepKey<unknown>)[]): MapFn<IRegistration> =>
   (r) =>
-    r.assignToAliases(...aliases);
+    r.assignToAliases(...aliases.map((a) => (isDependencyKey(a) ? a : a.key)));

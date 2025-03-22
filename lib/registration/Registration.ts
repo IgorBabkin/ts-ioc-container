@@ -1,4 +1,4 @@
-import { Alias, DependencyKey, IContainer } from '../container/IContainer';
+import { DependencyKey, IContainer } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import { IProvider, ResolveDependency } from '../provider/IProvider';
@@ -41,7 +41,7 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  assignToAliases(...aliases: Alias[]): this {
+  assignToAliases(...aliases: DependencyKey[]): this {
     for (const alias of aliases) {
       this.aliases.add(alias);
     }

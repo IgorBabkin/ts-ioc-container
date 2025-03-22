@@ -21,7 +21,7 @@ export const isDepKey = <T>(key: unknown): key is DepKey<T> => {
 };
 
 export const depKey = <T>(key: DependencyKey): DepKey<T> => {
-  let isValidWhen: ScopePredicate;
+  const scopePredicates: ScopePredicate[] = [];
   const mappers: MapFn<IProvider<T>>[] = [];
 
   return {
@@ -29,16 +29,16 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
 
     assignTo: (registration: IRegistration<T>) => {
       let reg: IRegistration<T> = registration.pipe(...mappers).assignToKey(key);
-      if (isValidWhen) {
-        reg = registration.when(isValidWhen);
+      if (scopePredicates.length > 0) {
+        reg = registration.when(...scopePredicates);
       }
       return reg;
     },
 
     register: (fn: (s: IContainer, ...args: unknown[]) => T): IRegistration<T> => {
       let registration: IRegistration<T> = new Registration(() => new Provider<T>(fn), key).pipe(...mappers);
-      if (isValidWhen) {
-        registration = registration.when(isValidWhen);
+      if (scopePredicates.length > 0) {
+        registration = registration.when(...scopePredicates);
       }
       return registration;
     },
@@ -55,8 +55,8 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return this;
     },
 
-    when(value: ScopePredicate) {
-      isValidWhen = value;
+    when(...predicates: ScopePredicate[]) {
+      scopePredicates.push(...predicates);
       return this;
     },
 
