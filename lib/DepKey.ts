@@ -60,6 +60,9 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return this;
     },
 
-    asAlias: (r) => r.assignToAliases(key),
+    asAlias(r) {
+      r.assignToAliases(key);
+      return r;
+    },
   };
 };

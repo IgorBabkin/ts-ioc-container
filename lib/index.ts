@@ -31,6 +31,8 @@ export {
   ArgsFn,
   ProviderDecorator,
   ProviderResolveOptions,
+  IMapper,
+  ProviderMapper,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
