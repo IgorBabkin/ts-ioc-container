@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { by, Container, hook, inject, key, provider, register, Registration as R, runHooks, singleton } from '../lib';
+import { by, Container, hook, inject, register, Registration as R, runHooks, singleton } from '../lib';
 
-@register('logsRepo', provider(singleton()))
+@register('logsRepo', singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 

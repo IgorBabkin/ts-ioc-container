@@ -5,15 +5,13 @@ import {
   DependencyNotFoundError,
   IContainer,
   inject,
-  key,
-  provider,
   register,
   Registration as R,
   scope,
   singleton,
 } from '../../lib';
 
-@register('ILogger', scope((s) => s.hasTag('child')), provider(singleton()))
+@register('ILogger', scope((s) => s.hasTag('child')), singleton())
 class Logger {}
 
 describe('Scopes', function () {

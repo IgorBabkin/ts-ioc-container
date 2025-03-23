@@ -1,20 +1,33 @@
+/* eslint-disable no-prototype-builtins */
 import { IContainer, Tagged } from '../container/IContainer';
-import { constructor, MapFn, pipe } from '../utils';
-import { getMetadata } from '../metadata';
-import { IRegistration } from '../registration/IRegistration';
+import { MapFn, pipe } from '../utils';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
 export type ChildrenVisibilityPredicate = (options: { child: Tagged; isParent: boolean }) => boolean;
 
 export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
-
-export function args<T = unknown>(...extraArgs: unknown[]): MapFn<IProvider<T>> {
-  return (provider) => provider.setArgs(() => extraArgs);
+export interface IMapper<T> {
+  mapItem<T>(target: IProvider<T>): IProvider<T>;
 }
 
-export function argsFn<T = unknown>(fn: ArgsFn): MapFn<IProvider<T>> {
-  return (provider) => provider.setArgs(fn);
+export const isMapper = <T>(target: unknown): target is IMapper<T> =>
+  typeof target === 'object' && (target as object).hasOwnProperty('mapItem');
+
+export class ProviderMapper implements IMapper<IProvider> {
+  constructor(private readonly mappers: MapFn<IProvider>[]) {}
+
+  mapItem<T>(target: IProvider<T>): IProvider<T> {
+    return target.pipe(...this.mappers);
+  }
+}
+
+export function args(...extraArgs: unknown[]) {
+  return new ProviderMapper([(provider) => provider.setArgs(() => extraArgs)]);
+}
+
+export function argsFn(fn: ArgsFn) {
+  return new ProviderMapper([(provider) => provider.setArgs(fn)]);
 }
 
 export interface IProvider<T = any> {
@@ -22,26 +35,15 @@ export interface IProvider<T = any> {
 
   isVisible(parent: Tagged, child: Tagged): boolean;
 
-  pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T>;
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper)[]): IProvider<T>;
 
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
 
   setArgs(argsFn: ArgsFn): this;
 }
 
-const METADATA_KEY = 'provider';
-export const provider =
-  (...mappers: MapFn<IProvider>[]): MapFn<IRegistration> =>
-  (r) =>
-    r.pipe(...mappers);
-
-export const getTransformers = <T>(Target: constructor<T>) =>
-  getMetadata<MapFn<IProvider<T>>[]>(Target, METADATA_KEY) ?? [];
-
-export const visible =
-  (isVisibleWhen: ChildrenVisibilityPredicate): MapFn<IProvider> =>
-  (p) =>
-    p.setVisibility(isVisibleWhen);
+export const visible = (isVisibleWhen: ChildrenVisibilityPredicate) =>
+  new ProviderMapper([(p) => p.setVisibility(isVisibleWhen)]);
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}

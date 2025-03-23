@@ -1,7 +1,7 @@
 import { DependencyKey, IContainer } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
-import { IProvider, ResolveDependency } from '../provider/IProvider';
+import { IProvider, ProviderMapper, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
 
@@ -27,7 +27,7 @@ export class Registration<T = any> implements IRegistration<T> {
     return new Registration<T>(() => Provider.fromKey(key));
   }
 
-  private mappers: MapFn<IProvider<T>>[] = [];
+  private mappers: Array<MapFn<IProvider<T>> | ProviderMapper> = [];
   private aliases: Set<DependencyKey> = new Set();
 
   constructor(
@@ -48,7 +48,7 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  pipe(...mappers: MapFn<IProvider<T>>[]): this {
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper)[]): this {
     this.mappers.push(...mappers);
     return this;
   }

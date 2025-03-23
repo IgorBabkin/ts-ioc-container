@@ -1,18 +1,7 @@
-import {
-  by,
-  Container,
-  decorate,
-  IContainer,
-  inject,
-  key,
-  provider,
-  register,
-  Registration as R,
-  singleton,
-} from '../../lib';
+import { by, Container, decorate, IContainer, inject, register, Registration as R, singleton } from '../../lib';
 
 describe('lazy provider', () => {
-  @register(provider(singleton()))
+  @register(singleton())
   class Logger {
     private logs: string[] = [];
 
@@ -48,7 +37,7 @@ describe('lazy provider', () => {
 
   const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
 
-  @register('IRepository', provider(decorate(logRepo)))
+  @register('IRepository', decorate(logRepo))
   class TodoRepository implements IRepository {
     async save(item: Todo): Promise<void> {}
   }

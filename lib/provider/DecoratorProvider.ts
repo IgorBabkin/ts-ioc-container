@@ -1,5 +1,5 @@
 import { IContainer } from '../container/IContainer';
-import { IProvider, ProviderDecorator, ProviderResolveOptions } from './IProvider';
+import { IProvider, ProviderDecorator, ProviderMapper, ProviderResolveOptions } from './IProvider';
 
 export type DecorateFn<Instance> = (dep: Instance, scope: IContainer) => Instance;
 
@@ -17,7 +17,5 @@ export class DecoratorProvider<Instance> extends ProviderDecorator<Instance> {
   }
 }
 
-export const decorate =
-  <Instance>(decorateFn: DecorateFn<Instance>) =>
-  (provider: IProvider<Instance>) =>
-    new DecoratorProvider(provider, decorateFn);
+export const decorate = <Instance>(decorateFn: DecorateFn<Instance>) =>
+  new ProviderMapper([(provider: IProvider<Instance>) => new DecoratorProvider(provider, decorateFn)]);

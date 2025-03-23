@@ -1,23 +1,21 @@
 import {
   ArgsFn,
   ChildrenVisibilityPredicate,
-  getTransformers,
   IProvider,
+  ProviderMapper,
   ProviderResolveOptions,
   ResolveDependency,
 } from './IProvider';
 import { DependencyKey, IContainer, Tagged } from '../container/IContainer';
-import { constructor, isConstructor, lazyProxy, MapFn, pipe } from '../utils';
+import { constructor, lazyProxy, MapFn, pipe } from '../utils';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
-    const transformers = getTransformers(Target);
-    return new Provider((container, options) => container.resolveByClass(Target, options)).pipe(...transformers);
+    return new Provider((container, options) => container.resolveByClass(Target, options));
   }
 
   static fromValue<T>(value: T): IProvider<T> {
-    const mappers = isConstructor(value) ? (getTransformers(value as constructor<T>) ?? []) : [];
-    return new Provider(() => value).pipe(...mappers);
+    return new Provider(() => value);
   }
 
   static fromKey<T>(key: DependencyKey) {
@@ -29,8 +27,8 @@ export class Provider<T = any> implements IProvider<T> {
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
-  pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
-    return pipe(...mappers)(this);
+  pipe(...mappers: Array<MapFn<IProvider<T>> | ProviderMapper>): IProvider<T> {
+    return pipe(...mappers.map((m) => (m instanceof ProviderMapper ? m.mapItem.bind(m) : m)))(this);
   }
 
   resolve(container: IContainer, { args, lazy: isLazy }: ProviderResolveOptions): T {

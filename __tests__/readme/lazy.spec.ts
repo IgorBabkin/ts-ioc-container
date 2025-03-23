@@ -1,7 +1,7 @@
-import { by, Container, inject, provider, register, Registration as R, singleton } from '../../lib';
+import { by, Container, inject, register, Registration as R, singleton } from '../../lib';
 
 describe('lazy provider', () => {
-  @register(provider(singleton()))
+  @register(singleton())
   class Flag {
     isSet = false;
 

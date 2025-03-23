@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { singleton, Container, key, provider, Registration as R, register } from '../lib';
+import { Container, register, Registration as R, singleton } from '../lib';
 
-@register('logger', provider(singleton()))
+@register('logger', singleton())
 class Logger {}
 
 describe('Singleton', function () {

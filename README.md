@@ -132,15 +132,13 @@ import {
   DependencyNotFoundError,
   IContainer,
   inject,
-  key,
-  provider,
   register,
   Registration as R,
   scope,
   singleton,
 } from 'ts-ioc-container';
 
-@register('ILogger', scope((s) => s.hasTag('child')), provider(singleton()))
+@register('ILogger', scope((s) => s.hasTag('child')), singleton())
 class Logger {}
 
 describe('Scopes', function () {
@@ -280,10 +278,10 @@ describe('Disposing', function () {
 Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
 
 ```typescript
-import { by, Container, inject, provider, register, Registration as R, singleton } from 'ts-ioc-container';
+import { by, Container, inject, register, Registration as R, singleton } from 'ts-ioc-container';
 
 describe('lazy provider', () => {
-  @register(provider(singleton()))
+  @register(singleton())
   class Flag {
     isSet = false;
 
@@ -754,9 +752,9 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, Registration as R, register } from 'ts-ioc-container';
+import { Container, register, Registration as R, singleton } from 'ts-ioc-container';
 
-@register('logger', provider(singleton()))
+@register('logger', singleton())
 class Logger {}
 
 describe('Singleton', function () {
@@ -802,10 +800,7 @@ import {
   Container,
   DependencyKey,
   inject,
-  key,
-  MetadataInjector,
   MultiCache,
-  provider,
   register,
   Registration as R,
   singleton,
@@ -862,7 +857,7 @@ describe('ArgsProvider', function () {
       name = 'TodoRepository';
     }
 
-    @register('EntityManager', provider(argsFn((container, token) => [container.resolve(token as DependencyKey)])))
+    @register('EntityManager', argsFn((container, token) => [container.resolve(token as DependencyKey)]))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
@@ -900,11 +895,9 @@ describe('ArgsProvider', function () {
     }
 
     @register(
-      key('EntityManager'),
-      provider(
-        argsFn((container, token) => [container.resolve(token as DependencyKey)]),
-        singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
-      ),
+      'EntityManager',
+      argsFn((container, token) => [container.resolve(token as DependencyKey)]),
+      singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
     )
     class EntityManager {
       constructor(public repository: IRepository) {}
@@ -946,7 +939,6 @@ import {
   Container,
   DependencyNotFoundError,
   key,
-  provider,
   register,
   Registration as R,
   scope,
@@ -956,14 +948,7 @@ import {
 
 describe('Visibility', function () {
   it('should hide from children', () => {
-    @register(
-      key('logger'),
-      scope((s) => s.hasTag('root')),
-      provider(
-        singleton(),
-        visible(({ isParent }) => isParent),
-      ),
-    )
+    @register(key('logger'), scope((s) => s.hasTag('root')), singleton(), visible(({ isParent }) => isParent))
     class FileLogger {}
 
     const parent = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
@@ -1108,21 +1093,10 @@ Sometimes you want to decorate you class with some logic. This is what `Decorato
 - `provider(decorate((instance, container) => new LoggerDecorator(instance)))`
 
 ```typescript
-import {
-  by,
-  Container,
-  decorate,
-  IContainer,
-  inject,
-  key,
-  provider,
-  register,
-  Registration as R,
-  singleton,
-} from 'ts-ioc-container';
+import { by, Container, decorate, IContainer, inject, register, Registration as R, singleton } from 'ts-ioc-container';
 
 describe('lazy provider', () => {
-  @register(provider(singleton()))
+  @register(singleton())
   class Logger {
     private logs: string[] = [];
 
@@ -1158,7 +1132,7 @@ describe('lazy provider', () => {
 
   const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
 
-  @register('IRepository', provider(decorate(logRepo)))
+  @register('IRepository', decorate(logRepo))
   class TodoRepository implements IRepository {
     async save(item: Todo): Promise<void> {}
   }
@@ -1210,14 +1184,14 @@ Sometimes you want to register provider with certain key. This is what `key` is 
 
 ```typescript
 import 'reflect-metadata';
-import { Container, key, provider, register, Registration as R, scope, singleton } from 'ts-ioc-container';
+import { Container, register, Registration as R, scope, singleton } from 'ts-ioc-container';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
   const createContainer = () => new Container({ tags: ['root'] });
 
   it('should register class', function () {
-    @register('ILogger', scope((s) => s.hasTag('root')), provider(singleton()))
+    @register('ILogger', scope((s) => s.hasTag('root')), singleton())
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
@@ -1252,7 +1226,7 @@ describe('Registration module', function () {
   });
 
   it('should assign additional key which redirects to original one', function () {
-    @register('ILogger', 'Logger', provider(singleton()))
+    @register('ILogger', 'Logger', singleton())
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
@@ -1271,9 +1245,9 @@ Sometimes you need to register provider only in scope which matches to certain c
 
 ```typescript
 import 'reflect-metadata';
-import { singleton, Container, key, provider, Registration as R, scope, register } from 'ts-ioc-container';
+import { singleton, Container, Registration as R, scope, register } from 'ts-ioc-container';
 
-@register('ILogger', scope((s) => s.hasTag('root')), provider(singleton()))
+@register('ILogger', scope((s) => s.hasTag('root')), singleton())
 class Logger {}
 describe('ScopeProvider', function () {
   it('should return the same instance', function () {
@@ -1391,9 +1365,9 @@ describe('onConstruct', function () {
 ### OnDispose
 ```typescript
 import 'reflect-metadata';
-import { by, Container, hook, inject, key, provider, register, Registration as R, runHooks, singleton } from 'ts-ioc-container';
+import { by, Container, hook, inject, register, Registration as R, runHooks, singleton } from 'ts-ioc-container';
 
-@register('logsRepo', provider(singleton()))
+@register('logsRepo', singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 

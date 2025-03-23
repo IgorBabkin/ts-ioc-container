@@ -5,7 +5,6 @@ import {
   Container,
   ContainerDisposedError,
   DependencyNotFoundError,
-  provider,
   register,
   Registration as R,
   singleton,
@@ -88,7 +87,7 @@ describe('IocContainer', function () {
   });
 
   it('should use builder decorators', function () {
-    @register(provider(singleton()))
+    @register(singleton())
     class Logger1 {}
 
     const container = createContainer().addRegistration(R.fromClass(Logger1).assignToKey('logger'));

@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import { Container, key, provider, register, Registration as R, scope, singleton } from '../../lib';
+import { Container, register, Registration as R, scope, singleton } from '../../lib';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
 describe('Registration module', function () {
   const createContainer = () => new Container({ tags: ['root'] });
 
   it('should register class', function () {
-    @register('ILogger', scope((s) => s.hasTag('root')), provider(singleton()))
+    @register('ILogger', scope((s) => s.hasTag('root')), singleton())
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
@@ -41,7 +41,7 @@ describe('Registration module', function () {
   });
 
   it('should assign additional key which redirects to original one', function () {
-    @register('ILogger', 'Logger', provider(singleton()))
+    @register('ILogger', 'Logger', singleton())
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));

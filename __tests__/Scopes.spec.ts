@@ -3,9 +3,6 @@ import {
   singleton,
   Container,
   ContainerDisposedError,
-  key,
-  provider,
-  MetadataInjector,
   Registration as R,
   scope,
   register,
@@ -14,7 +11,7 @@ import {
   by,
 } from '../lib';
 
-@register('logger', scope((s) => s.hasTag('home')), provider(singleton()))
+@register('logger', scope((s) => s.hasTag('home')), singleton())
 class Logger {}
 
 describe('Singleton', function () {

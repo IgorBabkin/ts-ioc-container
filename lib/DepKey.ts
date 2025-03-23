@@ -1,7 +1,7 @@
 import { DependencyKey, IContainer } from './container/IContainer';
 import { MapFn } from './utils';
 import { IRegistration, ScopePredicate } from './registration/IRegistration';
-import { IProvider } from './provider/IProvider';
+import { IProvider, ProviderMapper } from './provider/IProvider';
 import { Registration } from './registration/Registration';
 import { Provider } from './provider/Provider';
 import { IInjectFnResolver } from './injector/IInjector';
@@ -10,7 +10,7 @@ export type DepKey<T> = IInjectFnResolver<T> & {
   key: DependencyKey;
   assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
-  pipe(...values: MapFn<IProvider<T>>[]): DepKey<T>;
+  pipe(...values: Array<MapFn<IProvider<T>> | ProviderMapper>): DepKey<T>;
   to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
   asAlias: (registration: IRegistration<T>) => IRegistration<T>;

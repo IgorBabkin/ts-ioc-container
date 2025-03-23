@@ -5,10 +5,7 @@ import {
   Container,
   DependencyKey,
   inject,
-  key,
-  MetadataInjector,
   MultiCache,
-  provider,
   register,
   Registration as R,
   singleton,
@@ -65,7 +62,7 @@ describe('ArgsProvider', function () {
       name = 'TodoRepository';
     }
 
-    @register('EntityManager', provider(argsFn((container, token) => [container.resolve(token as DependencyKey)])))
+    @register('EntityManager', argsFn((container, token) => [container.resolve(token as DependencyKey)]))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
@@ -103,11 +100,9 @@ describe('ArgsProvider', function () {
     }
 
     @register(
-      key('EntityManager'),
-      provider(
-        argsFn((container, token) => [container.resolve(token as DependencyKey)]),
-        singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
-      ),
+      'EntityManager',
+      argsFn((container, token) => [container.resolve(token as DependencyKey)]),
+      singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
     )
     class EntityManager {
       constructor(public repository: IRepository) {}

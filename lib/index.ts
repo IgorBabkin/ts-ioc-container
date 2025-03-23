@@ -25,7 +25,6 @@ export { ProxyInjector } from './injector/ProxyInjector';
 export {
   ResolveDependency,
   IProvider,
-  provider,
   visible,
   argsFn,
   args,
