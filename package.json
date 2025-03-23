@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "39.5.0",
+  "version": "39.5.1",
   "description": "Typescript IoC container",
   "publishConfig": {
     "access": "public",
