@@ -4,7 +4,7 @@ import { Provider } from '../provider/Provider';
 import { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
-import { isProviderMapper, ProviderMapper } from '../provider/ProviderMapper';
+import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
 
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {
@@ -49,8 +49,8 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper<T>)[]): this {
-    const fns = mappers.map((m): MapFn<IProvider<T>> => (isProviderMapper<T>(m) ? m.mapProvider.bind(m) : m));
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): this {
+    const fns = mappers.map((m): MapFn<IProvider<T>> => (isProviderPipe<T>(m) ? m.mapProvider.bind(m) : m));
     this.mappers.push(...fns);
     return this;
   }

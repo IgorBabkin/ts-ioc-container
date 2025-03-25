@@ -1,6 +1,6 @@
 import { IContainer, Tagged } from '../container/IContainer';
 import { MapFn } from '../utils';
-import { isProviderMapper, ProviderMapper, RegistrationMapper } from './ProviderMapper';
+import { isProviderPipe, ProviderPipe, RegistrationPipe } from './ProviderPipe';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
@@ -16,14 +16,14 @@ export interface IProvider<T = any> {
 
   isVisible(parent: Tagged, child: Tagged): boolean;
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper<T>)[]): IProvider<T>;
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T>;
 
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
 
   setArgs(argsFn: ArgsFn): this;
 }
 
-class VisibleMapper<T> extends RegistrationMapper<T> {
+class VisiblePipe<T> extends RegistrationPipe<T> {
   constructor(private isVisibleWhen: ChildrenVisibilityPredicate) {
     super();
   }
@@ -33,7 +33,7 @@ class VisibleMapper<T> extends RegistrationMapper<T> {
   }
 }
 
-class ArgsMapper<T> extends RegistrationMapper<T> {
+class ArgsPipe<T> extends RegistrationPipe<T> {
   constructor(private argsFn: ArgsFn) {
     super();
   }
@@ -43,11 +43,11 @@ class ArgsMapper<T> extends RegistrationMapper<T> {
   }
 }
 
-export const args = <T>(...extraArgs: unknown[]) => new ArgsMapper<T>(() => extraArgs);
+export const args = <T>(...extraArgs: unknown[]) => new ArgsPipe<T>(() => extraArgs);
 
-export const argsFn = <T>(fn: ArgsFn) => new ArgsMapper<T>(fn);
+export const argsFn = <T>(fn: ArgsFn) => new ArgsPipe<T>(fn);
 
-export const visible = <T>(isVisibleWhen: ChildrenVisibilityPredicate) => new VisibleMapper<T>(isVisibleWhen);
+export const visible = <T>(isVisibleWhen: ChildrenVisibilityPredicate) => new VisiblePipe<T>(isVisibleWhen);
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
@@ -65,9 +65,9 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.resolve(container, options);
   }
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper<T>)[]): IProvider<T> {
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T> {
     const fns = mappers.map((m): MapFn<IProvider<T>> => {
-      if (isProviderMapper<T>(m)) {
+      if (isProviderPipe<T>(m)) {
         return m.mapProvider.bind(m);
       }
       return m;

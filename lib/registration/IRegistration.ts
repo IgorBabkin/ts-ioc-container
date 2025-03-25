@@ -3,7 +3,7 @@ import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import { IProvider } from '../provider/IProvider';
 import { DepKey, isDepKey } from '../DepKey';
-import { isProviderMapper, ProviderMapper } from '../provider/ProviderMapper';
+import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
 
 export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
 
@@ -12,7 +12,7 @@ export interface IRegistration<T = any> extends IContainerModule {
 
   assignToKey(key: DependencyKey): this;
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper<T>)[]): this;
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): this;
 
   assignToAliases(...aliases: DependencyKey[]): this;
 }
@@ -33,9 +33,9 @@ const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: Array<MapFn<IRegistration> | DepKey<any> | DependencyKey | ProviderMapper>) => {
+export const register = (...mappers: Array<MapFn<IRegistration> | DepKey<any> | DependencyKey | ProviderPipe>) => {
   const fns = mappers.map((m, index) =>
-    isProviderMapper(m)
+    isProviderPipe(m)
       ? m.mapRegistration.bind(m)
       : isDepKey(m)
         ? index === 0

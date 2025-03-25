@@ -5,13 +5,13 @@ import { IProvider } from './provider/IProvider';
 import { Registration } from './registration/Registration';
 import { Provider } from './provider/Provider';
 import { IInjectFnResolver } from './injector/IInjector';
-import { ProviderMapper } from './provider/ProviderMapper';
+import { ProviderPipe } from './provider/ProviderPipe';
 
 export type DepKey<T> = IInjectFnResolver<T> & {
   key: DependencyKey;
   assignTo: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
-  pipe(...values: Array<MapFn<IProvider<T>> | ProviderMapper>): DepKey<T>;
+  pipe(...values: Array<MapFn<IProvider<T>> | ProviderPipe>): DepKey<T>;
   to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
   asAlias: (registration: IRegistration<T>) => IRegistration<T>;

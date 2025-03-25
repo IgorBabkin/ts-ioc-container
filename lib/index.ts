@@ -87,5 +87,5 @@ export { depKey, DepKey } from './DepKey';
 export { multiCache } from './provider/Cache';
 export { MultiCache } from './provider/Cache';
 export { alias } from './registration/IRegistration';
-export { ProviderMapper } from './provider/ProviderMapper';
+export { ProviderPipe } from './provider/ProviderPipe';
 export { InstancePredicate } from './resolve';
