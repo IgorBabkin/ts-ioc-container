@@ -1,12 +1,16 @@
 import { IContainer } from '../container/IContainer';
-import { IProvider, ProviderDecorator, ProviderMapper, ProviderResolveOptions } from './IProvider';
-import { MapFn } from '../utils';
+import { IProvider, ProviderDecorator, ProviderResolveOptions } from './IProvider';
 import { Cache, SingleCache } from './Cache';
+import { RegistrationMapper } from './ProviderMapper';
 
-export function singleton<T = unknown>(cacheProvider?: () => Cache<unknown, T>): ProviderMapper {
-  return new ProviderMapper([
-    (provider: IProvider) => new SingletonProvider(provider, cacheProvider ? cacheProvider() : new SingleCache()),
-  ]);
+class SingletonMapper<T> extends RegistrationMapper<T> {
+  constructor(private readonly cacheProvider?: () => Cache<unknown, T>) {
+    super();
+  }
+
+  mapProvider(provider: IProvider<T>): IProvider<T> {
+    return new SingletonProvider(provider, this.cacheProvider ? this.cacheProvider() : new SingleCache());
+  }
 }
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
@@ -27,3 +31,5 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     return this.cache.getValue(key);
   }
 }
+
+export const singleton = <T = unknown>(cacheProvider?: () => Cache<unknown, T>) => new SingletonMapper(cacheProvider);

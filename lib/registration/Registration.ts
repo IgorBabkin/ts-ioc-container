@@ -1,9 +1,10 @@
 import { DependencyKey, IContainer } from '../container/IContainer';
 import { constructor, isConstructor, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
-import { IProvider, ProviderMapper, ResolveDependency } from '../provider/IProvider';
+import { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
+import { isProviderMapper, ProviderMapper } from '../provider/ProviderMapper';
 
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {
@@ -27,7 +28,7 @@ export class Registration<T = any> implements IRegistration<T> {
     return new Registration<T>(() => Provider.fromKey(key));
   }
 
-  private mappers: Array<MapFn<IProvider<T>> | ProviderMapper> = [];
+  private mappers: MapFn<IProvider<T>>[] = [];
   private aliases: Set<DependencyKey> = new Set();
 
   constructor(
@@ -48,8 +49,9 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper)[]): this {
-    this.mappers.push(...mappers);
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper<T>)[]): this {
+    const fns = mappers.map((m): MapFn<IProvider<T>> => (isProviderMapper<T>(m) ? m.mapProvider.bind(m) : m));
+    this.mappers.push(...fns);
     return this;
   }
 

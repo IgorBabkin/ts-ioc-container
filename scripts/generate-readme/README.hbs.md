@@ -157,7 +157,6 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 ## Provider
 Provider is dependency factory which creates dependency.
 
-- `provider()`
 - `Provider.fromClass(Logger)`
 - `Provider.fromValue(logger)`
 - `new Provider((container, ...args) => container.resolve(Logger, {args}))`

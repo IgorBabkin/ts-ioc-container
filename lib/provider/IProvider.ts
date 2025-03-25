@@ -1,6 +1,6 @@
-/* eslint-disable no-prototype-builtins */
 import { IContainer, Tagged } from '../container/IContainer';
-import { MapFn, pipe } from '../utils';
+import { MapFn } from '../utils';
+import { isProviderMapper, ProviderMapper, RegistrationMapper } from './ProviderMapper';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
@@ -11,39 +11,43 @@ export interface IMapper<T> {
   mapItem<T>(target: IProvider<T>): IProvider<T>;
 }
 
-export const isMapper = <T>(target: unknown): target is IMapper<T> =>
-  typeof target === 'object' && (target as object).hasOwnProperty('mapItem');
-
-export class ProviderMapper implements IMapper<IProvider> {
-  constructor(private readonly mappers: MapFn<IProvider>[]) {}
-
-  mapItem<T>(target: IProvider<T>): IProvider<T> {
-    return target.pipe(...this.mappers);
-  }
-}
-
-export function args(...extraArgs: unknown[]) {
-  return new ProviderMapper([(provider) => provider.setArgs(() => extraArgs)]);
-}
-
-export function argsFn(fn: ArgsFn) {
-  return new ProviderMapper([(provider) => provider.setArgs(fn)]);
-}
-
 export interface IProvider<T = any> {
   resolve(container: IContainer, options: ProviderResolveOptions): T;
 
   isVisible(parent: Tagged, child: Tagged): boolean;
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper)[]): IProvider<T>;
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper<T>)[]): IProvider<T>;
 
   setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
 
   setArgs(argsFn: ArgsFn): this;
 }
 
-export const visible = (isVisibleWhen: ChildrenVisibilityPredicate) =>
-  new ProviderMapper([(p) => p.setVisibility(isVisibleWhen)]);
+class VisibleMapper<T> extends RegistrationMapper<T> {
+  constructor(private isVisibleWhen: ChildrenVisibilityPredicate) {
+    super();
+  }
+
+  mapProvider(p: IProvider<T>): IProvider<T> {
+    return p.setVisibility(this.isVisibleWhen);
+  }
+}
+
+class ArgsMapper<T> extends RegistrationMapper<T> {
+  constructor(private argsFn: ArgsFn) {
+    super();
+  }
+
+  mapProvider(provider: IProvider<T>): IProvider<T> {
+    return provider.setArgs(this.argsFn);
+  }
+}
+
+export const args = <T>(...extraArgs: unknown[]) => new ArgsMapper<T>(() => extraArgs);
+
+export const argsFn = <T>(fn: ArgsFn) => new ArgsMapper<T>(fn);
+
+export const visible = <T>(isVisibleWhen: ChildrenVisibilityPredicate) => new VisibleMapper<T>(isVisibleWhen);
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
@@ -61,8 +65,15 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.resolve(container, options);
   }
 
-  pipe(...mappers: MapFn<IProvider<T>>[]): IProvider<T> {
-    return pipe(...mappers)(this);
+  pipe(...mappers: (MapFn<IProvider<T>> | ProviderMapper<T>)[]): IProvider<T> {
+    const fns = mappers.map((m): MapFn<IProvider<T>> => {
+      if (isProviderMapper<T>(m)) {
+        return m.mapProvider.bind(m);
+      }
+      return m;
+    });
+    this.decorated = this.decorated.pipe(...fns);
+    return this;
   }
 
   setArgs(argsFn: ArgsFn): this {

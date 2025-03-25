@@ -1,7 +1,8 @@
 import { IContainer } from '../container/IContainer';
-import { IProvider, ProviderDecorator, ProviderMapper, ProviderResolveOptions } from './IProvider';
+import { IProvider, ProviderDecorator, ProviderResolveOptions } from './IProvider';
+import { RegistrationMapper } from './ProviderMapper';
 
-export type DecorateFn<Instance> = (dep: Instance, scope: IContainer) => Instance;
+export type DecorateFn<Instance = any> = (dep: Instance, scope: IContainer) => Instance;
 
 export class DecoratorProvider<Instance> extends ProviderDecorator<Instance> {
   constructor(
@@ -17,5 +18,16 @@ export class DecoratorProvider<Instance> extends ProviderDecorator<Instance> {
   }
 }
 
-export const decorate = <Instance>(decorateFn: DecorateFn<Instance>) =>
-  new ProviderMapper([(provider: IProvider<Instance>) => new DecoratorProvider(provider, decorateFn)]);
+class DecorateMapper<Instance> extends RegistrationMapper<Instance> {
+  constructor(private decorateFn: DecorateFn<Instance>) {
+    super();
+  }
+
+  mapProvider(provider: IProvider<Instance>): IProvider<Instance> {
+    return new DecoratorProvider(provider, this.decorateFn);
+  }
+}
+
+export const decorate = (decorateFn: DecorateFn) => {
+  return new DecorateMapper(decorateFn);
+};

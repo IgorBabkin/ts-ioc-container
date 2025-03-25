@@ -32,7 +32,6 @@ export {
   ProviderDecorator,
   ProviderResolveOptions,
   IMapper,
-  ProviderMapper,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
@@ -89,3 +88,4 @@ export { multiCache } from './provider/Cache';
 export { MultiCache } from './provider/Cache';
 export { InstancePredicate } from './resolvers/InjectionResolver';
 export { alias } from './registration/IRegistration';
+export { ProviderMapper } from './provider/ProviderMapper';
