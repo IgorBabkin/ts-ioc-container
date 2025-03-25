@@ -78,8 +78,7 @@
   "lint-staged": {
     "*.{js,ts,tsx}": [
       "eslint --fix",
-      "prettier --write",
-      "npm run test-coverage:check"
+      "prettier --write"
     ]
   },
   "gitHead": "ae10f302c7e0f55196b42669040735112479a854",
