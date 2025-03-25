@@ -73,7 +73,7 @@ export {
 export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
 
 // Others
-export { by } from './resolvers/by';
+export { by } from './resolve';
 export { constructor, Branded } from './utils';
 export {
   setMetadata,
@@ -86,6 +86,6 @@ export {
 export { depKey, DepKey } from './DepKey';
 export { multiCache } from './provider/Cache';
 export { MultiCache } from './provider/Cache';
-export { InstancePredicate } from './resolvers/InjectionResolver';
 export { alias } from './registration/IRegistration';
 export { ProviderMapper } from './provider/ProviderMapper';
+export { InstancePredicate } from './resolve';
