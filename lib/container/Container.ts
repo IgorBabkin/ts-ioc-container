@@ -1,4 +1,5 @@
 import {
+  ContainerResolver,
   CreateScopeOptions,
   DependencyKey,
   IContainer,
@@ -14,10 +15,30 @@ import { EmptyContainer } from './EmptyContainer';
 import { IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { constructor } from '../utils';
+import { constructor, isConstructor } from '../utils';
 import { ProviderMap } from './ProviderMap';
-import { ContainerResolver, DEFAULT_CONTAINER_RESOLVER } from './ContainerResolver';
 import { AliasMap } from './AliasMap';
+import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
+
+export const DEFAULT_CONTAINER_RESOLVER = <T>(
+  scope: IContainer,
+  keyOrAlias: constructor<T> | DependencyKey,
+  options?: ResolveOneOptions,
+): T => {
+  if (isConstructor(keyOrAlias)) {
+    return scope.resolveByClass(keyOrAlias, options);
+  }
+
+  try {
+    return scope.resolveOneByKey(keyOrAlias, options);
+  } catch (e) {
+    if (e instanceof DependencyNotFoundError) {
+      return scope.resolveOneByAlias(keyOrAlias, options);
+    }
+
+    throw e;
+  }
+};
 
 export class Container implements IContainer {
   isDisposed = false;

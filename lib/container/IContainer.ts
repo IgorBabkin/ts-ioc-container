@@ -76,3 +76,9 @@ export interface IContainer extends Tagged {
 
   detachFromParent(): void;
 }
+
+export type ContainerResolver = <T>(
+  scope: IContainer,
+  keyOrAlias: constructor<T> | DependencyKey,
+  options?: ResolveOneOptions,
+) => T;
