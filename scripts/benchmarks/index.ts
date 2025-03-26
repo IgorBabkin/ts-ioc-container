@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { Bench } from 'tinybench';
-import { Container, Registration, Provider, visible, args, argsFn } from '../../lib';
+import { Container, Registration, visible } from '../../lib';
 import 'reflect-metadata';
 
 // Define some test classes and interfaces for benchmarks

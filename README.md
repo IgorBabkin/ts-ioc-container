@@ -173,7 +173,7 @@ Sometimes you want to get all instances from container and its scopes. For examp
 
 ```typescript
 import 'reflect-metadata';
-import { inject, key, Registration as R, Container, by, register } from 'ts-ioc-container';
+import { by, Container, inject, register, Registration as R } from 'ts-ioc-container';
 
 describe('Instances', function () {
   @register('ILogger')
@@ -1263,7 +1263,7 @@ Sometimes you want to encapsulate registration logic in separate module. This is
 
 ```typescript
 import 'reflect-metadata';
-import { type IContainerModule, Registration as R, type IContainer, key, Container, register } from 'ts-ioc-container';
+import { Container, type IContainer, type IContainerModule, register, Registration as R } from 'ts-ioc-container';
 
 @register('ILogger')
 class Logger {}
