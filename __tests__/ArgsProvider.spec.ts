@@ -3,7 +3,7 @@ import {
   args,
   argsFn,
   Container,
-  DependencyKey,
+  type DependencyKey,
   inject,
   MultiCache,
   register,

@@ -1,10 +1,13 @@
-import { DependencyKey, IContainer } from '../container/IContainer';
-import { constructor, isConstructor, MapFn, pipe } from '../utils';
+import type { DependencyKey, IContainer } from '../container/IContainer';
+import { isConstructor, pipe } from '../utils';
+import type { constructor, MapFn } from '../utils';
 import { Provider } from '../provider/Provider';
-import { IProvider, ResolveDependency } from '../provider/IProvider';
+import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
-import { getTransformers, IRegistration, ScopePredicate } from './IRegistration';
-import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
+import type { IRegistration, ScopePredicate } from './IRegistration';
+import { getTransformers } from './IRegistration';
+import { isProviderPipe } from '../provider/ProviderPipe';
+import type { ProviderPipe } from '../provider/ProviderPipe';
 
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {

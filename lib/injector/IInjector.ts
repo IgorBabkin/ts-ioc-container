@@ -1,5 +1,5 @@
-import { constructor } from '../utils';
-import { IContainer } from '../container/IContainer';
+import { type constructor } from '../utils';
+import { type IContainer } from '../container/IContainer';
 
 export type InjectOptions = { args: unknown[] };
 

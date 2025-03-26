@@ -1,11 +1,11 @@
-import { DependencyKey, IContainer } from './container/IContainer';
-import { MapFn } from './utils';
-import { IRegistration, ScopePredicate } from './registration/IRegistration';
-import { IProvider } from './provider/IProvider';
+import { type DependencyKey, type IContainer } from './container/IContainer';
+import { type MapFn } from './utils';
+import { type IRegistration, type ScopePredicate } from './registration/IRegistration';
+import { type IProvider } from './provider/IProvider';
 import { Registration } from './registration/Registration';
 import { Provider } from './provider/Provider';
-import { IInjectFnResolver } from './injector/IInjector';
-import { ProviderPipe } from './provider/ProviderPipe';
+import { type IInjectFnResolver } from './injector/IInjector';
+import { type ProviderPipe } from './provider/ProviderPipe';
 
 export type DepKey<T> = IInjectFnResolver<T> & {
   key: DependencyKey;

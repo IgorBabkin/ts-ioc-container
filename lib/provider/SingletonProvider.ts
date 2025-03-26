@@ -1,6 +1,8 @@
-import { IContainer } from '../container/IContainer';
-import { IProvider, ProviderDecorator, ProviderResolveOptions } from './IProvider';
-import { Cache, SingleCache } from './Cache';
+import type { IContainer } from '../container/IContainer';
+import type { IProvider, ProviderResolveOptions } from './IProvider';
+import { ProviderDecorator } from './IProvider';
+import { SingleCache } from './Cache';
+import type { Cache } from './Cache';
 import { RegistrationPipe } from './ProviderPipe';
 
 class SingletonPipe<T> extends RegistrationPipe<T> {

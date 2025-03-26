@@ -1,21 +1,22 @@
+// biome-ignore lint/style/useImportType: <explanation>
 import {
-  ContainerResolver,
-  CreateScopeOptions,
-  DependencyKey,
-  IContainer,
-  IContainerModule,
-  Instance,
-  RegisterOptions,
-  ResolveOneOptions,
-  Tag,
+  type ContainerResolver,
+  type CreateScopeOptions,
+  type DependencyKey,
+  type IContainer,
+  type IContainerModule,
+  type Instance,
+  type RegisterOptions,
+  type ResolveOneOptions,
+  type Tag,
 } from './IContainer';
-import { IInjector } from '../injector/IInjector';
-import { IProvider } from '../provider/IProvider';
+import { type IInjector } from '../injector/IInjector';
+import { type IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
-import { IRegistration } from '../registration/IRegistration';
+import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { constructor, isConstructor } from '../utils';
+import { type constructor, isConstructor } from '../utils';
 import { ProviderMap } from './ProviderMap';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';

@@ -1,7 +1,15 @@
-import { ArgsFn, ChildrenVisibilityPredicate, IProvider, ProviderResolveOptions, ResolveDependency } from './IProvider';
-import { DependencyKey, IContainer, Tagged } from '../container/IContainer';
-import { constructor, lazyProxy, MapFn, pipe } from '../utils';
-import { isProviderPipe, ProviderPipe } from './ProviderPipe';
+import type {
+  ArgsFn,
+  ChildrenVisibilityPredicate,
+  IProvider,
+  ProviderResolveOptions,
+  ResolveDependency,
+} from './IProvider';
+import type { DependencyKey, IContainer, Tagged } from '../container/IContainer';
+import type { constructor, MapFn } from '../utils';
+import { lazyProxy, pipe } from '../utils';
+import type { ProviderPipe } from './ProviderPipe';
+import { isProviderPipe } from './ProviderPipe';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {

@@ -1,9 +1,12 @@
-import { DependencyKey, IContainer, IContainerModule, isDependencyKey } from '../container/IContainer';
-import { constructor, MapFn } from '../utils';
+import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
+import { isDependencyKey } from '../container/IContainer';
+import type { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
-import { IProvider } from '../provider/IProvider';
-import { DepKey, isDepKey } from '../DepKey';
-import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
+import type { IProvider } from '../provider/IProvider';
+import { isDepKey } from '../DepKey';
+import type { DepKey } from '../DepKey';
+import { isProviderPipe } from '../provider/ProviderPipe';
+import type { ProviderPipe } from '../provider/ProviderPipe';
 
 export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
 

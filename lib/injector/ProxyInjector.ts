@@ -1,6 +1,6 @@
-import { IInjector, InjectOptions } from './IInjector';
-import { IContainer } from '../container/IContainer';
-import { constructor } from '../utils';
+import type { IInjector, InjectOptions } from './IInjector';
+import type { IContainer } from '../container/IContainer';
+import type { constructor } from '../utils';
 
 function getProp(target: object, key: string | symbol): unknown {
   // @ts-ignore

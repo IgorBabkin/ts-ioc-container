@@ -1,6 +1,6 @@
-import { IProvider } from '../provider/IProvider';
-import { constructor } from '../utils';
-import { IRegistration } from '../registration/IRegistration';
+import { type IProvider } from '../provider/IProvider';
+import { type constructor } from '../utils';
+import { type IRegistration } from '../registration/IRegistration';
 
 export type Tag = string;
 

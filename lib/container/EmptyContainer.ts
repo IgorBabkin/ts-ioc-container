@@ -1,18 +1,16 @@
 import {
-  AliasPredicate,
-  DependencyKey,
-  IContainer,
-  IContainerModule,
-  InjectionToken,
-  ResolveManyOptions,
-  ResolveOneOptions,
-  Tag,
+  type DependencyKey,
+  type IContainer,
+  type IContainerModule,
+  type ResolveManyOptions,
+  type ResolveOneOptions,
+  type Tag,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { IProvider } from '../provider/IProvider';
-import { IRegistration } from '../registration/IRegistration';
-import { constructor } from '../utils';
+import { type IProvider } from '../provider/IProvider';
+import { type IRegistration } from '../registration/IRegistration';
+import { type constructor } from '../utils';
 
 export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {

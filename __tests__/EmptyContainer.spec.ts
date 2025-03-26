@@ -1,12 +1,12 @@
 import {
-  IContainer,
+  type IContainer,
   MethodNotImplementedError,
   Provider,
   EmptyContainer,
   DependencyNotFoundError,
   type IRegistration,
   Registration,
-  IContainerModule,
+  type IContainerModule,
 } from '../lib';
 
 describe('EmptyContainer', () => {

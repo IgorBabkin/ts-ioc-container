@@ -1,4 +1,4 @@
-import { constructor } from './utils';
+import type { constructor } from './utils';
 
 export const setMetadata =
   <T>(key: string | symbol, value: T): ClassDecorator =>

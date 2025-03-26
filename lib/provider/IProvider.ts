@@ -1,6 +1,7 @@
-import { IContainer, Tagged } from '../container/IContainer';
-import { MapFn } from '../utils';
-import { isProviderPipe, ProviderPipe, RegistrationPipe } from './ProviderPipe';
+import type { IContainer, Tagged } from '../container/IContainer';
+import type { MapFn } from '../utils';
+import type { ProviderPipe } from './ProviderPipe';
+import { isProviderPipe, RegistrationPipe } from './ProviderPipe';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;

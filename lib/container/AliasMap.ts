@@ -1,4 +1,4 @@
-import { DependencyKey } from './IContainer';
+import { type DependencyKey } from './IContainer';
 import { lastOf } from '../utils';
 
 export type Alias = DependencyKey;

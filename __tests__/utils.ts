@@ -1,4 +1,4 @@
-import { GetPropertyInteraction, IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
+import { GetPropertyInteraction, type IMock, It, Mock, NamedMethodInteraction, SetPropertyInteraction } from 'moq.ts';
 
 export function createMock<T>(): IMock<T> {
   const mock = new Mock<T>()

@@ -1,5 +1,6 @@
-import { IContainer } from '../container/IContainer';
-import { IProvider, ProviderDecorator, ProviderResolveOptions } from './IProvider';
+import type { IContainer } from '../container/IContainer';
+import type { IProvider, ProviderResolveOptions } from './IProvider';
+import { ProviderDecorator } from './IProvider';
 import { RegistrationPipe } from './ProviderPipe';
 
 export type DecorateFn<Instance = any> = (dep: Instance, scope: IContainer) => Instance;

@@ -85,7 +85,7 @@ And `tsconfig.json` should have next options:
 
 ```typescript
 import 'reflect-metadata';
-import { IContainer, by, Container, inject, Registration as R } from 'ts-ioc-container';
+import { type IContainer, by, Container, inject, Registration as R } from 'ts-ioc-container';
 
 describe('Basic usage', function () {
   class Logger {
@@ -130,7 +130,7 @@ import {
   by,
   Container,
   DependencyNotFoundError,
-  IContainer,
+  type IContainer,
   inject,
   register,
   Registration as R,
@@ -418,7 +418,7 @@ This type of injector just passes container to constructor with others arguments
 
 ```typescript
 import 'reflect-metadata';
-import { Container, IContainer, Registration as R, SimpleInjector } from 'ts-ioc-container';
+import { Container, type IContainer, Registration as R, SimpleInjector } from 'ts-ioc-container';
 
 describe('SimpleInjector', function () {
   it('should pass container as first parameter', function () {
@@ -797,7 +797,7 @@ import {
   args,
   argsFn,
   Container,
-  DependencyKey,
+  type DependencyKey,
   inject,
   MultiCache,
   register,
@@ -1092,7 +1092,7 @@ Sometimes you want to decorate you class with some logic. This is what `Decorato
 - `provider(decorate((instance, container) => new LoggerDecorator(instance)))`
 
 ```typescript
-import { by, Container, decorate, IContainer, inject, register, Registration as R, singleton } from 'ts-ioc-container';
+import { by, Container, decorate, type IContainer, inject, register, Registration as R, singleton } from 'ts-ioc-container';
 
 describe('lazy provider', () => {
   @register(singleton())
@@ -1263,7 +1263,7 @@ Sometimes you want to encapsulate registration logic in separate module. This is
 
 ```typescript
 import 'reflect-metadata';
-import { IContainerModule, Registration as R, IContainer, key, Container, register } from 'ts-ioc-container';
+import { type IContainerModule, Registration as R, type IContainer, key, Container, register } from 'ts-ioc-container';
 
 @register('ILogger')
 class Logger {}
@@ -1310,13 +1310,12 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 ```typescript
 import 'reflect-metadata';
 import {
-  constructor,
+  type constructor,
   Container,
   hook,
-  IContainer,
-  IInjector,
-  InjectOptions,
-  key,
+  type IContainer,
+  type IInjector,
+  type InjectOptions,
   MetadataInjector,
   register,
   Registration as R,
@@ -1421,7 +1420,7 @@ describe('onDispose', function () {
 ### Inject property
 
 ```typescript
-import { by, Container, hook, injectProp, Registration, runHooks, runHooksAsync } from 'ts-ioc-container';
+import { by, Container, hook, injectProp, Registration, runHooks } from 'ts-ioc-container';
 
 describe('inject property', () => {
   it('should inject property', () => {
@@ -1445,8 +1444,9 @@ describe('inject property', () => {
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
-import { AutoMockedContainer, Container, DependencyKey } from 'ts-ioc-container';
-import { IMock, Mock } from 'moq.ts';
+import { AutoMockedContainer, Container, type DependencyKey } from 'ts-ioc-container';
+// biome-ignore lint/style/useImportType: <explanation>
+import { type IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();

@@ -1,4 +1,4 @@
-import { Container, HookFn, hook, runHooks } from '../../lib';
+import { Container, type HookFn, hook, runHooks } from '../../lib';
 
 const execute: HookFn = (context) => {
   context.invokeMethod({ args: [] });

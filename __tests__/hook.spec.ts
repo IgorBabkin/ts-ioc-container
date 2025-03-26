@@ -1,16 +1,15 @@
 import {
   Container,
+  hasHooks,
   hook,
-  HookFn,
-  MetadataInjector,
-  runHooks,
+  type HookFn,
   onConstruct,
   onDispose,
-  UnexpectedHookResultError,
+  runHooks,
+  runHooksAsync,
   runOnConstructHooks,
   runOnDisposeHooks,
-  runHooksAsync,
-  hasHooks,
+  UnexpectedHookResultError,
 } from '../lib';
 
 const execute: HookFn = (ctx) => {

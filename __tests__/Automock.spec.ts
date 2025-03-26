@@ -2,16 +2,15 @@ import 'reflect-metadata';
 import {
   AutoMockedContainer,
   by,
-  constructor,
+  type constructor,
   Container,
-  DependencyKey,
+  type DependencyKey,
   inject,
-  MetadataInjector,
   MethodNotImplementedError,
 } from '../lib';
-import { IMock, It, Times } from 'moq.ts';
+import { type IMock, It, Times } from 'moq.ts';
 import { createMock } from './utils';
-import { ResolveManyOptions, ResolveOneOptions } from '../lib/container/IContainer';
+import { type ResolveManyOptions, type ResolveOneOptions } from '../lib/container/IContainer';
 
 const ILogsRepoKey = Symbol('ILogsRepo');
 

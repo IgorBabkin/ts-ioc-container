@@ -54,7 +54,8 @@
     "lint": "eslint lib/**/*.ts  __tests__/**/*.ts scripts/**/*.ts",
     "lint:fix": "npm run lint --fix",
     "prepare": "husky",
-    "release": "npm run build && npm test && npm publish"
+    "release": "npm run build && npm test && npm publish",
+    "benchmarks": "./scripts/benchmarks/index.ts"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

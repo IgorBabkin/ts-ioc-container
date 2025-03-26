@@ -1,7 +1,9 @@
-import { CreateScopeOptions, DependencyKey, IContainer, Instance, isDependencyKey } from './container/IContainer';
-import { constructor } from './utils';
-import { DepKey, isDepKey } from './DepKey';
-import { IInjectFnResolver } from './injector/IInjector';
+import type { CreateScopeOptions, DependencyKey, IContainer, Instance } from './container/IContainer';
+import type { constructor } from './utils';
+import { isDepKey } from './DepKey';
+import type { DepKey } from './DepKey';
+import type { IInjectFnResolver } from './injector/IInjector';
+import { isDependencyKey } from './container/IContainer';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 export const all: InstancePredicate = () => true;

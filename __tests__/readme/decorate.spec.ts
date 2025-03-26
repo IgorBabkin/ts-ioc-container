@@ -1,4 +1,4 @@
-import { by, Container, decorate, IContainer, inject, register, Registration as R, singleton } from '../../lib';
+import { by, Container, decorate, type IContainer, inject, register, Registration as R, singleton } from '../../lib';
 
 describe('lazy provider', () => {
   @register(singleton())

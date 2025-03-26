@@ -1,14 +1,14 @@
 // Containers
 export {
-  IContainer,
-  Resolvable,
-  IContainerModule,
+  type IContainer,
+  type Resolvable,
+  type IContainerModule,
   isDependencyKey,
-  DependencyKey,
-  InjectionToken,
-  Tag,
-  Tagged,
-  Instance,
+  type DependencyKey,
+  type InjectionToken,
+  type Tag,
+  type Tagged,
+  type Instance,
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
@@ -16,36 +16,36 @@ export { AutoMockedContainer } from './container/AutoMockedContainer';
 
 // Injectors
 export { inject, resolveArgs } from './injector/inject';
-export { IInjector, InjectOptions } from './injector/IInjector';
+export { type IInjector, type InjectOptions } from './injector/IInjector';
 export { MetadataInjector } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 
 // Providers
 export {
-  ResolveDependency,
-  IProvider,
+  type ResolveDependency,
+  type IProvider,
   visible,
   argsFn,
   args,
-  ArgsFn,
+  type ArgsFn,
   ProviderDecorator,
-  ProviderResolveOptions,
-  IMapper,
+  type ProviderResolveOptions,
+  type IMapper,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
-export { Cache } from './provider/Cache';
-export { decorate, DecorateFn } from './provider/DecoratorProvider';
+export { type Cache } from './provider/Cache';
+export { decorate, type DecorateFn } from './provider/DecoratorProvider';
 
 // Registrations
 export {
   key,
-  IRegistration,
-  ReturnTypeOfRegistration,
+  type IRegistration,
+  type ReturnTypeOfRegistration,
   scope,
   register,
-  ScopePredicate,
+  type ScopePredicate,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
@@ -60,8 +60,8 @@ export {
   getHooks,
   hook,
   hasHooks,
-  HookFn,
-  HookClass,
+  type HookFn,
+  type HookClass,
   runHooks,
   runHooksAsync,
   injectProp,
@@ -70,11 +70,11 @@ export {
   runOnConstructHooks,
   runOnDisposeHooks,
 } from './hooks/hook';
-export { HookContext, InjectFn, IHookContext } from './hooks/HookContext';
+export { HookContext, type InjectFn, type IHookContext } from './hooks/HookContext';
 
 // Others
 export { by } from './resolve';
-export { constructor, Branded } from './utils';
+export { type constructor, type Branded } from './utils';
 export {
   setMetadata,
   getMetadata,
@@ -83,9 +83,9 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
-export { depKey, DepKey } from './DepKey';
+export { depKey, type DepKey } from './DepKey';
 export { multiCache } from './provider/Cache';
 export { MultiCache } from './provider/Cache';
 export { alias } from './registration/IRegistration';
-export { ProviderPipe } from './provider/ProviderPipe';
-export { InstancePredicate } from './resolve';
+export { type ProviderPipe } from './provider/ProviderPipe';
+export { type InstancePredicate } from './resolve';

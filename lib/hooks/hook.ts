@@ -1,8 +1,8 @@
-import { IContainer } from '../container/IContainer';
-import { CreateHookContext, createHookContext, IHookContext, InjectFn } from './HookContext';
-import { constructor, isConstructor, promisify } from '../utils';
+import { type IContainer } from '../container/IContainer';
+import { type CreateHookContext, createHookContext, type IHookContext, type InjectFn } from './HookContext';
+import { type constructor, isConstructor, promisify } from '../utils';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
-import { IInjectFnResolver } from '../injector/IInjector';
+import { type IInjectFnResolver } from '../injector/IInjector';
 import { toInjectFn } from '../injector/inject';
 
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;

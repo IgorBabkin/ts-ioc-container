@@ -3,7 +3,7 @@ import {
   by,
   Container,
   DependencyNotFoundError,
-  IContainer,
+  type IContainer,
   inject,
   register,
   Registration as R,

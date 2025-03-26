@@ -1,6 +1,6 @@
 import { resolveArgs } from '../injector/inject';
-import { IContainer } from '../container/IContainer';
-import { constructor } from '../utils';
+import type { IContainer } from '../container/IContainer';
+import type { constructor } from '../utils';
 
 export type InjectFn<T = unknown> = (s: IContainer) => T;
 

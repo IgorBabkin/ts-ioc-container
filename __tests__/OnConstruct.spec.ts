@@ -1,12 +1,11 @@
 import 'reflect-metadata';
 import {
-  constructor,
+  type constructor,
   Container,
   hook,
-  IContainer,
-  IInjector,
-  InjectOptions,
-  key,
+  type IContainer,
+  type IInjector,
+  type InjectOptions,
   MetadataInjector,
   register,
   Registration as R,

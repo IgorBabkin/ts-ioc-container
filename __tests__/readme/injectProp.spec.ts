@@ -1,4 +1,4 @@
-import { by, Container, hook, injectProp, Registration, runHooks, runHooksAsync } from '../../lib';
+import { by, Container, hook, injectProp, Registration, runHooks } from '../../lib';
 
 describe('inject property', () => {
   it('should inject property', () => {

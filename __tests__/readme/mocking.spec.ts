@@ -1,5 +1,6 @@
-import { AutoMockedContainer, Container, DependencyKey } from '../../lib';
-import { IMock, Mock } from 'moq.ts';
+import { AutoMockedContainer, Container, type DependencyKey } from '../../lib';
+// biome-ignore lint/style/useImportType: <explanation>
+import { type IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();

@@ -1,5 +1,5 @@
-import { IRegistration } from '../registration/IRegistration';
-import { IProvider } from './IProvider';
+import type { IRegistration } from '../registration/IRegistration';
+import type { IProvider } from './IProvider';
 
 export interface ProviderPipe<T = unknown> {
   mapProvider(p: IProvider<T>): IProvider<T>;

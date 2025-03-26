@@ -1,17 +1,14 @@
 import {
-  AliasPredicate,
-  DependencyKey,
-  IContainer,
-  InjectionToken,
-  Instance,
-  ResolveManyOptions,
-  ResolveOneOptions,
-  Tag,
+  type DependencyKey,
+  type IContainer,
+  type Instance,
+  type ResolveManyOptions,
+  type ResolveOneOptions,
+  type Tag,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
-import { IRegistration } from '../registration/IRegistration';
-import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { constructor } from '../utils';
+import { type IRegistration } from '../registration/IRegistration';
+import { type constructor } from '../utils';
 
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;

@@ -1,5 +1,5 @@
-import { DependencyKey } from './IContainer';
-import { IProvider } from '../provider/IProvider';
+import { type DependencyKey } from './IContainer';
+import { type IProvider } from '../provider/IProvider';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
 export class ProviderMap {

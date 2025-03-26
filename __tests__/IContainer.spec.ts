@@ -4,7 +4,7 @@ import {
   Container,
   DependencyNotFoundError,
   depKey,
-  IContainer,
+  type IContainer,
   inject,
   isDependencyKey,
   Provider,

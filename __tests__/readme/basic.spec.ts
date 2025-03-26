@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { IContainer, by, Container, inject, Registration as R } from '../../lib';
+import { type IContainer, by, Container, inject, Registration as R } from '../../lib';
 
 describe('Basic usage', function () {
   class Logger {

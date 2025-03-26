@@ -7,7 +7,7 @@ import {
   scope,
   register,
   DependencyNotFoundError,
-  constructor,
+  type constructor,
   by,
 } from '../lib';
 
