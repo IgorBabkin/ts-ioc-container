@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { inject, key, Registration as R, Container, by, register } from '../../lib';
+import { by, Container, inject, register, Registration as R } from '../../lib';
 
 describe('Instances', function () {
   @register('ILogger')
