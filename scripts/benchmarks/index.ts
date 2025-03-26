@@ -187,6 +187,110 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
     root.dispose({ cascade: true });
   });
 
+  bench.add('Server scenario', () => {
+    // Create root container with 10 dependencies
+    const rootContainer = new Container();
+
+    // Register 10 dependencies in the root container
+    for (let i = 0; i < 10; i++) {
+      rootContainer.addRegistration(
+        Registration.fromFn(() => ({ id: i, name: `Service-${i}` })).assignToKey(`service-${i}`),
+      );
+    }
+
+    // Create 10 scopes, resolve 5 dependencies in each, then dispose each scope
+    const scopes = [];
+    for (let i = 0; i < 10; i++) {
+      // Create a scope
+      const scope = rootContainer.createScope();
+      scopes.push(scope);
+
+      // Resolve 5 dependencies in the scope
+      for (let j = 0; j < 5; j++) {
+        const serviceIndex = j % 10; // Ensure we don't go out of bounds
+        scope.resolve(`service-${serviceIndex}`);
+      }
+    }
+
+    // Dispose each scope individually
+    for (const scope of scopes) {
+      scope.dispose();
+    }
+
+    // Dispose the root container
+    rootContainer.dispose();
+  });
+
+  bench.add('Client scenario', () => {
+    // Create root container with 20 dependencies
+    const rootContainer = new Container();
+
+    // Register 20 dependencies in the root container
+    for (let i = 0; i < 20; i++) {
+      rootContainer.addRegistration(
+        Registration.fromFn(() => ({ id: i, name: `AppService-${i}` })).assignToKey(`app-service-${i}`),
+      );
+    }
+
+    // Create 3 page scopes with "page" tag
+    const pages = [];
+    for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
+      // Create a page scope with "page" tag
+      const pageScope = rootContainer.createScope({ tags: ['page'] });
+      pages.push(pageScope);
+
+      // Register page-specific services
+      pageScope.addRegistration(Registration.fromValue({ pageId: `page-${pageIndex}` }).assignToKey('pageContext'));
+
+      // Create 10 widgets per page
+      const widgets = [];
+      for (let widgetIndex = 0; widgetIndex < 10; widgetIndex++) {
+        // Create a widget scope
+        const widgetScope = pageScope.createScope({ tags: ['widget'] });
+        widgets.push(widgetScope);
+
+        // Register widget-specific services
+        widgetScope.addRegistration(
+          Registration.fromValue({
+            widgetId: `widget-${pageIndex}-${widgetIndex}`,
+            type: `Widget-${widgetIndex % 5}`,
+          }).assignToKey('widgetContext'),
+        );
+
+        // Resolve 5 dependencies in each widget
+        for (let depIndex = 0; depIndex < 5; depIndex++) {
+          // Resolve a mix of app-level and page-level services
+          if (depIndex % 2 === 0) {
+            // Resolve app-level service
+            const appServiceIndex = (depIndex + widgetIndex) % 20;
+            widgetScope.resolve(`app-service-${appServiceIndex}`);
+          } else {
+            // Resolve page context
+            widgetScope.resolve('pageContext');
+
+            // Also resolve widget context
+            if (depIndex === 3) {
+              widgetScope.resolve('widgetContext');
+            }
+          }
+        }
+      }
+
+      // Dispose all widget scopes for this page
+      for (const widget of widgets) {
+        widget.dispose();
+      }
+    }
+
+    // Dispose all page scopes
+    for (const page of pages) {
+      page.dispose();
+    }
+
+    // Dispose the root container
+    rootContainer.dispose();
+  });
+
   // Run the benchmarks
   await bench.run();
 
