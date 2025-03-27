@@ -3,6 +3,12 @@
 import { Bench } from 'tinybench';
 import { Container, Registration, visible } from '../../lib';
 import 'reflect-metadata';
+import { BENCHMARK_CONFIG } from './config';
+import { writeFileSync } from 'node:fs';
+
+// Parse command-line arguments
+const args = process.argv.slice(2);
+const reportOutput = args.includes('--report-output') ? args[args.indexOf('--report-output') + 1] : null;
 
 // Define some test classes and interfaces for benchmarks
 interface IGreeter {
@@ -41,7 +47,7 @@ class UserService {
 
 async function runBenchmark(benchmark = 'default'): Promise<void> {
   console.log(`Running benchmark: ${benchmark}`);
-  const bench = new Bench();
+  const bench = new Bench(BENCHMARK_CONFIG);
 
   // Benchmark 1: Container creation and basic registration
   bench.add('Container creation', () => {
@@ -305,6 +311,19 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
 
   // Output results
   console.table(bench.table());
+
+  // Save report as JSON if --report-output is specified
+  if (reportOutput) {
+    try {
+      const results = bench.table();
+      const jsonReport = JSON.stringify(results, null, 2);
+      writeFileSync(reportOutput, jsonReport);
+      console.log(`Benchmark report saved to: ${reportOutput}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Error saving benchmark report: ${errorMessage}`);
+    }
+  }
 }
 
 // Run the benchmark
