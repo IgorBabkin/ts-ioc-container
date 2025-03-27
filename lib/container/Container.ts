@@ -97,23 +97,21 @@ export class Container implements IContainer {
   ): T[] {
     this.validateContainer();
 
-    const providersKeys = this.aliasMap.findManyKeysByAlias(alias, new Set(excluded));
-
-    const key2VisibleProvider = providersKeys
+    const key2Dependency = this.aliasMap
+      .findManyKeysByAlias(alias, new Set(excluded))
       .map<[DependencyKey, IProvider<T>]>((k) => [k, this.providerMap.findOneByKeyOrFail(k)])
-      .filter(([k, provider]) => provider.isVisible(this, child));
+      .filter(([k, provider]) => provider.isVisible(this, child))
+      .map<[DependencyKey, T]>(([k, provider]) => [k, provider.resolve(this, { args, lazy })]);
 
-    const key2Dependency = new Map<DependencyKey, T>(
-      key2VisibleProvider.map(([k, provider]) => [k, provider.resolve(this, { args, lazy })]),
-    );
+    const [excludedKeysForParent, dependencies] = [key2Dependency.map(([k]) => k), key2Dependency.map(([_, v]) => v)];
 
     const parentDeps = this.parent.resolveMany<T>(alias, {
       args,
       child,
       lazy,
-      excludedKeys: [...excluded, ...key2Dependency.keys()],
+      excludedKeys: [...excluded, ...excludedKeysForParent],
     });
-    return [...key2Dependency.values(), ...parentDeps];
+    return [...dependencies, ...parentDeps];
   }
 
   resolveByClass<T>(token: constructor<T>, { args = [] }: { args?: unknown[] } = {}): T {
