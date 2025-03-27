@@ -55,8 +55,9 @@
     "lint:fix": "npm run lint --fix",
     "prepare": "husky",
     "release": "npm run build && npm test && npm publish",
-    "benchmarks": "./scripts/benchmarks/index.ts --report-output ./scripts/benchmarks/.benchmark.new.report.json",
-    "perfomance-regression": "./scripts/benchmarks/compare-reports.ts --left ./scripts/benchmarks/.benchmark.report.json --right ./scripts/benchmarks/.benchmark.new.report.json",
+    "benchmarks:generate": "./scripts/benchmarks/index.ts --report-output ./scripts/benchmarks/.benchmark.new.report.json",
+    "benchmarks:compare": "./scripts/benchmarks/compare-reports.ts --left ./scripts/benchmarks/.benchmark.report.json --right ./scripts/benchmarks/.benchmark.new.report.json",
+    "perfomance-regression": "npm run benchmarks:generate && npm run benchmarks:compare",
     "perfomance-regression:save": "cp ./scripts/benchmarks/.benchmark.new.report.json ./scripts/benchmarks/.benchmark.report.json && rm ./scripts/benchmarks/.benchmark.new.report.json"
   },
   "devDependencies": {
