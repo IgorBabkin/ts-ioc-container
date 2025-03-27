@@ -160,7 +160,44 @@ function compareReports(baseline: BenchmarkResult[], comparison: BenchmarkResult
 }
 
 /**
- * Format and display the comparison results
+ * Helper function to format percentage values with colors and symbols
+ */
+function formatPercentage(value: number, isLatency: boolean): string {
+  const formattedValue = `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+  const threshold = isLatency
+    ? COMPARISON_THRESHOLDS.maxLatencyIncreasePercent
+    : COMPARISON_THRESHOLDS.maxThroughputDecreasePercent;
+
+  if (isLatency) {
+    // For latency, increases (positive values) are bad
+    if (value > threshold) {
+      return `❌ ${formattedValue}`;
+    }
+    if (value > 0) {
+      return `⚠️ ${formattedValue}`;
+    }
+    return `✅ ${formattedValue}`;
+  }
+
+  // For throughput, decreases (negative values) are bad
+  if (value < -threshold) {
+    return `❌ ${formattedValue}`;
+  }
+  if (value < 0) {
+    return `⚠️ ${formattedValue}`;
+  }
+  return `✅ ${formattedValue}`;
+}
+
+/**
+ * Helper function to pad a string to a specific length
+ */
+function padString(str: string, length: number): string {
+  return str.length >= length ? str : `${str}${' '.repeat(length - str.length)}`;
+}
+
+/**
+ * Format and display the comparison results as a table
  */
 function displayResults(results: ComparisonResult[]): boolean {
   let hasFailures = false;
@@ -168,41 +205,49 @@ function displayResults(results: ComparisonResult[]): boolean {
   console.log('\nBenchmark Comparison Results:');
   console.log('=============================\n');
 
+  // Define column widths for the table
+  const nameWidth = Math.max(...results.map((r) => r.name.length), 30);
+  const idWidth = Math.max(...results.map((r) => r.id.length), 15);
+  const metricWidth = 20;
+
+  // Print table header
+  console.log(
+    `${padString('Benchmark', nameWidth)} | ${padString('ID', idWidth)} | ${padString('Latency Avg', metricWidth)} | ${padString('Latency Med', metricWidth)} | ${padString('Throughput Avg', metricWidth)} | ${padString('Throughput Med', metricWidth)}`,
+  );
+
+  // Print separator
+  console.log(
+    `${'-'.repeat(nameWidth)}-+-${'-'.repeat(idWidth)}-+-${'-'.repeat(metricWidth)}-+-${'-'.repeat(metricWidth)}-+-${'-'.repeat(metricWidth)}-+-${'-'.repeat(metricWidth)}`,
+  );
+
+  // Print data rows
   for (const result of results) {
-    console.log(`${result.name} (${result.id}):`);
-
-    // Display latency difference
-    const latencyAvgSymbol = result.latencyAvgDiffPercent > 0 ? '⚠️ ' : '✅ ';
     console.log(
-      `  ${latencyAvgSymbol}Latency (avg): ${result.latencyAvgDiffPercent > 0 ? '+' : ''}${result.latencyAvgDiffPercent.toFixed(2)}%`,
+      `${padString(result.name, nameWidth)} | ${padString(result.id, idWidth)} | ${padString(formatPercentage(result.latencyAvgDiffPercent, true), metricWidth)} | ${padString(formatPercentage(result.latencyMedDiffPercent, true), metricWidth)} | ${padString(formatPercentage(result.throughputAvgDiffPercent, false), metricWidth)} | ${padString(formatPercentage(result.throughputMedDiffPercent, false), metricWidth)}`,
     );
 
-    const latencyMedSymbol = result.latencyMedDiffPercent > 0 ? '⚠️ ' : '✅ ';
-    console.log(
-      `  ${latencyMedSymbol}Latency (med): ${result.latencyMedDiffPercent > 0 ? '+' : ''}${result.latencyMedDiffPercent.toFixed(2)}%`,
-    );
-
-    // Display throughput difference
-    const throughputAvgSymbol = result.throughputAvgDiffPercent < 0 ? '⚠️ ' : '✅ ';
-    console.log(
-      `  ${throughputAvgSymbol}Throughput (avg): ${result.throughputAvgDiffPercent > 0 ? '+' : ''}${result.throughputAvgDiffPercent.toFixed(2)}%`,
-    );
-
-    const throughputMedSymbol = result.throughputMedDiffPercent < 0 ? '⚠️ ' : '✅ ';
-    console.log(
-      `  ${throughputMedSymbol}Throughput (med): ${result.throughputMedDiffPercent > 0 ? '+' : ''}${result.throughputMedDiffPercent.toFixed(2)}%`,
-    );
-
-    // Display failures if any
     if (result.exceedsThreshold) {
       hasFailures = true;
-      console.log('\n  Failures:');
+    }
+  }
+
+  console.log('\nFailure Details:');
+  console.log('===============\n');
+
+  let foundFailures = false;
+  for (const result of results) {
+    if (result.failures.length > 0) {
+      foundFailures = true;
+      console.log(`${result.name} (${result.id}):`);
       for (const failure of result.failures) {
         console.log(`  ❌ ${failure}`);
       }
+      console.log('');
     }
+  }
 
-    console.log(''); // Add spacing between benchmark results
+  if (!foundFailures) {
+    console.log('✅ No failures detected\n');
   }
 
   // Display summary

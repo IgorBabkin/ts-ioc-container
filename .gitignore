@@ -13,5 +13,5 @@ precompiled
 .yarn/install-state.gz
 yarn.log
 prev-coverage-result.json
-.benchmark.report.json
+*.new.report.json
 
