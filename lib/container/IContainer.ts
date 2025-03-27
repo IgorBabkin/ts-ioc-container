@@ -17,7 +17,7 @@ export const isConstructor = <T>(T: constructor<T> | unknown): T is constructor<
 export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 
 export type ResolveOneOptions = { args?: unknown[]; child?: Tagged; lazy?: boolean };
-export type ResolveManyOptions = ResolveOneOptions & { excludedKeys?: DependencyKey[] };
+export type ResolveManyOptions = ResolveOneOptions & { excludedKeys?: Set<DependencyKey> };
 
 export interface Resolvable {
   resolve<T>(key: InjectionToken<T>, options?: ResolveOneOptions): T;

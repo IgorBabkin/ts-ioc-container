@@ -10,6 +10,7 @@ import {
   Provider,
   ProviderDecorator,
   register,
+  Registration,
   Registration as R,
   singleton,
 } from '../lib';
@@ -178,5 +179,26 @@ describe('IContainer', function () {
     app.run();
     app.stop();
     expect(app.display()).toEqual('StartStop');
+  });
+
+  it('Resolve with aliases', () => {
+    const container = new Container();
+
+    for (let i = 0; i < 20; i++) {
+      container.addRegistration(
+        Registration.fromFn(() => `value-${i}`)
+          .assignToKey(`key-${i}`)
+          .assignToAliases('valueAlias', `alias-${i}`),
+      );
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const child = container.createScope();
+      const deps = child.resolveMany('valueAlias');
+      expect(deps.length).toEqual(20);
+      child.dispose();
+    }
+
+    container.dispose();
   });
 });

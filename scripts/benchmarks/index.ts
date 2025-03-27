@@ -147,9 +147,10 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
 
   // Benchmark 9: Many registrations with aliases
   bench.add('Resolve with aliases', () => {
+    const numberOfRegistrations = 10;
     const container = new Container();
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < numberOfRegistrations; i++) {
       container.addRegistration(
         Registration.fromFn(() => `value-${i}`)
           .assignToKey(`key-${i}`)
@@ -157,9 +158,17 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
       );
     }
 
-    for (let i = 0; i < 20; i++) {
-      container.resolveMany('valueAlias');
+    const child1 = container.createScope();
+    for (let i = 0; i < numberOfRegistrations; i++) {
+      const child2 = child1.createScope();
+      const deps = child2.resolveMany('valueAlias');
+      if (deps.length !== numberOfRegistrations) {
+        throw new Error(`Resolving ${deps.length} deps`);
+      }
+      child2.dispose();
     }
+
+    child1.dispose();
 
     container.dispose();
   });

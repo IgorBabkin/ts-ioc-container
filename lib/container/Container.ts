@@ -7,6 +7,7 @@ import {
   type IContainerModule,
   type Instance,
   type RegisterOptions,
+  ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
 } from './IContainer';
@@ -16,7 +17,7 @@ import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { type constructor, isConstructor } from '../utils';
+import { type constructor, Filter as F, isConstructor } from '../utils';
 import { ProviderMap } from './ProviderMap';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
@@ -93,25 +94,28 @@ export class Container implements IContainer {
 
   resolveMany<T>(
     alias: DependencyKey,
-    { args = [], child = this, lazy, excluded = [] }: ResolveOneOptions & { excluded?: DependencyKey[] } = {},
+    { args = [], child = this, lazy, excludedKeys = new Set() }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
-    const key2Dependency = this.aliasMap
-      .findManyKeysByAlias(alias, new Set(excluded))
-      .map<[DependencyKey, IProvider<T>]>((k) => [k, this.providerMap.findOneByKeyOrFail(k)])
-      .filter(([k, provider]) => provider.isVisible(this, child))
-      .map<[DependencyKey, T]>(([k, provider]) => [k, provider.resolve(this, { args, lazy })]);
-
-    const [excludedKeysForParent, dependencies] = [key2Dependency.map(([k]) => k), key2Dependency.map(([_, v]) => v)];
+    const childDepsKeys: DependencyKey[] = [];
+    const childDeps: T[] = [];
+    for (const key of this.aliasMap.findManyKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
+      const provider = this.providerMap.findOneByKeyOrFail<T>(key);
+      if (!provider.isVisible(this, child)) {
+        continue;
+      }
+      childDepsKeys.push(key);
+      childDeps.push(provider.resolve(this, { args, lazy }));
+    }
 
     const parentDeps = this.parent.resolveMany<T>(alias, {
       args,
       child,
       lazy,
-      excludedKeys: [...excluded, ...excludedKeysForParent],
+      excludedKeys: new Set([...excludedKeys, ...childDepsKeys]),
     });
-    return [...dependencies, ...parentDeps];
+    return [...childDeps, ...parentDeps];
   }
 
   resolveByClass<T>(token: constructor<T>, { args = [] }: { args?: unknown[] } = {}): T {

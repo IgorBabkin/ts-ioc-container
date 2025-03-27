@@ -52,4 +52,12 @@ export function isInstance(target: object): target is InstanceOfClass<unknown> {
   return Object.prototype.hasOwnProperty.call(target, 'constructor');
 }
 
-export const lastOf = <T>(arr: T[]): T => arr[arr.length - 1];
+export const List = {
+  lastOf: <T>(arr: T[]): T => arr[arr.length - 1],
+};
+export const Filter = {
+  exclude: <T>(arr: Set<T> | T[]) => {
+    const excludeSet = arr instanceof Array ? new Set(arr) : arr;
+    return (v: T) => !excludeSet.has(v);
+  },
+};

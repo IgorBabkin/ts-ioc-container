@@ -1,5 +1,5 @@
 import { type DependencyKey } from './IContainer';
-import { lastOf } from '../utils';
+import { List as L } from '../utils';
 
 export type Alias = DependencyKey;
 
@@ -15,13 +15,13 @@ export class AliasMap {
     }
   }
 
-  findManyKeysByAlias(alias: DependencyKey, excluded: Set<DependencyKey> = new Set()): DependencyKey[] {
-    return [...(this.aliasToKeySet.get(alias) ?? [])].filter((k) => !excluded.has(k));
+  findManyKeysByAlias(alias: DependencyKey): DependencyKey[] {
+    return [...(this.aliasToKeySet.get(alias) ?? [])];
   }
 
   findLastKeyByAlias(alias: DependencyKey): DependencyKey | undefined {
     const keys = [...(this.aliasToKeySet.get(alias) ?? [])];
-    return keys.length > 0 ? lastOf(keys) : undefined;
+    return keys.length > 0 ? L.lastOf(keys) : undefined;
   }
 
   addAliases(key: DependencyKey, aliases: DependencyKey[]): void {
