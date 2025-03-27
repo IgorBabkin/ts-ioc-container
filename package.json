@@ -55,7 +55,7 @@
     "lint:fix": "npm run lint --fix",
     "prepare": "husky",
     "release": "npm run build && npm test && npm publish",
-    "benchmarks": "./scripts/benchmarks/index.ts"
+    "benchmarks": "./scripts/benchmarks/index.ts --output ./scripts/benchmarks/.benchmark.report.json"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

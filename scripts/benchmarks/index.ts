@@ -6,6 +6,22 @@ import 'reflect-metadata';
 import { BENCHMARK_CONFIG } from './config';
 import { writeFileSync } from 'node:fs';
 
+// Define task acronyms for benchmark identification
+const TASK_ACRONYMS: Record<string, string> = {
+  'Container creation': 'cont_create',
+  'Container with 100 registrations': 'cont_reg',
+  'Create 10 scopes': 'scope_create',
+  'Resolve simple value 100 times': 'resolve_val',
+  'Resolve class instance': 'resolve_class',
+  'Resolve deep dependency chain': 'resolve_chain',
+  'Provider with pipe transformations': 'provider_pipe',
+  'Lazy resolution': 'lazy_resolve',
+  'Resolve with aliases': 'resolve_alias',
+  'Scope hierarchy resolution': 'scope_hierarchy',
+  'Server scenario': 'server_scenario',
+  'Client scenario': 'client_scenario',
+};
+
 // Parse command-line arguments
 const args = process.argv.slice(2);
 const reportOutput = args.includes('--report-output') ? args[args.indexOf('--report-output') + 1] : null;
@@ -16,7 +32,7 @@ interface IGreeter {
 }
 
 class Greeter implements IGreeter {
-  constructor(private prefix: string = 'Hello') {}
+  constructor(private prefix = 'Hello') {}
 
   greet(name: string): string {
     return `${this.prefix}, ${name}!`;
@@ -316,7 +332,74 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
   if (reportOutput) {
     try {
       const results = bench.table();
-      const jsonReport = JSON.stringify(results, null, 2);
+
+      // Add task IDs to the results and rename 'Task name' to 'name'
+      const resultsWithIds = results.map((result) => {
+        if (result && typeof result === 'object') {
+          const taskName = result['Task name'];
+          if (taskName && typeof taskName === 'string') {
+            // Extract all properties except 'Task name' and create a new object with 'name' instead
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { 'Task name': _unused, ...otherProps } = result;
+
+            // Improve latency and throughput field names
+            const {
+              'Latency avg (ns)': latencyAvgRaw,
+              'Latency med (ns)': latencyMedRaw,
+              'Throughput avg (ops/s)': throughputAvgRaw,
+              'Throughput med (ops/s)': throughputMedRaw,
+              Samples: samplesRaw,
+              ...rest
+            } = otherProps;
+
+            // Parse latency and throughput values
+            const parseMetric = (metricString: string | number | undefined) => {
+              if (typeof metricString !== 'string') return { value: 0, error: 0 };
+
+              // Extract numeric value and error margin
+              const parts = metricString.split('±');
+              if (parts.length !== 2) return { value: Number.parseFloat(metricString) || 0, error: 0 };
+
+              const valueStr = parts[0].trim();
+              const errorStr = parts[1].trim().replace('%', '');
+
+              return {
+                value: Number.parseFloat(valueStr) || 0,
+                error: Number.parseFloat(errorStr) || 0,
+              };
+            };
+
+            const latencyAvgParsed = parseMetric(latencyAvgRaw);
+            const latencyMedParsed = parseMetric(latencyMedRaw);
+            const throughputAvgParsed = parseMetric(throughputAvgRaw);
+            const throughputMedParsed = parseMetric(throughputMedRaw);
+
+            return {
+              id: TASK_ACRONYMS[taskName] || taskName.replace(/\s+/g, '_').toLowerCase(),
+              name: taskName,
+              latency: {
+                avg: latencyAvgParsed.value,
+                avgError: latencyAvgParsed.error,
+                med: latencyMedParsed.value,
+                medError: latencyMedParsed.error,
+                unit: 'ns',
+              },
+              throughput: {
+                avg: throughputAvgParsed.value,
+                avgError: throughputAvgParsed.error,
+                med: throughputMedParsed.value,
+                medError: throughputMedParsed.error,
+                unit: 'ops/s',
+              },
+              samples: samplesRaw,
+              ...rest,
+            };
+          }
+        }
+        return result;
+      });
+
+      const jsonReport = JSON.stringify(resultsWithIds, null, 2);
       writeFileSync(reportOutput, jsonReport);
       console.log(`Benchmark report saved to: ${reportOutput}`);
     } catch (error: unknown) {
