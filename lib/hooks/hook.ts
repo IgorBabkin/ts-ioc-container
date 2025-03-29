@@ -9,9 +9,14 @@ export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void
 export interface HookClass<T extends IHookContext = IHookContext> {
   execute(context: Omit<T, 'scope'>): void | Promise<void>;
 }
-const isHookClassConstructor = (execute: HookFn | constructor<HookClass>): execute is constructor<HookClass> => {
+const isHookClassConstructor = <C extends IHookContext>(
+  execute: HookFn<C> | constructor<HookClass<C>>,
+): execute is constructor<HookClass<C>> => {
   return isConstructor(execute) && execute.prototype.execute;
 };
+
+export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
+  isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
 
 type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
 
@@ -48,16 +53,18 @@ export const runHooks = (
 ) => {
   const hooks = Array.from(getHooks(target, key).entries()).filter(([methodName]) => predicate(methodName));
 
-  for (const [methodName, executions] of hooks) {
+  const runMethodHooks = (methodName: string, executions: HookFn[]) => {
+    const context = createContext(target, scope, methodName);
     for (const execute of executions) {
-      const context = createContext(target, scope, methodName);
-      const result = isHookClassConstructor(execute)
-        ? scope.resolveByClass(execute).execute(context)
-        : execute(context);
+      const result = execute(context);
       if (result instanceof Promise) {
         throw new UnexpectedHookResultError(`Hook ${methodName} returned a promise, use runHooksAsync instead`);
       }
     }
+  };
+
+  for (const [methodName, executions] of hooks) {
+    runMethodHooks(methodName, executions.map(toHookFn));
   }
 };
 
@@ -75,17 +82,15 @@ export const runHooksAsync = (
   },
 ) => {
   const hooks = Array.from(getHooks(target, key).entries()).filter(([methodName]) => predicate(methodName));
-  const runExecution = (execute: HookFn | constructor<HookClass>, context: IHookContext) =>
-    isHookClassConstructor(execute)
-      ? promisify(context.scope.resolveByClass(execute).execute(context))
-      : promisify(execute(context));
 
-  return Promise.all(
-    hooks.flatMap(([methodName, executions]) => {
-      const context = createContext(target, scope, methodName);
-      return executions.map((execute) => runExecution(execute, context));
-    }),
-  );
+  const runMethodHooks = async (methodName: string, executions: HookFn[]) => {
+    const context = createContext(target, scope, methodName);
+    for (const execute of executions) {
+      await promisify(execute(context));
+    }
+  };
+
+  return Promise.all(hooks.map(([methodName, executions]) => runMethodHooks(methodName, executions.map(toHookFn))));
 };
 
 export const injectProp =
