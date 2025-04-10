@@ -46,7 +46,7 @@
     "test-coverage:update": "scripts/test-coverage/update-coverage-results.ts",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "coverage": "coveralls",
-    "test": "jest --coverage --coverageReporters='json-summary'",
+    "test": "jest --coverage",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "commit": "cz",
