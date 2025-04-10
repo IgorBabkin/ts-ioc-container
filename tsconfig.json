@@ -11,7 +11,8 @@
     "noImplicitReturns": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noUnusedLocals": true
   },
   "include": [
     "lib",

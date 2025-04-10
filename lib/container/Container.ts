@@ -1,7 +1,6 @@
-// biome-ignore lint/style/useImportType: <explanation>
 import {
-  type ContainerResolver,
   type CreateScopeOptions,
+  DEFAULT_CONTAINER_RESOLVER as resolveOne,
   type DependencyKey,
   type IContainer,
   type IContainerModule,
@@ -17,30 +16,9 @@ import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { type constructor, Filter as F, isConstructor } from '../utils';
+import { type constructor, Filter as F } from '../utils';
 import { ProviderMap } from './ProviderMap';
 import { AliasMap } from './AliasMap';
-import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-
-export const DEFAULT_CONTAINER_RESOLVER = <T>(
-  scope: IContainer,
-  keyOrAlias: constructor<T> | DependencyKey,
-  options?: ResolveOneOptions,
-): T => {
-  if (isConstructor(keyOrAlias)) {
-    return scope.resolveByClass(keyOrAlias, options);
-  }
-
-  try {
-    return scope.resolveOneByKey(keyOrAlias, options);
-  } catch (e) {
-    if (e instanceof DependencyNotFoundError) {
-      return scope.resolveOneByAlias(keyOrAlias, options);
-    }
-
-    throw e;
-  }
-};
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -53,7 +31,6 @@ export class Container implements IContainer {
   private readonly registrations = new Set<IRegistration>();
   private readonly onConstruct: (instance: Instance, scope: IContainer) => void;
   private readonly onDispose: (scope: IContainer) => void;
-  private readonly onResolve: ContainerResolver = DEFAULT_CONTAINER_RESOLVER;
   private readonly injector: IInjector;
 
   constructor(
@@ -63,7 +40,6 @@ export class Container implements IContainer {
       tags?: Tag[];
       onConstruct?: (instance: Instance, scope: IContainer) => void;
       onDispose?: (scope: IContainer) => void;
-      onResolve?: ContainerResolver;
     } = {},
   ) {
     this.injector = options.injector ?? new MetadataInjector();
@@ -71,13 +47,6 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
     this.onConstruct = options.onConstruct ?? (() => {});
     this.onDispose = options.onDispose ?? (() => {});
-    this.onResolve = options.onResolve ?? DEFAULT_CONTAINER_RESOLVER;
-  }
-
-  addRegistration(registration: IRegistration): this {
-    this.registrations.add(registration);
-    registration.applyTo(this);
-    return this;
   }
 
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
@@ -88,34 +57,14 @@ export class Container implements IContainer {
     return this;
   }
 
-  resolve<T>(keyOrAlias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
-    return this.onResolve(this, keyOrAlias, options);
+  addRegistration(registration: IRegistration): this {
+    this.registrations.add(registration);
+    registration.applyTo(this);
+    return this;
   }
 
-  resolveMany<T>(
-    alias: DependencyKey,
-    { args = [], child = this, lazy, excludedKeys = new Set() }: ResolveManyOptions = {},
-  ): T[] {
-    this.validateContainer();
-
-    const childDepsKeys: DependencyKey[] = [];
-    const childDeps: T[] = [];
-    for (const key of this.aliasMap.findManyKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
-      const provider = this.providerMap.findOneByKeyOrFail<T>(key);
-      if (!provider.isVisible(this, child)) {
-        continue;
-      }
-      childDepsKeys.push(key);
-      childDeps.push(provider.resolve(this, { args, lazy }));
-    }
-
-    const parentDeps = this.parent.resolveMany<T>(alias, {
-      args,
-      child,
-      lazy,
-      excludedKeys: new Set([...excludedKeys, ...childDepsKeys]),
-    });
-    return [...childDeps, ...parentDeps];
+  getRegistrations(): IRegistration[] {
+    return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
   resolveByClass<T>(token: constructor<T>, { args = [] }: { args?: unknown[] } = {}): T {
@@ -127,12 +76,16 @@ export class Container implements IContainer {
     return instance;
   }
 
+  resolveOne<T>(keyOrAlias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
+    return resolveOne(this, keyOrAlias, options);
+  }
+
   resolveOneByKey<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
     const provider = this.providerMap.findOneByKey<T>(keyOrAlias);
 
-    return provider?.isVisible(this, child)
+    return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
       : this.parent.resolveOneByKey<T>(keyOrAlias, { args, child, lazy });
   }
@@ -143,9 +96,35 @@ export class Container implements IContainer {
     const key = this.aliasMap.findLastKeyByAlias(keyOrAlias);
     const provider = key !== undefined ? this.providerMap.findOneByKeyOrFail<T>(key) : undefined;
 
-    return provider?.isVisible(this, child)
+    return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
       : this.parent.resolveOneByAlias<T>(keyOrAlias, { args, child, lazy });
+  }
+
+  resolveMany<T>(
+    alias: DependencyKey,
+    { args = [], child = this, lazy, excludedKeys = new Set() }: ResolveManyOptions = {},
+  ): T[] {
+    this.validateContainer();
+
+    const keys: DependencyKey[] = [];
+    const deps: T[] = [];
+    for (const key of this.aliasMap.findManyKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
+      const provider = this.providerMap.findOneByKeyOrFail<T>(key);
+      if (!provider.hasAccess({ invocationScope: child, providerScope: this })) {
+        continue;
+      }
+      keys.push(key);
+      deps.push(provider.resolve(this, { args, lazy }));
+    }
+
+    const parentDeps = this.parent.resolveMany<T>(alias, {
+      args,
+      child,
+      lazy,
+      excludedKeys: new Set([...excludedKeys, ...keys]),
+    });
+    return [...deps, ...parentDeps];
   }
 
   createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
@@ -156,7 +135,6 @@ export class Container implements IContainer {
       parent: this,
       tags,
       onDispose: this.onDispose,
-      onResolve: this.onResolve,
       onConstruct: this.onConstruct,
     });
     scope.applyRegistrationsFrom(this);
@@ -165,7 +143,32 @@ export class Container implements IContainer {
     return scope;
   }
 
-  dispose({ cascade = true }: { cascade?: boolean } = {}): void {
+  getScopes() {
+    return [...this.scopes];
+  }
+
+  removeScope(child: IContainer): void {
+    this.scopes.delete(child);
+  }
+
+  useModule(module: IContainerModule): this {
+    module.applyTo(this);
+    return this;
+  }
+
+  getParent() {
+    return this.parent;
+  }
+
+  getInstances() {
+    return [...this.instances];
+  }
+
+  hasTag(tag: Tag) {
+    return this.tags.has(tag);
+  }
+
+  dispose(): void {
     this.validateContainer();
     this.isDisposed = true;
 
@@ -179,48 +182,6 @@ export class Container implements IContainer {
     this.instances.clear();
     this.registrations.clear();
     this.onDispose(this);
-
-    // Dispose all scopes
-    while (this.scopes.size > 0) {
-      const scope = this.scopes.values().next().value!;
-      if (cascade) {
-        scope.dispose({ cascade: true });
-      } else {
-        scope.detachFromParent();
-      }
-    }
-  }
-
-  detachFromParent() {
-    this.parent.removeScope(this);
-    this.parent = new EmptyContainer();
-  }
-
-  useModule(module: IContainerModule): this {
-    module.applyTo(this);
-    return this;
-  }
-
-  hasProvider(keyOrAlias: DependencyKey): boolean {
-    return this.providerMap.has(keyOrAlias) || this.aliasMap.has(keyOrAlias) || this.parent.hasProvider(keyOrAlias);
-  }
-
-  getParent() {
-    return this.parent;
-  }
-
-  getScopes() {
-    return [...this.scopes];
-  }
-
-  getInstances({ cascade = true }: { cascade?: boolean } = {}) {
-    return cascade
-      ? [...this.instances, ...[...this.scopes].flatMap((s) => s.getInstances({ cascade }))]
-      : [...this.instances];
-  }
-
-  hasTag(tag: Tag) {
-    return this.tags.has(tag);
   }
 
   /**
@@ -232,21 +193,9 @@ export class Container implements IContainer {
     }
   }
 
-  /**
-   * @private
-   */
-  getRegistrations(): IRegistration[] {
-    return [...this.parent.getRegistrations(), ...this.registrations];
-  }
-
-  /**
-   * @private
-   */
-  removeScope(child: IContainer): void {
-    this.scopes.delete(child);
-  }
-
   private validateContainer(): void {
-    ContainerDisposedError.assert(!this.isDisposed, 'Container is already disposed');
+    if (this.isDisposed) {
+      throw new ContainerDisposedError('Container is already disposed');
+    }
   }
 }

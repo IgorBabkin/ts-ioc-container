@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { by, Container, hook, inject, register, Registration as R, runHooks, singleton } from '../lib';
+import { asKey, by, Container, hook, inject, register, Registration as R, runHooks, singleton } from '../lib';
 
-@register('logsRepo', singleton())
+@register(asKey('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 
@@ -10,7 +10,7 @@ class LogsRepo {
   }
 }
 
-@register('logger')
+@register(asKey('logger'))
 class Logger {
   @hook('onDispose', ({ instance, methodName }) => {
     // @ts-ignore
@@ -40,13 +40,13 @@ describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
     const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(LogsRepo));
 
-    const logger = container.resolve<Logger>('logger');
+    const logger = container.resolveOne<Logger>('logger');
     logger.log('Hello');
 
     for (const instance of by.instances().resolve(container)) {
       runHooks(instance as object, 'onDispose', { scope: container });
     }
 
-    expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
+    expect(container.resolveOne<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
   });
 });

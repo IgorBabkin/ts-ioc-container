@@ -1,8 +1,15 @@
 export type constructor<T> = new (...args: any[]) => T;
+export const isConstructor = (T: unknown): T is constructor<unknown> => typeof T === 'function' && !!T.prototype;
+
+export interface InstanceOfClass<T = unknown> {
+  new (...args: unknown[]): T;
+}
+
+export function isInstance(target: object): target is InstanceOfClass {
+  return Object.prototype.hasOwnProperty.call(target, 'constructor');
+}
 
 export type MapFn<T> = (value: T) => T;
-
-export type Branded<T, Brand> = T & { _brand: Brand };
 
 export const pipe =
   <T>(...mappers: MapFn<T>[]): MapFn<T> =>
@@ -26,8 +33,6 @@ export const constant =
   () =>
     value;
 
-export const isConstructor = (T: unknown): T is constructor<unknown> => typeof T === 'function' && !!T.prototype;
-
 export function lazyProxy<T>(resolveInstance: () => T): T {
   let instance: T | undefined;
   return new Proxy(
@@ -44,17 +49,10 @@ export function lazyProxy<T>(resolveInstance: () => T): T {
 
 export const promisify = <T>(arg: T | Promise<T>): Promise<T> => (arg instanceof Promise ? arg : Promise.resolve(arg));
 
-export interface InstanceOfClass<T = unknown> {
-  new (...args: unknown[]): T;
-}
-
-export function isInstance(target: object): target is InstanceOfClass<unknown> {
-  return Object.prototype.hasOwnProperty.call(target, 'constructor');
-}
-
 export const List = {
   lastOf: <T>(arr: T[]): T => arr[arr.length - 1],
 };
+
 export const Filter = {
   exclude: <T>(arr: Set<T> | T[]) => {
     const excludeSet = arr instanceof Array ? new Set(arr) : arr;

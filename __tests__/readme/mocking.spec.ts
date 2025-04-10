@@ -1,11 +1,10 @@
 import { AutoMockedContainer, Container, type DependencyKey } from '../../lib';
-// biome-ignore lint/style/useImportType: <explanation>
 import { type IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolve<T>(key: DependencyKey): T {
+  resolveOne<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 
@@ -45,7 +44,7 @@ describe('Mocking', () => {
     const engineMock = mockContainer.resolveMock<IEngine>('IEngine');
     engineMock.setup((i) => i.getRegistrationNumber()).returns('123');
 
-    const engine = container.resolve<IEngine>('IEngine');
+    const engine = container.resolveOne<IEngine>('IEngine');
 
     expect(engine.getRegistrationNumber()).toBe('123');
   });

@@ -1,13 +1,13 @@
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { isConstructor, pipe } from '../utils';
 import type { constructor, MapFn } from '../utils';
+import { isConstructor, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
 import type { IRegistration, ScopePredicate } from './IRegistration';
 import { getTransformers } from './IRegistration';
-import { isProviderPipe } from '../provider/ProviderPipe';
 import type { ProviderPipe } from '../provider/ProviderPipe';
+import { isProviderPipe } from '../provider/ProviderPipe';
 
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {
@@ -40,15 +40,13 @@ export class Registration<T = any> implements IRegistration<T> {
     private scopePredicates: ScopePredicate[] = [],
   ) {}
 
-  assignToKey(key: DependencyKey): this {
+  bindToKey(key: DependencyKey): this {
     this.key = key;
     return this;
   }
 
-  assignToAliases(...aliases: DependencyKey[]): this {
-    for (const alias of aliases) {
-      this.aliases.add(alias);
-    }
+  bindToAlias(alias: DependencyKey): this {
+    this.aliases.add(alias);
     return this;
   }
 

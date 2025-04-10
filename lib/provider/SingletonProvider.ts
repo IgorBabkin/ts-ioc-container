@@ -1,19 +1,9 @@
 import type { IContainer } from '../container/IContainer';
 import type { IProvider, ProviderResolveOptions } from './IProvider';
 import { ProviderDecorator } from './IProvider';
-import { SingleCache } from './Cache';
 import type { Cache } from './Cache';
-import { RegistrationPipe } from './ProviderPipe';
-
-class SingletonPipe<T> extends RegistrationPipe<T> {
-  constructor(private readonly cacheProvider?: () => Cache<unknown, T>) {
-    super();
-  }
-
-  mapProvider(provider: IProvider<T>): IProvider<T> {
-    return new SingletonProvider(provider, this.cacheProvider ? this.cacheProvider() : new SingleCache());
-  }
-}
+import { SingleCache } from './Cache';
+import { registerPipe } from './ProviderPipe';
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
   constructor(
@@ -34,4 +24,5 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
   }
 }
 
-export const singleton = <T = unknown>(cacheProvider?: () => Cache<unknown, T>) => new SingletonPipe(cacheProvider);
+export const singleton = <T = unknown>(cacheProvider?: () => Cache<unknown, T>) =>
+  registerPipe<T>((p) => new SingletonProvider(p, cacheProvider ? cacheProvider() : new SingleCache()));

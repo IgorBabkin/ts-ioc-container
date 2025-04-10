@@ -35,7 +35,7 @@ class Logger {
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolve<T>(key: DependencyKey): T {
+  resolveOne<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 
@@ -79,7 +79,7 @@ describe('Automock', function () {
   it('should automock all non defined dependencies', async function () {
     const container = createContainer();
 
-    const logger = container.resolve(Logger);
+    const logger = container.resolveOne(Logger);
     logger.log('hello');
     logger.save();
 

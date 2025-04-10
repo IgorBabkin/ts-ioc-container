@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { by, Container, inject, register, Registration as R } from '../../lib';
+import { asKey, by, Container, inject, register, Registration as R } from '../../lib';
 
 describe('Instances', function () {
-  @register('ILogger')
+  @register(asKey('ILogger'))
   class Logger {}
 
   it('should return injected instances', () => {
@@ -13,11 +13,11 @@ describe('Instances', function () {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
-    const logger1 = root.resolve('ILogger');
-    const logger2 = child.resolve('ILogger');
+    root.resolveOne('ILogger');
+    child.resolveOne('ILogger');
 
-    const rootApp = root.resolve(App);
-    const childApp = child.resolve(App);
+    const rootApp = root.resolveOne(App);
+    const childApp = child.resolveOne(App);
 
     expect(childApp.loggers.length).toBe(1);
     expect(rootApp.loggers.length).toBe(2);
@@ -31,10 +31,10 @@ describe('Instances', function () {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
-    const logger1 = root.resolve('ILogger');
-    const logger2 = child.resolve('ILogger');
+    root.resolveOne('ILogger');
+    child.resolveOne('ILogger');
 
-    const rootApp = root.resolve(App);
+    const rootApp = root.resolveOne(App);
 
     expect(rootApp.loggers.length).toBe(1);
   });
@@ -48,9 +48,9 @@ describe('Instances', function () {
 
     const container = new Container().addRegistration(R.fromClass(Logger));
 
-    const logger0 = container.resolve('ILogger');
-    const logger1 = container.resolve('ILogger');
-    const app = container.resolve(App);
+    const logger0 = container.resolveOne('ILogger');
+    const logger1 = container.resolveOne('ILogger');
+    const app = container.resolveOne(App);
 
     expect(app.loggers).toHaveLength(2);
     expect(app.loggers[0]).toBe(logger0);

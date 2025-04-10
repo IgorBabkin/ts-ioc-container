@@ -11,9 +11,9 @@ describe('Basic usage', function () {
       constructor(@inject(by.one('ILogger')) public logger: Logger) {}
     }
 
-    const container = new Container().addRegistration(R.fromClass(Logger).assignToKey('ILogger'));
+    const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
 
-    expect(container.resolve(App).logger.name).toBe('Logger');
+    expect(container.resolveOne(App).logger.name).toBe('Logger');
   });
 
   it('should inject current scope', function () {
@@ -23,7 +23,7 @@ describe('Basic usage', function () {
       constructor(@inject(by.scope.current) public scope: IContainer) {}
     }
 
-    const app = root.resolve(App);
+    const app = root.resolveOne(App);
 
     expect(app.scope).toBe(root);
   });

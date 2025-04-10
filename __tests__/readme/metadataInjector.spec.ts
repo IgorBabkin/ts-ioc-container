@@ -19,9 +19,9 @@ class App {
 
 describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
-    const container = new Container().addRegistration(R.fromClass(Logger).assignToKey('ILogger'));
+    const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
 
-    const app = container.resolve(App);
+    const app = container.resolveOne(App);
 
     expect(app.getLoggerName()).toBe('Logger');
   });

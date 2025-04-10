@@ -13,19 +13,11 @@ import { type constructor } from '../utils';
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;
 
-  hasProvider(key: string): boolean {
-    return false;
-  }
-
   createScope(): IContainer {
     throw new MethodNotImplementedError();
   }
 
   dispose(): void {}
-
-  detachFromParent() {
-    throw new MethodNotImplementedError();
-  }
 
   register(): this {
     return this;
@@ -69,5 +61,5 @@ export abstract class AutoMockedContainer implements IContainer {
 
   abstract resolveOneByAlias<T>(keyOrAlias: DependencyKey, options?: ResolveOneOptions): T;
 
-  abstract resolve<T>(alias: constructor<T> | DependencyKey, options?: ResolveManyOptions): T;
+  abstract resolveOne<T>(alias: constructor<T> | DependencyKey, options?: ResolveManyOptions): T;
 }

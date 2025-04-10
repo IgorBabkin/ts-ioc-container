@@ -41,8 +41,8 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolve(App);
-    const flag = container.resolve<Flag>('Flag');
+    container.resolveOne(App);
+    const flag = container.resolveOne<Flag>('Flag');
 
     // Assert
     expect(flag.isSet).toBe(false);
@@ -53,8 +53,8 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolve(App);
-    const flag = container.resolve<Flag>('Flag');
+    const app = container.resolveOne(App);
+    const flag = container.resolveOne<Flag>('Flag');
 
     // Assert
     expect(app.run()).toBe('Hello');
@@ -66,7 +66,7 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolve(App);
+    const app = container.resolveOne(App);
 
     // Assert
     expect(app.run()).toBe('Hello');
@@ -79,8 +79,8 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolve(App);
-    const flag = container.resolve<Flag>('Flag');
+    const app = container.resolveOne(App);
+    const flag = container.resolveOne<Flag>('Flag');
 
     // Assert
     expect(app.service.name).toBe('Service');

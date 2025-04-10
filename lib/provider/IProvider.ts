@@ -1,11 +1,11 @@
 import type { IContainer, Tagged } from '../container/IContainer';
 import type { MapFn } from '../utils';
-import type { ProviderPipe } from './ProviderPipe';
-import { isProviderPipe, RegistrationPipe } from './ProviderPipe';
+import { isProviderPipe, ProviderPipe, registerPipe } from './ProviderPipe';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
-export type ChildrenVisibilityPredicate = (options: { child: Tagged; isParent: boolean }) => boolean;
+export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
+export type ScopeAccessFn = (options: ScopeAccessOptions) => boolean;
 
 export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
 export interface IMapper<T> {
@@ -15,51 +15,31 @@ export interface IMapper<T> {
 export interface IProvider<T = any> {
   resolve(container: IContainer, options: ProviderResolveOptions): T;
 
-  isVisible(parent: Tagged, child: Tagged): boolean;
+  hasAccess(options: ScopeAccessOptions): boolean;
 
   pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T>;
 
-  setVisibility(isVisibleWhen: ChildrenVisibilityPredicate): this;
+  setAccessPredicate(hasAccessWhen: ScopeAccessFn): this;
 
   setArgs(argsFn: ArgsFn): this;
 }
 
-class VisiblePipe<T> extends RegistrationPipe<T> {
-  constructor(private isVisibleWhen: ChildrenVisibilityPredicate) {
-    super();
-  }
+export const args = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.setArgs(() => extraArgs));
 
-  mapProvider(p: IProvider<T>): IProvider<T> {
-    return p.setVisibility(this.isVisibleWhen);
-  }
-}
+export const argsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
 
-class ArgsPipe<T> extends RegistrationPipe<T> {
-  constructor(private argsFn: ArgsFn) {
-    super();
-  }
-
-  mapProvider(provider: IProvider<T>): IProvider<T> {
-    return provider.setArgs(this.argsFn);
-  }
-}
-
-export const args = <T>(...extraArgs: unknown[]) => new ArgsPipe<T>(() => extraArgs);
-
-export const argsFn = <T>(fn: ArgsFn) => new ArgsPipe<T>(fn);
-
-export const visible = <T>(isVisibleWhen: ChildrenVisibilityPredicate) => new VisiblePipe<T>(isVisibleWhen);
+export const scopeAccess = <T>(predicate: ScopeAccessFn) => registerPipe<T>((p) => p.setAccessPredicate(predicate));
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
 
-  setVisibility(predicate: ChildrenVisibilityPredicate): this {
-    this.decorated.setVisibility(predicate);
+  setAccessPredicate(predicate: ScopeAccessFn): this {
+    this.decorated.setAccessPredicate(predicate);
     return this;
   }
 
-  isVisible(parent: IContainer, child: Tagged): boolean {
-    return this.decorated.isVisible(parent, child);
+  hasAccess(options: ScopeAccessOptions): boolean {
+    return this.decorated.hasAccess(options);
   }
 
   resolve(container: IContainer, options: ProviderResolveOptions): T {

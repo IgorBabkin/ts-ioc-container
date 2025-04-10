@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  asKey,
   type constructor,
   Container,
   hook,
@@ -22,7 +23,7 @@ class MyInjector implements IInjector {
   }
 }
 
-@register('logger')
+@register(asKey('logger'))
 class Logger {
   isReady = false;
 
@@ -42,7 +43,7 @@ describe('onConstruct', function () {
   it('should make logger be ready on resolve', function () {
     const container = new Container({ injector: new MyInjector() }).addRegistration(R.fromClass(Logger));
 
-    const logger = container.resolve<Logger>('logger');
+    const logger = container.resolveOne<Logger>('logger');
 
     expect(logger.isReady).toBe(true);
   });

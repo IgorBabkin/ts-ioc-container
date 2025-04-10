@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { alias, by, Container, DependencyNotFoundError, inject, register, Registration as R, scope } from '../../lib';
+import { asAlias, by, Container, DependencyNotFoundError, inject, register, Registration as R, scope } from '../../lib';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
-  const middleware = register(alias(IMiddlewareKey));
+  const middleware = register(asAlias(IMiddlewareKey));
 
   interface IMiddleware {
     applyTo(application: IApplication): void;
@@ -56,7 +56,7 @@ describe('alias', () => {
       .addRegistration(R.fromClass(LoggerMiddleware))
       .addRegistration(R.fromClass(ErrorHandlerMiddleware));
 
-    const app = container.resolve(App);
+    const app = container.resolveOne(App);
     app.run();
 
     expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
@@ -64,7 +64,7 @@ describe('alias', () => {
   });
 
   it('should resolve by some alias', () => {
-    @register(alias('ILogger'))
+    @register(asAlias('ILogger'))
     class FileLogger {}
 
     const container = new Container().addRegistration(R.fromClass(FileLogger));
@@ -74,10 +74,10 @@ describe('alias', () => {
   });
 
   it('should resolve by alias', () => {
-    @register(alias('ILogger'), scope((s) => s.hasTag('root')))
+    @register(asAlias('ILogger'), scope((s) => s.hasTag('root')))
     class FileLogger {}
 
-    @register(alias('ILogger'), scope((s) => s.hasTag('child')))
+    @register(asAlias('ILogger'), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
     const container = new Container({ tags: ['root'] })
@@ -95,10 +95,10 @@ describe('alias', () => {
   it('should resolve by aliases', () => {
     interface ILogger {}
 
-    @register(alias('ILogger'))
+    @register(asAlias('ILogger'))
     class FileLogger implements ILogger {}
 
-    @register(alias('ILogger'))
+    @register(asAlias('ILogger'))
     class DbLogger implements ILogger {}
 
     class App {
@@ -107,9 +107,9 @@ describe('alias', () => {
 
     const container = new Container().addRegistration(R.fromClass(FileLogger));
 
-    const loggers = container.resolve(App).loggers;
+    const loggers = container.resolveOne(App).loggers;
     container.addRegistration(R.fromClass(DbLogger));
-    const loggers2 = container.resolve(App).loggers;
+    const loggers2 = container.resolveOne(App).loggers;
 
     expect(loggers).toEqual(loggers2);
   });

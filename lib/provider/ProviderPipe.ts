@@ -10,10 +10,7 @@ export interface ProviderPipe<T = unknown> {
 export const isProviderPipe = <T>(obj: unknown): obj is ProviderPipe<T> =>
   obj !== null && typeof obj === 'object' && 'mapProvider' in obj;
 
-export abstract class RegistrationPipe<T> implements ProviderPipe<T> {
-  abstract mapProvider(p: IProvider<T>): IProvider<T>;
-
-  mapRegistration(r: IRegistration<T>): IRegistration<T> {
-    return r.pipe(this.mapProvider.bind(this));
-  }
-}
+export const registerPipe = <T>(mapProvider: (p: IProvider<T>) => IProvider<T>): ProviderPipe<T> => ({
+  mapProvider,
+  mapRegistration: (r) => r.pipe(mapProvider),
+});

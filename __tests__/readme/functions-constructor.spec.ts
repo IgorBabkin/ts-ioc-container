@@ -17,7 +17,6 @@ const ILoggerKey = depKey<
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const useLogger = ILoggerKey.when((s) => s.hasTag('root'))
-  .to('ILogger')
   .register(async () => {
     await sleep(50);
     return {

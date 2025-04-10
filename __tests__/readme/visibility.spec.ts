@@ -1,25 +1,30 @@
 import 'reflect-metadata';
 import {
+  asKey,
   Container,
   DependencyNotFoundError,
-  key,
   register,
   Registration as R,
   scope,
   singleton,
-  visible,
+  scopeAccess,
 } from '../../lib';
 
 describe('Visibility', function () {
   it('should hide from children', () => {
-    @register(key('logger'), scope((s) => s.hasTag('root')), singleton(), visible(({ isParent }) => isParent))
+    @register(
+      asKey('logger'),
+      scope((s) => s.hasTag('root')),
+      singleton(),
+      scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope),
+    )
     class FileLogger {}
 
     const parent = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
 
     const child = parent.createScope({ tags: ['child'] });
 
-    expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);
-    expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
+    expect(() => child.resolveOne('logger')).toThrowError(DependencyNotFoundError);
+    expect(parent.resolveOne('logger')).toBeInstanceOf(FileLogger);
   });
 });

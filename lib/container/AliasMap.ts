@@ -34,8 +34,4 @@ export class AliasMap {
   destroy(): void {
     this.aliasToKeySet.clear();
   }
-
-  has(keyOrAlias: DependencyKey): boolean {
-    return this.aliasToKeySet.has(keyOrAlias);
-  }
 }

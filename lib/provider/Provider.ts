@@ -1,11 +1,12 @@
-import type {
+import {
+  ScopeAccessOptions,
   ArgsFn,
-  ChildrenVisibilityPredicate,
+  ScopeAccessFn,
   IProvider,
   ProviderResolveOptions,
   ResolveDependency,
 } from './IProvider';
-import type { DependencyKey, IContainer, Tagged } from '../container/IContainer';
+import type { DependencyKey, IContainer } from '../container/IContainer';
 import type { constructor, MapFn } from '../utils';
 import { lazyProxy, pipe } from '../utils';
 import type { ProviderPipe } from './ProviderPipe';
@@ -21,11 +22,11 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   static fromKey<T>(key: DependencyKey) {
-    return new Provider<T>((c) => c.resolve(key));
+    return new Provider<T>((c) => c.resolveOne(key));
   }
 
   private argsFn: ArgsFn = () => [];
-  private isVisibleWhen: ChildrenVisibilityPredicate = () => true;
+  private checkAccess: ScopeAccessFn = () => true;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
@@ -40,8 +41,8 @@ export class Provider<T = any> implements IProvider<T> {
     return isLazy ? lazyProxy(resolveDependency) : resolveDependency();
   }
 
-  setVisibility(predicate: ChildrenVisibilityPredicate): this {
-    this.isVisibleWhen = predicate;
+  setAccessPredicate(predicate: ScopeAccessFn): this {
+    this.checkAccess = predicate;
     return this;
   }
 
@@ -50,7 +51,7 @@ export class Provider<T = any> implements IProvider<T> {
     return this;
   }
 
-  isVisible(parent: Tagged, child: Tagged): boolean {
-    return this.isVisibleWhen({ child, isParent: child === parent });
+  hasAccess(options: ScopeAccessOptions): boolean {
+    return this.checkAccess(options);
   }
 }

@@ -19,7 +19,7 @@ export class ProxyInjector implements IInjector {
             ? getProp(args, prop)
             : prop.toString().search(/array/gi) >= 0
               ? container.resolveMany(prop)
-              : container.resolve(prop);
+              : container.resolveOne(prop);
         },
       },
     );

@@ -9,10 +9,9 @@ import { type ProviderPipe } from './provider/ProviderPipe';
 
 export type DepKey<T> = IInjectFnResolver<T> & {
   key: DependencyKey;
-  assignTo: (registration: IRegistration<T>) => IRegistration<T>;
+  asKey: (registration: IRegistration<T>) => IRegistration<T>;
   register: (fn: (s: IContainer, ...args: unknown[]) => T) => IRegistration<T>;
   pipe(...values: Array<MapFn<IProvider<T>> | ProviderPipe>): DepKey<T>;
-  to(target: DependencyKey): DepKey<T>;
   when(value: ScopePredicate): DepKey<T>;
   asAlias: (registration: IRegistration<T>) => IRegistration<T>;
 };
@@ -28,8 +27,8 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
   return {
     key,
 
-    assignTo: (registration: IRegistration<T>) => {
-      let reg: IRegistration<T> = registration.pipe(...mappers).assignToKey(key);
+    asKey: (registration: IRegistration<T>) => {
+      let reg: IRegistration<T> = registration.pipe(...mappers).bindToKey(key);
       if (scopePredicates.length > 0) {
         reg = registration.when(...scopePredicates);
       }
@@ -44,15 +43,10 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return registration;
     },
 
-    resolve: (s: IContainer): T => s.resolve(key),
+    resolve: (s: IContainer): T => s.resolveOne(key),
 
     pipe(...values: MapFn<IProvider<T>>[]) {
       mappers.push(...values);
-      return this;
-    },
-
-    to(target: DependencyKey) {
-      key = target;
       return this;
     },
 
@@ -62,8 +56,7 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
     },
 
     asAlias(r) {
-      r.assignToAliases(key);
-      return r;
+      return r.bindToAlias(key);
     },
   };
 };

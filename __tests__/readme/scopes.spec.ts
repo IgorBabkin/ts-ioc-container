@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  asKey,
   by,
   Container,
   DependencyNotFoundError,
@@ -11,7 +12,7 @@ import {
   singleton,
 } from '../../lib';
 
-@register('ILogger', scope((s) => s.hasTag('child')), singleton())
+@register(asKey('ILogger'), scope((s) => s.hasTag('child')), singleton())
 class Logger {}
 
 describe('Scopes', function () {
@@ -19,8 +20,8 @@ describe('Scopes', function () {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
-    expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
-    expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);
+    expect(child.resolveOne('ILogger')).toBe(child.resolveOne('ILogger'));
+    expect(() => root.resolveOne('ILogger')).toThrow(DependencyNotFoundError);
   });
 
   it('should inject new scope', function () {
@@ -30,7 +31,7 @@ describe('Scopes', function () {
       constructor(@inject(by.scope.create({ tags: ['child'] })) public scope: IContainer) {}
     }
 
-    const app = root.resolve(App);
+    const app = root.resolveOne(App);
 
     expect(app.scope).not.toBe(root);
     expect(app.scope.hasTag('child')).toBe(true);

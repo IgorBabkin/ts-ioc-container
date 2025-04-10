@@ -35,7 +35,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    const instance = root.resolve(MyClass);
+    const instance = root.resolveOne(MyClass);
 
     runHooks(instance, 'syncBefore', { scope: root });
 
@@ -53,7 +53,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    const instance = root.resolve(MyClass);
+    const instance = root.resolveOne(MyClass);
 
     expect(() => runHooks(instance, 'syncBefore', { scope: root })).toThrowError(UnexpectedHookResultError);
   });
@@ -75,7 +75,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    const instance = root.resolve(Logger);
+    const instance = root.resolveOne(Logger);
 
     runOnConstructHooks(instance, root);
     runOnDisposeHooks(instance, root);
@@ -106,7 +106,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    const instance = root.resolve(Logger);
+    const instance = root.resolveOne(Logger);
 
     await runHooksAsync(instance, 'onStart', {
       scope: root,

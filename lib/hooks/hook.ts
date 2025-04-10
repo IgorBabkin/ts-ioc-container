@@ -16,7 +16,7 @@ const isHookClassConstructor = <C extends IHookContext>(
 };
 
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
-  isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
+  isHookClassConstructor(execute) ? (context) => context.scope.resolveOne(execute).execute(context) : execute;
 
 type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
 

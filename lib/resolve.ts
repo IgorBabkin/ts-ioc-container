@@ -1,124 +1,86 @@
 import type { CreateScopeOptions, DependencyKey, IContainer, Instance } from './container/IContainer';
-import type { constructor } from './utils';
-import { isDepKey } from './DepKey';
-import type { DepKey } from './DepKey';
-import type { IInjectFnResolver } from './injector/IInjector';
 import { isDependencyKey } from './container/IContainer';
+import type { constructor } from './utils';
+import type { DepKey } from './DepKey';
+import { isDepKey } from './DepKey';
+import type { IInjectFnResolver } from './injector/IInjector';
 
 export type InstancePredicate = (dep: unknown) => boolean;
-export const all: InstancePredicate = () => true;
 export type InjectOptions = { lazy: boolean; args: unknown[] };
 export type ArgsFn = (l: IContainer) => unknown[];
 
-export abstract class InjectionResolver<T> {
-  #isLazy: boolean = false;
-  #argsFn: ArgsFn = () => [];
+export class InjectionResolver<T> {
+  private isLazy: boolean = false;
+  private getArgs: ArgsFn = () => [];
+
+  constructor(private resolveByOptions: (s: IContainer, options: InjectOptions) => T) {}
 
   args(...deps: unknown[]): this {
-    this.#argsFn = () => deps;
+    this.getArgs = () => deps;
     return this;
   }
 
   argsFn(fn: ArgsFn): this {
-    this.#argsFn = fn;
+    this.getArgs = fn;
     return this;
   }
 
   lazy(): this {
-    this.#isLazy = true;
+    this.isLazy = true;
     return this;
   }
 
   resolve(s: IContainer): T {
     return this.resolveByOptions(s, {
-      lazy: this.#isLazy,
-      args: this.#argsFn(s),
+      lazy: this.isLazy,
+      args: this.getArgs(s),
     });
-  }
-
-  protected abstract resolveByOptions(s: IContainer, options: InjectOptions): T;
-}
-
-export class AliasManyResolver<T> extends InjectionResolver<T[]> {
-  constructor(private alias: DependencyKey) {
-    super();
-  }
-
-  protected override resolveByOptions(c: IContainer, options: InjectOptions): T[] {
-    return c.resolveMany(this.alias, options);
-  }
-}
-
-export class AliasOneResolver<T> extends InjectionResolver<T[]> {
-  constructor(private alias: DependencyKey) {
-    super();
-  }
-
-  protected override resolveByOptions(c: IContainer, options: InjectOptions): T[] {
-    return c.resolveOneByAlias(this.alias, options);
-  }
-}
-
-export class ClassResolver<T> extends InjectionResolver<T> {
-  constructor(private Target: constructor<T>) {
-    super();
-  }
-
-  protected override resolveByOptions(c: IContainer, options: InjectOptions): T {
-    return c.resolveByClass(this.Target, options);
   }
 }
 
 export class InstancesResolver implements IInjectFnResolver<Instance[]> {
-  #cascade = true;
+  private isCascade = true;
 
   constructor(private predicate: InstancePredicate) {}
 
   cascade(isTrue: boolean): this {
-    this.#cascade = isTrue;
+    this.isCascade = isTrue;
     return this;
   }
 
   resolve(c: IContainer): Instance[] {
-    return c.getInstances({ cascade: this.#cascade }).filter(this.predicate);
-  }
-}
-
-export class KeyResolver<T> extends InjectionResolver<T> {
-  constructor(private key: DependencyKey) {
-    super();
-  }
-
-  protected override resolveByOptions(c: IContainer, options: InjectOptions): T {
-    return c.resolveOneByKey(this.key, options);
-  }
-}
-
-export class OneResolver<T> extends InjectionResolver<T> {
-  constructor(private key: constructor<T> | DependencyKey) {
-    super();
-  }
-
-  protected override resolveByOptions(c: IContainer, options: InjectOptions): T {
-    return c.resolve(this.key, options);
+    const result = new Set<Instance>(c.getInstances().filter(this.predicate));
+    if (this.isCascade) {
+      for (const s of c.getScopes()) {
+        for (const instance of s.getInstances().filter(this.predicate)) {
+          result.add(instance);
+        }
+      }
+    }
+    return [...result];
   }
 }
 
 export const by = {
-  many: <T>(target: DependencyKey | DepKey<T>) =>
-    new AliasManyResolver<T>(isDependencyKey(target) ? target : target.key),
+  many: <T>(target: DependencyKey | DepKey<T>) => {
+    const alias = isDependencyKey(target) ? target : target.key;
+    return new InjectionResolver<T[]>((s, options) => s.resolveMany(alias, options));
+  },
 
-  one: <T>(target: DependencyKey | constructor<T> | DepKey<T>) =>
-    new OneResolver<T>(isDepKey<T>(target) ? target.key : target),
+  one: <T>(target: DependencyKey | constructor<T> | DepKey<T>) => {
+    const key = isDepKey<T>(target) ? target.key : target;
+    return new InjectionResolver<T>((s, options) => s.resolveOne(key, options));
+  },
 
-  aliasOne: <T>(target: DependencyKey | DepKey<T>) =>
-    new AliasOneResolver<T>(isDepKey<T>(target) ? target.key : target),
+  /**
+   * Use it only for optimization. Otherwise, recommended to use `by.one`
+   */
+  aliasOne: <T>(target: DependencyKey | DepKey<T>) => {
+    const alias = isDepKey<T>(target) ? target.key : target;
+    return new InjectionResolver<T>((s, options) => s.resolveOneByAlias(alias, options));
+  },
 
-  classOne: <T>(Target: constructor<T>) => new ClassResolver<T>(Target),
-
-  keyOne: <T>(target: DependencyKey | DepKey<T>) => new KeyResolver<T>(isDepKey<T>(target) ? target.key : target),
-
-  instances: (predicate: InstancePredicate = all) => new InstancesResolver(predicate),
+  instances: (predicate: InstancePredicate = () => true) => new InstancesResolver(predicate),
 
   scope: {
     current: (container: IContainer) => container,

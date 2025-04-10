@@ -1,5 +1,6 @@
 import {
-  alias,
+  asAlias,
+  asKey,
   by,
   Container,
   DependencyNotFoundError,
@@ -26,32 +27,17 @@ describe('IContainer', function () {
 
   it('should run onDispose callback when disposing every child', function () {
     let isRootDisposed = false;
-    let isChild1Disposed = false;
-    let isChild2Disposed = false;
     const onDispose = (c: IContainer) => {
       if (c.hasTag('root')) {
         isRootDisposed = true;
-      }
-
-      if (c.hasTag('child1')) {
-        isChild1Disposed = true;
-      }
-
-      if (c.hasTag('child2')) {
-        isChild2Disposed = true;
       }
     };
 
     const container = new Container({ tags: ['root'], onDispose });
 
-    const child1 = container.createScope({ tags: ['child1'] });
-    const child2 = container.createScope({ tags: ['child2'] });
-
     container.dispose();
 
     expect(isRootDisposed).toBe(true);
-    expect(isChild1Disposed).toBe(true);
-    expect(isChild2Disposed).toBe(true);
   });
 
   it('should assign a dependency key to a registration', function () {
@@ -64,7 +50,7 @@ describe('IContainer', function () {
     const ILoggerKey2 = depKey<ILogger>('ILogger2');
     const ILoggerKey3 = depKey<ILogger>('ILogger3');
 
-    @register(ILoggerKey.assignTo, ILoggerKey2.asAlias, ILoggerKey3, 'ILogger4', alias('ILogger5'))
+    @register(ILoggerKey.asKey, ILoggerKey2.asAlias, asAlias(ILoggerKey3), asAlias('ILogger4'), asAlias('ILogger5'))
     class FileLogger {}
 
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
@@ -73,8 +59,8 @@ describe('IContainer', function () {
 
     expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey2.resolve(child1));
     expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey3.resolve(child1));
-    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger4'));
-    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger5'));
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolveOne('ILogger4'));
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolveOne('ILogger5'));
     expect(() => ILoggerKey.resolve(child2)).toThrow(DependencyNotFoundError);
   });
 
@@ -83,10 +69,10 @@ describe('IContainer', function () {
 
     const ILoggerKey = depKey<ILogger>('ILogger');
 
-    @register(ILoggerKey)
+    @register(ILoggerKey.asKey)
     class FileLogger {}
 
-    @register('INormalizer')
+    @register(asKey('INormalizer'))
     class Normalizer {}
 
     const root = new Container({ tags: ['root'] })
@@ -94,7 +80,7 @@ describe('IContainer', function () {
       .addRegistration(R.fromClass(Normalizer));
 
     expect(ILoggerKey.resolve(root)).toBeInstanceOf(FileLogger);
-    expect(root.resolve('INormalizer')).toBeInstanceOf(Normalizer);
+    expect(root.resolveOne('INormalizer')).toBeInstanceOf(Normalizer);
   });
 
   it('should test isDepKey', function () {
@@ -117,20 +103,8 @@ describe('IContainer', function () {
     const provider = new MyProvider().setArgs(() => ['world']);
     const root = new Container({ tags: ['root'] }).register('myProvider', provider, { aliases: ['greeting'] });
 
-    expect(root.resolve('myProvider')).toBe('hello world');
-    expect(root.resolve('greeting')).toBe('hello world');
-  });
-
-  it('should getInstances from all scopes by default = cascade is true', function () {
-    class FileLogger {}
-
-    const root = new Container({ tags: ['root'] });
-    const child1 = root.createScope({ tags: ['child1'] });
-
-    const logger1 = root.resolve(FileLogger);
-    const logger2 = child1.resolve(FileLogger);
-
-    expect(root.getInstances()).toEqual([logger1, logger2]);
+    expect(root.resolveOne('myProvider')).toBe('hello world');
+    expect(root.resolveOne('greeting')).toBe('hello world');
   });
 
   it('should getInstances only from current scope if cascade is false', () => {
@@ -139,10 +113,10 @@ describe('IContainer', function () {
     const root = new Container({ tags: ['root'] });
     const child1 = root.createScope({ tags: ['child1'] });
 
-    const logger1 = root.resolve(FileLogger);
-    const logger2 = child1.resolve(FileLogger);
+    const logger1 = root.resolveOne(FileLogger);
+    child1.resolveOne(FileLogger);
 
-    expect(root.getInstances({ cascade: false })).toEqual([logger1]);
+    expect(root.getInstances()).toEqual([logger1]);
   });
 
   it('should create instance and inject it', () => {
@@ -159,7 +133,7 @@ describe('IContainer', function () {
       }
     }
     class TestApp {
-      constructor(@inject(by.classOne(Logger)) private logger: Logger) {}
+      constructor(@inject(by.one(Logger)) private logger: Logger) {}
 
       run() {
         this.logger.info('Start');
@@ -187,8 +161,9 @@ describe('IContainer', function () {
     for (let i = 0; i < 20; i++) {
       container.addRegistration(
         Registration.fromFn(() => `value-${i}`)
-          .assignToKey(`key-${i}`)
-          .assignToAliases('valueAlias', `alias-${i}`),
+          .bindToKey(`key-${i}`)
+          .bindToAlias('valueAlias')
+          .bindToAlias(`alias-${i}`),
       );
     }
 

@@ -25,7 +25,7 @@ export { ProxyInjector } from './injector/ProxyInjector';
 export {
   type ResolveDependency,
   type IProvider,
-  visible,
+  scopeAccess,
   argsFn,
   args,
   type ArgsFn,
@@ -35,12 +35,14 @@ export {
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
-export { type Cache } from './provider/Cache';
+export { type Cache, multiCache, MultiCache } from './provider/Cache';
 export { decorate, type DecorateFn } from './provider/DecoratorProvider';
+export { type ProviderPipe } from './provider/ProviderPipe';
 
 // Registrations
 export {
-  key,
+  asKey,
+  asAlias,
   type IRegistration,
   type ReturnTypeOfRegistration,
   scope,
@@ -72,9 +74,7 @@ export {
 } from './hooks/hook';
 export { HookContext, type InjectFn, type IHookContext } from './hooks/HookContext';
 
-// Others
-export { by } from './resolve';
-export { type constructor, type Branded } from './utils';
+// Metadata
 export {
   setMetadata,
   getMetadata,
@@ -83,9 +83,9 @@ export {
   getMethodMetadata,
   getParameterMetadata,
 } from './metadata';
+
+// Others
+export { by } from './resolve';
+export { type constructor } from './utils';
 export { depKey, type DepKey } from './DepKey';
-export { multiCache } from './provider/Cache';
-export { MultiCache } from './provider/Cache';
-export { alias } from './registration/IRegistration';
-export { type ProviderPipe } from './provider/ProviderPipe';
 export { type InstancePredicate } from './resolve';

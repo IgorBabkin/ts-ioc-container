@@ -36,10 +36,10 @@
     - [Singleton](#singleton) `singleton`
     - [Arguments](#arguments) `args` `argsFn`
     - [Visibility](#visibility) `visible`
-    - [Alias](#alias) `alias`
+    - [Alias](#alias) `asAlias`
     - [Decorator](#decorator) `decorate`
 - [Registration](#registration) `@register`
-    - [Key](#key) `key`
+    - [Key](#key) `asKey`
     - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
@@ -197,7 +197,7 @@ Sometimes you want to hide dependency if somebody wants to resolve it from certa
 
 ### Alias
 Alias is needed to group keys
-- `@register(alias('logger'))` helper assigns `logger` alias to registration.
+- `@register(asAlias('logger'))` helper assigns `logger` alias to registration.
 - `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
 - `Provider.fromClass(Logger).pipe(alias('logger'))`
 
@@ -215,7 +215,7 @@ Sometimes you want to decorate you class with some logic. This is what `Decorato
 
 ## Registration
 Registration is provider factory which registers provider in container.
-- `@register('logger')`
+- `@register(asKey('logger'))`
 - `Registration.fromClass(Logger).to('logger')`
 - `Registration.fromClass(Logger)`
 - `Registration.fromValue(Logger)`

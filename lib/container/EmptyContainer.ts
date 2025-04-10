@@ -17,14 +17,6 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  detachFromParent() {
-    throw new MethodNotImplementedError();
-  }
-
-  hasProvider(key: string): boolean {
-    return false;
-  }
-
   getParent() {
     return undefined;
   }
@@ -75,7 +67,7 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
-  resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveManyOptions): T {
+  resolveOne<T>(key: constructor<T> | DependencyKey, options?: ResolveManyOptions): T {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 

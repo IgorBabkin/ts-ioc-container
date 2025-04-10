@@ -14,10 +14,10 @@ describe('ProxyInjector', function () {
     }
 
     const container = new Container({ injector: new ProxyInjector() }).addRegistration(
-      R.fromClass(Logger).assignToKey('logger'),
+      R.fromClass(Logger).bindToKey('logger'),
     );
 
-    const app = container.resolve(App);
+    const app = container.resolveOne(App);
     expect(app.logger).toBeInstanceOf(Logger);
   });
 
@@ -45,10 +45,10 @@ describe('ProxyInjector', function () {
     const greetingTemplate = (name: string) => `Hello ${name}`;
 
     const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(App).assignToKey('App').pipe(args({ greetingTemplate })))
-      .addRegistration(R.fromClass(Logger).assignToKey('logger'));
+      .addRegistration(R.fromClass(App).bindToKey('App').pipe(args({ greetingTemplate })))
+      .addRegistration(R.fromClass(Logger).bindToKey('logger'));
 
-    const app = container.resolve<App>('App', { args: [{ name: `world` }] });
+    const app = container.resolveOne<App>('App', { args: [{ name: `world` }] });
     expect(app.greeting).toBe('Hello world');
   });
 
@@ -69,15 +69,13 @@ describe('ProxyInjector', function () {
     // Mock container's resolveMany to return an array with a Logger instance
     const mockLogger = new Logger();
     const mockContainer = new Container({ injector: new ProxyInjector() });
-    const originalResolveMany = mockContainer.resolveMany;
     mockContainer.resolveMany = jest.fn().mockImplementation((key) => {
-      console.log(`resolveMany called with key: ${key}, type: ${typeof key}, toString: ${key.toString()}`);
       // Always return the mock array for simplicity
       return [mockLogger];
     });
-    mockContainer.addRegistration(R.fromClass(Service).assignToKey('service'));
+    mockContainer.addRegistration(R.fromClass(Service).bindToKey('service'));
 
-    const app = mockContainer.resolve(App);
+    const app = mockContainer.resolveOne(App);
     console.log('App loggers:', app.loggers);
     expect(app.loggers).toBeInstanceOf(Array);
     expect(app.loggers.length).toBe(1);

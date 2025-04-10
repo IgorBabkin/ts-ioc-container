@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { Container, type IContainer, type IContainerModule, register, Registration as R } from '../../lib';
+import { asKey, Container, type IContainer, type IContainerModule, register, Registration as R } from '../../lib';
 
-@register('ILogger')
+@register(asKey('ILogger'))
 class Logger {}
 
-@register('ILogger')
+@register(asKey('ILogger'))
 class TestLogger {}
 
 class Production implements IContainerModule {
@@ -27,12 +27,12 @@ describe('Container Modules', function () {
   it('should register production dependencies', function () {
     const container = createContainer(true);
 
-    expect(container.resolve('ILogger')).toBeInstanceOf(Logger);
+    expect(container.resolveOne('ILogger')).toBeInstanceOf(Logger);
   });
 
   it('should register development dependencies', function () {
     const container = createContainer(false);
 
-    expect(container.resolve('ILogger')).toBeInstanceOf(TestLogger);
+    expect(container.resolveOne('ILogger')).toBeInstanceOf(TestLogger);
   });
 });
