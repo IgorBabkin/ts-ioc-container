@@ -1,9 +1,9 @@
-import { by, Container, hook, injectProp, Registration, runHooks } from '../../lib';
+import { Container, hook, injectProp, Registration, runHooks } from '../../lib';
 
 describe('inject property', () => {
   it('should inject property', () => {
     class App {
-      @hook('onInit', injectProp(by.one('greeting')))
+      @hook('onInit', injectProp('greeting'))
       greeting!: string;
     }
     const expected = 'Hello world!';

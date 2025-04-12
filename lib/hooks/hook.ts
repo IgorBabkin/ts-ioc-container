@@ -1,4 +1,4 @@
-import { type IContainer } from '../container/IContainer';
+import { DependencyKey, type IContainer } from '../container/IContainer';
 import { type CreateHookContext, createHookContext, type IHookContext, type InjectFn } from './HookContext';
 import { type constructor, isConstructor, promisify } from '../utils';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
@@ -94,7 +94,7 @@ export const runHooksAsync = (
 };
 
 export const injectProp =
-  (fn: InjectFn | IInjectFnResolver<unknown>): HookFn =>
+  (fn: InjectFn | IInjectFnResolver<unknown> | DependencyKey | constructor<unknown>): HookFn =>
   (context) =>
     context.setProperty(toInjectFn(fn));
 

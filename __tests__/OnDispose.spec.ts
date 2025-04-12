@@ -18,9 +18,9 @@ class Logger {
   }) // <--- or extract it to @onDispose
   private messages: string[] = [];
 
-  constructor(@inject(by.one('logsRepo')) private logsRepo: LogsRepo) {}
+  constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
 
-  log(@inject(by.one('logsRepo')) message: string): void {
+  log(@inject('logsRepo') message: string): void {
     this.messages.push(message);
   }
 

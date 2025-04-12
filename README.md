@@ -94,7 +94,7 @@ describe('Basic usage', function () {
 
   it('should inject dependencies', function () {
     class App {
-      constructor(@inject(by.one('ILogger')) public logger: Logger) {}
+      constructor(@inject('ILogger') public logger: Logger) {}
     }
 
     const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
@@ -280,7 +280,7 @@ describe('lazy provider', () => {
   class Service {
     name = 'Service';
 
-    constructor(@inject(by.one('Flag')) private flag: Flag) {
+    constructor(@inject('Flag') private flag: Flag) {
       this.flag.set();
     }
 
@@ -370,14 +370,14 @@ Also you can [inject property.](#inject-property)
 
 ```typescript
 import 'reflect-metadata';
-import { by, Container, inject, Registration as R } from 'ts-ioc-container';
+import { Container, inject, Registration as R } from 'ts-ioc-container';
 
 class Logger {
   name = 'Logger';
 }
 
 class App {
-  constructor(@inject(by.one('ILogger')) private logger: Logger) {}
+  constructor(@inject('ILogger') private logger: Logger) {}
 
   // OR
   // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {
@@ -1025,8 +1025,8 @@ describe('alias', () => {
 
     const container = new Container().addRegistration(R.fromClass(FileLogger));
 
-    expect(by.one('ILogger').resolve(container)).toBeInstanceOf(FileLogger);
-    expect(() => by.one('logger').resolve(container)).toThrowError(DependencyNotFoundError);
+    expect(container.resolveOne('ILogger')).toBeInstanceOf(FileLogger);
+    expect(() => container.resolveOne('logger')).toThrowError(DependencyNotFoundError);
   });
 
   it('should resolve by alias', () => {
@@ -1040,9 +1040,9 @@ describe('alias', () => {
       .addRegistration(R.fromClass(FileLogger))
       .addRegistration(R.fromClass(DbLogger));
 
-    const result1 = by.one('ILogger').resolve(container);
+    const result1 = container.resolveOne('ILogger');
     const child = container.createScope({ tags: ['child'] });
-    const result2 = by.one('ILogger').resolve(child);
+    const result2 = child.resolveOne('ILogger');
 
     expect(result1).toBeInstanceOf(FileLogger);
     expect(result2).toBeInstanceOf(DbLogger);
@@ -1133,7 +1133,7 @@ describe('lazy provider', () => {
   }
 
   class App {
-    constructor(@inject(by.one('IRepository')) public repository: IRepository) {}
+    constructor(@inject('IRepository') public repository: IRepository) {}
 
     async run() {
       await this.repository.save({ id: '1', text: 'Hello' });
@@ -1379,9 +1379,9 @@ class Logger {
   }) // <--- or extract it to @onDispose
   private messages: string[] = [];
 
-  constructor(@inject(by.one('logsRepo')) private logsRepo: LogsRepo) {}
+  constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
 
-  log(@inject(by.one('logsRepo')) message: string): void {
+  log(@inject('logsRepo') message: string): void {
     this.messages.push(message);
   }
 
@@ -1417,12 +1417,12 @@ describe('onDispose', function () {
 ### Inject property
 
 ```typescript
-import { by, Container, hook, injectProp, Registration, runHooks } from 'ts-ioc-container';
+import { Container, hook, injectProp, Registration, runHooks } from 'ts-ioc-container';
 
 describe('inject property', () => {
   it('should inject property', () => {
     class App {
-      @hook('onInit', injectProp(by.one('greeting')))
+      @hook('onInit', injectProp('greeting'))
       greeting!: string;
     }
     const expected = 'Hello world!';

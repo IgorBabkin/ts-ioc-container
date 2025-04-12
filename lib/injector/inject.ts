@@ -1,12 +1,11 @@
 import { getParameterMetadata, setParameterMetadata } from '../metadata';
-import { constant, type constructor, fillEmptyIndexes, isInstance } from '../utils';
-import { type IContainer } from '../container/IContainer';
+import { constant, type constructor, fillEmptyIndexes, isConstructor, isInstance } from '../utils';
+import { DependencyKey, type IContainer, isDependencyKey } from '../container/IContainer';
 import { hookMetaKey, type InjectFn } from '../hooks/HookContext';
-import { type DepKey } from '../DepKey';
 import { type IInjectFnResolver } from './IInjector';
 
 export const inject =
-  <T>(fn: InjectFn<T> | DepKey<T> | IInjectFnResolver<T>): ParameterDecorator =>
+  <T>(fn: InjectFn<T> | IInjectFnResolver<T> | DependencyKey | constructor<T>): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
     setParameterMetadata(hookMetaKey(propertyKey as string), toInjectFn(fn))(
       isInstance(target) ? target.constructor : target,
@@ -19,8 +18,19 @@ function isInjectBuilder<T>(fn: object): fn is IInjectFnResolver<T> {
   return 'resolve' in fn && typeof fn['resolve'] === 'function';
 }
 
-export const toInjectFn = <T>(fn: InjectFn<T> | IInjectFnResolver<T>): InjectFn<T> =>
-  isInjectBuilder(fn) ? (scope) => fn.resolve(scope) : (fn as InjectFn<T>);
+export const toInjectFn = <T>(
+  target: InjectFn<T> | IInjectFnResolver<T> | DependencyKey | constructor<T>,
+): InjectFn<T> => {
+  if (typeof target === 'object' && isInjectBuilder(target)) {
+    return (s) => target.resolve(s);
+  }
+
+  if (isDependencyKey(target) || isConstructor(target)) {
+    return (scope, ...args: unknown[]) => scope.resolveOne(target, { args });
+  }
+
+  return target;
+};
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const argsFns = getInjectFns(Target, methodName);

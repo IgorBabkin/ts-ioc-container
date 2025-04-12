@@ -53,7 +53,7 @@ describe('lazy provider', () => {
   }
 
   class App {
-    constructor(@inject(by.one('IRepository')) public repository: IRepository) {}
+    constructor(@inject('IRepository') public repository: IRepository) {}
 
     async run() {
       await this.repository.save({ id: '1', text: 'Hello' });

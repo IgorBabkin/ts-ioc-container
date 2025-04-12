@@ -1,7 +1,6 @@
 import {
   asAlias,
   asKey,
-  by,
   Container,
   DependencyNotFoundError,
   depKey,
@@ -133,7 +132,7 @@ describe('IContainer', function () {
       }
     }
     class TestApp {
-      constructor(@inject(by.one(Logger)) private logger: Logger) {}
+      constructor(@inject(Logger) private logger: Logger) {}
 
       run() {
         this.logger.info('Start');

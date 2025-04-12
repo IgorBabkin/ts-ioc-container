@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import {
   AutoMockedContainer,
-  by,
   type constructor,
   Container,
   type DependencyKey,
@@ -21,7 +20,7 @@ interface ILogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject(by.one(ILogsRepoKey)) private logsRepo: ILogsRepo) {}
+  constructor(@inject(ILogsRepoKey) private logsRepo: ILogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);

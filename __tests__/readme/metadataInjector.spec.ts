@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import { by, Container, inject, Registration as R } from '../../lib';
+import { Container, inject, Registration as R } from '../../lib';
 
 class Logger {
   name = 'Logger';
 }
 
 class App {
-  constructor(@inject(by.one('ILogger')) private logger: Logger) {}
+  constructor(@inject('ILogger') private logger: Logger) {}
 
   // OR
   // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {

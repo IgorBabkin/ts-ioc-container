@@ -8,7 +8,7 @@ describe('Basic usage', function () {
 
   it('should inject dependencies', function () {
     class App {
-      constructor(@inject(by.one('ILogger')) public logger: Logger) {}
+      constructor(@inject('ILogger') public logger: Logger) {}
     }
 
     const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));

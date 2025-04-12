@@ -13,7 +13,7 @@ describe('lazy provider', () => {
   class Service {
     name = 'Service';
 
-    constructor(@inject(by.one('Flag')) private flag: Flag) {
+    constructor(@inject('Flag') private flag: Flag) {
       this.flag.set();
     }
 
