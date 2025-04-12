@@ -25,7 +25,11 @@ export const toInjectFn = <T>(
     return (s) => target.resolve(s);
   }
 
-  if (isDependencyKey(target) || isConstructor(target)) {
+  if (isConstructor(target)) {
+    return (scope, ...args: unknown[]) => scope.resolveByClass(target, { args });
+  }
+
+  if (isDependencyKey(target)) {
     return (scope, ...args: unknown[]) => scope.resolveOne(target, { args });
   }
 
