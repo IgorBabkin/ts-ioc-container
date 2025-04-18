@@ -26,6 +26,7 @@ export {
   type ResolveDependency,
   type IProvider,
   scopeAccess,
+  lazy,
   argsFn,
   args,
   type ArgsFn,

@@ -26,11 +26,11 @@ export const toInjectFn = <T>(
   }
 
   if (isConstructor(target)) {
-    return (scope, ...args: unknown[]) => scope.resolveByClass(target, { args });
+    return (scope) => scope.resolveByClass(target);
   }
 
   if (isDependencyKey(target)) {
-    return (scope, ...args: unknown[]) => scope.resolveOne(target, { args });
+    return (scope) => scope.resolveOne(target);
   }
 
   return target;

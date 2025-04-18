@@ -22,6 +22,8 @@ export interface IProvider<T = any> {
   setAccessPredicate(hasAccessWhen: ScopeAccessFn): this;
 
   setArgs(argsFn: ArgsFn): this;
+
+  lazy(): this;
 }
 
 export const args = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.setArgs(() => extraArgs));
@@ -29,6 +31,8 @@ export const args = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.set
 export const argsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
 
 export const scopeAccess = <T>(predicate: ScopeAccessFn) => registerPipe<T>((p) => p.setAccessPredicate(predicate));
+
+export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
@@ -59,6 +63,11 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
 
   setArgs(argsFn: ArgsFn): this {
     this.decorated.setArgs(argsFn);
+    return this;
+  }
+
+  lazy(): this {
+    this.decorated.lazy();
     return this;
   }
 }

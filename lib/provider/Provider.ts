@@ -27,6 +27,7 @@ export class Provider<T = any> implements IProvider<T> {
 
   private argsFn: ArgsFn = () => [];
   private checkAccess: ScopeAccessFn = () => true;
+  private isLazy = false;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
@@ -35,14 +36,19 @@ export class Provider<T = any> implements IProvider<T> {
     return pipe(...fns)(this);
   }
 
-  resolve(container: IContainer, { args, lazy: isLazy }: ProviderResolveOptions): T {
+  resolve(container: IContainer, { args, lazy }: ProviderResolveOptions): T {
     const resolveDependency = () =>
       this.resolveDependency(container, { args: [...this.argsFn(container, ...args), ...args] });
-    return isLazy ? lazyProxy(resolveDependency) : resolveDependency();
+    return (lazy ?? this.isLazy) ? lazyProxy(resolveDependency) : resolveDependency();
   }
 
   setAccessPredicate(predicate: ScopeAccessFn): this {
     this.checkAccess = predicate;
+    return this;
+  }
+
+  lazy(): this {
+    this.isLazy = true;
     return this;
   }
 
