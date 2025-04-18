@@ -26,8 +26,8 @@ export class Container implements IContainer {
   private readonly scopes = new Set<IContainer>();
   private readonly instances = new Set<Instance>();
   private readonly tags: Set<Tag>;
-  private readonly providerMap = new ProviderMap();
-  private readonly aliasMap = new AliasMap();
+  private readonly providers = new ProviderMap();
+  private readonly aliases = new AliasMap();
   private readonly registrations = new Set<IRegistration>();
   private readonly onConstruct: (instance: Instance, scope: IContainer) => void;
   private readonly onDispose: (scope: IContainer) => void;
@@ -51,9 +51,9 @@ export class Container implements IContainer {
 
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
     this.validateContainer();
-    this.providerMap.register(key, provider);
-    this.aliasMap.deleteKeyFromAliases(key);
-    this.aliasMap.addAliases(key, aliases);
+    this.providers.register(key, provider);
+    this.aliases.deleteKeyFromAliases(key);
+    this.aliases.addAliases(key, aliases);
     return this;
   }
 
@@ -83,7 +83,7 @@ export class Container implements IContainer {
   resolveOneByKey<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    const provider = this.providerMap.findOneByKey<T>(keyOrAlias);
+    const provider = this.providers.findOneByKey<T>(keyOrAlias);
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
@@ -93,8 +93,8 @@ export class Container implements IContainer {
   resolveOneByAlias<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    const key = this.aliasMap.findLastKeyByAlias(keyOrAlias);
-    const provider = key !== undefined ? this.providerMap.findOneByKeyOrFail<T>(key) : undefined;
+    const key = this.aliases.findLastKeyByAlias(keyOrAlias);
+    const provider = key !== undefined ? this.providers.findOneByKeyOrFail<T>(key) : undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
@@ -109,8 +109,8 @@ export class Container implements IContainer {
 
     const keys: DependencyKey[] = [];
     const deps: T[] = [];
-    for (const key of this.aliasMap.findManyKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
-      const provider = this.providerMap.findOneByKeyOrFail<T>(key);
+    for (const key of this.aliases.findManyKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
+      const provider = this.providers.findOneByKeyOrFail<T>(key);
       if (!provider.hasAccess({ invocationScope: child, providerScope: this })) {
         continue;
       }
@@ -177,8 +177,8 @@ export class Container implements IContainer {
     this.parent = new EmptyContainer();
 
     // Reset the state
-    this.providerMap.destroy();
-    this.aliasMap.destroy();
+    this.providers.destroy();
+    this.aliases.destroy();
     this.instances.clear();
     this.registrations.clear();
     this.onDispose(this);
