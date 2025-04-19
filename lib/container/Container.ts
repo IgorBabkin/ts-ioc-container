@@ -1,6 +1,6 @@
 import {
   type CreateScopeOptions,
-  DEFAULT_CONTAINER_RESOLVER as resolveOne,
+  DEFAULT_CONTAINER_RESOLVER,
   type DependencyKey,
   type IContainer,
   type IContainerModule,
@@ -20,6 +20,12 @@ import { type constructor, Filter as F } from '../utils';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
+type ResolveOneStrategy = <T>(
+  scope: IContainer,
+  keyOrAlias: constructor<T> | DependencyKey,
+  options?: ResolveOneOptions,
+) => T;
+
 export class Container implements IContainer {
   isDisposed = false;
   private parent: IContainer;
@@ -32,6 +38,7 @@ export class Container implements IContainer {
   private readonly onConstruct: (instance: Instance, scope: IContainer) => void;
   private readonly onDispose: (scope: IContainer) => void;
   private readonly injector: IInjector;
+  private readonly resolveOneStrategy: ResolveOneStrategy;
 
   constructor(
     options: {
@@ -40,6 +47,7 @@ export class Container implements IContainer {
       tags?: Tag[];
       onConstruct?: (instance: Instance, scope: IContainer) => void;
       onDispose?: (scope: IContainer) => void;
+      resolveOneStrategy?: ResolveOneStrategy;
     } = {},
   ) {
     this.injector = options.injector ?? new MetadataInjector();
@@ -47,6 +55,7 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
     this.onConstruct = options.onConstruct ?? (() => {});
     this.onDispose = options.onDispose ?? (() => {});
+    this.resolveOneStrategy = options.resolveOneStrategy ?? DEFAULT_CONTAINER_RESOLVER;
   }
 
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
@@ -77,7 +86,7 @@ export class Container implements IContainer {
   }
 
   resolveOne<T>(keyOrAlias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
-    return resolveOne(this, keyOrAlias, options);
+    return this.resolveOneStrategy(this, keyOrAlias, options);
   }
 
   resolveOneByKey<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {

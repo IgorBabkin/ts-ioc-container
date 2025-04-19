@@ -76,7 +76,6 @@ describe('ProxyInjector', function () {
     mockContainer.addRegistration(R.fromClass(Service).bindToKey('service'));
 
     const app = mockContainer.resolveOne(App);
-    console.log('App loggers:', app.loggers);
     expect(app.loggers).toBeInstanceOf(Array);
     expect(app.loggers.length).toBe(1);
     expect(app.loggers[0]).toBe(mockLogger);
