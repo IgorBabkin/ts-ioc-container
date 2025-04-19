@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { by, Container, ContainerDisposedError, Registration as R } from '../../lib';
 
 class Logger {}

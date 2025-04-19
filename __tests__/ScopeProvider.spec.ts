@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { singleton, Container, Registration as R, scope, register, asKey } from '../lib';
 
 @register(asKey('ILogger'), scope((s) => s.hasTag('root')), singleton())

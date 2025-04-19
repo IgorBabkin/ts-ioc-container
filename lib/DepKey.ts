@@ -43,7 +43,7 @@ export const depKey = <T>(key: DependencyKey): DepKey<T> => {
       return registration;
     },
 
-    resolve: (s: IContainer): T => s.resolveOne(key),
+    resolve: (s: IContainer, options): T => s.resolveOne(key, options),
 
     pipe(...values: MapFn<IProvider<T>>[]) {
       mappers.push(...values);

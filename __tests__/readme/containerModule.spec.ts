@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { asKey, Container, type IContainer, type IContainerModule, register, Registration as R } from '../../lib';
 
 @register(asKey('ILogger'))

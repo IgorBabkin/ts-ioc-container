@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { Container, inject, Registration as R } from '../../lib';
 
 class Logger {

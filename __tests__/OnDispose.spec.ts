@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { asKey, by, Container, hook, inject, register, Registration as R, runHooks, singleton } from '../lib';
 
 @register(asKey('logsRepo'), singleton())

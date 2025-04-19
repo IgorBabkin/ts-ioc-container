@@ -1,5 +1,5 @@
-import type { IContainer, Tagged } from '../container/IContainer';
-import type { MapFn } from '../utils';
+import { IContainer, Tagged } from '../container/IContainer';
+import { Is, MapFn } from '../utils';
 import { isProviderPipe, ProviderPipe, registerPipe } from './ProviderPipe';
 
 export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
@@ -29,6 +29,17 @@ export interface IProvider<T = any> {
 export const args = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.setArgs(() => extraArgs));
 
 export const argsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
+
+export const resolveByArgs = (s: IContainer, ...deps: unknown[]) =>
+  deps.map((d) => {
+    if (Is.injectBuilder(d)) {
+      return d.resolve(s);
+    }
+    if (Is.constructor(d)) {
+      return s.resolveClass(d);
+    }
+    return d;
+  });
 
 export const scopeAccess = <T>(predicate: ScopeAccessFn) => registerPipe<T>((p) => p.setAccessPredicate(predicate));
 

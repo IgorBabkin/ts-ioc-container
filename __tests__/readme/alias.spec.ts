@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { asAlias, by, Container, DependencyNotFoundError, inject, register, Registration as R, scope } from '../../lib';
 
 describe('alias', () => {

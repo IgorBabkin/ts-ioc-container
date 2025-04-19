@@ -47,7 +47,7 @@ export interface IContainer extends Tagged {
 
   resolveClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
 
-  resolveOne<T>(alias: constructor<T> | DependencyKey, options?: ResolveManyOptions): T;
+  resolveOne<T>(alias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
 
   resolveOneByKey<T>(key: DependencyKey, options?: ResolveOneOptions): T;
 

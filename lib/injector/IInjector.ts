@@ -1,5 +1,5 @@
 import { type constructor } from '../utils';
-import { type IContainer } from '../container/IContainer';
+import { type IContainer, ResolveOneOptions } from '../container/IContainer';
 
 export type InjectOptions = { args: unknown[] };
 
@@ -8,5 +8,5 @@ export interface IInjector {
 }
 
 export interface IInjectFnResolver<T> {
-  resolve(s: IContainer): T;
+  resolve(s: IContainer, options?: ResolveOneOptions): T;
 }

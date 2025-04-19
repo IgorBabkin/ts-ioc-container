@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { asKey, Container, register, Registration as R, singleton } from '../lib';
 
 @register(asKey('logger'), singleton())

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
+import 'reflect-metadata';
 import { Bench } from 'tinybench';
 import { Container, Registration, scopeAccess } from '../../lib';
-import 'reflect-metadata';
 import { BENCHMARK_CONFIG } from './config';
 import { writeFileSync } from 'node:fs';
 

@@ -14,7 +14,7 @@ export const inject =
     );
   };
 
-function isInjectBuilder<T>(fn: object): fn is IInjectFnResolver<T> {
+export function isInjectBuilder<T>(fn: object): fn is IInjectFnResolver<T> {
   return 'resolve' in fn && typeof fn['resolve'] === 'function';
 }
 

@@ -1,16 +1,17 @@
-import 'reflect-metadata';
 import {
   args,
   argsFn,
   asKey,
+  by,
   Container,
-  type DependencyKey,
+  depKey,
   inject,
   MultiCache,
   register,
   Registration as R,
   singleton,
 } from '../lib';
+import { resolveByArgs } from '../lib/provider/IProvider';
 
 @register(asKey('logger'))
 class Logger {
@@ -26,7 +27,7 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
+    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(argsFn(() => ['name'])));
 
     const logger = root.createScope().resolveOne<Logger>('logger');
     expect(logger.name).toBe('name');
@@ -53,25 +54,34 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(asKey('UserRepository'))
+    const IUserRepositoryKey = depKey<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = depKey<IRepository>('ITodoRepository');
+
+    @register(IUserRepositoryKey.asKey)
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(asKey('TodoRepository'))
+    @register(ITodoRepositoryKey.asKey)
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
 
-    @register(asKey('EntityManager'), argsFn((container, token) => [container.resolveOne(token as DependencyKey)]))
+    interface IEntityManager {
+      repository: IRepository;
+    }
+
+    const IEntityManagerKey = depKey<IEntityManager>('IEntityManager');
+
+    @register(IEntityManagerKey.asKey, argsFn(resolveByArgs))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
 
     class Main {
       constructor(
-        @inject((s) => s.resolveOne('EntityManager', { args: ['UserRepository'] })) public userEntities: EntityManager,
-        @inject((s) => s.resolveOne('EntityManager', { args: ['TodoRepository'] })) public todoEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(IUserRepositoryKey)) public userEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(ITodoRepositoryKey)) public todoEntities: EntityManager,
       ) {}
     }
 
@@ -90,29 +100,34 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(asKey('UserRepository'))
+    const IUserRepositoryKey = depKey<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = depKey<IRepository>('ITodoRepository');
+
+    @register(IUserRepositoryKey.asKey)
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(asKey('TodoRepository'))
+    @register(ITodoRepositoryKey.asKey)
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
 
-    @register(
-      asKey('EntityManager'),
-      argsFn((container, token) => [container.resolveOne(token as DependencyKey)]),
-      singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
-    )
+    interface IEntityManager {
+      repository: IRepository;
+    }
+
+    const IEntityManagerKey = depKey<IEntityManager>('IEntityManager');
+
+    @register(IEntityManagerKey.asKey, argsFn(resolveByArgs), singleton(MultiCache.fromFirstArg))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
 
     class Main {
       constructor(
-        @inject((s) => s.resolveOne('EntityManager', { args: ['UserRepository'] })) public userEntities: EntityManager,
-        @inject((s) => s.resolveOne('EntityManager', { args: ['TodoRepository'] })) public todoEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(IUserRepositoryKey)) public userEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(ITodoRepositoryKey)) public todoEntities: EntityManager,
       ) {}
     }
 
@@ -122,11 +137,11 @@ describe('ArgsProvider', function () {
       .addRegistration(R.fromClass(TodoRepository));
     const main = root.resolveOne(Main);
 
-    const userRepository = root.resolveOne<EntityManager>('EntityManager', { args: ['UserRepository'] }).repository;
+    const userRepository = IEntityManagerKey.resolve(root, { args: [IUserRepositoryKey] }).repository;
     expect(userRepository).toBeInstanceOf(UserRepository);
     expect(main.userEntities.repository).toBe(userRepository);
 
-    const todoRepository = root.resolveOne<EntityManager>('EntityManager', { args: ['TodoRepository'] }).repository;
+    const todoRepository = IEntityManagerKey.resolve(root, { args: [ITodoRepositoryKey] }).repository;
     expect(todoRepository).toBeInstanceOf(TodoRepository);
     expect(main.todoEntities.repository).toBe(todoRepository);
   });

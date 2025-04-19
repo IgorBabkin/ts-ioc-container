@@ -1,10 +1,19 @@
+import { DependencyKey } from './container/IContainer';
+import { IInjectFnResolver } from './injector/IInjector';
+
 export type constructor<T> = new (...args: any[]) => T;
+/**
+ * @deprecated Use Is.constructor instead
+ */
 export const isConstructor = (T: unknown): T is constructor<unknown> => typeof T === 'function' && !!T.prototype;
 
 export interface InstanceOfClass<T = unknown> {
   new (...args: unknown[]): T;
 }
 
+/**
+ * @deprecated Use Is.instance instead
+ */
 export function isInstance(target: object): target is InstanceOfClass {
   return Object.prototype.hasOwnProperty.call(target, 'constructor');
 }
@@ -58,4 +67,13 @@ export const Filter = {
     const excludeSet = arr instanceof Array ? new Set(arr) : arr;
     return (v: T) => !excludeSet.has(v);
   },
+};
+
+export const Is = {
+  object: (target: unknown): target is object => target !== null && typeof target === 'object',
+  instance: (target: unknown): target is InstanceOfClass => Object.prototype.hasOwnProperty.call(target, 'constructor'),
+  constructor: (target: unknown): target is constructor<unknown> => typeof target === 'function' && !!target.prototype,
+  dependencyKey: (target: unknown): target is DependencyKey => ['string', 'symbol'].includes(typeof target),
+  injectBuilder: (target: unknown): target is IInjectFnResolver<unknown> =>
+    Is.object(target) && 'resolve' in target && typeof target['resolve'] === 'function',
 };

@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { type IContainer, by, Container, inject, Registration as R } from '../../lib';
 
 describe('Basic usage', function () {

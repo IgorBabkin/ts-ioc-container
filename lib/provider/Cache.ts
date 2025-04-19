@@ -1,3 +1,5 @@
+import type { DependencyKey } from '../container/IContainer';
+
 export interface Cache<K, V> {
   getKey(...args: unknown[]): K;
 
@@ -10,6 +12,10 @@ export interface Cache<K, V> {
 
 export class MultiCache<K, V> implements Cache<K, V> {
   private instances = new Map<K, V>();
+
+  static fromFirstArg(): MultiCache<DependencyKey, unknown> {
+    return new MultiCache((key) => key as DependencyKey);
+  }
 
   constructor(readonly getKey: (...args: unknown[]) => K = () => '1' as K) {}
 

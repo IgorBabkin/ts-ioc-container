@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { asKey, by, Container, inject, register, Registration as R } from '../../lib';
 
 describe('Instances', function () {

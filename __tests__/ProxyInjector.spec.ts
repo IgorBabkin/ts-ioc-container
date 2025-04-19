@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { Container, ProxyInjector, args, Registration as R } from '../lib';
 
 describe('ProxyInjector', function () {

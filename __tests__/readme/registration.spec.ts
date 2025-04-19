@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { asAlias, asKey, Container, register, Registration as R, scope, singleton } from '../../lib';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 

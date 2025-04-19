@@ -84,7 +84,6 @@ And `tsconfig.json` should have next options:
 ### Basic usage
 
 ```typescript
-import 'reflect-metadata';
 import { type IContainer, by, Container, inject, Registration as R } from 'ts-ioc-container';
 
 describe('Basic usage', function () {
@@ -125,7 +124,6 @@ Sometimes you need to create a scope of container. For example, when you want to
 - NOTICE: when you create a scope then we clone ONLY tags-matched providers.
 
 ```typescript
-import 'reflect-metadata';
 import {
   asKey,
   by,
@@ -173,7 +171,6 @@ Sometimes you want to get all instances from container and its scopes. For examp
 - you can get instances from container and scope which were created by injector
 
 ```typescript
-import 'reflect-metadata';
 import { asKey, by, Container, inject, register, Registration as R } from 'ts-ioc-container';
 
 describe('Instances', function () {
@@ -243,7 +240,6 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 - when container is disposed then it unregisters all providers and remove all instances
 
 ```typescript
-import 'reflect-metadata';
 import { by, Container, ContainerDisposedError, Registration as R } from 'ts-ioc-container';
 
 class Logger {}
@@ -369,7 +365,6 @@ This type of injector uses `@inject` decorator to mark where dependencies should
 Also you can [inject property.](#inject-property)
 
 ```typescript
-import 'reflect-metadata';
 import { Container, inject, Registration as R } from 'ts-ioc-container';
 
 class Logger {
@@ -404,7 +399,6 @@ describe('Reflection Injector', function () {
 This type of injector just passes container to constructor with others arguments.
 
 ```typescript
-import 'reflect-metadata';
 import { Container, type IContainer, Registration as R, SimpleInjector } from 'ts-ioc-container';
 
 describe('SimpleInjector', function () {
@@ -444,7 +438,6 @@ describe('SimpleInjector', function () {
 This type of injector injects dependencies as dictionary `Record<string, unknown>`.
 
 ```typescript
-import 'reflect-metadata';
 import { Container, ProxyInjector, args, Registration as R } from 'ts-ioc-container';
 
 describe('ProxyInjector', function () {
@@ -541,7 +534,6 @@ Provider is dependency factory which creates dependency.
 - `new Provider((container, ...args) => container.resolve(Logger, {args}))`
 
 ```typescript
-import 'reflect-metadata';
 import {
   args,
   argsFn,
@@ -823,7 +815,6 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 - NOTICE: if you create a scope 'A' of container 'root' then Logger of A !== Logger of root.
 
 ```typescript
-import 'reflect-metadata';
 import { asKey, Container, register, Registration as R, singleton } from 'ts-ioc-container';
 
 @register(asKey('logger'), singleton())
@@ -865,19 +856,20 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
 ```typescript
-import 'reflect-metadata';
 import {
   args,
   argsFn,
   asKey,
+  by,
   Container,
-  type DependencyKey,
+  depKey,
   inject,
   MultiCache,
   register,
   Registration as R,
   singleton,
 } from 'ts-ioc-container';
+import { resolveByArgs } from '../lib/provider/IProvider';
 
 @register(asKey('logger'))
 class Logger {
@@ -893,7 +885,7 @@ describe('ArgsProvider', function () {
   }
 
   it('can assign argument function to provider', function () {
-    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(argsFn((container, ...args) => ['name'])));
+    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(argsFn(() => ['name'])));
 
     const logger = root.createScope().resolveOne<Logger>('logger');
     expect(logger.name).toBe('name');
@@ -920,25 +912,34 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(asKey('UserRepository'))
+    const IUserRepositoryKey = depKey<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = depKey<IRepository>('ITodoRepository');
+
+    @register(IUserRepositoryKey.asKey)
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(asKey('TodoRepository'))
+    @register(ITodoRepositoryKey.asKey)
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
 
-    @register(asKey('EntityManager'), argsFn((container, token) => [container.resolveOne(token as DependencyKey)]))
+    interface IEntityManager {
+      repository: IRepository;
+    }
+
+    const IEntityManagerKey = depKey<IEntityManager>('IEntityManager');
+
+    @register(IEntityManagerKey.asKey, argsFn(resolveByArgs))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
 
     class Main {
       constructor(
-        @inject((s) => s.resolveOne('EntityManager', { args: ['UserRepository'] })) public userEntities: EntityManager,
-        @inject((s) => s.resolveOne('EntityManager', { args: ['TodoRepository'] })) public todoEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(IUserRepositoryKey)) public userEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(ITodoRepositoryKey)) public todoEntities: EntityManager,
       ) {}
     }
 
@@ -957,29 +958,34 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    @register(asKey('UserRepository'))
+    const IUserRepositoryKey = depKey<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = depKey<IRepository>('ITodoRepository');
+
+    @register(IUserRepositoryKey.asKey)
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(asKey('TodoRepository'))
+    @register(ITodoRepositoryKey.asKey)
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
 
-    @register(
-      asKey('EntityManager'),
-      argsFn((container, token) => [container.resolveOne(token as DependencyKey)]),
-      singleton(() => new MultiCache((...args: unknown[]) => args[0] as DependencyKey)),
-    )
+    interface IEntityManager {
+      repository: IRepository;
+    }
+
+    const IEntityManagerKey = depKey<IEntityManager>('IEntityManager');
+
+    @register(IEntityManagerKey.asKey, argsFn(resolveByArgs), singleton(MultiCache.fromFirstArg))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
 
     class Main {
       constructor(
-        @inject((s) => s.resolveOne('EntityManager', { args: ['UserRepository'] })) public userEntities: EntityManager,
-        @inject((s) => s.resolveOne('EntityManager', { args: ['TodoRepository'] })) public todoEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(IUserRepositoryKey)) public userEntities: EntityManager,
+        @inject(by.one(IEntityManagerKey).args(ITodoRepositoryKey)) public todoEntities: EntityManager,
       ) {}
     }
 
@@ -989,11 +995,11 @@ describe('ArgsProvider', function () {
       .addRegistration(R.fromClass(TodoRepository));
     const main = root.resolveOne(Main);
 
-    const userRepository = root.resolveOne<EntityManager>('EntityManager', { args: ['UserRepository'] }).repository;
+    const userRepository = IEntityManagerKey.resolve(root, { args: [IUserRepositoryKey] }).repository;
     expect(userRepository).toBeInstanceOf(UserRepository);
     expect(main.userEntities.repository).toBe(userRepository);
 
-    const todoRepository = root.resolveOne<EntityManager>('EntityManager', { args: ['TodoRepository'] }).repository;
+    const todoRepository = IEntityManagerKey.resolve(root, { args: [ITodoRepositoryKey] }).repository;
     expect(todoRepository).toBeInstanceOf(TodoRepository);
     expect(main.todoEntities.repository).toBe(todoRepository);
   });
@@ -1007,7 +1013,6 @@ Sometimes you want to hide dependency if somebody wants to resolve it from certa
 - `Provider.fromClass(Logger).pipe(visible(({ isParent, child }) => isParent || child.hasTag('root')))`
 
 ```typescript
-import 'reflect-metadata';
 import {
   asKey,
   Container,
@@ -1047,7 +1052,6 @@ Alias is needed to group keys
 - `Provider.fromClass(Logger).pipe(alias('logger'))`
 
 ```typescript
-import 'reflect-metadata';
 import { asAlias, by, Container, DependencyNotFoundError, inject, register, Registration as R, scope } from 'ts-ioc-container';
 
 describe('alias', () => {
@@ -1271,7 +1275,6 @@ Sometimes you want to register provider with certain key. This is what `key` is 
 - you can assign the same key to different registrations
 
 ```typescript
-import 'reflect-metadata';
 import { asAlias, asKey, Container, register, Registration as R, scope, singleton } from 'ts-ioc-container';
 import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
 
@@ -1332,7 +1335,6 @@ Sometimes you need to register provider only in scope which matches to certain c
 - `Registration.fromClass(Logger).when((container) => container.hasTag('root'))`
 
 ```typescript
-import 'reflect-metadata';
 import { singleton, Container, Registration as R, scope, register, asKey } from 'ts-ioc-container';
 
 @register(asKey('ILogger'), scope((s) => s.hasTag('root')), singleton())
@@ -1351,7 +1353,6 @@ describe('ScopeProvider', function () {
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
 ```typescript
-import 'reflect-metadata';
 import { asKey, Container, type IContainer, type IContainerModule, register, Registration as R } from 'ts-ioc-container';
 
 @register(asKey('ILogger'))
@@ -1397,7 +1398,6 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 
 ### OnConstruct
 ```typescript
-import 'reflect-metadata';
 import {
   asKey,
   type constructor,
@@ -1452,7 +1452,6 @@ describe('onConstruct', function () {
 
 ### OnDispose
 ```typescript
-import 'reflect-metadata';
 import { asKey, by, Container, hook, inject, register, Registration as R, runHooks, singleton } from 'ts-ioc-container';
 
 @register(asKey('logsRepo'), singleton())

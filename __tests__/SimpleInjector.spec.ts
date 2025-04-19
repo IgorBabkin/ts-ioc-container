@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { Container, type IContainer, Registration as R, SimpleInjector } from '../lib';
 
 describe('SimpleInjector', function () {
