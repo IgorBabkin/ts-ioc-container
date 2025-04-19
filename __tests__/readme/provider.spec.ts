@@ -208,7 +208,7 @@ describe('Provider', () => {
     }
 
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const main = root.resolveByClass(Main);
+    const main = root.resolveClass(Main);
 
     expect(isLoggerCreated).toBe(false);
 
@@ -236,7 +236,7 @@ describe('Provider', () => {
     }
 
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const main = root.resolveByClass(Main);
+    const main = root.resolveClass(Main);
 
     expect(main.getChannel()).toBe('file');
   });
@@ -265,7 +265,7 @@ describe('Provider', () => {
       .addRegistration(R.fromValue('file').bindToKey('channel'))
       .addRegistration(R.fromClass(Logger));
 
-    const main = root.resolveByClass(Main);
+    const main = root.resolveClass(Main);
 
     expect(main.getChannel()).toBe('file');
   });

@@ -21,7 +21,7 @@ export class EmptyContainer implements IContainer {
     return undefined;
   }
 
-  resolveByClass<T>(token: constructor<T>, options?: { args?: [] }): T {
+  resolveClass<T>(token: constructor<T>, options?: { args?: [] }): T {
     throw new MethodNotImplementedError();
   }
 

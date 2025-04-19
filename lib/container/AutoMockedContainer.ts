@@ -55,7 +55,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
   abstract resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 
-  abstract resolveByClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
+  abstract resolveClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
 
   abstract resolveOneByKey<T>(keyOrAlias: DependencyKey, options?: ResolveOneOptions): T;
 

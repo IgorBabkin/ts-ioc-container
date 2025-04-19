@@ -148,7 +148,7 @@ describe('IContainer', function () {
     }
 
     const root = new Container({ tags: ['root'] });
-    const app = root.resolveByClass(TestApp);
+    const app = root.resolveClass(TestApp);
     app.run();
     app.stop();
     expect(app.display()).toEqual('StartStop');

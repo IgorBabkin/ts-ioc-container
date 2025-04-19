@@ -15,7 +15,7 @@ export class MoqContainer extends AutoMockedContainer {
     return this.mocks.get(key) as IMock<T>;
   }
 
-  resolveByClass<T>(target: any, options?: { args?: unknown[] }): T {
+  resolveClass<T>(target: any, options?: { args?: unknown[] }): T {
     throw new Error('Method not implemented.');
   }
 

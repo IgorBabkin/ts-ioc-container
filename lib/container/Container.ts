@@ -67,7 +67,7 @@ export class Container implements IContainer {
     return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
-  resolveByClass<T>(token: constructor<T>, { args = [] }: { args?: unknown[] } = {}): T {
+  resolveClass<T>(token: constructor<T>, { args = [] }: { args?: unknown[] } = {}): T {
     this.validateContainer();
 
     const instance = this.injector.resolve(this, token, { args });

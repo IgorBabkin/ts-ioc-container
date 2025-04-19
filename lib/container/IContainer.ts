@@ -45,7 +45,7 @@ export interface IContainer extends Tagged {
 
   getRegistrations(): IRegistration[];
 
-  resolveByClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
+  resolveClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
 
   resolveOne<T>(alias: constructor<T> | DependencyKey, options?: ResolveManyOptions): T;
 
@@ -76,7 +76,7 @@ export const DEFAULT_CONTAINER_RESOLVER = <T>(
   options?: ResolveOneOptions,
 ): T => {
   if (isConstructor(keyOrAlias)) {
-    return scope.resolveByClass(keyOrAlias, options);
+    return scope.resolveClass(keyOrAlias, options);
   }
 
   try {

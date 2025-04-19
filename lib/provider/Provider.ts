@@ -14,7 +14,7 @@ import { isProviderPipe } from './ProviderPipe';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
-    return new Provider((container, options) => container.resolveByClass(Target, options));
+    return new Provider((container, options) => container.resolveClass(Target, options));
   }
 
   static fromValue<T>(value: T): IProvider<T> {

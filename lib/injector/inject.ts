@@ -26,7 +26,7 @@ export const toInjectFn = <T>(
   }
 
   if (isConstructor(target)) {
-    return (scope) => scope.resolveByClass(target);
+    return (scope) => scope.resolveClass(target);
   }
 
   if (isDependencyKey(target)) {

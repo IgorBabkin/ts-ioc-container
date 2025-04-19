@@ -38,7 +38,7 @@ export class MoqContainer extends AutoMockedContainer {
     return this.resolveMock<T>(key).object();
   }
 
-  resolveByClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T {
+  resolveClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T {
     throw new MethodNotImplementedError();
   }
 
