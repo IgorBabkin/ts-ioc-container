@@ -1,6 +1,5 @@
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import type { constructor, MapFn } from '../utils';
-import { isConstructor, pipe } from '../utils';
+import { constructor, Is, MapFn, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
@@ -16,7 +15,7 @@ export class Registration<T = any> implements IRegistration<T> {
   }
 
   static fromValue<T>(value: T) {
-    if (isConstructor(value)) {
+    if (Is.constructor(value)) {
       const transform = pipe(...getTransformers(value as constructor<T>));
       return transform(new Registration(() => Provider.fromValue(value), value.name));
     }

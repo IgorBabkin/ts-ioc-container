@@ -1,6 +1,6 @@
 import { getParameterMetadata, setParameterMetadata } from '../metadata';
-import { constant, type constructor, fillEmptyIndexes, isConstructor, isInstance } from '../utils';
-import { DependencyKey, type IContainer, isDependencyKey } from '../container/IContainer';
+import { constant, type constructor, fillEmptyIndexes, Is } from '../utils';
+import { DependencyKey, type IContainer } from '../container/IContainer';
 import { hookMetaKey, type InjectFn } from '../hooks/HookContext';
 import { type IInjectFnResolver } from './IInjector';
 
@@ -8,7 +8,7 @@ export const inject =
   <T>(fn: InjectFn<T> | IInjectFnResolver<T> | DependencyKey | constructor<T>): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
     setParameterMetadata(hookMetaKey(propertyKey as string), toInjectFn(fn))(
-      isInstance(target) ? target.constructor : target,
+      Is.instance(target) ? target.constructor : target,
       propertyKey,
       parameterIndex,
     );
@@ -25,11 +25,11 @@ export const toInjectFn = <T>(
     return (s) => target.resolve(s);
   }
 
-  if (isConstructor(target)) {
+  if (Is.constructor(target)) {
     return (scope) => scope.resolveClass(target);
   }
 
-  if (isDependencyKey(target)) {
+  if (Is.dependencyKey(target)) {
     return (scope) => scope.resolveOne(target);
   }
 

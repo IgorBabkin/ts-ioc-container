@@ -1,6 +1,6 @@
 import { DependencyKey, type IContainer } from '../container/IContainer';
 import { type CreateHookContext, createHookContext, type IHookContext, type InjectFn } from './HookContext';
-import { type constructor, isConstructor, promisify } from '../utils';
+import { type constructor, Is, promisify } from '../utils';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
 import { type IInjectFnResolver } from '../injector/IInjector';
 import { toInjectFn } from '../injector/inject';
@@ -12,7 +12,7 @@ export interface HookClass<T extends IHookContext = IHookContext> {
 const isHookClassConstructor = <C extends IHookContext>(
   execute: HookFn<C> | constructor<HookClass<C>>,
 ): execute is constructor<HookClass<C>> => {
-  return isConstructor(execute) && execute.prototype.execute;
+  return Is.constructor(execute) && execute.prototype.execute;
 };
 
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>

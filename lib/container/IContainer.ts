@@ -1,15 +1,11 @@
 import { type IProvider } from '../provider/IProvider';
-import { type constructor, isConstructor } from '../utils';
+import { type constructor, Is } from '../utils';
 import { type IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
 export type Tag = string;
 
 export type DependencyKey = string | symbol;
-
-export function isDependencyKey(token: unknown): token is DependencyKey {
-  return ['string', 'symbol'].includes(typeof token);
-}
 
 export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 
@@ -75,7 +71,7 @@ export const DEFAULT_CONTAINER_RESOLVER = <T>(
   keyOrAlias: constructor<T> | DependencyKey,
   options?: ResolveOneOptions,
 ): T => {
-  if (isConstructor(keyOrAlias)) {
+  if (Is.constructor(keyOrAlias)) {
     return scope.resolveClass(keyOrAlias, options);
   }
 

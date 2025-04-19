@@ -16,10 +16,6 @@ export type DepKey<T> = IInjectFnResolver<T> & {
   asAlias: (registration: IRegistration<T>) => IRegistration<T>;
 };
 
-export const isDepKey = <T>(key: unknown): key is DepKey<T> => {
-  return typeof key === 'object' && key !== null && 'key' in key;
-};
-
 export const depKey = <T>(key: DependencyKey): DepKey<T> => {
   const scopePredicates: ScopePredicate[] = [];
   const mappers: MapFn<IProvider<T>>[] = [];

@@ -3,7 +3,6 @@ export {
   type IContainer,
   type Resolvable,
   type IContainerModule,
-  isDependencyKey,
   type DependencyKey,
   type InjectionToken,
   type Tag,
@@ -87,6 +86,6 @@ export {
 
 // Others
 export { by } from './resolve';
-export { type constructor } from './utils';
+export { type constructor, Is } from './utils';
 export { depKey, type DepKey } from './DepKey';
 export { type InstancePredicate } from './resolve';

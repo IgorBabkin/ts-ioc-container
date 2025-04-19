@@ -1,6 +1,5 @@
 import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import { isDependencyKey } from '../container/IContainer';
-import type { constructor, MapFn } from '../utils';
+import { constructor, Is, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
 import type { DepKey } from '../DepKey';
@@ -38,7 +37,7 @@ export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>)
 export const asAlias =
   (target: DependencyKey | DepKey<any>): MapFn<IRegistration> =>
   (r) =>
-    r.bindToAlias(isDependencyKey(target) ? target : target.key);
+    r.bindToAlias(Is.dependencyKey(target) ? target : target.key);
 
 export const asKey =
   (key: DependencyKey): MapFn<IRegistration> =>

@@ -6,7 +6,7 @@ import {
   depKey,
   type IContainer,
   inject,
-  isDependencyKey,
+  Is,
   Provider,
   ProviderDecorator,
   register,
@@ -14,14 +14,13 @@ import {
   Registration as R,
   singleton,
 } from '../lib';
-import { isDepKey } from '../lib/DepKey';
 
 describe('IContainer', function () {
   it('should accept a symbol as dependency key', function () {
-    expect(isDependencyKey(Symbol('key'))).toBe(true);
+    expect(Is.dependencyKey(Symbol('key'))).toBe(true);
   });
   it('should accept a string as dependency key', function () {
-    expect(isDependencyKey('key')).toBe(true);
+    expect(Is.dependencyKey('key')).toBe(true);
   });
 
   it('should run onDispose callback when disposing every child', function () {
@@ -89,7 +88,7 @@ describe('IContainer', function () {
       .when((c) => c.hasTag('child1'))
       .pipe(singleton());
 
-    expect(isDepKey(ILoggerKey)).toBe(true);
+    expect(Is.DepKey(ILoggerKey)).toBe(true);
   });
 
   it('should test provider decorator', function () {

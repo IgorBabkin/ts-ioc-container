@@ -1,21 +1,11 @@
 import { DependencyKey } from './container/IContainer';
 import { IInjectFnResolver } from './injector/IInjector';
+import { DepKey } from './DepKey';
 
 export type constructor<T> = new (...args: any[]) => T;
-/**
- * @deprecated Use Is.constructor instead
- */
-export const isConstructor = (T: unknown): T is constructor<unknown> => typeof T === 'function' && !!T.prototype;
 
 export interface InstanceOfClass<T = unknown> {
   new (...args: unknown[]): T;
-}
-
-/**
- * @deprecated Use Is.instance instead
- */
-export function isInstance(target: object): target is InstanceOfClass {
-  return Object.prototype.hasOwnProperty.call(target, 'constructor');
 }
 
 export type MapFn<T> = (value: T) => T;
@@ -76,4 +66,8 @@ export const Is = {
   dependencyKey: (target: unknown): target is DependencyKey => ['string', 'symbol'].includes(typeof target),
   injectBuilder: (target: unknown): target is IInjectFnResolver<unknown> =>
     Is.object(target) && 'resolve' in target && typeof target['resolve'] === 'function',
+
+  DepKey: <T>(key: unknown): key is DepKey<T> => {
+    return typeof key === 'object' && key !== null && 'key' in key;
+  },
 };

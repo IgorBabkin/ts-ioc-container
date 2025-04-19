@@ -1,12 +1,6 @@
-import {
-  type CreateScopeOptions,
-  type DependencyKey,
-  type IContainer,
-  type Instance,
-  isDependencyKey,
-} from './container/IContainer';
-import { type constructor } from './utils';
-import { type DepKey, isDepKey } from './DepKey';
+import { type CreateScopeOptions, type DependencyKey, type IContainer, type Instance } from './container/IContainer';
+import { type constructor, Is } from './utils';
+import { type DepKey } from './DepKey';
 import type { IInjectFnResolver } from './injector/IInjector';
 
 export type InstancePredicate = (dep: unknown) => boolean;
@@ -67,12 +61,12 @@ export class InstancesResolver implements IInjectFnResolver<Instance[]> {
 
 export const by = {
   many: <T>(target: DependencyKey | DepKey<T>) => {
-    const alias = isDependencyKey(target) ? target : target.key;
+    const alias = Is.dependencyKey(target) ? target : target.key;
     return new InjectionResolver<T[]>((s, options) => s.resolveMany(alias, options));
   },
 
   one: <T>(target: DependencyKey | constructor<T> | DepKey<T>) => {
-    const key = isDepKey<T>(target) ? target.key : target;
+    const key = Is.DepKey<T>(target) ? target.key : target;
     return new InjectionResolver<T>((s, options) => s.resolveOne(key, options));
   },
 
@@ -80,7 +74,7 @@ export const by = {
    * Use it only for optimization. Otherwise, recommended to use `by.one`
    */
   aliasOne: <T>(target: DependencyKey | DepKey<T>) => {
-    const alias = isDepKey<T>(target) ? target.key : target;
+    const alias = Is.DepKey<T>(target) ? target.key : target;
     return new InjectionResolver<T>((s, options) => s.resolveOneByAlias(alias, options));
   },
 
