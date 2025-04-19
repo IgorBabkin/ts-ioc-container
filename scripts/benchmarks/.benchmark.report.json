@@ -3,228 +3,228 @@
     "id": "cont_create",
     "name": "Container creation",
     "latency": {
-      "avg": 161.41,
-      "avgError": 0.95,
-      "med": 125,
-      "medError": 0,
+      "avg": 190.16,
+      "avgError": 0.96,
+      "med": 167,
+      "medError": 1,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 7690426,
+      "avg": 6353236,
       "avgError": 0.02,
-      "med": 8000000,
-      "medError": 0,
+      "med": 5988024,
+      "medError": 36072,
       "unit": "ops/s"
     },
-    "samples": 6195526
+    "samples": 5258606
   },
   {
     "id": "cont_reg",
     "name": "Container with 100 registrations",
     "latency": {
-      "avg": 46479,
-      "avgError": 0.91,
-      "med": 44000,
-      "medError": 1917,
+      "avg": 60525,
+      "avgError": 1.05,
+      "med": 56875,
+      "medError": 2375,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 22220,
-      "avgError": 0.13,
-      "med": 22727,
-      "medError": 1008,
+      "avg": 17153,
+      "avgError": 0.15,
+      "med": 17582,
+      "medError": 738,
       "unit": "ops/s"
     },
-    "samples": 21516
+    "samples": 16523
   },
   {
     "id": "scope_create",
     "name": "Create 10 scopes",
     "latency": {
-      "avg": 44598,
-      "avgError": 0.8,
-      "med": 43083,
-      "medError": 1416,
+      "avg": 57131,
+      "avgError": 0.62,
+      "med": 54959,
+      "medError": 1626,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 22934,
-      "avgError": 0.09,
-      "med": 23211,
-      "medError": 765,
+      "avg": 17873,
+      "avgError": 0.12,
+      "med": 18195,
+      "medError": 548,
       "unit": "ops/s"
     },
-    "samples": 22423
+    "samples": 17505
   },
   {
     "id": "resolve_val",
     "name": "Resolve simple value 100 times",
     "latency": {
-      "avg": 10161,
-      "avgError": 0.93,
-      "med": 9750,
-      "medError": 375,
+      "avg": 12844,
+      "avgError": 0.58,
+      "med": 12209,
+      "medError": 417,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 101297,
-      "avgError": 0.05,
-      "med": 102564,
-      "medError": 4103,
+      "avg": 80159,
+      "avgError": 0.07,
+      "med": 81907,
+      "medError": 2896,
       "unit": "ops/s"
     },
-    "samples": 98416
+    "samples": 77857
   },
   {
     "id": "resolve_class",
     "name": "Resolve class instance",
     "latency": {
-      "avg": 31333,
-      "avgError": 0.61,
-      "med": 30417,
-      "medError": 750,
+      "avg": 41931,
+      "avgError": 0.74,
+      "med": 40000,
+      "medError": 1250,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 32450,
-      "avgError": 0.07,
-      "med": 32876,
-      "medError": 831,
+      "avg": 24446,
+      "avgError": 0.1,
+      "med": 25000,
+      "medError": 806,
       "unit": "ops/s"
     },
-    "samples": 31916
+    "samples": 23849
   },
   {
     "id": "resolve_chain",
     "name": "Resolve deep dependency chain",
     "latency": {
-      "avg": 17125,
-      "avgError": 0.51,
-      "med": 16708,
-      "medError": 542,
+      "avg": 22425,
+      "avgError": 0.53,
+      "med": 21583,
+      "medError": 625,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 59261,
-      "avgError": 0.05,
-      "med": 59852,
-      "medError": 2003,
+      "avg": 45520,
+      "avgError": 0.08,
+      "med": 46333,
+      "medError": 1379,
       "unit": "ops/s"
     },
-    "samples": 58396
+    "samples": 44594
   },
   {
     "id": "provider_pipe",
     "name": "Provider with pipe transformations",
     "latency": {
-      "avg": 17809,
-      "avgError": 0.46,
-      "med": 17375,
-      "medError": 625,
+      "avg": 23877,
+      "avgError": 0.62,
+      "med": 22917,
+      "medError": 708,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 56991,
-      "avgError": 0.06,
-      "med": 57554,
-      "medError": 1998,
+      "avg": 42857,
+      "avgError": 0.08,
+      "med": 43636,
+      "medError": 1383,
       "unit": "ops/s"
     },
-    "samples": 56152
+    "samples": 41882
   },
   {
     "id": "lazy_resolve",
     "name": "Lazy resolution",
     "latency": {
-      "avg": 3202,
-      "avgError": 0.59,
-      "med": 3000,
-      "medError": 292,
+      "avg": 3953.2,
+      "avgError": 0.77,
+      "med": 3625,
+      "medError": 375,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 329439,
-      "avgError": 0.06,
-      "med": 333333,
-      "medError": 33393,
+      "avg": 270655,
+      "avgError": 0.07,
+      "med": 275862,
+      "medError": 27905,
       "unit": "ops/s"
     },
-    "samples": 312306
+    "samples": 252958
   },
   {
     "id": "resolve_alias",
     "name": "Resolve with aliases",
     "latency": {
-      "avg": 136541,
-      "avgError": 0.93,
-      "med": 131791,
-      "medError": 3750,
+      "avg": 175128,
+      "avgError": 0.64,
+      "med": 170375,
+      "medError": 4208,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 7456,
+      "avg": 5792,
       "avgError": 0.18,
-      "med": 7588,
-      "medError": 217,
+      "med": 5869,
+      "medError": 146,
       "unit": "ops/s"
     },
-    "samples": 7324
+    "samples": 5711
   },
   {
     "id": "scope_hierarchy",
     "name": "Scope hierarchy resolution",
     "latency": {
-      "avg": 17750,
-      "avgError": 0.44,
-      "med": 17292,
-      "medError": 625,
+      "avg": 23444,
+      "avgError": 0.73,
+      "med": 22375,
+      "medError": 875,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 57186,
-      "avgError": 0.06,
-      "med": 57830,
-      "medError": 2021,
+      "avg": 43867,
+      "avgError": 0.08,
+      "med": 44693,
+      "medError": 1758,
       "unit": "ops/s"
     },
-    "samples": 56337
+    "samples": 42655
   },
   {
     "id": "server_scenario",
     "name": "Server scenario",
     "latency": {
-      "avg": 52275,
-      "avgError": 0.44,
-      "med": 51125,
-      "medError": 1708,
+      "avg": 69407,
+      "avgError": 0.6,
+      "med": 66958,
+      "medError": 2583,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 19358,
-      "avgError": 0.09,
-      "med": 19560,
-      "medError": 659,
+      "avg": 14695,
+      "avgError": 0.13,
+      "med": 14935,
+      "medError": 581,
       "unit": "ops/s"
     },
-    "samples": 19130
+    "samples": 14408
   },
   {
     "id": "client_scenario",
     "name": "Client scenario",
     "latency": {
-      "avg": 336144,
-      "avgError": 0.52,
-      "med": 330458,
-      "medError": 4458,
+      "avg": 458347,
+      "avgError": 0.76,
+      "med": 443209,
+      "medError": 13417,
       "unit": "ns"
     },
     "throughput": {
-      "avg": 2999,
-      "avgError": 0.21,
-      "med": 3026,
-      "medError": 41,
+      "avg": 2215,
+      "avgError": 0.36,
+      "med": 2256,
+      "medError": 69,
       "unit": "ops/s"
     },
-    "samples": 2975
+    "samples": 2182
   }
 ]
