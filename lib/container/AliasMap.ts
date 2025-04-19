@@ -7,7 +7,7 @@ export class AliasMap {
   private readonly aliasToKeySet = new Map<DependencyKey, Set<Alias>>();
 
   deleteKeyFromAliases(key: DependencyKey): void {
-    for (const [depKey, aliasSet] of [...this.aliasToKeySet].filter(([k, aliasSet]) => aliasSet.has(key))) {
+    for (const [depKey, aliasSet] of [...this.aliasToKeySet].filter(([, aliasSet]) => aliasSet.has(key))) {
       aliasSet.delete(key);
       if (aliasSet.size === 0) {
         this.aliasToKeySet.delete(depKey);

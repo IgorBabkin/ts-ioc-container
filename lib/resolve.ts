@@ -1,8 +1,12 @@
-import type { CreateScopeOptions, DependencyKey, IContainer, Instance } from './container/IContainer';
-import { isDependencyKey } from './container/IContainer';
-import type { constructor } from './utils';
-import type { DepKey } from './DepKey';
-import { isDepKey } from './DepKey';
+import {
+  type CreateScopeOptions,
+  type DependencyKey,
+  type IContainer,
+  type Instance,
+  isDependencyKey,
+} from './container/IContainer';
+import { type constructor } from './utils';
+import { type DepKey, isDepKey } from './DepKey';
 import type { IInjectFnResolver } from './injector/IInjector';
 
 export type InstancePredicate = (dep: unknown) => boolean;

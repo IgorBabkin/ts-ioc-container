@@ -1,31 +1,34 @@
 import 'reflect-metadata';
-import { args, argsFn, Container, Provider, scopeAccess, singleton } from '../../lib';
+import {
+  args,
+  argsFn,
+  Container,
+  inject,
+  Provider,
+  scopeAccess,
+  singleton,
+  Registration as R,
+  register,
+  asKey,
+  lazy,
+  by,
+} from '../../lib';
 
 class Logger {}
+
 class ConfigService {
   constructor(private readonly configPath: string) {}
+
   getPath(): string {
     return this.configPath;
   }
 }
+
 class UserService {}
 
 class TestClass {}
 
 class ClassWithoutTransformers {}
-
-jest.mock('../../lib/provider/IProvider', () => {
-  const originalModule = jest.requireActual('../../lib/provider/IProvider');
-  return {
-    ...originalModule,
-    getTransformers: jest.fn().mockImplementation((target) => {
-      if (target === ClassWithoutTransformers) {
-        return null;
-      }
-      return originalModule.getTransformers(target);
-    }),
-  };
-});
 
 describe('Provider', () => {
   it('can be registered as a function', () => {
@@ -174,5 +177,96 @@ describe('Provider', () => {
     const container = new Container().register('NoTransformers', Provider.fromValue(ClassWithoutTransformers));
     const result = container.resolveOne('NoTransformers');
     expect(result).toBe(ClassWithoutTransformers);
+  });
+
+  it('allows to register lazy provider', () => {
+    let isLoggerCreated = false;
+
+    @register(asKey('Logger'), lazy())
+    class Logger {
+      private logs: string[] = [];
+
+      constructor() {
+        isLoggerCreated = true;
+      }
+
+      info(message: string, context: Record<string, unknown>): void {
+        this.logs.push(JSON.stringify({ ...context, level: 'info', message }));
+      }
+
+      serialize(): string {
+        return this.logs.join('\n');
+      }
+    }
+
+    class Main {
+      constructor(@inject('Logger') private logger: Logger) {}
+
+      getLogs(): string {
+        return this.logger.serialize();
+      }
+    }
+
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
+    const main = root.resolveByClass(Main);
+
+    expect(isLoggerCreated).toBe(false);
+
+    main.getLogs();
+
+    expect(isLoggerCreated).toBe(true);
+  });
+
+  it('allows to resolve with args', () => {
+    @register(asKey('ILogger'))
+    class Logger {
+      readonly channel: string;
+
+      constructor(options: { channel: string }) {
+        this.channel = options.channel;
+      }
+    }
+
+    class Main {
+      constructor(@inject(by.one('ILogger').args({ channel: 'file' })) private logger: Logger) {}
+
+      getChannel(): string {
+        return this.logger.channel;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
+    const main = root.resolveByClass(Main);
+
+    expect(main.getChannel()).toBe('file');
+  });
+
+  it('allows to resolve with argsFn', () => {
+    @register(asKey('ILogger'))
+    class Logger {
+      readonly channel: string;
+
+      constructor(options: { channel: string }) {
+        this.channel = options.channel;
+      }
+    }
+
+    class Main {
+      constructor(
+        @inject(by.one('ILogger').argsFn((s) => [{ channel: s.resolveOne('channel') }])) private logger: Logger,
+      ) {}
+
+      getChannel(): string {
+        return this.logger.channel;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] })
+      .addRegistration(R.fromValue('file').bindToKey('channel'))
+      .addRegistration(R.fromClass(Logger));
+
+    const main = root.resolveByClass(Main);
+
+    expect(main.getChannel()).toBe('file');
   });
 });
