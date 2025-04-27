@@ -17,7 +17,7 @@ export { AutoMockedContainer } from './container/AutoMockedContainer';
 
 // Injectors
 export { inject, resolveArgs } from './injector/inject';
-export { type IInjector, type InjectOptions } from './injector/IInjector';
+export { type IInjector, type InjectOptions, type IInjectFnResolver } from './injector/IInjector';
 export { MetadataInjector } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
