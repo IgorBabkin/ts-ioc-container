@@ -8,6 +8,8 @@ export {
   type Tag,
   type Tagged,
   type Instance,
+  type ResolveOneOptions,
+  type ResolveManyOptions,
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
@@ -31,6 +33,7 @@ export {
   type ArgsFn,
   ProviderDecorator,
   type IMapper,
+  type ProviderOptions,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
