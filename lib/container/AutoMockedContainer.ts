@@ -9,6 +9,7 @@ import {
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { type IRegistration } from '../registration/IRegistration';
 import { type constructor } from '../utils';
+import { InjectOptions } from '../injector/IInjector';
 
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;
@@ -55,7 +56,7 @@ export abstract class AutoMockedContainer implements IContainer {
 
   abstract resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 
-  abstract resolveClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
+  abstract resolveClass<T>(target: constructor<T>, options?: InjectOptions): T;
 
   abstract resolveOneByKey<T>(keyOrAlias: DependencyKey, options?: ResolveOneOptions): T;
 

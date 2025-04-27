@@ -1,9 +1,9 @@
-import type { IInjector, InjectOptions } from './IInjector';
+import { InjectOptions, Injector } from './IInjector';
 import type { IContainer } from '../container/IContainer';
-import type { constructor } from '../utils';
+import { constructor } from '../utils';
 
-export class SimpleInjector implements IInjector {
-  resolve<T>(container: IContainer, Target: constructor<T>, { args: deps }: InjectOptions): T {
-    return new Target(container, ...deps);
+export class SimpleInjector extends Injector {
+  protected createInstance<T>(container: IContainer, Target: constructor<T>, { args = [] }: InjectOptions = {}): T {
+    return new Target(container, ...args);
   }
 }

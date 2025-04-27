@@ -1,4 +1,4 @@
-import { type IProvider } from '../provider/IProvider';
+import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type constructor, Is } from '../utils';
 import { type IRegistration } from '../registration/IRegistration';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
@@ -9,8 +9,10 @@ export type DependencyKey = string | symbol;
 
 export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
 
-export type ResolveOneOptions = { args?: unknown[]; child?: Tagged; lazy?: boolean };
-export type ResolveManyOptions = ResolveOneOptions & { excludedKeys?: Set<DependencyKey> };
+type WithChild = { child: Tagged };
+export type ResolveOneOptions = ProviderOptions & Partial<WithChild>;
+type WithExcludedKeys = { excludedKeys: Set<DependencyKey> };
+export type ResolveManyOptions = ResolveOneOptions & Partial<WithExcludedKeys>;
 
 export interface Resolvable {
   resolve<T>(key: InjectionToken<T>, options?: ResolveOneOptions): T;
@@ -24,7 +26,8 @@ export interface Tagged {
   hasTag(tag: Tag): boolean;
 }
 
-export type CreateScopeOptions = { tags?: Tag[] };
+type WithTags = { tags: Tag[] };
+export type CreateScopeOptions = Partial<WithTags>;
 
 export interface Instance<T = unknown> {
   new (...args: unknown[]): T;
@@ -41,7 +44,7 @@ export interface IContainer extends Tagged {
 
   getRegistrations(): IRegistration[];
 
-  resolveClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T;
+  resolveClass<T>(target: constructor<T>, options?: ProviderOptions): T;
 
   resolveOne<T>(alias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
 

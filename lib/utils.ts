@@ -46,6 +46,13 @@ export function lazyProxy<T>(resolveInstance: () => T): T {
   ) as T;
 }
 
+export function toLazyIf<T>(resolveInstance: () => T, isLazy: boolean = false): T {
+  if (isLazy) {
+    return lazyProxy(resolveInstance);
+  }
+  return resolveInstance();
+}
+
 export const promisify = <T>(arg: T | Promise<T>): Promise<T> => (arg instanceof Promise ? arg : Promise.resolve(arg));
 
 export const List = {

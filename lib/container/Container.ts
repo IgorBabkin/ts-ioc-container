@@ -11,12 +11,12 @@ import {
   type Tag,
 } from './IContainer';
 import { type IInjector } from '../injector/IInjector';
-import { type IProvider } from '../provider/IProvider';
+import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { type constructor, Filter as F } from '../utils';
+import { type constructor, Filter as F, toLazyIf } from '../utils';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 
@@ -76,13 +76,15 @@ export class Container implements IContainer {
     return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
-  resolveClass<T>(token: constructor<T>, { args = [] }: { args?: unknown[] } = {}): T {
+  resolveClass<T>(token: constructor<T>, options?: ProviderOptions): T {
     this.validateContainer();
 
-    const instance = this.injector.resolve(this, token, { args });
-    this.instances.add(instance as Instance);
-    this.onConstruct(instance as Instance, this);
-    return instance;
+    return toLazyIf(() => {
+      const instance = this.injector.resolve(this, token, options);
+      this.instances.add(instance as Instance);
+      this.onConstruct(instance as Instance, this);
+      return instance;
+    }, options?.lazy);
   }
 
   resolveOne<T>(keyOrAlias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {

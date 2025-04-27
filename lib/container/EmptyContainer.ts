@@ -11,6 +11,7 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { type constructor } from '../utils';
+import { InjectOptions } from '../injector/IInjector';
 
 export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {
@@ -21,7 +22,7 @@ export class EmptyContainer implements IContainer {
     return undefined;
   }
 
-  resolveClass<T>(token: constructor<T>, options?: { args?: [] }): T {
+  resolveClass<T>(token: constructor<T>, options?: InjectOptions): T {
     throw new MethodNotImplementedError();
   }
 

@@ -1,4 +1,4 @@
-import type { IInjector, InjectOptions } from './IInjector';
+import { InjectOptions, Injector } from './IInjector';
 import type { IContainer } from '../container/IContainer';
 import type { constructor } from '../utils';
 
@@ -7,8 +7,8 @@ function getProp(target: object, key: string | symbol): unknown {
   return target[key];
 }
 
-export class ProxyInjector implements IInjector {
-  resolve<T>(container: IContainer, Target: constructor<T>, { args: deps }: InjectOptions): T {
+export class ProxyInjector extends Injector {
+  protected createInstance<T>(scope: IContainer, Target: constructor<T>, { args: deps = [] }: InjectOptions = {}): T {
     const args = (deps as object[]).reduce((acc, it) => ({ ...acc, ...it }), {});
     const proxy = new Proxy(
       {},
@@ -18,8 +18,8 @@ export class ProxyInjector implements IInjector {
           return args.hasOwnProperty(prop)
             ? getProp(args, prop)
             : prop.toString().search(/array/gi) >= 0
-              ? container.resolveMany(prop)
-              : container.resolveOne(prop);
+              ? scope.resolveMany(prop)
+              : scope.resolveOne(prop);
         },
       },
     );

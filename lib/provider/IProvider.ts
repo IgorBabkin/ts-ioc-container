@@ -1,19 +1,21 @@
 import { IContainer, Tagged } from '../container/IContainer';
 import { Is, MapFn } from '../utils';
 import { isProviderPipe, ProviderPipe, registerPipe } from './ProviderPipe';
+import { InjectOptions } from '../injector/IInjector';
 
-export type ProviderResolveOptions = { args: unknown[]; lazy?: boolean };
-export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderResolveOptions) => T;
+export type WithLazy = { lazy: boolean };
+export type ProviderOptions = InjectOptions & Partial<WithLazy>;
+export type ResolveDependency<T = unknown> = (container: IContainer, options: InjectOptions) => T;
 export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
 export type ScopeAccessFn = (options: ScopeAccessOptions) => boolean;
 
 export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
-export interface IMapper<T> {
+export interface IMapper {
   mapItem<T>(target: IProvider<T>): IProvider<T>;
 }
 
 export interface IProvider<T = any> {
-  resolve(container: IContainer, options: ProviderResolveOptions): T;
+  resolve(container: IContainer, options: ProviderOptions): T;
 
   hasAccess(options: ScopeAccessOptions): boolean;
 
@@ -57,7 +59,7 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this.decorated.hasAccess(options);
   }
 
-  resolve(container: IContainer, options: ProviderResolveOptions): T {
+  resolve(container: IContainer, options: ProviderOptions): T {
     return this.decorated.resolve(container, options);
   }
 

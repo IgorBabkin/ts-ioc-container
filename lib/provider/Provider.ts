@@ -1,14 +1,6 @@
-import {
-  ScopeAccessOptions,
-  ArgsFn,
-  ScopeAccessFn,
-  IProvider,
-  ProviderResolveOptions,
-  ResolveDependency,
-} from './IProvider';
+import { ArgsFn, IProvider, ProviderOptions, ResolveDependency, ScopeAccessFn, ScopeAccessOptions } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import type { constructor, MapFn } from '../utils';
-import { lazyProxy, pipe } from '../utils';
+import { constructor, MapFn, pipe, toLazyIf } from '../utils';
 import type { ProviderPipe } from './ProviderPipe';
 import { isProviderPipe } from './ProviderPipe';
 
@@ -36,10 +28,14 @@ export class Provider<T = any> implements IProvider<T> {
     return pipe(...fns)(this);
   }
 
-  resolve(container: IContainer, { args, lazy }: ProviderResolveOptions): T {
-    const resolveDependency = () =>
-      this.resolveDependency(container, { args: [...this.argsFn(container, ...args), ...args] });
-    return (lazy ?? this.isLazy) ? lazyProxy(resolveDependency) : resolveDependency();
+  resolve(container: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
+    return toLazyIf(
+      () =>
+        this.resolveDependency(container, {
+          args: [...this.argsFn(container, ...args), ...args],
+        }),
+      lazy ?? this.isLazy,
+    );
   }
 
   setAccessPredicate(predicate: ScopeAccessFn): this {

@@ -30,7 +30,6 @@ export {
   args,
   type ArgsFn,
   ProviderDecorator,
-  type ProviderResolveOptions,
   type IMapper,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';

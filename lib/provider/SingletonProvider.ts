@@ -1,9 +1,10 @@
 import type { IContainer } from '../container/IContainer';
-import type { IProvider, ProviderResolveOptions } from './IProvider';
+import type { IProvider } from './IProvider';
 import { ProviderDecorator } from './IProvider';
 import type { Cache } from './Cache';
 import { SingleCache } from './Cache';
 import { registerPipe } from './ProviderPipe';
+import { InjectOptions } from '../injector/IInjector';
 
 export class SingletonProvider<T> extends ProviderDecorator<T> {
   constructor(
@@ -13,8 +14,9 @@ export class SingletonProvider<T> extends ProviderDecorator<T> {
     super(provider);
   }
 
-  resolve(container: IContainer, options: ProviderResolveOptions): T {
-    const key = this.cache.getKey(...options.args);
+  resolve(container: IContainer, options: InjectOptions): T {
+    const { args = [] } = options;
+    const key = this.cache.getKey(...args);
 
     if (!this.cache.hasValue(key)) {
       this.cache.setValue(key, this.provider.resolve(container, options));

@@ -94,7 +94,7 @@ describe('IContainer', function () {
   it('should test provider decorator', function () {
     class MyProvider extends ProviderDecorator<string> {
       constructor() {
-        super(new Provider((c, { args }) => `hello ${args[0]}`));
+        super(new Provider((c, { args = [] }) => `hello ${args[0]}`));
       }
     }
 

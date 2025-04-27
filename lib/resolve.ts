@@ -2,16 +2,16 @@ import { type CreateScopeOptions, type DependencyKey, type IContainer, type Inst
 import { type constructor, Is } from './utils';
 import { type DepKey } from './DepKey';
 import type { IInjectFnResolver } from './injector/IInjector';
+import { ProviderOptions } from './provider/IProvider';
 
 export type InstancePredicate = (dep: unknown) => boolean;
-export type InjectOptions = { lazy: boolean; args: unknown[] };
 export type ArgsFn = (l: IContainer) => unknown[];
 
 export class InjectionResolver<T> {
   private isLazy: boolean = false;
   private getArgs: ArgsFn = () => [];
 
-  constructor(private resolveByOptions: (s: IContainer, options: InjectOptions) => T) {}
+  constructor(private resolveByOptions: (s: IContainer, options: ProviderOptions) => T) {}
 
   args(...deps: unknown[]): this {
     this.getArgs = () => deps;
