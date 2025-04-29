@@ -1,4 +1,6 @@
-export class DependencyMissingKeyError extends Error {
+import { ContainerError } from './ContainerError';
+
+export class DependencyMissingKeyError extends ContainerError {
   name = 'DependencyMissingKeyError';
 
   constructor(message: string) {

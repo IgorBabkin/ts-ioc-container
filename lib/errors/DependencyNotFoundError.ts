@@ -1,4 +1,6 @@
-export class DependencyNotFoundError extends Error {
+import { ContainerError } from './ContainerError';
+
+export class DependencyNotFoundError extends ContainerError {
   name = 'DependencyNotFoundError';
 
   constructor(message: string) {

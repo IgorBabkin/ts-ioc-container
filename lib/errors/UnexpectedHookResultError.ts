@@ -1,7 +1,9 @@
-export class UnexpectedHookResultError extends Error {
+import { ContainerError } from './ContainerError';
+
+export class UnexpectedHookResultError extends ContainerError {
   name = 'UnexpectedHookResultError';
 
-  constructor(message?: string) {
+  constructor(message: string) {
     super(message);
 
     Object.setPrototypeOf(this, UnexpectedHookResultError.prototype);

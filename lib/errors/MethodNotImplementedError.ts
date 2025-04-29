@@ -1,4 +1,6 @@
-export class MethodNotImplementedError extends Error {
+import { ContainerError } from './ContainerError';
+
+export class MethodNotImplementedError extends ContainerError {
   name = 'MethodNotImplementedError';
 
   constructor(message?: string) {

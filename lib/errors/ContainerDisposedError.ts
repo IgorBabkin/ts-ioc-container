@@ -1,4 +1,6 @@
-export class ContainerDisposedError extends Error {
+import { ContainerError } from './ContainerError';
+
+export class ContainerDisposedError extends ContainerError {
   name = 'ContainerDisposedError';
 
   constructor(message: string) {
