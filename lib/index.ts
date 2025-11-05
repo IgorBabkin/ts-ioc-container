@@ -65,7 +65,11 @@ export { HookContext, type InjectFn, type IHookContext } from './hooks/HookConte
 export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct } from './hooks/onConstruct';
 export { onDisposeHooksRunner, onDispose } from './hooks/onDispose';
+
+// Hooks runner
 export { HooksRunnerContext } from './hooks/runner/HooksRunner';
+export { AsyncHooksRunner } from './hooks/runner/AsyncHooksRunner';
+export { SyncHooksRunner } from './hooks/runner/SyncHooksRunner';
 
 // Metadata
 export {
@@ -85,10 +89,8 @@ export { StringToken } from './token/StringToken';
 export { FunctionToken } from './token/FunctionToken';
 export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, InstanceListToken } from './token/InstanceListToken';
+export { toToken } from './token/toToken';
 
 // Others
 export { select } from './select';
 export { type constructor, Is } from './utils';
-export { toToken } from './token/toToken';
-export { AsyncHooksRunner } from './hooks/runner/AsyncHooksRunner';
-export { SyncHooksRunner } from './hooks/runner/SyncHooksRunner';
