@@ -13,6 +13,8 @@ export interface IRegistration<T = any> extends IContainerModule {
 
   bindToKey(key: DependencyKey): this;
 
+  bindTo(key: DependencyKey | BindToken): this;
+
   pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): this;
 
   bindToAlias(alias: DependencyKey): this;
