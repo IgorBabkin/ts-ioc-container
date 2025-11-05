@@ -1,6 +1,4 @@
 import { DependencyKey } from './container/IContainer';
-import { IInjectFnResolver } from './injector/IInjector';
-import { InjectionToken } from './token/InjectionToken';
 
 export type constructor<T> = new (...args: any[]) => T;
 
@@ -50,10 +48,6 @@ export function toLazyIf<T>(resolveInstance: () => T, isLazy: boolean = false): 
 
 export const promisify = <T>(arg: T | Promise<T>): Promise<T> => (arg instanceof Promise ? arg : Promise.resolve(arg));
 
-export const List = {
-  lastOf: <T>(arr: T[]): T => arr[arr.length - 1],
-};
-
 export const Filter = {
   exclude: <T>(arr: Set<T> | T[]) => {
     const excludeSet = arr instanceof Array ? new Set(arr) : arr;
@@ -67,10 +61,4 @@ export const Is = {
   instance: (target: unknown): target is InstanceOfClass => Object.prototype.hasOwnProperty.call(target, 'constructor'),
   constructor: (target: unknown): target is constructor<unknown> => typeof target === 'function' && !!target.prototype,
   dependencyKey: (target: unknown): target is DependencyKey => ['string', 'symbol'].includes(typeof target),
-  injectBuilder: (target: unknown): target is IInjectFnResolver<unknown> =>
-    Is.object(target) && 'resolve' in target && typeof target['resolve'] === 'function',
-
-  DepKey: <T>(key: unknown): key is InjectionToken<T> => {
-    return typeof key === 'object' && key !== null && 'key' in key;
-  },
 };
