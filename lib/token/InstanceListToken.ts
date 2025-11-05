@@ -1,5 +1,6 @@
 import { InjectionToken } from './InjectionToken';
 import type { IContainer, Instance } from '../container/IContainer';
+import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 
@@ -11,15 +12,15 @@ export class InstanceListToken extends InjectionToken<Instance[]> {
   }
 
   args(...deps: unknown[]): this {
-    throw new Error('not implemented');
+    throw new MethodNotImplementedError('not implemented');
   }
 
   argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<Instance[]> {
-    throw new Error('not implemented');
+    throw new MethodNotImplementedError('not implemented');
   }
 
   lazy(): InjectionToken<Instance[]> {
-    throw new Error('not implemented');
+    throw new MethodNotImplementedError('not implemented');
   }
 
   cascade(isTrue: boolean): this {

@@ -1,5 +1,6 @@
 import type { IContainer } from '../container/IContainer';
 import { InjectionToken } from './InjectionToken';
+import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 
 export class ConstantToken<T = any> extends InjectionToken<T> {
   constructor(private readonly token: T) {
@@ -11,14 +12,14 @@ export class ConstantToken<T = any> extends InjectionToken<T> {
   }
 
   args(...deps: unknown[]): InjectionToken<T> {
-    throw new Error('not implemented');
+    throw new MethodNotImplementedError('not implemented');
   }
 
   argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
-    throw new Error('not implemented');
+    throw new MethodNotImplementedError('not implemented');
   }
 
   lazy(): InjectionToken<T> {
-    throw new Error('not implemented');
+    throw new MethodNotImplementedError('not implemented');
   }
 }
