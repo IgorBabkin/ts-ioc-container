@@ -1,6 +1,5 @@
 import {
-  asKey,
-  by,
+  bindTo,
   Container,
   decorate,
   type IContainer,
@@ -8,6 +7,7 @@ import {
   register,
   Registration as R,
   singleton,
+  toToken,
 } from '../../lib';
 
 describe('lazy provider', () => {
@@ -36,7 +36,7 @@ describe('lazy provider', () => {
   class LogRepository implements IRepository {
     constructor(
       private repository: IRepository,
-      @inject(by.one('Logger').lazy()) private logger: Logger,
+      @inject(toToken('Logger').lazy()) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {
@@ -45,9 +45,9 @@ describe('lazy provider', () => {
     }
   }
 
-  const logRepo = (dep: IRepository, scope: IContainer) => scope.resolveOne(LogRepository, { args: [dep] });
+  const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
 
-  @register(asKey('IRepository'), decorate(logRepo))
+  @register(bindTo('IRepository'), decorate(logRepo))
   class TodoRepository implements IRepository {
     async save(item: Todo): Promise<void> {}
   }
@@ -72,8 +72,8 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolveOne(App);
-    const logger = container.resolveOne<Logger>('Logger');
+    const app = container.resolve(App);
+    const logger = container.resolve<Logger>('Logger');
     await app.run();
 
     // Assert

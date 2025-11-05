@@ -1,9 +1,9 @@
-import { asKey, Container, type IContainer, type IContainerModule, register, Registration as R } from '../../lib';
+import { bindTo, Container, type IContainer, type IContainerModule, register, Registration as R } from '../../lib';
 
-@register(asKey('ILogger'))
+@register(bindTo('ILogger'))
 class Logger {}
 
-@register(asKey('ILogger'))
+@register(bindTo('ILogger'))
 class TestLogger {}
 
 class Production implements IContainerModule {
@@ -26,12 +26,12 @@ describe('Container Modules', function () {
   it('should register production dependencies', function () {
     const container = createContainer(true);
 
-    expect(container.resolveOne('ILogger')).toBeInstanceOf(Logger);
+    expect(container.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 
   it('should register development dependencies', function () {
     const container = createContainer(false);
 
-    expect(container.resolveOne('ILogger')).toBeInstanceOf(TestLogger);
+    expect(container.resolve('ILogger')).toBeInstanceOf(TestLogger);
   });
 });

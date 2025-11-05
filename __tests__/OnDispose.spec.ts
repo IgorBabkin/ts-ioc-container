@@ -1,6 +1,6 @@
-import { asKey, by, Container, hook, inject, register, Registration as R, runHooks, singleton } from '../lib';
+import { bindTo, Container, hook, inject, register, Registration as R, runHooks, select, singleton } from '../lib';
 
-@register(asKey('logsRepo'), singleton())
+@register(bindTo('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
 
@@ -9,7 +9,7 @@ class LogsRepo {
   }
 }
 
-@register(asKey('logger'))
+@register(bindTo('logger'))
 class Logger {
   @hook('onDispose', ({ instance, methodName }) => {
     // @ts-ignore
@@ -39,13 +39,13 @@ describe('onDispose', function () {
   it('should invoke hooks on all instances', async function () {
     const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(LogsRepo));
 
-    const logger = container.resolveOne<Logger>('logger');
+    const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
 
-    for (const instance of by.instances().resolve(container)) {
+    for (const instance of select.instances().resolve(container)) {
       runHooks(instance as object, 'onDispose', { scope: container });
     }
 
-    expect(container.resolveOne<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
+    expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
   });
 });

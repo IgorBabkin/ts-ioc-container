@@ -9,7 +9,7 @@ describe('SimpleInjector', function () {
     const container = new Container({ injector: new SimpleInjector() }).addRegistration(
       R.fromClass(App).bindToKey('App'),
     );
-    const app = container.resolveOne<App>('App');
+    const app = container.resolve<App>('App');
 
     expect(app.container).toBeInstanceOf(Container);
   });
@@ -25,7 +25,7 @@ describe('SimpleInjector', function () {
     const container = new Container({ injector: new SimpleInjector() }).addRegistration(
       R.fromClass(App).bindToKey('App'),
     );
-    const app = container.resolveOne<App>('App', { args: ['Hello world'] });
+    const app = container.resolve<App>('App', { args: ['Hello world'] });
 
     expect(app.greeting).toBe('Hello world');
   });

@@ -1,4 +1,4 @@
-import { by, Container, inject, register, Registration as R, singleton } from '../../lib';
+import { Container, inject, register, Registration as R, singleton, toToken } from '../../lib';
 
 describe('lazy provider', () => {
   @register(singleton())
@@ -23,7 +23,7 @@ describe('lazy provider', () => {
   }
 
   class App {
-    constructor(@inject(by.one('Service').lazy()) public service: Service) {}
+    constructor(@inject(toToken('Service').lazy()) public service: Service) {}
 
     run() {
       return this.service.greet();
@@ -41,8 +41,8 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    container.resolveOne(App);
-    const flag = container.resolveOne<Flag>('Flag');
+    container.resolve(App);
+    const flag = container.resolve<Flag>('Flag');
 
     // Assert
     expect(flag.isSet).toBe(false);
@@ -53,8 +53,8 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolveOne(App);
-    const flag = container.resolveOne<Flag>('Flag');
+    const app = container.resolve(App);
+    const flag = container.resolve<Flag>('Flag');
 
     // Assert
     expect(app.run()).toBe('Hello');
@@ -66,7 +66,7 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolveOne(App);
+    const app = container.resolve(App);
 
     // Assert
     expect(app.run()).toBe('Hello');
@@ -79,8 +79,8 @@ describe('lazy provider', () => {
     const container = createContainer();
 
     // Act
-    const app = container.resolveOne(App);
-    const flag = container.resolveOne<Flag>('Flag');
+    const app = container.resolve(App);
+    const flag = container.resolve<Flag>('Flag');
 
     // Assert
     expect(app.service.name).toBe('Service');

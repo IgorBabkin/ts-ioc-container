@@ -9,7 +9,7 @@ describe('inject property', () => {
     const expected = 'Hello world!';
 
     const container = new Container().addRegistration(Registration.fromValue(expected).bindToKey('greeting'));
-    const app = container.resolveOne(App);
+    const app = container.resolve(App);
     runHooks(app as object, 'onInit', { scope: container });
 
     expect(app.greeting).toBe(expected);

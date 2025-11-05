@@ -4,7 +4,6 @@ export {
   type Resolvable,
   type IContainerModule,
   type DependencyKey,
-  type InjectionToken,
   type Tag,
   type Tagged,
   type Instance,
@@ -88,7 +87,7 @@ export {
 
 // InjectionToken
 export { InjectionToken, toToken } from './token/InjectionToken';
-export { AliasToken } from './token/AliasToken';
+export { AliasToken, toAlias } from './token/AliasToken';
 export { ClassToken } from './token/ClassToken';
 export { StringToken } from './token/StringToken';
 export { FunctionToken } from './token/FunctionToken';

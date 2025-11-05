@@ -2,8 +2,7 @@ import { DependencyKey, type IContainer } from '../container/IContainer';
 import { type CreateHookContext, createHookContext, type IHookContext, type InjectFn } from './HookContext';
 import { type constructor, Is, promisify } from '../utils';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
-import { type IInjectFnResolver } from '../injector/IInjector';
-import { toToken } from '../token/InjectionToken';
+import { InjectionToken, toToken } from '../token/InjectionToken';
 
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
 export interface HookClass<T extends IHookContext = IHookContext> {
@@ -16,7 +15,7 @@ const isHookClassConstructor = <C extends IHookContext>(
 };
 
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
-  isHookClassConstructor(execute) ? (context) => context.scope.resolveOne(execute).execute(context) : execute;
+  isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
 
 type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
 
@@ -94,7 +93,7 @@ export const runHooksAsync = (
 };
 
 export const injectProp =
-  (fn: InjectFn | IInjectFnResolver<unknown> | DependencyKey | constructor<unknown>): HookFn =>
+  (fn: InjectFn | InjectionToken | DependencyKey | constructor<unknown>): HookFn =>
   (context) =>
     context.setProperty(toToken(fn));
 

@@ -6,7 +6,7 @@ import { isProviderPipe } from './ProviderPipe';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
-    return new Provider((container, options) => container.resolveClass(Target, options));
+    return new Provider((container, options) => container.resolve(Target, options));
   }
 
   static fromValue<T>(value: T): IProvider<T> {
@@ -14,7 +14,7 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   static fromKey<T>(key: DependencyKey) {
-    return new Provider<T>((c) => c.resolveOne(key));
+    return new Provider<T>((c) => c.resolve(key));
   }
 
   private argsFn: ArgsFn = () => [];

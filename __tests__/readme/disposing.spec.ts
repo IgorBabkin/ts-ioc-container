@@ -1,4 +1,4 @@
-import { by, Container, ContainerDisposedError, Registration as R } from '../../lib';
+import { Container, ContainerDisposedError, Registration as R, select } from '../../lib';
 
 class Logger {}
 
@@ -8,7 +8,7 @@ describe('Disposing', function () {
 
     root.dispose();
 
-    expect(() => root.resolveOne('ILogger')).toThrow(ContainerDisposedError);
-    expect(by.instances().resolve(root).length).toBe(0);
+    expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
+    expect(select.instances().resolve(root).length).toBe(0);
   });
 });

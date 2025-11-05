@@ -1,12 +1,11 @@
 import type { IContainer } from '../container/IContainer';
-import { InjectionToken } from './InjectionToken';
+import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
 import { constructor } from '../utils';
-import { ProviderOptions } from '../provider/IProvider';
 
 export class ClassToken<T = any> extends InjectionToken<T> {
   constructor(
     private readonly token: constructor<T>,
-    private options: ProviderOptions = {},
+    private options: TokenOptions = {},
   ) {
     super();
   }
@@ -15,8 +14,14 @@ export class ClassToken<T = any> extends InjectionToken<T> {
     return s.resolve(this.token);
   }
 
-  args(...deps: unknown[]): InjectionToken<T> {
-    return new ClassToken(this.token, { ...this.options, args: [...(this.options?.args ?? []), ...deps] });
+  args(...args: unknown[]): InjectionToken<T> {
+    const argsFn = this.options.argsFn ?? setArgs();
+    return new ClassToken(this.token, { ...this.options, argsFn: (s) => [...argsFn(s), ...args] });
+  }
+
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
+    const argsFn = this.options.argsFn ?? setArgs();
+    return new ClassToken(this.token, { ...this.options, argsFn: (s) => [...argsFn(s), ...getArgsFn(s)] });
   }
 
   lazy() {

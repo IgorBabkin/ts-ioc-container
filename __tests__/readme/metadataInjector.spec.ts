@@ -20,7 +20,7 @@ describe('Reflection Injector', function () {
   it('should inject dependencies by @inject decorator', function () {
     const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
 
-    const app = container.resolveOne(App);
+    const app = container.resolve(App);
 
     expect(app.getLoggerName()).toBe('Logger');
   });

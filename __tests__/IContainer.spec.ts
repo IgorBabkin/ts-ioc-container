@@ -1,6 +1,6 @@
 import {
-  asAlias,
-  asKey,
+  AliasToken,
+  bindTo,
   Container,
   DependencyNotFoundError,
   type IContainer,
@@ -11,9 +11,11 @@ import {
   register,
   Registration,
   Registration as R,
+  scope,
   singleton,
-  token,
+  StringToken,
 } from '../lib';
+import { toAlias } from '../lib/token/AliasToken';
 
 describe('IContainer', function () {
   it('should accept a symbol as dependency key', function () {
@@ -41,14 +43,19 @@ describe('IContainer', function () {
   it('should assign a dependency key to a registration', function () {
     interface ILogger {}
 
-    const ILoggerKey = token<ILogger>('ILogger')
-      .when((c) => c.hasTag('child1'))
-      .pipe(singleton());
+    const ILoggerKey = new StringToken<ILogger>('ILogger');
+    const ILoggerKey2 = new AliasToken<ILogger>('ILogger2');
+    const ILoggerKey3 = new AliasToken<ILogger>('ILogger3');
 
-    const ILoggerKey2 = token<ILogger>('ILogger2');
-    const ILoggerKey3 = token<ILogger>('ILogger3');
-
-    @register(ILoggerKey.asKey, ILoggerKey2.asAlias, asAlias(ILoggerKey3), asAlias('ILogger4'), asAlias('ILogger5'))
+    @register(
+      bindTo(ILoggerKey),
+      bindTo(ILoggerKey2),
+      bindTo(ILoggerKey3),
+      bindTo(toAlias('ILogger4')),
+      bindTo(toAlias('ILogger5')),
+      scope((c) => c.hasTag('child1')),
+      singleton(),
+    )
     class FileLogger {}
 
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
@@ -57,20 +64,20 @@ describe('IContainer', function () {
 
     expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey2.resolve(child1));
     expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey3.resolve(child1));
-    expect(ILoggerKey.resolve(child1)).toBe(child1.resolveOne('ILogger4'));
-    expect(ILoggerKey.resolve(child1)).toBe(child1.resolveOne('ILogger5'));
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger4'));
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger5'));
     expect(() => ILoggerKey.resolve(child2)).toThrow(DependencyNotFoundError);
   });
 
   it('should test register decorator', function () {
     interface ILogger {}
 
-    const ILoggerKey = token<ILogger>('ILogger');
+    const ILoggerKey = new StringToken<ILogger>('ILogger');
 
-    @register(ILoggerKey.asKey)
+    @register(bindTo(ILoggerKey))
     class FileLogger {}
 
-    @register(asKey('INormalizer'))
+    @register(bindTo('INormalizer'))
     class Normalizer {}
 
     const root = new Container({ tags: ['root'] })
@@ -78,15 +85,13 @@ describe('IContainer', function () {
       .addRegistration(R.fromClass(Normalizer));
 
     expect(ILoggerKey.resolve(root)).toBeInstanceOf(FileLogger);
-    expect(root.resolveOne('INormalizer')).toBeInstanceOf(Normalizer);
+    expect(root.resolve('INormalizer')).toBeInstanceOf(Normalizer);
   });
 
   it('should test isDepKey', function () {
     interface ILogger {}
 
-    const ILoggerKey = token<ILogger>('ILogger')
-      .when((c) => c.hasTag('child1'))
-      .pipe(singleton());
+    const ILoggerKey = new StringToken<ILogger>('ILogger');
 
     expect(Is.DepKey(ILoggerKey)).toBe(true);
   });
@@ -101,8 +106,8 @@ describe('IContainer', function () {
     const provider = new MyProvider().setArgs(() => ['world']);
     const root = new Container({ tags: ['root'] }).register('myProvider', provider, { aliases: ['greeting'] });
 
-    expect(root.resolveOne('myProvider')).toBe('hello world');
-    expect(root.resolveOne('greeting')).toBe('hello world');
+    expect(root.resolve('myProvider')).toBe('hello world');
+    expect(root.resolve('greeting')).toBe('hello world');
   });
 
   it('should getInstances only from current scope if cascade is false', () => {
@@ -111,8 +116,8 @@ describe('IContainer', function () {
     const root = new Container({ tags: ['root'] });
     const child1 = root.createScope({ tags: ['child1'] });
 
-    const logger1 = root.resolveOne(FileLogger);
-    child1.resolveOne(FileLogger);
+    const logger1 = root.resolve(FileLogger);
+    child1.resolve(FileLogger);
 
     expect(root.getInstances()).toEqual([logger1]);
   });
@@ -147,7 +152,7 @@ describe('IContainer', function () {
     }
 
     const root = new Container({ tags: ['root'] });
-    const app = root.resolveClass(TestApp);
+    const app = root.resolve(TestApp);
     app.run();
     app.stop();
     expect(app.display()).toEqual('StartStop');

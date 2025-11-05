@@ -1,12 +1,11 @@
 import type { IContainer } from '../container/IContainer';
-import { InjectionToken } from './InjectionToken';
+import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
-import { ProviderOptions } from '../provider/IProvider';
 
 export class StringToken<T = any> extends InjectionToken {
   constructor(
     public token: string | symbol,
-    private options: ProviderOptions = {},
+    private options: TokenOptions = {},
   ) {
     super();
   }
@@ -20,9 +19,18 @@ export class StringToken<T = any> extends InjectionToken {
   }
 
   args(...args: unknown[]): StringToken<T> {
+    const argsFn = this.options.argsFn ?? setArgs();
     return new StringToken(this.token, {
       ...this.options,
-      args: [...(this.options.args as unknown[]), ...(args as unknown[])],
+      argsFn: (s) => [...argsFn(s), ...args],
+    });
+  }
+
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): StringToken<T> {
+    const argsFn = this.options.argsFn ?? setArgs();
+    return new StringToken(this.token, {
+      ...this.options,
+      argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
     });
   }
 

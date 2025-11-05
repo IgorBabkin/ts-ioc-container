@@ -1,18 +1,18 @@
 import {
-  asKey,
+  bindTo,
   Container,
   DependencyNotFoundError,
   register,
   Registration as R,
   scope,
-  singleton,
   scopeAccess,
+  singleton,
 } from '../../lib';
 
 describe('Visibility', function () {
   it('should hide from children', () => {
     @register(
-      asKey('logger'),
+      bindTo('logger'),
       scope((s) => s.hasTag('root')),
       singleton(),
       scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope),
@@ -23,7 +23,7 @@ describe('Visibility', function () {
 
     const child = parent.createScope({ tags: ['child'] });
 
-    expect(() => child.resolveOne('logger')).toThrowError(DependencyNotFoundError);
-    expect(parent.resolveOne('logger')).toBeInstanceOf(FileLogger);
+    expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);
+    expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
   });
 });

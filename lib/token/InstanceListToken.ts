@@ -14,6 +14,10 @@ export class InstanceListToken extends InjectionToken<Instance[]> {
     throw new Error('not implemented');
   }
 
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<Instance[]> {
+    throw new Error('not implemented');
+  }
+
   lazy(): InjectionToken<Instance[]> {
     throw new Error('not implemented');
   }

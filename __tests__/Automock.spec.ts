@@ -1,14 +1,13 @@
 import {
   AutoMockedContainer,
-  type constructor,
   Container,
   type DependencyKey,
   inject,
   MethodNotImplementedError,
+  type ResolveManyOptions,
 } from '../lib';
 import { type IMock, It, Times } from 'moq.ts';
 import { createMock } from './utils';
-import { type ResolveManyOptions, type ResolveOneOptions } from '../lib/container/IContainer';
 
 const ILogsRepoKey = Symbol('ILogsRepo');
 
@@ -33,23 +32,11 @@ class Logger {
 export class MoqContainer extends AutoMockedContainer {
   private mocks = new Map<DependencyKey, IMock<any>>();
 
-  resolveOne<T>(key: DependencyKey): T {
-    return this.resolveMock<T>(key).object();
-  }
-
-  resolveClass<T>(target: constructor<T>, options?: { args?: unknown[] }): T {
-    throw new MethodNotImplementedError();
-  }
-
-  resolveOneByKey<T>(key: DependencyKey, options?: ResolveOneOptions): T {
+  resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
   }
 
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
-    throw new MethodNotImplementedError();
-  }
-
-  resolveOneByAlias<T>(key: DependencyKey, options?: ResolveOneOptions): T {
     throw new MethodNotImplementedError();
   }
 
@@ -77,7 +64,7 @@ describe('Automock', function () {
   it('should automock all non defined dependencies', async function () {
     const container = createContainer();
 
-    const logger = container.resolveOne(Logger);
+    const logger = container.resolve(Logger);
     logger.log('hello');
     logger.save();
 

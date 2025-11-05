@@ -1,22 +1,22 @@
-import { asKey, by, Container, inject, register, Registration as R } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, select } from '../../lib';
 
 describe('Instances', function () {
-  @register(asKey('ILogger'))
+  @register(bindTo('ILogger'))
   class Logger {}
 
   it('should return injected instances', () => {
     class App {
-      constructor(@inject(by.instances()) public loggers: Logger[]) {}
+      constructor(@inject(select.instances()) public loggers: Logger[]) {}
     }
 
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
-    root.resolveOne('ILogger');
-    child.resolveOne('ILogger');
+    root.resolve('ILogger');
+    child.resolve('ILogger');
 
-    const rootApp = root.resolveOne(App);
-    const childApp = child.resolveOne(App);
+    const rootApp = root.resolve(App);
+    const childApp = child.resolve(App);
 
     expect(childApp.loggers.length).toBe(1);
     expect(rootApp.loggers.length).toBe(2);
@@ -24,16 +24,16 @@ describe('Instances', function () {
 
   it('should return only current scope instances', () => {
     class App {
-      constructor(@inject(by.instances().cascade(false)) public loggers: Logger[]) {}
+      constructor(@inject(select.instances().cascade(false)) public loggers: Logger[]) {}
     }
 
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
     const child = root.createScope({ tags: ['child'] });
 
-    root.resolveOne('ILogger');
-    child.resolveOne('ILogger');
+    root.resolve('ILogger');
+    child.resolve('ILogger');
 
-    const rootApp = root.resolveOne(App);
+    const rootApp = root.resolve(App);
 
     expect(rootApp.loggers.length).toBe(1);
   });
@@ -42,14 +42,14 @@ describe('Instances', function () {
     const isLogger = (instance: unknown) => instance instanceof Logger;
 
     class App {
-      constructor(@inject(by.instances(isLogger)) public loggers: Logger[]) {}
+      constructor(@inject(select.instances(isLogger)) public loggers: Logger[]) {}
     }
 
     const container = new Container().addRegistration(R.fromClass(Logger));
 
-    const logger0 = container.resolveOne('ILogger');
-    const logger1 = container.resolveOne('ILogger');
-    const app = container.resolveOne(App);
+    const logger0 = container.resolve('ILogger');
+    const logger1 = container.resolve('ILogger');
+    const app = container.resolve(App);
 
     expect(app.loggers).toHaveLength(2);
     expect(app.loggers[0]).toBe(logger0);

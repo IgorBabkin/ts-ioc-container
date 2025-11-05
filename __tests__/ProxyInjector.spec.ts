@@ -16,7 +16,7 @@ describe('ProxyInjector', function () {
       R.fromClass(Logger).bindToKey('logger'),
     );
 
-    const app = container.resolveOne(App);
+    const app = container.resolve(App);
     expect(app.logger).toBeInstanceOf(Logger);
   });
 
@@ -47,7 +47,7 @@ describe('ProxyInjector', function () {
       .addRegistration(R.fromClass(App).bindToKey('App').pipe(args({ greetingTemplate })))
       .addRegistration(R.fromClass(Logger).bindToKey('logger'));
 
-    const app = container.resolveOne<App>('App', { args: [{ name: `world` }] });
+    const app = container.resolve<App>('App', { args: [{ name: `world` }] });
     expect(app.greeting).toBe('Hello world');
   });
 
@@ -74,7 +74,7 @@ describe('ProxyInjector', function () {
     });
     mockContainer.addRegistration(R.fromClass(Service).bindToKey('service'));
 
-    const app = mockContainer.resolveOne(App);
+    const app = mockContainer.resolve(App);
     expect(app.loggers).toBeInstanceOf(Array);
     expect(app.loggers.length).toBe(1);
     expect(app.loggers[0]).toBe(mockLogger);

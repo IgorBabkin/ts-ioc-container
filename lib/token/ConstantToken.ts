@@ -11,10 +11,14 @@ export class ConstantToken<T = any> extends InjectionToken<T> {
   }
 
   args(...deps: unknown[]): InjectionToken<T> {
-    return this;
+    throw new Error('not implemented');
+  }
+
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
+    throw new Error('not implemented');
   }
 
   lazy(): InjectionToken<T> {
-    return this;
+    throw new Error('not implemented');
   }
 }

@@ -15,6 +15,10 @@ export class FunctionToken<T = any> extends InjectionToken<T> {
     throw new Error('not implemented');
   }
 
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
+    throw new Error('not implemented');
+  }
+
   lazy(): InjectionToken<T> {
     throw new Error('not implemented');
   }

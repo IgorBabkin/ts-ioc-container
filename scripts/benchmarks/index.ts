@@ -100,7 +100,7 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
     container.addRegistration(Registration.fromValue('Hello World').bindToKey('greeting'));
 
     for (let i = 0; i < 100; i++) {
-      container.resolveOne<string>('greeting');
+      container.resolve<string>('greeting');
     }
 
     container.dispose();
@@ -112,7 +112,7 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
     container.addRegistration(Registration.fromClass(Greeter).bindToKey('greeter'));
 
     for (let i = 0; i < 100; i++) {
-      container.resolveOne<Greeter>('greeter');
+      container.resolve<Greeter>('greeter');
     }
 
     container.dispose();
@@ -127,7 +127,7 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
     container.addRegistration(Registration.fromClass(UserService).bindToKey('userService'));
 
     for (let i = 0; i < 50; i++) {
-      container.resolveOne<UserService>('userService');
+      container.resolve<UserService>('userService');
     }
 
     container.dispose();
@@ -149,7 +149,7 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
     const scope = container.createScope({ tags: ['api'] });
 
     for (let i = 0; i < 50; i++) {
-      scope.resolveOne<Greeter>('greeter');
+      scope.resolve<Greeter>('greeter');
     }
 
     container.dispose();
@@ -161,7 +161,7 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
     container.addRegistration(Registration.fromClass(Greeter).bindToKey('greeter'));
 
     for (let i = 0; i < 50; i++) {
-      container.resolveOne<Greeter>('greeter', { lazy: true });
+      container.resolve<Greeter>('greeter', { lazy: true });
     }
 
     container.dispose();
@@ -209,11 +209,11 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
 
     for (let i = 0; i < 50; i++) {
       // Resolve from parent
-      child2.resolveOne<string>('shared');
+      child2.resolve<string>('shared');
       // Resolve from immediate parent
-      child2.resolveOne<string>('child1-key');
+      child2.resolve<string>('child1-key');
       // Resolve from self
-      child2.resolveOne<string>('child2-key');
+      child2.resolve<string>('child2-key');
     }
 
     root.dispose();
@@ -240,7 +240,7 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
       // Resolve 5 dependencies in the scope
       for (let j = 0; j < 5; j++) {
         const serviceIndex = j % 10; // Ensure we don't go out of bounds
-        scope.resolveOne(`service-${serviceIndex}`);
+        scope.resolve(`service-${serviceIndex}`);
       }
     }
 
@@ -295,14 +295,14 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
           if (depIndex % 2 === 0) {
             // Resolve app-level service
             const appServiceIndex = (depIndex + widgetIndex) % 20;
-            widgetScope.resolveOne(`app-service-${appServiceIndex}`);
+            widgetScope.resolve(`app-service-${appServiceIndex}`);
           } else {
             // Resolve page context
-            widgetScope.resolveOne('pageContext');
+            widgetScope.resolve('pageContext');
 
             // Also resolve widget context
             if (depIndex === 3) {
-              widgetScope.resolveOne('widgetContext');
+              widgetScope.resolve('widgetContext');
             }
           }
         }

@@ -1,4 +1,4 @@
-import { type IContainer, by, Container, inject, Registration as R } from '../../lib';
+import { Container, type IContainer, inject, Registration as R, select } from '../../lib';
 
 describe('Basic usage', function () {
   class Logger {
@@ -12,17 +12,17 @@ describe('Basic usage', function () {
 
     const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
 
-    expect(container.resolveOne(App).logger.name).toBe('Logger');
+    expect(container.resolve(App).logger.name).toBe('Logger');
   });
 
   it('should inject current scope', function () {
     const root = new Container({ tags: ['root'] });
 
     class App {
-      constructor(@inject(by.scope.current) public scope: IContainer) {}
+      constructor(@inject(select.scope.current) public scope: IContainer) {}
     }
 
-    const app = root.resolveOne(App);
+    const app = root.resolve(App);
 
     expect(app.scope).toBe(root);
   });

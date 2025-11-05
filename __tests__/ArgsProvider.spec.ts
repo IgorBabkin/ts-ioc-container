@@ -56,12 +56,12 @@ describe('ArgsProvider', function () {
     const IUserRepositoryKey = new StringToken<IRepository>('IUserRepository');
     const ITodoRepositoryKey = new StringToken<IRepository>('ITodoRepository');
 
-    @register(IUserRepositoryKey.asKey)
+    @register(bindTo(IUserRepositoryKey))
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(ITodoRepositoryKey.asKey)
+    @register(bindTo(ITodoRepositoryKey))
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
@@ -70,17 +70,17 @@ describe('ArgsProvider', function () {
       repository: IRepository;
     }
 
-    const IEntityManagerKey = token<IEntityManager>('IEntityManager');
+    const IEntityManagerKey = new StringToken<IEntityManager>('IEntityManager');
 
-    @register(IEntityManagerKey.asKey, argsFn(resolveByArgs))
+    @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
 
     class Main {
       constructor(
-        @inject(by.one(IEntityManagerKey).args(IUserRepositoryKey)) public userEntities: EntityManager,
-        @inject(by.one(IEntityManagerKey).args(ITodoRepositoryKey)) public todoEntities: EntityManager,
+        @inject(IEntityManagerKey.args(IUserRepositoryKey)) public userEntities: EntityManager,
+        @inject(IEntityManagerKey.args(ITodoRepositoryKey)) public todoEntities: EntityManager,
       ) {}
     }
 
@@ -99,15 +99,15 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    const IUserRepositoryKey = token<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = token<IRepository>('ITodoRepository');
+    const IUserRepositoryKey = new StringToken<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = new StringToken<IRepository>('ITodoRepository');
 
-    @register(IUserRepositoryKey.asKey)
+    @register(bindTo(IUserRepositoryKey))
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(ITodoRepositoryKey.asKey)
+    @register(bindTo(ITodoRepositoryKey))
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
@@ -125,8 +125,8 @@ describe('ArgsProvider', function () {
 
     class Main {
       constructor(
-        @inject(by.one(IEntityManagerKey).args(IUserRepositoryKey)) public userEntities: EntityManager,
-        @inject(by.one(IEntityManagerKey).args(ITodoRepositoryKey)) public todoEntities: EntityManager,
+        @inject(IEntityManagerKey.args(IUserRepositoryKey)) public userEntities: EntityManager,
+        @inject(IEntityManagerKey.args(ITodoRepositoryKey)) public todoEntities: EntityManager,
       ) {}
     }
 
@@ -136,11 +136,11 @@ describe('ArgsProvider', function () {
       .addRegistration(R.fromClass(TodoRepository));
     const main = root.resolve(Main);
 
-    const userRepository = IEntityManagerKey.resolve(root, { args: [IUserRepositoryKey] }).repository;
+    const userRepository = IEntityManagerKey.args(IUserRepositoryKey).resolve(root).repository;
     expect(userRepository).toBeInstanceOf(UserRepository);
     expect(main.userEntities.repository).toBe(userRepository);
 
-    const todoRepository = IEntityManagerKey.resolve(root, { args: [ITodoRepositoryKey] }).repository;
+    const todoRepository = IEntityManagerKey.args(IUserRepositoryKey).resolve(root).repository;
     expect(todoRepository).toBeInstanceOf(TodoRepository);
     expect(main.todoEntities.repository).toBe(todoRepository);
   });
