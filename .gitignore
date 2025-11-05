@@ -14,4 +14,5 @@ precompiled
 yarn.log
 prev-coverage-result.json
 *.new.report.json
+.DS_Store
 
