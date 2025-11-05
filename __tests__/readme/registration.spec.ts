@@ -1,5 +1,13 @@
-import { bindTo, Container, register, Registration as R, scope, singleton, toAlias } from '../../lib';
-import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
+import {
+  bindTo,
+  Container,
+  DependencyMissingKeyError,
+  register,
+  Registration as R,
+  scope,
+  singleton,
+  toAlias,
+} from '../../lib';
 
 describe('Registration module', function () {
   const createContainer = () => new Container({ tags: ['root'] });

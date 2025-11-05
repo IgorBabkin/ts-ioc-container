@@ -14,8 +14,8 @@ import {
   scope,
   singleton,
   StringToken,
+  toAlias,
 } from '../lib';
-import { toAlias } from '../lib/token/AliasToken';
 
 describe('IContainer', function () {
   it('should accept a symbol as dependency key', function () {

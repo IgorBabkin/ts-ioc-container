@@ -1261,8 +1261,16 @@ Sometimes you want to register provider with certain key. This is what `key` is 
 - you can assign the same key to different registrations
 
 ```typescript
-import { bindTo, Container, register, Registration as R, scope, singleton, toAlias } from 'ts-ioc-container';
-import { DependencyMissingKeyError } from '../../lib/errors/DependencyMissingKeyError';
+import {
+  bindTo,
+  Container,
+  DependencyMissingKeyError,
+  register,
+  Registration as R,
+  scope,
+  singleton,
+  toAlias,
+} from 'ts-ioc-container';
 
 describe('Registration module', function () {
   const createContainer = () => new Container({ tags: ['root'] });
