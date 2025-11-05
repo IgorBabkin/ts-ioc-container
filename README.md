@@ -1395,15 +1395,16 @@ import {
   MetadataInjector,
   register,
   Registration as R,
-  runHooks,
+  SyncHooksRunner,
 } from 'ts-ioc-container';
 
+const onConstructHooksRunner = new SyncHooksRunner('onConstruct');
 class MyInjector implements IInjector {
   private injector = new MetadataInjector();
 
   resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
     const instance = this.injector.resolve(container, value, options);
-    runHooks(instance as object, 'onConstruct', { scope: container });
+    onConstructHooksRunner.execute(instance as object, { scope: container });
     return instance;
   }
 }
@@ -1438,8 +1439,19 @@ describe('onConstruct', function () {
 
 ### OnDispose
 ```typescript
-import { bindTo, Container, hook, inject, register, Registration as R, runHooks, select, singleton } from 'ts-ioc-container';
+import {
+  bindTo,
+  Container,
+  hook,
+  inject,
+  register,
+  Registration as R,
+  select,
+  singleton,
+  SyncHooksRunner,
+} from 'ts-ioc-container';
 
+const onDisposeHookRunner = new SyncHooksRunner('onDispose');
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
@@ -1483,7 +1495,7 @@ describe('onDispose', function () {
     logger.log('Hello');
 
     for (const instance of select.instances().resolve(container)) {
-      runHooks(instance as object, 'onDispose', { scope: container });
+      onDisposeHookRunner.execute(instance as object, { scope: container });
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
@@ -1495,8 +1507,9 @@ describe('onDispose', function () {
 ### Inject property
 
 ```typescript
-import { Container, hook, injectProp, Registration, runHooks } from 'ts-ioc-container';
+import { Container, hook, injectProp, Registration, SyncHooksRunner } from 'ts-ioc-container';
 
+const onInitHookRunner = new SyncHooksRunner('onInit');
 describe('inject property', () => {
   it('should inject property', () => {
     class App {
@@ -1507,7 +1520,7 @@ describe('inject property', () => {
 
     const container = new Container().addRegistration(Registration.fromValue(expected).bindToKey('greeting'));
     const app = container.resolve(App);
-    runHooks(app as object, 'onInit', { scope: container });
+    onInitHookRunner.execute(app as object, { scope: container });
 
     expect(app.greeting).toBe(expected);
   });

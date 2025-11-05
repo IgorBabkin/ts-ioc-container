@@ -6,8 +6,6 @@ export type Tag = string;
 
 export type DependencyKey = string | symbol;
 
-export type InjectionToken<T = unknown> = constructor<T> | DependencyKey;
-
 type WithChild = { child: Tagged };
 export type ResolveOneOptions = ProviderOptions & Partial<WithChild>;
 type WithExcludedKeys = { excludedKeys: Set<DependencyKey> };
@@ -15,7 +13,7 @@ type TakeFirst = { takeFirst: number };
 export type ResolveManyOptions = ResolveOneOptions & Partial<WithExcludedKeys> & Partial<TakeFirst>;
 
 export interface Resolvable {
-  resolve<T>(key: InjectionToken<T>, options?: ResolveOneOptions): T;
+  resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
 }
 
 export interface IContainerModule {

@@ -1,5 +1,4 @@
 import { type DependencyKey } from './IContainer';
-import { List as L } from '../utils';
 
 export type Alias = DependencyKey;
 
@@ -17,11 +16,6 @@ export class AliasMap {
 
   findManyKeysByAlias(alias: DependencyKey): DependencyKey[] {
     return [...(this.aliasToKeySet.get(alias) ?? [])];
-  }
-
-  findLastKeyByAlias(alias: DependencyKey): DependencyKey | undefined {
-    const keys = [...(this.aliasToKeySet.get(alias) ?? [])];
-    return keys.length > 0 ? L.lastOf(keys) : undefined;
   }
 
   addAliases(key: DependencyKey, aliases: DependencyKey[]): void {

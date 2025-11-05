@@ -4,7 +4,7 @@ import { getMetadata, setMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
 import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
 import { StringToken } from '../token/StringToken';
-import { BindToken, isBindToken } from './BindToken';
+import { BindToken, isBindToken } from '../token/BindToken';
 
 export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
 

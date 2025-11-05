@@ -59,21 +59,12 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 
 // Hooks
-export {
-  getHooks,
-  hook,
-  hasHooks,
-  type HookFn,
-  type HookClass,
-  runHooks,
-  runHooksAsync,
-  injectProp,
-  onDispose,
-  onConstruct,
-  runOnConstructHooks,
-  runOnDisposeHooks,
-} from './hooks/hook';
+export { getHooks, hook, hasHooks, type HookFn, type HookClass } from './hooks/hook';
 export { HookContext, type InjectFn, type IHookContext } from './hooks/HookContext';
+export { injectProp } from './hooks/injectProp';
+export { onConstructHooksRunner, onConstruct } from './hooks/onConstruct';
+export { onDisposeHooksRunner, onDispose } from './hooks/onDispose';
+export { HooksRunnerContext } from './hooks/runner/HooksRunner';
 
 // Metadata
 export {
@@ -98,3 +89,5 @@ export { type InstancePredicate, InstanceListToken } from './token/InstanceListT
 export { select } from './select';
 export { type constructor, Is } from './utils';
 export { toToken } from './token/toToken';
+export { AsyncHooksRunner } from './hooks/runner/AsyncHooksRunner';
+export { SyncHooksRunner } from './hooks/runner/SyncHooksRunner';

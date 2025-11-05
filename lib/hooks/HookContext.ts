@@ -1,6 +1,7 @@
-import { resolveArgs } from '../injector/inject';
 import type { IContainer } from '../container/IContainer';
 import type { constructor } from '../utils';
+
+import { resolveArgs } from '../injector/inject';
 import { InjectionToken } from '../token/InjectionToken';
 
 export type InjectFn<T = unknown> = (s: IContainer) => T;
@@ -33,14 +34,12 @@ export class HookContext implements IHookContext {
     return this.instance[this.methodName](...args);
   }
 
-  setProperty(token: InjectionToken): void {
+  setProperty(fn: InjectionToken): void {
     // @ts-ignore
-    this.instance[this.methodName] = token.resolve(this.scope);
+    this.instance[this.methodName] = fn.resolve(this.scope);
   }
 }
 
 export type CreateHookContext = (Target: object, scope: IContainer, methodName?: string) => IHookContext;
 export const createHookContext: CreateHookContext = (Target, scope, methodName = 'constructor') =>
   new HookContext(Target, scope, methodName);
-
-export const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;

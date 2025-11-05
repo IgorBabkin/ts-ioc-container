@@ -9,15 +9,16 @@ import {
   MetadataInjector,
   register,
   Registration as R,
-  runHooks,
+  SyncHooksRunner,
 } from '../lib';
 
+const onConstructHooksRunner = new SyncHooksRunner('onConstruct');
 class MyInjector implements IInjector {
   private injector = new MetadataInjector();
 
   resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
     const instance = this.injector.resolve(container, value, options);
-    runHooks(instance as object, 'onConstruct', { scope: container });
+    onConstructHooksRunner.execute(instance as object, { scope: container });
     return instance;
   }
 }

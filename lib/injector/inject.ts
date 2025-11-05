@@ -1,10 +1,12 @@
 import { getParameterMetadata, setParameterMetadata } from '../metadata';
 import { type constructor, fillEmptyIndexes, Is } from '../utils';
 import { type IContainer } from '../container/IContainer';
-import { hookMetaKey, type InjectFn } from '../hooks/HookContext';
+import { type InjectFn } from '../hooks/HookContext';
 import { InjectionToken } from '../token/InjectionToken';
 import { ConstantToken } from '../token/ConstantToken';
 import { toToken } from '../token/toToken';
+
+const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
 
 export const inject =
   <T>(fn: InjectionToken<T> | InjectFn<T> | symbol | string | constructor<T>): ParameterDecorator =>

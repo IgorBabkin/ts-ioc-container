@@ -1,4 +1,4 @@
-import { IRegistration } from './IRegistration';
+import { IRegistration } from '../registration/IRegistration';
 import { Is } from '../utils';
 
 export interface BindToken<T = any> {

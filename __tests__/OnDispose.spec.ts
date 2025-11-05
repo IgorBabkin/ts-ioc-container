@@ -1,5 +1,16 @@
-import { bindTo, Container, hook, inject, register, Registration as R, runHooks, select, singleton } from '../lib';
+import {
+  bindTo,
+  Container,
+  hook,
+  inject,
+  register,
+  Registration as R,
+  select,
+  singleton,
+  SyncHooksRunner,
+} from '../lib';
 
+const onDisposeHookRunner = new SyncHooksRunner('onDispose');
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
@@ -43,7 +54,7 @@ describe('onDispose', function () {
     logger.log('Hello');
 
     for (const instance of select.instances().resolve(container)) {
-      runHooks(instance as object, 'onDispose', { scope: container });
+      onDisposeHookRunner.execute(instance as object, { scope: container });
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');

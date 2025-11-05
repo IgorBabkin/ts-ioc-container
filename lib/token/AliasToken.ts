@@ -1,7 +1,7 @@
 import type { DependencyKey, IContainer } from '../container/IContainer';
 import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
-import { BindToken } from '../registration/BindToken';
+import { BindToken } from './BindToken';
 
 export class AliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T> {
   constructor(

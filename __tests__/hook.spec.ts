@@ -1,14 +1,14 @@
 import {
+  AsyncHooksRunner,
   Container,
   hasHooks,
   hook,
   type HookFn,
   onConstruct,
+  onConstructHooksRunner,
   onDispose,
-  runHooks,
-  runHooksAsync,
-  runOnConstructHooks,
-  runOnDisposeHooks,
+  onDisposeHooksRunner,
+  SyncHooksRunner,
   UnexpectedHookResultError,
 } from '../lib';
 
@@ -23,6 +23,7 @@ const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
+const syncBeforeHooksRunner = new SyncHooksRunner('syncBefore');
 describe('hooks', () => {
   it('should run runHooks only for sync hooks', () => {
     class MyClass {
@@ -37,7 +38,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    runHooks(instance, 'syncBefore', { scope: root });
+    syncBeforeHooksRunner.execute(instance, { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
@@ -55,7 +56,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    expect(() => runHooks(instance, 'syncBefore', { scope: root })).toThrowError(UnexpectedHookResultError);
+    expect(() => syncBeforeHooksRunner.execute(instance, { scope: root })).toThrowError(UnexpectedHookResultError);
   });
 
   it('should test hooks', () => {
@@ -77,13 +78,14 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(Logger);
 
-    runOnConstructHooks(instance, root);
-    runOnDisposeHooks(instance, root);
+    onConstructHooksRunner.execute(instance, { scope: root });
+    onDisposeHooksRunner.execute(instance, { scope: root });
 
     expect(instance.isStarted).toBe(true);
     expect(instance.isDisposed).toBe(true);
   });
 
+  const onStartHooksRunner = new AsyncHooksRunner('onStart');
   it('should test runHooksAsync', async () => {
     class Logger {
       isStarted = false;
@@ -108,7 +110,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(Logger);
 
-    await runHooksAsync(instance, 'onStart', {
+    await onStartHooksRunner.execute(instance, {
       scope: root,
       predicate: (methodName) => methodName === 'initialize',
     });

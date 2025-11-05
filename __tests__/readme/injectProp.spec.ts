@@ -1,5 +1,6 @@
-import { Container, hook, injectProp, Registration, runHooks } from '../../lib';
+import { Container, hook, injectProp, Registration, SyncHooksRunner } from '../../lib';
 
+const onInitHookRunner = new SyncHooksRunner('onInit');
 describe('inject property', () => {
   it('should inject property', () => {
     class App {
@@ -10,7 +11,7 @@ describe('inject property', () => {
 
     const container = new Container().addRegistration(Registration.fromValue(expected).bindToKey('greeting'));
     const app = container.resolve(App);
-    runHooks(app as object, 'onInit', { scope: container });
+    onInitHookRunner.execute(app as object, { scope: container });
 
     expect(app.greeting).toBe(expected);
   });
