@@ -438,7 +438,7 @@ describe('SimpleInjector', function () {
 This type of injector injects dependencies as dictionary `Record<string, unknown>`.
 
 ```typescript
-import { Container, ProxyInjector, args, Registration as R } from 'ts-ioc-container';
+import { args, Container, ProxyInjector, Registration as R } from 'ts-ioc-container';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -505,10 +505,10 @@ describe('ProxyInjector', function () {
       }
     }
 
-    // Mock container's resolveMany to return an array with a Logger instance
+    // Mock container's resolveByAlias to return an array with a Logger instance
     const mockLogger = new Logger();
     const mockContainer = new Container({ injector: new ProxyInjector() });
-    mockContainer.resolveMany = jest.fn().mockImplementation((key) => {
+    mockContainer.resolveByAlias = jest.fn().mockImplementation((key) => {
       // Always return the mock array for simplicity
       return [mockLogger];
     });
@@ -519,8 +519,8 @@ describe('ProxyInjector', function () {
     expect(app.loggers.length).toBe(1);
     expect(app.loggers[0]).toBe(mockLogger);
     expect(app.service).toBeInstanceOf(Service);
-    // Verify that resolveMany was called with the correct key
-    expect(mockContainer.resolveMany).toHaveBeenCalledWith('loggersArray');
+    // Verify that resolveByAlias was called with the correct key
+    expect(mockContainer.resolveByAlias).toHaveBeenCalledWith('loggersArray');
   });
 });
 
@@ -859,19 +859,18 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 import {
   args,
   argsFn,
-  asKey,
-  by,
+  bindTo,
   Container,
-  depKey,
   inject,
   MultiCache,
   register,
   Registration as R,
+  resolveByArgs,
   singleton,
+  StringToken,
 } from 'ts-ioc-container';
-import { resolveByArgs } from '../lib/provider/IProvider';
 
-@register(asKey('logger'))
+@register(bindTo('logger'))
 class Logger {
   constructor(
     public name: string,
@@ -887,21 +886,21 @@ describe('ArgsProvider', function () {
   it('can assign argument function to provider', function () {
     const root = createContainer().addRegistration(R.fromClass(Logger).pipe(argsFn(() => ['name'])));
 
-    const logger = root.createScope().resolveOne<Logger>('logger');
+    const logger = root.createScope().resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('can assign argument to provider', function () {
     const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('name')));
 
-    const logger = root.resolveOne<Logger>('logger');
+    const logger = root.resolve<Logger>('logger');
     expect(logger.name).toBe('name');
   });
 
   it('should set provider arguments with highest priority in compare to resolve arguments', function () {
     const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('name')));
 
-    const logger = root.resolveOne<Logger>('logger', { args: ['file'] });
+    const logger = root.resolve<Logger>('logger', { args: ['file'] });
 
     expect(logger.name).toBe('name');
     expect(logger.type).toBe('file');
@@ -912,8 +911,8 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    const IUserRepositoryKey = depKey<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = depKey<IRepository>('ITodoRepository');
+    const IUserRepositoryKey = new StringToken<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = new StringToken<IRepository>('ITodoRepository');
 
     @register(IUserRepositoryKey.asKey)
     class UserRepository implements IRepository {
@@ -929,7 +928,7 @@ describe('ArgsProvider', function () {
       repository: IRepository;
     }
 
-    const IEntityManagerKey = depKey<IEntityManager>('IEntityManager');
+    const IEntityManagerKey = token<IEntityManager>('IEntityManager');
 
     @register(IEntityManagerKey.asKey, argsFn(resolveByArgs))
     class EntityManager {
@@ -947,7 +946,7 @@ describe('ArgsProvider', function () {
       .addRegistration(R.fromClass(EntityManager))
       .addRegistration(R.fromClass(UserRepository))
       .addRegistration(R.fromClass(TodoRepository));
-    const main = root.resolveOne(Main);
+    const main = root.resolve(Main);
 
     expect(main.userEntities.repository).toBeInstanceOf(UserRepository);
     expect(main.todoEntities.repository).toBeInstanceOf(TodoRepository);
@@ -958,8 +957,8 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    const IUserRepositoryKey = depKey<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = depKey<IRepository>('ITodoRepository');
+    const IUserRepositoryKey = token<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = token<IRepository>('ITodoRepository');
 
     @register(IUserRepositoryKey.asKey)
     class UserRepository implements IRepository {
@@ -975,9 +974,9 @@ describe('ArgsProvider', function () {
       repository: IRepository;
     }
 
-    const IEntityManagerKey = depKey<IEntityManager>('IEntityManager');
+    const IEntityManagerKey = new StringToken<IEntityManager>('IEntityManager');
 
-    @register(IEntityManagerKey.asKey, argsFn(resolveByArgs), singleton(MultiCache.fromFirstArg))
+    @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs), singleton(MultiCache.fromFirstArg))
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
@@ -993,7 +992,7 @@ describe('ArgsProvider', function () {
       .addRegistration(R.fromClass(EntityManager))
       .addRegistration(R.fromClass(UserRepository))
       .addRegistration(R.fromClass(TodoRepository));
-    const main = root.resolveOne(Main);
+    const main = root.resolve(Main);
 
     const userRepository = IEntityManagerKey.resolve(root, { args: [IUserRepositoryKey] }).repository;
     expect(userRepository).toBeInstanceOf(UserRepository);
@@ -1558,7 +1557,7 @@ export class MoqContainer extends AutoMockedContainer {
     return this.resolveMock<T>(key).object();
   }
 
-  resolveMany<T>(alias: DependencyKey): T[] {
+  resolveByAlias<T>(alias: DependencyKey): T[] {
     throw new Error('Method not implemented.');
   }
 

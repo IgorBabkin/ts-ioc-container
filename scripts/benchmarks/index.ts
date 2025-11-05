@@ -184,7 +184,7 @@ async function runBenchmark(benchmark = 'default'): Promise<void> {
     const child1 = container.createScope();
     for (let i = 0; i < numberOfRegistrations; i++) {
       const child2 = child1.createScope();
-      const deps = child2.resolveMany('valueAlias');
+      const deps = child2.resolveByAlias('valueAlias');
       if (deps.length !== numberOfRegistrations) {
         throw new Error(`Resolving ${deps.length} deps`);
       }

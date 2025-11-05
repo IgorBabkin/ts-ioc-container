@@ -3,7 +3,6 @@ import {
   asKey,
   Container,
   DependencyNotFoundError,
-  depKey,
   type IContainer,
   inject,
   Is,
@@ -13,6 +12,7 @@ import {
   Registration,
   Registration as R,
   singleton,
+  token,
 } from '../lib';
 
 describe('IContainer', function () {
@@ -41,12 +41,12 @@ describe('IContainer', function () {
   it('should assign a dependency key to a registration', function () {
     interface ILogger {}
 
-    const ILoggerKey = depKey<ILogger>('ILogger')
+    const ILoggerKey = token<ILogger>('ILogger')
       .when((c) => c.hasTag('child1'))
       .pipe(singleton());
 
-    const ILoggerKey2 = depKey<ILogger>('ILogger2');
-    const ILoggerKey3 = depKey<ILogger>('ILogger3');
+    const ILoggerKey2 = token<ILogger>('ILogger2');
+    const ILoggerKey3 = token<ILogger>('ILogger3');
 
     @register(ILoggerKey.asKey, ILoggerKey2.asAlias, asAlias(ILoggerKey3), asAlias('ILogger4'), asAlias('ILogger5'))
     class FileLogger {}
@@ -65,7 +65,7 @@ describe('IContainer', function () {
   it('should test register decorator', function () {
     interface ILogger {}
 
-    const ILoggerKey = depKey<ILogger>('ILogger');
+    const ILoggerKey = token<ILogger>('ILogger');
 
     @register(ILoggerKey.asKey)
     class FileLogger {}
@@ -84,7 +84,7 @@ describe('IContainer', function () {
   it('should test isDepKey', function () {
     interface ILogger {}
 
-    const ILoggerKey = depKey<ILogger>('ILogger')
+    const ILoggerKey = token<ILogger>('ILogger')
       .when((c) => c.hasTag('child1'))
       .pipe(singleton());
 
@@ -167,7 +167,7 @@ describe('IContainer', function () {
 
     for (let i = 0; i < 20; i++) {
       const child = container.createScope();
-      const deps = child.resolveMany('valueAlias');
+      const deps = child.resolveByAlias('valueAlias');
       expect(deps.length).toEqual(20);
       child.dispose();
     }

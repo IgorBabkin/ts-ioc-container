@@ -3,7 +3,7 @@ import { type CreateHookContext, createHookContext, type IHookContext, type Inje
 import { type constructor, Is, promisify } from '../utils';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
 import { type IInjectFnResolver } from '../injector/IInjector';
-import { toInjectFn } from '../injector/inject';
+import { toToken } from '../token/InjectionToken';
 
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
 export interface HookClass<T extends IHookContext = IHookContext> {
@@ -96,7 +96,7 @@ export const runHooksAsync = (
 export const injectProp =
   (fn: InjectFn | IInjectFnResolver<unknown> | DependencyKey | constructor<unknown>): HookFn =>
   (context) =>
-    context.setProperty(toInjectFn(fn));
+    context.setProperty(toToken(fn));
 
 export const onConstruct = (fn: HookFn) => hook('onConstruct', fn);
 export const runOnConstructHooks = (target: object, scope: IContainer) => runHooks(target, 'onConstruct', { scope });

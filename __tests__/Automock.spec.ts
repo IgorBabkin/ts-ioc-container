@@ -45,7 +45,7 @@ export class MoqContainer extends AutoMockedContainer {
     return this.resolveMock<T>(key).object();
   }
 
-  resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
+  resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
     throw new MethodNotImplementedError();
   }
 

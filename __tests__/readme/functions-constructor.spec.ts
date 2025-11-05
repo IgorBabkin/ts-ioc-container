@@ -1,6 +1,6 @@
-import { Container, depKey, singleton } from '../../lib';
+import { Container, singleton, token } from '../../lib';
 
-const ICarKey = depKey<
+const ICarKey = token<
   Promise<{
     isDriving(): boolean;
     drive(): void;
@@ -8,7 +8,7 @@ const ICarKey = depKey<
   }>
 >('ICar');
 
-const ILoggerKey = depKey<
+const ILoggerKey = token<
   Promise<{
     info(...messages: string[]): boolean;
   }>

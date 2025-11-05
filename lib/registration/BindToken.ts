@@ -1,0 +1,10 @@
+import { IRegistration } from './IRegistration';
+import { Is } from '../utils';
+
+export interface BindToken<T = any> {
+  bindTo(r: IRegistration<T>): void;
+}
+
+export function isBindToken(token: unknown): token is BindToken {
+  return !Is.nullish(token) && typeof token === 'object' && 'bindTo' in token;
+}

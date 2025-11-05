@@ -44,13 +44,12 @@ export { type ProviderPipe } from './provider/ProviderPipe';
 
 // Registrations
 export {
-  asKey,
-  asAlias,
   type IRegistration,
   type ReturnTypeOfRegistration,
   scope,
   register,
   type ScopePredicate,
+  bindTo,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
@@ -87,8 +86,15 @@ export {
   getParameterMetadata,
 } from './metadata';
 
+// InjectionToken
+export { InjectionToken, toToken } from './token/InjectionToken';
+export { AliasToken } from './token/AliasToken';
+export { ClassToken } from './token/ClassToken';
+export { StringToken } from './token/StringToken';
+export { FunctionToken } from './token/FunctionToken';
+export { ConstantToken } from './token/ConstantToken';
+export { type InstancePredicate, InstanceListToken } from './token/InstanceListToken';
+
 // Others
-export { by } from './resolve';
+export { select } from './select';
 export { type constructor, Is } from './utils';
-export { depKey, type DepKey } from './DepKey';
-export { type InstancePredicate } from './resolve';

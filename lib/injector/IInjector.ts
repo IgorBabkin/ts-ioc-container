@@ -12,7 +12,7 @@ export interface IInjectFnResolver<T> {
   resolve(s: IContainer, options?: ResolveOneOptions): T;
 }
 
-export abstract class Injector implements IInjector {
+export abstract class Injector {
   resolve<T>(scope: IContainer, Target: constructor<T>, options?: InjectOptions): T {
     return this.createInstance(scope, Target, options);
   }

@@ -1,4 +1,4 @@
-import { Container, ProxyInjector, args, Registration as R } from '../lib';
+import { args, Container, ProxyInjector, Registration as R } from '../lib';
 
 describe('ProxyInjector', function () {
   it('should pass dependency to constructor as dictionary', function () {
@@ -65,10 +65,10 @@ describe('ProxyInjector', function () {
       }
     }
 
-    // Mock container's resolveMany to return an array with a Logger instance
+    // Mock container's resolveByAlias to return an array with a Logger instance
     const mockLogger = new Logger();
     const mockContainer = new Container({ injector: new ProxyInjector() });
-    mockContainer.resolveMany = jest.fn().mockImplementation((key) => {
+    mockContainer.resolveByAlias = jest.fn().mockImplementation((key) => {
       // Always return the mock array for simplicity
       return [mockLogger];
     });
@@ -79,7 +79,7 @@ describe('ProxyInjector', function () {
     expect(app.loggers.length).toBe(1);
     expect(app.loggers[0]).toBe(mockLogger);
     expect(app.service).toBeInstanceOf(Service);
-    // Verify that resolveMany was called with the correct key
-    expect(mockContainer.resolveMany).toHaveBeenCalledWith('loggersArray');
+    // Verify that resolveByAlias was called with the correct key
+    expect(mockContainer.resolveByAlias).toHaveBeenCalledWith('loggersArray');
   });
 });

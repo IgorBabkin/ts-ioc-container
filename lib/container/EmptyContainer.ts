@@ -11,7 +11,6 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { type constructor } from '../utils';
-import { InjectOptions } from '../injector/IInjector';
 
 export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {
@@ -20,10 +19,6 @@ export class EmptyContainer implements IContainer {
 
   getParent() {
     return undefined;
-  }
-
-  resolveClass<T>(token: constructor<T>, options?: InjectOptions): T {
-    throw new MethodNotImplementedError();
   }
 
   getScopes() {
@@ -64,19 +59,11 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
-  resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
+  resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
     return [];
   }
 
-  resolveOne<T>(key: constructor<T> | DependencyKey, options?: ResolveManyOptions): T {
-    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
-  }
-
-  resolveOneByKey<T>(key: DependencyKey, options?: ResolveOneOptions): T {
-    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
-  }
-
-  resolveOneByAlias<T>(key: DependencyKey, options?: ResolveOneOptions): T {
+  resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 }

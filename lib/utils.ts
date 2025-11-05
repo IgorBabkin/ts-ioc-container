@@ -1,6 +1,6 @@
 import { DependencyKey } from './container/IContainer';
 import { IInjectFnResolver } from './injector/IInjector';
-import { DepKey } from './DepKey';
+import { InjectionToken } from './token/InjectionToken';
 
 export type constructor<T> = new (...args: any[]) => T;
 
@@ -26,11 +26,6 @@ export function fillEmptyIndexes<T>(baseArr: (T | undefined)[], insertArr: T[]):
   }
   return a.concat(b) as T[];
 }
-
-export const constant =
-  <T>(value: T) =>
-  () =>
-    value;
 
 export function lazyProxy<T>(resolveInstance: () => T): T {
   let instance: T | undefined;
@@ -67,6 +62,7 @@ export const Filter = {
 };
 
 export const Is = {
+  nullish: <T>(value: T | undefined | null): value is null | undefined => value === undefined || value === null,
   object: (target: unknown): target is object => target !== null && typeof target === 'object',
   instance: (target: unknown): target is InstanceOfClass => Object.prototype.hasOwnProperty.call(target, 'constructor'),
   constructor: (target: unknown): target is constructor<unknown> => typeof target === 'function' && !!target.prototype,
@@ -74,7 +70,7 @@ export const Is = {
   injectBuilder: (target: unknown): target is IInjectFnResolver<unknown> =>
     Is.object(target) && 'resolve' in target && typeof target['resolve'] === 'function',
 
-  DepKey: <T>(key: unknown): key is DepKey<T> => {
+  DepKey: <T>(key: unknown): key is InjectionToken<T> => {
     return typeof key === 'object' && key !== null && 'key' in key;
   },
 };

@@ -2,6 +2,7 @@ import { IContainer, Tagged } from '../container/IContainer';
 import { Is, MapFn } from '../utils';
 import { isProviderPipe, ProviderPipe, registerPipe } from './ProviderPipe';
 import { InjectOptions } from '../injector/IInjector';
+import { InjectionToken } from '../token/InjectionToken';
 
 export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
@@ -34,11 +35,11 @@ export const argsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
 
 export const resolveByArgs = (s: IContainer, ...deps: unknown[]) =>
   deps.map((d) => {
-    if (Is.injectBuilder(d)) {
+    if (d instanceof InjectionToken) {
       return d.resolve(s);
     }
     if (Is.constructor(d)) {
-      return s.resolveClass(d);
+      return s.resolve(d);
     }
     return d;
   });

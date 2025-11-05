@@ -1,6 +1,7 @@
 import { resolveArgs } from '../injector/inject';
 import type { IContainer } from '../container/IContainer';
 import type { constructor } from '../utils';
+import { InjectionToken } from '../token/InjectionToken';
 
 export type InjectFn<T = unknown> = (s: IContainer) => T;
 
@@ -13,7 +14,7 @@ export interface IHookContext {
 
   invokeMethod({ args }: { args?: unknown[] }): unknown;
 
-  setProperty(fn: InjectFn): void;
+  setProperty(fn: InjectionToken): void;
 }
 
 export class HookContext implements IHookContext {
@@ -32,9 +33,9 @@ export class HookContext implements IHookContext {
     return this.instance[this.methodName](...args);
   }
 
-  setProperty(fn: InjectFn): void {
+  setProperty(token: InjectionToken): void {
     // @ts-ignore
-    this.instance[this.methodName] = fn(this.scope);
+    this.instance[this.methodName] = token.resolve(this.scope);
   }
 }
 

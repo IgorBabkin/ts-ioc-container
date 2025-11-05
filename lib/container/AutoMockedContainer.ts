@@ -1,15 +1,7 @@
-import {
-  type DependencyKey,
-  type IContainer,
-  type Instance,
-  type ResolveManyOptions,
-  type ResolveOneOptions,
-  type Tag,
-} from './IContainer';
+import { type DependencyKey, type IContainer, type Instance, type ResolveManyOptions, type Tag } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { type IRegistration } from '../registration/IRegistration';
 import { type constructor } from '../utils';
-import { InjectOptions } from '../injector/IInjector';
 
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;
@@ -54,13 +46,7 @@ export abstract class AutoMockedContainer implements IContainer {
     return this;
   }
 
-  abstract resolveMany<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
+  abstract resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 
-  abstract resolveClass<T>(target: constructor<T>, options?: InjectOptions): T;
-
-  abstract resolveOneByKey<T>(keyOrAlias: DependencyKey, options?: ResolveOneOptions): T;
-
-  abstract resolveOneByAlias<T>(keyOrAlias: DependencyKey, options?: ResolveOneOptions): T;
-
-  abstract resolveOne<T>(alias: constructor<T> | DependencyKey, options?: ResolveManyOptions): T;
+  abstract resolve<T>(alias: constructor<T> | DependencyKey, options?: ResolveManyOptions): T;
 }

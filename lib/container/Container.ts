@@ -1,6 +1,5 @@
 import {
   type CreateScopeOptions,
-  DEFAULT_CONTAINER_RESOLVER,
   type DependencyKey,
   type IContainer,
   type IContainerModule,
@@ -11,20 +10,14 @@ import {
   type Tag,
 } from './IContainer';
 import { type IInjector } from '../injector/IInjector';
-import { type IProvider, ProviderOptions } from '../provider/IProvider';
+import { type IProvider } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { type constructor, Filter as F, toLazyIf } from '../utils';
+import { type constructor, Filter as F, Is, toLazyIf } from '../utils';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-
-type ResolveOneStrategy = <T>(
-  scope: IContainer,
-  keyOrAlias: constructor<T> | DependencyKey,
-  options?: ResolveOneOptions,
-) => T;
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -38,7 +31,6 @@ export class Container implements IContainer {
   private readonly onConstruct: (instance: Instance, scope: IContainer) => void;
   private readonly onDispose: (scope: IContainer) => void;
   private readonly injector: IInjector;
-  private readonly resolveOneStrategy: ResolveOneStrategy;
 
   constructor(
     options: {
@@ -47,7 +39,6 @@ export class Container implements IContainer {
       tags?: Tag[];
       onConstruct?: (instance: Instance, scope: IContainer) => void;
       onDispose?: (scope: IContainer) => void;
-      resolveOneStrategy?: ResolveOneStrategy;
     } = {},
   ) {
     this.injector = options.injector ?? new MetadataInjector();
@@ -55,7 +46,6 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
     this.onConstruct = options.onConstruct ?? (() => {});
     this.onDispose = options.onDispose ?? (() => {});
-    this.resolveOneStrategy = options.resolveOneStrategy ?? DEFAULT_CONTAINER_RESOLVER;
   }
 
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
@@ -76,48 +66,32 @@ export class Container implements IContainer {
     return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
-  resolveClass<T>(token: constructor<T>, options?: ProviderOptions): T {
+  resolve<T>(keyOrAlias: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    return toLazyIf(() => {
-      const instance = this.injector.resolve(this, token, options);
-      this.instances.add(instance as Instance);
-      this.onConstruct(instance as Instance, this);
-      return instance;
-    }, options?.lazy);
-  }
-
-  resolveOne<T>(keyOrAlias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
-    return this.resolveOneStrategy(this, keyOrAlias, options);
-  }
-
-  resolveOneByKey<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
-    this.validateContainer();
+    if (Is.constructor(keyOrAlias)) {
+      return toLazyIf(() => {
+        const instance = this.injector.resolve(this, keyOrAlias, { args });
+        this.instances.add(instance as Instance);
+        this.onConstruct(instance as Instance, this);
+        return instance;
+      }, lazy);
+    }
 
     const provider = this.providers.get(keyOrAlias) as IProvider<T> | undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
-      : this.parent.resolveOneByKey<T>(keyOrAlias, { args, child, lazy });
+      : this.parent.resolve<T>(keyOrAlias, { args, child, lazy });
   }
 
-  resolveOneByAlias<T>(keyOrAlias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
-    this.validateContainer();
-
-    const key = this.aliases.findLastKeyByAlias(keyOrAlias);
-    const provider = key !== undefined ? this.findProviderByKeyOrFail<T>(key) : undefined;
-
-    return provider?.hasAccess({ invocationScope: child, providerScope: this })
-      ? provider.resolve(this, { args, lazy })
-      : this.parent.resolveOneByAlias<T>(keyOrAlias, { args, child, lazy });
-  }
-
-  resolveMany<T>(
+  resolveByAlias<T>(
     alias: DependencyKey,
-    { args = [], child = this, lazy, excludedKeys = new Set() }: ResolveManyOptions = {},
+    { args = [], child = this, lazy, excludedKeys = new Set(), takeFirst = -1 }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
+    let left = takeFirst;
     const keys: DependencyKey[] = [];
     const deps: T[] = [];
     for (const key of this.aliases.findManyKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
@@ -127,9 +101,14 @@ export class Container implements IContainer {
       }
       keys.push(key);
       deps.push(provider.resolve(this, { args, lazy }));
+      if (left < 0 || left > 0) {
+        left--;
+        continue;
+      }
+      break;
     }
 
-    const parentDeps = this.parent.resolveMany<T>(alias, {
+    const parentDeps = this.parent.resolveByAlias<T>(alias, {
       args,
       child,
       lazy,

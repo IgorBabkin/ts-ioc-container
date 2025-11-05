@@ -1,9 +1,10 @@
 import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import { constructor, Is, MapFn } from '../utils';
+import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
-import type { DepKey } from '../DepKey';
 import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
+import { StringToken } from '../token/StringToken';
+import { BindToken, isBindToken } from './BindToken';
 
 export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
 
@@ -34,12 +35,10 @@ export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>)
     mappers.map((m) => (isProviderPipe(m) ? (r: IRegistration) => m.mapRegistration(r) : m)),
   );
 
-export const asAlias =
-  (target: DependencyKey | DepKey<any>): MapFn<IRegistration> =>
-  (r) =>
-    r.bindToAlias(Is.dependencyKey(target) ? target : target.key);
-
-export const asKey =
-  (key: DependencyKey): MapFn<IRegistration> =>
-  (r) =>
-    r.bindToKey(key);
+export const bindTo =
+  (token: DependencyKey | BindToken): MapFn<IRegistration> =>
+  (r) => {
+    const targetToken = isBindToken(token) ? token : new StringToken(token);
+    targetToken.bindTo(r);
+    return r;
+  };
