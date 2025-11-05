@@ -33,7 +33,7 @@ describe('IContainer', function () {
       }
     };
 
-    const container = new Container({ tags: ['root'], onDispose });
+    const container = new Container({ tags: ['root'] }).addOnDisposeHook(onDispose);
 
     container.dispose();
 

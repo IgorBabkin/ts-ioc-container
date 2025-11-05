@@ -8,7 +8,7 @@ export type DependencyKey = string | symbol;
 
 type WithChild = { child: Tagged };
 export type ResolveOneOptions = ProviderOptions & Partial<WithChild>;
-type WithExcludedKeys = { excludedKeys: Set<DependencyKey> };
+type WithExcludedKeys = { excludedKeys: DependencyKey[] };
 type TakeFirst = { takeFirst: number };
 export type ResolveManyOptions = ResolveOneOptions & Partial<WithExcludedKeys> & Partial<TakeFirst>;
 

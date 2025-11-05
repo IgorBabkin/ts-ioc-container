@@ -3,13 +3,13 @@ import { type DependencyKey } from './IContainer';
 export type Alias = DependencyKey;
 
 export class AliasMap {
-  private readonly aliasToKeySet = new Map<DependencyKey, Set<Alias>>();
+  private readonly aliasToKeySet = new Map<Alias, Set<DependencyKey>>();
 
-  deleteKeyFromAliases(key: DependencyKey): void {
-    for (const [depKey, aliasSet] of [...this.aliasToKeySet].filter(([, aliasSet]) => aliasSet.has(key))) {
-      aliasSet.delete(key);
-      if (aliasSet.size === 0) {
-        this.aliasToKeySet.delete(depKey);
+  deleteAliasesByKey(key: DependencyKey): void {
+    for (const [alias, keySet] of this.aliasToKeySet) {
+      keySet.delete(key);
+      if (keySet.size === 0) {
+        this.aliasToKeySet.delete(alias);
       }
     }
   }
@@ -18,10 +18,10 @@ export class AliasMap {
     return [...(this.aliasToKeySet.get(alias) ?? [])];
   }
 
-  addAliases(key: DependencyKey, aliases: DependencyKey[]): void {
+  setAliases(key: DependencyKey, aliases: DependencyKey[]): void {
     for (const alias of aliases) {
-      const currentAliasKeys = this.aliasToKeySet.get(alias) ?? new Set();
-      this.aliasToKeySet.set(alias, currentAliasKeys.add(key));
+      const dependencyKeySet = this.aliasToKeySet.get(alias) ?? new Set();
+      this.aliasToKeySet.set(alias, dependencyKeySet.add(key));
     }
   }
 

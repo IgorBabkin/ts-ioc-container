@@ -18,6 +18,8 @@ import { MetadataInjector } from '../injector/MetadataInjector';
 import { type constructor, Filter as F, Is, toLazyIf } from '../utils';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
+import { OnConstructHook } from '../hooks/onConstruct';
+import { OnDisposeHook } from '../hooks/onDispose';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -28,31 +30,37 @@ export class Container implements IContainer {
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly aliases = new AliasMap();
   private readonly registrations = new Set<IRegistration>();
-  private readonly onConstruct: (instance: Instance, scope: IContainer) => void;
-  private readonly onDispose: (scope: IContainer) => void;
   private readonly injector: IInjector;
+  private readonly onConstructHookList: OnConstructHook[] = [];
+  private readonly onDisposeHookList: OnDisposeHook[] = [];
 
   constructor(
     options: {
       injector?: IInjector;
       parent?: IContainer;
       tags?: Tag[];
-      onConstruct?: (instance: Instance, scope: IContainer) => void;
-      onDispose?: (scope: IContainer) => void;
     } = {},
   ) {
     this.injector = options.injector ?? new MetadataInjector();
     this.parent = options.parent ?? new EmptyContainer();
     this.tags = new Set(options.tags ?? []);
-    this.onConstruct = options.onConstruct ?? (() => {});
-    this.onDispose = options.onDispose ?? (() => {});
+  }
+
+  addOnConstructHook(...hooks: OnConstructHook[]): this {
+    this.onConstructHookList.push(...hooks);
+    return this;
+  }
+
+  addOnDisposeHook(...hooks: OnDisposeHook[]): this {
+    this.onDisposeHookList.push(...hooks);
+    return this;
   }
 
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
     this.validateContainer();
     this.providers.set(key, provider);
-    this.aliases.deleteKeyFromAliases(key);
-    this.aliases.addAliases(key, aliases);
+    this.aliases.deleteAliasesByKey(key);
+    this.aliases.setAliases(key, aliases);
     return this;
   }
 
@@ -73,7 +81,12 @@ export class Container implements IContainer {
       return toLazyIf(() => {
         const instance = this.injector.resolve(this, keyOrAlias, { args });
         this.instances.add(instance as Instance);
-        this.onConstruct(instance as Instance, this);
+
+        // Execute onConstruct hooks
+        for (const onConstruct of this.onConstructHookList) {
+          onConstruct(instance as Instance, this);
+        }
+
         return instance;
       }, lazy);
     }
@@ -87,7 +100,7 @@ export class Container implements IContainer {
 
   resolveByAlias<T>(
     alias: DependencyKey,
-    { args = [], child = this, lazy, excludedKeys = new Set(), takeFirst = -1 }: ResolveManyOptions = {},
+    { args = [], child = this, lazy, excludedKeys = [], takeFirst = -1 }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
@@ -112,7 +125,7 @@ export class Container implements IContainer {
       args,
       child,
       lazy,
-      excludedKeys: new Set([...excludedKeys, ...keys]),
+      excludedKeys: [...excludedKeys, ...keys],
     });
     return [...deps, ...parentDeps];
   }
@@ -124,9 +137,10 @@ export class Container implements IContainer {
       injector: this.injector,
       parent: this,
       tags,
-      onDispose: this.onDispose,
-      onConstruct: this.onConstruct,
-    });
+    })
+      .addOnConstructHook(...this.onConstructHookList)
+      .addOnDisposeHook(...this.onDisposeHookList);
+
     scope.applyRegistrationsFrom(this);
     this.scopes.add(scope);
 
@@ -171,7 +185,15 @@ export class Container implements IContainer {
     this.aliases.destroy();
     this.instances.clear();
     this.registrations.clear();
-    this.onDispose(this);
+
+    // Clear hooks
+    this.onConstructHookList.splice(0, this.onConstructHookList.length);
+
+    // Execute onDispose hooks
+    while (this.onDisposeHookList.length) {
+      const onDispose = this.onDisposeHookList.shift()!;
+      onDispose(this);
+    }
   }
 
   /**
