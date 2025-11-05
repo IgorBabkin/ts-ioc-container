@@ -6,6 +6,8 @@ import { type constructor } from '../utils';
 export abstract class AutoMockedContainer implements IContainer {
   isDisposed = false;
 
+  onInstanceCreated(instance: Instance) {}
+
   createScope(): IContainer {
     throw new MethodNotImplementedError();
   }

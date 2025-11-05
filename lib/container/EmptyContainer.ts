@@ -2,6 +2,7 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
+  Instance,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
@@ -16,6 +17,8 @@ export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {
     throw new MethodNotImplementedError();
   }
+
+  onInstanceCreated(instance: Instance) {}
 
   getParent() {
     return undefined;

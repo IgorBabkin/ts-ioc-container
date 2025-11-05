@@ -59,4 +59,6 @@ export interface IContainer extends Tagged {
   getInstances(): Instance[];
 
   dispose(): void;
+
+  onInstanceCreated(instance: Instance): void;
 }

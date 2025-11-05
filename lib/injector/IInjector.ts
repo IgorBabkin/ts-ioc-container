@@ -1,5 +1,5 @@
 import { type constructor } from '../utils';
-import { type IContainer, ResolveOneOptions } from '../container/IContainer';
+import { type IContainer, Instance, ResolveOneOptions } from '../container/IContainer';
 
 type WithArgs = { args: unknown[] };
 export type InjectOptions = Partial<WithArgs>;
@@ -14,7 +14,9 @@ export interface IInjectFnResolver<T> {
 
 export abstract class Injector {
   resolve<T>(scope: IContainer, Target: constructor<T>, options?: InjectOptions): T {
-    return this.createInstance(scope, Target, options);
+    const instance = this.createInstance(scope, Target, options);
+    scope.onInstanceCreated(instance as Instance);
+    return instance;
   }
 
   protected abstract createInstance<T>(scope: IContainer, Target: constructor<T>, options?: InjectOptions): T;

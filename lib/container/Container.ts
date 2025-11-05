@@ -56,6 +56,15 @@ export class Container implements IContainer {
     return this;
   }
 
+  onInstanceCreated(instance: Instance) {
+    this.instances.add(instance as Instance);
+
+    // Execute onConstruct hooks
+    for (const onConstruct of this.onConstructHookList) {
+      onConstruct(instance as Instance, this);
+    }
+  }
+
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
     this.validateContainer();
     this.providers.set(key, provider);
@@ -78,17 +87,7 @@ export class Container implements IContainer {
     this.validateContainer();
 
     if (Is.constructor(keyOrAlias)) {
-      return toLazyIf(() => {
-        const instance = this.injector.resolve(this, keyOrAlias, { args });
-        this.instances.add(instance as Instance);
-
-        // Execute onConstruct hooks
-        for (const onConstruct of this.onConstructHookList) {
-          onConstruct(instance as Instance, this);
-        }
-
-        return instance;
-      }, lazy);
+      return toLazyIf(() => this.injector.resolve(this, keyOrAlias, { args }), lazy);
     }
 
     const provider = this.providers.get(keyOrAlias) as IProvider<T> | undefined;
