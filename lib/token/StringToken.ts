@@ -11,7 +11,11 @@ export class StringToken<T = any> extends InjectionToken {
   }
 
   resolve(s: IContainer): T {
-    return s.resolve(this.token);
+    const argsFn = this.options.argsFn ?? setArgs();
+    return s.resolve(this.token, {
+      args: argsFn(s),
+      lazy: this.options.lazy,
+    });
   }
 
   bindTo(r: IRegistration<T>) {

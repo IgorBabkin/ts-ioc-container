@@ -86,7 +86,7 @@ export {
 } from './metadata';
 
 // InjectionToken
-export { InjectionToken, toToken } from './token/InjectionToken';
+export { InjectionToken } from './token/InjectionToken';
 export { AliasToken, toAlias } from './token/AliasToken';
 export { ClassToken } from './token/ClassToken';
 export { StringToken } from './token/StringToken';
@@ -97,3 +97,4 @@ export { type InstancePredicate, InstanceListToken } from './token/InstanceListT
 // Others
 export { select } from './select';
 export { type constructor, Is } from './utils';
+export { toToken } from './token/toToken';

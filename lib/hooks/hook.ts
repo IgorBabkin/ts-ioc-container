@@ -2,7 +2,8 @@ import { DependencyKey, type IContainer } from '../container/IContainer';
 import { type CreateHookContext, createHookContext, type IHookContext, type InjectFn } from './HookContext';
 import { type constructor, Is, promisify } from '../utils';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
-import { InjectionToken, toToken } from '../token/InjectionToken';
+import { InjectionToken } from '../token/InjectionToken';
+import { toToken } from '../token/toToken';
 
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
 export interface HookClass<T extends IHookContext = IHookContext> {

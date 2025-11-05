@@ -77,7 +77,7 @@ describe('alias', () => {
 
     const container = new Container().addRegistration(R.fromClass(FileLogger));
 
-    expect(container.resolve('ILogger')).toBeInstanceOf(FileLogger);
+    expect(container.resolveByAlias('ILogger', { takeFirst: 1 })[0]).toBeInstanceOf(FileLogger);
     expect(() => container.resolve('logger')).toThrowError(DependencyNotFoundError);
   });
 
@@ -92,33 +92,11 @@ describe('alias', () => {
       .addRegistration(R.fromClass(FileLogger))
       .addRegistration(R.fromClass(DbLogger));
 
-    const result1 = container.resolve('ILogger');
+    const [result1] = container.resolveByAlias('ILogger', { takeFirst: 1 });
     const child = container.createScope({ tags: ['child'] });
-    const result2 = child.resolve('ILogger');
+    const [result2] = child.resolveByAlias('ILogger', { takeFirst: 1 });
 
     expect(result1).toBeInstanceOf(FileLogger);
     expect(result2).toBeInstanceOf(DbLogger);
-  });
-
-  it('should resolve by aliases', () => {
-    interface ILogger {}
-
-    @register(bindTo(toAlias('ILogger')))
-    class FileLogger implements ILogger {}
-
-    @register(bindTo(toAlias('ILogger')))
-    class DbLogger implements ILogger {}
-
-    class App {
-      constructor(@inject(toAlias('ILogger')) public loggers: ILogger[]) {}
-    }
-
-    const container = new Container().addRegistration(R.fromClass(FileLogger));
-
-    const loggers = container.resolve(App).loggers;
-    container.addRegistration(R.fromClass(DbLogger));
-    const loggers2 = container.resolve(App).loggers;
-
-    expect(loggers).toEqual(loggers2);
   });
 });

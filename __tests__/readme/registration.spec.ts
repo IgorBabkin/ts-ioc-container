@@ -45,7 +45,7 @@ describe('Registration module', function () {
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
 
-    expect(root.resolve('Logger')).toBeInstanceOf(Logger);
+    expect(root.resolveByAlias('Logger')[0]).toBeInstanceOf(Logger);
     expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 });

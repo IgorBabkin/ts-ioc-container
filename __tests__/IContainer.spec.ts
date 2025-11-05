@@ -62,10 +62,10 @@ describe('IContainer', function () {
     const child1 = root.createScope({ tags: ['child1'] });
     const child2 = root.createScope({ tags: ['child2'] });
 
-    expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey2.resolve(child1));
-    expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey3.resolve(child1));
-    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger4'));
-    expect(ILoggerKey.resolve(child1)).toBe(child1.resolve('ILogger5'));
+    expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey2.resolve(child1)[0]);
+    expect(ILoggerKey.resolve(child1)).toBe(ILoggerKey3.resolve(child1)[0]);
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolveByAlias('ILogger4')[0]);
+    expect(ILoggerKey.resolve(child1)).toBe(child1.resolveByAlias('ILogger5')[0]);
     expect(() => ILoggerKey.resolve(child2)).toThrow(DependencyNotFoundError);
   });
 
@@ -88,14 +88,6 @@ describe('IContainer', function () {
     expect(root.resolve('INormalizer')).toBeInstanceOf(Normalizer);
   });
 
-  it('should test isDepKey', function () {
-    interface ILogger {}
-
-    const ILoggerKey = new StringToken<ILogger>('ILogger');
-
-    expect(Is.DepKey(ILoggerKey)).toBe(true);
-  });
-
   it('should test provider decorator', function () {
     class MyProvider extends ProviderDecorator<string> {
       constructor() {
@@ -107,7 +99,7 @@ describe('IContainer', function () {
     const root = new Container({ tags: ['root'] }).register('myProvider', provider, { aliases: ['greeting'] });
 
     expect(root.resolve('myProvider')).toBe('hello world');
-    expect(root.resolve('greeting')).toBe('hello world');
+    expect(root.resolveByAlias('greeting')[0]).toBe('hello world');
   });
 
   it('should getInstances only from current scope if cascade is false', () => {

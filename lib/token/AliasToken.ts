@@ -12,7 +12,11 @@ export class AliasToken<T = any> extends InjectionToken<T[]> implements BindToke
   }
 
   resolve(s: IContainer): T[] {
-    return s.resolveByAlias(this.token);
+    const argsFn = this.options.argsFn ?? setArgs();
+    return s.resolveByAlias(this.token, {
+      args: argsFn(s),
+      lazy: this.options.lazy,
+    });
   }
 
   bindTo(r: IRegistration<T>) {

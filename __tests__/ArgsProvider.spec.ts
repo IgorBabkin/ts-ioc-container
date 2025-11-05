@@ -140,7 +140,7 @@ describe('ArgsProvider', function () {
     expect(userRepository).toBeInstanceOf(UserRepository);
     expect(main.userEntities.repository).toBe(userRepository);
 
-    const todoRepository = IEntityManagerKey.args(IUserRepositoryKey).resolve(root).repository;
+    const todoRepository = IEntityManagerKey.args(ITodoRepositoryKey).resolve(root).repository;
     expect(todoRepository).toBeInstanceOf(TodoRepository);
     expect(main.todoEntities.repository).toBe(todoRepository);
   });

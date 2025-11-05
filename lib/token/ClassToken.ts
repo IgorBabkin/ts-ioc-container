@@ -11,7 +11,11 @@ export class ClassToken<T = any> extends InjectionToken<T> {
   }
 
   resolve(s: IContainer) {
-    return s.resolve(this.token);
+    const argsFn = this.options.argsFn ?? setArgs();
+    return s.resolve(this.token, {
+      args: argsFn(s),
+      lazy: this.options.lazy,
+    });
   }
 
   args(...args: unknown[]): InjectionToken<T> {

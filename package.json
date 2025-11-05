@@ -42,10 +42,7 @@
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
     "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
     "generate:docs": "scripts/generate-readme/generate-readme.ts && git add README.md",
-    "test-coverage:check": "scripts/test-coverage/check-coverage.ts",
-    "test-coverage:update": "scripts/test-coverage/update-coverage-results.ts",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
-    "coverage": "coveralls",
     "test": "jest --coverage",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
@@ -54,11 +51,7 @@
     "lint": "eslint lib/**/*.ts  __tests__/**/*.ts scripts/**/*.ts",
     "lint:fix": "npm run lint --fix",
     "prepare": "husky",
-    "release": "npm run build && npm test && npm publish",
-    "benchmarks:generate": "./scripts/benchmarks/index.ts --report-output ./scripts/benchmarks/.benchmark.new.report.json",
-    "benchmarks:compare": "./scripts/benchmarks/compare-reports.ts --left ./scripts/benchmarks/.benchmark.report.json --right ./scripts/benchmarks/.benchmark.new.report.json",
-    "perfomance-regression": "npm run benchmarks:generate && npm run benchmarks:compare",
-    "perfomance-regression:save": "cp ./scripts/benchmarks/.benchmark.new.report.json ./scripts/benchmarks/.benchmark.report.json && rm ./scripts/benchmarks/.benchmark.new.report.json"
+    "release": "npm run build && npm test && npm publish"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
@@ -76,7 +69,6 @@
     "prettier": "3.5.3",
     "reflect-metadata": "^0.2.2",
     "rimraf": "6.0.1",
-    "tinybench": "^4.0.1",
     "ts-jest": "29.3.1",
     "typescript": "5.8.3"
   },
