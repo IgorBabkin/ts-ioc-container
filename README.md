@@ -1130,7 +1130,7 @@ describe('alias', () => {
 
     const container = new Container().addRegistration(R.fromClass(FileLogger));
 
-    expect(container.resolveByAlias('ILogger', { takeFirst: 1 })[0]).toBeInstanceOf(FileLogger);
+    expect(container.resolveOneByAlias('ILogger')).toBeInstanceOf(FileLogger);
     expect(() => container.resolve('logger')).toThrowError(DependencyNotFoundError);
   });
 
@@ -1145,9 +1145,9 @@ describe('alias', () => {
       .addRegistration(R.fromClass(FileLogger))
       .addRegistration(R.fromClass(DbLogger));
 
-    const [result1] = container.resolveByAlias('ILogger', { takeFirst: 1 });
+    const result1 = container.resolveOneByAlias('ILogger');
     const child = container.createScope({ tags: ['child'] });
-    const [result2] = child.resolveByAlias('ILogger', { takeFirst: 1 });
+    const result2 = child.resolveOneByAlias('ILogger');
 
     expect(result1).toBeInstanceOf(FileLogger);
     expect(result2).toBeInstanceOf(DbLogger);

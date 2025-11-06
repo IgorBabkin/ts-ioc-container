@@ -4,7 +4,7 @@ import { constructor, Instance } from '../types';
 
 export type DependencyKey = string | symbol;
 export function isDependencyKey(target: unknown): target is DependencyKey {
-  return typeof target === 'symbol' || target === 'string';
+  return typeof target === 'symbol' || typeof target === 'string';
 }
 
 export type Tag = string;
