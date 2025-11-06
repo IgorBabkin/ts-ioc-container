@@ -69,7 +69,7 @@ export class Container implements IContainer {
     this.validateContainer();
     this.providers.set(key, provider);
     this.aliases.deleteAliasesByKey(key);
-    this.aliases.setAliases(key, aliases);
+    this.aliases.setAliasesByKey(key, aliases);
     return this;
   }
 
@@ -106,7 +106,7 @@ export class Container implements IContainer {
     let left = takeFirst;
     const keys: DependencyKey[] = [];
     const deps: T[] = [];
-    for (const key of this.aliases.findManyKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
+    for (const key of this.aliases.getKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
       const provider = this.findProviderByKeyOrFail<T>(key);
       if (!provider.hasAccess({ invocationScope: child, providerScope: this })) {
         continue;
@@ -127,6 +127,17 @@ export class Container implements IContainer {
       excludedKeys: [...excludedKeys, ...keys],
     });
     return [...deps, ...parentDeps];
+  }
+
+  resolveOneByAlias<T>(alias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+    this.validateContainer();
+
+    const [key, ..._] = this.aliases.getKeysByAlias(alias);
+    const provider = key !== undefined ? this.findProviderByKeyOrFail<T>(key) : undefined;
+
+    return provider?.hasAccess({ invocationScope: child, providerScope: this })
+      ? provider.resolve(this, { args, lazy })
+      : this.parent.resolveOneByAlias<T>(key, { args, child, lazy });
   }
 
   createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {

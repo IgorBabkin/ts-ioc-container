@@ -46,6 +46,8 @@ export interface IContainer extends Tagged {
 
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 
+  resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T;
+
   createScope(options?: CreateScopeOptions): IContainer;
 
   getScopes(): IContainer[];

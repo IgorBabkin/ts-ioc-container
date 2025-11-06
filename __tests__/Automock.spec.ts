@@ -5,6 +5,7 @@ import {
   inject,
   MethodNotImplementedError,
   type ResolveManyOptions,
+  ResolveOneOptions,
 } from '../lib';
 import { type IMock, It, Times } from 'moq.ts';
 import { createMock } from './utils';
@@ -37,6 +38,10 @@ export class MoqContainer extends AutoMockedContainer {
   }
 
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
+    throw new MethodNotImplementedError();
+  }
+
+  resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T {
     throw new MethodNotImplementedError();
   }
 

@@ -1,4 +1,10 @@
-import { AutoMockedContainer, Container, type DependencyKey } from '../../lib';
+import {
+  AutoMockedContainer,
+  Container,
+  type DependencyKey,
+  MethodNotImplementedError,
+  ResolveOneOptions,
+} from '../../lib';
 import { type IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
@@ -6,6 +12,10 @@ export class MoqContainer extends AutoMockedContainer {
 
   resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
+  }
+
+  resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T {
+    throw new MethodNotImplementedError('resolveOneByAlias');
   }
 
   resolveMock<T>(key: DependencyKey): IMock<T> {

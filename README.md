@@ -867,7 +867,7 @@ import {
   Registration as R,
   resolveByArgs,
   singleton,
-  StringToken,
+  UniqToken,
 } from 'ts-ioc-container';
 
 @register(bindTo('logger'))
@@ -911,8 +911,8 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    const IUserRepositoryKey = new StringToken<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = new StringToken<IRepository>('ITodoRepository');
+    const IUserRepositoryKey = new UniqToken<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = new UniqToken<IRepository>('ITodoRepository');
 
     @register(bindTo(IUserRepositoryKey))
     class UserRepository implements IRepository {
@@ -928,7 +928,7 @@ describe('ArgsProvider', function () {
       repository: IRepository;
     }
 
-    const IEntityManagerKey = new StringToken<IEntityManager>('IEntityManager');
+    const IEntityManagerKey = new UniqToken<IEntityManager>('IEntityManager');
 
     @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs))
     class EntityManager {
@@ -957,8 +957,8 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    const IUserRepositoryKey = new StringToken<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = new StringToken<IRepository>('ITodoRepository');
+    const IUserRepositoryKey = new UniqToken<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = new UniqToken<IRepository>('ITodoRepository');
 
     @register(bindTo(IUserRepositoryKey))
     class UserRepository implements IRepository {
@@ -974,7 +974,7 @@ describe('ArgsProvider', function () {
       repository: IRepository;
     }
 
-    const IEntityManagerKey = new StringToken<IEntityManager>('IEntityManager');
+    const IEntityManagerKey = new UniqToken<IEntityManager>('IEntityManager');
 
     @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs), singleton(MultiCache.fromFirstArg))
     class EntityManager {
@@ -1540,7 +1540,13 @@ describe('inject property', () => {
 Sometimes you need to automatically mock all dependencies in container. This is what `AutoMockedContainer` is for.
 
 ```typescript
-import { AutoMockedContainer, Container, type DependencyKey } from 'ts-ioc-container';
+import {
+  AutoMockedContainer,
+  Container,
+  type DependencyKey,
+  MethodNotImplementedError,
+  ResolveOneOptions,
+} from 'ts-ioc-container';
 import { type IMock, Mock } from 'moq.ts';
 
 export class MoqContainer extends AutoMockedContainer {
@@ -1548,6 +1554,10 @@ export class MoqContainer extends AutoMockedContainer {
 
   resolve<T>(key: DependencyKey): T {
     return this.resolveMock<T>(key).object();
+  }
+
+  resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T {
+    throw new MethodNotImplementedError('resolveOneByAlias');
   }
 
   resolveMock<T>(key: DependencyKey): IMock<T> {

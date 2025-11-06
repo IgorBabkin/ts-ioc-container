@@ -3,7 +3,7 @@ import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
 import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
-import { StringToken } from '../token/StringToken';
+import { UniqToken } from '../token/UniqToken';
 import { BindToken, isBindToken } from '../token/BindToken';
 
 export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
@@ -40,7 +40,7 @@ export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>)
 export const bindTo =
   (token: DependencyKey | BindToken): MapFn<IRegistration> =>
   (r) => {
-    const targetToken = isBindToken(token) ? token : new StringToken(token);
+    const targetToken = isBindToken(token) ? token : new UniqToken(token);
     targetToken.bindTo(r);
     return r;
   };

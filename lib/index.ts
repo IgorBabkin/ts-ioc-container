@@ -85,7 +85,7 @@ export {
 export { InjectionToken } from './token/InjectionToken';
 export { AliasToken, toAlias } from './token/AliasToken';
 export { ClassToken } from './token/ClassToken';
-export { StringToken } from './token/StringToken';
+export { UniqToken } from './token/UniqToken';
 export { FunctionToken } from './token/FunctionToken';
 export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, InstanceListToken } from './token/InstanceListToken';

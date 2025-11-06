@@ -8,7 +8,7 @@ import { getTransformers } from './IRegistration';
 import type { ProviderPipe } from '../provider/ProviderPipe';
 import { isProviderPipe } from '../provider/ProviderPipe';
 import { BindToken } from '../token/BindToken';
-import { StringToken } from '../token/StringToken';
+import { UniqToken } from '../token/UniqToken';
 
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {
@@ -64,7 +64,7 @@ export class Registration<T = any> implements IRegistration<T> {
 
   bindTo(key: DependencyKey | BindToken): this {
     if (Is.dependencyKey(key)) {
-      new StringToken(key).bindTo(this);
+      new UniqToken(key).bindTo(this);
       return this;
     }
 

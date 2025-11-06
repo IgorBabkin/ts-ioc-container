@@ -14,11 +14,11 @@ export class AliasMap {
     }
   }
 
-  findManyKeysByAlias(alias: DependencyKey): DependencyKey[] {
+  getKeysByAlias(alias: DependencyKey): DependencyKey[] {
     return [...(this.aliasToKeySet.get(alias) ?? [])];
   }
 
-  setAliases(key: DependencyKey, aliases: DependencyKey[]): void {
+  setAliasesByKey(key: DependencyKey, aliases: DependencyKey[]): void {
     for (const alias of aliases) {
       const dependencyKeySet = this.aliasToKeySet.get(alias) ?? new Set();
       this.aliasToKeySet.set(alias, dependencyKeySet.add(key));

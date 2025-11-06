@@ -62,11 +62,15 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
+  resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
+    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
+  }
+
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
     return [];
   }
 
-  resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
-    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
+  resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T {
+    throw new DependencyNotFoundError(`Cannot find alias ${alias.toString()}`);
   }
 }
