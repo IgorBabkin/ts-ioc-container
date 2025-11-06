@@ -31,14 +31,6 @@ export class InstanceListToken extends InjectionToken<Instance[]> {
   }
 
   resolve(c: IContainer): Instance[] {
-    const result = new Set<Instance>(c.getInstances().filter(this.predicate));
-    if (this.isCascade) {
-      for (const s of c.getScopes()) {
-        for (const instance of s.getInstances().filter(this.predicate)) {
-          result.add(instance);
-        }
-      }
-    }
-    return [...result];
+    return c.getInstances(this.isCascade).filter(this.predicate);
   }
 }

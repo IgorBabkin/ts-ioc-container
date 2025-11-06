@@ -24,12 +24,12 @@ import { constructor, Instance } from '../types';
 export class Container implements IContainer {
   isDisposed = false;
   private parent: IContainer;
-  private readonly scopes = new Set<IContainer>();
-  private readonly instances = new Set<Instance>();
+  private scopes: IContainer[] = [];
+  private instances: Instance[] = [];
+  private registrations: IRegistration[] = [];
   private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly aliases = new AliasMap();
-  private readonly registrations = new Set<IRegistration>();
   private readonly injector: IInjector;
   private readonly onConstructHookList: OnConstructHook[] = [];
   private readonly onDisposeHookList: OnDisposeHook[] = [];
@@ -46,41 +46,11 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
   }
 
-  addOnConstructHook(...hooks: OnConstructHook[]): this {
-    this.onConstructHookList.push(...hooks);
-    return this;
-  }
-
-  addOnDisposeHook(...hooks: OnDisposeHook[]): this {
-    this.onDisposeHookList.push(...hooks);
-    return this;
-  }
-
-  addInstance(instance: Instance) {
-    this.instances.add(instance as Instance);
-
-    // Execute onConstruct hooks
-    for (const onConstruct of this.onConstructHookList) {
-      onConstruct(instance as Instance, this);
-    }
-  }
-
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
     this.validateContainer();
     this.providers.set(key, provider);
-    this.aliases.deleteAliasesByKey(key);
     this.aliases.setAliasesByKey(key, aliases);
     return this;
-  }
-
-  addRegistration(registration: IRegistration): this {
-    this.registrations.add(registration);
-    registration.applyTo(this);
-    return this;
-  }
-
-  getRegistrations(): IRegistration[] {
-    return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
   resolve<T>(keyOrAlias: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
@@ -127,7 +97,7 @@ export class Container implements IContainer {
     this.validateContainer();
 
     const [key, ..._] = this.aliases.getKeysByAlias(alias);
-    const provider = key !== undefined ? this.findProviderByKeyOrFail<T>(key) : undefined;
+    const provider = key ? this.findProviderByKeyOrFail<T>(key) : undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
@@ -144,9 +114,62 @@ export class Container implements IContainer {
     for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
     }
-    this.scopes.add(scope);
+    this.scopes.push(scope);
 
     return scope;
+  }
+
+  dispose(): void {
+    this.validateContainer();
+    this.isDisposed = true;
+
+    // Execute onDispose hooks
+    while (this.onDisposeHookList.length) {
+      const onDispose = this.onDisposeHookList.shift()!;
+      onDispose(this);
+    }
+
+    // Detach from parent
+    this.parent.removeScope(this);
+    this.parent = new EmptyContainer();
+
+    // Reset the state
+    this.providers.clear();
+    this.aliases.destroy();
+    this.instances = [];
+    this.registrations = [];
+
+    // Clear hooks
+    this.onConstructHookList.splice(0, this.onConstructHookList.length);
+  }
+
+  addRegistration(registration: IRegistration): this {
+    this.registrations.push(registration);
+    registration.applyTo(this);
+    return this;
+  }
+
+  getRegistrations(): IRegistration[] {
+    return [...this.parent.getRegistrations(), ...this.registrations];
+  }
+
+  addOnConstructHook(...hooks: OnConstructHook[]): this {
+    this.onConstructHookList.push(...hooks);
+    return this;
+  }
+
+  addOnDisposeHook(...hooks: OnDisposeHook[]): this {
+    this.onDisposeHookList.push(...hooks);
+    return this;
+  }
+
+  addInstance(instance: Instance) {
+    this.instances.push(instance as Instance);
+
+    // Execute onConstruct hooks
+    for (const onConstruct of this.onConstructHookList) {
+      onConstruct(instance as Instance, this);
+    }
   }
 
   getScopes() {
@@ -154,7 +177,7 @@ export class Container implements IContainer {
   }
 
   removeScope(child: IContainer): void {
-    this.scopes.delete(child);
+    this.scopes = this.scopes.filter((s) => s !== child);
   }
 
   useModule(module: IContainerModule): this {
@@ -166,36 +189,15 @@ export class Container implements IContainer {
     return this.parent;
   }
 
-  getInstances() {
-    return [...this.instances];
+  getInstances(cascade: boolean = false) {
+    if (!cascade) {
+      return [...this.instances];
+    }
+    return [...this.instances, ...this.scopes.flatMap((s) => s.getInstances(true))];
   }
 
   hasTag(tag: Tag) {
     return this.tags.has(tag);
-  }
-
-  dispose(): void {
-    this.validateContainer();
-    this.isDisposed = true;
-
-    // Detach from parent
-    this.parent.removeScope(this);
-    this.parent = new EmptyContainer();
-
-    // Reset the state
-    this.providers.clear();
-    this.aliases.destroy();
-    this.instances.clear();
-    this.registrations.clear();
-
-    // Clear hooks
-    this.onConstructHookList.splice(0, this.onConstructHookList.length);
-
-    // Execute onDispose hooks
-    while (this.onDisposeHookList.length) {
-      const onDispose = this.onDisposeHookList.shift()!;
-      onDispose(this);
-    }
   }
 
   private validateContainer(): void {

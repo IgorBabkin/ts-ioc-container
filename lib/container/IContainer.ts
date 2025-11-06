@@ -52,7 +52,7 @@ export interface IContainer extends Tagged {
 
   getParent(): IContainer | undefined;
 
-  getInstances(): Instance[];
+  getInstances(cascade?: boolean): Instance[];
 
   dispose(): void;
 
