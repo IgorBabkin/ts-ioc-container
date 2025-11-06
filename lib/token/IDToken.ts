@@ -2,7 +2,7 @@ import type { IContainer } from '../container/IContainer';
 import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 
-export class UniqToken<T = any> extends InjectionToken {
+export class IDToken<T = any> extends InjectionToken {
   constructor(
     public token: string | symbol,
     private options: TokenOptions = {},
@@ -22,23 +22,23 @@ export class UniqToken<T = any> extends InjectionToken {
     r.bindToKey(this.token);
   }
 
-  args(...args: unknown[]): UniqToken<T> {
+  args(...args: unknown[]): IDToken<T> {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new UniqToken(this.token, {
+    return new IDToken(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...args],
     });
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]): UniqToken<T> {
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): IDToken<T> {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new UniqToken(this.token, {
+    return new IDToken(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
     });
   }
 
-  lazy(): UniqToken<T> {
-    return new UniqToken(this.token, { ...this.options, lazy: true });
+  lazy(): IDToken<T> {
+    return new IDToken(this.token, { ...this.options, lazy: true });
   }
 }

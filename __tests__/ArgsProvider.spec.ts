@@ -3,13 +3,13 @@ import {
   argsFn,
   bindTo,
   Container,
+  IDToken,
   inject,
   MultiCache,
   register,
   Registration as R,
   resolveByArgs,
   singleton,
-  UniqToken,
 } from '../lib';
 
 @register(bindTo('logger'))
@@ -53,8 +53,8 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    const IUserRepositoryKey = new UniqToken<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = new UniqToken<IRepository>('ITodoRepository');
+    const IUserRepositoryKey = new IDToken<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = new IDToken<IRepository>('ITodoRepository');
 
     @register(bindTo(IUserRepositoryKey))
     class UserRepository implements IRepository {
@@ -70,7 +70,7 @@ describe('ArgsProvider', function () {
       repository: IRepository;
     }
 
-    const IEntityManagerKey = new UniqToken<IEntityManager>('IEntityManager');
+    const IEntityManagerKey = new IDToken<IEntityManager>('IEntityManager');
 
     @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs))
     class EntityManager {
@@ -99,8 +99,8 @@ describe('ArgsProvider', function () {
       name: string;
     }
 
-    const IUserRepositoryKey = new UniqToken<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = new UniqToken<IRepository>('ITodoRepository');
+    const IUserRepositoryKey = new IDToken<IRepository>('IUserRepository');
+    const ITodoRepositoryKey = new IDToken<IRepository>('ITodoRepository');
 
     @register(bindTo(IUserRepositoryKey))
     class UserRepository implements IRepository {
@@ -116,7 +116,7 @@ describe('ArgsProvider', function () {
       repository: IRepository;
     }
 
-    const IEntityManagerKey = new UniqToken<IEntityManager>('IEntityManager');
+    const IEntityManagerKey = new IDToken<IEntityManager>('IEntityManager');
 
     @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs), singleton(MultiCache.fromFirstArg))
     class EntityManager {

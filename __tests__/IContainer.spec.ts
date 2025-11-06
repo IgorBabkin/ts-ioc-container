@@ -4,6 +4,7 @@ import {
   Container,
   DependencyNotFoundError,
   type IContainer,
+  IDToken,
   inject,
   Is,
   Provider,
@@ -14,7 +15,6 @@ import {
   scope,
   singleton,
   toAlias,
-  UniqToken,
 } from '../lib';
 
 describe('IContainer', function () {
@@ -43,7 +43,7 @@ describe('IContainer', function () {
   it('should assign a dependency key to a registration', function () {
     interface ILogger {}
 
-    const ILoggerKey = new UniqToken<ILogger>('ILogger');
+    const ILoggerKey = new IDToken<ILogger>('ILogger');
     const ILoggerKey2 = new AliasToken<ILogger>('ILogger2');
     const ILoggerKey3 = new AliasToken<ILogger>('ILogger3');
 
@@ -72,7 +72,7 @@ describe('IContainer', function () {
   it('should test register decorator', function () {
     interface ILogger {}
 
-    const ILoggerKey = new UniqToken<ILogger>('ILogger');
+    const ILoggerKey = new IDToken<ILogger>('ILogger');
 
     @register(bindTo(ILoggerKey))
     class FileLogger {}

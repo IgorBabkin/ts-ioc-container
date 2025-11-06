@@ -1,7 +1,7 @@
 import type { InjectFn } from '../hooks/HookContext';
 import { DependencyKey } from '../container/IContainer';
 import { constructor, Is } from '../utils';
-import { UniqToken } from './UniqToken';
+import { IDToken } from './IDToken';
 import { ClassToken } from './ClassToken';
 import { FunctionToken } from './FunctionToken';
 import { UnsupportedTokenTypeError } from '../errors/UnsupportedTokenTypeError';
@@ -15,7 +15,7 @@ export const toToken = <T = any>(
   }
 
   if (Is.dependencyKey(token)) {
-    return new UniqToken(token);
+    return new IDToken(token);
   }
 
   if (Is.constructor(token)) {
