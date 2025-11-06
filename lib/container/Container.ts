@@ -137,15 +137,13 @@ export class Container implements IContainer {
   createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
-    const scope = new Container({
-      injector: this.injector,
-      parent: this,
-      tags,
-    })
+    const scope = new Container({ injector: this.injector, parent: this, tags })
       .addOnConstructHook(...this.onConstructHookList)
       .addOnDisposeHook(...this.onDisposeHookList);
 
-    scope.applyRegistrationsFrom(this);
+    for (const registration of this.getRegistrations()) {
+      registration.applyTo(this);
+    }
     this.scopes.add(scope);
 
     return scope;
@@ -197,15 +195,6 @@ export class Container implements IContainer {
     while (this.onDisposeHookList.length) {
       const onDispose = this.onDisposeHookList.shift()!;
       onDispose(this);
-    }
-  }
-
-  /**
-   * @private
-   */
-  applyRegistrationsFrom(source: Container): void {
-    for (const registration of source.getRegistrations()) {
-      registration.applyTo(this);
     }
   }
 
