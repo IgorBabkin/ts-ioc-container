@@ -1,8 +1,9 @@
 import { ArgsFn, IProvider, ProviderOptions, ResolveDependency, ScopeAccessFn, ScopeAccessOptions } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { constructor, MapFn, pipe, toLazyIf } from '../utils';
+import { pipe, toLazyIf } from '../utils';
 import type { ProviderPipe } from './ProviderPipe';
 import { isProviderPipe } from './ProviderPipe';
+import { constructor, MapFn } from '../types';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {

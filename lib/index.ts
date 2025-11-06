@@ -6,9 +6,9 @@ export {
   type DependencyKey,
   type Tag,
   type Tagged,
-  type Instance,
   type ResolveOneOptions,
   type ResolveManyOptions,
+  isDependencyKey,
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
@@ -93,5 +93,8 @@ export { toToken } from './token/toToken';
 
 // Others
 export { select } from './select';
-export { type constructor, Is } from './utils';
+export { Is } from './utils';
 export { InjectFn } from './hooks/hook';
+
+export { Instance } from './types';
+export { constructor } from './types';

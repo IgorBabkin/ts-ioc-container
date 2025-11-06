@@ -1,6 +1,8 @@
 import { InjectionToken } from './InjectionToken';
-import type { IContainer, Instance } from '../container/IContainer';
+import type { IContainer } from '../container/IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
+
+import { Instance } from '../types';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 

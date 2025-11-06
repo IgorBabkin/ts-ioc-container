@@ -1,5 +1,5 @@
-import type { DependencyKey, IContainer } from '../container/IContainer';
-import { constructor, Is, MapFn, pipe } from '../utils';
+import { DependencyKey, IContainer, isDependencyKey } from '../container/IContainer';
+import { Is, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
@@ -9,6 +9,7 @@ import type { ProviderPipe } from '../provider/ProviderPipe';
 import { isProviderPipe } from '../provider/ProviderPipe';
 import { BindToken } from '../token/BindToken';
 import { IDToken } from '../token/IDToken';
+import { constructor, MapFn } from '../types';
 
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {
@@ -63,7 +64,7 @@ export class Registration<T = any> implements IRegistration<T> {
   }
 
   bindTo(key: DependencyKey | BindToken): this {
-    if (Is.dependencyKey(key)) {
+    if (isDependencyKey(key)) {
       new IDToken(key).bindTo(this);
       return this;
     }

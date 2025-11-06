@@ -1,10 +1,11 @@
 import { getParameterMetadata, setParameterMetadata } from '../metadata';
-import { type constructor, fillEmptyIndexes, Is } from '../utils';
+import { fillEmptyIndexes, Is } from '../utils';
 import { type IContainer } from '../container/IContainer';
 import { InjectionToken } from '../token/InjectionToken';
 import { ConstantToken } from '../token/ConstantToken';
 import { toToken } from '../token/toToken';
 import { InjectFn } from '../hooks/hook';
+import { constructor } from '../types';
 
 const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
 

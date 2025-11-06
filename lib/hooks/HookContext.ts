@@ -1,8 +1,8 @@
 import type { IContainer } from '../container/IContainer';
-import type { constructor } from '../utils';
 
 import { resolveArgs } from '../injector/inject';
 import { InjectionToken } from '../token/InjectionToken';
+import { constructor } from '../types';
 
 export interface IHookContext {
   instance: object;

@@ -6,7 +6,7 @@ import {
   type IContainer,
   IDToken,
   inject,
-  Is,
+  isDependencyKey,
   Provider,
   ProviderDecorator,
   register,
@@ -19,10 +19,10 @@ import {
 
 describe('IContainer', function () {
   it('should accept a symbol as dependency key', function () {
-    expect(Is.dependencyKey(Symbol('key'))).toBe(true);
+    expect(isDependencyKey(Symbol('key'))).toBe(true);
   });
   it('should accept a string as dependency key', function () {
-    expect(Is.dependencyKey('key')).toBe(true);
+    expect(isDependencyKey('key')).toBe(true);
   });
 
   it('should run onDispose callback when disposing every child', function () {

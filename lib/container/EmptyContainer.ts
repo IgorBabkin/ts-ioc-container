@@ -2,7 +2,6 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  Instance,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
@@ -11,14 +10,14 @@ import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { type constructor } from '../utils';
+import { constructor, Instance } from '../types';
 
 export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {
     throw new MethodNotImplementedError();
   }
 
-  onInstanceCreated(instance: Instance) {}
+  addInstance(instance: Instance) {}
 
   getParent() {
     return undefined;

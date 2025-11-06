@@ -1,12 +1,4 @@
-import { DependencyKey } from './container/IContainer';
-
-export type constructor<T> = new (...args: any[]) => T;
-
-export interface InstanceOfClass<T = unknown> {
-  new (...args: unknown[]): T;
-}
-
-export type MapFn<T> = (value: T) => T;
+import { constructor, InstanceOfClass, MapFn } from './types';
 
 export const pipe =
   <T>(...mappers: MapFn<T>[]): MapFn<T> =>
@@ -60,5 +52,4 @@ export const Is = {
   object: (target: unknown): target is object => target !== null && typeof target === 'object',
   instance: (target: unknown): target is InstanceOfClass => Object.prototype.hasOwnProperty.call(target, 'constructor'),
   constructor: (target: unknown): target is constructor<unknown> => typeof target === 'function' && !!target.prototype,
-  dependencyKey: (target: unknown): target is DependencyKey => ['string', 'symbol'].includes(typeof target),
 };

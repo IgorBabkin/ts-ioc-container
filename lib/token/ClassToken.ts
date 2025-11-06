@@ -1,6 +1,7 @@
 import type { IContainer } from '../container/IContainer';
 import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
-import { constructor } from '../utils';
+
+import { constructor } from '../types';
 
 export class ClassToken<T = any> extends InjectionToken<T> {
   constructor(

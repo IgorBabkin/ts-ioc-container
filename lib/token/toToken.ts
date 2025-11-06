@@ -1,11 +1,12 @@
-import { DependencyKey } from '../container/IContainer';
-import { constructor, Is } from '../utils';
+import { DependencyKey, isDependencyKey } from '../container/IContainer';
+import { Is } from '../utils';
 import { IDToken } from './IDToken';
 import { ClassToken } from './ClassToken';
 import { FunctionToken } from './FunctionToken';
 import { UnsupportedTokenTypeError } from '../errors/UnsupportedTokenTypeError';
 import { InjectionToken } from './InjectionToken';
 import { InjectFn } from '../hooks/hook';
+import { constructor } from '../types';
 
 export const toToken = <T = any>(
   token: InjectFn<T> | InjectionToken<T> | DependencyKey | constructor<T>,
@@ -14,7 +15,7 @@ export const toToken = <T = any>(
     return token;
   }
 
-  if (Is.dependencyKey(token)) {
+  if (isDependencyKey(token)) {
     return new IDToken(token);
   }
 

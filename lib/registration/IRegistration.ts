@@ -1,10 +1,10 @@
 import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import { constructor, MapFn } from '../utils';
 import { getMetadata, setMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
 import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
 import { IDToken } from '../token/IDToken';
 import { BindToken, isBindToken } from '../token/BindToken';
+import { constructor, MapFn } from '../types';
 
 export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
 

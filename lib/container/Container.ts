@@ -3,7 +3,6 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type Instance,
   type RegisterOptions,
   ResolveManyOptions,
   type ResolveOneOptions,
@@ -15,11 +14,12 @@ import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { type constructor, Filter as F, Is, toLazyIf } from '../utils';
+import { Filter as F, Is, toLazyIf } from '../utils';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onDispose';
+import { constructor, Instance } from '../types';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -56,7 +56,7 @@ export class Container implements IContainer {
     return this;
   }
 
-  onInstanceCreated(instance: Instance) {
+  addInstance(instance: Instance) {
     this.instances.add(instance as Instance);
 
     // Execute onConstruct hooks
@@ -99,11 +99,10 @@ export class Container implements IContainer {
 
   resolveByAlias<T>(
     alias: DependencyKey,
-    { args = [], child = this, lazy, excludedKeys = [], takeFirst = -1 }: ResolveManyOptions = {},
+    { args = [], child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
-    let left = takeFirst;
     const keys: DependencyKey[] = [];
     const deps: T[] = [];
     for (const key of this.aliases.getKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
@@ -113,11 +112,6 @@ export class Container implements IContainer {
       }
       keys.push(key);
       deps.push(provider.resolve(this, { args, lazy }));
-      if (left < 0 || left > 0) {
-        left--;
-        continue;
-      }
-      break;
     }
 
     const parentDeps = this.parent.resolveByAlias<T>(alias, {
