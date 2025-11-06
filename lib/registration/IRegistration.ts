@@ -38,9 +38,11 @@ export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>)
   );
 
 export const bindTo =
-  (token: DependencyKey | BindToken): MapFn<IRegistration> =>
+  (...tokens: (DependencyKey | BindToken)[]): MapFn<IRegistration> =>
   (r) => {
-    const targetToken = isBindToken(token) ? token : new UniqToken(token);
-    targetToken.bindTo(r);
+    for (const token of tokens) {
+      const targetToken = isBindToken(token) ? token : new UniqToken(token);
+      targetToken.bindTo(r);
+    }
     return r;
   };
