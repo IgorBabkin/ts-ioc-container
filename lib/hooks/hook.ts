@@ -1,5 +1,8 @@
 import { type IHookContext } from './HookContext';
 import { type constructor, Is } from '../utils';
+import type { IContainer } from '../container/IContainer';
+
+export type InjectFn<T = unknown> = (s: IContainer) => T;
 
 // HookFn
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;

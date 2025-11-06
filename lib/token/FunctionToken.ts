@@ -1,7 +1,7 @@
-import type { InjectFn } from '../hooks/HookContext';
 import type { IContainer } from '../container/IContainer';
 import { InjectionToken } from './InjectionToken';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
+import { InjectFn } from '../hooks/hook';
 
 export class FunctionToken<T = any> extends InjectionToken<T> {
   constructor(private readonly fn: InjectFn<T>) {

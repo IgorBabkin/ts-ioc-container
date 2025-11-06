@@ -1,4 +1,3 @@
-import type { InjectFn } from '../hooks/HookContext';
 import { DependencyKey } from '../container/IContainer';
 import { constructor, Is } from '../utils';
 import { IDToken } from './IDToken';
@@ -6,6 +5,7 @@ import { ClassToken } from './ClassToken';
 import { FunctionToken } from './FunctionToken';
 import { UnsupportedTokenTypeError } from '../errors/UnsupportedTokenTypeError';
 import { InjectionToken } from './InjectionToken';
+import { InjectFn } from '../hooks/hook';
 
 export const toToken = <T = any>(
   token: InjectFn<T> | InjectionToken<T> | DependencyKey | constructor<T>,

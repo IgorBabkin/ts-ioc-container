@@ -4,8 +4,6 @@ import type { constructor } from '../utils';
 import { resolveArgs } from '../injector/inject';
 import { InjectionToken } from '../token/InjectionToken';
 
-export type InjectFn<T = unknown> = (s: IContainer) => T;
-
 export interface IHookContext {
   instance: object;
   scope: IContainer;

@@ -12,7 +12,6 @@ export {
 } from './container/IContainer';
 export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
-export { AutoMockedContainer } from './container/AutoMockedContainer';
 
 // Injectors
 export { inject, resolveArgs } from './injector/inject';
@@ -61,7 +60,7 @@ export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 
 // Hooks
 export { getHooks, hook, hasHooks, type HookFn, type HookClass } from './hooks/hook';
-export { HookContext, type InjectFn, type IHookContext } from './hooks/HookContext';
+export { HookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct } from './hooks/onConstruct';
 export { onDisposeHooksRunner, onDispose } from './hooks/onDispose';
@@ -95,3 +94,4 @@ export { toToken } from './token/toToken';
 // Others
 export { select } from './select';
 export { type constructor, Is } from './utils';
+export { InjectFn } from './hooks/hook';
