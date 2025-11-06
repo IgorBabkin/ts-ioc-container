@@ -84,6 +84,7 @@ export {
 // InjectionToken
 export { InjectionToken } from './token/InjectionToken';
 export { AliasToken, toAlias } from './token/AliasToken';
+export { AliasUniqToken, toAliasUniq } from './token/AliasUniqToken';
 export { ClassToken } from './token/ClassToken';
 export { UniqToken } from './token/UniqToken';
 export { FunctionToken } from './token/FunctionToken';
