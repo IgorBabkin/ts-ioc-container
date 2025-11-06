@@ -14,7 +14,7 @@ import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { Filter as F, Is, toLazyIf } from '../utils';
+import { Filter as F, Is } from '../utils';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnConstructHook } from '../hooks/onConstruct';
@@ -53,18 +53,18 @@ export class Container implements IContainer {
     return this;
   }
 
-  resolve<T>(keyOrAlias: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+  resolve<T>(key: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    if (Is.constructor(keyOrAlias)) {
-      return toLazyIf(() => this.injector.resolve(this, keyOrAlias, { args }), lazy);
+    if (Is.constructor(key)) {
+      return this.injector.resolve(this, key, { args, lazy });
     }
 
-    const provider = this.providers.get(keyOrAlias) as IProvider<T> | undefined;
+    const provider = this.providers.get(key) as IProvider<T> | undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
-      : this.parent.resolve<T>(keyOrAlias, { args, child, lazy });
+      : this.parent.resolve<T>(key, { args, child, lazy });
   }
 
   resolveByAlias<T>(

@@ -7,7 +7,7 @@ import { MapFn } from '../types';
 
 export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
-export type ResolveDependency<T = unknown> = (container: IContainer, options: InjectOptions) => T;
+export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderOptions) => T;
 export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
 export type ScopeAccessFn = (options: ScopeAccessOptions) => boolean;
 

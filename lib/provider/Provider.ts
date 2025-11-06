@@ -1,6 +1,6 @@
 import { ArgsFn, IProvider, ProviderOptions, ResolveDependency, ScopeAccessFn, ScopeAccessOptions } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { pipe, toLazyIf } from '../utils';
+import { pipe } from '../utils';
 import type { ProviderPipe } from './ProviderPipe';
 import { isProviderPipe } from './ProviderPipe';
 import { constructor, MapFn } from '../types';
@@ -30,13 +30,10 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   resolve(container: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
-    return toLazyIf(
-      () =>
-        this.resolveDependency(container, {
-          args: [...this.argsFn(container, ...args), ...args],
-        }),
-      lazy ?? this.isLazy,
-    );
+    return this.resolveDependency(container, {
+      args: [...this.argsFn(container, ...args), ...args],
+      lazy: lazy ?? this.isLazy,
+    });
   }
 
   setAccessPredicate(predicate: ScopeAccessFn): this {
