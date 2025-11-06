@@ -142,7 +142,7 @@ export class Container implements IContainer {
       .addOnDisposeHook(...this.onDisposeHookList);
 
     for (const registration of this.getRegistrations()) {
-      registration.applyTo(this);
+      registration.applyTo(scope);
     }
     this.scopes.add(scope);
 
