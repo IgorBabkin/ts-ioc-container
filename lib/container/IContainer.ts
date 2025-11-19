@@ -36,7 +36,7 @@ export interface IContainer extends Tagged {
 
   getRegistrations(): IRegistration[];
 
-  resolve<T>(alias: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
+  resolve<T>(target: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
 
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 

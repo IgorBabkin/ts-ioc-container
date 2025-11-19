@@ -6,8 +6,8 @@ import {
   inject,
   register,
   Registration as R,
+  select as s,
   singleton,
-  toToken,
 } from '../../lib';
 
 describe('lazy provider', () => {
@@ -36,7 +36,7 @@ describe('lazy provider', () => {
   class LogRepository implements IRepository {
     constructor(
       private repository: IRepository,
-      @inject(toToken('Logger').lazy()) private logger: Logger,
+      @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {

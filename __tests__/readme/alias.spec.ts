@@ -6,12 +6,12 @@ import {
   register,
   Registration as R,
   scope,
-  toAlias,
+  select as s,
 } from '../../lib';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
-  const middleware = register(bindTo(toAlias(IMiddlewareKey)));
+  const middleware = register(bindTo(s.alias(IMiddlewareKey)));
 
   interface IMiddleware {
     applyTo(application: IApplication): void;
@@ -39,7 +39,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(toAlias(IMiddlewareKey)) public middleware: IMiddleware[]) {}
+      constructor(@inject(s.alias(IMiddlewareKey)) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);
@@ -72,7 +72,7 @@ describe('alias', () => {
   });
 
   it('should resolve by some alias', () => {
-    @register(bindTo(toAlias('ILogger')))
+    @register(bindTo(s.alias('ILogger')))
     class FileLogger {}
 
     const container = new Container().addRegistration(R.fromClass(FileLogger));
@@ -82,10 +82,10 @@ describe('alias', () => {
   });
 
   it('should resolve by alias', () => {
-    @register(bindTo(toAlias('ILogger')), scope((s) => s.hasTag('root')))
+    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('root')))
     class FileLogger {}
 
-    @register(bindTo(toAlias('ILogger')), scope((s) => s.hasTag('child')))
+    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
     const container = new Container({ tags: ['root'] })

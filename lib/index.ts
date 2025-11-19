@@ -80,14 +80,13 @@ export {
 
 // InjectionToken
 export { InjectionToken } from './token/InjectionToken';
-export { AliasToken, toAlias } from './token/AliasToken';
+export { AliasToken } from './token/AliasToken';
 export { AliasUniqToken, toAliasUniq } from './token/AliasUniqToken';
 export { ClassToken } from './token/ClassToken';
 export { IDToken } from './token/IDToken';
 export { FunctionToken } from './token/FunctionToken';
 export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, InstanceListToken } from './token/InstanceListToken';
-export { toToken } from './token/toToken';
 
 // Others
 export { select } from './select';

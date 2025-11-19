@@ -261,7 +261,7 @@ describe('Disposing', function () {
 Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
 
 ```typescript
-import { Container, inject, register, Registration as R, singleton, toToken } from 'ts-ioc-container';
+import { Container, inject, register, Registration as R, select as s, singleton } from 'ts-ioc-container';
 
 describe('lazy provider', () => {
   @register(singleton())
@@ -286,7 +286,7 @@ describe('lazy provider', () => {
   }
 
   class App {
-    constructor(@inject(toToken('Service').lazy()) public service: Service) {}
+    constructor(@inject(s.token('Service').lazy()) public service: Service) {}
 
     run() {
       return this.service.greet();
@@ -545,8 +545,8 @@ import {
   register,
   Registration as R,
   scopeAccess,
+  select as s,
   singleton,
-  toToken,
 } from 'ts-ioc-container';
 
 class Logger {}
@@ -763,7 +763,7 @@ describe('Provider', () => {
     }
 
     class Main {
-      constructor(@inject(toToken('ILogger').args({ channel: 'file' })) private logger: Logger) {}
+      constructor(@inject(s.token('ILogger').args({ channel: 'file' })) private logger: Logger) {}
 
       getChannel(): string {
         return this.logger.channel;
@@ -788,7 +788,7 @@ describe('Provider', () => {
 
     class Main {
       constructor(
-        @inject(toToken('ILogger').argsFn((s) => [{ channel: s.resolve('channel') }])) private logger: Logger,
+        @inject(s.token('ILogger').argsFn((s) => [{ channel: s.resolve('channel') }])) private logger: Logger,
       ) {}
 
       getChannel(): string {
@@ -1059,12 +1059,12 @@ import {
   register,
   Registration as R,
   scope,
-  toAlias,
+  select as s,
 } from 'ts-ioc-container';
 
 describe('alias', () => {
   const IMiddlewareKey = 'IMiddleware';
-  const middleware = register(bindTo(toAlias(IMiddlewareKey)));
+  const middleware = register(bindTo(s.alias(IMiddlewareKey)));
 
   interface IMiddleware {
     applyTo(application: IApplication): void;
@@ -1092,7 +1092,7 @@ describe('alias', () => {
   it('should resolve by some alias', () => {
     class App implements IApplication {
       private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(toAlias(IMiddlewareKey)) public middleware: IMiddleware[]) {}
+      constructor(@inject(s.alias(IMiddlewareKey)) public middleware: IMiddleware[]) {}
 
       markMiddlewareAsApplied(name: string): void {
         this.appliedMiddleware.add(name);
@@ -1125,7 +1125,7 @@ describe('alias', () => {
   });
 
   it('should resolve by some alias', () => {
-    @register(bindTo(toAlias('ILogger')))
+    @register(bindTo(s.alias('ILogger')))
     class FileLogger {}
 
     const container = new Container().addRegistration(R.fromClass(FileLogger));
@@ -1135,10 +1135,10 @@ describe('alias', () => {
   });
 
   it('should resolve by alias', () => {
-    @register(bindTo(toAlias('ILogger')), scope((s) => s.hasTag('root')))
+    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('root')))
     class FileLogger {}
 
-    @register(bindTo(toAlias('ILogger')), scope((s) => s.hasTag('child')))
+    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
     const container = new Container({ tags: ['root'] })
@@ -1169,8 +1169,8 @@ import {
   inject,
   register,
   Registration as R,
+  select as s,
   singleton,
-  toToken,
 } from 'ts-ioc-container';
 
 describe('lazy provider', () => {
@@ -1199,7 +1199,7 @@ describe('lazy provider', () => {
   class LogRepository implements IRepository {
     constructor(
       private repository: IRepository,
-      @inject(toToken('Logger').lazy()) private logger: Logger,
+      @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {
@@ -1268,8 +1268,8 @@ import {
   register,
   Registration as R,
   scope,
+  select as s,
   singleton,
-  toAlias,
 } from 'ts-ioc-container';
 
 describe('Registration module', function () {
@@ -1311,7 +1311,7 @@ describe('Registration module', function () {
   });
 
   it('should assign additional key which redirects to original one', function () {
-    @register(bindTo('ILogger'), bindTo(toAlias('Logger')), singleton())
+    @register(bindTo('ILogger'), bindTo(s.alias('Logger')), singleton())
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));

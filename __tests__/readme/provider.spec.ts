@@ -9,8 +9,8 @@ import {
   register,
   Registration as R,
   scopeAccess,
+  select as s,
   singleton,
-  toToken,
 } from '../../lib';
 
 class Logger {}
@@ -227,7 +227,7 @@ describe('Provider', () => {
     }
 
     class Main {
-      constructor(@inject(toToken('ILogger').args({ channel: 'file' })) private logger: Logger) {}
+      constructor(@inject(s.token('ILogger').args({ channel: 'file' })) private logger: Logger) {}
 
       getChannel(): string {
         return this.logger.channel;
@@ -252,7 +252,7 @@ describe('Provider', () => {
 
     class Main {
       constructor(
-        @inject(toToken('ILogger').argsFn((s) => [{ channel: s.resolve('channel') }])) private logger: Logger,
+        @inject(s.token('ILogger').argsFn((s) => [{ channel: s.resolve('channel') }])) private logger: Logger,
       ) {}
 
       getChannel(): string {

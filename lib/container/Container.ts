@@ -53,18 +53,18 @@ export class Container implements IContainer {
     return this;
   }
 
-  resolve<T>(key: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+  resolve<T>(target: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    if (Is.constructor(key)) {
-      return this.injector.resolve(this, key, { args, lazy });
+    if (Is.constructor(target)) {
+      return this.injector.resolve(this, target, { args, lazy });
     }
 
-    const provider = this.providers.get(key) as IProvider<T> | undefined;
+    const provider = this.providers.get(target) as IProvider<T> | undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
-      : this.parent.resolve<T>(key, { args, child, lazy });
+      : this.parent.resolve<T>(target, { args, child, lazy });
   }
 
   resolveByAlias<T>(

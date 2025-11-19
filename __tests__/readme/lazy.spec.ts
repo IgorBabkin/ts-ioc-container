@@ -1,4 +1,4 @@
-import { Container, inject, register, Registration as R, singleton, toToken } from '../../lib';
+import { Container, inject, register, Registration as R, select as s, singleton } from '../../lib';
 
 describe('lazy provider', () => {
   @register(singleton())
@@ -23,7 +23,7 @@ describe('lazy provider', () => {
   }
 
   class App {
-    constructor(@inject(toToken('Service').lazy()) public service: Service) {}
+    constructor(@inject(s.token('Service').lazy()) public service: Service) {}
 
     run() {
       return this.service.greet();

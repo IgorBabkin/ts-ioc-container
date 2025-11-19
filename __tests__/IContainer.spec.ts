@@ -13,8 +13,8 @@ import {
   Registration,
   Registration as R,
   scope,
+  select as s,
   singleton,
-  toAlias,
 } from '../lib';
 
 describe('IContainer', function () {
@@ -51,8 +51,8 @@ describe('IContainer', function () {
       bindTo(ILoggerKey),
       bindTo(ILoggerKey2),
       bindTo(ILoggerKey3),
-      bindTo(toAlias('ILogger4')),
-      bindTo(toAlias('ILogger5')),
+      bindTo(s.alias('ILogger4')),
+      bindTo(s.alias('ILogger5')),
       scope((c) => c.hasTag('child1')),
       singleton(),
     )

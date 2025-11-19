@@ -5,8 +5,8 @@ import {
   register,
   Registration as R,
   scope,
+  select as s,
   singleton,
-  toAlias,
 } from '../../lib';
 
 describe('Registration module', function () {
@@ -48,7 +48,7 @@ describe('Registration module', function () {
   });
 
   it('should assign additional key which redirects to original one', function () {
-    @register(bindTo('ILogger'), bindTo(toAlias('Logger')), singleton())
+    @register(bindTo('ILogger'), bindTo(s.alias('Logger')), singleton())
     class Logger {}
 
     const root = createContainer().addRegistration(R.fromClass(Logger));
