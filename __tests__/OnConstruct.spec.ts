@@ -22,7 +22,7 @@ describe('onConstruct', function () {
   it('should run methods and resolve arguments from container', function () {
     const root = new Container()
       .addOnConstructHook((instance, scope) => {
-        onConstructHooksRunner.execute(instance as object, { scope });
+        onConstructHooksRunner.execute(instance, { scope });
       })
       .addRegistration(R.fromValue('bmw').bindTo('engine'));
 

@@ -53,7 +53,7 @@ describe('onDispose', function () {
     logger.log('Hello');
 
     for (const instance of select.instances().resolve(container)) {
-      onDisposeHookRunner.execute(instance as object, { scope: container });
+      onDisposeHookRunner.execute(instance, { scope: container });
     }
 
     expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
