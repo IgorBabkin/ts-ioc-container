@@ -1,16 +1,6 @@
-import {
-  bindTo,
-  Container,
-  hook,
-  inject,
-  register,
-  Registration as R,
-  select,
-  singleton,
-  SyncHooksRunner,
-} from '../lib';
+import { bindTo, Container, hook, HooksRunner, inject, register, Registration as R, select, singleton } from '../lib';
 
-const onDisposeHookRunner = new SyncHooksRunner('onDispose');
+const onDisposeHookRunner = new HooksRunner('onDispose');
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];

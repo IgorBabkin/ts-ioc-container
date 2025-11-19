@@ -1394,28 +1394,18 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 ```typescript
 import {
   bindTo,
-  type constructor,
   Container,
   hook,
-  type IContainer,
-  type IInjector,
-  type InjectOptions,
-  MetadataInjector,
+  HookContext,
+  HookFn,
+  HooksRunner,
+  inject,
+  onConstruct,
   register,
   Registration as R,
-  SyncHooksRunner,
 } from 'ts-ioc-container';
 
-const onConstructHooksRunner = new SyncHooksRunner('onConstruct');
-class MyInjector implements IInjector {
-  private injector = new MetadataInjector();
-
-  resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
-    const instance = this.injector.resolve(container, value, options);
-    onConstructHooksRunner.execute(instance as object, { scope: container });
-    return instance;
-  }
-}
+const onConstructHooksRunner = new HooksRunner('onConstruct');
 
 @register(bindTo('logger'))
 class Logger {
@@ -1435,11 +1425,44 @@ class Logger {
 
 describe('onConstruct', function () {
   it('should make logger be ready on resolve', function () {
-    const container = new Container({ injector: new MyInjector() }).addRegistration(R.fromClass(Logger));
+    const container = new Container()
+      .addOnConstructHook((instance, scope) => {
+        onConstructHooksRunner.execute(instance as object, { scope });
+      })
+      .addRegistration(R.fromClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 
     expect(logger.isReady).toBe(true);
+  });
+
+  it('should run methods and resolve arguments from container', function () {
+    const execute: HookFn = (ctx: HookContext) => {
+      ctx.invokeMethod({ args: ctx.resolveArgs() });
+    };
+
+    class Car {
+      private engine!: string;
+
+      @onConstruct(execute)
+      setEngine(@inject('engine') engine: string) {
+        this.engine = engine;
+      }
+
+      getEngine() {
+        return this.engine;
+      }
+    }
+
+    const root = new Container()
+      .addOnConstructHook((instance, scope) => {
+        onConstructHooksRunner.execute(instance as object, { scope });
+      })
+      .addRegistration(R.fromValue('bmw').bindTo('engine'));
+
+    const car = root.resolve(Car);
+
+    expect(car.getEngine()).toBe('bmw');
   });
 });
 
@@ -1447,19 +1470,9 @@ describe('onConstruct', function () {
 
 ### OnDispose
 ```typescript
-import {
-  bindTo,
-  Container,
-  hook,
-  inject,
-  register,
-  Registration as R,
-  select,
-  singleton,
-  SyncHooksRunner,
-} from 'ts-ioc-container';
+import { bindTo, Container, hook, HooksRunner, inject, register, Registration as R, select, singleton } from 'ts-ioc-container';
 
-const onDisposeHookRunner = new SyncHooksRunner('onDispose');
+const onDisposeHookRunner = new HooksRunner('onDispose');
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
@@ -1515,9 +1528,9 @@ describe('onDispose', function () {
 ### Inject property
 
 ```typescript
-import { Container, hook, injectProp, Registration, SyncHooksRunner } from 'ts-ioc-container';
+import { Container, hook, HooksRunner, injectProp, Registration } from 'ts-ioc-container';
 
-const onInitHookRunner = new SyncHooksRunner('onInit');
+const onInitHookRunner = new HooksRunner('onInit');
 describe('inject property', () => {
   it('should inject property', () => {
     class App {
@@ -1526,9 +1539,9 @@ describe('inject property', () => {
     }
     const expected = 'Hello world!';
 
-    const container = new Container().addRegistration(Registration.fromValue(expected).bindToKey('greeting'));
-    const app = container.resolve(App);
-    onInitHookRunner.execute(app as object, { scope: container });
+    const scope = new Container().addRegistration(Registration.fromValue(expected).bindToKey('greeting'));
+    const app = scope.resolve(App);
+    onInitHookRunner.execute(app, { scope });
 
     expect(app.greeting).toBe(expected);
   });

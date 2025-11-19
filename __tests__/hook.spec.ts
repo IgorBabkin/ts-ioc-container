@@ -1,14 +1,13 @@
 import {
-  AsyncHooksRunner,
   Container,
   hasHooks,
   hook,
   type HookFn,
+  HooksRunner,
   onConstruct,
   onConstructHooksRunner,
   onDispose,
   onDisposeHooksRunner,
-  SyncHooksRunner,
   UnexpectedHookResultError,
 } from '../lib';
 
@@ -23,7 +22,7 @@ const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-const syncBeforeHooksRunner = new SyncHooksRunner('syncBefore');
+const beforeHooksRunner = new HooksRunner('syncBefore');
 describe('hooks', () => {
   it('should run runHooks only for sync hooks', () => {
     class MyClass {
@@ -38,7 +37,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    syncBeforeHooksRunner.execute(instance, { scope: root });
+    beforeHooksRunner.execute(instance, { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
@@ -56,7 +55,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    expect(() => syncBeforeHooksRunner.execute(instance, { scope: root })).toThrowError(UnexpectedHookResultError);
+    expect(() => beforeHooksRunner.execute(instance, { scope: root })).toThrowError(UnexpectedHookResultError);
   });
 
   it('should test hooks', () => {
@@ -69,40 +68,43 @@ describe('hooks', () => {
         this.isStarted = true;
       }
 
-      @onDispose
+      @onDispose(execute)
       destroy(): void {
         this.isDisposed = true;
       }
     }
 
-    const root = new Container({ tags: ['root'] });
-    const instance = root.resolve(Logger);
+    const root = new Container({ tags: ['root'] })
+      .addOnConstructHook((instance, scope) => {
+        onConstructHooksRunner.execute(instance, { scope });
+      })
+      .addOnDisposeHook((scope) => {
+        for (const i of scope.getInstances()) {
+          onDisposeHooksRunner.execute(i, { scope });
+        }
+      });
 
-    onConstructHooksRunner.execute(instance, { scope: root });
-    onDisposeHooksRunner.execute(instance, { scope: root });
+    const instance = root.resolve(Logger);
+    root.dispose();
 
     expect(instance.isStarted).toBe(true);
     expect(instance.isDisposed).toBe(true);
   });
 
-  const onStartHooksRunner = new AsyncHooksRunner('onStart');
+  const onStartHooksRunner = new HooksRunner('onStart');
   it('should test runHooksAsync', async () => {
     class Logger {
       isStarted = false;
 
-      @hook('onStart', async (c) => {
+      @hook('onStart', executeAsync)
+      async initialize() {
         await sleep(100);
-        c.invokeMethod({ args: c.resolveArgs() });
-      })
-      initialize(): void {
         this.isStarted = true;
       }
 
-      @hook('onStart', async (c) => {
+      @hook('onStart', executeAsync)
+      async dispose() {
         await sleep(100);
-        c.invokeMethod({ args: c.resolveArgs() });
-      })
-      dispose(): void {
         this.isStarted = false;
       }
     }
@@ -110,7 +112,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(Logger);
 
-    await onStartHooksRunner.execute(instance, {
+    await onStartHooksRunner.executeAsync(instance, {
       scope: root,
       predicate: (methodName) => methodName === 'initialize',
     });

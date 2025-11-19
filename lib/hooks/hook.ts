@@ -13,6 +13,9 @@ export interface HookClass<T extends IHookContext = IHookContext> {
   execute(context: Omit<T, 'scope'>): void | Promise<void>;
 }
 
+// HooksOfClass
+type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
+
 const isHookClassConstructor = <C extends IHookContext>(
   execute: HookFn<C> | constructor<HookClass<C>>,
 ): execute is constructor<HookClass<C>> => {
@@ -21,9 +24,6 @@ const isHookClassConstructor = <C extends IHookContext>(
 
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
   isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
-
-// HooksOfClass
-type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
 
 // Get hooks metadata
 export function getHooks(target: object, key: string | symbol): HooksOfClass {

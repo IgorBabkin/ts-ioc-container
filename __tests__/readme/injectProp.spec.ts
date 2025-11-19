@@ -1,6 +1,6 @@
-import { Container, hook, injectProp, Registration, SyncHooksRunner } from '../../lib';
+import { Container, hook, HooksRunner, injectProp, Registration } from '../../lib';
 
-const onInitHookRunner = new SyncHooksRunner('onInit');
+const onInitHookRunner = new HooksRunner('onInit');
 describe('inject property', () => {
   it('should inject property', () => {
     class App {
@@ -9,9 +9,9 @@ describe('inject property', () => {
     }
     const expected = 'Hello world!';
 
-    const container = new Container().addRegistration(Registration.fromValue(expected).bindToKey('greeting'));
-    const app = container.resolve(App);
-    onInitHookRunner.execute(app as object, { scope: container });
+    const scope = new Container().addRegistration(Registration.fromValue(expected).bindToKey('greeting'));
+    const app = scope.resolve(App);
+    onInitHookRunner.execute(app, { scope });
 
     expect(app.greeting).toBe(expected);
   });

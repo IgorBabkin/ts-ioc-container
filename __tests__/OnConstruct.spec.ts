@@ -1,27 +1,17 @@
 import {
   bindTo,
-  type constructor,
   Container,
   hook,
-  type IContainer,
-  type IInjector,
-  type InjectOptions,
-  MetadataInjector,
+  HookContext,
+  HookFn,
+  HooksRunner,
+  inject,
+  onConstruct,
   register,
   Registration as R,
-  SyncHooksRunner,
 } from '../lib';
 
-const onConstructHooksRunner = new SyncHooksRunner('onConstruct');
-class MyInjector implements IInjector {
-  private injector = new MetadataInjector();
-
-  resolve<T>(container: IContainer, value: constructor<T>, options: InjectOptions): T {
-    const instance = this.injector.resolve(container, value, options);
-    onConstructHooksRunner.execute(instance as object, { scope: container });
-    return instance;
-  }
-}
+const onConstructHooksRunner = new HooksRunner('onConstruct');
 
 @register(bindTo('logger'))
 class Logger {
@@ -41,10 +31,43 @@ class Logger {
 
 describe('onConstruct', function () {
   it('should make logger be ready on resolve', function () {
-    const container = new Container({ injector: new MyInjector() }).addRegistration(R.fromClass(Logger));
+    const container = new Container()
+      .addOnConstructHook((instance, scope) => {
+        onConstructHooksRunner.execute(instance as object, { scope });
+      })
+      .addRegistration(R.fromClass(Logger));
 
     const logger = container.resolve<Logger>('logger');
 
     expect(logger.isReady).toBe(true);
+  });
+
+  it('should run methods and resolve arguments from container', function () {
+    const execute: HookFn = (ctx: HookContext) => {
+      ctx.invokeMethod({ args: ctx.resolveArgs() });
+    };
+
+    class Car {
+      private engine!: string;
+
+      @onConstruct(execute)
+      setEngine(@inject('engine') engine: string) {
+        this.engine = engine;
+      }
+
+      getEngine() {
+        return this.engine;
+      }
+    }
+
+    const root = new Container()
+      .addOnConstructHook((instance, scope) => {
+        onConstructHooksRunner.execute(instance as object, { scope });
+      })
+      .addRegistration(R.fromValue('bmw').bindTo('engine'));
+
+    const car = root.resolve(Car);
+
+    expect(car.getEngine()).toBe('bmw');
   });
 });

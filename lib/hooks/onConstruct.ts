@@ -1,10 +1,9 @@
 import { hook, HookClass, HookFn } from './hook';
-import { SyncHooksRunner } from './runner/SyncHooksRunner';
 import type { IContainer } from '../container/IContainer';
-
 import { constructor, Instance } from '../types';
+import { HooksRunner } from './HooksRunner';
 
-export const onConstructHooksRunner = new SyncHooksRunner('onConstruct');
+export const onConstructHooksRunner = new HooksRunner('onConstruct');
 export const onConstruct = (fn: HookFn | constructor<HookClass>) => hook('onConstruct', fn);
 
 export type OnConstructHook = (instance: Instance, scope: IContainer) => void;
