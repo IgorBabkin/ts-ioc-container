@@ -4,21 +4,22 @@ import {
   hook,
   type HookFn,
   HooksRunner,
+  inject,
   onConstruct,
   onConstructHooksRunner,
   onDispose,
   onDisposeHooksRunner,
+  Registration as R,
   UnexpectedHookResultError,
 } from '../lib';
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const executeAsync: HookFn = async (ctx) => {
-  await sleep(100);
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
@@ -97,19 +98,19 @@ describe('hooks', () => {
       isStarted = false;
 
       @hook('onStart', executeAsync)
-      async initialize() {
-        await sleep(100);
+      async initialize(@inject('TimeToSleep') timeToSleep: number) {
+        await sleep(timeToSleep);
         this.isStarted = true;
       }
 
       @hook('onStart', executeAsync)
-      async dispose() {
-        await sleep(100);
+      async dispose(@inject('TimeToSleep') timeToSleep: number) {
+        await sleep(timeToSleep);
         this.isStarted = false;
       }
     }
 
-    const root = new Container({ tags: ['root'] });
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue(100).bindTo('TimeToSleep'));
     const instance = root.resolve(Logger);
 
     await onStartHooksRunner.executeAsync(instance, {

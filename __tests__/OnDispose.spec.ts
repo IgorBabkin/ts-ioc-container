@@ -20,12 +20,8 @@ class Logger {
 
   constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
 
-  log(@inject('logsRepo') message: string): void {
+  log(message: string): void {
     this.messages.push(message);
-  }
-
-  size(): number {
-    return this.messages.length;
   }
 
   @hook('onDispose', (c) => {

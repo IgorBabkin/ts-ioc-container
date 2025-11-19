@@ -1392,68 +1392,28 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 
 ### OnConstruct
 ```typescript
-import {
-  bindTo,
-  Container,
-  hook,
-  HookContext,
-  HookFn,
-  HooksRunner,
-  inject,
-  onConstruct,
-  register,
-  Registration as R,
-} from 'ts-ioc-container';
+import { Container, HookContext, HookFn, HooksRunner, inject, onConstruct, Registration as R } from 'ts-ioc-container';
 
 const onConstructHooksRunner = new HooksRunner('onConstruct');
+const execute: HookFn = (ctx: HookContext) => {
+  ctx.invokeMethod({ args: ctx.resolveArgs() });
+};
 
-@register(bindTo('logger'))
-class Logger {
-  isReady = false;
+class Car {
+  private engine!: string;
 
-  @hook('onConstruct', (context) => {
-    context.invokeMethod({ args: [] });
-  }) // <--- or extract it to @onConstruct
-  initialize() {
-    this.isReady = true;
+  @onConstruct(execute)
+  setEngine(@inject('engine') engine: string) {
+    this.engine = engine;
   }
 
-  log(message: string): void {
-    console.log(message);
+  getEngine() {
+    return this.engine;
   }
 }
 
 describe('onConstruct', function () {
-  it('should make logger be ready on resolve', function () {
-    const container = new Container()
-      .addOnConstructHook((instance, scope) => {
-        onConstructHooksRunner.execute(instance as object, { scope });
-      })
-      .addRegistration(R.fromClass(Logger));
-
-    const logger = container.resolve<Logger>('logger');
-
-    expect(logger.isReady).toBe(true);
-  });
-
   it('should run methods and resolve arguments from container', function () {
-    const execute: HookFn = (ctx: HookContext) => {
-      ctx.invokeMethod({ args: ctx.resolveArgs() });
-    };
-
-    class Car {
-      private engine!: string;
-
-      @onConstruct(execute)
-      setEngine(@inject('engine') engine: string) {
-        this.engine = engine;
-      }
-
-      getEngine() {
-        return this.engine;
-      }
-    }
-
     const root = new Container()
       .addOnConstructHook((instance, scope) => {
         onConstructHooksRunner.execute(instance as object, { scope });
@@ -1492,12 +1452,8 @@ class Logger {
 
   constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
 
-  log(@inject('logsRepo') message: string): void {
+  log(message: string): void {
     this.messages.push(message);
-  }
-
-  size(): number {
-    return this.messages.length;
   }
 
   @hook('onDispose', (c) => {
