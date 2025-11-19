@@ -1430,9 +1430,24 @@ describe('onConstruct', function () {
 
 ### OnDispose
 ```typescript
-import { bindTo, Container, hook, HooksRunner, inject, register, Registration as R, select, singleton } from 'ts-ioc-container';
+import {
+  bindTo,
+  Container,
+  hook,
+  type HookFn,
+  HooksRunner,
+  inject,
+  register,
+  Registration as R,
+  select,
+  singleton,
+} from 'ts-ioc-container';
 
 const onDisposeHookRunner = new HooksRunner('onDispose');
+const execute: HookFn = (ctx) => {
+  ctx.invokeMethod({ args: ctx.resolveArgs() });
+};
+
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
   savedLogs: string[] = [];
@@ -1456,16 +1471,14 @@ class Logger {
     this.messages.push(message);
   }
 
-  @hook('onDispose', (c) => {
-    c.invokeMethod({ args: [] });
-  }) // <--- or extract it to @onDispose
-  async save(): Promise<void> {
+  @hook('onDispose', execute) // <--- or extract it to @onDispose
+  save() {
     this.logsRepo.saveLogs(this.messages);
   }
 }
 
 describe('onDispose', function () {
-  it('should invoke hooks on all instances', async function () {
+  it('should invoke hooks on all instances', function () {
     const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
