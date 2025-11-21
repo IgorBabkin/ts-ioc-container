@@ -8,7 +8,7 @@ import {
   scope,
   select,
   singleton,
-} from '../lib';
+} from '../../lib';
 
 @register(bindTo('logger'), scope((s) => s.hasTag('home')), singleton())
 class Logger {}

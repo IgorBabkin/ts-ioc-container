@@ -10,7 +10,7 @@ import {
   Registration as R,
   resolveByArgs,
   singleton,
-} from '../lib';
+} from '../../lib';
 
 @register(bindTo('logger'))
 class Logger {

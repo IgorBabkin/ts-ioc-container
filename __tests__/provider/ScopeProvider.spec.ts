@@ -1,4 +1,4 @@
-import { bindTo, Container, register, Registration as R, scope, singleton } from '../lib';
+import { bindTo, Container, register, Registration as R, scope, singleton } from '../../lib';
 
 @register(bindTo('ILogger'), scope((s) => s.hasTag('root')), singleton())
 class Logger {}

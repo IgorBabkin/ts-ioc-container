@@ -15,7 +15,7 @@ import {
   scope,
   select as s,
   singleton,
-} from '../lib';
+} from '../../lib';
 
 describe('IContainer', function () {
   it('should accept a symbol as dependency key', function () {

@@ -1,4 +1,4 @@
-import { Container, HookContext, HookFn, HooksRunner, inject, onConstruct, Registration as R } from '../lib';
+import { Container, HookContext, HookFn, HooksRunner, inject, onConstruct, Registration as R } from '../../lib';
 
 const onConstructHooksRunner = new HooksRunner('onConstruct');
 const execute: HookFn = (ctx: HookContext) => {

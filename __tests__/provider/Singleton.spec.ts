@@ -1,4 +1,4 @@
-import { bindTo, Container, register, Registration as R, singleton } from '../lib';
+import { bindTo, Container, register, Registration as R, singleton } from '../../lib';
 
 @register(bindTo('logger'), singleton())
 class Logger {}

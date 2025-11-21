@@ -8,7 +8,7 @@ import {
   Registration as R,
   select,
   singleton,
-} from '../lib';
+} from '../../lib';
 
 @register(bindTo('logger'))
 class Logger {

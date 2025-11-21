@@ -53,7 +53,7 @@ export class Container implements IContainer {
     return this;
   }
 
-  resolve<T>(target: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+  resolve<T>(target: constructor<T> | DependencyKey, { args, child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
     if (Is.constructor(target)) {
@@ -69,7 +69,7 @@ export class Container implements IContainer {
 
   resolveByAlias<T>(
     alias: DependencyKey,
-    { args = [], child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
+    { args, child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
@@ -93,7 +93,7 @@ export class Container implements IContainer {
     return [...deps, ...parentDeps];
   }
 
-  resolveOneByAlias<T>(alias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+  resolveOneByAlias<T>(alias: DependencyKey, { args, child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
     const [key, ..._] = this.aliases.getKeysByAlias(alias);
@@ -104,14 +104,14 @@ export class Container implements IContainer {
       : this.parent.resolveOneByAlias<T>(key, { args, child, lazy });
   }
 
-  createScope({ tags = [] }: CreateScopeOptions = {}): IContainer {
+  createScope({ tags }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
     const scope = new Container({ injector: this.injector, parent: this, tags })
       .addOnConstructHook(...this.onConstructHookList)
       .addOnDisposeHook(...this.onDisposeHookList);
 
-    for (const registration of this.getRegistrations()) {
+    for (const registration of [...this.parent.getRegistrations(), ...this.registrations]) {
       registration.applyTo(scope);
     }
     this.scopes.push(scope);
@@ -168,7 +168,7 @@ export class Container implements IContainer {
 
     // Execute onConstruct hooks
     for (const onConstruct of this.onConstructHookList) {
-      onConstruct(instance as Instance, this);
+      onConstruct(instance, this);
     }
   }
 

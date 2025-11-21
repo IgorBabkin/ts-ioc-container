@@ -5,7 +5,7 @@ import {
   MethodNotImplementedError,
   Provider,
   Registration,
-} from '../lib';
+} from '../../lib';
 
 describe('EmptyContainer', () => {
   it('should raise an error when create a scope', () => {

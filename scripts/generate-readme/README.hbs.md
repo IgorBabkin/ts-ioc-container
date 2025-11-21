@@ -144,14 +144,14 @@ Also you can [inject property.](#inject-property)
 This type of injector just passes container to constructor with others arguments.
 
 ```typescript
-{{{include_file './__tests__/SimpleInjector.spec.ts'}}}
+{{{include_file './__tests__/injector/SimpleInjector.spec.ts'}}}
 ```
 
 ### Proxy
 This type of injector injects dependencies as dictionary `Record<string, unknown>`.
 
 ```typescript
-{{{include_file './__tests__/ProxyInjector.spec.ts'}}}
+{{{include_file './__tests__/injector/ProxyInjector.spec.ts'}}}
 ```
 
 ## Provider
@@ -172,7 +172,7 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 - NOTICE: if you create a scope 'A' of container 'root' then Logger of A !== Logger of root.
 
 ```typescript
-{{{include_file './__tests__/Singleton.spec.ts'}}}
+{{{include_file './__tests__/provider/Singleton.spec.ts'}}}
 ```
 
 ### Arguments
@@ -183,7 +183,7 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
 
 ```typescript
-{{{include_file './__tests__/ArgsProvider.spec.ts'}}}
+{{{include_file './__tests__/provider/ArgsProvider.spec.ts'}}}
 ```
 
 ### Visibility
@@ -237,7 +237,7 @@ Sometimes you need to register provider only in scope which matches to certain c
 - `Registration.fromClass(Logger).when((container) => container.hasTag('root'))`
 
 ```typescript
-{{{include_file './__tests__/ScopeProvider.spec.ts'}}}
+{{{include_file './__tests__/provider/ScopeProvider.spec.ts'}}}
 ```
 
 ## Module
@@ -252,12 +252,12 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 
 ### OnConstruct
 ```typescript
-{{{include_file '__tests__/OnConstruct.spec.ts'}}}
+{{{include_file '__tests__/hooks/OnConstruct.spec.ts'}}}
 ```
 
 ### OnDispose
 ```typescript
-{{{include_file '__tests__/OnDispose.spec.ts'}}}
+{{{include_file '__tests__/hooks/OnDispose.spec.ts'}}}
 ```
 
 ### Inject property

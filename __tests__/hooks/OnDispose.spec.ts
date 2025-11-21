@@ -9,7 +9,7 @@ import {
   Registration as R,
   select,
   singleton,
-} from '../lib';
+} from '../../lib';
 
 const onDisposeHookRunner = new HooksRunner('onDispose');
 const execute: HookFn = (ctx) => {

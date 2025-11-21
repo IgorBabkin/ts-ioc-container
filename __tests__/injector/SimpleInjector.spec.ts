@@ -1,4 +1,4 @@
-import { Container, type IContainer, Registration as R, SimpleInjector } from '../lib';
+import { Container, type IContainer, Registration as R, SimpleInjector } from '../../lib';
 
 describe('SimpleInjector', function () {
   it('should pass container as first parameter', function () {
