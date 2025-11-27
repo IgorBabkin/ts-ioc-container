@@ -1,5 +1,5 @@
 import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import { getMetadata, setMetadata } from '../metadata';
+import { getClassMetadata, setClassMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
 import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
 import { IDToken } from '../token/IDToken';
@@ -29,11 +29,10 @@ export const scope =
 
 const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
-  getMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
+  getClassMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
 export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>) =>
-  setMetadata(
-    METADATA_KEY,
+  setClassMetadata(METADATA_KEY, () =>
     mappers.map((m) => (isProviderPipe(m) ? (r: IRegistration) => m.mapRegistration(r) : m)),
   );
 

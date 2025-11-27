@@ -12,7 +12,7 @@ const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
 export const inject =
   <T>(fn: InjectionToken<T> | InjectFn<T> | symbol | string | constructor<T>): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
-    setParameterMetadata(hookMetaKey(propertyKey as string), toToken(fn))(
+    setParameterMetadata(hookMetaKey(propertyKey as string), () => toToken(fn))(
       Is.instance(target) ? target.constructor : target,
       propertyKey,
       parameterIndex,

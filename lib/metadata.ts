@@ -1,20 +1,21 @@
 import { constructor } from './types';
 
-export const setMetadata =
-  <T>(key: string | symbol, value: T): ClassDecorator =>
+export const setClassMetadata =
+  <T>(key: string | symbol, mapFn: (prev: T | undefined) => T): ClassDecorator =>
   (target) => {
-    Reflect.defineMetadata(key, value, target);
+    const value: T | undefined = Reflect.getOwnMetadata(key, target);
+    Reflect.defineMetadata(key, mapFn(value), target);
   };
 
-export function getMetadata<T>(target: object, key: string | symbol): T | undefined {
-  return Reflect.getOwnMetadata(key, target) as T;
+export function getClassMetadata<T>(target: object, key: string | symbol): T | undefined {
+  return Reflect.getOwnMetadata(key, target);
 }
 
 export const setParameterMetadata =
-  (key: string | symbol, value: unknown): ParameterDecorator =>
+  (key: string | symbol, mapFn: (prev: unknown) => unknown): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
     const metadata: unknown[] = Reflect.getOwnMetadata(key, target) ?? [];
-    metadata[parameterIndex] = value;
+    metadata[parameterIndex] = mapFn(metadata[parameterIndex]);
     Reflect.defineMetadata(key, metadata, target);
   };
 
@@ -23,9 +24,10 @@ export const getParameterMetadata = (key: string | symbol, target: constructor<u
 };
 
 export const setMethodMetadata =
-  (key: string, value: unknown): MethodDecorator =>
+  <T>(key: string, mapFn: (prev: T | undefined) => T): MethodDecorator =>
   (target, propertyKey) => {
-    Reflect.defineMetadata(key, value, target.constructor, propertyKey);
+    const metadata: T | undefined = Reflect.getMetadata(key, target.constructor, propertyKey);
+    Reflect.defineMetadata(key, mapFn(metadata), target.constructor, propertyKey);
   };
 
 export const getMethodMetadata = (key: string, target: object, propertyKey: string): unknown =>

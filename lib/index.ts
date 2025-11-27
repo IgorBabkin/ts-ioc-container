@@ -70,8 +70,8 @@ export { HooksRunnerContext, HooksRunner } from './hooks/HooksRunner';
 
 // Metadata
 export {
-  setMetadata,
-  getMetadata,
+  setClassMetadata,
+  getClassMetadata,
   setParameterMetadata,
   setMethodMetadata,
   getMethodMetadata,

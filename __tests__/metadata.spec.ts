@@ -3,10 +3,10 @@ import { getMethodMetadata, setMethodMetadata } from '../lib';
 describe('metadata', () => {
   it('should test setMethodMetadata', () => {
     class Logger {
-      @setMethodMetadata('firstname', 'John')
+      @setMethodMetadata('firstname', () => 'John')
       start() {}
 
-      @setMethodMetadata('lastname', 'Doe')
+      @setMethodMetadata('lastname', () => 'Doe')
       stop() {}
     }
 
