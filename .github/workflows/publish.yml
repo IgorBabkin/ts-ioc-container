@@ -66,6 +66,7 @@ jobs:
         with:
           node-version: ${{ steps.nvm.outputs.version }}
           registry-url: 'https://registry.npmjs.org'
+          always-auth: true
 
       - name: Verify tag matches package version
         run: |
