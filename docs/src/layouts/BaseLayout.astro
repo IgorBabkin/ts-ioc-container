@@ -1,0 +1,226 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'TypeScript IoC (Inversion Of Control) container library' } = Astro.props;
+
+const navigation = [
+  { title: 'Home', href: '/ts-ioc-container/' },
+  { title: 'Container', href: '/ts-ioc-container/container' },
+  { title: 'Injector', href: '/ts-ioc-container/injector' },
+  { title: 'Provider', href: '/ts-ioc-container/provider' },
+  { title: 'Token', href: '/ts-ioc-container/token' },
+  { title: 'Registration', href: '/ts-ioc-container/registration' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | ts-ioc-container</title>
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <div class="header-content">
+          <a href="/ts-ioc-container/" class="logo">
+            <h1>ts-ioc-container</h1>
+          </a>
+          <nav class="nav">
+            <a href="https://github.com/IgorBabkin/ts-ioc-container" target="_blank" rel="noopener noreferrer" class="nav-link external">
+              GitHub
+            </a>
+            <a href="https://www.npmjs.com/package/ts-ioc-container" target="_blank" rel="noopener noreferrer" class="nav-link external">
+              NPM
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <div class="container">
+        <aside class="sidebar">
+          <nav class="sidebar-nav">
+            {navigation.map((item) => {
+              const isActive = Astro.url.pathname === item.href ||
+                              Astro.url.pathname === item.href + '/' ||
+                              (item.href !== '/ts-ioc-container/' && Astro.url.pathname.startsWith(item.href));
+              return (
+                <a
+                  href={item.href}
+                  class={`sidebar-link ${isActive ? 'active' : ''}`}
+                >
+                  {item.title}
+                </a>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <main class="main">
+          <slot />
+        </main>
+      </div>
+
+      <footer class="footer">
+        <p>
+          Copyright &copy; IgorBabkin. Distributed by an{' '}
+          <a href="https://github.com/IgorBabkin/ts-ioc-container/tree/main/LICENSE">ISC license</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
+
+<style>
+  .wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    background: #fff;
+    border-bottom: 1px solid #e1e4e8;
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    text-decoration: none;
+    color: #24292e;
+  }
+
+  .logo h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: #0366d6;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover {
+    color: #0256cc;
+    text-decoration: underline;
+  }
+
+  .container {
+    flex: 1;
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 2rem;
+  }
+
+  .sidebar {
+    width: 240px;
+    padding: 2rem 0;
+    border-right: 1px solid #e1e4e8;
+    position: sticky;
+    top: 80px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .sidebar-link {
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: #24292e;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+
+  .sidebar-link:hover {
+    background-color: #f6f8fa;
+  }
+
+  .sidebar-link.active {
+    background-color: #0366d6;
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .main {
+    flex: 1;
+    padding: 2rem 3rem;
+    max-width: 800px;
+  }
+
+  .footer {
+    background: #f6f8fa;
+    border-top: 1px solid #e1e4e8;
+    padding: 2rem;
+    text-align: center;
+    color: #586069;
+    margin-top: auto;
+  }
+
+  .footer a {
+    color: #0366d6;
+    text-decoration: none;
+  }
+
+  .footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .sidebar-nav {
+      flex-direction: row;
+      overflow-x: auto;
+    }
+
+    .main {
+      padding: 1.5rem;
+    }
+  }
+</style>
+

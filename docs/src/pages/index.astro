@@ -1,0 +1,73 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Home" description="TypeScript IoC container library">
+  <article>
+    <h1>TypeScript IoC Container</h1>
+
+    <p>
+      <img src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square" alt="NPM version" />
+      <img src="https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square" alt="npm downloads" />
+      <img src="https://img.shields.io/bundlejs/size/ts-ioc-container" alt="npm package size" />
+      <a href="https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master">
+        <img src="https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master" alt="Coverage Status" />
+      </a>
+      <img src="https://img.shields.io/npm/l/ts-ioc-container" alt="License" />
+      <a href="https://github.com/semantic-release/semantic-release">
+        <img src="https://img.shields.io/badge/semantic--release-e10079.svg" alt="semantic-release" />
+      </a>
+    </p>
+
+    <h2>Advantages</h2>
+    <ul>
+      <li>battle tested</li>
+      <li>written on <code>typescript</code></li>
+      <li>simple and lightweight</li>
+      <li>clean API</li>
+      <li>supports <code>tagged scopes</code></li>
+      <li>fully test covered</li>
+      <li>can be used with decorators <code>@inject</code></li>
+      <li>can inject properties</li>
+      <li>can inject lazy dependencies</li>
+      <li>composable and open to extend</li>
+    </ul>
+
+    <h2>Quick Start</h2>
+    <pre><code>npm install ts-ioc-container reflect-metadata</code></pre>
+
+    <pre><code>yarn add ts-ioc-container reflect-metadata</code></pre>
+
+    <p>Put this in your entrypoint file (should be the first line):</p>
+    <pre><code>import 'reflect-metadata';</code></pre>
+
+    <p>Configure <code>tsconfig.json</code>:</p>
+    <pre><code class="language-json">{`{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}`}</code></pre>
+
+    <h2>Documentation</h2>
+    <p>Browse the documentation chapters in the navigation menu to learn about:</p>
+    <ul>
+      <li><strong><a href="/ts-ioc-container/container">Container</a></strong> - Core container functionality, scopes, and instance management</li>
+      <li><strong><a href="/ts-ioc-container/injector">Injector</a></strong> - Different injection strategies (Metadata, Simple, Proxy)</li>
+      <li><strong><a href="/ts-ioc-container/provider">Provider</a></strong> - Dependency factories with singleton, args, visibility, alias, and decorator features</li>
+      <li><strong><a href="/ts-ioc-container/token">Token</a></strong> - Token types for dependency keys (InjectionToken, IDToken, ClassToken, etc.)</li>
+      <li><strong><a href="/ts-ioc-container/registration">Registration</a></strong> - Registering providers with keys and scopes</li>
+    </ul>
+
+    <h2>Installation</h2>
+    <p>Install the package from npm:</p>
+    <pre><code>npm install ts-ioc-container reflect-metadata</code></pre>
+
+    <h2>Links</h2>
+    <ul>
+      <li><a href="https://github.com/IgorBabkin/ts-ioc-container">GitHub Repository</a></li>
+      <li><a href="https://www.npmjs.com/package/ts-ioc-container">NPM Package</a></li>
+      <li><a href="/ts-ioc-container/coverage/">Coverage Report</a></li>
+    </ul>
+  </article>
+</BaseLayout>

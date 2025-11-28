@@ -1,2 +1,14 @@
-esm
-cjm
+# Build outputs
+cjm/
+esm/
+typings/
+coverage/
+dist/
+.astro/
+
+# Dependencies
+node_modules/
+
+# Docs (Astro files)
+docs/**/*.astro
+*.astro

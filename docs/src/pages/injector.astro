@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Injector" description="Injector - Different injection strategies (Metadata, Simple, Proxy)">
+  <article>
+    <h1>Injector</h1>
+    <p><code>IInjector</code> is used to describe how dependencies should be injected to constructor.</p>
+    <ul>
+      <li><code>MetadataInjector</code> - injects dependencies using <code>@inject</code> decorator</li>
+      <li><code>ProxyInjector</code> - injects dependencies as dictionary <code>Record&lt;string, unknown&gt;</code></li>
+      <li><code>SimpleInjector</code> - just passes container to constructor with others arguments</li>
+    </ul>
+    <p>See the full documentation in the README.md file.</p>
+  </article>
+</BaseLayout>
+

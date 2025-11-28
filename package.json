@@ -52,7 +52,12 @@
     "lint": "eslint lib/**/*.ts  __tests__/**/*.ts scripts/**/*.ts",
     "lint:fix": "npm run lint --fix",
     "prepare": "husky",
-    "release": "npm run build && npm test && npm publish"
+    "release": "npm run build && npm test && npm publish",
+    "docs:install": "cd docs && npm install",
+    "docs:dev": "cd docs && npm run dev",
+    "docs:serve": "cd docs && npm run dev",
+    "docs:build": "cd docs && npm run build",
+    "docs:preview": "cd docs && npm run preview"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
@@ -81,6 +86,9 @@
   "lint-staged": {
     "*.{js,ts,tsx}": [
       "eslint --fix",
+      "prettier --write"
+    ],
+    "docs/**/*.{js,ts,tsx,mjs}": [
       "prettier --write"
     ]
   },

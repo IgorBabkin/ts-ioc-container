@@ -46,4 +46,7 @@ export default [
       ],
     },
   },
+  {
+    ignores: ['docs/**'],
+  },
 ];
