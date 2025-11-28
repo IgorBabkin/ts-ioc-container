@@ -1,3 +1,10 @@
+## [45.1.3](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.2...v45.1.3) (2025-11-28)
+
+
+### Bug Fixes
+
+* **ci:** add semantic-release badge ([4a71f6d](https://github.com/IgorBabkin/ts-ioc-container/commit/4a71f6df0506d44dd6f1db6b2a26765aaf8cf740)), closes [#42](https://github.com/IgorBabkin/ts-ioc-container/issues/42)
+
 ## [45.1.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.1...v45.1.2) (2025-11-28)
 
 
