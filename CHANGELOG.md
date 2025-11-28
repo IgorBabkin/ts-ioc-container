@@ -1,3 +1,10 @@
+## [45.1.11](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.10...v45.1.11) (2025-11-28)
+
+
+### Bug Fixes
+
+* **license:** add license file ([5811b52](https://github.com/IgorBabkin/ts-ioc-container/commit/5811b52601e4dff76f22d8c2f7b64193aea18b0a))
+
 ## [45.1.10](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.9...v45.1.10) (2025-11-28)
 
 
