@@ -1,3 +1,10 @@
+## [45.1.14](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.13...v45.1.14) (2025-11-28)
+
+
+### Bug Fixes
+
+* **notification:** test notifications by email ([e8d67aa](https://github.com/IgorBabkin/ts-ioc-container/commit/e8d67aa9c2269c80b19ec92dbceb43a223501bb2))
+
 ## [45.1.13](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.12...v45.1.13) (2025-11-28)
 
 
