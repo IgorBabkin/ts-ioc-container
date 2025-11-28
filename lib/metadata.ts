@@ -13,7 +13,7 @@ export function getClassMetadata<T>(target: object, key: string | symbol): T | u
 
 export const setParameterMetadata =
   (key: string | symbol, mapFn: (prev: unknown) => unknown): ParameterDecorator =>
-  (target, propertyKey, parameterIndex) => {
+  (target, _, parameterIndex) => {
     const metadata: unknown[] = Reflect.getOwnMetadata(key, target) ?? [];
     metadata[parameterIndex] = mapFn(metadata[parameterIndex]);
     Reflect.defineMetadata(key, metadata, target);
