@@ -5,6 +5,7 @@
 ![npm package minimized gzipped size (select exports)](https://img.shields.io/bundlejs/size/ts-ioc-container)
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
+[![semantic-release](https://img.shields.io/badge/%20%20%20FLO%20-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
 ## Advantages
 - battle tested :boom:
