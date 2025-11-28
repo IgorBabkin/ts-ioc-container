@@ -74,6 +74,31 @@ jobs:
           git config core.hooksPath /dev/null  # Disable git hooks on CI
 
       - name: Release
+        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx semantic-release
+
+      - name: Publish to GitHub Packages
+        # Publish to GitHub Packages so it shows up in the Packages section
+        continue-on-error: true
+        run: |
+          # Get repository owner (npm scopes must be lowercase)
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          
+          # Configure npm to publish to GitHub Packages
+          echo "@${REPO_OWNER}:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+          
+          # Temporarily scope the package name for GitHub Packages
+          # GitHub Packages requires scoped packages matching the repository owner
+          npm pkg set name="@${REPO_OWNER}/ts-ioc-container"
+          
+          # Publish to GitHub Packages
+          # This will fail gracefully if the version already exists
+          npm publish --registry=https://npm.pkg.github.com || echo "Package already published to GitHub Packages"
+          
+          # Restore original package name (semantic-release will update it anyway, but good practice)
+          npm pkg set name="ts-ioc-container"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
