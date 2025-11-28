@@ -1,3 +1,10 @@
+## [45.1.16](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.15...v45.1.16) (2025-11-28)
+
+
+### Bug Fixes
+
+* **deployments:** add release-notification env ([24377cf](https://github.com/IgorBabkin/ts-ioc-container/commit/24377cf50b6bc4b5d4a41815ecedeb1c428f3dbe))
+
 ## [45.1.15](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.14...v45.1.15) (2025-11-28)
 
 
