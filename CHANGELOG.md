@@ -1,3 +1,10 @@
+## [45.1.8](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.7...v45.1.8) (2025-11-28)
+
+
+### Bug Fixes
+
+* **docs:** check docs generation ([4bacd8f](https://github.com/IgorBabkin/ts-ioc-container/commit/4bacd8f1be6bfe7b44bf392766b37d3ec3c2f496))
+
 ## [45.1.7](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.6...v45.1.7) (2025-11-28)
 
 
