@@ -15,4 +15,5 @@ yarn.log
 prev-coverage-result.json
 *.new.report.json
 .DS_Store
+CI_CD_AUDIT.md
 
