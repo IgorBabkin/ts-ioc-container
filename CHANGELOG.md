@@ -1,3 +1,10 @@
+## [45.1.9](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.8...v45.1.9) (2025-11-28)
+
+
+### Bug Fixes
+
+* **readme:** remove template file from package ([acc9d29](https://github.com/IgorBabkin/ts-ioc-container/commit/acc9d295c94c25e34567de100cbc981a2efb1901))
+
 ## [45.1.8](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.7...v45.1.8) (2025-11-28)
 
 
