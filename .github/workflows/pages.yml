@@ -1,9 +1,10 @@
-name: Deploy GitHub Pages
+name: github-pages
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["publish"]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -17,6 +18,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -40,15 +42,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Cache Jest
-        uses: ./.github/actions/cache-jest
-
-      - name: Test with coverage
-        run: npm run test:coverage -- --maxWorkers=2
-
-      - name: Build
-        run: npm run build
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
@@ -59,12 +52,6 @@ jobs:
       - name: Build Astro site
         working-directory: docs
         run: npm run build
-
-      - name: Copy coverage report
-        working-directory: docs
-        run: |
-          mkdir -p dist/coverage
-          cp -r ../coverage/lcov-report/* dist/coverage/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
