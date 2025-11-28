@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Required for semantic-release to analyze commits
-          token: ${{ secrets.GITHUB_TOKEN }}  # Required for semantic-release to push commits
+          token: ${{ secrets.GH_TOKEN }}  # Required for semantic-release to push commits
 
       - name: Read Node.js version from .nvmrc
         id: nvm
