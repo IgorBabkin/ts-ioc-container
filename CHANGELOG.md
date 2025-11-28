@@ -1,3 +1,13 @@
+## [45.1.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.0...v45.1.1) (2025-11-28)
+
+
+### Bug Fixes
+
+* **ci-fix:** check ([343cd4d](https://github.com/IgorBabkin/ts-ioc-container/commit/343cd4d04b52a167b309710f977cb14079b49a47))
+* **ci-optimization:** check ([29a921c](https://github.com/IgorBabkin/ts-ioc-container/commit/29a921c6107dfff70e224ca57e1fb4e93bec57b4))
+* **ci-test:** check ([f2d30db](https://github.com/IgorBabkin/ts-ioc-container/commit/f2d30db936b920fa15e258504680ae629b8f234c))
+* **ci:** fix github flow ([1d32b2b](https://github.com/IgorBabkin/ts-ioc-container/commit/1d32b2b0ac8bc61e1e915c9542f60979d5f1dde5))
+
 # [45.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.0.7...v45.1.0) (2025-11-28)
 
 
