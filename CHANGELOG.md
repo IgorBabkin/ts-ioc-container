@@ -1,3 +1,10 @@
+## [45.1.15](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.14...v45.1.15) (2025-11-28)
+
+
+### Bug Fixes
+
+* **email:** asda ([2231355](https://github.com/IgorBabkin/ts-ioc-container/commit/2231355e0011e6d801709eb98fbceb8a8aef0953))
+
 ## [45.1.14](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.13...v45.1.14) (2025-11-28)
 
 
