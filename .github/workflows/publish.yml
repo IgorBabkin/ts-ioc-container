@@ -14,6 +14,7 @@ permissions:
   contents: write  # Required for creating releases and tags
   issues: write    # Required for creating issue comments
   pull-requests: write  # Required for creating PR comments
+  packages: write  # Required for publishing to GitHub Packages
 
 jobs:
   calc-coverage-and-release:
@@ -93,6 +94,10 @@ jobs:
           # Temporarily scope the package name for GitHub Packages
           # GitHub Packages requires scoped packages matching the repository owner
           npm pkg set name="@${REPO_OWNER}/ts-ioc-container"
+          
+          # Add repository field to link package to this repository (required for GitHub Packages)
+          npm pkg set repository.type=git
+          npm pkg set repository.url="git+https://github.com/${{ github.repository }}.git"
           
           # Publish to GitHub Packages
           # This will fail gracefully if the version already exists
