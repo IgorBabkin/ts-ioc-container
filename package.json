@@ -7,7 +7,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://github.com/IgorBabkin/ts-ioc-container",
+  "homepage": "https://igorbabkin.github.io/ts-ioc-container",
   "license": "ISC",
   "sideEffects": false,
   "main": "cjm/index.js",
