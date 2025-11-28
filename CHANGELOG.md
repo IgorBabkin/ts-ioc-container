@@ -1,3 +1,10 @@
+## [45.1.12](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.11...v45.1.12) (2025-11-28)
+
+
+### Bug Fixes
+
+* **github-packages:** upload package to github paclages ([51bc699](https://github.com/IgorBabkin/ts-ioc-container/commit/51bc69991256ae8610cac5dbbacdb836c414b82f))
+
 ## [45.1.11](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.10...v45.1.11) (2025-11-28)
 
 
