@@ -1,3 +1,10 @@
+## [45.1.4](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.3...v45.1.4) (2025-11-28)
+
+
+### Bug Fixes
+
+* **ci:** jest speed ([49f435b](https://github.com/IgorBabkin/ts-ioc-container/commit/49f435b03ec98c9b8a8220e186035ea344ca3790))
+
 ## [45.1.3](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.2...v45.1.3) (2025-11-28)
 
 
