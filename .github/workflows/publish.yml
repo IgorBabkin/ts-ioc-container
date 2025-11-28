@@ -56,6 +56,7 @@ jobs:
 
   release:
     needs: test
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -74,7 +75,6 @@ jobs:
           node-version: ${{ steps.nvm.outputs.version }}
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
-          always-auth: true
         # OIDC authentication is automatically used when:
         # 1. permissions.id-token: write is set (see top of file)
         # 2. npm 11.5.1+ is installed (next step)
