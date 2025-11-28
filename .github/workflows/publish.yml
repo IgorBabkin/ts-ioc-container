@@ -9,6 +9,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -49,10 +53,6 @@ jobs:
     needs: test
     environment: production
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,6 +84,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify package configuration
+        run: |
+          echo "Package name: $(node -p "require('./package.json').name")"
+          echo "Package version: $(node -p "require('./package.json').version")"
+          echo "Registry: $(node -p "require('./package.json').publishConfig.registry")"
+
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        run: npm publish
 
