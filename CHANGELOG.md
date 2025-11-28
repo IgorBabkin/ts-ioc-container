@@ -1,3 +1,15 @@
+# [45.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.0.7...v45.1.0) (2025-11-28)
+
+
+### Bug Fixes
+
+* **ci:** disable hooks on ci ([5ce8a43](https://github.com/IgorBabkin/ts-ioc-container/commit/5ce8a43f95908d07c6056cd43dd28e75f783507b))
+
+
+### Features
+
+* **test-sem-ver:** check ([de4b1a7](https://github.com/IgorBabkin/ts-ioc-container/commit/de4b1a7d9335782e973c794bb9b84fd93e405db3))
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
