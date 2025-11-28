@@ -15,6 +15,7 @@ yarn.log
 prev-coverage-result.json
 *.new.report.json
 .DS_Store
+.jest-cache
 CI_CD_AUDIT.md
 NPM_OIDC_SETUP.md
 

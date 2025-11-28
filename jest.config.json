@@ -7,10 +7,12 @@
       "ts-jest",
       {
         "tsconfig": "./tsconfig.json",
-        "isolatedModules": false
+        "isolatedModules": true
       }
     ]
   },
+  "cache": true,
+  "cacheDirectory": "<rootDir>/.jest-cache",
   "coveragePathIgnorePatterns": [
     "/node_modules/",
     "/__tests__/",

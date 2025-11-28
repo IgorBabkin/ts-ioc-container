@@ -43,6 +43,9 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Cache Jest
+        uses: ./.github/actions/cache-jest
+
       - name: Test
-        run: npm test
+        run: npm test -- --maxWorkers=2
 

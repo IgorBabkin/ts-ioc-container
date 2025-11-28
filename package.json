@@ -44,7 +44,7 @@
     "generate:docs": "scripts/generate-readme/generate-readme.ts && git add README.md",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "test": "jest",
-    "test:coverage": "jest --coverage",
+    "test:coverage": "jest --coverage --coverageReporters=lcov --coverageReporters=text-summary",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "commit": "cz",
