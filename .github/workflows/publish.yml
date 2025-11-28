@@ -16,7 +16,7 @@ permissions:
   pull-requests: write  # Required for creating PR comments
 
 jobs:
-  test:
+  test-and-build:
     runs-on: ubuntu-latest
 
     env:
@@ -39,11 +39,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm test
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            cjm/**
+            esm/**
+            typings/**
+          retention-days: 1
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
@@ -52,8 +62,7 @@ jobs:
           file: ./coverage/lcov.info
 
   release:
-    needs: test
-    environment: production
+    needs: test-and-build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -80,8 +89,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: .
 
       - name: Configure Git
         run: |
