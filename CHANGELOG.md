@@ -1,3 +1,11 @@
+## [45.1.5](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.4...v45.1.5) (2025-11-28)
+
+
+### Bug Fixes
+
+* **ci:** asdas ([c58d8d0](https://github.com/IgorBabkin/ts-ioc-container/commit/c58d8d07d5fda2661050d09bd8c2174c27a8954c))
+* **ci:** jest ([6265f5f](https://github.com/IgorBabkin/ts-ioc-container/commit/6265f5f5d53f63ee63eead07e99e651468eecf57))
+
 ## [45.1.4](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.3...v45.1.4) (2025-11-28)
 
 
