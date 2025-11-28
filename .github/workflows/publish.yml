@@ -1,4 +1,4 @@
-name: Release
+name: Publish
 
 on:
   push:
@@ -16,48 +16,12 @@ permissions:
   pull-requests: write  # Required for creating PR comments
 
 jobs:
-  test:
+  calc-coverage-and-release:
+    environment:
+      name: production
+      url: https://www.npmjs.com/package/ts-ioc-container
     runs-on: ubuntu-latest
-
-    env:
-      NODE_ENV: test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Read Node.js version from .nvmrc
-        id: nvm
-        run: echo "version=$(cat .nvmrc | sed 's/^v//')" >> $GITHUB_OUTPUT
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ steps.nvm.outputs.version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Test
-        run: npm test
-
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./coverage/lcov.info
-
-  release:
-    needs: test
-    environment: production
-    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,6 +51,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./coverage/lcov.info
 
       - name: Build
         run: npm run build
