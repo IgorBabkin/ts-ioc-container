@@ -5,7 +5,7 @@ import Handlebars from 'handlebars';
 import './handlebars-helpers';
 import * as console from 'node:console';
 
-const content = fs.readFileSync('scripts/generate-readme/README.hbs.md', 'utf8');
+const content = fs.readFileSync('./README.hbs.md', 'utf8');
 const template = Handlebars.compile(content);
 fs.writeFileSync(
   'README.md',
