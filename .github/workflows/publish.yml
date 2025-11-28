@@ -1,9 +1,9 @@
-name: Publish
+name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,7 +11,9 @@ concurrency:
 
 permissions:
   id-token: write  # Required for OIDC
-  contents: read
+  contents: write  # Required for creating releases and tags
+  issues: write    # Required for creating issue comments
+  pull-requests: write  # Required for creating PR comments
 
 jobs:
   test:
@@ -49,13 +51,16 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./coverage/lcov.info
 
-  publish:
+  release:
     needs: test
     environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for semantic-release to analyze commits
+          token: ${{ secrets.GITHUB_TOKEN }}  # Required for semantic-release to push commits
 
       - name: Read Node.js version from .nvmrc
         id: nvm
@@ -67,18 +72,10 @@ jobs:
           node-version: ${{ steps.nvm.outputs.version }}
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Verify tag matches package version
-        run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
-            echo "❌ Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
-            exit 1
-          fi
-          echo "✅ Version match: $TAG_VERSION"
-
       - name: Ensure npm 11.5.1 or later for OIDC
-        run: npm install -g npm@latest
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - name: Install dependencies
         run: npm ci
@@ -86,12 +83,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify package configuration
+      - name: Configure Git
         run: |
-          echo "Package name: $(node -p "require('./package.json').name")"
-          echo "Package version: $(node -p "require('./package.json').version")"
-          echo "Registry: $(node -p "require('./package.json').publishConfig.registry")"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Publish to npm
-        run: npm publish
-
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
