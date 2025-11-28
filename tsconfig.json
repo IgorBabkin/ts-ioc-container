@@ -12,7 +12,8 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "resolveJsonModule": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "isolatedModules": true
   },
   "include": [
     "lib",
