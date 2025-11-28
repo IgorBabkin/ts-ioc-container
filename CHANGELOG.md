@@ -1,3 +1,13 @@
+## [45.1.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.1...v45.1.2) (2025-11-28)
+
+
+### Bug Fixes
+
+* **ci:** add pr support ([7abeee2](https://github.com/IgorBabkin/ts-ioc-container/commit/7abeee20e06f9c3ed1b6429e80f1c6666b5f7336))
+* **ci:** semver ([bea8b58](https://github.com/IgorBabkin/ts-ioc-container/commit/bea8b588f0f68abc8522e15462352bbad7a2e5d1))
+* **ci:** semver ([90f81b1](https://github.com/IgorBabkin/ts-ioc-container/commit/90f81b1ea6e00a411ba237ccea902c804506bee1))
+* **ci:** split pr-checks and publish ([668aa99](https://github.com/IgorBabkin/ts-ioc-container/commit/668aa99af0c6eb3e5c4900810a2866d2a992f626))
+
 ## [45.1.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.0...v45.1.1) (2025-11-28)
 
 
