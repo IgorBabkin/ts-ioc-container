@@ -1,3 +1,10 @@
+## [45.1.13](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.12...v45.1.13) (2025-11-28)
+
+
+### Bug Fixes
+
+* **github-registry:** publish to github registry ([cb23e86](https://github.com/IgorBabkin/ts-ioc-container/commit/cb23e861d9fce3847c69f2d2f1bc0f49431f7fec))
+
 ## [45.1.12](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.11...v45.1.12) (2025-11-28)
 
 
