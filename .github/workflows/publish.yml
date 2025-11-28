@@ -66,7 +66,6 @@ jobs:
         with:
           node-version: ${{ steps.nvm.outputs.version }}
           registry-url: 'https://registry.npmjs.org'
-          always-auth: true
 
       - name: Verify tag matches package version
         run: |
@@ -77,6 +76,9 @@ jobs:
             exit 1
           fi
           echo "✅ Version match: $TAG_VERSION"
+
+      - name: Ensure npm 11.5.1 or later for OIDC
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci
