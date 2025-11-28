@@ -19,4 +19,5 @@ prev-coverage-result.json
 CI_CD_AUDIT.md
 NPM_OIDC_SETUP.md
 WARP.md
+RELEASE_NOTIFICATION_SETUP.md
 

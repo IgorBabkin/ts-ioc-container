@@ -1,0 +1,97 @@
+name: notify-release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  send-email-notification:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'published'
+    # Continue even if email fails - notification is non-critical
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if email is configured
+        id: check-config
+        run: |
+          if [ -z "${{ secrets.SMTP_PASSWORD }}" ] || [ -z "${{ vars.SMTP_SERVER }}" ] || [ -z "${{ vars.RELEASE_NOTIFICATION_EMAIL }}" ]; then
+            echo "Email notification not configured. Skipping notification."
+            echo "configured=false" >> $GITHUB_OUTPUT
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send email notification
+        if: steps.check-config.outputs.configured == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ vars.SMTP_SERVER }}
+          server_port: ${{ vars.SMTP_PORT || '587' }}
+          username: ${{ vars.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: |
+            🚀 New Release: ${{ github.event.release.name }} - ts-ioc-container
+          to: ${{ vars.RELEASE_NOTIFICATION_EMAIL }}
+          from: ${{ vars.SMTP_FROM || vars.SMTP_USERNAME }}
+          body: |
+            A new release has been published for ts-ioc-container!
+            
+            Release Details:
+            • Version: ${{ github.event.release.tag_name }}
+            • Release Name: ${{ github.event.release.name }}
+            • Published by: ${{ github.event.release.author.login }}
+            • Published at: ${{ github.event.release.published_at }}
+            
+            Release Notes:
+            ${{ github.event.release.body }}
+            
+            Links:
+            • GitHub Release: ${{ github.event.release.html_url }}
+            • npm Package: https://www.npmjs.com/package/ts-ioc-container
+            • Repository: ${{ github.repository_url }}
+            
+            You're receiving this because you're subscribed to release notifications.
+          html_body: |
+            <html>
+              <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #0969da;">🚀 New Release: ${{ github.event.release.name }}</h2>
+                  
+                  <p>A new release has been published for <strong>ts-ioc-container</strong>!</p>
+                  
+                  <div style="background-color: #f6f8fa; border-left: 4px solid #0969da; padding: 15px; margin: 20px 0;">
+                    <h3 style="margin-top: 0;">Release Details</h3>
+                    <ul style="margin: 0; padding-left: 20px;">
+                      <li><strong>Version:</strong> <code style="background-color: #e7f3ff; padding: 2px 6px; border-radius: 3px;">${{ github.event.release.tag_name }}</code></li>
+                      <li><strong>Release Name:</strong> ${{ github.event.release.name }}</li>
+                      <li><strong>Published by:</strong> ${{ github.event.release.author.login }}</li>
+                      <li><strong>Published at:</strong> ${{ github.event.release.published_at }}</li>
+                    </ul>
+                  </div>
+                  
+                  <div style="margin: 20px 0;">
+                    <h3>Release Notes</h3>
+                    <div style="background-color: #f6f8fa; padding: 15px; border-radius: 5px; white-space: pre-wrap;">${{ github.event.release.body }}</div>
+                  </div>
+                  
+                  <div style="margin: 20px 0;">
+                    <h3>Quick Links</h3>
+                    <ul style="padding-left: 20px;">
+                      <li><a href="${{ github.event.release.html_url }}" style="color: #0969da;">View on GitHub</a></li>
+                      <li><a href="https://www.npmjs.com/package/ts-ioc-container" style="color: #0969da;">View on npm</a></li>
+                      <li><a href="${{ github.repository_url }}" style="color: #0969da;">Repository</a></li>
+                    </ul>
+                  </div>
+                  
+                  <hr style="border: none; border-top: 1px solid #d0d7de; margin: 30px 0;">
+                  <p style="color: #656d76; font-size: 12px;">
+                    You're receiving this because you're subscribed to release notifications.<br>
+                    Repository: <a href="${{ github.repository_url }}" style="color: #656d76;">${{ github.repository }}</a>
+                  </p>
+                </div>
+              </body>
+            </html>
+
