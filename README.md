@@ -18,7 +18,6 @@
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
 - composable and open to extend
-- awesome for testing (auto mocking)
 
 ## Content
 
