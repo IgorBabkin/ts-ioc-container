@@ -66,7 +66,8 @@ export { onConstructHooksRunner, onConstruct } from './hooks/onConstruct';
 export { onDisposeHooksRunner, onDispose } from './hooks/onDispose';
 
 // Hooks runner
-export { HooksRunnerContext, HooksRunner } from './hooks/HooksRunner';
+export type { HooksRunnerContext } from './hooks/HooksRunner';
+export { HooksRunner } from './hooks/HooksRunner';
 
 // Metadata
 export {
@@ -91,5 +92,5 @@ export { type InstancePredicate, InstanceListToken } from './token/InstanceListT
 // Others
 export { select } from './select';
 export { Is } from './utils';
-export { InjectFn } from './hooks/hook';
-export { Instance, constructor } from './types';
+export type { InjectFn } from './hooks/hook';
+export type { Instance, constructor } from './types';
