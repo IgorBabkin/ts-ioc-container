@@ -18,4 +18,5 @@ prev-coverage-result.json
 .jest-cache
 CI_CD_AUDIT.md
 NPM_OIDC_SETUP.md
+WARP.md
 
