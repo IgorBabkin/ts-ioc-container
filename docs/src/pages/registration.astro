@@ -17,7 +17,7 @@ import registrationFlowDiagram from "../diagrams/registration-flow.mermaid?raw";
       providing flexibility in how you organize your dependency configuration.
     </p>
 
-    <h2>Registration Flow</h2>
+    <h2 id="registration-flow">Registration Flow</h2>
 
     <p>
       The following diagram shows how registrations are processed and applied to
@@ -28,7 +28,7 @@ import registrationFlowDiagram from "../diagrams/registration-flow.mermaid?raw";
       <div class="mermaid" set:html={registrationFlowDiagram} />
     </div>
 
-    <h2>Registration Methods</h2>
+    <h2 id="registration-methods">Registration Methods</h2>
 
     <p>There are several ways to create and apply registrations:</p>
 
@@ -45,7 +45,7 @@ import registrationFlowDiagram from "../diagrams/registration-flow.mermaid?raw";
       </li>
     </ul>
 
-    <h2>Decorator-Based Registration</h2>
+    <h2 id="decorator-based-registration">Decorator-Based Registration</h2>
 
     <p>
       The <code>@register</code> decorator provides a declarative way to register
@@ -100,7 +100,7 @@ const logger2 = root.resolve('ILogger');
 // Same instance (singleton)
 expect(logger1).toBe(logger2);`} lang="typescript" />
 
-    <h2>Fluent API Registration</h2>
+    <h2 id="fluent-api-registration">Fluent API Registration</h2>
 
     <p>
       The fluent API provides more control and is useful when you need dynamic
@@ -144,7 +144,7 @@ expect(greeting).toBe('Hello World');`} lang="typescript" />
 const logger = container.resolve('ILogger');
 expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
 
-    <h2>Keys</h2>
+    <h2 id="keys">Keys</h2>
 
     <p>
       Keys identify dependencies in the container. They can be strings, symbols,
@@ -222,7 +222,7 @@ expect(() => {
 // This is correct
 container.addRegistration(R.fromValue('Hello').bindToKey('greeting'));`} lang="typescript" />
 
-    <h2>Scope Registration</h2>
+    <h2 id="scope-registration">Scope Registration</h2>
 
     <p>
       Scope predicates control which scopes a provider is available in. This
@@ -281,7 +281,7 @@ class Logger {}`} lang="typescript" />
       .when((s) => s.hasTag('root'))
   );`} lang="typescript" />
 
-    <h2>Registration Pipeline</h2>
+    <h2 id="registration-pipeline">Registration Pipeline</h2>
 
     <p>
       Registrations support the pipeline pattern, allowing you to chain multiple
@@ -300,7 +300,7 @@ const container = new Container()
       .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
   );`} lang="typescript" />
 
-    <h2>Container Modules</h2>
+    <h2 id="container-modules">Container Modules</h2>
 
     <p>
       Container modules encapsulate registration logic, making it easy to
@@ -328,7 +328,7 @@ const container = new Container()
 const logger = container.resolve('ILogger');
 expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
 
-    <h2>Best Practices</h2>
+    <h2 id="best-practices">Best Practices</h2>
 
     <ul>
       <li>
@@ -359,7 +359,7 @@ expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
       </li>
     </ul>
 
-    <h2>Registration Lifecycle</h2>
+    <h2 id="registration-lifecycle">Registration Lifecycle</h2>
 
     <ol>
       <li>

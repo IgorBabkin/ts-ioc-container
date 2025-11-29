@@ -18,7 +18,7 @@ import scopeHierarchyDiagram from "../diagrams/scope-hierarchy.mermaid?raw";
       instances. Understanding containers is essential for effective dependency injection.
     </p>
 
-    <h2>Scopes</h2>
+    <h2 id="scopes">Scopes</h2>
 
     <p>
       Scopes allow you to create isolated dependency contexts. This is perfect
@@ -106,7 +106,7 @@ expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}
       <li>Throw <code>DependencyNotFoundError</code> if not found anywhere</li>
     </ol>
 
-    <h2>Dependency Resolution Flow</h2>
+    <h2 id="dependency-resolution-flow">Dependency Resolution Flow</h2>
 
     <p>
       The following sequence diagram illustrates how a dependency is resolved
@@ -117,7 +117,7 @@ expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}
       <div class="mermaid" set:html={dependencyResolutionFlowDiagram} />
     </div>
 
-    <h2>Instance Management</h2>
+    <h2 id="instance-management">Instance Management</h2>
 
     <p>
       The container tracks all instances it creates, allowing you to query and
@@ -166,7 +166,7 @@ class App {
       lang="typescript"
     />
 
-    <h2>Disposal</h2>
+    <h2 id="disposal">Disposal</h2>
 
     <p>
       Proper resource cleanup is essential for preventing memory leaks. The
@@ -200,7 +200,7 @@ expect(select.instances().resolve(container).length).toBe(0);`}
       </li>
     </ul>
 
-    <h2>Lazy Loading</h2>
+    <h2 id="lazy-loading">Lazy Loading</h2>
 
     <p>
       Lazy loading defers the instantiation of dependencies until they're
@@ -252,7 +252,7 @@ expect(flag.isSet).toBe(true);`}
       lang="typescript"
     />
 
-    <h2>Memory Management</h2>
+    <h2 id="memory-management">Memory Management</h2>
 
     <p>The container provides explicit disposal to prevent memory leaks:</p>
     <ul>
@@ -262,7 +262,7 @@ expect(flag.isSet).toBe(true);`}
       <li>Hooks can be used to release external resources</li>
     </ul>
 
-    <h2>Container Modules</h2>
+    <h2 id="container-modules">Container Modules</h2>
 
     <p>
       Container modules encapsulate registration logic, making it easy to organize
@@ -356,7 +356,7 @@ function createContainer(isProduction: boolean) {
       </li>
     </ul>
 
-    <h2>Key Design Decisions</h2>
+    <h2 id="key-design-decisions">Key Design Decisions</h2>
 
     <h3>1. Separation of Concerns</h3>
     <p>The architecture separates three distinct responsibilities:</p>
@@ -410,7 +410,7 @@ function createContainer(isProduction: boolean) {
       the codebase.
     </p>
 
-    <h2>Best Practices</h2>
+    <h2 id="best-practices">Best Practices</h2>
 
     <ul>
       <li>
@@ -435,7 +435,7 @@ function createContainer(isProduction: boolean) {
       </li>
     </ul>
 
-    <h2>API Reference</h2>
+    <h2 id="api-reference">API Reference</h2>
 
     <h3>Container Methods</h3>
     <ul>

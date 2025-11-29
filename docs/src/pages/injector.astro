@@ -17,7 +17,7 @@ import injectionStrategiesDiagram from "../diagrams/injection-strategies.mermaid
       use cases and coding styles.
     </p>
 
-    <h2>Injection Strategies</h2>
+    <h2 id="injection-strategies">Injection Strategies</h2>
 
     <p>
       The container supports three injection strategies, each implementing the <code
@@ -29,7 +29,7 @@ import injectionStrategiesDiagram from "../diagrams/injection-strategies.mermaid
       <div class="mermaid" set:html={injectionStrategiesDiagram} />
     </div>
 
-    <h2>Available Injectors</h2>
+    <h2 id="available-injectors">Available Injectors</h2>
 
     <ul>
       <li>
@@ -46,7 +46,7 @@ import injectionStrategiesDiagram from "../diagrams/injection-strategies.mermaid
       </li>
     </ul>
 
-    <h2>Metadata Injector</h2>
+    <h2 id="metadata-injector">Metadata Injector</h2>
 
     <p>
       The default injector uses TypeScript decorators and reflection metadata to
@@ -121,7 +121,7 @@ expect(app.greeting).toBe('Hello world!');`}
       lang="typescript"
     />
 
-    <h2>Simple Injector</h2>
+    <h2 id="simple-injector">Simple Injector</h2>
 
     <p>
       The Simple Injector passes the container instance as the first constructor
@@ -176,7 +176,7 @@ expect(app.greeting).toBe('Hello world');`}
       <li>Framework integration where container access is needed</li>
     </ul>
 
-    <h2>Proxy Injector</h2>
+    <h2 id="proxy-injector">Proxy Injector</h2>
 
     <p>
       The Proxy Injector matches constructor parameter names to dependency keys
@@ -278,7 +278,7 @@ class App {
       <li>When you prefer explicit parameter names over decorators</li>
     </ul>
 
-    <h2>Choosing the Right Injector</h2>
+    <h2 id="choosing-the-right-injector">Choosing the Right Injector</h2>
 
     <table>
       <thead>
@@ -311,14 +311,14 @@ class App {
       </tbody>
     </table>
 
-    <h2>Strategy Pattern</h2>
+    <h2 id="strategy-pattern">Strategy Pattern</h2>
     <p>
       The <code>IInjector</code> interface uses the Strategy pattern, allowing different
       injection strategies to be used interchangeably. This makes the system flexible
       and extensible.
     </p>
 
-    <h2>Custom Injectors</h2>
+    <h2 id="custom-injectors">Custom Injectors</h2>
 
     <p>
       You can create custom injectors by implementing the <code>IInjector</code> interface.
@@ -354,7 +354,7 @@ class CustomInjector implements IInjector {
       <li>Support alternative dependency injection styles</li>
     </ul>
 
-    <h2>Best Practices</h2>
+    <h2 id="best-practices">Best Practices</h2>
 
     <ul>
       <li>

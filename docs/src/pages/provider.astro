@@ -18,14 +18,14 @@ import providerPipelineDiagram from "../diagrams/provider-pipeline.mermaid?raw";
       key to mastering the IoC container.
     </p>
 
-    <h2>Factory Pattern</h2>
+    <h2 id="factory-pattern">Factory Pattern</h2>
     <p>
       Providers implement the Factory pattern, encapsulating the creation logic
       of dependencies. This allows for complex instantiation logic while keeping
       the container simple.
     </p>
 
-    <h2>Provider Types</h2>
+    <h2 id="provider-types">Provider Types</h2>
 
     <p>There are three main ways to create providers:</p>
 
@@ -45,7 +45,7 @@ import providerPipelineDiagram from "../diagrams/provider-pipeline.mermaid?raw";
       </li>
     </ul>
 
-    <h2>Singleton</h2>
+    <h2 id="singleton">Singleton</h2>
 
     <p>
       Singleton providers ensure only one instance is created per scope. This is
@@ -97,7 +97,7 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
       <li>Service locators</li>
     </ul>
 
-    <h2>Arguments</h2>
+    <h2 id="arguments">Arguments</h2>
 
     <p>
       Argument providers allow you to bind constructor arguments at registration
@@ -166,7 +166,7 @@ expect(logger.type).toBe('file'); // Second argument still passed`}
       lang="typescript"
     />
 
-    <h2>Visibility</h2>
+    <h2 id="visibility">Visibility</h2>
 
     <p>
       Visibility control allows you to restrict which scopes can access certain
@@ -217,7 +217,7 @@ expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);`}
       <li>Security boundaries</li>
     </ul>
 
-    <h2>Alias</h2>
+    <h2 id="alias">Alias</h2>
 
     <p>
       Aliases allow you to group multiple registrations under a common
@@ -292,7 +292,7 @@ expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);`}
       <li>Event handlers or observers</li>
     </ul>
 
-    <h2>Decorator</h2>
+    <h2 id="decorator">Decorator</h2>
 
     <p>
       The decorator pattern allows you to wrap instances with additional
@@ -385,7 +385,7 @@ expect(logger.printLogs()).toBe('1,2');`}
       <li>Proxy patterns</li>
     </ul>
 
-    <h2>Lazy Loading</h2>
+    <h2 id="lazy-loading">Lazy Loading</h2>
 
     <p>
       Lazy providers defer instantiation until the dependency is actually
@@ -433,7 +433,7 @@ expect(isLoggerCreated).toBe(true);`}
       lang="typescript"
     />
 
-    <h2>Provider Pipeline</h2>
+    <h2 id="provider-pipeline">Provider Pipeline</h2>
 
     <p>
       Providers can be composed using the pipeline pattern. Each transformation
@@ -493,7 +493,7 @@ expect(isLoggerCreated).toBe(true);`}
       lang="typescript"
     />
 
-    <h2>Performance Considerations</h2>
+    <h2 id="performance-considerations">Performance Considerations</h2>
 
     <h3>Singleton Caching</h3>
     <p>
@@ -518,7 +518,7 @@ expect(isLoggerCreated).toBe(true);`}
       > for efficient multi-key lookups.
     </p>
 
-    <h2>Extension Points</h2>
+    <h2 id="extension-points">Extension Points</h2>
 
     <h3>Custom Providers</h3>
     <p>
@@ -544,7 +544,7 @@ container.addOnConstructHook((instance, scope) => {
       lang="typescript"
     />
 
-    <h2>Best Practices</h2>
+    <h2 id="best-practices">Best Practices</h2>
 
     <ul>
       <li>
