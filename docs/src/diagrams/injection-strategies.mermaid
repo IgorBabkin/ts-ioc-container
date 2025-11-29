@@ -1,0 +1,19 @@
+graph TB
+    IInjector[IInjector Interface]
+    Metadata[MetadataInjector<br/>Uses @inject decorators<br/>+ reflect-metadata]
+    Simple[SimpleInjector<br/>Passes container<br/>as first arg]
+    Proxy[ProxyInjector<br/>Matches param names<br/>to dependency keys]
+    
+    IInjector -->|implements| Metadata
+    IInjector -->|implements| Simple
+    IInjector -->|implements| Proxy
+    
+    Metadata -->|injects| Instance1[Instance with<br/>decorated params]
+    Simple -->|injects| Instance2[Instance with<br/>container param]
+    Proxy -->|injects| Instance3[Instance with<br/>destructured params]
+    
+    style IInjector fill:#0366d6,color:#fff
+    style Metadata fill:#28a745,color:#fff
+    style Simple fill:#ffc107,color:#000
+    style Proxy fill:#17a2b8,color:#fff
+

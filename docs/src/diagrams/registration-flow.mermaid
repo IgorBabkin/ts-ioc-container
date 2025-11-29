@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant Dev as Developer
+    participant Reg as Registration
+    participant Container
+    participant Provider
+    participant AliasMap
+    
+    Dev->>Reg: Registration.fromClass(Logger)
+    Reg->>Reg: create Provider
+    Dev->>Reg: bindToKey('ILogger')
+    Reg->>Reg: set key = 'ILogger'
+    Dev->>Reg: pipe(singleton())
+    Reg->>Provider: pipe(singleton())
+    Provider->>Provider: wrap with SingletonProvider
+    Dev->>Reg: when(scope => scope.hasTag('root'))
+    Reg->>Reg: add scope predicate
+    Dev->>Container: addRegistration(registration)
+    Container->>Reg: applyTo(container)
+    Reg->>Reg: check scope predicates
+    alt Scope matches
+        Reg->>Container: register('ILogger', provider)
+        Container->>Provider: store in providers map
+        Reg->>Container: bindToAlias('Logger')
+        Container->>AliasMap: add('Logger', 'ILogger')
+        Container-->>Dev: registration complete
+    else Scope doesn't match
+        Reg-->>Container: skip registration
+    end
+

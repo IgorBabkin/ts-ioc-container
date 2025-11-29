@@ -1,0 +1,102 @@
+classDiagram
+    class IContainer {
+        <<interface>>
+        +resolve(key) T
+        +createScope(options) IContainer
+        +register(key, provider) this
+        +addRegistration(registration) this
+        +dispose() void
+        +getInstances() Instance[]
+        +hasTag(tag) boolean
+    }
+    
+    class Container {
+        -parent: IContainer
+        -scopes: IContainer[]
+        -instances: Instance[]
+        -providers: Map
+        -injector: IInjector
+        -tags: Set
+        +resolve(key) T
+        +createScope(options) IContainer
+        +register(key, provider) this
+        +dispose() void
+    }
+    
+    class IProvider {
+        <<interface>>
+        +resolve(container, options) T
+        +hasAccess(options) boolean
+        +pipe(mappers) IProvider
+        +setAccessPredicate(fn) this
+        +setArgs(fn) this
+        +lazy() this
+    }
+    
+    class Provider {
+        -factory: ResolveDependency
+        -argsFn: ArgsFn
+        -accessPredicate: ScopeAccessFn
+        -isLazy: boolean
+        +resolve(container, options) T
+        +pipe(mappers) IProvider
+    }
+    
+    class SingletonProvider {
+        -cache: Cache
+        +resolve(container, options) T
+    }
+    
+    class IInjector {
+        <<interface>>
+        +resolve(container, constructor, options) T
+    }
+    
+    class MetadataInjector {
+        +resolve(container, constructor, options) T
+        -createInstance(container, constructor, options) T
+    }
+    
+    class SimpleInjector {
+        +resolve(container, constructor, options) T
+        -createInstance(container, constructor, options) T
+    }
+    
+    class ProxyInjector {
+        +resolve(container, constructor, options) T
+        -createInstance(container, constructor, options) T
+    }
+    
+    class IRegistration {
+        <<interface>>
+        +when(predicates) this
+        +bindToKey(key) this
+        +bindTo(key) this
+        +pipe(mappers) this
+        +applyTo(container) void
+    }
+    
+    class Registration {
+        -provider: IProvider
+        -key: DependencyKey
+        -scopePredicates: ScopePredicate[]
+        +when(predicates) this
+        +bindToKey(key) this
+        +applyTo(container) void
+    }
+    
+    IContainer <|.. Container
+    IContainer <|.. EmptyContainer
+    Container --> IProvider : uses
+    Container --> IInjector : uses
+    Container --> IRegistration : manages
+    IProvider <|.. Provider
+    IProvider <|.. SingletonProvider
+    SingletonProvider --|> Provider
+    IInjector <|.. MetadataInjector
+    IInjector <|.. SimpleInjector
+    IInjector <|.. ProxyInjector
+    IRegistration <|.. Registration
+    Registration --> IProvider : creates
+    Container --> Container : parent-child
+

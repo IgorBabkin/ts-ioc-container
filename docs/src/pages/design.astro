@@ -1,5 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import architectureDiagram from '../diagrams/architecture-overview.mermaid?raw';
+import registrationFlowDiagram from '../diagrams/registration-flow.mermaid?raw';
+import classDiagram from '../diagrams/class-diagram.mermaid?raw';
+import dependencyResolutionFlowDiagram from '../diagrams/dependency-resolution-flow.mermaid?raw';
+import scopeHierarchyDiagram from '../diagrams/scope-hierarchy.mermaid?raw';
+import providerPipelineDiagram from '../diagrams/provider-pipeline.mermaid?raw';
+import injectionStrategiesDiagram from '../diagrams/injection-strategies.mermaid?raw';
 ---
 
 <BaseLayout title="Design" description="Design - Architecture and design patterns of ts-ioc-container">
@@ -27,28 +34,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <h3>Architecture Overview</h3>
     
     <div class="diagram">
-      <div class="mermaid">graph TB
-    Container[Container]
-    Provider[IProvider]
-    Injector[IInjector]
-    Registration[IRegistration]
-    Scope[Container Scope]
-    
-    Container -->|uses| Provider
-    Container -->|uses| Injector
-    Container -->|creates| Scope
-    Registration -->|creates| Provider
-    Container -->|manages| Registration
-    
-    Provider -->|resolves| Instance[Instance]
-    Injector -->|injects| Instance
-    
-    style Container fill:#0366d6,color:#fff
-    style Provider fill:#28a745,color:#fff
-    style Injector fill:#ffc107,color:#000
-    style Registration fill:#17a2b8,color:#fff
-    style Scope fill:#6f42c1,color:#fff
-    style Instance fill:#dc3545,color:#fff</div>
+      <div class="mermaid" set:html={architectureDiagram}></div>
     </div>
 
     <h2>Class Diagram</h2>
@@ -58,107 +44,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </p>
 
     <div class="diagram">
-      <div class="mermaid">{`classDiagram
-    class IContainer {
-        &lt;&lt;interface&gt;&gt;
-        +resolve(key) T
-        +createScope(options) IContainer
-        +register(key, provider) this
-        +addRegistration(registration) this
-        +dispose() void
-        +getInstances() Instance[]
-        +hasTag(tag) boolean
-    }
-    
-    class Container {
-        -parent: IContainer
-        -scopes: IContainer[]
-        -instances: Instance[]
-        -providers: Map~DependencyKey, IProvider~
-        -injector: IInjector
-        -tags: Set~Tag~
-        +resolve(key) T
-        +createScope(options) IContainer
-        +register(key, provider) this
-        +dispose() void
-    }
-    
-    class IProvider {
-        &lt;&lt;interface&gt;&gt;
-        +resolve(container, options) T
-        +hasAccess(options) boolean
-        +pipe(...mappers) IProvider
-        +setAccessPredicate(fn) this
-        +setArgs(fn) this
-        +lazy() this
-    }
-    
-    class Provider {
-        -factory: ResolveDependency
-        -argsFn: ArgsFn
-        -accessPredicate: ScopeAccessFn
-        -isLazy: boolean
-        +resolve(container, options) T
-        +pipe(...mappers) IProvider
-    }
-    
-    class SingletonProvider {
-        -cache: Cache
-        +resolve(container, options) T
-    }
-    
-    class IInjector {
-        &lt;&lt;interface&gt;&gt;
-        +resolve(container, constructor, options) T
-    }
-    
-    class MetadataInjector {
-        +resolve(container, constructor, options) T
-        -createInstance(container, constructor, options) T
-    }
-    
-    class SimpleInjector {
-        +resolve(container, constructor, options) T
-        -createInstance(container, constructor, options) T
-    }
-    
-    class ProxyInjector {
-        +resolve(container, constructor, options) T
-        -createInstance(container, constructor, options) T
-    }
-    
-    class IRegistration {
-        &lt;&lt;interface&gt;&gt;
-        +when(...predicates) this
-        +bindToKey(key) this
-        +bindTo(key) this
-        +pipe(...mappers) this
-        +applyTo(container) void
-    }
-    
-    class Registration {
-        -provider: IProvider
-        -key: DependencyKey
-        -scopePredicates: ScopePredicate[]
-        +when(...predicates) this
-        +bindToKey(key) this
-        +applyTo(container) void
-    }
-    
-    IContainer &lt;|.. Container
-    IContainer &lt;|.. EmptyContainer
-    Container --&gt; IProvider : uses
-    Container --&gt; IInjector : uses
-    Container --&gt; IRegistration : manages
-    IProvider &lt;|.. Provider
-    IProvider &lt;|.. SingletonProvider
-    SingletonProvider --|&gt; Provider : extends
-    IInjector &lt;|.. MetadataInjector
-    IInjector &lt;|.. SimpleInjector
-    IInjector &lt;|.. ProxyInjector
-    IRegistration &lt;|.. Registration
-    Registration --&gt; IProvider : creates
-    Container --&gt; Container : parent-child`}</div>
+      <div class="mermaid" set:html={classDiagram}></div>
     </div>
 
     <h2>Dependency Resolution Flow</h2>
@@ -168,43 +54,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </p>
 
     <div class="diagram">
-      <pre><code class="language-mermaid">sequenceDiagram
-    participant Client
-    participant Container
-    participant Provider
-    participant Injector
-    participant Instance
-    
-    Client->>Container: resolve('ILogger')
-    Container->>Container: findProvider('ILogger')
-    alt Provider found in current scope
-        Container->>Provider: resolve(container, options)
-        Provider->>Provider: checkAccess(invocationScope)
-        alt Has access
-            Provider->>Provider: getArgs(container)
-            Provider->>Injector: resolve(container, Logger, args)
-            Injector->>Injector: createInstance(container, Logger, args)
-            Injector->>Container: resolve dependencies
-            Container-->>Injector: dependencies
-            Injector->>Instance: new Logger(deps)
-            Instance-->>Injector: instance
-            Injector-->>Provider: instance
-            Provider->>Provider: cache (if singleton)
-            Provider-->>Container: instance
-            Container->>Container: addInstance(instance)
-            Container-->>Client: instance
-        else No access
-            Provider-->>Container: throw DependencyNotFoundError
-        end
-    else Provider not found
-        Container->>Container: getParent()
-        alt Has parent
-            Container->>Container: parent.resolve('ILogger')
-            Note over Container: Recursive resolution
-        else No parent
-            Container-->>Client: throw DependencyNotFoundError
-        end
-    end</div>
+      <div class="mermaid" set:html={dependencyResolutionFlowDiagram}></div>
     </div>
 
     <h2>Scope Hierarchy</h2>
@@ -215,23 +65,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </p>
 
     <div class="diagram">
-      <div class="mermaid">graph TD
-    Root[Root Container<br/>tags: 'root']
-    Request1[Request Scope 1<br/>tags: 'request', 'user:123']
-    Request2[Request Scope 2<br/>tags: 'request', 'user:456']
-    Feature1[Feature Scope 1<br/>tags: 'feature:admin']
-    Feature2[Feature Scope 2<br/>tags: 'feature:user']
-    
-    Root -->|createScope| Request1
-    Root -->|createScope| Request2
-    Request1 -->|createScope| Feature1
-    Request2 -->|createScope| Feature2
-    
-    style Root fill:#0366d6,color:#fff
-    style Request1 fill:#28a745,color:#fff
-    style Request2 fill:#28a745,color:#fff
-    style Feature1 fill:#ffc107,color:#000
-    style Feature2 fill:#ffc107,color:#000</div>
+      <div class="mermaid" set:html={scopeHierarchyDiagram}></div>
     </div>
 
     <h3>Scope Resolution Strategy</h3>
@@ -256,26 +90,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </p>
 
     <div class="diagram">
-      <div class="mermaid">graph LR
-    Base[Base Provider<br/>fromClass Logger]
-    Args[Args Provider<br/>args '/config.json']
-    Singleton[Singleton Provider<br/>cache instance]
-    Visibility[Visibility Provider<br/>scopeAccess predicate]
-    Lazy[Lazy Provider<br/>deferred creation]
-    
-    Base -->|pipe args| Args
-    Args -->|pipe singleton| Singleton
-    Singleton -->|pipe scopeAccess| Visibility
-    Visibility -->|pipe lazy| Lazy
-    
-    Lazy -->|final| Final[Final Provider]
-    
-    style Base fill:#e1e4e8
-    style Args fill:#c6e48b
-    style Singleton fill:#7bc96f
-    style Visibility fill:#239a3b
-    style Lazy fill:#196127
-    style Final fill:#0366d6,color:#fff</div>
+      <div class="mermaid" set:html={providerPipelineDiagram}></div>
     </div>
 
     <h3>Provider Composition Example</h3>
@@ -297,24 +112,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </p>
 
     <div class="diagram">
-      <div class="mermaid">graph TB
-    IInjector[IInjector Interface]
-    Metadata[MetadataInjector<br/>Uses @inject decorators<br/>+ reflect-metadata]
-    Simple[SimpleInjector<br/>Passes container<br/>as first arg]
-    Proxy[ProxyInjector<br/>Matches param names<br/>to dependency keys]
-    
-    IInjector <|.. Metadata
-    IInjector <|.. Simple
-    IInjector <|.. Proxy
-    
-    Metadata -->|injects| Instance1[Instance with<br/>decorated params]
-    Simple -->|injects| Instance2[Instance with<br/>container param]
-    Proxy -->|injects| Instance3[Instance with<br/>destructured params]
-    
-    style IInjector fill:#0366d6,color:#fff
-    style Metadata fill:#28a745,color:#fff
-    style Simple fill:#ffc107,color:#000
-    style Proxy fill:#17a2b8,color:#fff</div>
+      <div class="mermaid" set:html={injectionStrategiesDiagram}></div>
     </div>
 
     <h2>Registration Flow</h2>
@@ -324,34 +122,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </p>
 
     <div class="diagram">
-      <pre><code class="language-mermaid">sequenceDiagram
-    participant Dev as Developer
-    participant Reg as Registration
-    participant Container
-    participant Provider
-    participant AliasMap
-    
-    Dev->>Reg: Registration.fromClass(Logger)
-    Reg->>Reg: create Provider
-    Dev->>Reg: bindToKey('ILogger')
-    Reg->>Reg: set key = 'ILogger'
-    Dev->>Reg: pipe(singleton())
-    Reg->>Provider: pipe(singleton())
-    Provider->>Provider: wrap with SingletonProvider
-    Dev->>Reg: when(scope => scope.hasTag('root'))
-    Reg->>Reg: add scope predicate
-    Dev->>Container: addRegistration(registration)
-    Container->>Reg: applyTo(container)
-    Reg->>Reg: check scope predicates
-    alt Scope matches
-        Reg->>Container: register('ILogger', provider)
-        Container->>Provider: store in providers map
-        Reg->>Container: bindToAlias('Logger')
-        Container->>AliasMap: add('Logger', 'ILogger')
-        Container-->>Dev: registration complete
-    else Scope doesn't match
-        Reg-->>Container: skip registration
-    end</div>
+      <div class="mermaid" set:html={registrationFlowDiagram}></div>
     </div>
 
     <h2>Design Patterns</h2>

@@ -1,0 +1,18 @@
+graph TD
+    Root[Root Container<br/>tags: 'root']
+    Request1[Request Scope 1<br/>tags: 'request', 'user:123']
+    Request2[Request Scope 2<br/>tags: 'request', 'user:456']
+    Feature1[Feature Scope 1<br/>tags: 'feature:admin']
+    Feature2[Feature Scope 2<br/>tags: 'feature:user']
+    
+    Root -->|createScope| Request1
+    Root -->|createScope| Request2
+    Request1 -->|createScope| Feature1
+    Request2 -->|createScope| Feature2
+    
+    style Root fill:#0366d6,color:#fff
+    style Request1 fill:#28a745,color:#fff
+    style Request2 fill:#28a745,color:#fff
+    style Feature1 fill:#ffc107,color:#000
+    style Feature2 fill:#ffc107,color:#000
+

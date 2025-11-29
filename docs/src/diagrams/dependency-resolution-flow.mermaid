@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant Client
+    participant Container
+    participant Provider
+    participant Injector
+    participant Instance
+    
+    Client->>Container: resolve('ILogger')
+    Container->>Container: findProvider('ILogger')
+    alt Provider found in current scope
+        Container->>Provider: resolve(container, options)
+        Provider->>Provider: checkAccess(invocationScope)
+        alt Has access
+            Provider->>Provider: getArgs(container)
+            Provider->>Injector: resolve(container, Logger, args)
+            Injector->>Injector: createInstance(container, Logger, args)
+            Injector->>Container: resolve dependencies
+            Container-->>Injector: dependencies
+            Injector->>Instance: new Logger(deps)
+            Instance-->>Injector: instance
+            Injector-->>Provider: instance
+            Provider->>Provider: cache (if singleton)
+            Provider-->>Container: instance
+            Container->>Container: addInstance(instance)
+            Container-->>Client: instance
+        else No access
+            Provider-->>Container: throw DependencyNotFoundError
+        end
+    else Provider not found
+        Container->>Container: getParent()
+        alt Has parent
+            Container->>Container: parent.resolve('ILogger')
+            Note over Container: Recursive resolution
+        else No parent
+            Container-->>Client: throw DependencyNotFoundError
+        end
+    end
+

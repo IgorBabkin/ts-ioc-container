@@ -43,7 +43,7 @@ This is a TypeScript Inversion of Control (IoC) container library. The project p
 - Root ESLint ignores `docs/**` directory
 
 ## Key Concepts
-- **Container**: Main IoC container managing registrations and resolutions. Container contains scopes, registrations, providers and instances.
+- **Container**: Main IoC container managing registrations and resolutions. Container contains scopes, registrations, providers and instances. It's a linked list with reference to parent scope. Like linked list with "previous" reference.
 - **Registration**: Defines how dependencies are registered and resolved. It contains Provider and binding key. Also scope rules - which scope to apply
 - **Provider**: Handles instance creation and caching strategies. It's like a function which creates/return instance of dependency.
 - **Injector**: Manages dependency injection (Metadata, Simple, Proxy). It describes how to inject dependencies into the target constructor.
