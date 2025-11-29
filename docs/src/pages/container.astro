@@ -18,7 +18,7 @@ import scopeHierarchyDiagram from "../diagrams/scope-hierarchy.mermaid?raw";
       instances. Understanding containers is essential for effective dependency injection.
     </p>
 
-    <h2 id="scopes">Scopes</h2>
+    <h2 id="scopes" class="toc-link">Scopes</h2>
 
     <p>
       Scopes allow you to create isolated dependency contexts. This is perfect
@@ -117,7 +117,7 @@ expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}
       <div class="mermaid" set:html={dependencyResolutionFlowDiagram} />
     </div>
 
-    <h2 id="instance-management">Instance Management</h2>
+    <h2 id="instance-management" class="toc-link">Instance Management</h2>
 
     <p>
       The container tracks all instances it creates, allowing you to query and

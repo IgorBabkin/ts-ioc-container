@@ -1,6 +1,13 @@
 ---
 import "../styles/global.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import TableOfContents from "../components/TableOfContents.astro";
+
+interface Heading {
+  id: string;
+  text: string;
+  level: 2 | 3 | 4;
+}
 
 interface Props {
   title: string;
@@ -11,6 +18,96 @@ const {
   title,
   description = "TypeScript IoC (Inversion Of Control) container library",
 } = Astro.props;
+
+// Hardcoded headings for each page
+const pageHeadings: Record<string, Heading[]> = {
+  "/": [
+    { id: "advantages", text: "Advantages", level: 2 },
+    { id: "quick-start", text: "Quick Start", level: 2 },
+    { id: "documentation", text: "Documentation", level: 2 },
+    { id: "core-architecture", text: "Core Architecture", level: 2 },
+    { id: "class-diagram", text: "Class Diagram", level: 2 },
+  ],
+  "/ts-ioc-container": [
+    { id: "advantages", text: "Advantages", level: 2 },
+    { id: "quick-start", text: "Quick Start", level: 2 },
+    { id: "documentation", text: "Documentation", level: 2 },
+    { id: "core-architecture", text: "Core Architecture", level: 2 },
+    { id: "class-diagram", text: "Class Diagram", level: 2 },
+  ],
+  "/ts-ioc-container/": [
+    { id: "advantages", text: "Advantages", level: 2 },
+    { id: "quick-start", text: "Quick Start", level: 2 },
+    { id: "documentation", text: "Documentation", level: 2 },
+    { id: "core-architecture", text: "Core Architecture", level: 2 },
+    { id: "class-diagram", text: "Class Diagram", level: 2 },
+  ],
+  "/ts-ioc-container/container": [
+    { id: "scopes", text: "Scopes", level: 2 },
+    { id: "dependency-resolution-flow", text: "Dependency Resolution Flow", level: 2 },
+    { id: "instance-management", text: "Instance Management", level: 2 },
+    { id: "disposal", text: "Disposal", level: 2 },
+    { id: "lazy-loading", text: "Lazy Loading", level: 2 },
+    { id: "memory-management", text: "Memory Management", level: 2 },
+    { id: "container-modules", text: "Container Modules", level: 2 },
+    { id: "key-design-decisions", text: "Key Design Decisions", level: 2 },
+    { id: "best-practices", text: "Best Practices", level: 2 },
+    { id: "api-reference", text: "API Reference", level: 2 },
+  ],
+  "/ts-ioc-container/registration": [
+    { id: "registration-flow", text: "Registration Flow", level: 2 },
+    { id: "registration-methods", text: "Registration Methods", level: 2 },
+    { id: "decorator-based-registration", text: "Decorator-Based Registration", level: 2 },
+    { id: "fluent-api-registration", text: "Fluent API Registration", level: 2 },
+    { id: "keys", text: "Keys", level: 2 },
+    { id: "scope-registration", text: "Scope Registration", level: 2 },
+    { id: "registration-pipeline", text: "Registration Pipeline", level: 2 },
+    { id: "container-modules", text: "Container Modules", level: 2 },
+    { id: "best-practices", text: "Best Practices", level: 2 },
+    { id: "registration-lifecycle", text: "Registration Lifecycle", level: 2 },
+  ],
+  "/ts-ioc-container/provider": [
+    { id: "factory-pattern", text: "Factory Pattern", level: 2 },
+    { id: "provider-types", text: "Provider Types", level: 2 },
+    { id: "singleton", text: "Singleton", level: 2 },
+    { id: "arguments", text: "Arguments", level: 2 },
+    { id: "visibility", text: "Visibility", level: 2 },
+    { id: "alias", text: "Alias", level: 2 },
+    { id: "decorator", text: "Decorator", level: 2 },
+    { id: "lazy-loading", text: "Lazy Loading", level: 2 },
+    { id: "provider-pipeline", text: "Provider Pipeline", level: 2 },
+    { id: "performance-considerations", text: "Performance Considerations", level: 2 },
+    { id: "extension-points", text: "Extension Points", level: 2 },
+    { id: "best-practices", text: "Best Practices", level: 2 },
+  ],
+  "/ts-ioc-container/injector": [
+    { id: "injection-strategies", text: "Injection Strategies", level: 2 },
+    { id: "available-injectors", text: "Available Injectors", level: 2 },
+    { id: "metadata-injector", text: "Metadata Injector", level: 2 },
+    { id: "simple-injector", text: "Simple Injector", level: 2 },
+    { id: "proxy-injector", text: "Proxy Injector", level: 2 },
+    { id: "choosing-the-right-injector", text: "Choosing the Right Injector", level: 2 },
+    { id: "strategy-pattern", text: "Strategy Pattern", level: 2 },
+    { id: "custom-injectors", text: "Custom Injectors", level: 2 },
+    { id: "best-practices", text: "Best Practices", level: 2 },
+  ],
+  "/ts-ioc-container/token": [
+    { id: "why-tokens", text: "Why Tokens?", level: 2 },
+    { id: "token-hierarchy", text: "Token Hierarchy", level: 2 },
+    { id: "single-token", text: "SingleToken", level: 2 },
+    { id: "group-alias-token", text: "GroupAliasToken", level: 2 },
+    { id: "single-alias-token", text: "SingleAliasToken", level: 2 },
+    { id: "argument-binding", text: "Argument Binding", level: 2 },
+    { id: "lazy-loading", text: "Lazy Loading", level: 2 },
+    { id: "dynamic-arguments", text: "Dynamic Arguments", level: 2 },
+  ],
+};
+
+// Get headings for current page
+const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
+const currentPath = normalizePath(Astro.url.pathname);
+// Try both normalized path and with trailing slash for root paths
+const headingsArray = pageHeadings[currentPath] || pageHeadings[`${currentPath}/`] || [];
 
 const navigation = [
   { title: "Overview", href: "/ts-ioc-container/" },
@@ -36,154 +133,156 @@ const navigation = [
       mermaid.initialize({ startOnLoad: true, theme: "default" });
     </script>
   </head>
-  <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
-      <div class="container-fluid px-4">
-        <a class="navbar-brand text-decoration-none text-dark fw-semibold" href="/ts-ioc-container/">
-          ts-ioc-container
-        </a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarContent"
-          aria-controls="navbarContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarContent">
-          <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
-            <img
-              src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square"
-              alt="NPM version"
-              class="img-fluid"
-              style="height: 20px;"
-            />
-            <img
-              src="https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square"
-              alt="npm downloads"
-              class="img-fluid"
-              style="height: 20px;"
-            />
-            <img
-              src="https://img.shields.io/bundlejs/size/ts-ioc-container"
-              alt="npm package size"
-              class="img-fluid"
-              style="height: 20px;"
-            />
-            <a
-              href="https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-decoration-none"
-            >
+  <body class="layout-body">
+    <header class="layout-header">
+      <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container-fluid px-4">
+          <a class="navbar-brand text-decoration-none text-dark fw-semibold" href="/ts-ioc-container/">
+            ts-ioc-container
+          </a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarContent"
+            aria-controls="navbarContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarContent">
+            <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
               <img
-                src="https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master"
-                alt="Coverage Status"
+                src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square"
+                alt="NPM version"
                 class="img-fluid"
                 style="height: 20px;"
               />
-            </a>
-            <img
-              src="https://img.shields.io/npm/l/ts-ioc-container"
-              alt="License"
-              class="img-fluid"
-              style="height: 20px;"
-            />
-            <a
-              href="https://github.com/semantic-release/semantic-release"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-decoration-none"
-            >
               <img
-                src="https://img.shields.io/badge/semantic--release-e10079.svg"
-                alt="semantic-release"
+                src="https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square"
+                alt="npm downloads"
                 class="img-fluid"
                 style="height: 20px;"
               />
-            </a>
-            <a
-              href="https://github.com/IgorBabkin/ts-ioc-container"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-link text-dark p-1"
-              title="GitHub Repository"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="#24292e"
-                aria-label="GitHub"
+              <img
+                src="https://img.shields.io/bundlejs/size/ts-ioc-container"
+                alt="npm package size"
+                class="img-fluid"
+                style="height: 20px;"
+              />
+              <a
+                href="https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-decoration-none"
               >
-                <path
-                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-                ></path>
-              </svg>
-            </a>
-            <a
-              href="https://www.npmjs.com/package/ts-ioc-container"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-link text-dark p-1"
-              title="NPM Package"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="#CB3837"
-                aria-label="NPM"
+                <img
+                  src="https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master"
+                  alt="Coverage Status"
+                  class="img-fluid"
+                  style="height: 20px;"
+                />
+              </a>
+              <img
+                src="https://img.shields.io/npm/l/ts-ioc-container"
+                alt="License"
+                class="img-fluid"
+                style="height: 20px;"
+              />
+              <a
+                href="https://github.com/semantic-release/semantic-release"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-decoration-none"
               >
-                <path
-                  d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331z"
-                ></path>
-                <path d="M10.665 10H12v2.667h-1.335V10z"></path>
-              </svg>
-            </a>
+                <img
+                  src="https://img.shields.io/badge/semantic--release-e10079.svg"
+                  alt="semantic-release"
+                  class="img-fluid"
+                  style="height: 20px;"
+                />
+              </a>
+              <a
+                href="https://github.com/IgorBabkin/ts-ioc-container"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-link text-dark p-1"
+                title="GitHub Repository"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="#24292e"
+                  aria-label="GitHub"
+                >
+                  <path
+                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  ></path>
+                </svg>
+              </a>
+              <a
+                href="https://www.npmjs.com/package/ts-ioc-container"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-link text-dark p-1"
+                title="NPM Package"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="#CB3837"
+                  aria-label="NPM"
+                >
+                  <path
+                    d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331z"
+                  ></path>
+                  <path d="M10.665 10H12v2.667h-1.335V10z"></path>
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
 
-    <div class="container-fluid flex-grow-1 px-0">
-      <div class="row g-0 h-100 w-100">
-        <aside class="col-lg-3 col-xl-2 border-end bg-light">
-          <nav class="nav flex-column p-3">
+    <div class="layout-container">
+      <aside class="layout-sidebar-left">
+        <nav class="nav flex-column p-3">
             {
               navigation.map((item) => {
                 // Normalize pathnames by removing trailing slashes for comparison
-                const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
-                const currentPath = normalizePath(Astro.url.pathname);
                 const itemPath = normalizePath(item.href);
-                
-                const isActive =
-                  currentPath === itemPath ||
-                  (itemPath !== "/ts-ioc-container" &&
-                    Astro.url.pathname.startsWith(item.href));
-                return (
-                  <a
-                    href={item.href}
-                    class={`nav-link ${isActive ? "active bg-primary text-white" : "text-dark"}`}
-                  >
-                    {item.title}
-                  </a>
-                );
-              })
-            }
-          </nav>
-        </aside>
+              
+              const isActive =
+                currentPath === itemPath ||
+                (itemPath !== "/ts-ioc-container" &&
+                  Astro.url.pathname.startsWith(item.href));
+              return (
+                <a
+                  href={item.href}
+                  class={`nav-link ${isActive ? "active bg-primary text-white" : "text-dark"}`}
+                >
+                  {item.title}
+                </a>
+              );
+            })
+          }
+        </nav>
+      </aside>
 
-        <main class="col-lg-9 col-xl-10 px-4 py-4">
-          <slot />
-        </main>
-      </div>
+      <main class="layout-main">
+        <slot />
+      </main>
+
+      <aside class="layout-sidebar-right">
+        <TableOfContents headings={headingsArray} />
+      </aside>
     </div>
 
-    <footer class="bg-light border-top py-4 mt-auto w-100">
+    <footer class="layout-footer">
       <div class="container-fluid px-4 text-center text-muted">
         <p class="mb-0">
           Copyright &copy; IgorBabkin. Distributed by an{" "}

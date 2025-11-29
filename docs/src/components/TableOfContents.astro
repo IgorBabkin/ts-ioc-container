@@ -1,0 +1,219 @@
+---
+interface Heading {
+  id: string;
+  text: string;
+  level: 2 | 3 | 4;
+}
+
+interface Props {
+  headings?: Heading[];
+}
+
+const { headings = [] } = Astro.props;
+---
+
+<nav id="table-of-contents" class="toc-nav">
+  <div class="toc-header">
+    <h5 class="mb-0">On this page</h5>
+  </div>
+  {headings && headings.length > 0 ? (
+    <ul class="toc-list">
+      {headings.map((heading) => (
+        <li class={`toc-h${heading.level}`}>
+          <a href={`#${heading.id}`} class="toc-link">{heading.text}</a>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p class="toc-empty text-muted small">No sections available</p>
+  )}
+</nav>
+
+<style>
+  .toc-nav {
+    padding: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .toc-header {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+  }
+
+  .toc-header h5 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--bs-dark);
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-list li {
+    margin-bottom: 0.5rem;
+  }
+
+  .toc-list a {
+    color: var(--bs-secondary);
+    text-decoration: none;
+    display: block;
+    padding: 0.25rem 0;
+    transition: color 0.2s;
+  }
+
+  .toc-list a:hover {
+    color: var(--bs-primary);
+  }
+
+  .toc-list a.active {
+    color: var(--bs-primary);
+    font-weight: 500;
+  }
+
+  .toc-list .toc-h2 {
+    padding-left: 0;
+  }
+
+  .toc-list .toc-h3 {
+    padding-left: 1rem;
+  }
+
+  .toc-list .toc-h4 {
+    padding-left: 2rem;
+  }
+
+  .toc-empty {
+    margin: 0;
+    padding: 0.5rem 0;
+    font-size: 0.8rem;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // Highlight active section on scroll
+    function updateActiveTOC() {
+      const tocLinks = document.querySelectorAll(".toc-link");
+      if (tocLinks.length === 0) return;
+
+      const scrollContainer = getScrollContainer();
+      const scrollTop = scrollContainer === window ? window.scrollY : scrollContainer.scrollTop;
+      const headerHeight = getHeaderHeight();
+      const scrollPosition = scrollTop + headerHeight + 50; // Offset for header + some padding
+      let current = "";
+
+      tocLinks.forEach((link) => {
+        const href = link.getAttribute("href");
+        if (!href || !href.startsWith("#")) return;
+        const id = href.substring(1);
+        const target = document.getElementById(id);
+        if (target) {
+          let elementTop;
+          if (scrollContainer === window) {
+            elementTop = target.getBoundingClientRect().top + window.scrollY;
+          } else {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            elementTop = targetRect.top - containerRect.top + scrollTop;
+          }
+          
+          if (scrollPosition >= elementTop) {
+            current = id;
+          }
+        }
+      });
+
+      tocLinks.forEach((link) => {
+        link.classList.remove("active");
+        if (link.getAttribute("href") === `#${current}`) {
+          link.classList.add("active");
+        }
+      });
+    }
+
+    function getHeaderHeight() {
+      const header = document.querySelector('.layout-header');
+      return header ? header.getBoundingClientRect().height : 56;
+    }
+
+    function getScrollContainer() {
+      // The main content area is the scrollable container
+      return document.querySelector('.layout-main') || window;
+    }
+
+    function initTOC() {
+      // Smooth scroll for TOC links
+      document.querySelectorAll(".toc-link").forEach((link) => {
+        if (link.dataset.initialized) return;
+        link.dataset.initialized = "true";
+
+        link.addEventListener("click", (e) => {
+          const href = link.getAttribute("href");
+          if (!href || !href.startsWith("#")) return;
+          e.preventDefault();
+          const id = href.substring(1);
+          const target = document.getElementById(id);
+          if (target) {
+            const scrollContainer = getScrollContainer();
+            const headerHeight = getHeaderHeight();
+            
+            if (scrollContainer === window) {
+              // Fallback to window scrolling
+              const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+              const offsetPosition = targetPosition - headerHeight - 10;
+              window.scrollTo({
+                top: Math.max(0, offsetPosition),
+                behavior: "smooth",
+              });
+            } else {
+              // Scroll the main container
+              const containerRect = scrollContainer.getBoundingClientRect();
+              const targetRect = target.getBoundingClientRect();
+              const scrollTop = scrollContainer.scrollTop;
+              const offsetPosition = targetRect.top - containerRect.top + scrollTop - 10; // 10px padding
+              
+              scrollContainer.scrollTo({
+                top: Math.max(0, offsetPosition),
+                behavior: "smooth",
+              });
+            }
+
+            // Update URL without triggering scroll
+            setTimeout(() => {
+              history.pushState(null, "", `#${id}`);
+            }, 100);
+          }
+        });
+      });
+
+      // Throttle scroll events
+      let ticking = false;
+      function handleScroll() {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            updateActiveTOC();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }
+
+      window.addEventListener("scroll", handleScroll);
+
+      // Initial update
+      updateActiveTOC();
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initTOC);
+    } else {
+      initTOC();
+    }
+  })();
+</script>
+
