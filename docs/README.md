@@ -1,55 +1,38 @@
-# Documentation
+# Documentation Setup
 
 This directory contains the Astro-based documentation for ts-ioc-container.
 
-## Quick Start
+## Setup
 
-From the project root:
-
-```bash
-# Install dependencies (first time only)
-npm run docs:install
-
-# Start local development server
-npm run docs:dev
-```
-
-Or from the `docs` directory:
-
+1. Install dependencies:
 ```bash
 npm install
+```
+
+2. Run development server:
+```bash
 npm run dev
 ```
 
-The site will be available at `http://localhost:4321/ts-ioc-container/`
-
-## Available Scripts
-
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build the site for production
-- `npm run preview` - Preview the production build locally
-
-## Project Structure
-
-```
-docs/
-├── src/
-│   ├── layouts/
-│   │   └── BaseLayout.astro  # Main layout component
-│   ├── pages/
-│   │   ├── index.astro       # Home page
-│   │   ├── container.mdx     # Container documentation
-│   │   ├── injector.mdx      # Injector documentation
-│   │   ├── provider.mdx      # Provider documentation
-│   │   ├── token.mdx         # Token documentation
-│   │   └── registration.mdx  # Registration documentation
-│   └── styles/
-│       └── global.css        # Global styles
-├── astro.config.mjs          # Astro configuration
-└── package.json              # Dependencies and scripts
+3. Build for production:
+```bash
+npm run build
 ```
 
-## Deployment
+## Linting and Formatting
 
-The documentation is automatically deployed to GitHub Pages via GitHub Actions when pushing to the `master` branch.
+- **ESLint**: Configured with `eslint-plugin-astro` for Astro file linting
+- **Prettier**: Configured with `prettier-plugin-astro` for Astro file formatting
 
+### Commands
+
+- `npm run lint` - Lint all files
+- `npm run lint:fix` - Auto-fix linting issues
+- `npm run format` - Format all files with Prettier
+- `npm run format:check` - Check formatting without making changes
+
+## Configuration Files
+
+- `eslint.config.mjs` - ESLint configuration for Astro files
+- `.prettierrc.mjs` - Prettier configuration with Astro plugin
+- `.prettierignore` - Files to ignore during formatting

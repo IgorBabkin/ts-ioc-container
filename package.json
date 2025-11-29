@@ -88,8 +88,11 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "docs/**/*.{js,ts,tsx,mjs}": [
+    "docs/**/*.{js,ts,tsx,mjs,astro}": [
       "prettier --write"
+    ],
+    "docs/**/*.astro": [
+      "eslint --fix"
     ]
   },
   "gitHead": "ae10f302c7e0f55196b42669040735112479a854",

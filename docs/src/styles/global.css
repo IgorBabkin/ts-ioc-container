@@ -60,6 +60,7 @@ code {
   border-radius: 3px;
   font-size: 0.9em;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #e83e8c;
 }
 
 pre {
@@ -68,14 +69,51 @@ pre {
   border-radius: 6px;
   padding: 1rem;
   overflow-x: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 pre code {
   background-color: transparent;
   padding: 0;
   font-size: 0.875rem;
-  line-height: 1.45;
+  line-height: 1.6;
+  color: #24292e;
+  display: block;
+}
+
+/* Syntax highlighting support */
+pre code.language-typescript,
+pre code.language-javascript,
+pre code.language-json {
+  color: #24292e;
+}
+
+pre code .keyword {
+  color: #d73a49;
+  font-weight: 600;
+}
+
+pre code .string {
+  color: #032f62;
+}
+
+pre code .number {
+  color: #005cc5;
+}
+
+pre code .comment {
+  color: #6a737d;
+  font-style: italic;
+}
+
+pre code .function {
+  color: #6f42c1;
+}
+
+pre code .class {
+  color: #e36209;
 }
 
 ul, ol {
@@ -98,22 +136,135 @@ blockquote {
 table {
   border-collapse: collapse;
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 th, td {
-  border: 1px solid #dfe2e5;
-  padding: 0.5rem;
+  border: 1px solid #e1e4e8;
+  padding: 0.75rem 1rem;
   text-align: left;
 }
 
 th {
   background-color: #f6f8fa;
   font-weight: 600;
+  color: #24292e;
+  border-bottom: 2px solid #e1e4e8;
+}
+
+tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+tr:hover {
+  background-color: #f1f3f5;
+}
+
+td code {
+  background-color: #e1e4e8;
+  padding: 0.15em 0.4em;
+  font-size: 0.85em;
 }
 
 img {
   max-width: 100%;
   height: auto;
+}
+
+/* Enhanced styling for better readability */
+article {
+  line-height: 1.7;
+}
+
+article strong {
+  font-weight: 600;
+  color: #24292e;
+}
+
+article em {
+  font-style: italic;
+  color: #586069;
+}
+
+/* Diagram containers */
+.diagram {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.diagram pre {
+  margin: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.diagram code {
+  background: transparent;
+  padding: 0;
+  color: #24292e;
+}
+
+/* Callout boxes */
+blockquote {
+  border-left: 4px solid #0366d6;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  background-color: #f1f8ff;
+  border-radius: 0 6px 6px 0;
+  color: #24292e;
+}
+
+blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+ul, ol {
+  margin-bottom: 1.5rem;
+  padding-left: 2rem;
+}
+
+li {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+li code {
+  font-size: 0.85em;
+}
+
+/* Links */
+a {
+  color: #0366d6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #0256cc;
+  text-decoration: underline;
+}
+
+a code {
+  color: #0366d6;
+}
+
+a:hover code {
+  color: #0256cc;
 }
 

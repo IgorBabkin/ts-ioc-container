@@ -5,8 +5,417 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="Provider" description="Provider - Dependency factories with singleton, args, visibility, alias, and decorator features">
   <article>
     <h1>Provider</h1>
-    <p>Provider is dependency factory which creates dependency.</p>
-    <p>See the full documentation in the README.md file.</p>
+    
+    <p>
+      Providers are factories that create dependency instances. They can be configured with various features like
+      singletons, argument binding, visibility control, aliases, and decorators. Understanding providers is key to
+      mastering the IoC container.
+    </p>
+
+    <h2>Provider Types</h2>
+    
+    <p>There are three main ways to create providers:</p>
+    
+    <ul>
+      <li>
+        <strong>Class Provider</strong>: <code>Provider.fromClass(Logger)</code> - Creates instances from a class
+      </li>
+      <li>
+        <strong>Value Provider</strong>: <code>Provider.fromValue(value)</code> - Returns a constant value
+      </li>
+      <li>
+        <strong>Factory Provider</strong>: <code>new Provider((container, ...args) => ...)</code> - Custom factory
+        function
+      </li>
+    </ul>
+
+    <h2>Singleton</h2>
+    
+    <p>
+      Singleton providers ensure only one instance is created per scope. This is perfect for services like loggers,
+      database connections, or configuration managers.
+    </p>
+
+    <h3>Basic Usage</h3>
+    
+    <pre><code class="language-typescript">{`import { bindTo, Container, register, Registration as R, singleton } from 'ts-ioc-container';
+
+@register(bindTo('logger'), singleton())
+class Logger {}
+
+const container = new Container()
+  .addRegistration(R.fromClass(Logger));
+
+// Same instance returned every time
+expect(container.resolve('logger')).toBe(container.resolve('logger'));`}</code></pre>
+
+    <h3>Per-Scope Singletons</h3>
+    
+    <p>
+      Each scope maintains its own singleton instance. This means different scopes will have different instances:
+    </p>
+
+    <pre><code class="language-typescript">{`const container = new Container()
+  .addRegistration(R.fromClass(Logger));
+const child = container.createScope();
+
+// Different instances in different scopes
+expect(container.resolve('logger')).not.toBe(child.resolve('logger'));
+
+// Same instance within the same scope
+expect(child.resolve('logger')).toBe(child.resolve('logger'));`}</code></pre>
+
+    <h3>Use Cases</h3>
+    <ul>
+      <li>Shared state within a scope</li>
+      <li>Expensive object creation (database connections, HTTP clients)</li>
+      <li>Configuration objects</li>
+      <li>Service locators</li>
+    </ul>
+
+    <h2>Arguments</h2>
+    
+    <p>
+      Argument providers allow you to bind constructor arguments at registration time. This is useful for
+      configuration values, dependencies that should be resolved at provider creation, or default values.
+    </p>
+
+    <h3>Static Arguments</h3>
+    
+    <pre><code class="language-typescript">{`import { args, Container, Registration as R } from 'ts-ioc-container';
+
+class ConfigService {
+  constructor(private readonly configPath: string) {}
+  getPath(): string {
+    return this.configPath;
+  }
+}
+
+const container = new Container()
+  .addRegistration(R.fromClass(ConfigService).pipe(args('/etc/config.json')));
+
+const config = container.resolve<ConfigService>('ConfigService');
+expect(config.getPath()).toBe('/etc/config.json');`}</code></pre>
+
+    <h3>Dynamic Arguments</h3>
+    
+    <p>
+      Use <code>argsFn</code> to resolve arguments dynamically from the container:
+    </p>
+
+    <pre><code class="language-typescript">{`import { argsFn, Container, Registration as R } from 'ts-ioc-container';
+
+const container = new Container()
+  .addRegistration(R.fromClass(Logger))
+  .addRegistration(
+    R.fromClass(ConfigService).pipe(
+      argsFn((container) => ['/dynamic/config.json'])
+    )
+  );
+
+const config = container.resolve<ConfigService>('ConfigService');
+expect(config.getPath()).toBe('/dynamic/config.json');`}</code></pre>
+
+    <h3>Argument Priority</h3>
+    
+    <p>
+      Provider arguments take precedence over arguments passed to <code>resolve()</code>:
+    </p>
+
+    <pre><code class="language-typescript">{`const container = new Container()
+  .addRegistration(R.fromClass(Logger).pipe(args('name')));
+
+// Provider argument 'name' takes priority
+const logger = container.resolve<Logger>('logger', { args: ['file'] });
+expect(logger.name).toBe('name');
+expect(logger.type).toBe('file'); // Second argument still passed`}</code></pre>
+
+    <h2>Visibility</h2>
+    
+    <p>
+      Visibility control allows you to restrict which scopes can access certain dependencies. This is useful for
+      implementing access control, feature flags, or environment-specific services.
+    </p>
+
+    <h3>Basic Usage</h3>
+    
+    <pre><code class="language-typescript">{`import {
+  bindTo,
+  Container,
+  DependencyNotFoundError,
+  register,
+  Registration as R,
+  scope,
+  scopeAccess,
+  singleton,
+} from 'ts-ioc-container';
+
+@register(
+  bindTo('logger'),
+  scope((s) => s.hasTag('root')),
+  singleton(),
+  scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope)
+)
+class FileLogger {}
+
+const parent = new Container({ tags: ['root'] })
+  .addRegistration(R.fromClass(FileLogger));
+
+const child = parent.createScope({ tags: ['child'] });
+
+// Available in parent scope
+expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
+
+// Not available in child scope
+expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);`}</code></pre>
+
+    <h3>Use Cases</h3>
+    <ul>
+      <li>Admin-only services</li>
+      <li>Environment-specific dependencies (dev/staging/prod)</li>
+      <li>Feature flags</li>
+      <li>Security boundaries</li>
+    </ul>
+
+    <h2>Alias</h2>
+    
+    <p>
+      Aliases allow you to group multiple registrations under a common identifier. This is perfect for plugin
+      systems, middleware, or any scenario where you need to resolve multiple implementations of the same interface.
+    </p>
+
+    <h3>Basic Usage</h3>
+    
+    <pre><code class="language-typescript">{`import {
+  bindTo,
+  Container,
+  inject,
+  register,
+  Registration as R,
+  select as s,
+} from 'ts-ioc-container';
+
+const IMiddlewareKey = 'IMiddleware';
+const middleware = register(bindTo(s.alias(IMiddlewareKey)));
+
+interface IMiddleware {
+  applyTo(application: IApplication): void;
+}
+
+@middleware
+class LoggerMiddleware implements IMiddleware {
+  applyTo(application: IApplication): void {
+    application.markMiddlewareAsApplied('LoggerMiddleware');
+  }
+}
+
+@middleware
+class ErrorHandlerMiddleware implements IMiddleware {
+  applyTo(application: IApplication): void {
+    application.markMiddlewareAsApplied('ErrorHandlerMiddleware');
+  }
+}
+
+class App implements IApplication {
+  private appliedMiddleware: Set<string> = new Set();
+  
+  constructor(@inject(s.alias(IMiddlewareKey)) public middleware: IMiddleware[]) {}
+  
+  run() {
+    for (const module of this.middleware) {
+      module.applyTo(this);
+    }
+  }
+}
+
+const container = new Container()
+  .addRegistration(R.fromClass(LoggerMiddleware))
+  .addRegistration(R.fromClass(ErrorHandlerMiddleware));
+
+const app = container.resolve(App);
+app.run();
+
+// Both middleware are applied
+expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
+expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);`}</code></pre>
+
+    <h3>Use Cases</h3>
+    <ul>
+      <li>Middleware registration</li>
+      <li>Plugin systems</li>
+      <li>Multiple implementations of an interface</li>
+      <li>Event handlers or observers</li>
+    </ul>
+
+    <h2>Decorator</h2>
+    
+    <p>
+      The decorator pattern allows you to wrap instances with additional functionality without modifying the
+      original class. This is useful for cross-cutting concerns like logging, caching, or transaction management.
+    </p>
+
+    <h3>Basic Usage</h3>
+    
+    <pre><code class="language-typescript">{`import {
+  bindTo,
+  Container,
+  decorate,
+  type IContainer,
+  inject,
+  register,
+  Registration as R,
+  select as s,
+  singleton,
+} from 'ts-ioc-container';
+
+@register(singleton())
+class Logger {
+  private logs: string[] = [];
+  log(message: string) {
+    this.logs.push(message);
+  }
+  printLogs() {
+    return this.logs.join(',');
+  }
+}
+
+interface IRepository {
+  save(item: Todo): Promise<void>;
+}
+
+interface Todo {
+  id: string;
+  text: string;
+}
+
+class LogRepository implements IRepository {
+  constructor(
+    private repository: IRepository,
+    @inject(s.token('Logger').lazy()) private logger: Logger
+  ) {}
+  
+  async save(item: Todo): Promise<void> {
+    this.logger.log(item.id);
+    return this.repository.save(item);
+  }
+}
+
+const logRepo = (dep: IRepository, scope: IContainer) =>
+  scope.resolve(LogRepository, { args: [dep] });
+
+@register(bindTo('IRepository'), decorate(logRepo))
+class TodoRepository implements IRepository {
+  async save(item: Todo): Promise<void> {}
+}
+
+class App {
+  constructor(@inject('IRepository') public repository: IRepository) {}
+  
+  async run() {
+    await this.repository.save({ id: '1', text: 'Hello' });
+    await this.repository.save({ id: '2', text: 'Hello' });
+  }
+}
+
+const container = new Container()
+  .addRegistration(R.fromClass(TodoRepository))
+  .addRegistration(R.fromClass(Logger));
+
+const app = container.resolve(App);
+const logger = container.resolve<Logger>('Logger');
+await app.run();
+
+// Repository calls are logged
+expect(logger.printLogs()).toBe('1,2');`}</code></pre>
+
+    <h3>Use Cases</h3>
+    <ul>
+      <li>Cross-cutting concerns (logging, caching, transactions)</li>
+      <li>AOP (Aspect-Oriented Programming)</li>
+      <li>Wrapping services with additional behavior</li>
+      <li>Proxy patterns</li>
+    </ul>
+
+    <h2>Lazy Loading</h2>
+    
+    <p>
+      Lazy providers defer instantiation until the dependency is actually accessed. This can improve startup
+      performance and enable circular dependency resolution.
+    </p>
+
+    <pre><code class="language-typescript">{`import { bindTo, Container, inject, register, Registration as R, lazy } from 'ts-ioc-container';
+
+let isLoggerCreated = false;
+
+@register(bindTo('Logger'), lazy())
+class Logger {
+  private logs: string[] = [];
+  
+  constructor() {
+    isLoggerCreated = true;
+  }
+  
+  info(message: string, context: Record<string, unknown>): void {
+    this.logs.push(JSON.stringify({ ...context, level: 'info', message }));
+  }
+}
+
+class Main {
+  constructor(@inject('Logger') private logger: Logger) {}
+  
+  getLogs(): string {
+    return this.logger.serialize();
+  }
+}
+
+const container = new Container()
+  .addRegistration(R.fromClass(Logger));
+
+const main = container.resolve(Main);
+
+// Logger not created yet
+expect(isLoggerCreated).toBe(false);
+
+// Logger created when accessed
+main.getLogs();
+expect(isLoggerCreated).toBe(true);`}</code></pre>
+
+    <h2>Provider Pipeline</h2>
+    
+    <p>
+      Providers can be composed using the <code>pipe</code> method, allowing you to chain multiple features:
+    </p>
+
+    <pre><code class="language-typescript">{`const container = new Container()
+  .addRegistration(
+    R.fromClass(ConfigService)
+      .pipe(args('/default/config.json'))
+      .pipe(singleton())
+      .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
+  );`}</code></pre>
+
+    <h2>Best Practices</h2>
+    
+    <ul>
+      <li>
+        <strong>Use singletons for expensive resources</strong> - Database connections, HTTP clients, configuration
+        objects
+      </li>
+      <li>
+        <strong>Prefer argsFn for dynamic values</strong> - When arguments depend on other container values
+      </li>
+      <li>
+        <strong>Use visibility for security</strong> - Restrict access to sensitive services
+      </li>
+      <li>
+        <strong>Aliases for collections</strong> - Group related services together
+      </li>
+      <li>
+        <strong>Decorators for cross-cutting concerns</strong> - Keep your core classes clean
+      </li>
+      <li>
+        <strong>Lazy loading for performance</strong> - Defer expensive object creation
+      </li>
+    </ul>
   </article>
 </BaseLayout>
-

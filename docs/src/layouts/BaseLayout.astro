@@ -15,6 +15,7 @@ const navigation = [
   { title: 'Provider', href: '/ts-ioc-container/provider' },
   { title: 'Token', href: '/ts-ioc-container/token' },
   { title: 'Registration', href: '/ts-ioc-container/registration' },
+  { title: 'Design', href: '/ts-ioc-container/design' },
 ];
 ---
 
@@ -27,6 +28,10 @@ const navigation = [
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title} | ts-ioc-container</title>
+    <script type="module" is:inline>
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
   </head>
   <body>
     <div class="wrapper">

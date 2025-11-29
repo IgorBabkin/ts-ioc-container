@@ -1,0 +1,80 @@
+# TypeScript IoC Container - Cursor Rules
+
+## Project Overview
+This is a TypeScript Inversion of Control (IoC) container library. The project provides dependency injection capabilities with type safety, scoping, lifecycle hooks, and multiple injection strategies.
+
+## Project Structure
+- `lib/` - Source TypeScript code (main development directory)
+- `__tests__/` - Test files using Jest
+- `cjm/` - Compiled CommonJS output
+- `esm/` - Compiled ES Module output
+- `typings/` - TypeScript declaration files
+- `docs/` - Astro-based documentation site (separate project with its own configs)
+
+## Code Style & Conventions
+- Use TypeScript with strict typing
+- Follow existing patterns in the codebase
+- Use decorators for metadata injection (`@inject`, `@onConstruct`, `@onDispose`)
+- Prefer explicit types over `any` (use `any` only when necessary, with warnings)
+- Use interfaces for contracts (e.g., `IContainer`, `IProvider`, `IInjector`)
+- Follow the existing error handling patterns with custom error classes
+
+## Testing
+- All code must have corresponding tests in `__tests__/`
+- Tests use Jest with `ts-jest`
+- Test files mirror the source structure
+- Use `moq.ts` for mocking when needed
+- Maintain high test coverage
+
+## Build Process
+- Source code is in `lib/` (TypeScript)
+- Build outputs to three formats:
+  - `cjm/` - CommonJS (for Node.js)
+  - `esm/` - ES Modules
+  - `typings/` - Type definitions
+- Use `tsconfig.production.json` for builds
+- Never edit files in `cjm/`, `esm/`, or `typings/` directly - they are generated
+
+## Documentation
+- **Original README file**: `.readme.hbs.md` - This is the source file that should be edited
+- **Generated README**: `README.md` - This is auto-generated from `.readme.hbs.md` (do not edit directly)
+- Documentation site is in `docs/` (Astro project)
+- Docs have separate ESLint/Prettier configs (Astro-specific)
+- Root ESLint ignores `docs/**` directory
+
+## Key Concepts
+- **Container**: Main IoC container managing registrations and resolutions. Container contains scopes, registrations, providers and instances.
+- **Registration**: Defines how dependencies are registered and resolved. It contains Provider and binding key. Also scope rules - which scope to apply
+- **Provider**: Handles instance creation and caching strategies. It's like a function which creates/return instance of dependency.
+- **Injector**: Manages dependency injection (Metadata, Simple, Proxy). It describes how to inject dependencies into the target constructor.
+- **Scopes**: Tagged scopes for request-level or feature-level isolation. It's just a container inside of another container. So container can create a scope inside of it.
+- **Hooks**: Lifecycle hooks (`@hook`, `@onConstruct`, `@onDispose`)
+- **Tokens**: Various token types for dependency identification
+
+## When Making Changes
+1. Write/update code in `lib/`
+2. Add/update tests in `__tests__/`
+3. Run `npm test` to ensure tests pass
+4. Run `npm run build` to generate outputs
+5. Update documentation if needed (edit `.readme.hbs.md`, not `README.md`)
+6. Follow semantic versioning for releases
+
+## Important Notes
+- The project uses `reflect-metadata` for decorator metadata
+- Zero runtime dependencies (except `reflect-metadata`)
+- Maintain backward compatibility when possible
+- All public APIs should be exported from `lib/index.ts`
+- Keep bundle size minimal
+
+## Tests
+- use legend for tests only from rules
+
+### Test legends
+
+**Backend**
+- scopes are application, request, transaction.
+
+**Frontend**
+- scopes are application, page, widget.
+
+

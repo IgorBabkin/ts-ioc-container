@@ -5,13 +5,302 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="Injector" description="Injector - Different injection strategies (Metadata, Simple, Proxy)">
   <article>
     <h1>Injector</h1>
-    <p><code>IInjector</code> is used to describe how dependencies should be injected to constructor.</p>
+    
+    <p>
+      The injector determines how dependencies are passed to constructors. The container supports three injection
+      strategies, each suited for different use cases and coding styles.
+    </p>
+
+    <h2>Available Injectors</h2>
+    
     <ul>
-      <li><code>MetadataInjector</code> - injects dependencies using <code>@inject</code> decorator</li>
-      <li><code>ProxyInjector</code> - injects dependencies as dictionary <code>Record&lt;string, unknown&gt;</code></li>
-      <li><code>SimpleInjector</code> - just passes container to constructor with others arguments</li>
+      <li>
+        <strong>MetadataInjector</strong> (default): Uses <code>@inject</code> decorators with reflection metadata
+      </li>
+      <li>
+        <strong>ProxyInjector</strong>: Injects dependencies as a dictionary object, perfect for destructuring
+      </li>
+      <li>
+        <strong>SimpleInjector</strong>: Passes the container as the first constructor argument for manual resolution
+      </li>
     </ul>
-    <p>See the full documentation in the README.md file.</p>
+
+    <h2>Metadata Injector</h2>
+    
+    <p>
+      The default injector uses TypeScript decorators and reflection metadata to inject dependencies. This provides a
+      clean, declarative syntax that's easy to read and maintain.
+    </p>
+
+    <h3>Basic Usage</h3>
+    
+    <pre><code class="language-typescript">{`import { Container, inject, Registration as R } from 'ts-ioc-container';
+
+class Logger {
+  name = 'Logger';
+}
+
+class App {
+  constructor(@inject('ILogger') private logger: Logger) {}
+
+  getLoggerName(): string {
+    return this.logger.name;
+  }
+}
+
+const container = new Container()
+  .addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
+
+const app = container.resolve(App);
+expect(app.getLoggerName()).toBe('Logger');`}</code></pre>
+
+    <h3>Property Injection</h3>
+    
+    <p>
+      The Metadata Injector also supports property injection using hooks. This is useful when constructor injection
+      isn't possible or when you need to inject into base class properties.
+    </p>
+
+    <pre><code class="language-typescript">{`import { Container, hook, HooksRunner, injectProp, Registration } from 'ts-ioc-container';
+
+const onInitHookRunner = new HooksRunner('onInit');
+
+class App {
+  @hook('onInit', injectProp('greeting'))
+  greeting!: string;
+}
+
+const container = new Container()
+  .addRegistration(Registration.fromValue('Hello world!').bindToKey('greeting'));
+
+const app = container.resolve(App);
+onInitHookRunner.execute(app, { scope: container });
+
+expect(app.greeting).toBe('Hello world!');`}</code></pre>
+
+    <h3>Advanced Injection</h3>
+    
+    <p>
+      You can also use functions for more complex injection logic:
+    </p>
+
+    <pre><code class="language-typescript">{`class App {
+  constructor(
+    @inject((container, ...args) => container.resolve('ILogger', { args }))
+    private logger: Logger
+  ) {}
+}`}</code></pre>
+
+    <h2>Simple Injector</h2>
+    
+    <p>
+      The Simple Injector passes the container instance as the first constructor parameter, giving you direct access
+      to resolve dependencies manually. This approach is useful when you need more control over dependency resolution.
+    </p>
+
+    <h3>Basic Usage</h3>
+    
+    <pre><code class="language-typescript">{`import { Container, type IContainer, Registration as R, SimpleInjector } from 'ts-ioc-container';
+
+class App {
+  constructor(public container: IContainer) {}
+}
+
+const container = new Container({ injector: new SimpleInjector() })
+  .addRegistration(R.fromClass(App).bindToKey('App'));
+
+const app = container.resolve<App>('App');
+expect(app.container).toBeInstanceOf(Container);`}</code></pre>
+
+    <h3>With Additional Arguments</h3>
+    
+    <p>
+      The Simple Injector can pass additional arguments alongside the container:
+    </p>
+
+    <pre><code class="language-typescript">{`class App {
+  constructor(
+    container: IContainer,
+    public greeting: string,
+  ) {}
+}
+
+const container = new Container({ injector: new SimpleInjector() })
+  .addRegistration(R.fromClass(App).bindToKey('App'));
+
+const app = container.resolve<App>('App', { args: ['Hello world'] });
+expect(app.greeting).toBe('Hello world');`}</code></pre>
+
+    <h3>Use Cases</h3>
+    <ul>
+      <li>Manual dependency resolution</li>
+      <li>Dynamic dependency selection</li>
+      <li>Legacy code integration</li>
+      <li>Framework integration where container access is needed</li>
+    </ul>
+
+    <h2>Proxy Injector</h2>
+    
+    <p>
+      The Proxy Injector matches constructor parameter names to dependency keys and injects them as a dictionary
+      object. This is useful for object destructuring patterns and functional programming styles.
+    </p>
+
+    <h3>Basic Usage</h3>
+    
+    <pre><code class="language-typescript">{`import { Container, ProxyInjector, Registration as R } from 'ts-ioc-container';
+
+class Logger {}
+
+class App {
+  logger: Logger;
+
+  constructor({ logger }: { logger: Logger }) {
+    this.logger = logger;
+  }
+}
+
+const container = new Container({ injector: new ProxyInjector() })
+  .addRegistration(R.fromClass(Logger).bindToKey('logger'));
+
+const app = container.resolve(App);
+expect(app.logger).toBeInstanceOf(Logger);`}</code></pre>
+
+    <h3>With Arguments</h3>
+    
+    <p>
+      The Proxy Injector can also handle additional arguments passed as objects:
+    </p>
+
+    <pre><code class="language-typescript">{`import { args, Container, ProxyInjector, Registration as R } from 'ts-ioc-container';
+
+class Logger {}
+
+class App {
+  logger: Logger;
+  greeting: string;
+
+  constructor({
+    logger,
+    greetingTemplate,
+    name,
+  }: {
+    logger: Logger;
+    greetingTemplate: (name: string) => string;
+    name: string;
+  }) {
+    this.logger = logger;
+    this.greeting = greetingTemplate(name);
+  }
+}
+
+const greetingTemplate = (name: string) => \`Hello \${name}\`;
+
+const container = new Container({ injector: new ProxyInjector() })
+  .addRegistration(R.fromClass(App).bindToKey('App').pipe(args({ greetingTemplate })))
+  .addRegistration(R.fromClass(Logger).bindToKey('logger'));
+
+const app = container.resolve<App>('App', { args: [{ name: 'world' }] });
+expect(app.greeting).toBe('Hello world');`}</code></pre>
+
+    <h3>Array Dependencies</h3>
+    
+    <p>
+      When a property name contains "array", the Proxy Injector automatically resolves it as an array:
+    </p>
+
+    <pre><code class="language-typescript">{`class Logger {}
+class Service {}
+
+class App {
+  loggers: Logger[];
+  service: Service;
+
+  constructor({ loggersArray, service }: { loggersArray: Logger[]; service: Service }) {
+    this.loggers = loggersArray;
+    this.service = service;
+  }
+}`}</code></pre>
+
+    <h3>Use Cases</h3>
+    <ul>
+      <li>Object destructuring in constructors</li>
+      <li>Named parameter patterns</li>
+      <li>Functional programming styles</li>
+      <li>When you prefer explicit parameter names over decorators</li>
+    </ul>
+
+    <h2>Choosing the Right Injector</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Injector</th>
+          <th>Best For</th>
+          <th>Pros</th>
+          <th>Cons</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>MetadataInjector</strong></td>
+          <td>Most applications, TypeScript projects</td>
+          <td>Clean syntax, type-safe, IntelliSense support</td>
+          <td>Requires reflect-metadata, decorator support</td>
+        </tr>
+        <tr>
+          <td><strong>SimpleInjector</strong></td>
+          <td>Manual control, legacy code, frameworks</td>
+          <td>Full control, no decorators needed</td>
+          <td>More verbose, manual resolution</td>
+        </tr>
+        <tr>
+          <td><strong>ProxyInjector</strong></td>
+          <td>Destructuring patterns, functional style</td>
+          <td>Explicit parameter names, no decorators</td>
+          <td>Less type inference, naming conventions</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Custom Injectors</h2>
+    
+    <p>
+      You can create custom injectors by implementing the <code>IInjector</code> interface. This allows you to
+      implement injection strategies tailored to your specific needs.
+    </p>
+
+    <pre><code class="language-typescript">{`import { type IInjector, type IContainer, type constructor } from 'ts-ioc-container';
+
+class CustomInjector implements IInjector {
+  inject(
+    container: IContainer,
+    target: constructor,
+    args: unknown[] = []
+  ): unknown[] {
+    // Your custom injection logic here
+    return [/* injected dependencies */];
+  }
+}`}</code></pre>
+
+    <h2>Best Practices</h2>
+    
+    <ul>
+      <li>
+        <strong>Use MetadataInjector by default</strong> - It provides the best developer experience for most
+        TypeScript projects
+      </li>
+      <li>
+        <strong>Choose SimpleInjector for manual control</strong> - When you need explicit control over dependency
+        resolution
+      </li>
+      <li>
+        <strong>Use ProxyInjector for destructuring</strong> - When you prefer object destructuring patterns
+      </li>
+      <li>
+        <strong>Be consistent</strong> - Stick with one injector strategy throughout your application for
+        maintainability
+      </li>
+    </ul>
   </article>
 </BaseLayout>
-
