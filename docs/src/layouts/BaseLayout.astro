@@ -155,12 +155,12 @@ const navigation = [
             }
           });
         }
-        
+
         // Try to store immediately
         if (document.readyState !== "loading") {
           storeMermaidContent();
         }
-        
+
         // Also store when DOM is ready
         if (document.readyState === "loading") {
           document.addEventListener("DOMContentLoaded", storeMermaidContent);
@@ -298,7 +298,7 @@ const navigation = [
                 href="https://github.com/IgorBabkin/ts-ioc-container"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="btn btn-link p-1"
+                class="btn btn-link p-1 github-link"
                 title="GitHub Repository"
               >
                 <svg

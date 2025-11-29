@@ -248,9 +248,32 @@ article h3 {
   color: var(--bs-primary) !important;
 }
 
-/* SVG icon colors - NPM should stay red-ish in dark mode */
-[data-bs-theme="dark"] .npm-link svg {
+.npm-link svg {
   fill: #cb3837;
+}
+
+.npm-link:hover svg {
+  fill: #ff0000;
+}
+
+[data-bs-theme="light"] {
+  .github-link svg {
+    fill: #7a7a7a !important;
+  }
+
+  .github-link:hover svg {
+    fill: #000 !important;
+  }
+}
+
+[data-bs-theme="dark"] {
+  .github-link svg {
+    fill: #b6b6b6 !important;
+  }
+
+  .github-link:hover svg {
+    fill: #fff !important;
+  }
 }
 
 /* Link colors - use primary color */

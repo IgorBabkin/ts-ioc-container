@@ -43,6 +43,12 @@ const htmlDark = await codeToHtml(code, {
 </div>
 
 <style lang="css">
+  .card-body {
+    overflow: hidden;
+    border-bottom-left-radius: var(--bs-border-radius);
+    border-bottom-right-radius: var(--bs-border-radius);
+  }
+
   .card-body :global(pre) {
     margin: 0;
     padding: 1rem;
