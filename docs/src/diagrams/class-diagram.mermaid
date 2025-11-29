@@ -1,6 +1,5 @@
 classDiagram
     class IContainer {
-        <<interface>>
         +resolve(key) T
         +createScope(options) IContainer
         +register(key, provider) this
@@ -9,7 +8,7 @@ classDiagram
         +getInstances() Instance[]
         +hasTag(tag) boolean
     }
-    
+
     class Container {
         -parent: IContainer
         -scopes: IContainer[]
@@ -22,9 +21,8 @@ classDiagram
         +register(key, provider) this
         +dispose() void
     }
-    
+
     class IProvider {
-        <<interface>>
         +resolve(container, options) T
         +hasAccess(options) boolean
         +pipe(mappers) IProvider
@@ -32,7 +30,7 @@ classDiagram
         +setArgs(fn) this
         +lazy() this
     }
-    
+
     class Provider {
         -factory: ResolveDependency
         -argsFn: ArgsFn
@@ -41,41 +39,39 @@ classDiagram
         +resolve(container, options) T
         +pipe(mappers) IProvider
     }
-    
+
     class SingletonProvider {
         -cache: Cache
         +resolve(container, options) T
     }
-    
+
     class IInjector {
-        <<interface>>
         +resolve(container, constructor, options) T
     }
-    
+
     class MetadataInjector {
         +resolve(container, constructor, options) T
         -createInstance(container, constructor, options) T
     }
-    
+
     class SimpleInjector {
         +resolve(container, constructor, options) T
         -createInstance(container, constructor, options) T
     }
-    
+
     class ProxyInjector {
         +resolve(container, constructor, options) T
         -createInstance(container, constructor, options) T
     }
-    
+
     class IRegistration {
-        <<interface>>
         +when(predicates) this
         +bindToKey(key) this
         +bindTo(key) this
         +pipe(mappers) this
         +applyTo(container) void
     }
-    
+
     class Registration {
         -provider: IProvider
         -key: DependencyKey
@@ -84,7 +80,7 @@ classDiagram
         +bindToKey(key) this
         +applyTo(container) void
     }
-    
+
     IContainer <|.. Container
     IContainer <|.. EmptyContainer
     Container --> IProvider : uses
@@ -92,7 +88,6 @@ classDiagram
     Container --> IRegistration : manages
     IProvider <|.. Provider
     IProvider <|.. SingletonProvider
-    SingletonProvider --|> Provider
     IInjector <|.. MetadataInjector
     IInjector <|.. SimpleInjector
     IInjector <|.. ProxyInjector
