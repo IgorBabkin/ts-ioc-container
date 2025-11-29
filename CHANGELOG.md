@@ -1,3 +1,15 @@
+# [46.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.16...v46.0.0) (2025-11-29)
+
+
+### Features
+
+* **tokens:** rename tokens ([386f596](https://github.com/IgorBabkin/ts-ioc-container/commit/386f596f10417b27ffda89798af27e5e8658e401))
+
+
+### BREAKING CHANGES
+
+* **tokens:** tokens
+
 ## [45.1.16](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.15...v45.1.16) (2025-11-28)
 
 
