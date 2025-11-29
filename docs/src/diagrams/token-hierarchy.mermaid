@@ -1,0 +1,79 @@
+classDiagram
+    class InjectionToken {
+        +resolve(IContainer, ResolveOneOptions?) T
+        +args(...deps) InjectionToken~T~
+        +argsFn(getArgsFn) InjectionToken~T~
+        +lazy() InjectionToken~T~
+    }
+
+    class IDToken {
+        +token: string | symbol
+        +resolve(IContainer) T
+        +bindTo(IRegistration) void
+        +args(...args) IDToken~T~
+        +argsFn(getArgsFn) IDToken~T~
+        +lazy() IDToken~T~
+    }
+
+    class ClassToken {
+        -token: constructor~T~
+        +resolve(IContainer) T
+        +args(...args) InjectionToken~T~
+        +argsFn(getArgsFn) InjectionToken~T~
+        +lazy() InjectionToken~T~
+    }
+
+    class ConstantToken {
+        -token: T
+        +resolve(IContainer) T
+        +args(...deps) InjectionToken~T~*
+        +argsFn(getArgsFn) InjectionToken~T~*
+        +lazy() InjectionToken~T~*
+    }
+
+    class FunctionToken {
+        -fn: InjectFn~T~
+        +resolve(IContainer) T
+        +args(...deps) InjectionToken~T~*
+        +argsFn(getArgsFn) InjectionToken~T~*
+        +lazy() InjectionToken~T~*
+    }
+
+    class AliasToken {
+        +token: string | symbol
+        +resolve(IContainer) T[]
+        +bindTo(IRegistration) void
+        +args(...args) AliasToken~T~
+        +argsFn(getArgsFn) AliasToken~T~
+        +lazy() InjectionToken~T[]~
+    }
+
+    class InstanceListToken {
+        -predicate: InstancePredicate
+        -isCascade: boolean
+        +resolve(IContainer) Instance[]
+        +cascade(isTrue) InstanceListToken
+        +args(...deps) InjectionToken~Instance[]~*
+        +argsFn(getArgsFn) InjectionToken~Instance[]~*
+        +lazy() InjectionToken~Instance[]~*
+    }
+
+    class BindToken {
+        +bindTo(IRegistration) void
+    }
+
+    InjectionToken <|-- IDToken
+    InjectionToken <|-- ClassToken
+    InjectionToken <|-- ConstantToken
+    InjectionToken <|-- FunctionToken
+    InjectionToken <|-- AliasToken
+    InjectionToken <|-- InstanceListToken
+    BindToken <|.. AliasToken
+    BindToken <|.. AliasUniqToken
+
+    note for ConstantToken "args, argsFn, lazy\nnot implemented"
+    note for FunctionToken "args, argsFn, lazy\nnot implemented"
+    note for InstanceListToken "args, argsFn, lazy\nnot implemented"
+    note for AliasToken "Resolves to array of T\nSupports alias grouping"
+    note for InstanceListToken "Resolves all instances\nmatching predicate"
+

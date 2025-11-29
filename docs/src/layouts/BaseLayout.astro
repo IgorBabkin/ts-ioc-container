@@ -15,10 +15,10 @@ const navigation = [
   { title: "Home", href: "/ts-ioc-container/" },
   { title: "Overview", href: "/ts-ioc-container/overview" },
   { title: "Container", href: "/ts-ioc-container/container" },
-  { title: "Injector", href: "/ts-ioc-container/injector" },
-  { title: "Provider", href: "/ts-ioc-container/provider" },
-  { title: "Token", href: "/ts-ioc-container/token" },
   { title: "Registration", href: "/ts-ioc-container/registration" },
+  { title: "Provider", href: "/ts-ioc-container/provider" },
+  { title: "Injector", href: "/ts-ioc-container/injector" },
+  { title: "Token", href: "/ts-ioc-container/token" },
 ];
 ---
 
@@ -44,6 +44,41 @@ const navigation = [
             <h1>ts-ioc-container</h1>
           </a>
           <nav class="nav">
+            <div class="badges">
+              <img
+                src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square"
+                alt="NPM version"
+              />
+              <img
+                src="https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square"
+                alt="npm downloads"
+              />
+              <img
+                src="https://img.shields.io/bundlejs/size/ts-ioc-container"
+                alt="npm package size"
+              />
+              <a
+                href="https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master"
+                  alt="Coverage Status"
+                />
+              </a>
+              <img src="https://img.shields.io/npm/l/ts-ioc-container" alt="License" />
+              <a
+                href="https://github.com/semantic-release/semantic-release"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="https://img.shields.io/badge/semantic--release-e10079.svg"
+                  alt="semantic-release"
+                />
+              </a>
+            </div>
             <a
               href="https://github.com/IgorBabkin/ts-ioc-container"
               target="_blank"
@@ -167,6 +202,24 @@ const navigation = [
   .nav {
     display: flex;
     gap: 1.5rem;
+    align-items: center;
+  }
+
+  .badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .badges img {
+    height: 20px;
+    display: block;
+  }
+
+  .badges a {
+    display: inline-block;
+    line-height: 0;
   }
 
   .nav-link {

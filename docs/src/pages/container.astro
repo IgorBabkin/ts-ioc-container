@@ -262,6 +262,100 @@ expect(flag.isSet).toBe(true);`}
       <li>Hooks can be used to release external resources</li>
     </ul>
 
+    <h2>Container Modules</h2>
+
+    <p>
+      Container modules encapsulate registration logic, making it easy to organize
+      and compose your dependency configuration. This is particularly useful for
+      environment-specific setups or feature-based organization.
+    </p>
+
+    <h3>Creating a Module</h3>
+
+    <p>
+      Modules implement the <code>IContainerModule</code> interface and use the
+      <code>applyTo</code> method to register dependencies:
+    </p>
+
+    <CodeBlock
+      code={`import {
+  type IContainer,
+  type IContainerModule,
+  Container,
+  Registration as R,
+} from 'ts-ioc-container';
+
+class LoggerModule implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container.addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
+    container.addRegistration(R.fromClass(FileLogger).bindToKey('IFileLogger'));
+  }
+}
+
+const container = new Container().useModule(new LoggerModule());
+
+const logger = container.resolve('ILogger');
+expect(logger).toBeInstanceOf(Logger);`}
+      lang="typescript"
+    />
+
+    <h3>Environment-Specific Modules</h3>
+
+    <p>
+      You can create different modules for different environments (development,
+      staging, production) and conditionally apply them when creating containers:
+    </p>
+
+    <CodeBlock
+      code={`import {
+  type IContainer,
+  type IContainerModule,
+  Container,
+  Registration as R,
+} from 'ts-ioc-container';
+
+class ProductionModule implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container.addRegistration(
+      R.fromClass(ProductionLogger).bindToKey('ILogger')
+    );
+  }
+}
+
+class DevelopmentModule implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container.addRegistration(
+      R.fromClass(DevelopmentLogger).bindToKey('ILogger')
+    );
+  }
+}
+
+function createContainer(isProduction: boolean) {
+  return new Container().useModule(
+    isProduction ? new ProductionModule() : new DevelopmentModule()
+  );
+}`}
+      lang="typescript"
+    />
+
+    <h3>Use Cases</h3>
+    <ul>
+      <li>
+        <strong>Environment configuration</strong> - Different implementations for
+        dev/staging/production
+      </li>
+      <li>
+        <strong>Feature organization</strong> - Group related registrations together
+      </li>
+      <li>
+        <strong>Testing</strong> - Easy to swap modules for test scenarios
+      </li>
+      <li>
+        <strong>Modular architecture</strong> - Compose containers from smaller,
+        reusable modules
+      </li>
+    </ul>
+
     <h2>Key Design Decisions</h2>
 
     <h3>1. Separation of Concerns</h3>

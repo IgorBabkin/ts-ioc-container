@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
+import tokenHierarchyDiagram from "../diagrams/token-hierarchy.mermaid?raw";
 ---
 
 <BaseLayout
@@ -42,6 +43,42 @@ import CodeBlock from "../components/CodeBlock.astro";
       </li>
     </ul>
 
+    <h2>Token Hierarchy</h2>
+
+    <p>
+      All tokens in the library extend the abstract <code>InjectionToken</code> base class,
+      which defines the common interface for dependency resolution. The following diagram
+      shows the inheritance hierarchy and relationships between different token types:
+    </p>
+
+    <div class="diagram">
+      <div class="mermaid" set:html={tokenHierarchyDiagram}></div>
+    </div>
+
+    <p>
+      <strong>Key Points:</strong>
+    </p>
+    <ul>
+      <li>
+        <code>InjectionToken</code> is the abstract base class that all tokens extend
+      </li>
+      <li>
+        <code>IDToken</code>, <code>ClassToken</code>, <code>ConstantToken</code>, and
+        <code>FunctionToken</code> are concrete implementations for different use cases
+      </li>
+      <li>
+        <code>AliasToken</code> extends <code>InjectionToken</code> and implements
+        <code>BindToken</code> for grouping multiple implementations
+      </li>
+      <li>
+        <code>InstanceListToken</code> is specialized for resolving collections of instances
+      </li>
+      <li>
+        Some tokens (marked with *) don't implement all methods - they throw
+        <code>MethodNotImplementedError</code> for unsupported operations
+      </li>
+    </ul>
+
     <h2>Token Types</h2>
 
     <h3>IDToken</h3>
@@ -51,7 +88,7 @@ import CodeBlock from "../components/CodeBlock.astro";
       provides type safety while maintaining simplicity.
     </p>
 
-    <pre><code class="language-typescript">{`import { IDToken, Container, inject, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { IDToken, Container, inject, Registration as R } from 'ts-ioc-container';
 
 interface ILogger {
   log(message: string): void;
@@ -73,7 +110,7 @@ const container = new Container()
   .addRegistration(R.fromClass(Logger).bindToKey(ILoggerKey));
 
 const app = container.resolve(App);
-app.logger.log('Hello');`}</code></pre>
+app.logger.log('Hello');`} lang="typescript" />
 
     <h3>InjectionToken</h3>
 
@@ -82,7 +119,7 @@ app.logger.log('Hello');`}</code></pre>
       like argument binding, lazy loading, and alias support.
     </p>
 
-    <pre><code class="language-typescript">{`import { InjectionToken, Container, inject, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { InjectionToken, Container, inject, Registration as R } from 'ts-ioc-container';
 
 interface IConfig {
   apiUrl: string;
@@ -109,7 +146,7 @@ const container = new Container()
   .addRegistration(R.fromClass(Config).bindToKey(IConfigKey));
 
 const app = container.resolve(App);
-expect(app.config.apiUrl).toBe('https://api.example.com');`}</code></pre>
+expect(app.config.apiUrl).toBe('https://api.example.com');`} lang="typescript" />
 
     <h3>ClassToken</h3>
 
@@ -118,7 +155,7 @@ expect(app.config.apiUrl).toBe('https://api.example.com');`}</code></pre>
       you want to use the class itself as the key.
     </p>
 
-    <pre><code class="language-typescript">{`import { ClassToken, Container, inject, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { ClassToken, Container, inject, Registration as R } from 'ts-ioc-container';
 
 class Logger {
   log(message: string) {
@@ -136,7 +173,7 @@ const container = new Container()
   .addRegistration(R.fromClass(Logger).bindToKey(LoggerToken));
 
 const app = container.resolve(App);
-app.logger.log('Hello');`}</code></pre>
+app.logger.log('Hello');`} lang="typescript" />
 
     <h3>ConstantToken</h3>
 
@@ -145,7 +182,7 @@ app.logger.log('Hello');`}</code></pre>
       values or primitive types.
     </p>
 
-    <pre><code class="language-typescript">{`import { ConstantToken, Container, inject, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { ConstantToken, Container, inject, Registration as R } from 'ts-ioc-container';
 
 const ApiUrlToken = new ConstantToken<string>('API_URL', 'https://api.example.com');
 
@@ -157,7 +194,7 @@ const container = new Container()
   .addRegistration(R.fromValue('https://api.example.com').bindToKey(ApiUrlToken));
 
 const app = container.resolve(App);
-expect(app.apiUrl).toBe('https://api.example.com');`}</code></pre>
+expect(app.apiUrl).toBe('https://api.example.com');`} lang="typescript" />
 
     <h3>FunctionToken</h3>
 
@@ -166,7 +203,7 @@ expect(app.apiUrl).toBe('https://api.example.com');`}</code></pre>
       or callbacks.
     </p>
 
-    <pre><code class="language-typescript">{`import { FunctionToken, Container, inject, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { FunctionToken, Container, inject, Registration as R } from 'ts-ioc-container';
 
 type LoggerFactory = (name: string) => Logger;
 
@@ -188,7 +225,7 @@ const container = new Container()
   );
 
 const app = container.resolve(App);
-app.run();`}</code></pre>
+app.run();`} lang="typescript" />
 
     <h3>AliasToken</h3>
 
@@ -197,7 +234,7 @@ app.run();`}</code></pre>
       alias. This is perfect for plugin systems or middleware.
     </p>
 
-    <pre><code class="language-typescript">{`import {
+    <CodeBlock code={`import {
   AliasToken,
   Container,
   inject,
@@ -239,7 +276,7 @@ const container = new Container()
   .addRegistration(R.fromClass(AuthMiddleware));
 
 const app = container.resolve(App);
-app.run(); // Both middleware are applied`}</code></pre>
+app.run(); // Both middleware are applied`} lang="typescript" />
 
     <h3>InstanceListToken</h3>
 
@@ -249,7 +286,7 @@ app.run(); // Both middleware are applied`}</code></pre>
       an interface.
     </p>
 
-    <pre><code class="language-typescript">{`import {
+    <CodeBlock code={`import {
   InstanceListToken,
   Container,
   inject,
@@ -292,7 +329,7 @@ const container = new Container()
   .addRegistration(R.fromClass(AuthPlugin));
 
 const app = container.resolve(App);
-app.initialize();`}</code></pre>
+app.initialize();`} lang="typescript" />
 
     <h2>Token Features</h2>
 
@@ -303,31 +340,31 @@ app.initialize();`}</code></pre>
       resolving:
     </p>
 
-    <pre><code class="language-typescript">{`const IConfigKey = new InjectionToken<IConfig>('IConfig');
+    <CodeBlock code={`const IConfigKey = new InjectionToken<IConfig>('IConfig');
 
 class App {
   constructor(
     @inject(IConfigKey.args({ apiUrl: 'https://api.example.com', timeout: 5000 }))
     private config: IConfig
   ) {}
-}`}</code></pre>
+}`} lang="typescript" />
 
     <h3>Lazy Loading</h3>
 
     <p>Tokens support lazy loading, deferring instantiation until access:</p>
 
-    <pre><code class="language-typescript">{`class App {
+    <CodeBlock code={`class App {
   constructor(
     @inject(IConfigKey.lazy())
     private config: IConfig
   ) {}
-}`}</code></pre>
+}`} lang="typescript" />
 
     <h3>Dynamic Arguments</h3>
 
     <p>Tokens support dynamic argument resolution using functions:</p>
 
-    <pre><code class="language-typescript">{`class App {
+    <CodeBlock code={`class App {
   constructor(
     @inject(
       IConfigKey.argsFn((container) => [
@@ -336,7 +373,7 @@ class App {
     )
     private config: IConfig
   ) {}
-}`}</code></pre>
+}`} lang="typescript" />
 
     <h2>Best Practices</h2>
 
@@ -425,3 +462,34 @@ class App {
     </table>
   </article>
 </BaseLayout>
+
+<style>
+  .diagram {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    overflow-x: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .diagram .mermaid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+
+  .diagram pre {
+    margin: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  .diagram code {
+    background: transparent;
+    padding: 0;
+  }
+</style>

@@ -54,7 +54,7 @@ import registrationFlowDiagram from "../diagrams/registration-flow.mermaid?raw";
 
     <h3>Basic Registration</h3>
 
-    <pre><code class="language-typescript">{`import { bindTo, Container, register, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { bindTo, Container, register, Registration as R } from 'ts-ioc-container';
 
 @register(bindTo('ILogger'))
 class Logger {
@@ -67,11 +67,11 @@ const container = new Container()
   .addRegistration(R.fromClass(Logger));
 
 const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`}</code></pre>
+expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
 
     <h3>With Multiple Features</h3>
 
-    <pre><code class="language-typescript">{`import {
+    <CodeBlock code={`import {
   bindTo,
   Container,
   register,
@@ -98,7 +98,7 @@ const logger1 = root.resolve('ILogger');
 const logger2 = root.resolve('ILogger');
 
 // Same instance (singleton)
-expect(logger1).toBe(logger2);`}</code></pre>
+expect(logger1).toBe(logger2);`} lang="typescript" />
 
     <h2>Fluent API Registration</h2>
 
@@ -109,7 +109,7 @@ expect(logger1).toBe(logger2);`}</code></pre>
 
     <h3>Class Registration</h3>
 
-    <pre><code class="language-typescript">{`import { Container, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { Container, Registration as R } from 'ts-ioc-container';
 
 class Logger {
   log(message: string) {
@@ -121,19 +121,19 @@ const container = new Container()
   .addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
 
 const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`}</code></pre>
+expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
 
     <h3>Value Registration</h3>
 
-    <pre><code class="language-typescript">{`const container = new Container()
+    <CodeBlock code={`const container = new Container()
   .addRegistration(R.fromValue('Hello World').bindToKey('greeting'));
 
 const greeting = container.resolve('greeting');
-expect(greeting).toBe('Hello World');`}</code></pre>
+expect(greeting).toBe('Hello World');`} lang="typescript" />
 
     <h3>Factory Registration</h3>
 
-    <pre><code class="language-typescript">{`const container = new Container()
+    <CodeBlock code={`const container = new Container()
   .addRegistration(
     R.fromFn((container) => {
       const config = container.resolve('IConfig');
@@ -142,7 +142,7 @@ expect(greeting).toBe('Hello World');`}</code></pre>
   );
 
 const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`}</code></pre>
+expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
 
     <h2>Keys</h2>
 
@@ -159,14 +159,14 @@ expect(logger).toBeInstanceOf(Logger);`}</code></pre>
       as the default key:
     </p>
 
-    <pre><code class="language-typescript">{`class FileLogger {}
+    <CodeBlock code={`class FileLogger {}
 
 const container = new Container()
   .addRegistration(R.fromClass(FileLogger));
 
 // Resolve using class name
 const logger = container.resolve('FileLogger');
-expect(logger).toBeInstanceOf(FileLogger);`}</code></pre>
+expect(logger).toBeInstanceOf(FileLogger);`} lang="typescript" />
 
     <h3>Explicit Keys</h3>
 
@@ -174,11 +174,11 @@ expect(logger).toBeInstanceOf(FileLogger);`}</code></pre>
       You can specify explicit keys using <code>bindToKey()</code>:
     </p>
 
-    <pre><code class="language-typescript">{`const container = new Container()
+    <CodeBlock code={`const container = new Container()
   .addRegistration(R.fromClass(FileLogger).bindToKey('ILogger'));
 
 const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(FileLogger);`}</code></pre>
+expect(logger).toBeInstanceOf(FileLogger);`} lang="typescript" />
 
     <h3>Multiple Keys</h3>
 
@@ -186,7 +186,7 @@ expect(logger).toBeInstanceOf(FileLogger);`}</code></pre>
       You can bind a registration to multiple keys using <code>bindTo()</code>:
     </p>
 
-    <pre><code class="language-typescript">{`import { bindTo, Container, register, Registration as R, select as s } from 'ts-ioc-container';
+    <CodeBlock code={`import { bindTo, Container, register, Registration as R, select as s } from 'ts-ioc-container';
 
 @register(
   bindTo('ILogger'),
@@ -204,7 +204,7 @@ const logger1 = container.resolve('ILogger');
 const logger2 = container.resolveOneByAlias('Logger');
 
 expect(logger1).toBeInstanceOf(Logger);
-expect(logger2).toBeInstanceOf(Logger);`}</code></pre>
+expect(logger2).toBeInstanceOf(Logger);`} lang="typescript" />
 
     <h3>Key Requirements</h3>
 
@@ -212,7 +212,7 @@ expect(logger2).toBeInstanceOf(Logger);`}</code></pre>
       When registering a value or factory, you <strong>must</strong> provide a key:
     </p>
 
-    <pre><code class="language-typescript">{`import { DependencyMissingKeyError } from 'ts-ioc-container';
+    <CodeBlock code={`import { DependencyMissingKeyError } from 'ts-ioc-container';
 
 // This will throw DependencyMissingKeyError
 expect(() => {
@@ -220,7 +220,7 @@ expect(() => {
 }).toThrow(DependencyMissingKeyError);
 
 // This is correct
-container.addRegistration(R.fromValue('Hello').bindToKey('greeting'));`}</code></pre>
+container.addRegistration(R.fromValue('Hello').bindToKey('greeting'));`} lang="typescript" />
 
     <h2>Scope Registration</h2>
 
@@ -232,7 +232,7 @@ container.addRegistration(R.fromValue('Hello').bindToKey('greeting'));`}</code><
 
     <h3>Basic Scope Predicate</h3>
 
-    <pre><code class="language-typescript">{`import {
+    <CodeBlock code={`import {
   bindTo,
   Container,
   register,
@@ -256,30 +256,30 @@ expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
 
 // Not available in child scope
 const child = root.createScope({ tags: ['child'] });
-expect(() => child.resolve('ILogger')).toThrow();`}</code></pre>
+expect(() => child.resolve('ILogger')).toThrow();`} lang="typescript" />
 
     <h3>Multiple Scope Predicates</h3>
 
     <p>You can combine multiple scope predicates:</p>
 
-    <pre><code class="language-typescript">{`@register(
+    <CodeBlock code={`@register(
   bindTo('ILogger'),
   scope(
     (s) => s.hasTag('root'),
-    (s) => s.hasTag('admin')
+    (s, prev) => prev && s.hasTag('admin')
   ),
   singleton()
 )
-class Logger {}`}</code></pre>
+class Logger {}`} lang="typescript" />
 
     <h3>Fluent API Scope</h3>
 
-    <pre><code class="language-typescript">{`const container = new Container()
+    <CodeBlock code={`const container = new Container()
   .addRegistration(
     R.fromClass(Logger)
       .bindToKey('ILogger')
       .when((s) => s.hasTag('root'))
-  );`}</code></pre>
+  );`} lang="typescript" />
 
     <h2>Registration Pipeline</h2>
 
@@ -288,7 +288,7 @@ class Logger {}`}</code></pre>
       transformations:
     </p>
 
-    <pre><code class="language-typescript">{`import { args, singleton, scopeAccess } from 'ts-ioc-container';
+    <CodeBlock code={`import { args, singleton, scopeAccess } from 'ts-ioc-container';
 
 const container = new Container()
   .addRegistration(
@@ -298,7 +298,7 @@ const container = new Container()
       .pipe(args('/config.json'))
       .pipe(singleton())
       .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
-  );`}</code></pre>
+  );`} lang="typescript" />
 
     <h2>Container Modules</h2>
 
@@ -309,7 +309,7 @@ const container = new Container()
 
     <h3>Creating a Module</h3>
 
-    <pre><code class="language-typescript">{`import {
+    <CodeBlock code={`import {
   type IContainer,
   type IContainerModule,
   Registration as R,
@@ -326,26 +326,7 @@ const container = new Container()
   .useModule(new LoggerModule());
 
 const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`}</code></pre>
-
-    <h3>Environment-Specific Modules</h3>
-
-    <pre><code class="language-typescript">{`class ProductionModule implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(ProductionLogger).bindToKey('ILogger'));
-  }
-}
-
-class DevelopmentModule implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(DevelopmentLogger).bindToKey('ILogger'));
-  }
-}
-
-function createContainer(isProduction: boolean) {
-  return new Container()
-    .useModule(isProduction ? new ProductionModule() : new DevelopmentModule());
-}`}</code></pre>
+expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
 
     <h2>Best Practices</h2>
 
