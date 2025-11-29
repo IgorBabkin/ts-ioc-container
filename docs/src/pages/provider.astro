@@ -1,51 +1,62 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import providerPipelineDiagram from '../diagrams/provider-pipeline.mermaid?raw';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import providerPipelineDiagram from "../diagrams/provider-pipeline.mermaid?raw";
 ---
 
-<BaseLayout title="Provider" description="Provider - Dependency factories with singleton, args, visibility, alias, and decorator features">
+<BaseLayout
+  title="Provider"
+  description="Provider - Dependency factories with singleton, args, visibility, alias, and decorator features"
+>
   <article>
     <h1>Provider</h1>
-    
+
     <p>
-      Providers are factories that create dependency instances. They can be configured with various features like
-      singletons, argument binding, visibility control, aliases, and decorators. Understanding providers is key to
-      mastering the IoC container.
+      Providers are factories that create dependency instances. They can be
+      configured with various features like singletons, argument binding,
+      visibility control, aliases, and decorators. Understanding providers is
+      key to mastering the IoC container.
     </p>
 
     <h2>Factory Pattern</h2>
     <p>
-      Providers implement the Factory pattern, encapsulating the creation logic of dependencies. This allows for
-      complex instantiation logic while keeping the container simple.
+      Providers implement the Factory pattern, encapsulating the creation logic
+      of dependencies. This allows for complex instantiation logic while keeping
+      the container simple.
     </p>
 
     <h2>Provider Types</h2>
-    
+
     <p>There are three main ways to create providers:</p>
-    
+
     <ul>
       <li>
-        <strong>Class Provider</strong>: <code>Provider.fromClass(Logger)</code> - Creates instances from a class
+        <strong>Class Provider</strong>: <code>Provider.fromClass(Logger)</code> -
+        Creates instances from a class
       </li>
       <li>
-        <strong>Value Provider</strong>: <code>Provider.fromValue(value)</code> - Returns a constant value
+        <strong>Value Provider</strong>: <code>Provider.fromValue(value)</code> -
+        Returns a constant value
       </li>
       <li>
-        <strong>Factory Provider</strong>: <code>new Provider((container, ...args) =&gt; ...)</code> - Custom factory
-        function
+        <strong>Factory Provider</strong>: <code
+          >new Provider((container, ...args) =&gt; ...)</code
+        > - Custom factory function
       </li>
     </ul>
 
     <h2>Singleton</h2>
-    
+
     <p>
-      Singleton providers ensure only one instance is created per scope. This is perfect for services like loggers,
-      database connections, or configuration managers.
+      Singleton providers ensure only one instance is created per scope. This is
+      perfect for services like loggers, database connections, or configuration
+      managers.
     </p>
 
     <h3>Basic Usage</h3>
-    
-    <pre><code class="language-typescript">{`import { bindTo, Container, register, Registration as R, singleton } from 'ts-ioc-container';
+
+    <CodeBlock
+      code={`import { bindTo, Container, register, Registration as R, singleton } from 'ts-ioc-container';
 
 @register(bindTo('logger'), singleton())
 class Logger {}
@@ -54,15 +65,19 @@ const container = new Container()
   .addRegistration(R.fromClass(Logger));
 
 // Same instance returned every time
-expect(container.resolve('logger')).toBe(container.resolve('logger'));`}</code></pre>
+expect(container.resolve('logger')).toBe(container.resolve('logger'));`}
+      lang="typescript"
+    />
 
     <h3>Per-Scope Singletons</h3>
-    
+
     <p>
-      Each scope maintains its own singleton instance. This means different scopes will have different instances:
+      Each scope maintains its own singleton instance. This means different
+      scopes will have different instances:
     </p>
 
-    <pre><code class="language-typescript">{`const container = new Container()
+    <CodeBlock
+      code={`const container = new Container()
   .addRegistration(R.fromClass(Logger));
 const child = container.createScope();
 
@@ -70,7 +85,9 @@ const child = container.createScope();
 expect(container.resolve('logger')).not.toBe(child.resolve('logger'));
 
 // Same instance within the same scope
-expect(child.resolve('logger')).toBe(child.resolve('logger'));`}</code></pre>
+expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
+      lang="typescript"
+    />
 
     <h3>Use Cases</h3>
     <ul>
@@ -81,15 +98,17 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}</code></pre>
     </ul>
 
     <h2>Arguments</h2>
-    
+
     <p>
-      Argument providers allow you to bind constructor arguments at registration time. This is useful for
-      configuration values, dependencies that should be resolved at provider creation, or default values.
+      Argument providers allow you to bind constructor arguments at registration
+      time. This is useful for configuration values, dependencies that should be
+      resolved at provider creation, or default values.
     </p>
 
     <h3>Static Arguments</h3>
-    
-    <pre><code class="language-typescript">{`import { args, Container, Registration as R } from 'ts-ioc-container';
+
+    <CodeBlock
+      code={`import { args, Container, Registration as R } from 'ts-ioc-container';
 
 class ConfigService {
   constructor(private readonly configPath: string) {}
@@ -102,15 +121,18 @@ const container = new Container()
   .addRegistration(R.fromClass(ConfigService).pipe(args('/etc/config.json')));
 
 const config = container.resolve<ConfigService>('ConfigService');
-expect(config.getPath()).toBe('/etc/config.json');`}</code></pre>
+expect(config.getPath()).toBe('/etc/config.json');`}
+      lang="typescript"
+    />
 
     <h3>Dynamic Arguments</h3>
-    
+
     <p>
       Use <code>argsFn</code> to resolve arguments dynamically from the container:
     </p>
 
-    <pre><code class="language-typescript">{`import { argsFn, Container, Registration as R } from 'ts-ioc-container';
+    <CodeBlock
+      code={`import { argsFn, Container, Registration as R } from 'ts-ioc-container';
 
 const container = new Container()
   .addRegistration(R.fromClass(Logger))
@@ -121,32 +143,41 @@ const container = new Container()
   );
 
 const config = container.resolve<ConfigService>('ConfigService');
-expect(config.getPath()).toBe('/dynamic/config.json');`}</code></pre>
+expect(config.getPath()).toBe('/dynamic/config.json');`}
+      lang="typescript"
+    />
 
     <h3>Argument Priority</h3>
-    
+
     <p>
-      Provider arguments take precedence over arguments passed to <code>resolve()</code>:
+      Provider arguments take precedence over arguments passed to <code
+        >resolve()</code
+      >:
     </p>
 
-    <pre><code class="language-typescript">{`const container = new Container()
+    <CodeBlock
+      code={`const container = new Container()
   .addRegistration(R.fromClass(Logger).pipe(args('name')));
 
 // Provider argument 'name' takes priority
 const logger = container.resolve<Logger>('logger', { args: ['file'] });
 expect(logger.name).toBe('name');
-expect(logger.type).toBe('file'); // Second argument still passed`}</code></pre>
+expect(logger.type).toBe('file'); // Second argument still passed`}
+      lang="typescript"
+    />
 
     <h2>Visibility</h2>
-    
+
     <p>
-      Visibility control allows you to restrict which scopes can access certain dependencies. This is useful for
-      implementing access control, feature flags, or environment-specific services.
+      Visibility control allows you to restrict which scopes can access certain
+      dependencies. This is useful for implementing access control, feature
+      flags, or environment-specific services.
     </p>
 
     <h3>Basic Usage</h3>
-    
-    <pre><code class="language-typescript">{`import {
+
+    <CodeBlock
+      code={`import {
   bindTo,
   Container,
   DependencyNotFoundError,
@@ -174,7 +205,9 @@ const child = parent.createScope({ tags: ['child'] });
 expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
 
 // Not available in child scope
-expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);`}</code></pre>
+expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);`}
+      lang="typescript"
+    />
 
     <h3>Use Cases</h3>
     <ul>
@@ -185,15 +218,18 @@ expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);`}</
     </ul>
 
     <h2>Alias</h2>
-    
+
     <p>
-      Aliases allow you to group multiple registrations under a common identifier. This is perfect for plugin
-      systems, middleware, or any scenario where you need to resolve multiple implementations of the same interface.
+      Aliases allow you to group multiple registrations under a common
+      identifier. This is perfect for plugin systems, middleware, or any
+      scenario where you need to resolve multiple implementations of the same
+      interface.
     </p>
 
     <h3>Basic Usage</h3>
-    
-    <pre><code class="language-typescript">{`import {
+
+    <CodeBlock
+      code={`import {
   bindTo,
   Container,
   inject,
@@ -244,7 +280,9 @@ app.run();
 
 // Both middleware are applied
 expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
-expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);`}</code></pre>
+expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);`}
+      lang="typescript"
+    />
 
     <h3>Use Cases</h3>
     <ul>
@@ -255,15 +293,17 @@ expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);`}</code></
     </ul>
 
     <h2>Decorator</h2>
-    
+
     <p>
-      The decorator pattern allows you to wrap instances with additional functionality without modifying the
-      original class. This is useful for cross-cutting concerns like logging, caching, or transaction management.
+      The decorator pattern allows you to wrap instances with additional
+      functionality without modifying the original class. This is useful for
+      cross-cutting concerns like logging, caching, or transaction management.
     </p>
 
     <h3>Basic Usage</h3>
-    
-    <pre><code class="language-typescript">{`import {
+
+    <CodeBlock
+      code={`import {
   bindTo,
   Container,
   decorate,
@@ -333,7 +373,9 @@ const logger = container.resolve<Logger>('Logger');
 await app.run();
 
 // Repository calls are logged
-expect(logger.printLogs()).toBe('1,2');`}</code></pre>
+expect(logger.printLogs()).toBe('1,2');`}
+      lang="typescript"
+    />
 
     <h3>Use Cases</h3>
     <ul>
@@ -344,13 +386,15 @@ expect(logger.printLogs()).toBe('1,2');`}</code></pre>
     </ul>
 
     <h2>Lazy Loading</h2>
-    
+
     <p>
-      Lazy providers defer instantiation until the dependency is actually accessed. This can improve startup
-      performance and enable circular dependency resolution.
+      Lazy providers defer instantiation until the dependency is actually
+      accessed. This can improve startup performance and enable circular
+      dependency resolution.
     </p>
 
-    <pre><code class="language-typescript">{`import { bindTo, Container, inject, register, Registration as R, lazy } from 'ts-ioc-container';
+    <CodeBlock
+      code={`import { bindTo, Container, inject, register, Registration as R, lazy } from 'ts-ioc-container';
 
 let isLoggerCreated = false;
 
@@ -385,22 +429,25 @@ expect(isLoggerCreated).toBe(false);
 
 // Logger created when accessed
 main.getLogs();
-expect(isLoggerCreated).toBe(true);`}</code></pre>
+expect(isLoggerCreated).toBe(true);`}
+      lang="typescript"
+    />
 
     <h2>Provider Pipeline</h2>
-    
+
     <p>
-      Providers can be composed using the pipeline pattern. Each transformation wraps the provider with additional
-      functionality:
+      Providers can be composed using the pipeline pattern. Each transformation
+      wraps the provider with additional functionality:
     </p>
 
     <div class="diagram">
-      <div class="mermaid" set:html={providerPipelineDiagram}></div>
+      <div class="mermaid" set:html={providerPipelineDiagram} />
     </div>
 
     <h3>Provider Composition Example</h3>
-    
-    <pre><code class="language-typescript">{`const provider = Provider.fromClass(Logger)
+
+    <CodeBlock
+      code={`const provider = Provider.fromClass(Logger)
   .pipe(args('/config.json'))        // 1. Bind arguments
   .pipe(singleton())                // 2. Cache instances
   .pipe(scopeAccess(predicate))     // 3. Control visibility
@@ -408,17 +455,21 @@ expect(isLoggerCreated).toBe(true);`}</code></pre>
 
 // Each pipe wraps the previous provider
 // Final provider: Lazy(Visibility(Singleton(Args(Base))))
-`}</code></pre>
+`}
+      lang="typescript"
+    />
 
     <h3>Decorator Pattern</h3>
     <p>
-      The provider pipeline uses the Decorator pattern, allowing features to be added incrementally without
-      modifying the base provider. Each pipe operation wraps the provider with additional functionality.
+      The provider pipeline uses the Decorator pattern, allowing features to be
+      added incrementally without modifying the base provider. Each pipe
+      operation wraps the provider with additional functionality.
     </p>
 
     <h3>Composable Providers</h3>
     <p>
-      The pipeline pattern allows providers to be composed from smaller pieces. This design:
+      The pipeline pattern allows providers to be composed from smaller pieces.
+      This design:
     </p>
     <ul>
       <li>Keeps the base provider simple</li>
@@ -431,73 +482,89 @@ expect(isLoggerCreated).toBe(true);`}</code></pre>
       You can also use the <code>pipe</code> method in registrations:
     </p>
 
-    <pre><code class="language-typescript">{`const container = new Container()
+    <CodeBlock
+      code={`const container = new Container()
   .addRegistration(
     R.fromClass(ConfigService)
       .pipe(args('/default/config.json'))
       .pipe(singleton())
       .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
-  );`}</code></pre>
+  );`}
+      lang="typescript"
+    />
 
     <h2>Performance Considerations</h2>
-    
+
     <h3>Singleton Caching</h3>
     <p>
-      Singleton providers cache instances per scope, avoiding unnecessary object creation. The cache is implemented
-      using a <code>Map</code> for O(1) lookup performance.
+      Singleton providers cache instances per scope, avoiding unnecessary object
+      creation. The cache is implemented using a <code>Map</code> for O(1) lookup
+      performance.
     </p>
 
     <h3>Lazy Loading</h3>
     <p>
-      Lazy providers use JavaScript proxies to defer instantiation until access. This improves startup time by
-      avoiding eager initialization of unused dependencies.
+      Lazy providers use JavaScript proxies to defer instantiation until access.
+      This improves startup time by avoiding eager initialization of unused
+      dependencies.
     </p>
 
     <h3>Provider Lookup</h3>
     <p>
-      Providers are stored in a <code>Map</code> keyed by <code>DependencyKey</code>, providing O(1) lookup
-      performance. Alias resolution uses a separate <code>AliasMap</code> for efficient multi-key lookups.
+      Providers are stored in a <code>Map</code> keyed by <code
+        >DependencyKey</code
+      >, providing O(1) lookup performance. Alias resolution uses a separate <code
+        >AliasMap</code
+      > for efficient multi-key lookups.
     </p>
 
     <h2>Extension Points</h2>
-    
+
     <h3>Custom Providers</h3>
     <p>
-      Implement <code>IProvider</code> or extend <code>ProviderDecorator</code> to create custom providers:
+      Implement <code>IProvider</code> or extend <code>ProviderDecorator</code> to
+      create custom providers:
     </p>
-    <pre><code class="language-typescript">{`class CustomProvider extends ProviderDecorator {
+    <CodeBlock
+      code={`class CustomProvider extends ProviderDecorator {
   resolve(container: IContainer, options: ProviderOptions): T {
     // Your custom resolution logic
   }
-}`}</code></pre>
+}`}
+      lang="typescript"
+    />
 
     <h3>Custom Hooks</h3>
-    <p>
-      Create custom hooks by implementing the hook system:
-    </p>
-    <pre><code class="language-typescript">{`const customHookRunner = new HooksRunner('customHook');
+    <p>Create custom hooks by implementing the hook system:</p>
+    <CodeBlock
+      code={`const customHookRunner = new HooksRunner('customHook');
 container.addOnConstructHook((instance, scope) => {
   customHookRunner.execute(instance, { scope });
-});`}</code></pre>
+});`}
+      lang="typescript"
+    />
 
     <h2>Best Practices</h2>
-    
+
     <ul>
       <li>
-        <strong>Use singletons for expensive resources</strong> - Database connections, HTTP clients, configuration
-        objects
+        <strong>Use singletons for expensive resources</strong> - Database connections,
+        HTTP clients, configuration objects
       </li>
       <li>
-        <strong>Prefer argsFn for dynamic values</strong> - When arguments depend on other container values
+        <strong>Prefer argsFn for dynamic values</strong> - When arguments depend
+        on other container values
       </li>
       <li>
-        <strong>Use visibility for security</strong> - Restrict access to sensitive services
+        <strong>Use visibility for security</strong> - Restrict access to sensitive
+        services
       </li>
       <li>
         <strong>Aliases for collections</strong> - Group related services together
       </li>
       <li>
-        <strong>Decorators for cross-cutting concerns</strong> - Keep your core classes clean
+        <strong>Decorators for cross-cutting concerns</strong> - Keep your core classes
+        clean
       </li>
       <li>
         <strong>Lazy loading for performance</strong> - Defer expensive object creation

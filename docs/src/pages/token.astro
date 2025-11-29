@@ -1,36 +1,54 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CodeBlock from "../components/CodeBlock.astro";
 ---
 
-<BaseLayout title="Token" description="Token - Token types for dependency keys (InjectionToken, IDToken, ClassToken, etc.)">
+<BaseLayout
+  title="Token"
+  description="Token - Token types for dependency keys (InjectionToken, IDToken, ClassToken, etc.)"
+>
   <article>
     <h1>Token</h1>
-    
+
     <p>
-      Tokens are used to identify and resolve dependencies in the container. The library provides several token
-      types for different use cases, each offering different levels of type safety and flexibility.
+      Tokens are used to identify and resolve dependencies in the container. The
+      library provides several token types for different use cases, each
+      offering different levels of type safety and flexibility.
     </p>
 
     <h2>Why Tokens?</h2>
-    
+
     <p>
-      While you can use plain strings or symbols as dependency keys, tokens provide additional benefits:
+      While you can use plain strings or symbols as dependency keys, tokens
+      provide additional benefits:
     </p>
-    
+
     <ul>
-      <li><strong>Type Safety</strong>: Tokens carry type information, improving IntelliSense and compile-time checks</li>
-      <li><strong>Uniqueness</strong>: Tokens ensure unique identification, preventing accidental key collisions</li>
-      <li><strong>Features</strong>: Some tokens support additional features like argument binding and lazy loading</li>
-      <li><strong>Refactoring</strong>: Tokens make refactoring safer by providing a single source of truth</li>
+      <li>
+        <strong>Type Safety</strong>: Tokens carry type information, improving
+        IntelliSense and compile-time checks
+      </li>
+      <li>
+        <strong>Uniqueness</strong>: Tokens ensure unique identification,
+        preventing accidental key collisions
+      </li>
+      <li>
+        <strong>Features</strong>: Some tokens support additional features like
+        argument binding and lazy loading
+      </li>
+      <li>
+        <strong>Refactoring</strong>: Tokens make refactoring safer by providing
+        a single source of truth
+      </li>
     </ul>
 
     <h2>Token Types</h2>
-    
+
     <h3>IDToken</h3>
-    
+
     <p>
-      <code>IDToken</code> is a simple token that wraps a string or symbol key. It provides type safety while
-      maintaining simplicity.
+      <code>IDToken</code> is a simple token that wraps a string or symbol key. It
+      provides type safety while maintaining simplicity.
     </p>
 
     <pre><code class="language-typescript">{`import { IDToken, Container, inject, Registration as R } from 'ts-ioc-container';
@@ -58,10 +76,10 @@ const app = container.resolve(App);
 app.logger.log('Hello');`}</code></pre>
 
     <h3>InjectionToken</h3>
-    
+
     <p>
-      <code>InjectionToken</code> is the base class for all tokens. It provides features like argument binding,
-      lazy loading, and alias support.
+      <code>InjectionToken</code> is the base class for all tokens. It provides features
+      like argument binding, lazy loading, and alias support.
     </p>
 
     <pre><code class="language-typescript">{`import { InjectionToken, Container, inject, Registration as R } from 'ts-ioc-container';
@@ -94,10 +112,10 @@ const app = container.resolve(App);
 expect(app.config.apiUrl).toBe('https://api.example.com');`}</code></pre>
 
     <h3>ClassToken</h3>
-    
+
     <p>
-      <code>ClassToken</code> is a token that represents a class. It's useful when you want to use the class
-      itself as the key.
+      <code>ClassToken</code> is a token that represents a class. It's useful when
+      you want to use the class itself as the key.
     </p>
 
     <pre><code class="language-typescript">{`import { ClassToken, Container, inject, Registration as R } from 'ts-ioc-container';
@@ -121,10 +139,10 @@ const app = container.resolve(App);
 app.logger.log('Hello');`}</code></pre>
 
     <h3>ConstantToken</h3>
-    
+
     <p>
-      <code>ConstantToken</code> represents a constant value. It's useful for configuration values or primitive
-      types.
+      <code>ConstantToken</code> represents a constant value. It's useful for configuration
+      values or primitive types.
     </p>
 
     <pre><code class="language-typescript">{`import { ConstantToken, Container, inject, Registration as R } from 'ts-ioc-container';
@@ -142,9 +160,10 @@ const app = container.resolve(App);
 expect(app.apiUrl).toBe('https://api.example.com');`}</code></pre>
 
     <h3>FunctionToken</h3>
-    
+
     <p>
-      <code>FunctionToken</code> represents a function. It's useful for factory functions or callbacks.
+      <code>FunctionToken</code> represents a function. It's useful for factory functions
+      or callbacks.
     </p>
 
     <pre><code class="language-typescript">{`import { FunctionToken, Container, inject, Registration as R } from 'ts-ioc-container';
@@ -172,10 +191,10 @@ const app = container.resolve(App);
 app.run();`}</code></pre>
 
     <h3>AliasToken</h3>
-    
+
     <p>
-      <code>AliasToken</code> is used to group multiple registrations under a common alias. This is perfect for
-      plugin systems or middleware.
+      <code>AliasToken</code> is used to group multiple registrations under a common
+      alias. This is perfect for plugin systems or middleware.
     </p>
 
     <pre><code class="language-typescript">{`import {
@@ -223,10 +242,11 @@ const app = container.resolve(App);
 app.run(); // Both middleware are applied`}</code></pre>
 
     <h3>InstanceListToken</h3>
-    
+
     <p>
-      <code>InstanceListToken</code> allows you to resolve all instances of a certain type from the container.
-      This is useful for collecting all implementations of an interface.
+      <code>InstanceListToken</code> allows you to resolve all instances of a certain
+      type from the container. This is useful for collecting all implementations of
+      an interface.
     </p>
 
     <pre><code class="language-typescript">{`import {
@@ -275,11 +295,12 @@ const app = container.resolve(App);
 app.initialize();`}</code></pre>
 
     <h2>Token Features</h2>
-    
+
     <h3>Argument Binding</h3>
-    
+
     <p>
-      Tokens support argument binding, allowing you to pass arguments when resolving:
+      Tokens support argument binding, allowing you to pass arguments when
+      resolving:
     </p>
 
     <pre><code class="language-typescript">{`const IConfigKey = new InjectionToken<IConfig>('IConfig');
@@ -292,10 +313,8 @@ class App {
 }`}</code></pre>
 
     <h3>Lazy Loading</h3>
-    
-    <p>
-      Tokens support lazy loading, deferring instantiation until access:
-    </p>
+
+    <p>Tokens support lazy loading, deferring instantiation until access:</p>
 
     <pre><code class="language-typescript">{`class App {
   constructor(
@@ -305,10 +324,8 @@ class App {
 }`}</code></pre>
 
     <h3>Dynamic Arguments</h3>
-    
-    <p>
-      Tokens support dynamic argument resolution using functions:
-    </p>
+
+    <p>Tokens support dynamic argument resolution using functions:</p>
 
     <pre><code class="language-typescript">{`class App {
   constructor(
@@ -322,30 +339,36 @@ class App {
 }`}</code></pre>
 
     <h2>Best Practices</h2>
-    
+
     <ul>
       <li>
-        <strong>Use tokens for type safety</strong> - Prefer tokens over plain strings for better type checking
+        <strong>Use tokens for type safety</strong> - Prefer tokens over plain strings
+        for better type checking
       </li>
       <li>
-        <strong>Export tokens as constants</strong> - Create tokens once and reuse them throughout your application
+        <strong>Export tokens as constants</strong> - Create tokens once and reuse
+        them throughout your application
       </li>
       <li>
-        <strong>Use IDToken for simple cases</strong> - When you just need type-safe keys
+        <strong>Use IDToken for simple cases</strong> - When you just need type-safe
+        keys
       </li>
       <li>
-        <strong>Use InjectionToken for advanced features</strong> - When you need argument binding or lazy loading
+        <strong>Use InjectionToken for advanced features</strong> - When you need
+        argument binding or lazy loading
       </li>
       <li>
-        <strong>Use AliasToken for collections</strong> - When you need to group multiple implementations
+        <strong>Use AliasToken for collections</strong> - When you need to group multiple
+        implementations
       </li>
       <li>
-        <strong>Use InstanceListToken for discovery</strong> - When you need to find all instances of a type
+        <strong>Use InstanceListToken for discovery</strong> - When you need to find
+        all instances of a type
       </li>
     </ul>
 
     <h2>Token Comparison</h2>
-    
+
     <table>
       <thead>
         <tr>

@@ -1,59 +1,36 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import dependencyResolutionFlowDiagram from '../diagrams/dependency-resolution-flow.mermaid?raw';
-import scopeHierarchyDiagram from '../diagrams/scope-hierarchy.mermaid?raw';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import dependencyResolutionFlowDiagram from "../diagrams/dependency-resolution-flow.mermaid?raw";
+import scopeHierarchyDiagram from "../diagrams/scope-hierarchy.mermaid?raw";
 ---
 
-<BaseLayout title="Container" description="Container - Core container functionality, scopes, and instance management">
+<BaseLayout
+  title="Container"
+  description="Container - Core container functionality, scopes, and instance management"
+>
   <article>
     <h1>Container</h1>
-    
+
     <p>
-      The <code>Container</code> is the central component of the IoC system. It manages the lifecycle of dependencies,
-      resolves them when requested, and maintains scoped instances. Understanding containers is essential for effective
-      dependency injection.
+      The <code>Container</code> is the central component of the IoC system. It manages
+      the lifecycle of dependencies, resolves them when requested, and maintains scoped
+      instances. Understanding containers is essential for effective dependency injection.
     </p>
 
-    <h2>Basic Usage</h2>
-    
-    <p>Creating and using a container is straightforward:</p>
-    
-    <pre><code class="language-typescript">{`import { Container, inject, Registration as R } from 'ts-ioc-container';
-
-// Define your service
-class Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-// Define a class that depends on Logger
-class App {
-  constructor(@inject('ILogger') private logger: Logger) {}
-
-  run() {
-    this.logger.log('Hello, IoC!');
-  }
-}
-
-// Create and configure container
-const container = new Container()
-  .addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
-
-// Resolve and use
-const app = container.resolve(App);
-app.run(); // Output: Hello, IoC!`}</code></pre>
-
     <h2>Scopes</h2>
-    
+
     <p>
-      Scopes allow you to create isolated dependency contexts. This is perfect for request-level isolation in web
-      applications or feature-level separation. Each scope can have tags that control which providers are available.
+      Scopes allow you to create isolated dependency contexts. This is perfect
+      for request-level isolation in web applications or feature-level
+      separation. Each scope can have tags that control which providers are
+      available.
     </p>
 
     <h3>Creating Scopes</h3>
-    
-    <pre><code class="language-typescript">{`import { Container, type IContainer, inject, select } from 'ts-ioc-container';
+
+    <CodeBlock
+      code={`import { Container, type IContainer, inject, select } from 'ts-ioc-container';
 
 class App {
   constructor(@inject(select.scope.current) public scope: IContainer) {}
@@ -62,16 +39,19 @@ class App {
 const root = new Container({ tags: ['root'] });
 const app = root.resolve(App);
 
-expect(app.scope).toBe(root);`}</code></pre>
+expect(app.scope).toBe(root);`}
+      lang="typescript"
+    />
 
     <h3>Tagged Scopes</h3>
-    
+
     <p>
-      Tags allow you to control which providers are available in which scopes. This is useful for environment-specific
-      configurations or feature flags.
+      Tags allow you to control which providers are available in which scopes.
+      This is useful for environment-specific configurations or feature flags.
     </p>
 
-    <pre><code class="language-typescript">{`import {
+    <CodeBlock
+      code={`import {
   Container,
   DependencyNotFoundError,
   register,
@@ -96,53 +76,59 @@ const child = root.createScope({ tags: ['child'] });
 expect(child.resolve('ILogger')).toBeInstanceOf(Logger);
 
 // Logger is NOT available in root scope
-expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}</code></pre>
+expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}
+      lang="typescript"
+    />
 
     <h3>Scope Hierarchy</h3>
-    
+
     <p>
-      Containers can create child scopes, forming a tree structure. Each scope maintains its own provider registry and
-      instance cache, but can fall back to parent scopes for resolution.
+      Containers can create child scopes, forming a tree structure. Each scope
+      maintains its own provider registry and instance cache, but can fall back
+      to parent scopes for resolution.
     </p>
 
     <div class="diagram">
-      <div class="mermaid" set:html={scopeHierarchyDiagram}></div>
+      <div class="mermaid" set:html={scopeHierarchyDiagram} />
     </div>
 
     <h3>Scope Resolution Strategy</h3>
-    
-    <p>
-      When resolving a dependency, the container follows this strategy:
-    </p>
-    
+
+    <p>When resolving a dependency, the container follows this strategy:</p>
+
     <ol>
       <li>Check if provider exists in current scope</li>
-      <li>Check if provider has access in current scope (visibility predicate)</li>
+      <li>
+        Check if provider has access in current scope (visibility predicate)
+      </li>
       <li>If not found, recursively check parent scopes</li>
       <li>If found in parent, check access from current scope</li>
       <li>Throw <code>DependencyNotFoundError</code> if not found anywhere</li>
     </ol>
 
     <h2>Dependency Resolution Flow</h2>
-    
+
     <p>
-      The following sequence diagram illustrates how a dependency is resolved from the container:
+      The following sequence diagram illustrates how a dependency is resolved
+      from the container:
     </p>
 
     <div class="diagram">
-      <div class="mermaid" set:html={dependencyResolutionFlowDiagram}></div>
+      <div class="mermaid" set:html={dependencyResolutionFlowDiagram} />
     </div>
 
     <h2>Instance Management</h2>
-    
+
     <p>
-      The container tracks all instances it creates, allowing you to query and manage them. This is particularly
-      useful for cleanup operations, debugging, or implementing custom lifecycle management.
+      The container tracks all instances it creates, allowing you to query and
+      manage them. This is particularly useful for cleanup operations,
+      debugging, or implementing custom lifecycle management.
     </p>
 
     <h3>Querying Instances</h3>
-    
-    <pre><code class="language-typescript">{`import { Container, inject, Registration as R, select, bindTo, register } from 'ts-ioc-container';
+
+    <CodeBlock
+      code={`import { Container, inject, Registration as R, select, bindTo, register } from 'ts-ioc-container';
 
 @register(bindTo('ILogger'))
 class Logger {}
@@ -165,24 +151,31 @@ const childApp = child.resolve(App);
 expect(childApp.loggers.length).toBe(1);
 
 // Root scope sees all instances (cascading)
-expect(rootApp.loggers.length).toBe(2);`}</code></pre>
+expect(rootApp.loggers.length).toBe(2);`}
+      lang="typescript"
+    />
 
     <h3>Filtering Instances</h3>
-    
-    <pre><code class="language-typescript">{`const isLogger = (instance: unknown) => instance instanceof Logger;
+
+    <CodeBlock
+      code={`const isLogger = (instance: unknown) => instance instanceof Logger;
 
 class App {
   constructor(@inject(select.instances(isLogger)) public loggers: Logger[]) {}
-}`}</code></pre>
+}`}
+      lang="typescript"
+    />
 
     <h2>Disposal</h2>
-    
+
     <p>
-      Proper resource cleanup is essential for preventing memory leaks. The container provides a disposal mechanism
-      that cleans up all resources and prevents further usage.
+      Proper resource cleanup is essential for preventing memory leaks. The
+      container provides a disposal mechanism that cleans up all resources and
+      prevents further usage.
     </p>
 
-    <pre><code class="language-typescript">{`import { Container, ContainerDisposedError, Registration as R, select } from 'ts-ioc-container';
+    <CodeBlock
+      code={`import { Container, ContainerDisposedError, Registration as R, select } from 'ts-ioc-container';
 
 class Logger {}
 
@@ -193,24 +186,30 @@ container.dispose();
 
 // All subsequent operations throw ContainerDisposedError
 expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
-expect(select.instances().resolve(container).length).toBe(0);`}</code></pre>
+expect(select.instances().resolve(container).length).toBe(0);`}
+      lang="typescript"
+    />
 
     <h3>Disposal Behavior</h3>
     <ul>
       <li>Disposes the container and all child scopes</li>
       <li>Unregisters all providers</li>
       <li>Clears all cached instances</li>
-      <li>Throws <code>ContainerDisposedError</code> on any subsequent operations</li>
+      <li>
+        Throws <code>ContainerDisposedError</code> on any subsequent operations
+      </li>
     </ul>
 
     <h2>Lazy Loading</h2>
-    
+
     <p>
-      Lazy loading defers the instantiation of dependencies until they're actually accessed. This can improve startup
-      performance and enable circular dependency resolution.
+      Lazy loading defers the instantiation of dependencies until they're
+      actually accessed. This can improve startup performance and enable
+      circular dependency resolution.
     </p>
 
-    <pre><code class="language-typescript">{`import { Container, inject, register, Registration as R, select as s, singleton } from 'ts-ioc-container';
+    <CodeBlock
+      code={`import { Container, inject, register, Registration as R, select as s, singleton } from 'ts-ioc-container';
 
 @register(singleton())
 class Flag {
@@ -249,13 +248,13 @@ expect(flag.isSet).toBe(false);
 
 // Service is created when method is invoked
 expect(app.run()).toBe('Hello');
-expect(flag.isSet).toBe(true);`}</code></pre>
+expect(flag.isSet).toBe(true);`}
+      lang="typescript"
+    />
 
     <h2>Memory Management</h2>
-    
-    <p>
-      The container provides explicit disposal to prevent memory leaks:
-    </p>
+
+    <p>The container provides explicit disposal to prevent memory leaks:</p>
     <ul>
       <li><code>dispose()</code> clears all providers and instances</li>
       <li>Child scopes are automatically disposed when parent is disposed</li>
@@ -263,36 +262,26 @@ expect(flag.isSet).toBe(true);`}</code></pre>
       <li>Hooks can be used to release external resources</li>
     </ul>
 
-    <h2>Thread Safety</h2>
-    
-    <p>
-      <strong>Note:</strong> JavaScript is single-threaded, so thread safety is not a concern. However, the container
-      is designed to be used in async contexts:
-    </p>
-    <ul>
-      <li>Each async operation should use its own scope</li>
-      <li>Scopes provide isolation between concurrent operations</li>
-      <li>Instance tracking is per-scope, preventing cross-contamination</li>
-    </ul>
-
     <h2>Key Design Decisions</h2>
-    
+
     <h3>1. Separation of Concerns</h3>
-    <p>
-      The architecture separates three distinct responsibilities:
-    </p>
+    <p>The architecture separates three distinct responsibilities:</p>
     <ul>
-      <li><strong>Container</strong>: Manages lifecycle and coordinates resolution</li>
+      <li>
+        <strong>Container</strong>: Manages lifecycle and coordinates resolution
+      </li>
       <li><strong>Provider</strong>: Handles instance creation</li>
       <li><strong>Injector</strong>: Handles dependency injection</li>
     </ul>
     <p>
-      This separation makes each component testable and replaceable independently.
+      This separation makes each component testable and replaceable
+      independently.
     </p>
 
     <h3>2. Scope-Based Isolation</h3>
     <p>
-      Scopes provide isolation while maintaining a parent-child relationship. This design enables:
+      Scopes provide isolation while maintaining a parent-child relationship.
+      This design enables:
     </p>
     <ul>
       <li>Request-level isolation in web applications</li>
@@ -303,7 +292,8 @@ expect(flag.isSet).toBe(true);`}</code></pre>
 
     <h3>3. Tag-Based Scoping</h3>
     <p>
-      Tags provide a flexible way to control provider availability without hardcoding scope relationships. This:
+      Tags provide a flexible way to control provider availability without
+      hardcoding scope relationships. This:
     </p>
     <ul>
       <li>Enables environment-specific configurations</li>
@@ -314,51 +304,72 @@ expect(flag.isSet).toBe(true);`}</code></pre>
 
     <h3>4. Composite Pattern</h3>
     <p>
-      The scope hierarchy uses the Composite pattern, where containers can contain other containers. This allows
-      uniform treatment of individual containers and container hierarchies.
+      The scope hierarchy uses the Composite pattern, where containers can
+      contain other containers. This allows uniform treatment of individual
+      containers and container hierarchies.
     </p>
 
     <h3>5. Null Object Pattern</h3>
     <p>
-      The <code>EmptyContainer</code> class implements the Null Object pattern, providing a safe default parent
-      for root containers. This eliminates null checks throughout the codebase.
+      The <code>EmptyContainer</code> class implements the Null Object pattern, providing
+      a safe default parent for root containers. This eliminates null checks throughout
+      the codebase.
     </p>
 
     <h2>Best Practices</h2>
-    
+
     <ul>
       <li>
-        <strong>Always dispose containers</strong> when they're no longer needed, especially in long-running
-        applications
+        <strong>Always dispose containers</strong> when they're no longer needed,
+        especially in long-running applications
       </li>
       <li>
-        <strong>Use scopes for isolation</strong> - Create request-level scopes in web applications to prevent
-        cross-request contamination
+        <strong>Use scopes for isolation</strong> - Create request-level scopes in
+        web applications to prevent cross-request contamination
       </li>
       <li>
-        <strong>Tag your scopes</strong> - Use meaningful tags to control provider availability and make your code
-        more maintainable
+        <strong>Tag your scopes</strong> - Use meaningful tags to control provider
+        availability and make your code more maintainable
       </li>
       <li>
-        <strong>Query instances carefully</strong> - Be aware of cascading behavior when querying instances across
-        scopes
+        <strong>Query instances carefully</strong> - Be aware of cascading behavior
+        when querying instances across scopes
       </li>
       <li>
-        <strong>Use lazy loading wisely</strong> - Lazy loading can help with performance, but be aware of when
-        dependencies are actually created
+        <strong>Use lazy loading wisely</strong> - Lazy loading can help with performance,
+        but be aware of when dependencies are actually created
       </li>
     </ul>
 
     <h2>API Reference</h2>
-    
+
     <h3>Container Methods</h3>
     <ul>
-      <li><code>resolve&lt;T&gt;(key: DependencyKey | constructor&lt;T&gt;, options?: ResolveOptions): T</code> - Resolve a dependency</li>
-      <li><code>createScope(options?: ScopeOptions): IContainer</code> - Create a child scope</li>
-      <li><code>addRegistration(registration: IRegistration): IContainer</code> - Register a provider</li>
-      <li><code>dispose(): void</code> - Dispose the container and all resources</li>
-      <li><code>getInstances(): Iterable&lt;Instance&gt;</code> - Get all instances created by this container</li>
-      <li><code>hasTag(tag: Tag): boolean</code> - Check if container has a specific tag</li>
+      <li>
+        <code
+          >resolve&lt;T&gt;(key: DependencyKey | constructor&lt;T&gt;, options?:
+          ResolveOptions): T</code
+        > - Resolve a dependency
+      </li>
+      <li>
+        <code>createScope(options?: ScopeOptions): IContainer</code> - Create a child
+        scope
+      </li>
+      <li>
+        <code>addRegistration(registration: IRegistration): IContainer</code> - Register
+        a provider
+      </li>
+      <li>
+        <code>dispose(): void</code> - Dispose the container and all resources
+      </li>
+      <li>
+        <code>getInstances(): Iterable&lt;Instance&gt;</code> - Get all instances
+        created by this container
+      </li>
+      <li>
+        <code>hasTag(tag: Tag): boolean</code> - Check if container has a specific
+        tag
+      </li>
     </ul>
   </article>
 </BaseLayout>

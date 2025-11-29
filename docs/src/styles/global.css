@@ -1,5 +1,7 @@
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
   line-height: 1.6;
   color: #24292e;
   background-color: #ffffff;
@@ -59,7 +61,7 @@ code {
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-size: 0.9em;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   color: #e83e8c;
 }
 
@@ -116,7 +118,8 @@ pre code .class {
   color: #e36209;
 }
 
-ul, ol {
+ul,
+ol {
   margin-bottom: 1rem;
   padding-left: 2rem;
 }
@@ -143,7 +146,8 @@ table {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-th, td {
+th,
+td {
   border: 1px solid #e1e4e8;
   padding: 0.75rem 1rem;
   text-align: left;
@@ -234,7 +238,8 @@ blockquote p:last-child {
 }
 
 /* Lists */
-ul, ol {
+ul,
+ol {
   margin-bottom: 1.5rem;
   padding-left: 2rem;
 }
@@ -267,4 +272,3 @@ a code {
 a:hover code {
   color: #0256cc;
 }
-
