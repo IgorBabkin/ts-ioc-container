@@ -192,7 +192,7 @@ expect(select.instances().resolve(container).length).toBe(0);`}
 
     <h3>Disposal Behavior</h3>
     <ul>
-      <li>Disposes the container and all child scopes</li>
+      <li>Disposes the container only. Not children</li>
       <li>Unregisters all providers</li>
       <li>Clears all cached instances</li>
       <li>

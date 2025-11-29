@@ -155,10 +155,14 @@ const navigation = [
           <nav class="nav flex-column p-3">
             {
               navigation.map((item) => {
+                // Normalize pathnames by removing trailing slashes for comparison
+                const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
+                const currentPath = normalizePath(Astro.url.pathname);
+                const itemPath = normalizePath(item.href);
+                
                 const isActive =
-                  Astro.url.pathname === item.href ||
-                  Astro.url.pathname === item.href + "/" ||
-                  (item.href !== "/ts-ioc-container/" &&
+                  currentPath === itemPath ||
+                  (itemPath !== "/ts-ioc-container" &&
                     Astro.url.pathname.startsWith(item.href));
                 return (
                   <a
