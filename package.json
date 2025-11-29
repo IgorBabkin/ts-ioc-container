@@ -51,6 +51,7 @@
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint lib/**/*.ts  __tests__/**/*.ts scripts/**/*.ts",
     "lint:fix": "npm run lint --fix",
+    "audit": "npm audit",
     "prepare": "husky",
     "release": "npm run build && npm test && npm publish",
     "docs:install": "cd docs && npm install",

@@ -1,7 +1,8 @@
 ---
-import "../styles/global.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "../styles/global.scss";
 import TableOfContents from "../components/TableOfContents.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
 
 interface Heading {
   id: string;
@@ -128,16 +129,105 @@ const navigation = [
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title} | ts-ioc-container</title>
+    <style is:inline>
+      /* Override Bootstrap primary color with fresh sage green */
+      :root {
+        --bs-primary: #87a96b;
+        --bs-primary-rgb: 135, 169, 107;
+      }
+      [data-bs-theme="dark"] {
+        --bs-primary: #a8c585;
+        --bs-primary-rgb: 168, 197, 133;
+      }
+    </style>
+    <!-- Store original Mermaid diagram content before Mermaid processes it -->
+    <script is:inline>
+      // Store diagram content synchronously before any modules load
+      (function() {
+        function storeMermaidContent() {
+          const diagrams = document.querySelectorAll(".mermaid");
+          diagrams.forEach((el) => {
+            if (!el.hasAttribute("data-original-content")) {
+              const content = el.textContent || el.innerHTML.trim();
+              if (content && !el.hasAttribute("data-processed")) {
+                el.setAttribute("data-original-content", content);
+              }
+            }
+          });
+        }
+        
+        // Try to store immediately
+        if (document.readyState !== "loading") {
+          storeMermaidContent();
+        }
+        
+        // Also store when DOM is ready
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", storeMermaidContent);
+        } else {
+          // Use a small delay to catch elements added by Astro
+          setTimeout(storeMermaidContent, 0);
+        }
+      })();
+    </script>
     <script type="module" is:inline>
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.5/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({ startOnLoad: true, theme: "default" });
+
+      // Make mermaid globally accessible
+      window.mermaid = mermaid;
+
+      // Get theme from localStorage or system preference
+      function getInitialTheme() {
+        const stored = localStorage.getItem("theme");
+        if (stored) return stored;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+
+      // Ensure original content is stored before initializing
+      function ensureOriginalContentStored() {
+        document.querySelectorAll(".mermaid").forEach((el) => {
+          if (!el.hasAttribute("data-original-content")) {
+            const content = el.textContent || el.innerHTML.trim();
+            if (content && !el.hasAttribute("data-processed")) {
+              el.setAttribute("data-original-content", content);
+            }
+          }
+        });
+      }
+
+      // Wait for DOM to be ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+          ensureOriginalContentStored();
+        });
+      } else {
+        ensureOriginalContentStored();
+      }
+
+      const initialTheme = getInitialTheme();
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: initialTheme === "dark" ? "dark" : "default"
+      });
+    </script>
+    <script is:inline>
+      // Prevent flash of wrong theme
+      (function() {
+        function getInitialTheme() {
+          const stored = localStorage.getItem("theme");
+          if (stored) return stored;
+          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        const theme = getInitialTheme();
+        document.documentElement.setAttribute("data-bs-theme", theme);
+      })();
     </script>
   </head>
   <body class="layout-body">
     <header class="layout-header">
-      <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <nav class="navbar navbar-expand-lg border-bottom">
         <div class="container-fluid px-4">
-          <a class="navbar-brand text-decoration-none text-dark fw-semibold" href="/ts-ioc-container/">
+          <a class="navbar-brand text-decoration-none fw-semibold" href="/ts-ioc-container/">
             ts-ioc-container
           </a>
           <button
@@ -153,6 +243,7 @@ const navigation = [
           </button>
           <div class="collapse navbar-collapse" id="navbarContent">
             <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
+              <ThemeToggle />
               <img
                 src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square"
                 alt="NPM version"
@@ -207,14 +298,14 @@ const navigation = [
                 href="https://github.com/IgorBabkin/ts-ioc-container"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="btn btn-link text-dark p-1"
+                class="btn btn-link p-1"
                 title="GitHub Repository"
               >
                 <svg
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
-                  fill="#24292e"
+                  fill="currentColor"
                   aria-label="GitHub"
                 >
                   <path
@@ -226,14 +317,14 @@ const navigation = [
                 href="https://www.npmjs.com/package/ts-ioc-container"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="btn btn-link text-dark p-1"
+                class="btn btn-link p-1 npm-link"
                 title="NPM Package"
               >
                 <svg
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
-                  fill="#CB3837"
+                  fill="currentColor"
                   aria-label="NPM"
                 >
                   <path
@@ -255,18 +346,18 @@ const navigation = [
               navigation.map((item) => {
                 // Normalize pathnames by removing trailing slashes for comparison
                 const itemPath = normalizePath(item.href);
-              
+
               const isActive =
                 currentPath === itemPath ||
                 (itemPath !== "/ts-ioc-container" &&
                   Astro.url.pathname.startsWith(item.href));
               return (
-                <a
-                  href={item.href}
-                  class={`nav-link ${isActive ? "active bg-primary text-white" : "text-dark"}`}
-                >
-                  {item.title}
-                </a>
+              <a
+                href={item.href}
+                class={`nav-link ${isActive ? "active bg-primary text-white" : ""}`}
+              >
+                {item.title}
+              </a>
               );
             })
           }
@@ -295,6 +386,33 @@ const navigation = [
       </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>-->
+    <script>
+      // Sync CodeBlock components with ThemeToggle
+      (function () {
+        function syncCodeBlocksWithTheme() {
+          const codeBlocks = document.querySelectorAll("[data-code-block-id]");
+          codeBlocks.forEach((container) => {
+            // If no explicit theme is set, ensure it's "auto" to follow page theme
+            if (!container.getAttribute("data-code-theme")) {
+              container.setAttribute("data-code-theme", "auto");
+            }
+          });
+        }
+
+        // Initialize immediately if DOM is ready
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", syncCodeBlocksWithTheme);
+        } else {
+          syncCodeBlocksWithTheme();
+        }
+
+        // Also sync for dynamically added content
+        if (typeof window !== "undefined") {
+          const observer = new MutationObserver(syncCodeBlocksWithTheme);
+          observer.observe(document.body, { childList: true, subtree: true });
+        }
+      })();
+    </script>
   </body>
 </html>

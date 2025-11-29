@@ -1,0 +1,281 @@
+/* Minimal custom styles - Bootstrap handles most styling */
+
+/* Ensure full width layout */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Custom primary color - Light blue */
+/* Override Bootstrap's primary color variables - must come after Bootstrap import */
+:root {
+  --bs-spacer: 1rem;
+  --bs-primary: #3498db;
+  --bs-primary-rgb: 52, 152, 219;
+  --bs-primary-bg-subtle: #d6eaf8;
+  --bs-primary-border-subtle: #85c1e9;
+  --bs-primary-text-emphasis: #2874a6;
+}
+
+/* Dark theme support */
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --bs-primary: #5dade2;
+  --bs-primary-rgb: 93, 173, 226;
+  --bs-primary-bg-subtle: #1a2a3a;
+  --bs-primary-border-subtle: #3d5a7a;
+  --bs-primary-text-emphasis: #6bb6ff;
+}
+
+/* Body background for dark theme */
+[data-bs-theme="dark"] body {
+  background-color: var(--bs-dark);
+  color: var(--bs-body-color);
+}
+
+/* Layout structure */
+.layout-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.layout-header {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .layout-header {
+  background: var(--bs-dark);
+  border-bottom-color: var(--bs-border-color-translucent);
+}
+
+.layout-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.layout-sidebar-left {
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+  border-right: 1px solid var(--bs-border-color);
+  background-color: var(--bs-gray-100);
+  position: sticky;
+  top: 56px; /* Header height */
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+[data-bs-theme="dark"] .layout-sidebar-left {
+  background-color: var(--bs-dark);
+  border-right-color: var(--bs-border-color-translucent);
+}
+
+.layout-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  height: calc(100vh - 56px);
+}
+
+.layout-sidebar-right {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  border-left: 1px solid var(--bs-border-color);
+  background-color: var(--bs-gray-50);
+  position: sticky;
+  top: 56px; /* Header height */
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+[data-bs-theme="dark"] .layout-sidebar-right {
+  background-color: var(--bs-dark);
+  border-left-color: var(--bs-border-color-translucent);
+}
+
+.layout-footer {
+  background-color: var(--bs-gray-100);
+  border-top: 1px solid var(--bs-border-color);
+  padding: 1.5rem 0;
+  margin-top: auto;
+}
+
+[data-bs-theme="dark"] .layout-footer {
+  background-color: var(--bs-dark);
+  border-top-color: var(--bs-border-color-translucent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .layout-sidebar-right {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .layout-sidebar-left {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    position: relative;
+    top: 0;
+    height: auto;
+    max-height: 300px;
+  }
+
+  .layout-main {
+    height: auto;
+    min-height: calc(100vh - 56px);
+  }
+}
+
+/* Diagram containers using Bootstrap card styling */
+.diagram {
+  display: block;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  background-color: var(--bs-gray-100);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+}
+
+[data-bs-theme="dark"] .diagram {
+  background-color: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color-translucent);
+}
+
+.diagram .mermaid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Inline code styling - Bootstrap compatible */
+code:not(pre code) {
+  background-color: var(--bs-gray-100);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  color: #d97706;
+}
+
+[data-bs-theme="dark"] code:not(pre code) {
+  background-color: var(--bs-gray-800);
+  color: #f59e0b;
+}
+
+/* Article content spacing */
+article h1 {
+  border-bottom: 2px solid var(--bs-border-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+[data-bs-theme="dark"] article h1 {
+  border-bottom-color: var(--bs-border-color-translucent);
+}
+
+article h2 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--bs-primary);
+}
+
+article h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Cards in dark theme */
+[data-bs-theme="dark"] .card {
+  background-color: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color-translucent);
+  color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .card-header {
+  background-color: var(--bs-tertiary-bg);
+  border-bottom-color: var(--bs-border-color-translucent);
+}
+
+/* Navbar and navigation styles */
+[data-bs-theme="dark"] .navbar {
+  background-color: var(--bs-dark) !important;
+  border-bottom-color: var(--bs-border-color-translucent) !important;
+}
+
+[data-bs-theme="dark"] .navbar-brand {
+  color: var(--bs-body-color) !important;
+}
+
+/* Navigation links with rounded borders */
+.layout-sidebar-left .nav-link {
+  border-radius: 0.75rem;
+  margin: calc(var(--bs-spacer) * 0.25) 0;
+  transition: all 0.2s ease;
+}
+
+.layout-sidebar-left .nav-link:hover:not(.active) {
+  background-color: var(--bs-gray-200);
+}
+
+[data-bs-theme="dark"] .layout-sidebar-left .nav-link:hover:not(.active) {
+  background-color: var(--bs-gray-800);
+}
+
+[data-bs-theme="dark"] .nav-link:not(.active) {
+  color: var(--bs-body-color) !important;
+}
+
+[data-bs-theme="dark"] .nav-link:hover:not(.active) {
+  color: var(--bs-primary) !important;
+}
+
+/* SVG icon colors - NPM should stay red-ish in dark mode */
+[data-bs-theme="dark"] .npm-link svg {
+  fill: #cb3837;
+}
+
+/* Link colors - use primary color */
+a {
+  color: var(--bs-primary);
+}
+
+a:hover {
+  color: var(--bs-primary-text-emphasis);
+}
+
+[data-bs-theme="dark"] a {
+  color: var(--bs-primary);
+}
+
+[data-bs-theme="dark"] a:hover {
+  color: var(--bs-primary-text-emphasis);
+}
+
+/* Button link colors */
+[data-bs-theme="dark"] .btn-link {
+  color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .btn-link:hover {
+  color: var(--bs-primary);
+}
+

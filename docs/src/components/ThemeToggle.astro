@@ -1,0 +1,173 @@
+---
+---
+
+<button
+  id="theme-toggle"
+  class="btn btn-link p-1"
+  aria-label="Toggle dark mode"
+  title="Toggle dark mode"
+  type="button"
+>
+  <svg
+    id="theme-icon-light"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    style="display: none;"
+  >
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+  <svg
+    id="theme-icon-dark"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    style="display: none;"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+</button>
+
+<script is:inline>
+  (function () {
+    const THEME_KEY = "theme";
+    const THEME_DARK = "dark";
+    const THEME_LIGHT = "light";
+
+    function getStoredTheme() {
+      return localStorage.getItem(THEME_KEY);
+    }
+
+    function setStoredTheme(theme) {
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    function getPreferredTheme() {
+      const stored = getStoredTheme();
+      if (stored) {
+        return stored;
+      }
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? THEME_DARK
+        : THEME_LIGHT;
+    }
+
+    function setTheme(theme) {
+      if (theme === THEME_DARK) {
+        document.documentElement.setAttribute("data-bs-theme", THEME_DARK);
+        document.getElementById("theme-icon-light")?.style.setProperty("display", "none");
+        document.getElementById("theme-icon-dark")?.style.setProperty("display", "block");
+      } else {
+        document.documentElement.setAttribute("data-bs-theme", THEME_LIGHT);
+        document.getElementById("theme-icon-light")?.style.setProperty("display", "block");
+        document.getElementById("theme-icon-dark")?.style.setProperty("display", "none");
+      }
+      setStoredTheme(theme);
+      
+      // Update Mermaid theme and re-render diagrams
+      if (typeof window.mermaid !== "undefined") {
+        const mermaidTheme = theme === THEME_DARK ? "dark" : "default";
+        
+        // Update Mermaid configuration
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: mermaidTheme,
+        });
+        
+        // Re-render all mermaid diagrams with new theme
+        document.querySelectorAll(".mermaid").forEach((el) => {
+          // Get original content from data attribute, or try to extract from current content
+          let originalContent = el.getAttribute("data-original-content");
+          
+          // If no stored content, try to get it from the element
+          if (!originalContent) {
+            // If already processed, we need to restore from a backup or skip
+            // For now, try to get any text that might be there
+            originalContent = el.textContent?.trim() || "";
+          }
+          
+          if (originalContent) {
+            // Store original content if not already stored
+            if (!el.hasAttribute("data-original-content")) {
+              el.setAttribute("data-original-content", originalContent);
+            }
+            
+            // Clear the processed SVG content and restore original
+            el.innerHTML = originalContent;
+            el.removeAttribute("data-processed");
+            el.removeAttribute("data-mermaid");
+            
+            // Re-render with new theme
+            try {
+              window.mermaid.run({
+                nodes: [el],
+              });
+            } catch (error) {
+              console.warn("Error re-rendering Mermaid diagram:", error);
+            }
+          }
+        });
+      }
+    }
+
+    function initTheme() {
+      const preferredTheme = getPreferredTheme();
+      setTheme(preferredTheme);
+
+      // Watch for system theme changes
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!getStoredTheme()) {
+            setTheme(e.matches ? THEME_DARK : THEME_LIGHT);
+          }
+        });
+
+      // Theme toggle button
+      const toggleButton = document.getElementById("theme-toggle");
+      if (toggleButton) {
+        toggleButton.addEventListener("click", () => {
+          const currentTheme = document.documentElement.getAttribute("data-bs-theme");
+          const newTheme = currentTheme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
+          setTheme(newTheme);
+        });
+      }
+    }
+
+    // Initialize immediately to prevent flash
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initTheme);
+    } else {
+      initTheme();
+    }
+  })();
+</script>
+
+<style>
+  #theme-toggle {
+    transition: color 0.2s ease;
+  }
+  
+  #theme-toggle:hover {
+    opacity: 0.8;
+  }
+</style>
+
