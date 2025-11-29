@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import dependencyResolutionFlowDiagram from '../diagrams/dependency-resolution-flow.mermaid?raw';
+import scopeHierarchyDiagram from '../diagrams/scope-hierarchy.mermaid?raw';
 ---
 
 <BaseLayout title="Container" description="Container - Core container functionality, scopes, and instance management">
@@ -11,15 +13,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       resolves them when requested, and maintains scoped instances. Understanding containers is essential for effective
       dependency injection.
     </p>
-
-    <h2>Core Concepts</h2>
-    
-    <p>The container is built on three fundamental concepts:</p>
-    <ul>
-      <li><strong>Provider</strong>: A factory that creates dependency instances</li>
-      <li><strong>Injector</strong>: Describes how dependencies are injected into constructors</li>
-      <li><strong>Registration</strong>: Connects providers to the container with keys and configuration</li>
-    </ul>
 
     <h2>Basic Usage</h2>
     
@@ -105,12 +98,40 @@ expect(child.resolve('ILogger')).toBeInstanceOf(Logger);
 // Logger is NOT available in root scope
 expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}</code></pre>
 
-    <h3>Scope Resolution</h3>
+    <h3>Scope Hierarchy</h3>
     
     <p>
-      When a dependency isn't found in the current scope, the container automatically searches parent scopes. This
-      allows you to have global dependencies accessible from any scope.
+      Containers can create child scopes, forming a tree structure. Each scope maintains its own provider registry and
+      instance cache, but can fall back to parent scopes for resolution.
     </p>
+
+    <div class="diagram">
+      <div class="mermaid" set:html={scopeHierarchyDiagram}></div>
+    </div>
+
+    <h3>Scope Resolution Strategy</h3>
+    
+    <p>
+      When resolving a dependency, the container follows this strategy:
+    </p>
+    
+    <ol>
+      <li>Check if provider exists in current scope</li>
+      <li>Check if provider has access in current scope (visibility predicate)</li>
+      <li>If not found, recursively check parent scopes</li>
+      <li>If found in parent, check access from current scope</li>
+      <li>Throw <code>DependencyNotFoundError</code> if not found anywhere</li>
+    </ol>
+
+    <h2>Dependency Resolution Flow</h2>
+    
+    <p>
+      The following sequence diagram illustrates how a dependency is resolved from the container:
+    </p>
+
+    <div class="diagram">
+      <div class="mermaid" set:html={dependencyResolutionFlowDiagram}></div>
+    </div>
 
     <h2>Instance Management</h2>
     
@@ -230,6 +251,79 @@ expect(flag.isSet).toBe(false);
 expect(app.run()).toBe('Hello');
 expect(flag.isSet).toBe(true);`}</code></pre>
 
+    <h2>Memory Management</h2>
+    
+    <p>
+      The container provides explicit disposal to prevent memory leaks:
+    </p>
+    <ul>
+      <li><code>dispose()</code> clears all providers and instances</li>
+      <li>Child scopes are automatically disposed when parent is disposed</li>
+      <li>Instance tracking allows manual cleanup if needed</li>
+      <li>Hooks can be used to release external resources</li>
+    </ul>
+
+    <h2>Thread Safety</h2>
+    
+    <p>
+      <strong>Note:</strong> JavaScript is single-threaded, so thread safety is not a concern. However, the container
+      is designed to be used in async contexts:
+    </p>
+    <ul>
+      <li>Each async operation should use its own scope</li>
+      <li>Scopes provide isolation between concurrent operations</li>
+      <li>Instance tracking is per-scope, preventing cross-contamination</li>
+    </ul>
+
+    <h2>Key Design Decisions</h2>
+    
+    <h3>1. Separation of Concerns</h3>
+    <p>
+      The architecture separates three distinct responsibilities:
+    </p>
+    <ul>
+      <li><strong>Container</strong>: Manages lifecycle and coordinates resolution</li>
+      <li><strong>Provider</strong>: Handles instance creation</li>
+      <li><strong>Injector</strong>: Handles dependency injection</li>
+    </ul>
+    <p>
+      This separation makes each component testable and replaceable independently.
+    </p>
+
+    <h3>2. Scope-Based Isolation</h3>
+    <p>
+      Scopes provide isolation while maintaining a parent-child relationship. This design enables:
+    </p>
+    <ul>
+      <li>Request-level isolation in web applications</li>
+      <li>Feature-level separation</li>
+      <li>Hierarchical dependency resolution</li>
+      <li>Per-scope singleton instances</li>
+    </ul>
+
+    <h3>3. Tag-Based Scoping</h3>
+    <p>
+      Tags provide a flexible way to control provider availability without hardcoding scope relationships. This:
+    </p>
+    <ul>
+      <li>Enables environment-specific configurations</li>
+      <li>Supports feature flags</li>
+      <li>Allows dynamic scope matching</li>
+      <li>Makes testing easier</li>
+    </ul>
+
+    <h3>4. Composite Pattern</h3>
+    <p>
+      The scope hierarchy uses the Composite pattern, where containers can contain other containers. This allows
+      uniform treatment of individual containers and container hierarchies.
+    </p>
+
+    <h3>5. Null Object Pattern</h3>
+    <p>
+      The <code>EmptyContainer</code> class implements the Null Object pattern, providing a safe default parent
+      for root containers. This eliminates null checks throughout the codebase.
+    </p>
+
     <h2>Best Practices</h2>
     
     <ul>
@@ -268,3 +362,34 @@ expect(flag.isSet).toBe(true);`}</code></pre>
     </ul>
   </article>
 </BaseLayout>
+
+<style>
+  .diagram {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    overflow-x: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .diagram .mermaid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+
+  .diagram pre {
+    margin: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  .diagram code {
+    background: transparent;
+    padding: 0;
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import registrationFlowDiagram from '../diagrams/registration-flow.mermaid?raw';
 ---
 
 <BaseLayout title="Registration" description="Registration - Registering providers with keys and scopes">
@@ -10,6 +11,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       Registrations connect providers to the container with keys and configuration. They can be created using
       decorators or the fluent API, providing flexibility in how you organize your dependency configuration.
     </p>
+
+    <h2>Registration Flow</h2>
+    
+    <p>
+      The following diagram shows how registrations are processed and applied to containers:
+    </p>
+
+    <div class="diagram">
+      <div class="mermaid" set:html={registrationFlowDiagram}></div>
+    </div>
 
     <h2>Registration Methods</h2>
     
@@ -359,3 +370,34 @@ function createContainer(isProduction: boolean) {
     </ol>
   </article>
 </BaseLayout>
+
+<style>
+  .diagram {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    overflow-x: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .diagram .mermaid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+
+  .diagram pre {
+    margin: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  .diagram code {
+    background: transparent;
+    padding: 0;
+  }
+</style>

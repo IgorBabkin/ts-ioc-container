@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import providerPipelineDiagram from '../diagrams/provider-pipeline.mermaid?raw';
 ---
 
 <BaseLayout title="Provider" description="Provider - Dependency factories with singleton, args, visibility, alias, and decorator features">
@@ -10,6 +11,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       Providers are factories that create dependency instances. They can be configured with various features like
       singletons, argument binding, visibility control, aliases, and decorators. Understanding providers is key to
       mastering the IoC container.
+    </p>
+
+    <h2>Factory Pattern</h2>
+    <p>
+      Providers implement the Factory pattern, encapsulating the creation logic of dependencies. This allows for
+      complex instantiation logic while keeping the container simple.
     </p>
 
     <h2>Provider Types</h2>
@@ -383,7 +390,45 @@ expect(isLoggerCreated).toBe(true);`}</code></pre>
     <h2>Provider Pipeline</h2>
     
     <p>
-      Providers can be composed using the <code>pipe</code> method, allowing you to chain multiple features:
+      Providers can be composed using the pipeline pattern. Each transformation wraps the provider with additional
+      functionality:
+    </p>
+
+    <div class="diagram">
+      <div class="mermaid" set:html={providerPipelineDiagram}></div>
+    </div>
+
+    <h3>Provider Composition Example</h3>
+    
+    <pre><code class="language-typescript">{`const provider = Provider.fromClass(Logger)
+  .pipe(args('/config.json'))        // 1. Bind arguments
+  .pipe(singleton())                // 2. Cache instances
+  .pipe(scopeAccess(predicate))     // 3. Control visibility
+  .pipe(lazy());                    // 4. Defer creation
+
+// Each pipe wraps the previous provider
+// Final provider: Lazy(Visibility(Singleton(Args(Base))))
+`}</code></pre>
+
+    <h3>Decorator Pattern</h3>
+    <p>
+      The provider pipeline uses the Decorator pattern, allowing features to be added incrementally without
+      modifying the base provider. Each pipe operation wraps the provider with additional functionality.
+    </p>
+
+    <h3>Composable Providers</h3>
+    <p>
+      The pipeline pattern allows providers to be composed from smaller pieces. This design:
+    </p>
+    <ul>
+      <li>Keeps the base provider simple</li>
+      <li>Allows features to be added incrementally</li>
+      <li>Makes the system extensible</li>
+      <li>Follows the Open/Closed Principle</li>
+    </ul>
+
+    <p>
+      You can also use the <code>pipe</code> method in registrations:
     </p>
 
     <pre><code class="language-typescript">{`const container = new Container()
@@ -393,6 +438,47 @@ expect(isLoggerCreated).toBe(true);`}</code></pre>
       .pipe(singleton())
       .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
   );`}</code></pre>
+
+    <h2>Performance Considerations</h2>
+    
+    <h3>Singleton Caching</h3>
+    <p>
+      Singleton providers cache instances per scope, avoiding unnecessary object creation. The cache is implemented
+      using a <code>Map</code> for O(1) lookup performance.
+    </p>
+
+    <h3>Lazy Loading</h3>
+    <p>
+      Lazy providers use JavaScript proxies to defer instantiation until access. This improves startup time by
+      avoiding eager initialization of unused dependencies.
+    </p>
+
+    <h3>Provider Lookup</h3>
+    <p>
+      Providers are stored in a <code>Map</code> keyed by <code>DependencyKey</code>, providing O(1) lookup
+      performance. Alias resolution uses a separate <code>AliasMap</code> for efficient multi-key lookups.
+    </p>
+
+    <h2>Extension Points</h2>
+    
+    <h3>Custom Providers</h3>
+    <p>
+      Implement <code>IProvider</code> or extend <code>ProviderDecorator</code> to create custom providers:
+    </p>
+    <pre><code class="language-typescript">{`class CustomProvider extends ProviderDecorator {
+  resolve(container: IContainer, options: ProviderOptions): T {
+    // Your custom resolution logic
+  }
+}`}</code></pre>
+
+    <h3>Custom Hooks</h3>
+    <p>
+      Create custom hooks by implementing the hook system:
+    </p>
+    <pre><code class="language-typescript">{`const customHookRunner = new HooksRunner('customHook');
+container.addOnConstructHook((instance, scope) => {
+  customHookRunner.execute(instance, { scope });
+});`}</code></pre>
 
     <h2>Best Practices</h2>
     
@@ -419,3 +505,34 @@ expect(isLoggerCreated).toBe(true);`}</code></pre>
     </ul>
   </article>
 </BaseLayout>
+
+<style>
+  .diagram {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    overflow-x: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .diagram .mermaid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+
+  .diagram pre {
+    margin: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  .diagram code {
+    background: transparent;
+    padding: 0;
+  }
+</style>
