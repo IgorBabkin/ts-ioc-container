@@ -2,6 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import registrationFlowDiagram from "../diagrams/registration-flow.mermaid?raw";
+import registrationSpecCode from "../../../__tests__/readme/registration.spec.ts?raw";
+import containerModuleSpecCode from "../../../__tests__/readme/containerModule.spec?raw";
 ---
 
 <BaseLayout
@@ -52,53 +54,7 @@ import registrationFlowDiagram from "../diagrams/registration-flow.mermaid?raw";
       classes. This is the most convenient approach for most use cases.
     </p>
 
-    <h3>Basic Registration</h3>
-
-    <CodeBlock code={`import { bindTo, Container, register, Registration as R } from 'ts-ioc-container';
-
-@register(bindTo('ILogger'))
-class Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger));
-
-const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
-
-    <h3>With Multiple Features</h3>
-
-    <CodeBlock code={`import {
-  bindTo,
-  Container,
-  register,
-  Registration as R,
-  scope,
-  singleton,
-} from 'ts-ioc-container';
-
-@register(
-  bindTo('ILogger'),
-  scope((s) => s.hasTag('root')),
-  singleton()
-)
-class Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-const root = new Container({ tags: ['root'] })
-  .addRegistration(R.fromClass(Logger));
-
-const logger1 = root.resolve('ILogger');
-const logger2 = root.resolve('ILogger');
-
-// Same instance (singleton)
-expect(logger1).toBe(logger2);`} lang="typescript" />
+    <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
     <h2 id="fluent-api-registration">Fluent API Registration</h2>
 
@@ -107,42 +63,7 @@ expect(logger1).toBe(logger2);`} lang="typescript" />
       registration or want to avoid decorators.
     </p>
 
-    <h3>Class Registration</h3>
-
-    <CodeBlock code={`import { Container, Registration as R } from 'ts-ioc-container';
-
-class Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
-
-const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
-
-    <h3>Value Registration</h3>
-
-    <CodeBlock code={`const container = new Container()
-  .addRegistration(R.fromValue('Hello World').bindToKey('greeting'));
-
-const greeting = container.resolve('greeting');
-expect(greeting).toBe('Hello World');`} lang="typescript" />
-
-    <h3>Factory Registration</h3>
-
-    <CodeBlock code={`const container = new Container()
-  .addRegistration(
-    R.fromFn((container) => {
-      const config = container.resolve('IConfig');
-      return new Logger(config.logLevel);
-    }).bindToKey('ILogger')
-  );
-
-const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
+    <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
     <h2 id="keys">Keys</h2>
 
@@ -152,75 +73,7 @@ expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
       dependency management.
     </p>
 
-    <h3>Default Keys</h3>
-
-    <p>
-      When registering a class without specifying a key, the class name is used
-      as the default key:
-    </p>
-
-    <CodeBlock code={`class FileLogger {}
-
-const container = new Container()
-  .addRegistration(R.fromClass(FileLogger));
-
-// Resolve using class name
-const logger = container.resolve('FileLogger');
-expect(logger).toBeInstanceOf(FileLogger);`} lang="typescript" />
-
-    <h3>Explicit Keys</h3>
-
-    <p>
-      You can specify explicit keys using <code>bindToKey()</code>:
-    </p>
-
-    <CodeBlock code={`const container = new Container()
-  .addRegistration(R.fromClass(FileLogger).bindToKey('ILogger'));
-
-const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(FileLogger);`} lang="typescript" />
-
-    <h3>Multiple Keys</h3>
-
-    <p>
-      You can bind a registration to multiple keys using <code>bindTo()</code>:
-    </p>
-
-    <CodeBlock code={`import { bindTo, Container, register, Registration as R, select as s } from 'ts-ioc-container';
-
-@register(
-  bindTo('ILogger'),
-  bindTo(s.alias('Logger'))
-)
-class Logger {}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger));
-
-// Resolve by key
-const logger1 = container.resolve('ILogger');
-
-// Resolve by alias
-const logger2 = container.resolveOneByAlias('Logger');
-
-expect(logger1).toBeInstanceOf(Logger);
-expect(logger2).toBeInstanceOf(Logger);`} lang="typescript" />
-
-    <h3>Key Requirements</h3>
-
-    <p>
-      When registering a value or factory, you <strong>must</strong> provide a key:
-    </p>
-
-    <CodeBlock code={`import { DependencyMissingKeyError } from 'ts-ioc-container';
-
-// This will throw DependencyMissingKeyError
-expect(() => {
-  container.addRegistration(R.fromValue('Hello'));
-}).toThrow(DependencyMissingKeyError);
-
-// This is correct
-container.addRegistration(R.fromValue('Hello').bindToKey('greeting'));`} lang="typescript" />
+    <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
     <h2 id="scope-registration">Scope Registration</h2>
 
@@ -230,56 +83,7 @@ container.addRegistration(R.fromValue('Hello').bindToKey('greeting'));`} lang="t
       environments or contexts.
     </p>
 
-    <h3>Basic Scope Predicate</h3>
-
-    <CodeBlock code={`import {
-  bindTo,
-  Container,
-  register,
-  Registration as R,
-  scope,
-  singleton,
-} from 'ts-ioc-container';
-
-@register(
-  bindTo('ILogger'),
-  scope((s) => s.hasTag('root')),
-  singleton()
-)
-class Logger {}
-
-const root = new Container({ tags: ['root'] })
-  .addRegistration(R.fromClass(Logger));
-
-// Available in root scope
-expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
-
-// Not available in child scope
-const child = root.createScope({ tags: ['child'] });
-expect(() => child.resolve('ILogger')).toThrow();`} lang="typescript" />
-
-    <h3>Multiple Scope Predicates</h3>
-
-    <p>You can combine multiple scope predicates:</p>
-
-    <CodeBlock code={`@register(
-  bindTo('ILogger'),
-  scope(
-    (s) => s.hasTag('root'),
-    (s, prev) => prev && s.hasTag('admin')
-  ),
-  singleton()
-)
-class Logger {}`} lang="typescript" />
-
-    <h3>Fluent API Scope</h3>
-
-    <CodeBlock code={`const container = new Container()
-  .addRegistration(
-    R.fromClass(Logger)
-      .bindToKey('ILogger')
-      .when((s) => s.hasTag('root'))
-  );`} lang="typescript" />
+    <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
     <h2 id="registration-pipeline">Registration Pipeline</h2>
 
@@ -307,26 +111,7 @@ const container = new Container()
       organize and compose your dependency configuration.
     </p>
 
-    <h3>Creating a Module</h3>
-
-    <CodeBlock code={`import {
-  type IContainer,
-  type IContainerModule,
-  Registration as R,
-} from 'ts-ioc-container';
-
-class LoggerModule implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
-    container.addRegistration(R.fromClass(FileLogger).bindToKey('IFileLogger'));
-  }
-}
-
-const container = new Container()
-  .useModule(new LoggerModule());
-
-const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`} lang="typescript" />
+    <CodeBlock code={containerModuleSpecCode} lang="typescript" filename="__tests__/readme/containerModule.spec.ts" />
 
     <h2 id="best-practices">Best Practices</h2>
 

@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import architectureDiagram from "../diagrams/architecture-overview.mermaid?raw";
 import classDiagram from "../diagrams/class-diagram.mermaid?raw";
+import basicSpecCode from "../../../__tests__/readme/basic.spec.ts?raw";
 ---
 
 <BaseLayout
@@ -51,32 +52,9 @@ import classDiagram from "../diagrams/class-diagram.mermaid?raw";
     <p>Creating and using a container:</p>
 
     <CodeBlock
-      code={`import { Container, inject, Registration as R } from 'ts-ioc-container';
-
-// Define your service
-class Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-// Define a class that depends on Logger
-class App {
-  constructor(@inject('ILogger') private logger: Logger) {}
-
-  run() {
-    this.logger.log('Hello, IoC!');
-  }
-}
-
-// Create and configure container
-const container = new Container()
-  .addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
-
-// Resolve and use
-const app = container.resolve(App);
-app.run(); // Output: Hello, IoC!`}
+      code={basicSpecCode}
       lang="typescript"
+      filename="__tests__/readme/basic.spec.ts"
     />
 
     <h2 id="documentation">Documentation</h2>

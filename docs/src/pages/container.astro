@@ -3,6 +3,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import dependencyResolutionFlowDiagram from "../diagrams/dependency-resolution-flow.mermaid?raw";
 import scopeHierarchyDiagram from "../diagrams/scope-hierarchy.mermaid?raw";
+import scopesSpecCode from "../../../__tests__/readme/scopes.spec.ts?raw";
+import basicSpecCode from "../../../__tests__/readme/basic.spec.ts?raw";
+import instancesSpecCode from "../../../__tests__/readme/instances.spec.ts?raw";
+import filteringInstancesSpecCode from "../../../__tests__/readme/filteringInstances.spec.ts?raw";
+import disposingSpecCode from "../../../__tests__/readme/disposing.spec.ts?raw";
+import lazySpecCode from "../../../__tests__/readme/lazy.spec.ts?raw";
+import containerModuleSpecCode from "../../../__tests__/readme/containerModule.spec.ts?raw";
 ---
 
 <BaseLayout
@@ -27,22 +34,6 @@ import scopeHierarchyDiagram from "../diagrams/scope-hierarchy.mermaid?raw";
       available.
     </p>
 
-    <h3>Creating Scopes</h3>
-
-    <CodeBlock
-      code={`import { Container, type IContainer, inject, select } from 'ts-ioc-container';
-
-class App {
-  constructor(@inject(select.scope.current) public scope: IContainer) {}
-}
-
-const root = new Container({ tags: ['root'] });
-const app = root.resolve(App);
-
-expect(app.scope).toBe(root);`}
-      lang="typescript"
-    />
-
     <h3>Tagged Scopes</h3>
 
     <p>
@@ -51,33 +42,9 @@ expect(app.scope).toBe(root);`}
     </p>
 
     <CodeBlock
-      code={`import {
-  Container,
-  DependencyNotFoundError,
-  register,
-  Registration as R,
-  scope,
-  singleton,
-  bindTo,
-} from 'ts-ioc-container';
-
-@register(
-  bindTo('ILogger'),
-  scope((s) => s.hasTag('child')),
-  singleton()
-)
-class Logger {}
-
-const root = new Container({ tags: ['root'] })
-  .addRegistration(R.fromClass(Logger));
-const child = root.createScope({ tags: ['child'] });
-
-// Logger is available in child scope
-expect(child.resolve('ILogger')).toBeInstanceOf(Logger);
-
-// Logger is NOT available in root scope
-expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}
+      code={scopesSpecCode}
       lang="typescript"
+      filename="__tests__/readme/scopes.spec.ts"
     />
 
     <h3>Scope Hierarchy</h3>
@@ -128,42 +95,17 @@ expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);`}
     <h3>Querying Instances</h3>
 
     <CodeBlock
-      code={`import { Container, inject, Registration as R, select, bindTo, register } from 'ts-ioc-container';
-
-@register(bindTo('ILogger'))
-class Logger {}
-
-class App {
-  constructor(@inject(select.instances()) public loggers: Logger[]) {}
-}
-
-const root = new Container({ tags: ['root'] })
-  .addRegistration(R.fromClass(Logger));
-const child = root.createScope({ tags: ['child'] });
-
-root.resolve('ILogger');
-child.resolve('ILogger');
-
-const rootApp = root.resolve(App);
-const childApp = child.resolve(App);
-
-// Child scope sees only its own instance
-expect(childApp.loggers.length).toBe(1);
-
-// Root scope sees all instances (cascading)
-expect(rootApp.loggers.length).toBe(2);`}
+      code={instancesSpecCode}
       lang="typescript"
+      filename="__tests__/readme/instances.spec.ts"
     />
 
     <h3>Filtering Instances</h3>
 
     <CodeBlock
-      code={`const isLogger = (instance: unknown) => instance instanceof Logger;
-
-class App {
-  constructor(@inject(select.instances(isLogger)) public loggers: Logger[]) {}
-}`}
+      code={filteringInstancesSpecCode}
       lang="typescript"
+      filename="__tests__/readme/filteringInstances.spec.ts"
     />
 
     <h2 id="disposal">Disposal</h2>
@@ -175,19 +117,9 @@ class App {
     </p>
 
     <CodeBlock
-      code={`import { Container, ContainerDisposedError, Registration as R, select } from 'ts-ioc-container';
-
-class Logger {}
-
-const container = new Container({ tags: ['root'] })
-  .addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
-
-container.dispose();
-
-// All subsequent operations throw ContainerDisposedError
-expect(() => container.resolve('ILogger')).toThrow(ContainerDisposedError);
-expect(select.instances().resolve(container).length).toBe(0);`}
+      code={disposingSpecCode}
       lang="typescript"
+      filename="__tests__/readme/disposing.spec.ts"
     />
 
     <h3>Disposal Behavior</h3>
@@ -209,47 +141,9 @@ expect(select.instances().resolve(container).length).toBe(0);`}
     </p>
 
     <CodeBlock
-      code={`import { Container, inject, register, Registration as R, select as s, singleton } from 'ts-ioc-container';
-
-@register(singleton())
-class Flag {
-  isSet = false;
-  set() {
-    this.isSet = true;
-  }
-}
-
-class Service {
-  name = 'Service';
-  constructor(@inject('Flag') private flag: Flag) {
-    this.flag.set();
-  }
-  greet() {
-    return 'Hello';
-  }
-}
-
-class App {
-  constructor(@inject(s.token('Service').lazy()) public service: Service) {}
-  run() {
-    return this.service.greet();
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Flag))
-  .addRegistration(R.fromClass(Service));
-
-const app = container.resolve(App);
-const flag = container.resolve<Flag>('Flag');
-
-// Service is not created yet
-expect(flag.isSet).toBe(false);
-
-// Service is created when method is invoked
-expect(app.run()).toBe('Hello');
-expect(flag.isSet).toBe(true);`}
+      code={lazySpecCode}
       lang="typescript"
+      filename="__tests__/readme/lazy.spec.ts"
     />
 
     <h2 id="memory-management">Memory Management</h2>
@@ -278,64 +172,9 @@ expect(flag.isSet).toBe(true);`}
     </p>
 
     <CodeBlock
-      code={`import {
-  type IContainer,
-  type IContainerModule,
-  Container,
-  Registration as R,
-} from 'ts-ioc-container';
-
-class LoggerModule implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
-    container.addRegistration(R.fromClass(FileLogger).bindToKey('IFileLogger'));
-  }
-}
-
-const container = new Container().useModule(new LoggerModule());
-
-const logger = container.resolve('ILogger');
-expect(logger).toBeInstanceOf(Logger);`}
+      code={containerModuleSpecCode}
       lang="typescript"
-    />
-
-    <h3>Environment-Specific Modules</h3>
-
-    <p>
-      You can create different modules for different environments (development,
-      staging, production) and conditionally apply them when creating containers:
-    </p>
-
-    <CodeBlock
-      code={`import {
-  type IContainer,
-  type IContainerModule,
-  Container,
-  Registration as R,
-} from 'ts-ioc-container';
-
-class ProductionModule implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.addRegistration(
-      R.fromClass(ProductionLogger).bindToKey('ILogger')
-    );
-  }
-}
-
-class DevelopmentModule implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.addRegistration(
-      R.fromClass(DevelopmentLogger).bindToKey('ILogger')
-    );
-  }
-}
-
-function createContainer(isProduction: boolean) {
-  return new Container().useModule(
-    isProduction ? new ProductionModule() : new DevelopmentModule()
-  );
-}`}
-      lang="typescript"
+      filename="__tests__/readme/containerModule.spec.ts"
     />
 
     <h3>Use Cases</h3>

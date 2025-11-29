@@ -2,6 +2,11 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import injectionStrategiesDiagram from "../diagrams/injection-strategies.mermaid?raw";
+import metadataInjectorSpecCode from "../../../__tests__/readme/metadataInjector.spec.ts?raw";
+import injectPropSpecCode from "../../../__tests__/readme/injectProp.spec.ts?raw";
+import simpleInjectorSpecCode from "../../../__tests__/injector/SimpleInjector.spec.ts?raw";
+import proxyInjectorSpecCode from "../../../__tests__/injector/ProxyInjector.spec.ts?raw";
+import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spec.ts?raw";
 ---
 
 <BaseLayout
@@ -57,26 +62,9 @@ import injectionStrategiesDiagram from "../diagrams/injection-strategies.mermaid
     <h3>Basic Usage</h3>
 
     <CodeBlock
-      code={`import { Container, inject, Registration as R } from 'ts-ioc-container';
-
-class Logger {
-  name = 'Logger';
-}
-
-class App {
-  constructor(@inject('ILogger') private logger: Logger) {}
-
-  getLoggerName(): string {
-    return this.logger.name;
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
-
-const app = container.resolve(App);
-expect(app.getLoggerName()).toBe('Logger');`}
+      code={metadataInjectorSpecCode}
       lang="typescript"
+      filename="__tests__/readme/metadataInjector.spec.ts"
     />
 
     <h3>Property Injection</h3>
@@ -88,38 +76,11 @@ expect(app.getLoggerName()).toBe('Logger');`}
     </p>
 
     <CodeBlock
-      code={`import { Container, hook, HooksRunner, injectProp, Registration } from 'ts-ioc-container';
-
-const onInitHookRunner = new HooksRunner('onInit');
-
-class App {
-  @hook('onInit', injectProp('greeting'))
-  greeting!: string;
-}
-
-const container = new Container()
-  .addRegistration(Registration.fromValue('Hello world!').bindToKey('greeting'));
-
-const app = container.resolve(App);
-onInitHookRunner.execute(app, { scope: container });
-
-expect(app.greeting).toBe('Hello world!');`}
+      code={injectPropSpecCode}
       lang="typescript"
+      filename="__tests__/readme/injectProp.spec.ts"
     />
 
-    <h3>Advanced Injection</h3>
-
-    <p>You can also use functions for more complex injection logic:</p>
-
-    <CodeBlock
-      code={`class App {
-  constructor(
-    @inject((container, ...args) => container.resolve('ILogger', { args }))
-    private logger: Logger
-  ) {}
-}`}
-      lang="typescript"
-    />
 
     <h2 id="simple-injector">Simple Injector</h2>
 
@@ -129,43 +90,10 @@ expect(app.greeting).toBe('Hello world!');`}
       approach is useful when you need more control over dependency resolution.
     </p>
 
-    <h3>Basic Usage</h3>
-
     <CodeBlock
-      code={`import { Container, type IContainer, Registration as R, SimpleInjector } from 'ts-ioc-container';
-
-class App {
-  constructor(public container: IContainer) {}
-}
-
-const container = new Container({ injector: new SimpleInjector() })
-  .addRegistration(R.fromClass(App).bindToKey('App'));
-
-const app = container.resolve<App>('App');
-expect(app.container).toBeInstanceOf(Container);`}
+      code={simpleInjectorSpecCode}
       lang="typescript"
-    />
-
-    <h3>With Additional Arguments</h3>
-
-    <p>
-      The Simple Injector can pass additional arguments alongside the container:
-    </p>
-
-    <CodeBlock
-      code={`class App {
-  constructor(
-    container: IContainer,
-    public greeting: string,
-  ) {}
-}
-
-const container = new Container({ injector: new SimpleInjector() })
-  .addRegistration(R.fromClass(App).bindToKey('App'));
-
-const app = container.resolve<App>('App', { args: ['Hello world'] });
-expect(app.greeting).toBe('Hello world');`}
-      lang="typescript"
+      filename="__tests__/injector/SimpleInjector.spec.ts"
     />
 
     <h3>Use Cases</h3>
@@ -184,90 +112,10 @@ expect(app.greeting).toBe('Hello world');`}
       destructuring patterns and functional programming styles.
     </p>
 
-    <h3>Basic Usage</h3>
-
     <CodeBlock
-      code={`import { Container, ProxyInjector, Registration as R } from 'ts-ioc-container';
-
-class Logger {}
-
-class App {
-  logger: Logger;
-
-  constructor({ logger }: { logger: Logger }) {
-    this.logger = logger;
-  }
-}
-
-const container = new Container({ injector: new ProxyInjector() })
-  .addRegistration(R.fromClass(Logger).bindToKey('logger'));
-
-const app = container.resolve(App);
-expect(app.logger).toBeInstanceOf(Logger);`}
+      code={proxyInjectorSpecCode}
       lang="typescript"
-    />
-
-    <h3>With Arguments</h3>
-
-    <p>
-      The Proxy Injector can also handle additional arguments passed as objects:
-    </p>
-
-    <CodeBlock
-      code={`import { args, Container, ProxyInjector, Registration as R } from 'ts-ioc-container';
-
-class Logger {}
-
-class App {
-  logger: Logger;
-  greeting: string;
-
-  constructor({
-    logger,
-    greetingTemplate,
-    name,
-  }: {
-    logger: Logger;
-    greetingTemplate: (name: string) => string;
-    name: string;
-  }) {
-    this.logger = logger;
-    this.greeting = greetingTemplate(name);
-  }
-}
-
-const greetingTemplate = (name: string) => \`Hello \${name}\`;
-
-const container = new Container({ injector: new ProxyInjector() })
-  .addRegistration(R.fromClass(App).bindToKey('App').pipe(args({ greetingTemplate })))
-  .addRegistration(R.fromClass(Logger).bindToKey('logger'));
-
-const app = container.resolve<App>('App', { args: [{ name: 'world' }] });
-expect(app.greeting).toBe('Hello world');`}
-      lang="typescript"
-    />
-
-    <h3>Array Dependencies</h3>
-
-    <p>
-      When a property name contains "array", the Proxy Injector automatically
-      resolves it as an array:
-    </p>
-
-    <CodeBlock
-      code={`class Logger {}
-class Service {}
-
-class App {
-  loggers: Logger[];
-  service: Service;
-
-  constructor({ loggersArray, service }: { loggersArray: Logger[]; service: Service }) {
-    this.loggers = loggersArray;
-    this.service = service;
-  }
-}`}
-      lang="typescript"
+      filename="__tests__/injector/ProxyInjector.spec.ts"
     />
 
     <h3>Use Cases</h3>
@@ -329,19 +177,9 @@ class App {
     </p>
 
     <CodeBlock
-      code={`import { type IInjector, type IContainer, type constructor } from 'ts-ioc-container';
-
-class CustomInjector implements IInjector {
-  inject(
-    container: IContainer,
-    target: constructor,
-    args: unknown[] = []
-  ): unknown[] {
-    // Your custom injection logic here
-    return [/* injected dependencies */];
-  }
-}`}
+      code={customInjectorSpecCode}
       lang="typescript"
+      filename="__tests__/readme/customInjector.spec.ts"
     />
 
     <h3>Extension Points</h3>

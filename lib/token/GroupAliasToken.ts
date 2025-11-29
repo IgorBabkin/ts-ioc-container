@@ -44,4 +44,4 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
   }
 }
 
-export const toGroupAlias = (token: DependencyKey) => new GroupAliasToken(token);
+export const toGroupAlias = <T>(token: DependencyKey) => new GroupAliasToken<T>(token);

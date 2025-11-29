@@ -2,6 +2,12 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import tokenHierarchyDiagram from "../diagrams/token-hierarchy.mermaid?raw";
+import tokenSpecCode from "../../../__tests__/readme/token.spec.ts?raw";
+import tokenGroupAliasSpecCode from "../../../__tests__/readme/tokenGroupAlias.spec.ts?raw";
+import tokenSingleAliasSpecCode from "../../../__tests__/readme/tokenSingleAlias.spec.ts?raw";
+import tokenArgsSpecCode from "../../../__tests__/readme/tokenArgs.spec.ts?raw";
+import tokenLazySpecCode from "../../../__tests__/readme/tokenLazy.spec.ts?raw";
+import tokenArgsFnSpecCode from "../../../__tests__/readme/tokenArgsFn.spec.ts?raw";
 ---
 
 <BaseLayout
@@ -80,29 +86,7 @@ import tokenHierarchyDiagram from "../diagrams/token-hierarchy.mermaid?raw";
       provides type safety while maintaining simplicity.
     </p>
 
-    <CodeBlock code={`import { SingleToken, Container, inject, Registration as R } from 'ts-ioc-container';
-
-interface ILogger {
-  log(message: string): void;
-}
-
-const ILoggerKey = new SingleToken<ILogger>('ILogger');
-
-class Logger implements ILogger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-class App {
-  constructor(@inject(ILoggerKey) private logger: ILogger) {}
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger).bindToKey(ILoggerKey));
-
-const app = container.resolve(App);
-app.logger.log('Hello');`} lang="typescript" />
+    <CodeBlock code={tokenSpecCode} lang="typescript" filename="__tests__/readme/token.spec.ts" />
 
     <h2 id="group-alias-token">GroupAliasToken</h2>
 
@@ -112,49 +96,7 @@ app.logger.log('Hello');`} lang="typescript" />
       of all implementations bound to the alias.
     </p>
 
-    <CodeBlock code={`import {
-  GroupAliasToken,
-  Container,
-  inject,
-  register,
-  Registration as R,
-  select as s,
-} from 'ts-ioc-container';
-
-const IMiddlewareToken = new GroupAliasToken('IMiddleware');
-
-interface IMiddleware {
-  apply(): void;
-}
-
-@register(bindTo(s.alias(IMiddlewareToken)))
-class LoggerMiddleware implements IMiddleware {
-  apply() {
-    console.log('Logger middleware');
-  }
-}
-
-@register(bindTo(s.alias(IMiddlewareToken)))
-class AuthMiddleware implements IMiddleware {
-  apply() {
-    console.log('Auth middleware');
-  }
-}
-
-class App {
-  constructor(@inject(s.alias(IMiddlewareToken)) public middleware: IMiddleware[]) {}
-  
-  run() {
-    this.middleware.forEach(m => m.apply());
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(LoggerMiddleware))
-  .addRegistration(R.fromClass(AuthMiddleware));
-
-const app = container.resolve(App);
-app.run(); // Both middleware are applied`} lang="typescript" />
+    <CodeBlock code={tokenGroupAliasSpecCode} lang="typescript" filename="__tests__/readme/tokenGroupAlias.spec.ts" />
 
     <h2 id="single-alias-token">SingleAliasToken</h2>
 
@@ -165,49 +107,7 @@ app.run(); // Both middleware are applied`} lang="typescript" />
       implementation that should be used when multiple are registered.
     </p>
 
-    <CodeBlock code={`import {
-  SingleAliasToken,
-  Container,
-  inject,
-  Registration as R,
-  toSingleAlias,
-} from 'ts-ioc-container';
-
-const ILoggerToken = new SingleAliasToken<ILogger>('ILogger');
-
-interface ILogger {
-  log(message: string): void;
-}
-
-class ConsoleLogger implements ILogger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-class FileLogger implements ILogger {
-  log(message: string) {
-    // Write to file
-  }
-}
-
-class App {
-  constructor(@inject(ILoggerToken) private logger: ILogger) {}
-  
-  run() {
-    this.logger.log('Hello'); // Uses one of the registered loggers
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(ConsoleLogger).bindToKey('ConsoleLogger').bindToAlias('ILogger'))
-  .addRegistration(R.fromClass(FileLogger).bindToKey('FileLogger').bindToAlias('ILogger'));
-
-const app = container.resolve(App);
-app.run();
-
-// You can also use the helper function
-const ILoggerToken2 = toSingleAlias<ILogger>('ILogger');`} lang="typescript" />
+    <CodeBlock code={tokenSingleAliasSpecCode} lang="typescript" filename="__tests__/readme/tokenSingleAlias.spec.ts" />
 
     <h2 id="argument-binding">Argument Binding</h2>
 
@@ -216,40 +116,19 @@ const ILoggerToken2 = toSingleAlias<ILogger>('ILogger');`} lang="typescript" />
       resolving:
     </p>
 
-    <CodeBlock code={`const IConfigKey = new InjectionToken<IConfig>('IConfig');
-
-class App {
-  constructor(
-    @inject(toToken('IConfig').args({ apiUrl: 'https://api.example.com', timeout: 5000 }))
-    private config: IConfig
-  ) {}
-}`} lang="typescript" />
+    <CodeBlock code={tokenArgsSpecCode} lang="typescript" filename="__tests__/readme/tokenArgs.spec.ts" />
 
     <h2 id="lazy-loading">Lazy Loading</h2>
 
     <p>Tokens support lazy loading, deferring instantiation until access:</p>
 
-    <CodeBlock code={`class App {
-  constructor(
-    @inject(toToken('IConfig').lazy())
-    private config: IConfig
-  ) {}
-}`} lang="typescript" />
+    <CodeBlock code={tokenLazySpecCode} lang="typescript" filename="__tests__/readme/tokenLazy.spec.ts" />
 
     <h2 id="dynamic-arguments">Dynamic Arguments</h2>
 
     <p>Tokens support dynamic argument resolution using functions:</p>
 
-    <CodeBlock code={`class App {
-  constructor(
-    @inject(
-      toToken('IConfig').argsFn((scope) => [
-        { apiUrl: scope.resolve('API_URL'), timeout: 5000 }
-      ])
-    )
-    private config: IConfig
-  ) {}
-}`} lang="typescript" />
+    <CodeBlock code={tokenArgsFnSpecCode} lang="typescript" filename="__tests__/readme/tokenArgsFn.spec.ts" />
 
   </article>
 </BaseLayout>

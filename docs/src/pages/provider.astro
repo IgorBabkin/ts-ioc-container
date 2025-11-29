@@ -2,6 +2,10 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import providerPipelineDiagram from "../diagrams/provider-pipeline.mermaid?raw";
+import providerSpecCode from "../../../__tests__/readme/Singleton.spec.ts?raw";
+import aliasSpecCode from "../../../__tests__/readme/alias.spec.ts?raw";
+import decorateSpecCode from "../../../__tests__/readme/decorate.spec.ts?raw";
+import visibilitySpecCode from "../../../__tests__/readme/visibility.spec.ts?raw";
 ---
 
 <BaseLayout
@@ -53,20 +57,10 @@ import providerPipelineDiagram from "../diagrams/provider-pipeline.mermaid?raw";
       managers.
     </p>
 
-    <h3>Basic Usage</h3>
-
     <CodeBlock
-      code={`import { bindTo, Container, register, Registration as R, singleton } from 'ts-ioc-container';
-
-@register(bindTo('logger'), singleton())
-class Logger {}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger));
-
-// Same instance returned every time
-expect(container.resolve('logger')).toBe(container.resolve('logger'));`}
+      code={providerSpecCode}
       lang="typescript"
+      filename="__tests__/readme/provider.spec.ts"
     />
 
     <h3>Per-Scope Singletons</h3>
@@ -105,46 +99,10 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
       resolved at provider creation, or default values.
     </p>
 
-    <h3>Static Arguments</h3>
-
     <CodeBlock
-      code={`import { args, Container, Registration as R } from 'ts-ioc-container';
-
-class ConfigService {
-  constructor(private readonly configPath: string) {}
-  getPath(): string {
-    return this.configPath;
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(ConfigService).pipe(args('/etc/config.json')));
-
-const config = container.resolve<ConfigService>('ConfigService');
-expect(config.getPath()).toBe('/etc/config.json');`}
+      code={providerSpecCode}
       lang="typescript"
-    />
-
-    <h3>Dynamic Arguments</h3>
-
-    <p>
-      Use <code>argsFn</code> to resolve arguments dynamically from the container:
-    </p>
-
-    <CodeBlock
-      code={`import { argsFn, Container, Registration as R } from 'ts-ioc-container';
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger))
-  .addRegistration(
-    R.fromClass(ConfigService).pipe(
-      argsFn((container) => ['/dynamic/config.json'])
-    )
-  );
-
-const config = container.resolve<ConfigService>('ConfigService');
-expect(config.getPath()).toBe('/dynamic/config.json');`}
-      lang="typescript"
+      filename="__tests__/readme/provider.spec.ts"
     />
 
     <h3>Argument Priority</h3>
@@ -174,39 +132,10 @@ expect(logger.type).toBe('file'); // Second argument still passed`}
       flags, or environment-specific services.
     </p>
 
-    <h3>Basic Usage</h3>
-
     <CodeBlock
-      code={`import {
-  bindTo,
-  Container,
-  DependencyNotFoundError,
-  register,
-  Registration as R,
-  scope,
-  scopeAccess,
-  singleton,
-} from 'ts-ioc-container';
-
-@register(
-  bindTo('logger'),
-  scope((s) => s.hasTag('root')),
-  singleton(),
-  scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope)
-)
-class FileLogger {}
-
-const parent = new Container({ tags: ['root'] })
-  .addRegistration(R.fromClass(FileLogger));
-
-const child = parent.createScope({ tags: ['child'] });
-
-// Available in parent scope
-expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
-
-// Not available in child scope
-expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);`}
+      code={visibilitySpecCode}
       lang="typescript"
+      filename="__tests__/readme/visibility.spec.ts"
     />
 
     <h3>Use Cases</h3>
@@ -226,62 +155,10 @@ expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);`}
       interface.
     </p>
 
-    <h3>Basic Usage</h3>
-
     <CodeBlock
-      code={`import {
-  bindTo,
-  Container,
-  inject,
-  register,
-  Registration as R,
-  select as s,
-} from 'ts-ioc-container';
-
-const IMiddlewareKey = 'IMiddleware';
-const middleware = register(bindTo(s.alias(IMiddlewareKey)));
-
-interface IMiddleware {
-  applyTo(application: IApplication): void;
-}
-
-@middleware
-class LoggerMiddleware implements IMiddleware {
-  applyTo(application: IApplication): void {
-    application.markMiddlewareAsApplied('LoggerMiddleware');
-  }
-}
-
-@middleware
-class ErrorHandlerMiddleware implements IMiddleware {
-  applyTo(application: IApplication): void {
-    application.markMiddlewareAsApplied('ErrorHandlerMiddleware');
-  }
-}
-
-class App implements IApplication {
-  private appliedMiddleware: Set<string> = new Set();
-  
-  constructor(@inject(s.alias(IMiddlewareKey)) public middleware: IMiddleware[]) {}
-  
-  run() {
-    for (const module of this.middleware) {
-      module.applyTo(this);
-    }
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(LoggerMiddleware))
-  .addRegistration(R.fromClass(ErrorHandlerMiddleware));
-
-const app = container.resolve(App);
-app.run();
-
-// Both middleware are applied
-expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
-expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);`}
+      code={aliasSpecCode}
       lang="typescript"
+      filename="__tests__/readme/alias.spec.ts"
     />
 
     <h3>Use Cases</h3>
@@ -300,81 +177,10 @@ expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);`}
       cross-cutting concerns like logging, caching, or transaction management.
     </p>
 
-    <h3>Basic Usage</h3>
-
     <CodeBlock
-      code={`import {
-  bindTo,
-  Container,
-  decorate,
-  type IContainer,
-  inject,
-  register,
-  Registration as R,
-  select as s,
-  singleton,
-} from 'ts-ioc-container';
-
-@register(singleton())
-class Logger {
-  private logs: string[] = [];
-  log(message: string) {
-    this.logs.push(message);
-  }
-  printLogs() {
-    return this.logs.join(',');
-  }
-}
-
-interface IRepository {
-  save(item: Todo): Promise<void>;
-}
-
-interface Todo {
-  id: string;
-  text: string;
-}
-
-class LogRepository implements IRepository {
-  constructor(
-    private repository: IRepository,
-    @inject(s.token('Logger').lazy()) private logger: Logger
-  ) {}
-  
-  async save(item: Todo): Promise<void> {
-    this.logger.log(item.id);
-    return this.repository.save(item);
-  }
-}
-
-const logRepo = (dep: IRepository, scope: IContainer) =>
-  scope.resolve(LogRepository, { args: [dep] });
-
-@register(bindTo('IRepository'), decorate(logRepo))
-class TodoRepository implements IRepository {
-  async save(item: Todo): Promise<void> {}
-}
-
-class App {
-  constructor(@inject('IRepository') public repository: IRepository) {}
-  
-  async run() {
-    await this.repository.save({ id: '1', text: 'Hello' });
-    await this.repository.save({ id: '2', text: 'Hello' });
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(TodoRepository))
-  .addRegistration(R.fromClass(Logger));
-
-const app = container.resolve(App);
-const logger = container.resolve<Logger>('Logger');
-await app.run();
-
-// Repository calls are logged
-expect(logger.printLogs()).toBe('1,2');`}
+      code={decorateSpecCode}
       lang="typescript"
+      filename="__tests__/readme/decorate.spec.ts"
     />
 
     <h3>Use Cases</h3>
@@ -394,43 +200,9 @@ expect(logger.printLogs()).toBe('1,2');`}
     </p>
 
     <CodeBlock
-      code={`import { bindTo, Container, inject, register, Registration as R, lazy } from 'ts-ioc-container';
-
-let isLoggerCreated = false;
-
-@register(bindTo('Logger'), lazy())
-class Logger {
-  private logs: string[] = [];
-  
-  constructor() {
-    isLoggerCreated = true;
-  }
-  
-  info(message: string, context: Record<string, unknown>): void {
-    this.logs.push(JSON.stringify({ ...context, level: 'info', message }));
-  }
-}
-
-class Main {
-  constructor(@inject('Logger') private logger: Logger) {}
-  
-  getLogs(): string {
-    return this.logger.serialize();
-  }
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger));
-
-const main = container.resolve(Main);
-
-// Logger not created yet
-expect(isLoggerCreated).toBe(false);
-
-// Logger created when accessed
-main.getLogs();
-expect(isLoggerCreated).toBe(true);`}
+      code={providerSpecCode}
       lang="typescript"
+      filename="__tests__/readme/provider.spec.ts"
     />
 
     <h2 id="provider-pipeline">Provider Pipeline</h2>
