@@ -1,4 +1,4 @@
-import { ClassToken, Container, FunctionToken, IDToken } from '../../lib';
+import { ClassToken, Container, FunctionToken, SingleToken } from '../../lib';
 import { toToken } from '../../lib/token/toToken';
 import { UnsupportedTokenTypeError } from '../../lib/errors/UnsupportedTokenTypeError';
 import type { IContainer } from '../../lib/container/IContainer';
@@ -11,22 +11,22 @@ describe('toToken', () => {
   });
 
   it('should return InjectionToken as-is', () => {
-    const token = new IDToken('key');
+    const token = new SingleToken('key');
     const result = toToken(token);
     expect(result).toBe(token);
   });
 
-  it('should convert DependencyKey to IDToken', () => {
+  it('should convert DependencyKey to SingleToken', () => {
     const result = toToken('key');
-    expect(result).toBeInstanceOf(IDToken);
-    expect((result as IDToken).token).toBe('key');
+    expect(result).toBeInstanceOf(SingleToken);
+    expect((result as SingleToken).token).toBe('key');
   });
 
-  it('should convert symbol DependencyKey to IDToken', () => {
+  it('should convert symbol DependencyKey to SingleToken', () => {
     const sym = Symbol('key');
     const result = toToken(sym);
-    expect(result).toBeInstanceOf(IDToken);
-    expect((result as IDToken).token).toBe(sym);
+    expect(result).toBeInstanceOf(SingleToken);
+    expect((result as SingleToken).token).toBe(sym);
   });
 
   it('should convert constructor to ClassToken', () => {

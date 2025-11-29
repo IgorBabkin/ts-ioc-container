@@ -6,7 +6,7 @@ import tokenHierarchyDiagram from "../diagrams/token-hierarchy.mermaid?raw";
 
 <BaseLayout
   title="Token"
-  description="Token - Token types for dependency keys (InjectionToken, IDToken, ClassToken, etc.)"
+  description="Token - Token types for dependency keys (InjectionToken, SingleToken, GroupAliasToken, etc.)"
 >
   <article>
     <h1>Token</h1>
@@ -63,38 +63,30 @@ import tokenHierarchyDiagram from "../diagrams/token-hierarchy.mermaid?raw";
         <code>InjectionToken</code> is the abstract base class that all tokens extend
       </li>
       <li>
-        <code>IDToken</code>, <code>ClassToken</code>, <code>ConstantToken</code>, and
-        <code>FunctionToken</code> are concrete implementations for different use cases
+        <code>SingleToken</code> is a concrete implementation for simple dependency keys
       </li>
       <li>
-        <code>AliasToken</code> extends <code>InjectionToken</code> and implements
-        <code>BindToken</code> for grouping multiple implementations
+        <code>GroupAliasToken</code> extends <code>InjectionToken</code> for grouping multiple implementations (resolves to array)
       </li>
       <li>
-        <code>InstanceListToken</code> is specialized for resolving collections of instances
-      </li>
-      <li>
-        Some tokens (marked with *) don't implement all methods - they throw
-        <code>MethodNotImplementedError</code> for unsupported operations
+        <code>SingleAliasToken</code> extends <code>InjectionToken</code> for grouping implementations (resolves to single instance)
       </li>
     </ul>
 
-    <h2 id="token-types">Token Types</h2>
-
-    <h3>IDToken</h3>
+    <h2 id="single-token">SingleToken</h2>
 
     <p>
-      <code>IDToken</code> is a simple token that wraps a string or symbol key. It
+      <code>SingleToken</code> is a simple token that wraps a string or symbol key. It
       provides type safety while maintaining simplicity.
     </p>
 
-    <CodeBlock code={`import { IDToken, Container, inject, Registration as R } from 'ts-ioc-container';
+    <CodeBlock code={`import { SingleToken, Container, inject, Registration as R } from 'ts-ioc-container';
 
 interface ILogger {
   log(message: string): void;
 }
 
-const ILoggerKey = new IDToken<ILogger>('ILogger');
+const ILoggerKey = new SingleToken<ILogger>('ILogger');
 
 class Logger implements ILogger {
   log(message: string) {
@@ -112,130 +104,16 @@ const container = new Container()
 const app = container.resolve(App);
 app.logger.log('Hello');`} lang="typescript" />
 
-    <h3>InjectionToken</h3>
+    <h2 id="group-alias-token">GroupAliasToken</h2>
 
     <p>
-      <code>InjectionToken</code> is the base class for all tokens. It provides features
-      like argument binding, lazy loading, and alias support.
-    </p>
-
-    <CodeBlock code={`import { InjectionToken, Container, inject, Registration as R } from 'ts-ioc-container';
-
-interface IConfig {
-  apiUrl: string;
-  timeout: number;
-}
-
-const IConfigKey = new InjectionToken<IConfig>('IConfig');
-
-class Config implements IConfig {
-  constructor(
-    public apiUrl: string,
-    public timeout: number
-  ) {}
-}
-
-class App {
-  constructor(
-    @inject(IConfigKey.args({ apiUrl: 'https://api.example.com', timeout: 5000 }))
-    private config: IConfig
-  ) {}
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Config).bindToKey(IConfigKey));
-
-const app = container.resolve(App);
-expect(app.config.apiUrl).toBe('https://api.example.com');`} lang="typescript" />
-
-    <h3>ClassToken</h3>
-
-    <p>
-      <code>ClassToken</code> is a token that represents a class. It's useful when
-      you want to use the class itself as the key.
-    </p>
-
-    <CodeBlock code={`import { ClassToken, Container, inject, Registration as R } from 'ts-ioc-container';
-
-class Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-const LoggerToken = new ClassToken(Logger);
-
-class App {
-  constructor(@inject(LoggerToken) private logger: Logger) {}
-}
-
-const container = new Container()
-  .addRegistration(R.fromClass(Logger).bindToKey(LoggerToken));
-
-const app = container.resolve(App);
-app.logger.log('Hello');`} lang="typescript" />
-
-    <h3>ConstantToken</h3>
-
-    <p>
-      <code>ConstantToken</code> represents a constant value. It's useful for configuration
-      values or primitive types.
-    </p>
-
-    <CodeBlock code={`import { ConstantToken, Container, inject, Registration as R } from 'ts-ioc-container';
-
-const ApiUrlToken = new ConstantToken<string>('API_URL', 'https://api.example.com');
-
-class App {
-  constructor(@inject(ApiUrlToken) private apiUrl: string) {}
-}
-
-const container = new Container()
-  .addRegistration(R.fromValue('https://api.example.com').bindToKey(ApiUrlToken));
-
-const app = container.resolve(App);
-expect(app.apiUrl).toBe('https://api.example.com');`} lang="typescript" />
-
-    <h3>FunctionToken</h3>
-
-    <p>
-      <code>FunctionToken</code> represents a function. It's useful for factory functions
-      or callbacks.
-    </p>
-
-    <CodeBlock code={`import { FunctionToken, Container, inject, Registration as R } from 'ts-ioc-container';
-
-type LoggerFactory = (name: string) => Logger;
-
-const LoggerFactoryToken = new FunctionToken<LoggerFactory>('LoggerFactory');
-
-class App {
-  constructor(@inject(LoggerFactoryToken) private createLogger: LoggerFactory) {}
-  
-  run() {
-    const logger = this.createLogger('App');
-    logger.log('Hello');
-  }
-}
-
-const container = new Container()
-  .addRegistration(
-    R.fromValue((name: string) => new Logger(name))
-      .bindToKey(LoggerFactoryToken)
-  );
-
-const app = container.resolve(App);
-app.run();`} lang="typescript" />
-
-    <h3>AliasToken</h3>
-
-    <p>
-      <code>AliasToken</code> is used to group multiple registrations under a common
-      alias. This is perfect for plugin systems or middleware.
+      <code>GroupAliasToken</code> is used to group multiple registrations under a common
+      alias. This is perfect for plugin systems or middleware. It resolves to an array
+      of all implementations bound to the alias.
     </p>
 
     <CodeBlock code={`import {
-  AliasToken,
+  GroupAliasToken,
   Container,
   inject,
   register,
@@ -243,7 +121,7 @@ app.run();`} lang="typescript" />
   select as s,
 } from 'ts-ioc-container';
 
-const IMiddlewareToken = new AliasToken('IMiddleware');
+const IMiddlewareToken = new GroupAliasToken('IMiddleware');
 
 interface IMiddleware {
   apply(): void;
@@ -278,62 +156,60 @@ const container = new Container()
 const app = container.resolve(App);
 app.run(); // Both middleware are applied`} lang="typescript" />
 
-    <h3>InstanceListToken</h3>
+    <h2 id="single-alias-token">SingleAliasToken</h2>
 
     <p>
-      <code>InstanceListToken</code> allows you to resolve all instances of a certain
-      type from the container. This is useful for collecting all implementations of
-      an interface.
+      <code>SingleAliasToken</code> is similar to <code>GroupAliasToken</code>, but resolves
+      to a single instance instead of an array. This is useful when you want to ensure
+      only one implementation is resolved from an alias, or when you have a default
+      implementation that should be used when multiple are registered.
     </p>
 
     <CodeBlock code={`import {
-  InstanceListToken,
+  SingleAliasToken,
   Container,
   inject,
   Registration as R,
+  toSingleAlias,
 } from 'ts-ioc-container';
 
-interface IPlugin {
-  name: string;
-  initialize(): void;
+const ILoggerToken = new SingleAliasToken<ILogger>('ILogger');
+
+interface ILogger {
+  log(message: string): void;
 }
 
-const PluginListToken = new InstanceListToken<IPlugin>(
-  (instance): instance is IPlugin => 'name' in instance && 'initialize' in instance
-);
-
-class LoggerPlugin implements IPlugin {
-  name = 'Logger';
-  initialize() {
-    console.log('Logger plugin initialized');
+class ConsoleLogger implements ILogger {
+  log(message: string) {
+    console.log(message);
   }
 }
 
-class AuthPlugin implements IPlugin {
-  name = 'Auth';
-  initialize() {
-    console.log('Auth plugin initialized');
+class FileLogger implements ILogger {
+  log(message: string) {
+    // Write to file
   }
 }
 
 class App {
-  constructor(@inject(PluginListToken) public plugins: IPlugin[]) {}
+  constructor(@inject(ILoggerToken) private logger: ILogger) {}
   
-  initialize() {
-    this.plugins.forEach(plugin => plugin.initialize());
+  run() {
+    this.logger.log('Hello'); // Uses one of the registered loggers
   }
 }
 
 const container = new Container()
-  .addRegistration(R.fromClass(LoggerPlugin))
-  .addRegistration(R.fromClass(AuthPlugin));
+  .addRegistration(R.fromClass(ConsoleLogger).bindToKey('ConsoleLogger').bindToAlias('ILogger'))
+  .addRegistration(R.fromClass(FileLogger).bindToKey('FileLogger').bindToAlias('ILogger'));
 
 const app = container.resolve(App);
-app.initialize();`} lang="typescript" />
+app.run();
 
-    <h2 id="token-features">Token Features</h2>
+// You can also use the helper function
+const ILoggerToken2 = toSingleAlias<ILogger>('ILogger');`} lang="typescript" />
 
-    <h3>Argument Binding</h3>
+    <h2 id="argument-binding">Argument Binding</h2>
 
     <p>
       Tokens support argument binding, allowing you to pass arguments when
@@ -344,152 +220,37 @@ app.initialize();`} lang="typescript" />
 
 class App {
   constructor(
-    @inject(IConfigKey.args({ apiUrl: 'https://api.example.com', timeout: 5000 }))
+    @inject(toToken('IConfig').args({ apiUrl: 'https://api.example.com', timeout: 5000 }))
     private config: IConfig
   ) {}
 }`} lang="typescript" />
 
-    <h3>Lazy Loading</h3>
+    <h2 id="lazy-loading">Lazy Loading</h2>
 
     <p>Tokens support lazy loading, deferring instantiation until access:</p>
 
     <CodeBlock code={`class App {
   constructor(
-    @inject(IConfigKey.lazy())
+    @inject(toToken('IConfig').lazy())
     private config: IConfig
   ) {}
 }`} lang="typescript" />
 
-    <h3>Dynamic Arguments</h3>
+    <h2 id="dynamic-arguments">Dynamic Arguments</h2>
 
     <p>Tokens support dynamic argument resolution using functions:</p>
 
     <CodeBlock code={`class App {
   constructor(
     @inject(
-      IConfigKey.argsFn((container) => [
-        { apiUrl: container.resolve('API_URL'), timeout: 5000 }
+      toToken('IConfig').argsFn((scope) => [
+        { apiUrl: scope.resolve('API_URL'), timeout: 5000 }
       ])
     )
     private config: IConfig
   ) {}
 }`} lang="typescript" />
 
-    <h2 id="best-practices">Best Practices</h2>
-
-    <ul>
-      <li>
-        <strong>Use tokens for type safety</strong> - Prefer tokens over plain strings
-        for better type checking
-      </li>
-      <li>
-        <strong>Export tokens as constants</strong> - Create tokens once and reuse
-        them throughout your application
-      </li>
-      <li>
-        <strong>Use IDToken for simple cases</strong> - When you just need type-safe
-        keys
-      </li>
-      <li>
-        <strong>Use InjectionToken for advanced features</strong> - When you need
-        argument binding or lazy loading
-      </li>
-      <li>
-        <strong>Use AliasToken for collections</strong> - When you need to group multiple
-        implementations
-      </li>
-      <li>
-        <strong>Use InstanceListToken for discovery</strong> - When you need to find
-        all instances of a type
-      </li>
-    </ul>
-
-    <h2 id="token-comparison">Token Comparison</h2>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Token Type</th>
-          <th>Use Case</th>
-          <th>Type Safety</th>
-          <th>Features</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>IDToken</code></td>
-          <td>Simple dependency keys</td>
-          <td>High</td>
-          <td>Basic</td>
-        </tr>
-        <tr>
-          <td><code>InjectionToken</code></td>
-          <td>Advanced dependency resolution</td>
-          <td>High</td>
-          <td>Args, Lazy, Alias</td>
-        </tr>
-        <tr>
-          <td><code>ClassToken</code></td>
-          <td>Class-based keys</td>
-          <td>High</td>
-          <td>Basic</td>
-        </tr>
-        <tr>
-          <td><code>ConstantToken</code></td>
-          <td>Constant values</td>
-          <td>High</td>
-          <td>Basic</td>
-        </tr>
-        <tr>
-          <td><code>FunctionToken</code></td>
-          <td>Factory functions</td>
-          <td>High</td>
-          <td>Basic</td>
-        </tr>
-        <tr>
-          <td><code>AliasToken</code></td>
-          <td>Grouping implementations</td>
-          <td>High</td>
-          <td>Collection resolution</td>
-        </tr>
-        <tr>
-          <td><code>InstanceListToken</code></td>
-          <td>Instance discovery</td>
-          <td>High</td>
-          <td>Filtering, Collection</td>
-        </tr>
-      </tbody>
-    </table>
   </article>
 </BaseLayout>
 
-<style>
-  .diagram {
-    margin: 2rem 0;
-    padding: 1.5rem;
-    background: #f6f8fa;
-    border: 1px solid #e1e4e8;
-    border-radius: 8px;
-    overflow-x: auto;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .diagram .mermaid {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-  }
-
-  .diagram pre {
-    margin: 0;
-    background: transparent;
-    border: none;
-    padding: 0;
-  }
-
-  .diagram code {
-    background: transparent;
-    padding: 0;
-  }
-</style>

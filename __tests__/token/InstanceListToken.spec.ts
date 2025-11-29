@@ -1,4 +1,4 @@
-import { Container, InstanceListToken, MethodNotImplementedError } from '../../lib';
+import { Container, GroupInstanceToken, MethodNotImplementedError } from '../../lib';
 import type { IContainer } from '../../lib/container/IContainer';
 
 describe('InstanceListToken', () => {
@@ -12,7 +12,7 @@ describe('InstanceListToken', () => {
   class ServiceB {}
 
   it('should resolve instances matching predicate', () => {
-    const token = new InstanceListToken((dep) => dep instanceof ServiceA);
+    const token = new GroupInstanceToken((dep) => dep instanceof ServiceA);
     container.resolve(ServiceA);
     container.resolve(ServiceB);
     container.resolve(ServiceA);
@@ -23,7 +23,7 @@ describe('InstanceListToken', () => {
   });
 
   it('should support cascade method', () => {
-    const token = new InstanceListToken(() => true);
+    const token = new GroupInstanceToken(() => true);
     const child = container.createScope();
     child.resolve(ServiceA);
 
@@ -35,19 +35,19 @@ describe('InstanceListToken', () => {
   });
 
   it('should throw error on args method', () => {
-    const token = new InstanceListToken(() => true);
+    const token = new GroupInstanceToken(() => true);
     expect(() => token.args('arg1')).toThrow(MethodNotImplementedError);
     expect(() => token.args('arg1')).toThrow('not implemented');
   });
 
   it('should throw error on argsFn method', () => {
-    const token = new InstanceListToken(() => true);
+    const token = new GroupInstanceToken(() => true);
     expect(() => token.argsFn(() => [])).toThrow(MethodNotImplementedError);
     expect(() => token.argsFn(() => [])).toThrow('not implemented');
   });
 
   it('should throw error on lazy method', () => {
-    const token = new InstanceListToken(() => true);
+    const token = new GroupInstanceToken(() => true);
     expect(() => token.lazy()).toThrow(MethodNotImplementedError);
     expect(() => token.lazy()).toThrow('not implemented');
   });

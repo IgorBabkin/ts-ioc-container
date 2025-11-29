@@ -1,8 +1,8 @@
-import { AliasToken, Container, Registration } from '../../lib';
-import { toAlias } from '../../lib/token/AliasToken';
+import { GroupAliasToken, Container, Registration } from '../../lib';
+import { toGroupAlias } from '../../lib/token/GroupAliasToken';
 import type { IContainer } from '../../lib/container/IContainer';
 
-describe('AliasToken', () => {
+describe('GroupAliasToken', () => {
   let container: IContainer;
 
   beforeEach(() => {
@@ -10,7 +10,7 @@ describe('AliasToken', () => {
   });
 
   it('should resolve by alias', () => {
-    const token = new AliasToken<string>('myAlias');
+    const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn(() => 'value')
         .bindToKey('myKey')
@@ -22,7 +22,7 @@ describe('AliasToken', () => {
   });
 
   it('should support args method', () => {
-    const token = new AliasToken<string>('myAlias');
+    const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
         .bindToKey('myKey')
@@ -35,7 +35,7 @@ describe('AliasToken', () => {
   });
 
   it('should support argsFn method', () => {
-    const token = new AliasToken<string>('myAlias');
+    const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
         .bindToKey('myKey')
@@ -48,7 +48,7 @@ describe('AliasToken', () => {
   });
 
   it('should support chaining args and argsFn', () => {
-    const token = new AliasToken<string>('myAlias');
+    const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
         .bindToKey('myKey')
@@ -61,13 +61,13 @@ describe('AliasToken', () => {
   });
 
   it('should support lazy method', () => {
-    const token = new AliasToken<string>('myAlias');
+    const token = new GroupAliasToken<string>('myAlias');
     const lazyToken = token.lazy();
     expect(lazyToken).toBe(token);
   });
 
   it('should bind to alias', () => {
-    const token = new AliasToken<string>('myAlias');
+    const token = new GroupAliasToken<string>('myAlias');
     const registration = Registration.fromFn(() => 'value').bindToKey('myKey');
     token.bindTo(registration);
 
@@ -76,9 +76,9 @@ describe('AliasToken', () => {
     expect(result).toEqual(['value']);
   });
 
-  it('should support toAlias helper', () => {
-    const token = toAlias('myAlias');
-    expect(token).toBeInstanceOf(AliasToken);
+  it('should support toGroupAlias helper', () => {
+    const token = toGroupAlias('myAlias');
+    expect(token).toBeInstanceOf(GroupAliasToken);
     container.addRegistration(
       Registration.fromFn(() => 'value')
         .bindToKey('myKey')

@@ -1,7 +1,7 @@
-import { AliasUniqToken, Container, Registration, toAliasUniq } from '../../lib';
+import { SingleAliasToken, Container, Registration, toSingleAlias } from '../../lib';
 import type { IContainer } from '../../lib/container/IContainer';
 
-describe('AliasUniqToken', () => {
+describe('SingleAliasToken', () => {
   let container: IContainer;
 
   beforeEach(() => {
@@ -9,7 +9,7 @@ describe('AliasUniqToken', () => {
   });
 
   it('should resolve one by alias', () => {
-    const token = new AliasUniqToken<string>('myAlias');
+    const token = new SingleAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn(() => 'value')
         .bindToKey('myKey')
@@ -21,7 +21,7 @@ describe('AliasUniqToken', () => {
   });
 
   it('should support args method', () => {
-    const token = new AliasUniqToken<string>('myAlias');
+    const token = new SingleAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
         .bindToKey('myKey')
@@ -34,7 +34,7 @@ describe('AliasUniqToken', () => {
   });
 
   it('should support argsFn method', () => {
-    const token = new AliasUniqToken<string>('myAlias');
+    const token = new SingleAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
         .bindToKey('myKey')
@@ -47,7 +47,7 @@ describe('AliasUniqToken', () => {
   });
 
   it('should support chaining args and argsFn', () => {
-    const token = new AliasUniqToken<string>('myAlias');
+    const token = new SingleAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
         .bindToKey('myKey')
@@ -60,13 +60,13 @@ describe('AliasUniqToken', () => {
   });
 
   it('should support lazy method', () => {
-    const token = new AliasUniqToken<string>('myAlias');
+    const token = new SingleAliasToken<string>('myAlias');
     const lazyToken = token.lazy();
     expect(lazyToken).toBe(token);
   });
 
   it('should bind to alias', () => {
-    const token = new AliasUniqToken<string>('myAlias');
+    const token = new SingleAliasToken<string>('myAlias');
     const registration = Registration.fromFn(() => 'value').bindToKey('myKey');
     token.bindTo(registration);
 
@@ -75,9 +75,9 @@ describe('AliasUniqToken', () => {
     expect(result).toBe('value');
   });
 
-  it('should support toAliasUniq helper', () => {
-    const token = toAliasUniq('myAlias');
-    expect(token).toBeInstanceOf(AliasUniqToken);
+  it('should support toSingleAlias helper', () => {
+    const token = toSingleAlias('myAlias');
+    expect(token).toBeInstanceOf(SingleAliasToken);
     container.addRegistration(
       Registration.fromFn(() => 'value')
         .bindToKey('myKey')

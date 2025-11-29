@@ -280,36 +280,38 @@ class App {
 
     <h2 id="choosing-the-right-injector">Choosing the Right Injector</h2>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Injector</th>
-          <th>Best For</th>
-          <th>Pros</th>
-          <th>Cons</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>MetadataInjector</strong></td>
-          <td>Most applications, TypeScript projects</td>
-          <td>Clean syntax, type-safe, IntelliSense support</td>
-          <td>Requires reflect-metadata, decorator support</td>
-        </tr>
-        <tr>
-          <td><strong>SimpleInjector</strong></td>
-          <td>Manual control, legacy code, frameworks</td>
-          <td>Full control, no decorators needed</td>
-          <td>More verbose, manual resolution</td>
-        </tr>
-        <tr>
-          <td><strong>ProxyInjector</strong></td>
-          <td>Destructuring patterns, functional style</td>
-          <td>Explicit parameter names, no decorators</td>
-          <td>Less type inference, naming conventions</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-responsive mb-4">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>Injector</th>
+            <th>Best For</th>
+            <th>Pros</th>
+            <th>Cons</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>MetadataInjector</strong></td>
+            <td>Most applications, TypeScript projects</td>
+            <td>Clean syntax, type-safe, IntelliSense support</td>
+            <td>Requires reflect-metadata, decorator support</td>
+          </tr>
+          <tr>
+            <td><strong>SimpleInjector</strong></td>
+            <td>Manual control, legacy code, frameworks</td>
+            <td>Full control, no decorators needed</td>
+            <td>More verbose, manual resolution</td>
+          </tr>
+          <tr>
+            <td><strong>ProxyInjector</strong></td>
+            <td>Destructuring patterns, functional style</td>
+            <td>Explicit parameter names, no decorators</td>
+            <td>Less type inference, naming conventions</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <h2 id="strategy-pattern">Strategy Pattern</h2>
     <p>
@@ -377,33 +379,3 @@ class CustomInjector implements IInjector {
   </article>
 </BaseLayout>
 
-<style>
-  .diagram {
-    margin: 2rem 0;
-    padding: 1.5rem;
-    background: #f6f8fa;
-    border: 1px solid #e1e4e8;
-    border-radius: 8px;
-    overflow-x: auto;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .diagram .mermaid {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-  }
-
-  .diagram pre {
-    margin: 0;
-    background: transparent;
-    border: none;
-    padding: 0;
-  }
-
-  .diagram code {
-    background: transparent;
-    padding: 0;
-  }
-</style>

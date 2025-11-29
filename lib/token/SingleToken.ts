@@ -1,11 +1,10 @@
-import type { DependencyKey, IContainer } from '../container/IContainer';
+import type { IContainer } from '../container/IContainer';
 import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
-import { BindToken } from './BindToken';
 
-export class AliasUniqToken<T = any> extends InjectionToken<T> implements BindToken<T> {
+export class SingleToken<T = any> extends InjectionToken {
   constructor(
-    readonly token: string | symbol,
+    public token: string | symbol,
     private options: TokenOptions = {},
   ) {
     super();
@@ -13,35 +12,33 @@ export class AliasUniqToken<T = any> extends InjectionToken<T> implements BindTo
 
   resolve(s: IContainer): T {
     const argsFn = this.options.argsFn ?? setArgs();
-    return s.resolveOneByAlias(this.token, {
+    return s.resolve(this.token, {
       args: argsFn(s),
       lazy: this.options.lazy,
     });
   }
 
   bindTo(r: IRegistration<T>) {
-    r.bindToAlias(this.token);
+    r.bindToKey(this.token);
   }
 
-  args(...args: unknown[]): InjectionToken<T> {
+  args(...args: unknown[]): SingleToken<T> {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new AliasUniqToken(this.token, {
+    return new SingleToken(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...args],
     });
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): SingleToken<T> {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new AliasUniqToken(this.token, {
+    return new SingleToken(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
     });
   }
 
-  lazy(): InjectionToken<T> {
-    return this;
+  lazy(): SingleToken<T> {
+    return new SingleToken(this.token, { ...this.options, lazy: true });
   }
 }
-
-export const toAliasUniq = (token: DependencyKey) => new AliasUniqToken(token);

@@ -1,10 +1,10 @@
 import {
-  AliasToken,
+  GroupAliasToken,
   bindTo,
   Container,
   DependencyNotFoundError,
   type IContainer,
-  IDToken,
+  SingleToken,
   inject,
   isDependencyKey,
   Provider,
@@ -43,9 +43,9 @@ describe('IContainer', function () {
   it('should assign a dependency key to a registration', function () {
     interface ILogger {}
 
-    const ILoggerKey = new IDToken<ILogger>('ILogger');
-    const ILoggerKey2 = new AliasToken<ILogger>('ILogger2');
-    const ILoggerKey3 = new AliasToken<ILogger>('ILogger3');
+    const ILoggerKey = new SingleToken<ILogger>('ILogger');
+    const ILoggerKey2 = new GroupAliasToken<ILogger>('ILogger2');
+    const ILoggerKey3 = new GroupAliasToken<ILogger>('ILogger3');
 
     @register(
       bindTo(ILoggerKey),
@@ -72,7 +72,7 @@ describe('IContainer', function () {
   it('should test register decorator', function () {
     interface ILogger {}
 
-    const ILoggerKey = new IDToken<ILogger>('ILogger');
+    const ILoggerKey = new SingleToken<ILogger>('ILogger');
 
     @register(bindTo(ILoggerKey))
     class FileLogger {}

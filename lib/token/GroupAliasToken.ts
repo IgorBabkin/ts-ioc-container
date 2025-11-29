@@ -3,7 +3,7 @@ import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { BindToken } from './BindToken';
 
-export class AliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T> {
+export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T> {
   constructor(
     readonly token: string | symbol,
     private options: TokenOptions = {},
@@ -23,17 +23,17 @@ export class AliasToken<T = any> extends InjectionToken<T[]> implements BindToke
     r.bindToAlias(this.token);
   }
 
-  args(...args: unknown[]): AliasToken<T> {
+  args(...args: unknown[]): GroupAliasToken<T> {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new AliasToken(this.token, {
+    return new GroupAliasToken(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...args],
     });
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]): AliasToken<T> {
+  argsFn(getArgsFn: (s: IContainer) => unknown[]): GroupAliasToken<T> {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new AliasToken(this.token, {
+    return new GroupAliasToken(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
     });
@@ -44,4 +44,4 @@ export class AliasToken<T = any> extends InjectionToken<T[]> implements BindToke
   }
 }
 
-export const toAlias = (token: DependencyKey) => new AliasToken(token);
+export const toGroupAlias = (token: DependencyKey) => new GroupAliasToken(token);

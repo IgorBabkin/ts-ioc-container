@@ -8,7 +8,7 @@ import { getTransformers } from './IRegistration';
 import type { ProviderPipe } from '../provider/ProviderPipe';
 import { isProviderPipe } from '../provider/ProviderPipe';
 import { BindToken } from '../token/BindToken';
-import { IDToken } from '../token/IDToken';
+import { SingleToken } from '../token/SingleToken';
 import { constructor, MapFn } from '../types';
 
 export class Registration<T = any> implements IRegistration<T> {
@@ -65,7 +65,7 @@ export class Registration<T = any> implements IRegistration<T> {
 
   bindTo(key: DependencyKey | BindToken): this {
     if (isDependencyKey(key)) {
-      new IDToken(key).bindTo(this);
+      new SingleToken(key).bindTo(this);
       return this;
     }
 

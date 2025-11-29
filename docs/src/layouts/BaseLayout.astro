@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 interface Props {
   title: string;
@@ -35,54 +36,80 @@ const navigation = [
       mermaid.initialize({ startOnLoad: true, theme: "default" });
     </script>
   </head>
-  <body>
-    <div class="wrapper">
-      <header class="header">
-        <div class="header-content">
-          <a href="/ts-ioc-container/" class="logo">
-            <h1>ts-ioc-container</h1>
-          </a>
-          <nav class="nav">
-            <div class="badges">
+  <body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+      <div class="container-fluid px-4">
+        <a class="navbar-brand text-decoration-none text-dark fw-semibold" href="/ts-ioc-container/">
+          ts-ioc-container
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarContent"
+          aria-controls="navbarContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarContent">
+          <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
+            <img
+              src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square"
+              alt="NPM version"
+              class="img-fluid"
+              style="height: 20px;"
+            />
+            <img
+              src="https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square"
+              alt="npm downloads"
+              class="img-fluid"
+              style="height: 20px;"
+            />
+            <img
+              src="https://img.shields.io/bundlejs/size/ts-ioc-container"
+              alt="npm package size"
+              class="img-fluid"
+              style="height: 20px;"
+            />
+            <a
+              href="https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-decoration-none"
+            >
               <img
-                src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square"
-                alt="NPM version"
+                src="https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master"
+                alt="Coverage Status"
+                class="img-fluid"
+                style="height: 20px;"
               />
+            </a>
+            <img
+              src="https://img.shields.io/npm/l/ts-ioc-container"
+              alt="License"
+              class="img-fluid"
+              style="height: 20px;"
+            />
+            <a
+              href="https://github.com/semantic-release/semantic-release"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-decoration-none"
+            >
               <img
-                src="https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square"
-                alt="npm downloads"
+                src="https://img.shields.io/badge/semantic--release-e10079.svg"
+                alt="semantic-release"
+                class="img-fluid"
+                style="height: 20px;"
               />
-              <img
-                src="https://img.shields.io/bundlejs/size/ts-ioc-container"
-                alt="npm package size"
-              />
-              <a
-                href="https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master"
-                  alt="Coverage Status"
-                />
-              </a>
-              <img src="https://img.shields.io/npm/l/ts-ioc-container" alt="License" />
-              <a
-                href="https://github.com/semantic-release/semantic-release"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="https://img.shields.io/badge/semantic--release-e10079.svg"
-                  alt="semantic-release"
-                />
-              </a>
-            </div>
+            </a>
             <a
               href="https://github.com/IgorBabkin/ts-ioc-container"
               target="_blank"
               rel="noopener noreferrer"
-              class="nav-link external logo-link"
+              class="btn btn-link text-dark p-1"
               title="GitHub Repository"
             >
               <svg
@@ -101,7 +128,7 @@ const navigation = [
               href="https://www.npmjs.com/package/ts-ioc-container"
               target="_blank"
               rel="noopener noreferrer"
-              class="nav-link external logo-link"
+              class="btn btn-link text-dark p-1"
               title="NPM Package"
             >
               <svg
@@ -117,13 +144,15 @@ const navigation = [
                 <path d="M10.665 10H12v2.667h-1.335V10z"></path>
               </svg>
             </a>
-          </nav>
+          </div>
         </div>
-      </header>
+      </div>
+    </nav>
 
-      <div class="container">
-        <aside class="sidebar">
-          <nav class="sidebar-nav">
+    <div class="container-fluid flex-grow-1 px-0">
+      <div class="row g-0 h-100 w-100">
+        <aside class="col-lg-3 col-xl-2 border-end bg-light">
+          <nav class="nav flex-column p-3">
             {
               navigation.map((item) => {
                 const isActive =
@@ -134,7 +163,7 @@ const navigation = [
                 return (
                   <a
                     href={item.href}
-                    class={`sidebar-link ${isActive ? "active" : ""}`}
+                    class={`nav-link ${isActive ? "active bg-primary text-white" : "text-dark"}`}
                   >
                     {item.title}
                   </a>
@@ -144,202 +173,25 @@ const navigation = [
           </nav>
         </aside>
 
-        <main class="main">
+        <main class="col-lg-9 col-xl-10 px-4 py-4">
           <slot />
         </main>
       </div>
+    </div>
 
-      <footer class="footer">
-        <p>
+    <footer class="bg-light border-top py-4 mt-auto w-100">
+      <div class="container-fluid px-4 text-center text-muted">
+        <p class="mb-0">
           Copyright &copy; IgorBabkin. Distributed by an{" "}
           <a
             href="https://github.com/IgorBabkin/ts-ioc-container/tree/main/LICENSE"
+            class="text-decoration-none"
             >ISC license</a
           >.
         </p>
-      </footer>
-    </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
-
-<style>
-  .wrapper {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .header {
-    background: #fff;
-    border-bottom: 1px solid #e1e4e8;
-    padding: 1rem 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .header-content {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .logo {
-    text-decoration: none;
-    color: #24292e;
-  }
-
-  .logo h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-
-  .nav {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-  }
-
-  .badges {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .badges img {
-    height: 20px;
-    display: block;
-  }
-
-  .badges a {
-    display: inline-block;
-    line-height: 0;
-  }
-
-  .nav-link {
-    text-decoration: none;
-    color: #0366d6;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-
-  .nav-link:hover {
-    color: #0256cc;
-    text-decoration: underline;
-  }
-
-  .logo-link {
-    display: flex;
-    align-items: center;
-    padding: 0.25rem;
-    border-radius: 4px;
-    transition:
-      background-color 0.2s,
-      opacity 0.2s;
-  }
-
-  .logo-link:hover {
-    background-color: #f6f8fa;
-    text-decoration: none;
-    opacity: 0.8;
-  }
-
-  .logo-link svg {
-    display: block;
-  }
-
-  .container {
-    flex: 1;
-    display: flex;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-    padding: 0 2rem;
-  }
-
-  .sidebar {
-    width: 240px;
-    padding: 2rem 0;
-    border-right: 1px solid #e1e4e8;
-    position: sticky;
-    top: 80px;
-    height: calc(100vh - 80px);
-    overflow-y: auto;
-  }
-
-  .sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .sidebar-link {
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    color: #24292e;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-  }
-
-  .sidebar-link:hover {
-    background-color: #f6f8fa;
-  }
-
-  .sidebar-link.active {
-    background-color: #0366d6;
-    color: #fff;
-    font-weight: 500;
-  }
-
-  .main {
-    flex: 1;
-    padding: 2rem 3rem;
-    max-width: 800px;
-  }
-
-  .footer {
-    background: #f6f8fa;
-    border-top: 1px solid #e1e4e8;
-    padding: 2rem;
-    text-align: center;
-    color: #586069;
-    margin-top: auto;
-  }
-
-  .footer a {
-    color: #0366d6;
-    text-decoration: none;
-  }
-
-  .footer a:hover {
-    text-decoration: underline;
-  }
-
-  @media (max-width: 768px) {
-    .container {
-      flex-direction: column;
-    }
-
-    .sidebar {
-      width: 100%;
-      position: static;
-      height: auto;
-      border-right: none;
-      border-bottom: 1px solid #e1e4e8;
-    }
-
-    .sidebar-nav {
-      flex-direction: row;
-      overflow-x: auto;
-    }
-
-    .main {
-      padding: 1.5rem;
-    }
-  }
-</style>

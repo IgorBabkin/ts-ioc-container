@@ -6,7 +6,7 @@ import { Instance } from '../types';
 
 export type InstancePredicate = (dep: unknown) => boolean;
 
-export class InstanceListToken extends InjectionToken<Instance[]> {
+export class GroupInstanceToken extends InjectionToken<Instance[]> {
   private isCascade = true;
 
   constructor(private predicate: InstancePredicate) {

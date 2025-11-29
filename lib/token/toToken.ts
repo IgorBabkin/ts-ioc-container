@@ -1,6 +1,6 @@
 import { DependencyKey, isDependencyKey } from '../container/IContainer';
 import { Is } from '../utils';
-import { IDToken } from './IDToken';
+import { SingleToken } from './SingleToken';
 import { ClassToken } from './ClassToken';
 import { FunctionToken } from './FunctionToken';
 import { UnsupportedTokenTypeError } from '../errors/UnsupportedTokenTypeError';
@@ -16,7 +16,7 @@ export const toToken = <T = any>(
   }
 
   if (isDependencyKey(token)) {
-    return new IDToken(token);
+    return new SingleToken(token);
   }
 
   if (Is.constructor(token)) {

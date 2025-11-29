@@ -14,12 +14,12 @@ import classDiagram from "../diagrams/class-diagram.mermaid?raw";
 
     <h2 id="advantages">Advantages</h2>
     <ul>
-      <li>battle tested</li>
+      <li>battle tested 💥</li>
       <li>written on <code>typescript</code></li>
-      <li>simple and lightweight</li>
-      <li>clean API</li>
+      <li>simple and lightweight ❤️</li>
+      <li>clean API 💚</li>
       <li>supports <code>tagged scopes</code></li>
-      <li>fully test covered</li>
+      <li>fully test covered 💯</li>
       <li>can be used with decorators <code>@inject</code></li>
       <li>can inject properties</li>
       <li>can inject lazy dependencies</li>
@@ -85,29 +85,27 @@ app.run(); // Output: Hello, IoC!`}
     </p>
     <ul>
       <li>
-        <strong><a href="/ts-ioc-container/">Overview</a></strong> - Core
+        <a href="/ts-ioc-container/">Overview</a> - Core
         architecture and class diagrams
       </li>
       <li>
-        <strong><a href="/ts-ioc-container/container">Container</a></strong> - Core
+        <a href="/ts-ioc-container/container">Container</a> - Core
         container functionality, scopes, and instance management
       </li>
       <li>
-        <strong
-          ><a href="/ts-ioc-container/registration">Registration</a></strong
-        > - Registering providers with keys and scopes
+        <a href="/ts-ioc-container/registration">Registration</a> - Registering providers with keys and scopes
       </li>
       <li>
-        <strong><a href="/ts-ioc-container/provider">Provider</a></strong> - Dependency
+        <a href="/ts-ioc-container/provider">Provider</a> - Dependency
         factories with singleton, args, visibility, alias, and decorator features
       </li>
       <li>
-        <strong><a href="/ts-ioc-container/injector">Injector</a></strong> - Different
+        <a href="/ts-ioc-container/injector">Injector</a> - Different
         injection strategies (Metadata, Simple, Proxy)
       </li>
       <li>
-        <strong><a href="/ts-ioc-container/token">Token</a></strong> - Token types
-        for dependency keys (InjectionToken, IDToken, ClassToken, etc.)
+        <a href="/ts-ioc-container/token">Token</a> - Token types
+        for dependency keys (InjectionToken, SingleToken, GroupAliasToken, etc.)
       </li>
     </ul>
 
@@ -124,23 +122,40 @@ app.run(); // Output: Hello, IoC!`}
       together to provide dependency injection:
     </p>
 
-    <ul>
-      <li>
-        <strong>Container</strong>: Manages the lifecycle and resolution of
-        dependencies
-      </li>
-      <li>
-        <strong>Provider</strong>: Factory that creates dependency instances
-      </li>
-      <li>
-        <strong>Injector</strong>: Determines how dependencies are injected into
-        constructors
-      </li>
-      <li>
-        <strong>Registration</strong>: Connects providers to containers with
-        keys and configuration
-      </li>
-    </ul>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Container</h5>
+            <p class="card-text">Manages the lifecycle and resolution of dependencies</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Provider</h5>
+            <p class="card-text">Factory that creates dependency instances</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Injector</h5>
+            <p class="card-text">Determines how dependencies are injected into constructors</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Registration</h5>
+            <p class="card-text">Connects providers to containers with keys and configuration</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <h3>Architecture Overview</h3>
 
@@ -161,33 +176,3 @@ app.run(); // Output: Hello, IoC!`}
   </article>
 </BaseLayout>
 
-<style>
-  .diagram {
-    margin: 2rem 0;
-    padding: 1.5rem;
-    background: #f6f8fa;
-    border: 1px solid #e1e4e8;
-    border-radius: 8px;
-    overflow-x: auto;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .diagram .mermaid {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-  }
-
-  .diagram pre {
-    margin: 0;
-    background: transparent;
-    border: none;
-    padding: 0;
-  }
-
-  .diagram code {
-    background: transparent;
-    padding: 0;
-  }
-</style>

@@ -2,7 +2,7 @@ import type { DependencyKey, IContainer, IContainerModule } from '../container/I
 import { getClassMetadata, setClassMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
 import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
-import { IDToken } from '../token/IDToken';
+import { SingleToken } from '../token/SingleToken';
 import { BindToken, isBindToken } from '../token/BindToken';
 import { constructor, MapFn } from '../types';
 
@@ -40,7 +40,7 @@ export const bindTo =
   (...tokens: (DependencyKey | BindToken)[]): MapFn<IRegistration> =>
   (r) => {
     for (const token of tokens) {
-      const targetToken = isBindToken(token) ? token : new IDToken(token);
+      const targetToken = isBindToken(token) ? token : new SingleToken(token);
       targetToken.bindTo(r);
     }
     return r;
