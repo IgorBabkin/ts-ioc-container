@@ -302,3 +302,35 @@ a:hover {
   color: var(--bs-primary);
 }
 
+/* Badge alignment in navbar */
+.navbar .d-flex img.img-fluid {
+  display: block;
+}
+
+.navbar .d-flex a.text-decoration-none {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.navbar .d-flex a.text-decoration-none img.img-fluid {
+  display: block;
+}
+
+/* Align GitHub and npm link buttons with badges */
+.navbar .d-flex .github-link,
+.navbar .d-flex .npm-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  line-height: 1;
+  height: 20px;
+}
+
+.navbar .d-flex .github-link svg,
+.navbar .d-flex .npm-link svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
