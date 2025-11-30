@@ -39,27 +39,28 @@ const { code } = Astro.props;
       d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"
       fill="currentColor"></path>
   </svg>
+  <span class="copy-text">Copy</span>
 </button>
 
-<style>
+<style lang="scss">
   .code-copy-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-  }
 
-  .code-copy-btn.copied {
-    background-color: var(--bs-success-bg-subtle);
-    border-color: var(--bs-success);
-    color: var(--bs-success);
-  }
+    &.copied {
+      background-color: var(--bs-success-bg-subtle);
+      border-color: var(--bs-success);
+      color: var(--bs-success);
 
-  .code-copy-btn.copied .copy-icon {
-    display: none !important;
-  }
+      .copy-icon {
+        display: none !important;
+      }
 
-  .code-copy-btn.copied .check-icon {
-    display: inline-block !important;
+      .check-icon {
+        display: inline-block !important;
+      }
+    }
   }
 </style>
 
@@ -76,10 +77,17 @@ const { code } = Astro.props;
 
       // Add copied state
       this.classList.add("copied");
+      const copyText = this.querySelector<HTMLElement>(".copy-text");
+      if (copyText) {
+        copyText.textContent = "Copied!";
+      }
 
       // Reset after 2 seconds
       setTimeout(() => {
         this.classList.remove("copied");
+        if (copyText) {
+          copyText.textContent = "Copy";
+        }
       }, 2000);
     });
   }

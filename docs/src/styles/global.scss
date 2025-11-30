@@ -26,6 +26,7 @@ html, body {
   --bs-primary-bg-subtle: #1a2a3a;
   --bs-primary-border-subtle: #3d5a7a;
   --bs-primary-text-emphasis: #6bb6ff;
+  --bs-success: #f59e0b;
 }
 
 /* Body background for dark theme */
@@ -178,7 +179,7 @@ code:not(pre code) {
 
 [data-bs-theme="dark"] code:not(pre code) {
   background-color: var(--bs-gray-800);
-  color: #f59e0b;
+  color: var(--bs-danger);
 }
 
 /* Article content spacing */
