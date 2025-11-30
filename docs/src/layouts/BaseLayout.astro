@@ -157,7 +157,7 @@ const navigation = [
           const diagrams = document.querySelectorAll(".mermaid");
           diagrams.forEach((el) => {
             if (!el.hasAttribute("data-original-content")) {
-              const content = el.textContent || el.innerHTML.trim();
+              const content = el.innerHTML.trim() || el.textContent;
               if (content && !el.hasAttribute("data-processed")) {
                 el.setAttribute("data-original-content", content);
               }
@@ -196,7 +196,7 @@ const navigation = [
       function ensureOriginalContentStored() {
         document.querySelectorAll(".mermaid").forEach((el) => {
           if (!el.hasAttribute("data-original-content")) {
-            const content = el.textContent || el.innerHTML.trim();
+            const content = el.innerHTML.trim() || el.textContent;
             if (content && !el.hasAttribute("data-processed")) {
               el.setAttribute("data-original-content", content);
             }

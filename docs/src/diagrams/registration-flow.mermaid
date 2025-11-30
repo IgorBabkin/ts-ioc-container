@@ -13,10 +13,10 @@ sequenceDiagram
     Reg->>Provider: pipe(singleton())
     Provider->>Provider: wrap with SingletonProvider
     Dev->>Reg: when(scope => scope.hasTag('root'))
-    Reg->>Reg: add scope predicate
+    Reg->>Reg: add scope match rule
     Dev->>Container: addRegistration(registration)
     Container->>Reg: applyTo(container)
-    Reg->>Reg: check scope predicates
+    Reg->>Reg: check scope match rules
     alt Scope matches
         Reg->>Container: register('ILogger', provider)
         Container->>Provider: store in providers map

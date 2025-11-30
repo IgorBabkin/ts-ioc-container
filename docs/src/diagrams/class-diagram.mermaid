@@ -26,7 +26,7 @@ classDiagram
         +resolve(container, options) T
         +hasAccess(options) boolean
         +pipe(mappers) IProvider
-        +setAccessPredicate(fn) this
+        +setAccessRule(rule) this
         +setArgs(fn) this
         +lazy() this
     }
@@ -34,7 +34,7 @@ classDiagram
     class Provider {
         -factory: ResolveDependency
         -argsFn: ArgsFn
-        -accessPredicate: ScopeAccessFn
+        -accessRule: ScopeAccessRule
         -isLazy: boolean
         +resolve(container, options) T
         +pipe(mappers) IProvider
@@ -75,7 +75,7 @@ classDiagram
     class Registration {
         -provider: IProvider
         -key: DependencyKey
-        -scopePredicates: ScopePredicate[]
+        -scopeRules: ScopeMatchRule[]
         +when(predicates) this
         +bindToKey(key) this
         +applyTo(container) void

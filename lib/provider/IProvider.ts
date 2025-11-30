@@ -9,7 +9,7 @@ export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderOptions) => T;
 export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
-export type ScopeAccessFn = (options: ScopeAccessOptions) => boolean;
+export type ScopeAccessRule = (options: ScopeAccessOptions) => boolean;
 
 export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
 export interface IMapper {
@@ -23,7 +23,7 @@ export interface IProvider<T = any> {
 
   pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T>;
 
-  setAccessPredicate(hasAccessWhen: ScopeAccessFn): this;
+  setAccessRule(hasAccessWhen: ScopeAccessRule): this;
 
   setArgs(argsFn: ArgsFn): this;
 
@@ -45,15 +45,15 @@ export const resolveByArgs = (s: IContainer, ...deps: unknown[]) =>
     return d;
   });
 
-export const scopeAccess = <T>(predicate: ScopeAccessFn) => registerPipe<T>((p) => p.setAccessPredicate(predicate));
+export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.setAccessRule(rule));
 
 export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
 
-  setAccessPredicate(predicate: ScopeAccessFn): this {
-    this.decorated.setAccessPredicate(predicate);
+  setAccessRule(rule: ScopeAccessRule): this {
+    this.decorated.setAccessRule(rule);
     return this;
   }
 

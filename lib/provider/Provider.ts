@@ -1,4 +1,11 @@
-import { ArgsFn, IProvider, ProviderOptions, ResolveDependency, ScopeAccessFn, ScopeAccessOptions } from './IProvider';
+import {
+  ArgsFn,
+  IProvider,
+  ProviderOptions,
+  ResolveDependency,
+  ScopeAccessRule,
+  ScopeAccessOptions,
+} from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
 import { pipe } from '../utils';
 import type { ProviderPipe } from './ProviderPipe';
@@ -19,7 +26,7 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   private argsFn: ArgsFn = () => [];
-  private checkAccess: ScopeAccessFn = () => true;
+  private checkAccess: ScopeAccessRule = () => true;
   private isLazy = false;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
@@ -36,7 +43,7 @@ export class Provider<T = any> implements IProvider<T> {
     });
   }
 
-  setAccessPredicate(predicate: ScopeAccessFn): this {
+  setAccessRule(predicate: ScopeAccessRule): this {
     this.checkAccess = predicate;
     return this;
   }

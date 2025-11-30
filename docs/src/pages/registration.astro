@@ -78,7 +78,7 @@ import containerModuleSpecCode from "../../../__tests__/readme/containerModule.s
     <h2 id="scope-registration">Scope Registration</h2>
 
     <p>
-      Scope predicates control which scopes a provider is available in. This
+      Scope match rules (<code>ScopeMatchRule</code>) control which scopes a provider is available in. This
       allows you to register different implementations for different
       environments or contexts.
     </p>
@@ -133,7 +133,7 @@ const container = new Container()
         together
       </li>
       <li>
-        <strong>Use scope predicates for environment-specific code</strong> - Keep
+        <strong>Use scope match rules for environment-specific code</strong> - Keep
         configurations clean
       </li>
       <li>
@@ -158,7 +158,7 @@ const container = new Container()
         <strong>Application</strong>: Registration is applied to container via <code
           >addRegistration()</code>
       </li>
-      <li><strong>Validation</strong>: Scope predicates are evaluated</li>
+      <li><strong>Validation</strong>: Scope match rules are evaluated</li>
       <li>
         <strong>Storage</strong>: Provider is stored in container's provider map
       </li>

@@ -156,7 +156,7 @@ describe('Provider', () => {
 
   it('allows direct manipulation of visibility predicate', () => {
     const provider = Provider.fromClass(Logger);
-    provider.setAccessPredicate(({ invocationScope }) => invocationScope.hasTag('special'));
+    provider.setAccessRule(({ invocationScope }) => invocationScope.hasTag('special'));
     const container = new Container({ tags: ['root'] }).register('Logger', provider);
     const specialChild = container.createScope({ tags: ['special'] });
     const regularChild = container.createScope({ tags: ['regular'] });

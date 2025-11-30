@@ -128,7 +128,7 @@ expect(logger.type).toBe('file'); // Second argument still passed`}
 
     <p>
       Visibility control allows you to restrict which scopes can access certain
-      dependencies. This is useful for implementing access control, feature
+      dependencies using <code>ScopeAccessRule</code>. This is useful for implementing access control, feature
       flags, or environment-specific services.
     </p>
 
@@ -220,9 +220,9 @@ expect(logger.type).toBe('file'); // Second argument still passed`}
 
     <CodeBlock
       code={`const provider = Provider.fromClass(Logger)
-  .pipe(args('/config.json'))        // 1. Bind arguments
+  .pipe(args('/config.json'))       // 1. Bind arguments
   .pipe(singleton())                // 2. Cache instances
-  .pipe(scopeAccess(predicate))     // 3. Control visibility
+  .pipe(scopeAccess(rule))          // 3. Control visibility
   .pipe(lazy());                    // 4. Defer creation
 
 // Each pipe wraps the previous provider

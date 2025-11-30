@@ -1,16 +1,16 @@
 graph LR
-    Base[Base Provider<br/>fromClass Logger]
-    Args[Args Provider<br/>args '/config.json']
-    Singleton[Singleton Provider<br/>cache instance]
-    Visibility[Visibility Provider<br/>scopeAccess predicate]
-    Lazy[Lazy Provider<br/>deferred creation]
+    Base["Base Provider<br>fromClass Logger"]
+    Args["Args Provider<br>args '/config.json'"]
+    Singleton["Singleton Provider<br>cache instance"]
+    Visibility["Visibility Provider<br>scopeAccess rule"]
+    Lazy["Lazy Provider<br>deferred creation"]
     
     Base -->|pipe args| Args
     Args -->|pipe singleton| Singleton
     Singleton -->|pipe scopeAccess| Visibility
     Visibility -->|pipe lazy| Lazy
     
-    Lazy -->|final| Final[Final Provider]
+    Lazy -->|final| Final["Final Provider"]
     
     style Base fill:#e1e4e8
     style Args fill:#c6e48b

@@ -6,10 +6,10 @@ import { SingleToken } from '../token/SingleToken';
 import { BindToken, isBindToken } from '../token/BindToken';
 import { constructor, MapFn } from '../types';
 
-export type ScopePredicate = (s: IContainer, prev?: boolean) => boolean;
+export type ScopeMatchRule = (s: IContainer, prev?: boolean) => boolean;
 
 export interface IRegistration<T = any> extends IContainerModule {
-  when(...predicates: ScopePredicate[]): this;
+  when(...predicates: ScopeMatchRule[]): this;
 
   bindToKey(key: DependencyKey): this;
 
@@ -23,9 +23,9 @@ export interface IRegistration<T = any> extends IContainerModule {
 export type ReturnTypeOfRegistration<T> = T extends IRegistration<infer R> ? R : never;
 
 export const scope =
-  (...predicates: ScopePredicate[]): MapFn<IRegistration> =>
+  (...rules: ScopeMatchRule[]): MapFn<IRegistration> =>
   (r) =>
-    r.when(...predicates);
+    r.when(...rules);
 
 const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>

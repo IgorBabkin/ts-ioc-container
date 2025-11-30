@@ -100,8 +100,8 @@
           // If no stored content, try to get it from the element
           if (!originalContent) {
             // If already processed, we need to restore from a backup or skip
-            // For now, try to get any text that might be there
-            originalContent = el.textContent?.trim() || "";
+            // For now, try to get any HTML content that might be there
+            originalContent = el.innerHTML?.trim() || el.textContent?.trim() || "";
           }
           
           if (originalContent) {

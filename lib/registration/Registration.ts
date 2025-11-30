@@ -3,7 +3,7 @@ import { Is, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
-import type { IRegistration, ScopePredicate } from './IRegistration';
+import type { IRegistration, ScopeMatchRule } from './IRegistration';
 import { getTransformers } from './IRegistration';
 import type { ProviderPipe } from '../provider/ProviderPipe';
 import { isProviderPipe } from '../provider/ProviderPipe';
@@ -39,7 +39,7 @@ export class Registration<T = any> implements IRegistration<T> {
   constructor(
     private createProvider: () => IProvider<T>,
     private key?: DependencyKey,
-    private scopePredicates: ScopePredicate[] = [],
+    private scopeRules: ScopeMatchRule[] = [],
   ) {}
 
   bindToKey(key: DependencyKey): this {
@@ -58,8 +58,8 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  when(...predicates: ScopePredicate[]): this {
-    this.scopePredicates.push(...predicates);
+  when(...predicates: ScopeMatchRule[]): this {
+    this.scopeRules.push(...predicates);
     return this;
   }
 
@@ -74,10 +74,10 @@ export class Registration<T = any> implements IRegistration<T> {
   }
 
   private matchScope(container: IContainer): boolean {
-    if (this.scopePredicates.length === 0) {
+    if (this.scopeRules.length === 0) {
       return true;
     }
-    const [first, ...rest] = this.scopePredicates;
+    const [first, ...rest] = this.scopeRules;
     return rest.reduce((prev, curr) => curr(container, prev), first(container));
   }
 

@@ -692,7 +692,7 @@ describe('Provider', () => {
 
   it('allows direct manipulation of visibility predicate', () => {
     const provider = Provider.fromClass(Logger);
-    provider.setAccessPredicate(({ invocationScope }) => invocationScope.hasTag('special'));
+    provider.setAccessRule(({ invocationScope }) => invocationScope.hasTag('special'));
     const container = new Container({ tags: ['root'] }).register('Logger', provider);
     const specialChild = container.createScope({ tags: ['special'] });
     const regularChild = container.createScope({ tags: ['regular'] });
@@ -1007,9 +1007,9 @@ describe('ArgsProvider', function () {
 ```
 
 ### Visibility
-Sometimes you want to hide dependency if somebody wants to resolve it from certain scope
-- `provider(visible(({ isParent, child }) => isParent || child.hasTag('root')))` - dependency will be accessible from scope `root` or from scope where it's registered
-- `Provider.fromClass(Logger).pipe(visible(({ isParent, child }) => isParent || child.hasTag('root')))`
+Sometimes you want to hide dependency if somebody wants to resolve it from certain scope. This uses `ScopeAccessRule` to control access.
+- `provider(scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope))` - dependency will be accessible only from the scope where it's registered
+- `Provider.fromClass(Logger).pipe(scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope))`
 
 ```typescript
 import {
@@ -1324,7 +1324,7 @@ describe('Registration module', function () {
 ```
 
 ### Scope
-Sometimes you need to register provider only in scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`
+Sometimes you need to register provider only in scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`. This uses `ScopeMatchRule` to determine which scopes should have the provider.
 - `@register(scope((container) => container.hasTag('root'))` - register provider only in root scope
 - `Registration.fromClass(Logger).when((container) => container.hasTag('root'))`
 

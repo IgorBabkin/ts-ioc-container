@@ -1,9 +1,9 @@
 graph TD
-    Root[Root Container<br/>tags: 'root']
-    Request1[Request Scope 1<br/>tags: 'request', 'user:123']
-    Request2[Request Scope 2<br/>tags: 'request', 'user:456']
-    Feature1[Feature Scope 1<br/>tags: 'feature:admin']
-    Feature2[Feature Scope 2<br/>tags: 'feature:user']
+    Root["Root Container<br>tags: 'root'"]
+    Request1["Request Scope 1<br>tags: 'request', 'user:123'"]
+    Request2["Request Scope 2<br>tags: 'request', 'user:456'"]
+    Feature1["Feature Scope 1<br>tags: 'feature:admin'"]
+    Feature2["Feature Scope 2<br>tags: 'feature:user'"]
     
     Root -->|createScope| Request1
     Root -->|createScope| Request2

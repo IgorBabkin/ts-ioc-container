@@ -46,7 +46,7 @@ export {
   type ReturnTypeOfRegistration,
   scope,
   register,
-  type ScopePredicate,
+  type ScopeMatchRule,
   bindTo,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
