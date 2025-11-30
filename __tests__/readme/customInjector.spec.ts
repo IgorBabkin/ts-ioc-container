@@ -1,7 +1,7 @@
-import { type constructor, Container, type IContainer, type IInjector, ProviderOptions } from '../../lib';
+import { type constructor, Container, type IContainer, Injector, ProviderOptions } from '../../lib';
 
-class CustomInjector implements IInjector {
-  resolve<T>(container: IContainer, target: constructor<T>, { args = [] }: ProviderOptions = {}): T {
+class CustomInjector extends Injector {
+  createInstance<T>(container: IContainer, target: constructor<T>, { args = [] }: ProviderOptions = {}): T {
     return new App(args[0] as string) as T;
   }
 }

@@ -102,9 +102,7 @@ import tokenArgsFnSpecCode from "../../../__tests__/readme/tokenArgsFn.spec.ts?r
 
     <p>
       <code>SingleAliasToken</code> is similar to <code>GroupAliasToken</code>, but resolves
-      to a single instance instead of an array. This is useful when you want to ensure
-      only one implementation is resolved from an alias, or when you have a default
-      implementation that should be used when multiple are registered.
+      to a single instance instead of an array. This is useful when you want to use multiple interfaces for the same implementation.
     </p>
 
     <CodeBlock code={tokenSingleAliasSpecCode} lang="typescript" filename="__tests__/readme/tokenSingleAlias.spec.ts" />
