@@ -17,6 +17,20 @@ interface Props {
 }
 const { code, lang = "typescript", filename } = Astro.props;
 
+// Format language for display
+const langDisplayMap: Record<string, string> = {
+  ts: "TypeScript",
+  typescript: "TypeScript",
+  js: "JavaScript",
+  javascript: "JavaScript",
+  json: "JSON",
+  shell: "Shell",
+  bash: "Bash",
+  sh: "Shell",
+};
+
+const langDisplay = langDisplayMap[lang.toLowerCase()] || lang;
+
 // Generate both light and dark HTML versions
 const htmlLight = await codeToHtml(code, {
   lang,
@@ -33,10 +47,13 @@ const htmlDark = await codeToHtml(code, {
   class="card mb-4"
 >
   <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="badge bg-secondary">{langDisplay}</span>
     {filename && <span class="font-monospace small">{filename}</span>}
-    <CopyButton code={code} />
   </div>
   <div class="card-body p-0 code-block-content">
+    <div class="copy-button-wrapper">
+      <CopyButton code={code} />
+    </div>
     <div class="code-block-light" set:html={htmlLight} />
     <div class="code-block-dark" set:html={htmlDark} />
   </div>
@@ -65,6 +82,13 @@ const htmlDark = await codeToHtml(code, {
 
   .code-block-content {
     position: relative;
+  }
+
+  .copy-button-wrapper {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 10;
   }
 
   .code-block-light,
