@@ -3,7 +3,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import injectionStrategiesDiagram from "../diagrams/injection-strategies.mermaid?raw";
 import metadataInjectorSpecCode from "../../../__tests__/readme/metadataInjector.spec.ts?raw";
-import injectPropSpecCode from "../../../__tests__/readme/injectProp.spec.ts?raw";
 import simpleInjectorSpecCode from "../../../__tests__/injector/SimpleInjector.spec.ts?raw";
 import proxyInjectorSpecCode from "../../../__tests__/injector/ProxyInjector.spec.ts?raw";
 import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spec.ts?raw";
@@ -72,14 +71,9 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
     <p>
       The Metadata Injector also supports property injection using hooks. This
       is useful when constructor injection isn't possible or when you need to
-      inject into base class properties.
+      inject into base class properties. See the <a href="/ts-ioc-container/hooks#property-injection">Hooks</a> chapter
+      for detailed information about property injection.
     </p>
-
-    <CodeBlock
-      code={injectPropSpecCode}
-      lang="typescript"
-      filename="__tests__/readme/injectProp.spec.ts"
-    />
 
 
     <h2 id="simple-injector">Simple Injector</h2>

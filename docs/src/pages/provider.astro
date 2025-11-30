@@ -307,14 +307,10 @@ expect(logger.type).toBe('file'); // Second argument still passed`}
     />
 
     <h3>Custom Hooks</h3>
-    <p>Create custom hooks by implementing the hook system:</p>
-    <CodeBlock
-      code={`const customHookRunner = new HooksRunner('customHook');
-container.addOnConstructHook((instance, scope) => {
-  customHookRunner.execute(instance, { scope });
-});`}
-      lang="typescript"
-    />
+    <p>
+      Create custom hooks by implementing the hook system. See the <a href="/ts-ioc-container/hooks#custom-hooks">Hooks</a> chapter
+      for detailed information about creating and using custom hooks.
+    </p>
 
     <h2 id="best-practices">Best Practices</h2>
 
