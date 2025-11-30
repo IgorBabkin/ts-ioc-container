@@ -1,3 +1,10 @@
+# [46.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.0.1...v46.1.0) (2025-11-30)
+
+
+### Features
+
+* **refactor:** update some types - ScopePredicate -> ScopeMatchRule, ScopeAccessFn -> ScopeAccessRule ([1f2f607](https://github.com/IgorBabkin/ts-ioc-container/commit/1f2f607e0549a2261064c0f0df774e3dbdcbf11a))
+
 ## [46.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.0.0...v46.0.1) (2025-11-29)
 
 
