@@ -16,7 +16,8 @@ html, body {
   --bs-primary-bg-subtle: #d6eaf8;
   --bs-primary-border-subtle: #85c1e9;
   --bs-primary-text-emphasis: #2874a6;
-  --bs-danger: #f59e0b;
+  --bs-info: #f59e0b;
+  --bs-info-rgb: 245, 148, 11;
 }
 
 /* Dark theme support */
@@ -27,7 +28,8 @@ html, body {
   --bs-primary-bg-subtle: #1a2a3a;
   --bs-primary-border-subtle: #3d5a7a;
   --bs-primary-text-emphasis: #6bb6ff;
-  --bs-success: #f59e0b;
+  --bs-info: #f59e0b;
+  --bs-success: #5cb85c;
 }
 
 /* Body background for dark theme */
@@ -175,12 +177,12 @@ code:not(pre code) {
   padding: 0.2em 0.4em;
   border-radius: 0.25rem;
   font-size: 0.875em;
-  color: #d97706;
+  color: var(--bs-info);
 }
 
 [data-bs-theme="dark"] code:not(pre code) {
   background-color: var(--bs-gray-800);
-  color: var(--bs-danger);
+  color: var(--bs-info);
 }
 
 /* Article content spacing */
