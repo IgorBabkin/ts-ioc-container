@@ -1,29 +1,25 @@
-sequenceDiagram
-    participant Dev as Developer
-    participant Reg as Registration
-    participant Container
-    participant Provider
-    participant AliasMap
-    
-    Dev->>Reg: Registration.fromClass(Logger)
-    Reg->>Reg: create Provider
-    Dev->>Reg: bindToKey('ILogger')
-    Reg->>Reg: set key = 'ILogger'
-    Dev->>Reg: pipe(singleton())
-    Reg->>Provider: pipe(singleton())
-    Provider->>Provider: wrap with SingletonProvider
-    Dev->>Reg: when(scope => scope.hasTag('root'))
-    Reg->>Reg: add scope match rule
-    Dev->>Container: addRegistration(registration)
-    Container->>Reg: applyTo(container)
-    Reg->>Reg: check scope match rules
-    alt Scope matches
-        Reg->>Container: register('ILogger', provider)
-        Container->>Provider: store in providers map
-        Reg->>Container: bindToAlias('Logger')
-        Container->>AliasMap: add('Logger', 'ILogger')
-        Container-->>Dev: registration complete
-    else Scope doesn't match
-        Reg-->>Container: skip registration
-    end
+flowchart TD
+    Start([Developer creates Registration]) --> Config[Configure Registration:<br/>bindToKey, pipe, when]
+    Config --> CreateProvider[Registration creates provider with configuration]
+    CreateProvider --> AddToContainer[Developer addRegistration to container]
+    AddToContainer --> Apply[Container applies Registration]
+    Apply --> CheckScope{Scope matches?}
+    CheckScope -->|Yes| Register[Register provider & alias]
+    CheckScope -->|No| Skip[Skip registration]
+    Register --> Complete([Registration complete])
+    Skip --> Complete
+
+    classDef startEnd fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff
+    classDef process fill:#6C5CE7,stroke:#4834D4,stroke-width:2px,color:#fff
+    classDef config fill:#00B894,stroke:#00A085,stroke-width:2px,color:#fff
+    classDef decision fill:#FDCB6E,stroke:#E17055,stroke-width:2px,color:#2D3436
+    classDef success fill:#00B894,stroke:#00A085,stroke-width:2px,color:#fff
+    classDef skip fill:#636E72,stroke:#2D3436,stroke-width:2px,color:#fff
+
+    class Start,Complete startEnd
+    class CreateProvider,AddToContainer,Apply process
+    class Config config
+    class CheckScope decision
+    class Register success
+    class Skip skip
 

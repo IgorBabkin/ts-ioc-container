@@ -1,0 +1,13 @@
+flowchart TD
+    Create([Create new Container as Scope<br/>with parent reference]) --> CopyHooks[Copy hooks<br/>onConstruct, onDispose]
+    CopyHooks --> GetRegs[Get all registrations<br/>parent + current scope]
+    GetRegs --> Apply[Apply registration to new scope]
+    Apply --> AddScope[Add scope to<br/>scopes list]
+    AddScope --> Return([Return new scope])
+
+    style Create fill:#e1e4e8
+    style CopyHooks fill:#f1e05a
+    style GetRegs fill:#c6e48b
+    style AddScope fill:#7bc96f
+    style Return fill:#0366d6,color:#fff
+

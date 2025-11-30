@@ -1,38 +1,19 @@
-sequenceDiagram
-    participant Client
-    participant Container
-    participant Provider
-    participant Injector
-    participant Instance
-    
-    Client->>Container: resolve('ILogger')
-    Container->>Container: findProvider('ILogger')
-    alt Provider found in current scope
-        Container->>Provider: resolve(container, options)
-        Provider->>Provider: checkAccess(invocationScope)
-        alt Has access
-            Provider->>Provider: getArgs(container)
-            Provider->>Injector: resolve(container, Logger, args)
-            Injector->>Injector: createInstance(container, Logger, args)
-            Injector->>Container: resolve dependencies
-            Container-->>Injector: dependencies
-            Injector->>Instance: new Logger(deps)
-            Instance-->>Injector: instance
-            Injector-->>Provider: instance
-            Provider->>Provider: cache (if singleton)
-            Provider-->>Container: instance
-            Container->>Container: addInstance(instance)
-            Container-->>Client: instance
-        else No access
-            Provider-->>Container: throw DependencyNotFoundError
-        end
-    else Provider not found
-        Container->>Container: getParent()
-        alt Has parent
-            Container->>Container: parent.resolve('ILogger')
-            Note over Container: Recursive resolution
-        else No parent
-            Container-->>Client: throw DependencyNotFoundError
-        end
-    end
+flowchart TD
+    Start([Resolve dependency])
+    Start --> CheckConstructor{Is target<br/>constructor?}
+    CheckConstructor -->|Yes| Injector[Resolve constructor<br/>from Injector]
+    CheckConstructor -->|No| FindProvider[Find provider<br/>by string or symbol]
+    FindProvider --> Container{Provider exists<br/>and has access<br/>to current scope?}
+
+    Container -->|Yes| Provider[Resolve dependency<br/>from provider]
+
+    Container -->|No| ResolveParent[Resolve dependency<br/>from parent scope]
+
+    style Start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style CheckConstructor fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+    style Container fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+    style Injector fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
+    style FindProvider fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    style Provider fill:#00BCD4,stroke:#00838F,stroke-width:2px,color:#fff
+    style ResolveParent fill:#FF5722,stroke:#BF360C,stroke-width:2px,color:#fff
 

@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import dependencyResolutionFlowDiagram from "../diagrams/dependency-resolution-flow.mermaid?raw";
 import scopeHierarchyDiagram from "../diagrams/scope-hierarchy.mermaid?raw";
+import createScopeFlowDiagram from "../diagrams/create-scope-flow.mermaid?raw";
 import scopesSpecCode from "../../../__tests__/readme/scopes.spec.ts?raw";
 import instancesSpecCode from "../../../__tests__/readme/instances.spec.ts?raw";
 import filteringInstancesSpecCode from "../../../__tests__/readme/filteringInstances.spec.ts?raw";
@@ -57,6 +58,25 @@ import containerModuleSpecCode from "../../../__tests__/readme/containerModule.s
     <div class="diagram">
       <div class="mermaid" set:html={scopeHierarchyDiagram} />
     </div>
+
+    <h3>Creating a Scope</h3>
+
+    <p>
+      When you create a new scope using <code>createScope()</code>, the container
+      follows a specific process to set up the child scope. The new scope maintains
+      a reference to its parent, allowing it to access parent registrations while
+      maintaining its own isolated instance cache.
+    </p>
+
+    <div class="diagram">
+      <div class="mermaid" set:html={createScopeFlowDiagram} />
+    </div>
+
+    <p>
+      The scope creation process ensures that lifecycle hooks are properly
+      inherited, all relevant registrations are available, and the new scope is
+      properly registered in the parent's scope list for management and disposal.
+    </p>
 
     <h3>Scope Resolution Strategy</h3>
 
