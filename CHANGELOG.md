@@ -1,3 +1,10 @@
+# [46.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.1.0...v46.2.0) (2025-12-05)
+
+
+### Features
+
+* **hooks:** add hook modules ([5f9aa68](https://github.com/IgorBabkin/ts-ioc-container/commit/5f9aa689eaa806f7590ebf69c1d1994cc9e6df86))
+
 # [46.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.0.1...v46.1.0) (2025-11-30)
 
 
