@@ -1,3 +1,10 @@
+# [46.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.2.0...v46.3.0) (2025-12-05)
+
+
+### Features
+
+* **register:** make register function as monoid ([9845ab3](https://github.com/IgorBabkin/ts-ioc-container/commit/9845ab3a3af021b44f05ae112688c8c2c81b3577))
+
 # [46.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.1.0...v46.2.0) (2025-12-05)
 
 
