@@ -32,9 +32,12 @@ export const getTransformers = (Target: constructor<unknown>) =>
   getClassMetadata<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
 export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>) =>
-  setClassMetadata(METADATA_KEY, () =>
-    mappers.map((m) => (isProviderPipe(m) ? (r: IRegistration) => m.mapRegistration(r) : m)),
-  );
+  setClassMetadata(METADATA_KEY, (acc: MapFn<IRegistration>[] | undefined) => {
+    const result = mappers.map((m) =>
+      isProviderPipe(m) ? (r: IRegistration) => m.mapRegistration(r) : m,
+    ) as MapFn<IRegistration>[];
+    return acc ? [...result, ...acc] : result;
+  });
 
 export const bindTo =
   (...tokens: (DependencyKey | BindToken)[]): MapFn<IRegistration> =>

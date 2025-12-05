@@ -10,7 +10,9 @@ import {
   singleton,
 } from '../../lib';
 
-@register(bindTo('logger'), scope((s) => s.hasTag('home')), singleton())
+@register(bindTo('logger'))
+@register(scope((s) => s.hasTag('home')), singleton())
+@register(singleton())
 class Logger {}
 
 describe('Singleton', function () {
