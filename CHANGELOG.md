@@ -1,3 +1,10 @@
+# [46.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.3.0...v46.4.0) (2025-12-05)
+
+
+### Features
+
+* **hooks:** improve prop declaration ([55f9494](https://github.com/IgorBabkin/ts-ioc-container/commit/55f9494fcd0869a54a4e31d6f3d85a61247e6b3c))
+
 # [46.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.2.0...v46.3.0) (2025-12-05)
 
 
