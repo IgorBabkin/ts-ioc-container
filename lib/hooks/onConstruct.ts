@@ -4,7 +4,7 @@ import { constructor, Instance } from '../types';
 import { HooksRunner } from './HooksRunner';
 
 export const onConstructHooksRunner = new HooksRunner('onConstruct');
-export const onConstruct = (fn: HookFn | constructor<HookClass>) => hook('onConstruct', fn);
+export const onConstruct = (...fns: (HookFn | constructor<HookClass>)[]) => hook('onConstruct', ...fns);
 
 export type OnConstructHook = (instance: Instance, scope: IContainer) => void;
 
