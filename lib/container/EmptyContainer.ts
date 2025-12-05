@@ -11,6 +11,8 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { constructor, Instance } from '../types';
+import { OnDisposeHook } from '../hooks/onDispose';
+import { OnConstructHook } from '../hooks/onConstruct';
 
 export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {
@@ -71,5 +73,13 @@ export class EmptyContainer implements IContainer {
 
   resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T {
     throw new DependencyNotFoundError(`Cannot find alias ${alias.toString()}`);
+  }
+
+  addOnDisposeHook(...hooks: OnDisposeHook[]): this {
+    throw new MethodNotImplementedError();
+  }
+
+  addOnConstructHook(...hooks: OnConstructHook[]): this {
+    throw new MethodNotImplementedError();
   }
 }

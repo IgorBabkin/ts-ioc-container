@@ -1,4 +1,6 @@
 import {
+  AddOnConstructHookModule,
+  AddOnDisposeHookModule,
   Container,
   hasHooks,
   hook,
@@ -6,9 +8,7 @@ import {
   HooksRunner,
   inject,
   onConstruct,
-  onConstructHooksRunner,
   onDispose,
-  onDisposeHooksRunner,
   Registration as R,
   UnexpectedHookResultError,
 } from '../../lib';
@@ -76,14 +76,8 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] })
-      .addOnConstructHook((instance, scope) => {
-        onConstructHooksRunner.execute(instance, { scope });
-      })
-      .addOnDisposeHook((scope) => {
-        for (const i of scope.getInstances()) {
-          onDisposeHooksRunner.execute(i, { scope });
-        }
-      });
+      .useModule(new AddOnConstructHookModule())
+      .useModule(new AddOnDisposeHookModule());
 
     const instance = root.resolve(Logger);
     root.dispose();

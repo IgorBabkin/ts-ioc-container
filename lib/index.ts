@@ -62,8 +62,8 @@ export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 export { getHooks, hook, hasHooks, type HookFn, type HookClass } from './hooks/hook';
 export { HookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
-export { onConstructHooksRunner, onConstruct } from './hooks/onConstruct';
-export { onDisposeHooksRunner, onDispose } from './hooks/onDispose';
+export { onConstructHooksRunner, onConstruct, AddOnConstructHookModule } from './hooks/onConstruct';
+export { onDisposeHooksRunner, onDispose, AddOnDisposeHookModule } from './hooks/onDispose';
 
 // Hooks runner
 export type { HooksRunnerContext } from './hooks/HooksRunner';

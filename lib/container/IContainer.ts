@@ -1,6 +1,8 @@
 import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { constructor, Instance } from '../types';
+import { OnConstructHook } from '../hooks/onConstruct';
+import { OnDisposeHook } from '../hooks/onDispose';
 
 export type DependencyKey = string | symbol;
 export function isDependencyKey(target: unknown): target is DependencyKey {
@@ -29,6 +31,10 @@ export type RegisterOptions = { aliases?: DependencyKey[] };
 
 export interface IContainer extends Tagged {
   readonly isDisposed: boolean;
+
+  addOnConstructHook(...hooks: OnConstructHook[]): this;
+
+  addOnDisposeHook(...hooks: OnDisposeHook[]): this;
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 

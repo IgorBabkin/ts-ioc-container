@@ -1,17 +1,15 @@
 import {
+  AddOnDisposeHookModule,
   bindTo,
   Container,
-  hook,
   type HookFn,
-  HooksRunner,
   inject,
+  onDispose,
   register,
   Registration as R,
-  select,
   singleton,
 } from '../../lib';
 
-const onDisposeHookRunner = new HooksRunner('onDispose');
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
@@ -27,7 +25,7 @@ class LogsRepo {
 
 @register(bindTo('logger'))
 class Logger {
-  @hook('onDispose', ({ instance, methodName }) => {
+  @onDispose(({ instance, methodName }) => {
     // @ts-ignore
     instance[methodName].push('world');
   }) // <--- or extract it to @onDispose
@@ -39,7 +37,7 @@ class Logger {
     this.messages.push(message);
   }
 
-  @hook('onDispose', execute) // <--- or extract it to @onDispose
+  @onDispose(execute)
   save() {
     this.logsRepo.saveLogs(this.messages);
   }
@@ -47,15 +45,17 @@ class Logger {
 
 describe('onDispose', function () {
   it('should invoke hooks on all instances', function () {
-    const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(LogsRepo));
+    const container = new Container()
+      .useModule(new AddOnDisposeHookModule())
+      .addRegistration(R.fromClass(Logger))
+      .addRegistration(R.fromClass(LogsRepo));
 
     const logger = container.resolve<Logger>('logger');
     logger.log('Hello');
+    const logsRepo = container.resolve<LogsRepo>('logsRepo');
 
-    for (const instance of select.instances().resolve(container)) {
-      onDisposeHookRunner.execute(instance, { scope: container });
-    }
+    container.dispose();
 
-    expect(container.resolve<LogsRepo>('logsRepo').savedLogs.join(',')).toBe('Hello,world');
+    expect(logsRepo.savedLogs.join(',')).toBe('Hello,world');
   });
 });
