@@ -269,6 +269,29 @@ Custom error classes in `lib/errors/`:
 7. If changing API, update `.readme.hbs.md` and run `pnpm run generate:docs`
 8. Commit follows conventional commits (use `pnpm run commit` for help)
 
+## Commit Message Conventions
+
+This project follows conventional commits with specific scope rules:
+
+### Documentation Commits
+- **ALWAYS use** `docs(pages):` for documentation site changes (files in `docs/src/pages/`)
+- **NEVER use** `fix(docs):` or `feat(docs):` for documentation changes
+- The `docs` scope is reserved for documentation infrastructure, not content
+
+**Examples:**
+- ✅ `docs(pages): migrate all pages from Astro to MDX`
+- ✅ `docs(pages): add new token usage examples`
+- ✅ `docs(pages): fix typo in provider documentation`
+- ❌ `fix(docs): update container examples` (incorrect - use `docs(pages)`)
+- ❌ `feat(docs): add metadata page` (incorrect - use `docs(pages)`)
+
+### Other Common Scopes
+- `feat(container):` - New container features
+- `fix(provider):` - Provider bug fixes
+- `test(hooks):` - Test updates for hooks
+- `chore(release):` - Release automation
+- `ci(github):` - CI/CD changes
+
 ## Notes on Docs Directory
 
 - `docs/` is a separate pnpm workspace (Astro project) with its own package.json
