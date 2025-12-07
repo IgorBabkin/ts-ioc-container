@@ -1,3 +1,10 @@
+# [46.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.1...v46.5.0) (2025-12-07)
+
+
+### Features
+
+* **docs:** add Spotlight debugging integration for local development ([a9728c5](https://github.com/IgorBabkin/ts-ioc-container/commit/a9728c529aa32b1df2661fba210feb17e8abf29c))
+
 ## [46.4.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.0...v46.4.1) (2025-12-07)
 
 
