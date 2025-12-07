@@ -1,0 +1,330 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Provider
+description: Provider - Dependency factories with singleton, args, visibility, alias, and decorator features
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+import providerPipelineDiagram from "../diagrams/provider-pipeline.mermaid?raw";
+import providerSpecCode from "../../../__tests__/readme/Singleton.spec.ts?raw";
+import aliasSpecCode from "../../../__tests__/readme/alias.spec.ts?raw";
+import decorateSpecCode from "../../../__tests__/readme/decorate.spec.ts?raw";
+import visibilitySpecCode from "../../../__tests__/readme/visibility.spec.ts?raw";
+
+# Provider
+
+<p>
+  Providers are factories that create dependency instances. They can be
+  configured with various features like singletons, argument binding,
+  visibility control, aliases, and decorators. Understanding providers is
+  key to mastering the IoC container.
+</p>
+
+<h2 id="factory-pattern">Factory Pattern</h2>
+<p>
+  Providers implement the Factory pattern, encapsulating the creation logic
+  of dependencies. This allows for complex instantiation logic while keeping
+  the container simple.
+</p>
+
+<h2 id="provider-types">Provider Types</h2>
+
+<p>There are three main ways to create providers:</p>
+
+<ul>
+  <li>
+    <strong>Class Provider</strong>: <code>Provider.fromClass(Logger)</code> -
+    Creates instances from a class
+  </li>
+  <li>
+    <strong>Value Provider</strong>: <code>Provider.fromValue(value)</code> -
+    Returns a constant value
+  </li>
+  <li>
+    <strong>Factory Provider</strong>: <code
+      >new Provider((container, ...args) =&gt; ...)</code
+    > - Custom factory function
+  </li>
+</ul>
+
+<h2 id="singleton">Singleton</h2>
+
+<p>
+  Singleton providers ensure only one instance is created per scope. This is
+  perfect for services like loggers, database connections, or configuration
+  managers.
+</p>
+
+<CodeBlock
+  code={providerSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/provider.spec.ts"
+/>
+
+### Per-Scope Singletons
+
+<p>
+  Each scope maintains its own singleton instance. This means different
+  scopes will have different instances:
+</p>
+
+<CodeBlock
+  code={`const container = new Container()
+  .addRegistration(R.fromClass(Logger));
+const child = container.createScope();
+
+// Different instances in different scopes
+expect(container.resolve('logger')).not.toBe(child.resolve('logger'));
+
+// Same instance within the same scope
+expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
+  lang="typescript"
+/>
+
+### Use Cases
+<ul>
+  <li>Shared state within a scope</li>
+  <li>Expensive object creation (database connections, HTTP clients)</li>
+  <li>Configuration objects</li>
+  <li>Service locators</li>
+</ul>
+
+<h2 id="arguments">Arguments</h2>
+
+<p>
+  Argument providers allow you to bind constructor arguments at registration
+  time. This is useful for configuration values, dependencies that should be
+  resolved at provider creation, or default values.
+</p>
+
+<CodeBlock
+  code={providerSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/provider.spec.ts"
+/>
+
+### Argument Priority
+
+<p>
+  Provider arguments take precedence over arguments passed to <code
+    >resolve()</code
+  >:
+</p>
+
+<CodeBlock
+  code={`const container = new Container()
+  .addRegistration(R.fromClass(Logger).pipe(args('name')));
+
+// Provider argument 'name' takes priority
+const logger = container.resolve<Logger>('logger', { args: ['file'] });
+expect(logger.name).toBe('name');
+expect(logger.type).toBe('file'); // Second argument still passed`}
+  lang="typescript"
+/>
+
+<h2 id="visibility">Visibility</h2>
+
+<p>
+  Visibility control allows you to restrict which scopes can access certain
+  dependencies using <code>ScopeAccessRule</code>. This is useful for implementing access control, feature
+  flags, or environment-specific services.
+</p>
+
+<CodeBlock
+  code={visibilitySpecCode}
+  lang="typescript"
+  filename="__tests__/readme/visibility.spec.ts"
+/>
+
+### Use Cases
+<ul>
+  <li>Admin-only services</li>
+  <li>Environment-specific dependencies (dev/staging/prod)</li>
+  <li>Feature flags</li>
+  <li>Security boundaries</li>
+</ul>
+
+<h2 id="alias">Alias</h2>
+
+<p>
+  Aliases allow you to group multiple registrations under a common
+  identifier. This is perfect for plugin systems, middleware, or any
+  scenario where you need to resolve multiple implementations of the same
+  interface.
+</p>
+
+<CodeBlock
+  code={aliasSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/alias.spec.ts"
+/>
+
+### Use Cases
+<ul>
+  <li>Middleware registration</li>
+  <li>Plugin systems</li>
+  <li>Multiple implementations of an interface</li>
+  <li>Event handlers or observers</li>
+</ul>
+
+<h2 id="decorator">Decorator</h2>
+
+<p>
+  The decorator pattern allows you to wrap instances with additional
+  functionality without modifying the original class. This is useful for
+  cross-cutting concerns like logging, caching, or transaction management.
+</p>
+
+<CodeBlock
+  code={decorateSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/decorate.spec.ts"
+/>
+
+### Use Cases
+<ul>
+  <li>Cross-cutting concerns (logging, caching, transactions)</li>
+  <li>AOP (Aspect-Oriented Programming)</li>
+  <li>Wrapping services with additional behavior</li>
+  <li>Proxy patterns</li>
+</ul>
+
+<h2 id="lazy-loading">Lazy Loading</h2>
+
+<p>
+  Lazy providers defer instantiation until the dependency is actually
+  accessed. This can improve startup performance and enable circular
+  dependency resolution.
+</p>
+
+<CodeBlock
+  code={providerSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/provider.spec.ts"
+/>
+
+<h2 id="provider-pipeline">Provider Pipeline</h2>
+
+<p>
+  Providers can be composed using the pipeline pattern. Each transformation
+  wraps the provider with additional functionality:
+</p>
+
+<div class="diagram">
+  <div class="mermaid" set:html={providerPipelineDiagram} />
+</div>
+
+### Provider Composition Example
+
+<CodeBlock
+  code={`const provider = Provider.fromClass(Logger)
+  .pipe(args('/config.json'))       // 1. Bind arguments
+  .pipe(singleton())                // 2. Cache instances
+  .pipe(scopeAccess(rule))          // 3. Control visibility
+  .pipe(lazy());                    // 4. Defer creation
+
+// Each pipe wraps the previous provider
+// Final provider: Lazy(Visibility(Singleton(Args(Base))))
+`}
+  lang="typescript"
+/>
+
+### Decorator Pattern
+<p>
+  The provider pipeline uses the Decorator pattern, allowing features to be
+  added incrementally without modifying the base provider. Each pipe
+  operation wraps the provider with additional functionality.
+</p>
+
+### Composable Providers
+<p>
+  The pipeline pattern allows providers to be composed from smaller pieces.
+  This design:
+</p>
+<ul>
+  <li>Keeps the base provider simple</li>
+  <li>Allows features to be added incrementally</li>
+  <li>Makes the system extensible</li>
+  <li>Follows the Open/Closed Principle</li>
+</ul>
+
+<p>
+  You can also use the <code>pipe</code> method in registrations:
+</p>
+
+<CodeBlock
+  code={`const container = new Container()
+  .addRegistration(
+    R.fromClass(ConfigService)
+      .pipe(args('/default/config.json'))
+      .pipe(singleton())
+      .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
+  );`}
+  lang="typescript"
+/>
+
+<h2 id="performance-considerations">Performance Considerations</h2>
+
+### Singleton Caching
+<p>
+  Singleton providers cache instances per scope, avoiding unnecessary object
+  creation. The cache is implemented using a <code>Map</code> for O(1) lookup
+  performance.
+</p>
+
+### Lazy Loading
+<p>
+  Lazy providers use JavaScript proxies to defer instantiation until access.
+  This improves startup time by avoiding eager initialization of unused
+  dependencies.
+</p>
+
+### Provider Lookup
+<p>
+  Providers are stored in a <code>Map</code> keyed by <code
+    >DependencyKey</code
+  >, providing O(1) lookup performance. Alias resolution uses a separate <code
+    >AliasMap</code
+  > for efficient multi-key lookups.
+</p>
+
+<h2 id="custom-providers">Custom Providers</h2>
+<p>
+  Implement <code>IProvider</code> or extend <code>ProviderDecorator</code> to
+  create custom providers:
+</p>
+<CodeBlock
+  code={`class CustomProvider extends ProviderDecorator {
+  resolve(container: IContainer, options: ProviderOptions): T {
+    // Your custom resolution logic
+  }
+}`}
+  lang="typescript"
+/>
+
+<h2 id="best-practices">Best Practices</h2>
+
+<ul>
+  <li>
+    <strong>Use singletons for expensive resources</strong> - Database connections,
+    HTTP clients, configuration objects
+  </li>
+  <li>
+    <strong>Prefer argsFn for dynamic values</strong> - When arguments depend
+    on other container values
+  </li>
+  <li>
+    <strong>Use visibility for security</strong> - Restrict access to sensitive
+    services
+  </li>
+  <li>
+    <strong>Aliases for collections</strong> - Group related services together
+  </li>
+  <li>
+    <strong>Decorators for cross-cutting concerns</strong> - Keep your core classes
+    clean
+  </li>
+  <li>
+    <strong>Lazy loading for performance</strong> - Defer expensive object creation
+  </li>
+</ul>

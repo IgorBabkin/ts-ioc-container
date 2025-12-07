@@ -15,7 +15,6 @@ export default defineConfig({
     }),
     sitemap(),
     sentry({
-      dsn: "", // Leave empty for local development only
       sourceMapsUploadOptions: {
         enabled: false, // Disable for local dev
       },

@@ -1,0 +1,166 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Registration
+description: Registration - Registering providers with keys and scopes
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+import registrationFlowDiagram from "../diagrams/registration-flow.mermaid?raw";
+import registrationSpecCode from "../../../__tests__/readme/registration.spec.ts?raw";
+import containerModuleSpecCode from "../../../__tests__/readme/containerModule.spec.ts?raw";
+
+# Registration
+
+<p>
+  Registrations connect providers to the container with keys and
+  configuration. They can be created using decorators or the fluent API,
+  providing flexibility in how you organize your dependency configuration.
+</p>
+
+<h2 id="registration-flow">Registration Flow</h2>
+
+<p>
+  The following diagram shows how registrations are processed and applied to
+  containers:
+</p>
+
+<div class="diagram">
+  <div class="mermaid" set:html={registrationFlowDiagram} />
+</div>
+
+<h2 id="registration-methods">Registration Methods</h2>
+
+<p>There are several ways to create and apply registrations:</p>
+
+<ul>
+  <li>
+    <strong>Decorator-based</strong>: Using <code>@register</code> decorator
+  </li>
+  <li>
+    <strong>Fluent API</strong>: Using <code>Registration</code> class methods
+  </li>
+  <li>
+    <strong>Direct registration</strong>: Using <code
+      >container.register()</code>
+  </li>
+</ul>
+
+<h2 id="decorator-based-registration">Decorator-Based Registration</h2>
+
+<p>
+  The <code>@register</code> decorator provides a declarative way to register
+  classes. This is the most convenient approach for most use cases.
+</p>
+
+<CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
+
+<h2 id="fluent-api-registration">Fluent API Registration</h2>
+
+<p>
+  The fluent API provides more control and is useful when you need dynamic
+  registration or want to avoid decorators.
+</p>
+
+<CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
+
+<h2 id="keys">Keys</h2>
+
+<p>
+  Keys identify dependencies in the container. They can be strings, symbols,
+  or tokens. Understanding how keys work is essential for effective
+  dependency management.
+</p>
+
+<CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
+
+<h2 id="scope-registration">Scope Registration</h2>
+
+<p>
+  Scope match rules (<code>ScopeMatchRule</code>) control which scopes a provider is available in. This
+  allows you to register different implementations for different
+  environments or contexts.
+</p>
+
+<CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
+
+<h2 id="registration-pipeline">Registration Pipeline</h2>
+
+<p>
+  Registrations support the pipeline pattern, allowing you to chain multiple
+  transformations:
+</p>
+
+<CodeBlock code={`import { args, singleton, scopeAccess } from 'ts-ioc-container';
+
+const container = new Container()
+  .addRegistration(
+    R.fromClass(ConfigService)
+      .bindToKey('IConfig')
+      .when((s) => s.hasTag('root'))
+      .pipe(args('/config.json'))
+      .pipe(singleton())
+      .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
+  );`} lang="typescript" />
+
+<h2 id="container-modules">Container Modules</h2>
+
+<p>
+  Container modules encapsulate registration logic, making it easy to
+  organize and compose your dependency configuration.
+</p>
+
+<CodeBlock code={containerModuleSpecCode} lang="typescript" filename="__tests__/readme/containerModule.spec.ts" />
+
+<h2 id="best-practices">Best Practices</h2>
+
+<ul>
+  <li>
+    <strong>Use decorators for simple cases</strong> - When you have straightforward
+    class registrations
+  </li>
+  <li>
+    <strong>Use fluent API for dynamic registration</strong> - When keys or providers
+    are determined at runtime
+  </li>
+  <li>
+    <strong>Always provide keys for values/factories</strong> - Required to avoid
+    errors
+  </li>
+  <li>
+    <strong>Use modules for organization</strong> - Group related registrations
+    together
+  </li>
+  <li>
+    <strong>Use scope match rules for environment-specific code</strong> - Keep
+    configurations clean
+  </li>
+  <li>
+    <strong>Export tokens as constants</strong> - Create keys once and reuse them
+  </li>
+  <li>
+    <strong>Use aliases for grouping</strong> - When you need multiple implementations
+  </li>
+</ul>
+
+<h2 id="registration-lifecycle">Registration Lifecycle</h2>
+
+<ol>
+  <li>
+    <strong>Creation</strong>: Registration is created with a provider
+  </li>
+  <li>
+    <strong>Configuration</strong>: Keys, scopes, and features are
+    configured
+  </li>
+  <li>
+    <strong>Application</strong>: Registration is applied to container via <code
+      >addRegistration()</code>
+  </li>
+  <li><strong>Validation</strong>: Scope match rules are evaluated</li>
+  <li>
+    <strong>Storage</strong>: Provider is stored in container's provider map
+  </li>
+  <li>
+    <strong>Alias Registration</strong>: Aliases are registered if provided
+  </li>
+</ol>
