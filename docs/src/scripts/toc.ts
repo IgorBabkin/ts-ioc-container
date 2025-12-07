@@ -121,7 +121,15 @@ export function initializeTableOfContents(): void {
     }
   };
 
-  window.addEventListener("scroll", handleScroll, { passive: true });
+  // Add scroll listener to the correct scroll container
+  const scrollContainer = getScrollContainer();
+  if (scrollContainer === window) {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+  } else {
+    (scrollContainer as HTMLElement).addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+  }
 
   // Initial update
   updateActiveTOC();
