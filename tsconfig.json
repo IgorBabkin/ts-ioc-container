@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": "./lib",
-    "target": "ES2024",
+    "target": "ES2022",
     "module": "ESNext",
-    "lib": ["es2024"],
+    "lib": ["es2022"],
     "types": ["reflect-metadata", "jest", "node"],
     "moduleResolution": "Node",
     "experimentalDecorators": true,
