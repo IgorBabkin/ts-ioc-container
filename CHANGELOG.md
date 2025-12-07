@@ -1,3 +1,11 @@
+## [46.4.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.0...v46.4.1) (2025-12-07)
+
+
+### Bug Fixes
+
+* **docs:** fix diagram dark mode background ([1b945a7](https://github.com/IgorBabkin/ts-ioc-container/commit/1b945a788a4f57280ebf3a4bf39a1561e5b6d90f))
+* **token:** fix lazy() methods returning same instance instead of new one ([96dafe6](https://github.com/IgorBabkin/ts-ioc-container/commit/96dafe6486fee035977fc67ce9380509d51e733c))
+
 # [46.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.3.0...v46.4.0) (2025-12-05)
 
 
