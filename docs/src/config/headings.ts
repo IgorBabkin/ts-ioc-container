@@ -113,6 +113,22 @@ export const pageHeadings: Record<string, Heading[]> = {
     { id: "lazy-loading", text: "Lazy Loading", level: 2 },
     { id: "dynamic-arguments", text: "Dynamic Arguments", level: 2 },
   ],
+  "/ts-ioc-container/metadata": [
+    { id: "what-is-metadata", text: "What is Metadata?", level: 2 },
+    { id: "prerequisites", text: "Prerequisites", level: 2 },
+    { id: "api-overview", text: "API Overview", level: 2 },
+    { id: "class-metadata", text: "Class Metadata", level: 2 },
+    { id: "parameter-metadata", text: "Parameter Metadata", level: 2 },
+    { id: "method-metadata", text: "Method Metadata", level: 2 },
+    { id: "real-world-example", text: "Real-World Example", level: 2 },
+    { id: "how-it-works", text: "How It Works", level: 2 },
+    { id: "usage-in-container", text: "Usage in ts-ioc-container", level: 2 },
+    { id: "comprehensive-tests", text: "Comprehensive Tests", level: 2 },
+    { id: "best-practices", text: "Best Practices", level: 2 },
+    { id: "common-patterns", text: "Common Patterns", level: 2 },
+    { id: "limitations", text: "Limitations", level: 2 },
+    { id: "alternative-approaches", text: "Alternative Approaches", level: 2 },
+  ],
 };
 
 /**

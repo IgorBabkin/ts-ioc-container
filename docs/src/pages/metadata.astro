@@ -1,0 +1,563 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import metadataSpecCode from "../../../__tests__/readme/metadata.spec.ts?raw";
+import metadataSourceCode from "../../../lib/metadata.ts?raw";
+---
+
+<BaseLayout
+  title="Metadata"
+  description="Metadata - Low-level metadata API for decorators using reflect-metadata"
+>
+  <article>
+    <h1>Metadata</h1>
+
+    <p>
+      The metadata module provides a low-level API for storing and retrieving metadata on classes,
+      methods, and parameters using the <code>reflect-metadata</code> library. This system forms
+      the foundation for decorators like <code>@register</code>, <code>@inject</code>,
+      <code>@onConstruct</code>, and <code>@onDispose</code>.
+    </p>
+
+    <h2 id="what-is-metadata">What is Metadata?</h2>
+
+    <p>
+      Metadata is data about your code that can be attached to classes, methods, and parameters at
+      design time. The TypeScript compiler with <code>reflect-metadata</code> enables reading and
+      writing this metadata at runtime. The metadata system allows you to:
+    </p>
+
+    <ul>
+      <li>Store configuration on classes, methods, and parameters</li>
+      <li>Build powerful decorator systems</li>
+      <li>Implement dependency injection patterns</li>
+      <li>Create validation and serialization frameworks</li>
+      <li>Accumulate metadata from multiple decorators</li>
+    </ul>
+
+    <p>
+      This library provides a simplified, functional API over <code>reflect-metadata</code> that
+      supports accumulation patterns through mapper functions.
+    </p>
+
+    <h2 id="prerequisites">Prerequisites</h2>
+
+    <p>To use the metadata system, you need:</p>
+
+    <ul>
+      <li>
+        Import <code>reflect-metadata</code> at your application entry point
+      </li>
+      <li>
+        Enable <code>experimentalDecorators</code> and <code>emitDecoratorMetadata</code> in your
+        <code>tsconfig.json</code>
+      </li>
+    </ul>
+
+    <CodeBlock
+      code={`// At application entry point
+import 'reflect-metadata';
+
+// In tsconfig.json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}`}
+      lang="typescript"
+    />
+
+    <h2 id="api-overview">API Overview</h2>
+
+    <p>The metadata module exports six functions organized in pairs:</p>
+
+    <ul>
+      <li>
+        <strong>Class Metadata</strong>: <code>setClassMetadata</code> and
+        <code>getClassMetadata</code>
+      </li>
+      <li>
+        <strong>Parameter Metadata</strong>: <code>setParameterMetadata</code> and
+        <code>getParameterMetadata</code>
+      </li>
+      <li>
+        <strong>Method Metadata</strong>: <code>setMethodMetadata</code> and
+        <code>getMethodMetadata</code>
+      </li>
+    </ul>
+
+    <h2 id="class-metadata">Class Metadata</h2>
+
+    <p>
+      Class metadata is stored on the class constructor itself. Use this to attach configuration,
+      tags, or registration information to classes.
+    </p>
+
+    <h3>setClassMetadata</h3>
+
+    <p>
+      Creates a class decorator that stores metadata using a mapper function. The mapper receives
+      the previous value (if any) and returns the new value.
+    </p>
+
+    <pre><code>setClassMetadata&lt;T&gt;(
+  key: string | symbol,
+  mapFn: (prev: T | undefined) =&gt; T
+): ClassDecorator</code></pre>
+
+    <h3>getClassMetadata</h3>
+
+    <p>Retrieves metadata from a class constructor.</p>
+
+    <pre><code>getClassMetadata&lt;T&gt;(
+  target: object,
+  key: string | symbol
+): T | undefined</code></pre>
+
+    <h3>Example: Feature Flags</h3>
+
+    <CodeBlock
+      code={`const FEATURE_KEY = 'feature:enabled';
+
+@setClassMetadata(FEATURE_KEY, () => true)
+class FeatureService {
+  getName() {
+    return 'feature';
+  }
+}
+
+const isEnabled = getClassMetadata<boolean>(FeatureService, FEATURE_KEY);
+console.log(isEnabled); // true`}
+      lang="typescript"
+    />
+
+    <h3>Example: Accumulating Tags</h3>
+
+    <CodeBlock
+      code={`const TAGS_KEY = 'tags';
+
+@setClassMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
+@setClassMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
+class ApiService {
+  getName() {
+    return 'api';
+  }
+}
+
+const tags = getClassMetadata<string[]>(ApiService, TAGS_KEY);
+// Decorators apply bottom-to-top: 'api' added first, then 'service'
+console.log(tags); // ['api', 'service']`}
+      lang="typescript"
+    />
+
+    <h2 id="parameter-metadata">Parameter Metadata</h2>
+
+    <p>
+      Parameter metadata is stored as an array indexed by parameter position. This is crucial for
+      constructor and method parameter injection.
+    </p>
+
+    <h3>setParameterMetadata</h3>
+
+    <p>
+      Creates a parameter decorator that stores metadata for a specific parameter. The mapper
+      receives the previous value for that parameter index.
+    </p>
+
+    <pre><code>setParameterMetadata(
+  key: string | symbol,
+  mapFn: (prev: unknown) =&gt; unknown
+): ParameterDecorator</code></pre>
+
+    <h3>getParameterMetadata</h3>
+
+    <p>
+      Retrieves parameter metadata as an array. Undecorated parameters will have
+      <code>undefined</code> at their index.
+    </p>
+
+    <pre><code>getParameterMetadata(
+  key: string | symbol,
+  target: constructor&lt;unknown&gt;
+): unknown[]</code></pre>
+
+    <h3>Example: Dependency Injection</h3>
+
+    <CodeBlock
+      code={`const INJECT_KEY = 'inject:constructor';
+
+class DatabaseService {
+  constructor(
+    @setParameterMetadata(INJECT_KEY, () => 'config') config: any,
+    @setParameterMetadata(INJECT_KEY, () => 'logger') logger: any,
+  ) {
+    console.log('DatabaseService created');
+  }
+}
+
+const metadata = getParameterMetadata(INJECT_KEY, DatabaseService);
+console.log(metadata); // ['config', 'logger']`}
+      lang="typescript"
+    />
+
+    <h3>Example: Sparse Parameters</h3>
+
+    <CodeBlock
+      code={`const INJECT_KEY = 'inject:constructor';
+
+class SparseService {
+  constructor(
+    first: any,
+    @setParameterMetadata(INJECT_KEY, () => 'second') second: any,
+    third: any,
+    @setParameterMetadata(INJECT_KEY, () => 'fourth') fourth: any,
+  ) {}
+}
+
+const metadata = getParameterMetadata(INJECT_KEY, SparseService);
+console.log(metadata[0]); // undefined
+console.log(metadata[1]); // 'second'
+console.log(metadata[2]); // undefined
+console.log(metadata[3]); // 'fourth'`}
+      lang="typescript"
+    />
+
+    <h2 id="method-metadata">Method Metadata</h2>
+
+    <p>
+      Method metadata is stored per method on the class. Use this for hooks, validators, middleware,
+      or any method-level configuration.
+    </p>
+
+    <h3>setMethodMetadata</h3>
+
+    <p>
+      Creates a method decorator that stores metadata for a specific method. The mapper receives
+      the previous value for that method.
+    </p>
+
+    <pre><code>setMethodMetadata&lt;T&gt;(
+  key: string,
+  mapFn: (prev: T | undefined) =&gt; T
+): MethodDecorator</code></pre>
+
+    <h3>getMethodMetadata</h3>
+
+    <p>Retrieves metadata for a specific method.</p>
+
+    <pre><code>getMethodMetadata(
+  key: string,
+  target: object,
+  propertyKey: string
+): unknown</code></pre>
+
+    <h3>Example: Log Levels</h3>
+
+    <CodeBlock
+      code={`class Logger {
+  @setMethodMetadata('logLevel', () => 'info')
+  info(message: string) {
+    console.log(\`[INFO] \${message}\`);
+  }
+
+  @setMethodMetadata('logLevel', () => 'error')
+  error(message: string) {
+    console.error(\`[ERROR] \${message}\`);
+  }
+}
+
+const logger = new Logger();
+console.log(getMethodMetadata('logLevel', logger, 'info'));  // 'info'
+console.log(getMethodMetadata('logLevel', logger, 'error')); // 'error'`}
+      lang="typescript"
+    />
+
+    <h3>Example: Middleware Stack</h3>
+
+    <CodeBlock
+      code={`const MIDDLEWARE_KEY = 'middleware';
+
+class Controller {
+  @setMethodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
+  @setMethodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
+  handleRequest() {
+    console.log('Handling request');
+  }
+}
+
+const controller = new Controller();
+const middleware = getMethodMetadata(MIDDLEWARE_KEY, controller, 'handleRequest');
+// Decorators apply bottom-to-top: 'validate' added first, then 'auth'
+console.log(middleware); // ['validate', 'auth']`}
+      lang="typescript"
+    />
+
+    <h2 id="real-world-example">Real-World Example: Validation Decorators</h2>
+
+    <p>
+      Here's a complete example showing how to build a validation system using metadata:
+    </p>
+
+    <CodeBlock
+      code={`const VALIDATORS_KEY = 'validators';
+
+// Create a validation decorator
+const validate =
+  (validator: (value: any) => boolean): MethodDecorator =>
+    setMethodMetadata(VALIDATORS_KEY, (prev: Array<(v: any) => boolean> = []) => [
+      ...prev,
+      validator,
+    ]);
+
+// Function to run all validators for a method
+const runValidators = (instance: any, methodName: string, value: any): boolean => {
+  const validators = getMethodMetadata(VALIDATORS_KEY, instance, methodName) as Array<
+    (v: any) => boolean
+  >;
+  if (!validators) return true;
+  return validators.every((v) => v(value));
+};
+
+class UserService {
+  @validate((v) => v.length > 0)
+  @validate((v) => v.length <= 100)
+  setUsername(username: string) {
+    if (!runValidators(this, 'setUsername', username)) {
+      throw new Error('Invalid username');
+    }
+    return username;
+  }
+}
+
+const service = new UserService();
+console.log(runValidators(service, 'setUsername', 'john'));        // true
+console.log(runValidators(service, 'setUsername', ''));            // false
+console.log(runValidators(service, 'setUsername', 'a'.repeat(101))); // false`}
+      lang="typescript"
+    />
+
+    <h2 id="how-it-works">How It Works</h2>
+
+    <p>The metadata system is built on top of <code>reflect-metadata</code>:</p>
+
+    <ul>
+      <li>
+        <strong>Class metadata</strong> uses <code>Reflect.defineMetadata</code> and
+        <code>Reflect.getOwnMetadata</code> on the class constructor
+      </li>
+      <li>
+        <strong>Parameter metadata</strong> stores an array where each index corresponds to a
+        parameter position
+      </li>
+      <li>
+        <strong>Method metadata</strong> uses <code>Reflect.defineMetadata</code> with the class
+        constructor and property key
+      </li>
+    </ul>
+
+    <h3>Source Code</h3>
+
+    <p>Here's the complete implementation:</p>
+
+    <CodeBlock
+      code={metadataSourceCode}
+      lang="typescript"
+      filename="lib/metadata.ts"
+    />
+
+    <h2 id="usage-in-container">Usage in ts-ioc-container</h2>
+
+    <p>The metadata system powers several core features:</p>
+
+    <h3>@register Decorator</h3>
+
+    <p>
+      Uses <code>setClassMetadata</code> to store registration transformers on classes:
+    </p>
+
+    <CodeBlock
+      code={`@register(
+  bindTo('MyService'),
+  singleton(),
+  scope((s) => s.hasTag('root'))
+)
+class MyService {
+  // ...
+}`}
+      lang="typescript"
+    />
+
+    <h3>@inject Decorator</h3>
+
+    <p>
+      Uses <code>setParameterMetadata</code> to specify which dependencies to inject into
+      constructor parameters:
+    </p>
+
+    <CodeBlock
+      code={`class MyService {
+  constructor(
+    @inject('config') config: Config,
+    @inject('logger') logger: Logger
+  ) {
+    // ...
+  }
+}`}
+      lang="typescript"
+    />
+
+    <h3>Lifecycle Hooks</h3>
+
+    <p>
+      Uses <code>setMethodMetadata</code> for <code>@onConstruct</code>,
+      <code>@onDispose</code>, and <code>@hook</code> decorators:
+    </p>
+
+    <CodeBlock
+      code={`class MyService {
+  @onConstruct
+  async initialize() {
+    // Called after construction
+  }
+
+  @onDispose
+  async cleanup() {
+    // Called before disposal
+  }
+}`}
+      lang="typescript"
+    />
+
+    <h2 id="comprehensive-tests">Comprehensive Tests</h2>
+
+    <p>
+      The following test suite demonstrates all metadata functionality with real-world examples:
+    </p>
+
+    <CodeBlock
+      code={metadataSpecCode}
+      lang="typescript"
+      filename="__tests__/readme/metadata.spec.ts"
+    />
+
+    <h2 id="best-practices">Best Practices</h2>
+
+    <ul>
+      <li>
+        <strong>Use unique metadata keys</strong> - Namespace your keys to avoid collisions (e.g.,
+        <code>'mylib:feature'</code>)
+      </li>
+      <li>
+        <strong>Document metadata keys</strong> - Create constants for keys and document their
+        purpose
+      </li>
+      <li>
+        <strong>Use mapper functions for accumulation</strong> - When stacking decorators, use the
+        <code>prev</code> parameter to accumulate values
+      </li>
+      <li>
+        <strong>Type your metadata</strong> - Use TypeScript generics to type your metadata values
+      </li>
+      <li>
+        <strong>Handle undefined gracefully</strong> - Always check if metadata exists before using
+        it
+      </li>
+      <li>
+        <strong>Don't overuse metadata</strong> - Prefer explicit configuration over implicit
+        metadata when possible
+      </li>
+      <li>
+        <strong>Consider performance</strong> - Metadata reflection has a small runtime cost, cache
+        results when appropriate
+      </li>
+    </ul>
+
+    <h2 id="common-patterns">Common Patterns</h2>
+
+    <h3>Accumulation Pattern</h3>
+
+    <p>Use the previous value to accumulate metadata from multiple decorators:</p>
+
+    <CodeBlock
+      code={`const addTag = (tag: string) =>
+  setClassMetadata('tags', (prev: string[] = []) => [...prev, tag]);
+
+@addTag('api')
+@addTag('service')
+class MyService {}`}
+      lang="typescript"
+    />
+
+    <h3>Configuration Pattern</h3>
+
+    <p>Store configuration directly:</p>
+
+    <CodeBlock
+      code={`const config = (options: object) =>
+  setClassMetadata('config', () => options);
+
+@config({ timeout: 5000, retries: 3 })
+class HttpClient {}`}
+      lang="typescript"
+    />
+
+    <h3>Validation Pattern</h3>
+
+    <p>Accumulate validators on methods:</p>
+
+    <CodeBlock
+      code={`const validate = (fn: (v: any) => boolean) =>
+  setMethodMetadata('validators', (prev: Function[] = []) => [...prev, fn]);
+
+class UserService {
+  @validate(v => v.length > 0)
+  @validate(v => v.length <= 100)
+  setName(name: string) {}
+}`}
+      lang="typescript"
+    />
+
+    <h2 id="limitations">Limitations</h2>
+
+    <ul>
+      <li>
+        <strong>Requires reflect-metadata</strong> - Adds a runtime dependency and polyfill
+      </li>
+      <li>
+        <strong>TypeScript experimental feature</strong> - Decorators are still experimental in
+        TypeScript
+      </li>
+      <li>
+        <strong>No static type checking</strong> - Metadata keys and values aren't type-checked at
+        compile time
+      </li>
+      <li>
+        <strong>Reflection overhead</strong> - There's a small performance cost to reading metadata
+      </li>
+      <li>
+        <strong>Not serializable</strong> - Metadata doesn't survive JSON serialization
+      </li>
+    </ul>
+
+    <h2 id="alternative-approaches">Alternative Approaches</h2>
+
+    <p>If you want to avoid metadata, consider:</p>
+
+    <ul>
+      <li>
+        <strong>Explicit registration</strong> - Register dependencies manually without decorators
+      </li>
+      <li>
+        <strong>Factory functions</strong> - Use factory functions instead of class decorators
+      </li>
+      <li>
+        <strong>Configuration objects</strong> - Pass configuration explicitly rather than via
+        metadata
+      </li>
+      <li>
+        <strong>Type-based injection</strong> - Use TypeScript's type system without reflection
+      </li>
+    </ul>
+  </article>
+</BaseLayout>

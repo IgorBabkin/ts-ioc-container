@@ -12,4 +12,5 @@ export const navigation: NavigationItem[] = [
   { title: "Injector", href: "/ts-ioc-container/injector" },
   { title: "Token", href: "/ts-ioc-container/token" },
   { title: "Hooks", href: "/ts-ioc-container/hooks" },
+  { title: "Metadata", href: "/ts-ioc-container/metadata" },
 ];
