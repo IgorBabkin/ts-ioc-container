@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "46.6.0",
+  "version": "46.6.1",
   "description": "Typescript IoC container",
   "workspaces": [
     "docs"

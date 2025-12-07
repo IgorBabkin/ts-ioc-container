@@ -1,3 +1,10 @@
+## [46.6.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.0...v46.6.1) (2025-12-07)
+
+
+### Performance Improvements
+
+* **ci:** remove Jest cache to speed up workflow ([6c2e5a2](https://github.com/IgorBabkin/ts-ioc-container/commit/6c2e5a271a42eb37df53ccf23c9acc14cd0b9d6c))
+
 # [46.6.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.5.0...v46.6.0) (2025-12-07)
 
 
