@@ -13,17 +13,11 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 
 # Injector
 
-<p>
-  The injector determines how dependencies are passed to constructors. The
-  container supports three injection strategies, each suited for different
-  use cases and coding styles.
-</p>
+The injector determines how dependencies are passed to constructors. The container supports three injection strategies, each suited for different use cases and coding styles.
 
 <h2 id="injection-strategies">Injection Strategies</h2>
 
-<p>
-  The container supports three injection strategies, each implementing the <code>IInjector</code> interface:
-</p>
+The container supports three injection strategies, each implementing the `IInjector` interface:
 
 <div class="diagram">
   <div class="mermaid" set:html={injectionStrategiesDiagram} />
@@ -31,28 +25,13 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 
 <h2 id="available-injectors">Available Injectors</h2>
 
-<ul>
-  <li>
-    <strong>MetadataInjector</strong> (default): Uses <code>@inject</code> decorators
-    with reflection metadata
-  </li>
-  <li>
-    <strong>ProxyInjector</strong>: Injects dependencies as a dictionary
-    object, perfect for destructuring
-  </li>
-  <li>
-    <strong>SimpleInjector</strong>: Passes the container as the first
-    constructor argument for manual resolution
-  </li>
-</ul>
+- **MetadataInjector** (default): Uses `@inject` decorators with reflection metadata
+- **ProxyInjector**: Injects dependencies as a dictionary object, perfect for destructuring
+- **SimpleInjector**: Passes the container as the first constructor argument for manual resolution
 
 <h2 id="metadata-injector">Metadata Injector</h2>
 
-<p>
-  The default injector uses TypeScript decorators and reflection metadata to
-  inject dependencies. This provides a clean, declarative syntax that's easy
-  to read and maintain.
-</p>
+The default injector uses TypeScript decorators and reflection metadata to inject dependencies. This provides a clean, declarative syntax that's easy to read and maintain.
 
 ### Basic Usage
 
@@ -64,21 +43,11 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 
 ### Property Injection
 
-<p>
-  The Metadata Injector also supports property injection using hooks. This
-  is useful when constructor injection isn't possible or when you need to
-  inject into base class properties. See the <a href="/ts-ioc-container/hooks#property-injection">Hooks</a> chapter
-  for detailed information about property injection.
-</p>
-
+The Metadata Injector also supports property injection using hooks. This is useful when constructor injection isn't possible or when you need to inject into base class properties. See the [Hooks](/ts-ioc-container/hooks#property-injection) chapter for detailed information about property injection.
 
 <h2 id="simple-injector">Simple Injector</h2>
 
-<p>
-  The Simple Injector passes the container instance as the first constructor
-  parameter, giving you direct access to resolve dependencies manually. This
-  approach is useful when you need more control over dependency resolution.
-</p>
+The Simple Injector passes the container instance as the first constructor parameter, giving you direct access to resolve dependencies manually. This approach is useful when you need more control over dependency resolution.
 
 <CodeBlock
   code={simpleInjectorSpecCode}
@@ -87,20 +56,15 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 />
 
 ### Use Cases
-<ul>
-  <li>Manual dependency resolution</li>
-  <li>Dynamic dependency selection</li>
-  <li>Legacy code integration</li>
-  <li>Framework integration where container access is needed</li>
-</ul>
+
+- Manual dependency resolution
+- Dynamic dependency selection
+- Legacy code integration
+- Framework integration where container access is needed
 
 <h2 id="proxy-injector">Proxy Injector</h2>
 
-<p>
-  The Proxy Injector matches constructor parameter names to dependency keys
-  and injects them as a dictionary object. This is useful for object
-  destructuring patterns and functional programming styles.
-</p>
+The Proxy Injector matches constructor parameter names to dependency keys and injects them as a dictionary object. This is useful for object destructuring patterns and functional programming styles.
 
 <CodeBlock
   code={proxyInjectorSpecCode}
@@ -109,12 +73,11 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 />
 
 ### Use Cases
-<ul>
-  <li>Object destructuring in constructors</li>
-  <li>Named parameter patterns</li>
-  <li>Functional programming styles</li>
-  <li>When you prefer explicit parameter names over decorators</li>
-</ul>
+
+- Object destructuring in constructors
+- Named parameter patterns
+- Functional programming styles
+- When you prefer explicit parameter names over decorators
 
 <h2 id="choosing-the-right-injector">Choosing the Right Injector</h2>
 
@@ -152,19 +115,12 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 </div>
 
 <h2 id="strategy-pattern">Strategy Pattern</h2>
-<p>
-  The <code>IInjector</code> interface uses the Strategy pattern, allowing different
-  injection strategies to be used interchangeably. This makes the system flexible
-  and extensible.
-</p>
+
+The `IInjector` interface uses the Strategy pattern, allowing different injection strategies to be used interchangeably. This makes the system flexible and extensible.
 
 <h2 id="custom-injectors">Custom Injectors</h2>
 
-<p>
-  You can create custom injectors by implementing the <code>Injector</code> interface.
-  This allows you to implement injection strategies tailored to your specific
-  needs.
-</p>
+You can create custom injectors by implementing the `Injector` interface. This allows you to implement injection strategies tailored to your specific needs.
 
 <CodeBlock
   code={customInjectorSpecCode}
@@ -173,34 +129,17 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 />
 
 ### Extension Points
-<p>
-  Custom injectors are one of the key extension points in the architecture.
-  They allow you to:
-</p>
-<ul>
-  <li>Implement framework-specific injection patterns</li>
-  <li>Add custom parameter resolution logic</li>
-  <li>Integrate with legacy codebases</li>
-  <li>Support alternative dependency injection styles</li>
-</ul>
+
+Custom injectors are one of the key extension points in the architecture. They allow you to:
+
+- Implement framework-specific injection patterns
+- Add custom parameter resolution logic
+- Integrate with legacy codebases
+- Support alternative dependency injection styles
 
 <h2 id="best-practices">Best Practices</h2>
 
-<ul>
-  <li>
-    <strong>Use MetadataInjector by default</strong> - It provides the best developer
-    experience for most TypeScript projects
-  </li>
-  <li>
-    <strong>Choose SimpleInjector for manual control</strong> - When you need
-    explicit control over dependency resolution
-  </li>
-  <li>
-    <strong>Use ProxyInjector for destructuring</strong> - When you prefer object
-    destructuring patterns
-  </li>
-  <li>
-    <strong>Be consistent</strong> - Stick with one injector strategy throughout
-    your application for maintainability
-  </li>
-</ul>
+- **Use MetadataInjector by default** - It provides the best developer experience for most TypeScript projects
+- **Choose SimpleInjector for manual control** - When you need explicit control over dependency resolution
+- **Use ProxyInjector for destructuring** - When you prefer object destructuring patterns
+- **Be consistent** - Stick with one injector strategy throughout your application for maintainability

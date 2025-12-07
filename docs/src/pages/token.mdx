@@ -15,222 +15,135 @@ import tokenArgsFnSpecCode from "../../../__tests__/readme/tokenArgsFn.spec.ts?r
 
 # Token
 
-<p>
-  Tokens are used to identify and resolve dependencies in the container. The
-  library provides several token types for different use cases, each
-  offering different levels of type safety and flexibility.
-</p>
+Tokens are used to identify and resolve dependencies in the container. The library provides several token types for different use cases, each offering different levels of type safety and flexibility.
 
 <h2 id="why-tokens">Why Tokens?</h2>
 
-<p>
-  While you can use plain strings or symbols as dependency keys, tokens
-  provide additional benefits:
-</p>
+While you can use plain strings or symbols as dependency keys, tokens provide additional benefits:
 
-<ul>
-  <li>
-    <strong>Type Safety</strong>: Tokens carry type information, improving
-    IntelliSense and compile-time checks
-  </li>
-  <li>
-    <strong>Uniqueness</strong>: Tokens ensure unique identification,
-    preventing accidental key collisions
-  </li>
-  <li>
-    <strong>Features</strong>: Some tokens support additional features like
-    argument binding and lazy loading
-  </li>
-  <li>
-    <strong>Refactoring</strong>: Tokens make refactoring safer by providing
-    a single source of truth
-  </li>
-</ul>
+- **Type Safety**: Tokens carry type information, improving IntelliSense and compile-time checks
+- **Uniqueness**: Tokens ensure unique identification, preventing accidental key collisions
+- **Features**: Some tokens support additional features like argument binding and lazy loading
+- **Refactoring**: Tokens make refactoring safer by providing a single source of truth
 
 <h2 id="token-hierarchy">Token Hierarchy</h2>
 
-<p>
-  All tokens in the library extend the abstract <code>InjectionToken</code> base class,
-  which defines the common interface for dependency resolution. The following diagram
-  shows the inheritance hierarchy and relationships between different token types:
-</p>
+All tokens in the library extend the abstract `InjectionToken` base class, which defines the common interface for dependency resolution. The following diagram shows the inheritance hierarchy and relationships between different token types:
 
 <div class="diagram">
   <div class="mermaid" set:html={tokenHierarchyDiagram}></div>
 </div>
 
-<p>
-  <strong>Key Points:</strong>
-</p>
-<ul>
-  <li>
-    <code>InjectionToken</code> is the abstract base class that all tokens extend
-  </li>
-  <li>
-    <code>SingleToken</code> is a concrete implementation for simple dependency keys
-  </li>
-  <li>
-    <code>GroupAliasToken</code> extends <code>InjectionToken</code> for grouping multiple implementations (resolves to array)
-  </li>
-  <li>
-    <code>SingleAliasToken</code> extends <code>InjectionToken</code> for grouping implementations (resolves to single instance)
-  </li>
-</ul>
+**Key Points:**
+
+- `InjectionToken` is the abstract base class that all tokens extend
+- `SingleToken` is a concrete implementation for simple dependency keys
+- `GroupAliasToken` extends `InjectionToken` for grouping multiple implementations (resolves to array)
+- `SingleAliasToken` extends `InjectionToken` for grouping implementations (resolves to single instance)
 
 <h2 id="select-utility">The `select` Utility</h2>
 
-<p>
-  The <code>select</code> utility is a convenient helper for creating tokens and accessing
-  container features in a type-safe way. It provides shortcuts for common token operations
-  and is the recommended way to work with tokens in your application.
-</p>
+The `select` utility is a convenient helper for creating tokens and accessing container features in a type-safe way. It provides shortcuts for common token operations and is the recommended way to work with tokens in your application.
 
 ### select.token()
-<p>
-  Creates a <code>SingleToken</code> for resolving dependencies by key. Use it with the <code>@inject</code> decorator:
-</p>
-<p>
-  <code>@inject(s.token('ILogger'))</code> - Basic usage<br/>
-  <code>@inject(s.token('ILogger').args(...))</code> - With arguments<br/>
-  <code>@inject(s.token('Service').lazy())</code> - With lazy loading
-</p>
+
+Creates a `SingleToken` for resolving dependencies by key. Use it with the `@inject` decorator:
+
+- `@inject(s.token('ILogger'))` - Basic usage
+- `@inject(s.token('ILogger').args(...))` - With arguments
+- `@inject(s.token('Service').lazy())` - With lazy loading
 
 ### select.alias()
-<p>
-  Creates a <code>GroupAliasToken</code> for resolving multiple implementations. Useful for plugin systems and middleware:
-</p>
-<p>
-  <code>const token = s.alias('IMiddleware')</code><br/>
-  <code>@inject(token) middleware: IMiddleware[]</code> - Injects array of all implementations
-</p>
+
+Creates a `GroupAliasToken` for resolving multiple implementations. Useful for plugin systems and middleware:
+
+- `const token = s.alias('IMiddleware')`
+- `@inject(token) middleware: IMiddleware[]` - Injects array of all implementations
 
 ### select.instances()
-<p>
-  Creates a <code>GroupInstanceToken</code> to filter container instances by predicate:
-</p>
-<p>
-  <code>@inject(s.instances(predicate))</code> - Filter by predicate function<br/>
-  <code>@inject(s.instances())</code> - Get all instances
-</p>
+
+Creates a `GroupInstanceToken` to filter container instances by predicate:
+
+- `@inject(s.instances(predicate))` - Filter by predicate function
+- `@inject(s.instances())` - Get all instances
 
 ### select.scope.current
-<p>
-  Injects the current container scope. Use this to access the container within your classes:
-</p>
-<p>
-  <code>@inject(s.scope.current) scope: IContainer</code>
-</p>
+
+Injects the current container scope. Use this to access the container within your classes:
+
+- `@inject(s.scope.current) scope: IContainer`
 
 ### select.scope.create()
-<p>
-  Creates a new child scope on resolution. The new scope is created each time the dependency is resolved:
-</p>
-<p>
-  <code>@inject(s.scope.create(&#123; tags: ['request'] &#125;)) requestScope: IContainer</code>
-</p>
+
+Creates a new child scope on resolution. The new scope is created each time the dependency is resolved:
+
+- `@inject(s.scope.create({ tags: ['request'] })) requestScope: IContainer`
 
 <h2 id="single-token">SingleToken</h2>
 
-<p>
-  <code>SingleToken</code> is a simple token that wraps a string or symbol key. It
-  provides type safety while maintaining simplicity.
-</p>
+`SingleToken` is a simple token that wraps a string or symbol key. It provides type safety while maintaining simplicity.
 
 <CodeBlock code={tokenSpecCode} lang="typescript" filename="__tests__/readme/token.spec.ts" />
 
 <h2 id="group-alias-token">GroupAliasToken</h2>
 
-<p>
-  <code>GroupAliasToken</code> is used to group multiple registrations under a common
-  alias. This is perfect for plugin systems or middleware. It resolves to an array
-  of all implementations bound to the alias.
-</p>
+`GroupAliasToken` is used to group multiple registrations under a common alias. This is perfect for plugin systems or middleware. It resolves to an array of all implementations bound to the alias.
 
 <CodeBlock code={tokenGroupAliasSpecCode} lang="typescript" filename="__tests__/readme/tokenGroupAlias.spec.ts" />
 
 <h2 id="single-alias-token">SingleAliasToken</h2>
 
-<p>
-  <code>SingleAliasToken</code> is similar to <code>GroupAliasToken</code>, but resolves
-  to a single instance instead of an array. This is useful when you want to use multiple interfaces for the same implementation.
-</p>
+`SingleAliasToken` is similar to `GroupAliasToken`, but resolves to a single instance instead of an array. This is useful when you want to use multiple interfaces for the same implementation.
 
 <CodeBlock code={tokenSingleAliasSpecCode} lang="typescript" filename="__tests__/readme/tokenSingleAlias.spec.ts" />
 
 <h2 id="argument-binding">Argument Binding</h2>
 
-<p>
-  Tokens support argument binding, allowing you to pass arguments when
-  resolving:
-</p>
+Tokens support argument binding, allowing you to pass arguments when resolving:
 
 <CodeBlock code={tokenArgsSpecCode} lang="typescript" filename="__tests__/readme/tokenArgs.spec.ts" />
 
 <h2 id="lazy-loading">Lazy Loading</h2>
 
-<p>Tokens support lazy loading, deferring instantiation until access:</p>
+Tokens support lazy loading, deferring instantiation until access:
 
 <CodeBlock code={tokenLazySpecCode} lang="typescript" filename="__tests__/readme/tokenLazy.spec.ts" />
 
 <h2 id="dynamic-arguments">Dynamic Arguments</h2>
 
-<p>Tokens support dynamic argument resolution using functions:</p>
+Tokens support dynamic argument resolution using functions:
 
 <CodeBlock code={tokenArgsFnSpecCode} lang="typescript" filename="__tests__/readme/tokenArgsFn.spec.ts" />
 
 <h2 id="additional-token-types">Additional Token Types</h2>
 
-<p>
-  The library provides several specialized token types for advanced use cases.
-  These tokens are typically used internally by the framework but can also be
-  used directly when needed.
-</p>
+The library provides several specialized token types for advanced use cases. These tokens are typically used internally by the framework but can also be used directly when needed.
 
 ### ClassToken
-<p>
-  <code>ClassToken</code> wraps a class constructor and supports argument binding,
-  lazy loading, and custom argument functions. It's primarily used internally
-  when resolving classes directly.
-</p>
-<p>
-  <strong>Usage:</strong> <code>new ClassToken(MyService)</code><br/>
-  Supports: <code>args()</code>, <code>argsFn()</code>, <code>lazy()</code>
-</p>
+
+`ClassToken` wraps a class constructor and supports argument binding, lazy loading, and custom argument functions. It's primarily used internally when resolving classes directly.
+
+**Usage:** `new ClassToken(MyService)`
+Supports: `args()`, `argsFn()`, `lazy()`
 
 ### FunctionToken
-<p>
-  <code>FunctionToken</code> wraps a custom resolution function. This is used by
-  <code>select.scope.current</code> and <code>select.scope.create()</code> to inject
-  container scopes. The function receives the container and returns the resolved value.
-</p>
-<p>
-  <strong>Note:</strong> Does not support <code>args()</code>,
-  <code>argsFn()</code>, or <code>lazy()</code> methods (throws <code>MethodNotImplementedError</code>).
-</p>
+
+`FunctionToken` wraps a custom resolution function. This is used by `select.scope.current` and `select.scope.create()` to inject container scopes. The function receives the container and returns the resolved value.
+
+**Note:** Does not support `args()`, `argsFn()`, or `lazy()` methods (throws `MethodNotImplementedError`).
 
 ### ConstantToken
-<p>
-  <code>ConstantToken</code> always returns a constant value. It's used internally
-  by the <code>@inject</code> decorator to pass literal values. The token ignores
-  the container and always returns the same value.
-</p>
-<p>
-  <strong>Note:</strong> Does not support <code>args()</code>,
-  <code>argsFn()</code>, or <code>lazy()</code> methods.
-</p>
+
+`ConstantToken` always returns a constant value. It's used internally by the `@inject` decorator to pass literal values. The token ignores the container and always returns the same value.
+
+**Note:** Does not support `args()`, `argsFn()`, or `lazy()` methods.
 
 ### GroupInstanceToken
-<p>
-  <code>GroupInstanceToken</code> filters container instances by a predicate function.
-  This is used by <code>select.instances()</code> to query instances. It supports
-  cascade control to include or exclude parent scope instances.
-</p>
-<p>
-  <strong>Usage:</strong><br/>
-  <code>new GroupInstanceToken(predicate)</code> - Filter instances<br/>
-  <code>token.cascade(false)</code> - Current scope only
-</p>
-<p>
-  <strong>Note:</strong> Does not support <code>args()</code>,
-  <code>argsFn()</code>, or <code>lazy()</code> methods.
-</p>
+
+`GroupInstanceToken` filters container instances by a predicate function. This is used by `select.instances()` to query instances. It supports cascade control to include or exclude parent scope instances.
+
+**Usage:**
+- `new GroupInstanceToken(predicate)` - Filter instances
+- `token.cascade(false)` - Current scope only
+
+**Note:** Does not support `args()`, `argsFn()`, or `lazy()` methods.

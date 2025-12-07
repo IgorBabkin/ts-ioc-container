@@ -13,46 +13,26 @@ import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?r
 
 # Hooks
 
-<p>
-  Hooks provide a way to execute code at specific lifecycle points of an instance. They enable
-  initialization logic after construction, cleanup logic before disposal, property injection,
-  and custom lifecycle management. The hook system is flexible and extensible, allowing you to
-  create custom hooks for your specific needs.
-</p>
+Hooks provide a way to execute code at specific lifecycle points of an instance. They enable initialization logic after construction, cleanup logic before disposal, property injection, and custom lifecycle management. The hook system is flexible and extensible, allowing you to create custom hooks for your specific needs.
 
-<h2 id="what-are-hooks">What are Hooks?</h2>
+## What are Hooks?
 
-<p>
-  Hooks are methods decorated with special decorators that execute at specific points in an
-  instance's lifecycle. They can:
-</p>
+Hooks are methods decorated with special decorators that execute at specific points in an instance's lifecycle. They can:
 
-<ul>
-  <li>Run initialization code after instance construction</li>
-  <li>Execute cleanup logic before instance disposal</li>
-  <li>Inject dependencies into properties</li>
-  <li>Perform custom lifecycle operations</li>
-</ul>
+- Run initialization code after instance construction
+- Execute cleanup logic before instance disposal
+- Inject dependencies into properties
+- Perform custom lifecycle operations
 
-<p>
-  The hook system uses <code>HooksRunner</code> to execute hooks, which can be synchronous or
-  asynchronous. Hooks can resolve dependencies from the container, making them powerful tools
-  for managing complex initialization scenarios.
-</p>
+The hook system uses `HooksRunner` to execute hooks, which can be synchronous or asynchronous. Hooks can resolve dependencies from the container, making them powerful tools for managing complex initialization scenarios.
 
-<h2 id="onconstruct">OnConstruct Hooks</h2>
+## OnConstruct Hooks
 
-<p>
-  OnConstruct hooks execute after an instance is created. This is useful for initialization
-  logic that needs access to the container or other dependencies that can't be injected via
-  the constructor.
-</p>
+OnConstruct hooks execute after an instance is created. This is useful for initialization logic that needs access to the container or other dependencies that can't be injected via the constructor.
 
 ### Basic Usage
 
-<p>
-  Register an onConstruct hook on your container, then decorate methods with <code>@onConstruct</code>:
-</p>
+Register an onConstruct hook on your container, then decorate methods with `@onConstruct`:
 
 <CodeBlock
   code={onConstructSpecCode}
@@ -61,25 +41,19 @@ import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?r
 />
 
 ### Use Cases
-<ul>
-  <li>Post-construction initialization that requires container access</li>
-  <li>Setting up properties that depend on other container services</li>
-  <li>Validation or setup logic that needs to run after all dependencies are injected</li>
-  <li>Initializing relationships or connections</li>
-</ul>
 
-<h2 id="ondispose">OnDispose Hooks</h2>
+- Post-construction initialization that requires container access
+- Setting up properties that depend on other container services
+- Validation or setup logic that needs to run after all dependencies are injected
+- Initializing relationships or connections
 
-<p>
-  OnDispose hooks execute before an instance is disposed, allowing you to clean up resources,
-  save state, or perform other cleanup operations.
-</p>
+## OnDispose Hooks
+
+OnDispose hooks execute before an instance is disposed, allowing you to clean up resources, save state, or perform other cleanup operations.
 
 ### Basic Usage
 
-<p>
-  Register an onDispose hook on your container, then decorate methods with <code>@onDispose</code>:
-</p>
+Register an onDispose hook on your container, then decorate methods with `@onDispose`:
 
 <CodeBlock
   code={onDisposeSpecCode}
@@ -88,28 +62,20 @@ import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?r
 />
 
 ### Use Cases
-<ul>
-  <li>Closing database connections or file handles</li>
-  <li>Saving state or flushing buffers</li>
-  <li>Unsubscribing from events or observers</li>
-  <li>Releasing external resources</li>
-  <li>Logging cleanup operations</li>
-</ul>
 
-<h2 id="property-injection">Property Injection</h2>
+- Closing database connections or file handles
+- Saving state or flushing buffers
+- Unsubscribing from events or observers
+- Releasing external resources
+- Logging cleanup operations
 
-<p>
-  Property injection allows you to inject dependencies into properties using hooks. This is
-  useful when constructor injection isn't possible or when you need to inject into base class
-  properties.
-</p>
+## Property Injection
+
+Property injection allows you to inject dependencies into properties using hooks. This is useful when constructor injection isn't possible or when you need to inject into base class properties.
 
 ### Using injectProp with Hooks
 
-<p>
-  The <code>injectProp</code> helper can be used with the <code>@hook</code> decorator to inject
-  dependencies into properties:
-</p>
+The `injectProp` helper can be used with the `@hook` decorator to inject dependencies into properties:
 
 <CodeBlock
   code={injectPropSpecCode}
@@ -118,25 +84,19 @@ import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?r
 />
 
 ### When to Use Property Injection
-<ul>
-  <li>Injecting into base class properties</li>
-  <li>Optional dependencies that might not always be available</li>
-  <li>Circular dependency scenarios</li>
-  <li>Framework integration where constructor injection is limited</li>
-</ul>
 
-<h2 id="custom-hooks">Custom Hooks</h2>
+- Injecting into base class properties
+- Optional dependencies that might not always be available
+- Circular dependency scenarios
+- Framework integration where constructor injection is limited
 
-<p>
-  You can create custom hooks for any lifecycle event or application-specific scenario. Custom
-  hooks use the same <code>HooksRunner</code> system but with your own hook names.
-</p>
+## Custom Hooks
+
+You can create custom hooks for any lifecycle event or application-specific scenario. Custom hooks use the same `HooksRunner` system but with your own hook names.
 
 ### Creating Custom Hooks
 
-<p>
-  Create a custom hook by instantiating a <code>HooksRunner</code> with a unique hook name:
-</p>
+Create a custom hook by instantiating a `HooksRunner` with a unique hook name:
 
 <CodeBlock
   code={customHooksSpecCode}
@@ -146,9 +106,7 @@ import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?r
 
 ### Synchronous vs Asynchronous Hooks
 
-<p>
-  Hooks can be synchronous or asynchronous. Use the appropriate execution method:
-</p>
+Hooks can be synchronous or asynchronous. Use the appropriate execution method:
 
 <CodeBlock
   code={hookSpecCode}
@@ -157,60 +115,26 @@ import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?r
 />
 
 ### Hook Execution Methods
-<ul>
-  <li>
-    <code>execute(instance, context)</code> - Execute synchronous hooks. Throws an error if
-    any hook is asynchronous.
-  </li>
-  <li>
-    <code>executeAsync(instance, context)</code> - Execute hooks asynchronously, supporting
-    both sync and async hooks.
-  </li>
-</ul>
+
+- `execute(instance, context)` - Execute synchronous hooks. Throws an error if any hook is asynchronous.
+- `executeAsync(instance, context)` - Execute hooks asynchronously, supporting both sync and async hooks.
 
 ### Hook Context
 
-<p>
-  Hooks receive a <code>HookContext</code> that provides access to:
-</p>
+Hooks receive a `HookContext` that provides access to:
 
-<ul>
-  <li><code>instance</code> - The instance being hooked</li>
-  <li><code>scope</code> - The container scope</li>
-  <li><code>methodName</code> - The name of the method being executed</li>
-  <li><code>resolveArgs()</code> - Resolve method arguments from the container</li>
-  <li><code>invokeMethod(options)</code> - Invoke the hook method with arguments</li>
-</ul>
+- `instance` - The instance being hooked
+- `scope` - The container scope
+- `methodName` - The name of the method being executed
+- `resolveArgs()` - Resolve method arguments from the container
+- `invokeMethod(options)` - Invoke the hook method with arguments
 
-<h2 id="best-practices">Best Practices</h2>
+## Best Practices
 
-<ul>
-  <li>
-    <strong>Use OnConstruct for initialization</strong> - Initialize dependencies, validate
-    state, or set up connections after construction
-  </li>
-  <li>
-    <strong>Use OnDispose for cleanup</strong> - Close resources, save state, or unsubscribe
-    from events before disposal
-  </li>
-  <li>
-    <strong>Keep hook logic simple</strong> - Hooks should perform focused operations, not
-    complex business logic
-  </li>
-  <li>
-    <strong>Resolve dependencies in hooks</strong> - Use <code>ctx.resolveArgs()</code> to
-    inject dependencies that weren't available at construction time
-  </li>
-  <li>
-    <strong>Handle async hooks properly</strong> - Use <code>executeAsync</code> when hooks
-    may be asynchronous
-  </li>
-  <li>
-    <strong>Register hooks once</strong> - Set up onConstruct and onDispose hooks when creating
-    your root container
-  </li>
-  <li>
-    <strong>Prefer constructor injection</strong> - Use property injection with hooks only when
-    constructor injection isn't possible
-  </li>
-</ul>
+- **Use OnConstruct for initialization** - Initialize dependencies, validate state, or set up connections after construction
+- **Use OnDispose for cleanup** - Close resources, save state, or unsubscribe from events before disposal
+- **Keep hook logic simple** - Hooks should perform focused operations, not complex business logic
+- **Resolve dependencies in hooks** - Use `ctx.resolveArgs()` to inject dependencies that weren't available at construction time
+- **Handle async hooks properly** - Use `executeAsync` when hooks may be asynchronous
+- **Register hooks once** - Set up onConstruct and onDispose hooks when creating your root container
+- **Prefer constructor injection** - Use property injection with hooks only when constructor injection isn't possible
