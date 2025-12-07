@@ -297,6 +297,40 @@ This project follows conventional commits with specific scope rules:
 - ❌ `perf(ci): remove Jest cache` (incorrect - may trigger release)
 - ❌ `perf(github): speed up CI` (incorrect - use `ci(perf):`)
 
+### Semantic Release Rules (CRITICAL)
+**BEFORE pushing commits, verify they won't trigger unintended package releases:**
+
+- This project uses semantic-release to automatically publish new package versions
+- Only certain commit types trigger releases: `feat:`, `fix:`, `perf:` (and breaking changes)
+- Changes that should NOT trigger releases must use appropriate scopes/types
+
+**Commit types that WILL trigger releases:**
+- `feat(scope):` - Minor version bump (new feature)
+- `fix(scope):` - Patch version bump (bug fix)
+- `perf(scope):` - Patch version bump (performance improvement)
+- `BREAKING CHANGE:` - Major version bump
+
+**Commit types that will NOT trigger releases:**
+- `docs(scope):` - Documentation only
+- `test(scope):` - Test only
+- `ci(scope):` - CI/CD only
+- `chore(scope):` - Maintenance
+- `refactor(scope):` - Code refactoring without behavior change
+- `style(scope):` - Code style/formatting
+
+**Examples of commits that should NOT trigger releases:**
+- ✅ `docs(pages): update API examples` (not `fix(docs):`)
+- ✅ `test(container): add edge case tests` (not `feat(test):`)
+- ✅ `ci(github): update workflow` (not `fix(ci):`)
+- ✅ `refactor(docs): extract SVG icons` (not `feat(docs):`)
+- ✅ `chore(deps): update dev dependencies` (not `fix(deps):`)
+
+**Before creating commits:**
+1. Ask yourself: "Should this trigger a new package release?"
+2. If NO → use `docs`, `test`, `ci`, `chore`, `refactor`, or `style` type
+3. If YES → use `feat`, `fix`, or `perf` type
+4. When in doubt, use a non-release type and ask the user
+
 ### Other Common Scopes
 - `feat(container):` - New container features
 - `fix(provider):` - Provider bug fixes
