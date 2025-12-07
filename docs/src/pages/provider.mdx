@@ -41,9 +41,7 @@ import visibilitySpecCode from "../../../__tests__/readme/visibility.spec.ts?raw
     Returns a constant value
   </li>
   <li>
-    <strong>Factory Provider</strong>: <code
-      >new Provider((container, ...args) =&gt; ...)</code
-    > - Custom factory function
+    <strong>Factory Provider</strong>: <code>new Provider((container, ...args) =&gt; ...)</code> - Custom factory function
   </li>
 </ul>
 
@@ -106,9 +104,7 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
 ### Argument Priority
 
 <p>
-  Provider arguments take precedence over arguments passed to <code
-    >resolve()</code
-  >:
+  Provider arguments take precedence over arguments passed to <code>resolve()</code>:
 </p>
 
 <CodeBlock
@@ -281,11 +277,7 @@ expect(logger.type).toBe('file'); // Second argument still passed`}
 
 ### Provider Lookup
 <p>
-  Providers are stored in a <code>Map</code> keyed by <code
-    >DependencyKey</code
-  >, providing O(1) lookup performance. Alias resolution uses a separate <code
-    >AliasMap</code
-  > for efficient multi-key lookups.
+  Providers are stored in a <code>Map</code> keyed by <code>DependencyKey</code>, providing O(1) lookup performance. Alias resolution uses a separate <code>AliasMap</code> for efficient multi-key lookups.
 </p>
 
 <h2 id="custom-providers">Custom Providers</h2>
