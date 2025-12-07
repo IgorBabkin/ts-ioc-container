@@ -87,4 +87,31 @@ describe('SingleAliasToken', () => {
     const result = token.resolve(container);
     expect(result).toBe('value');
   });
+
+  it('should support select method', () => {
+    const token = new SingleAliasToken<string>('myAlias');
+    container.addRegistration(
+      Registration.fromFn(() => 'value')
+        .bindToKey('myKey')
+        .bindToAlias('myAlias'),
+    );
+
+    const selectFn = token.select((value) => value.toUpperCase());
+    const result = selectFn(container);
+    expect(result).toBe('VALUE');
+  });
+
+  it('should support select method with args', () => {
+    const token = new SingleAliasToken<string>('myAlias');
+    container.addRegistration(
+      Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
+        .bindToKey('myKey')
+        .bindToAlias('myAlias'),
+    );
+
+    const tokenWithArgs = token.args('arg1', 'arg2');
+    const selectFn = tokenWithArgs.select((value) => value.toUpperCase());
+    const result = selectFn(container);
+    expect(result).toBe('VALUE-ARG1-ARG2');
+  });
 });

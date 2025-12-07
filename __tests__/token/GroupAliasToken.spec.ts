@@ -1,6 +1,4 @@
-import { GroupAliasToken, Container, Registration } from '../../lib';
-import { toGroupAlias } from '../../lib/token/GroupAliasToken';
-import type { IContainer } from '../../lib/container/IContainer';
+import { Container, GroupAliasToken, type IContainer, Registration, toGroupAlias } from '../../lib';
 
 describe('GroupAliasToken', () => {
   let container: IContainer;
@@ -13,8 +11,8 @@ describe('GroupAliasToken', () => {
     const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn(() => 'value')
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
+        .bindTo('myKey')
+        .bindTo(token),
     );
 
     const result = token.resolve(container);
@@ -25,8 +23,8 @@ describe('GroupAliasToken', () => {
     const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
+        .bindTo('myKey')
+        .bindTo(token),
     );
 
     const tokenWithArgs = token.args('arg1', 'arg2');
@@ -38,8 +36,8 @@ describe('GroupAliasToken', () => {
     const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
+        .bindTo('myKey')
+        .bindTo(token),
     );
 
     const tokenWithArgs = token.argsFn(() => ['from', 'fn']);
@@ -51,8 +49,8 @@ describe('GroupAliasToken', () => {
     const token = new GroupAliasToken<string>('myAlias');
     container.addRegistration(
       Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
+        .bindTo('myKey')
+        .bindTo(token),
     );
 
     const tokenWithArgs = token.args('arg1').argsFn(() => ['from', 'fn']);
@@ -82,10 +80,42 @@ describe('GroupAliasToken', () => {
     expect(token).toBeInstanceOf(GroupAliasToken);
     container.addRegistration(
       Registration.fromFn(() => 'value')
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
+        .bindTo('myKey')
+        .bindTo(token),
     );
     const result = token.resolve(container);
     expect(result).toEqual(['value']);
+  });
+
+  it('should support select method', () => {
+    const token = new GroupAliasToken<string>('myAlias');
+    container.addRegistration(
+      Registration.fromFn(() => 'value1')
+        .bindTo('myKey1')
+        .bindTo(token),
+    );
+    container.addRegistration(
+      Registration.fromFn(() => 'value2')
+        .bindTo('myKey2')
+        .bindTo(token),
+    );
+
+    const selectFn = token.select((value) => value.toUpperCase());
+    const result = selectFn(container);
+    expect(result).toEqual(['VALUE1', 'VALUE2']);
+  });
+
+  it('should support select method with args', () => {
+    const token = new GroupAliasToken<string>('myAlias');
+    container.addRegistration(
+      Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
+        .bindTo('myKey')
+        .bindTo(token),
+    );
+
+    const tokenWithArgs = token.args('arg1', 'arg2');
+    const selectFn = tokenWithArgs.select((value) => value.toUpperCase());
+    const result = selectFn(container);
+    expect(result).toEqual(['VALUE-ARG1-ARG2']);
   });
 });

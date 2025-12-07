@@ -51,4 +51,26 @@ describe('InstanceListToken', () => {
     expect(() => token.lazy()).toThrow(MethodNotImplementedError);
     expect(() => token.lazy()).toThrow('not implemented');
   });
+
+  it('should support select method', () => {
+    const token = new GroupInstanceToken((dep) => dep instanceof ServiceA);
+    container.resolve(ServiceA);
+    container.resolve(ServiceB);
+    container.resolve(ServiceA);
+
+    const selectFn = token.select((instance) => instance.constructor.name);
+    const result = selectFn(container);
+    expect(result).toEqual(['ServiceA', 'ServiceA']);
+  });
+
+  it('should support select method with empty results', () => {
+    class ServiceC {}
+    const token = new GroupInstanceToken((dep) => dep instanceof ServiceC);
+    container.resolve(ServiceA);
+    container.resolve(ServiceB);
+
+    const selectFn = token.select((instance) => instance.constructor.name);
+    const result = selectFn(container);
+    expect(result).toEqual([]);
+  });
 });

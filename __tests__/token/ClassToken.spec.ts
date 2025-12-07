@@ -50,4 +50,19 @@ describe('ClassToken', () => {
     expect(lazyToken).toBeInstanceOf(ClassToken);
     expect(lazyToken).not.toBe(token);
   });
+
+  it('should support select method', () => {
+    const token = new ClassToken(TestClass);
+    const selectFn = token.select((instance) => instance.value);
+    const result = selectFn(container);
+    expect(result).toBe('default');
+  });
+
+  it('should support select method with args', () => {
+    const token = new ClassToken(TestClass);
+    const tokenWithArgs = token.args('custom');
+    const selectFn = tokenWithArgs.select((instance) => instance.value.toUpperCase());
+    const result = selectFn(container);
+    expect(result).toBe('CUSTOM');
+  });
 });
