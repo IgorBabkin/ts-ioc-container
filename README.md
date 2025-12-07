@@ -84,33 +84,77 @@ And `tsconfig.json` should have next options:
 ### Basic usage
 
 ```typescript
+import 'reflect-metadata';
 import { Container, type IContainer, inject, Registration as R, select } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Basic Dependency Injection
+ *
+ * This example demonstrates how to wire up a simple authentication service
+ * that depends on a user repository. This pattern is common in web applications
+ * where services need database access.
+ */
 describe('Basic usage', function () {
-  class Logger {
-    name = 'Logger';
+  // Domain types
+  interface User {
+    id: string;
+    email: string;
+    passwordHash: string;
+  }
+
+  // Repository interface - abstracts database access
+  interface IUserRepository {
+    findByEmail(email: string): User | undefined;
+  }
+
+  // Concrete implementation
+  class UserRepository implements IUserRepository {
+    private users: User[] = [{ id: '1', email: 'admin@example.com', passwordHash: 'hashed_password' }];
+
+    findByEmail(email: string): User | undefined {
+      return this.users.find((u) => u.email === email);
+    }
   }
 
   it('should inject dependencies', function () {
-    class App {
-      constructor(@inject('ILogger') public logger: Logger) {}
+    // AuthService depends on IUserRepository
+    class AuthService {
+      constructor(@inject('IUserRepository') private userRepo: IUserRepository) {}
+
+      authenticate(email: string): boolean {
+        const user = this.userRepo.findByEmail(email);
+        return user !== undefined;
+      }
     }
 
-    const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
+    // Wire up the container
+    const container = new Container().addRegistration(R.fromClass(UserRepository).bindTo('IUserRepository'));
 
-    expect(container.resolve(App).logger.name).toBe('Logger');
+    // Resolve AuthService - UserRepository is automatically injected
+    const authService = container.resolve(AuthService);
+
+    expect(authService.authenticate('admin@example.com')).toBe(true);
+    expect(authService.authenticate('unknown@example.com')).toBe(false);
   });
 
-  it('should inject current scope', function () {
-    const root = new Container({ tags: ['root'] });
+  it('should inject current scope for request context', function () {
+    // In Express.js, each request gets its own scope
+    // Services can access the current scope to resolve request-specific dependencies
+    const appContainer = new Container({ tags: ['application'] });
 
-    class App {
-      constructor(@inject(select.scope.current) public scope: IContainer) {}
+    class RequestHandler {
+      constructor(@inject(select.scope.current) public requestScope: IContainer) {}
+
+      handleRequest(): string {
+        // Access request-scoped dependencies
+        return this.requestScope.hasTag('application') ? 'app-scope' : 'request-scope';
+      }
     }
 
-    const app = root.resolve(App);
+    const handler = appContainer.resolve(RequestHandler);
 
-    expect(app.scope).toBe(root);
+    expect(handler.requestScope).toBe(appContainer);
+    expect(handler.handleRequest()).toBe('app-scope');
   });
 });
 
@@ -124,6 +168,7 @@ Sometimes you need to create a scope of container. For example, when you want to
 - NOTICE: when you create a scope then we clone ONLY tags-matched providers.
 
 ```typescript
+import 'reflect-metadata';
 import {
   bindTo,
   Container,
@@ -137,29 +182,78 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
-@register(bindTo('ILogger'), scope((s) => s.hasTag('child')), singleton())
-class Logger {}
+/**
+ * User Management Domain - Request Scopes
+ *
+ * In web applications, each HTTP request typically gets its own scope.
+ * This allows request-specific data (current user, request ID, etc.)
+ * to be isolated between concurrent requests.
+ *
+ * Scope hierarchy:
+ *   Application (singleton services)
+ *     └── Request (per-request services)
+ *           └── Transaction (database transaction boundary)
+ */
+
+// SessionService is only available in request scope - not at application level
+// This prevents accidental access to request-specific data from singletons
+@register(bindTo('ISessionService'), scope((s) => s.hasTag('request')), singleton())
+class SessionService {
+  private userId: string | null = null;
+
+  setCurrentUser(userId: string) {
+    this.userId = userId;
+  }
+
+  getCurrentUserId(): string | null {
+    return this.userId;
+  }
+}
 
 describe('Scopes', function () {
-  it('should resolve dependencies from scope', function () {
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const child = root.createScope({ tags: ['child'] });
+  it('should isolate request-scoped services', function () {
+    // Application container - lives for entire app lifetime
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(SessionService));
 
-    expect(child.resolve('ILogger')).toBe(child.resolve('ILogger'));
-    expect(() => root.resolve('ILogger')).toThrow(DependencyNotFoundError);
+    // Simulate two concurrent HTTP requests
+    const request1Scope = appContainer.createScope({ tags: ['request'] });
+    const request2Scope = appContainer.createScope({ tags: ['request'] });
+
+    // Each request has its own SessionService instance
+    const session1 = request1Scope.resolve<SessionService>('ISessionService');
+    const session2 = request2Scope.resolve<SessionService>('ISessionService');
+
+    session1.setCurrentUser('user-1');
+    session2.setCurrentUser('user-2');
+
+    // Sessions are isolated - user data doesn't leak between requests
+    expect(session1.getCurrentUserId()).toBe('user-1');
+    expect(session2.getCurrentUserId()).toBe('user-2');
+    expect(session1).not.toBe(session2);
+
+    // SessionService is NOT available at application level (security!)
+    expect(() => appContainer.resolve('ISessionService')).toThrow(DependencyNotFoundError);
   });
 
-  it('should inject new scope', function () {
-    const root = new Container({ tags: ['root'] });
+  it('should create child scopes for transactions', function () {
+    const appContainer = new Container({ tags: ['application'] });
 
-    class App {
-      constructor(@inject(select.scope.create({ tags: ['child'] })) public scope: IContainer) {}
+    // RequestHandler can create a transaction scope for database operations
+    class RequestHandler {
+      constructor(@inject(select.scope.create({ tags: ['transaction'] })) public transactionScope: IContainer) {}
+
+      executeInTransaction(): boolean {
+        // Transaction scope inherits from request scope
+        // Database operations can be rolled back together
+        return this.transactionScope.hasTag('transaction');
+      }
     }
 
-    const app = root.resolve(App);
+    const handler = appContainer.resolve(RequestHandler);
 
-    expect(app.scope).not.toBe(root);
-    expect(app.scope.hasTag('child')).toBe(true);
+    expect(handler.transactionScope).not.toBe(appContainer);
+    expect(handler.transactionScope.hasTag('transaction')).toBe(true);
+    expect(handler.executeInTransaction()).toBe(true);
   });
 });
 
@@ -240,18 +334,99 @@ Sometimes you want to dispose container and all its scopes. For example, when yo
 - when container is disposed then it unregisters all providers and remove all instances
 
 ```typescript
+import 'reflect-metadata';
 import { Container, ContainerDisposedError, Registration as R, select } from 'ts-ioc-container';
 
-class Logger {}
+/**
+ * User Management Domain - Resource Cleanup
+ *
+ * When a scope ends (e.g., HTTP request completes), resources must be cleaned up:
+ * - Database connections returned to pool
+ * - File handles closed
+ * - Temporary files deleted
+ * - Cache entries cleared
+ *
+ * The container.dispose() method:
+ * 1. Executes all onDispose hooks
+ * 2. Clears all instances and registrations
+ * 3. Detaches from parent scope
+ * 4. Prevents further resolution
+ */
+
+// Simulates a database connection that must be closed
+class DatabaseConnection {
+  public isClosed = false;
+
+  query(sql: string): string[] {
+    if (this.isClosed) {
+      throw new Error('Connection is closed');
+    }
+    return [`Result for: ${sql}`];
+  }
+
+  close(): void {
+    this.isClosed = true;
+  }
+}
 
 describe('Disposing', function () {
-  it('should container and make it unavailable for the further usage', function () {
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
+  it('should dispose container and prevent further usage', function () {
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(
+      R.fromClass(DatabaseConnection).bindTo('IDatabase'),
+    );
 
-    root.dispose();
+    // Create a request scope with a database connection
+    const requestScope = appContainer.createScope({ tags: ['request'] });
+    const connection = requestScope.resolve<DatabaseConnection>('IDatabase');
 
-    expect(() => root.resolve('ILogger')).toThrow(ContainerDisposedError);
-    expect(select.instances().resolve(root).length).toBe(0);
+    // Connection works normally
+    expect(connection.query('SELECT * FROM users')).toEqual(['Result for: SELECT * FROM users']);
+
+    // Request ends - dispose the scope
+    requestScope.dispose();
+
+    // Scope is now unusable
+    expect(() => requestScope.resolve('IDatabase')).toThrow(ContainerDisposedError);
+
+    // All instances are cleared
+    expect(select.instances().resolve(requestScope).length).toBe(0);
+
+    // Application container is still functional
+    expect(appContainer.resolve<DatabaseConnection>('IDatabase')).toBeDefined();
+  });
+
+  it('should clean up request-scoped resources on request end', function () {
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(
+      R.fromClass(DatabaseConnection).bindTo('IDatabase'),
+    );
+
+    // Simulate Express.js request lifecycle
+    function handleRequest(): { connection: DatabaseConnection; scope: Container } {
+      const requestScope = appContainer.createScope({ tags: ['request'] }) as Container;
+      const connection = requestScope.resolve<DatabaseConnection>('IDatabase');
+
+      // Do some work...
+      connection.query('INSERT INTO sessions VALUES (...)');
+
+      return { connection, scope: requestScope };
+    }
+
+    // Request 1
+    const request1 = handleRequest();
+    expect(request1.connection.isClosed).toBe(false);
+
+    // Request 1 ends - in Express, this would be in res.on('finish')
+    request1.connection.close();
+    request1.scope.dispose();
+
+    // Request 2 gets a fresh connection
+    const request2 = handleRequest();
+    expect(request2.connection.isClosed).toBe(false);
+    expect(request2.connection).not.toBe(request1.connection);
+
+    // Cleanup
+    request2.connection.close();
+    request2.scope.dispose();
   });
 });
 
@@ -261,93 +436,124 @@ describe('Disposing', function () {
 Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
 
 ```typescript
+import 'reflect-metadata';
 import { Container, inject, register, Registration as R, select as s, singleton } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Lazy Loading
+ *
+ * Some services are expensive to initialize:
+ * - EmailNotifier: Establishes SMTP connection
+ * - ReportGenerator: Loads templates, initializes PDF engine
+ * - ExternalApiClient: Authenticates with third-party service
+ *
+ * Lazy loading defers instantiation until first use.
+ * This improves startup time and avoids initializing unused services.
+ *
+ * Use cases:
+ * - Services used only in specific code paths (error notification)
+ * - Optional features that may not be triggered
+ * - Breaking circular dependencies
+ */
 describe('lazy provider', () => {
+  // Tracks whether SMTP connection was established
   @register(singleton())
-  class Flag {
-    isSet = false;
+  class SmtpConnectionStatus {
+    isConnected = false;
 
-    set() {
-      this.isSet = true;
+    connect() {
+      this.isConnected = true;
     }
   }
 
-  class Service {
-    name = 'Service';
-
-    constructor(@inject('Flag') private flag: Flag) {
-      this.flag.set();
+  // EmailNotifier is expensive - establishes SMTP connection on construction
+  class EmailNotifier {
+    constructor(@inject('SmtpConnectionStatus') private smtp: SmtpConnectionStatus) {
+      // Simulate expensive SMTP connection
+      this.smtp.connect();
     }
 
-    greet() {
-      return 'Hello';
+    sendPasswordReset(email: string): string {
+      return `Password reset sent to ${email}`;
     }
   }
 
-  class App {
-    constructor(@inject(s.token('Service').lazy()) public service: Service) {}
+  // AuthService might need to send password reset emails
+  // But most login requests don't need email (only password reset does)
+  class AuthService {
+    constructor(@inject(s.token('EmailNotifier').lazy()) public emailNotifier: EmailNotifier) {}
 
-    run() {
-      return this.service.greet();
+    login(email: string, password: string): boolean {
+      // Most requests just validate credentials - no email needed
+      return email === 'admin@example.com' && password === 'secret';
+    }
+
+    requestPasswordReset(email: string): string {
+      // Only here do we actually need the EmailNotifier
+      return this.emailNotifier.sendPasswordReset(email);
     }
   }
 
   function createContainer() {
     const container = new Container();
-    container.addRegistration(R.fromClass(Flag)).addRegistration(R.fromClass(Service));
+    container.addRegistration(R.fromClass(SmtpConnectionStatus)).addRegistration(R.fromClass(EmailNotifier));
     return container;
   }
 
-  it('should not create an instance until method is not invoked', () => {
-    // Arrange
+  it('should not connect to SMTP until email is actually needed', () => {
     const container = createContainer();
 
-    // Act
-    container.resolve(App);
-    const flag = container.resolve<Flag>('Flag');
+    // AuthService is created, but EmailNotifier is NOT instantiated yet
+    container.resolve(AuthService);
+    const smtp = container.resolve<SmtpConnectionStatus>('SmtpConnectionStatus');
 
-    // Assert
-    expect(flag.isSet).toBe(false);
+    // SMTP connection was NOT established - lazy loading deferred it
+    expect(smtp.isConnected).toBe(false);
   });
 
-  it('should create an instance only when some method/property is invoked', () => {
-    // Arrange
+  it('should connect to SMTP only when sending email', () => {
     const container = createContainer();
 
-    // Act
-    const app = container.resolve(App);
-    const flag = container.resolve<Flag>('Flag');
+    const authService = container.resolve(AuthService);
+    const smtp = container.resolve<SmtpConnectionStatus>('SmtpConnectionStatus');
 
-    // Assert
-    expect(app.run()).toBe('Hello');
-    expect(flag.isSet).toBe(true);
+    // Trigger password reset - this actually uses EmailNotifier
+    const result = authService.requestPasswordReset('user@example.com');
+
+    // Now SMTP connection was established
+    expect(result).toBe('Password reset sent to user@example.com');
+    expect(smtp.isConnected).toBe(true);
   });
 
-  it('should not create instance on every method invoked', () => {
-    // Arrange
+  it('should only create one instance even with multiple method calls', () => {
     const container = createContainer();
 
-    // Act
-    const app = container.resolve(App);
+    const authService = container.resolve(AuthService);
 
-    // Assert
-    expect(app.run()).toBe('Hello');
-    expect(app.run()).toBe('Hello');
-    expect(Array.from(container.getInstances()).filter((x) => x instanceof Service).length).toBe(1);
+    // Multiple password resets
+    authService.requestPasswordReset('user1@example.com');
+    authService.requestPasswordReset('user2@example.com');
+
+    // Only one EmailNotifier instance was created
+    const emailNotifiers = Array.from(container.getInstances()).filter((x) => x instanceof EmailNotifier);
+    expect(emailNotifiers.length).toBe(1);
   });
 
-  it('should create instance when property is invoked', () => {
-    // Arrange
+  it('should trigger instantiation when accessing property on lazy object', () => {
     const container = createContainer();
 
-    // Act
-    const app = container.resolve(App);
-    const flag = container.resolve<Flag>('Flag');
+    const authService = container.resolve(AuthService);
+    const smtp = container.resolve<SmtpConnectionStatus>('SmtpConnectionStatus');
 
-    // Assert
-    expect(app.service.name).toBe('Service');
-    expect(flag.isSet).toBe(true);
+    // Just getting the proxy doesn't trigger instantiation
+    const notifier = authService.emailNotifier;
+    expect(notifier).toBeDefined();
+    expect(smtp.isConnected).toBe(false); // Still lazy!
+
+    // Accessing a property ON the lazy object triggers instantiation
+    const method = notifier.sendPasswordReset;
+    expect(method).toBeDefined();
+    expect(smtp.isConnected).toBe(true); // Now instantiated!
   });
 });
 
@@ -815,34 +1021,84 @@ Sometimes you need to create only one instance of dependency per scope. For exam
 - NOTICE: if you create a scope 'A' of container 'root' then Logger of A !== Logger of root.
 
 ```typescript
+import 'reflect-metadata';
 import { bindTo, Container, register, Registration as R, singleton } from 'ts-ioc-container';
 
-@register(bindTo('logger'), singleton())
-class Logger {}
+/**
+ * User Management Domain - Singleton Pattern
+ *
+ * Singletons are services that should only have one instance per scope.
+ * Common examples:
+ * - PasswordHasher: Expensive to initialize (loads crypto config)
+ * - DatabasePool: Connection pool shared across requests
+ * - ConfigService: Application configuration loaded once
+ *
+ * Note: "singleton" in ts-ioc-container means "one instance per scope",
+ * not "one instance globally". Each scope gets its own singleton instance.
+ */
 
-describe('Singleton', function () {
-  function createContainer() {
-    return new Container();
+// PasswordHasher is expensive to create - should be singleton
+@register(bindTo('IPasswordHasher'), singleton())
+class PasswordHasher {
+  private readonly salt: string;
+
+  constructor() {
+    // Simulate expensive initialization (loading crypto config, etc.)
+    this.salt = 'random_salt_' + Math.random().toString(36);
   }
 
-  it('should resolve the same container per every request', function () {
-    const container = createContainer().addRegistration(R.fromClass(Logger));
+  hash(password: string): string {
+    return `hashed_${password}_${this.salt}`;
+  }
 
-    expect(container.resolve('logger')).toBe(container.resolve('logger'));
+  verify(password: string, hash: string): boolean {
+    return this.hash(password) === hash;
+  }
+}
+
+describe('Singleton', function () {
+  function createAppContainer() {
+    return new Container({ tags: ['application'] });
+  }
+
+  it('should resolve the same PasswordHasher for every request in same scope', function () {
+    const appContainer = createAppContainer().addRegistration(R.fromClass(PasswordHasher));
+
+    // Multiple resolves return the same instance
+    const hasher1 = appContainer.resolve<PasswordHasher>('IPasswordHasher');
+    const hasher2 = appContainer.resolve<PasswordHasher>('IPasswordHasher');
+
+    expect(hasher1).toBe(hasher2);
+    expect(hasher1.hash('password')).toBe(hasher2.hash('password'));
   });
 
-  it('should resolve different dependency per scope', function () {
-    const container = createContainer().addRegistration(R.fromClass(Logger));
-    const child = container.createScope();
+  it('should create different singleton per request scope', function () {
+    // Application-level singleton
+    const appContainer = createAppContainer().addRegistration(R.fromClass(PasswordHasher));
 
-    expect(container.resolve('logger')).not.toBe(child.resolve('logger'));
+    // Each request scope gets its own singleton instance
+    // This is useful when you want per-request caching
+    const request1 = appContainer.createScope({ tags: ['request'] });
+    const request2 = appContainer.createScope({ tags: ['request'] });
+
+    const appHasher = appContainer.resolve<PasswordHasher>('IPasswordHasher');
+    const request1Hasher = request1.resolve<PasswordHasher>('IPasswordHasher');
+    const request2Hasher = request2.resolve<PasswordHasher>('IPasswordHasher');
+
+    // Each scope has its own instance
+    expect(appHasher).not.toBe(request1Hasher);
+    expect(request1Hasher).not.toBe(request2Hasher);
   });
 
-  it('should resolve the same dependency for scope', function () {
-    const container = createContainer().addRegistration(R.fromClass(Logger));
-    const child = container.createScope();
+  it('should maintain singleton within a scope', function () {
+    const appContainer = createAppContainer().addRegistration(R.fromClass(PasswordHasher));
+    const requestScope = appContainer.createScope({ tags: ['request'] });
 
-    expect(child.resolve('logger')).toBe(child.resolve('logger'));
+    // Within the same scope, singleton is maintained
+    const hasher1 = requestScope.resolve<PasswordHasher>('IPasswordHasher');
+    const hasher2 = requestScope.resolve<PasswordHasher>('IPasswordHasher');
+
+    expect(hasher1).toBe(hasher2);
   });
 });
 
@@ -1012,6 +1268,7 @@ Sometimes you want to hide dependency if somebody wants to resolve it from certa
 - `Provider.fromClass(Logger).pipe(scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope))`
 
 ```typescript
+import 'reflect-metadata';
 import {
   bindTo,
   Container,
@@ -1023,22 +1280,81 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Visibility Control
+ *
+ * Some services should only be accessible in specific scopes:
+ * - AdminService: Only accessible in admin routes
+ * - AuditLogger: Only accessible at application level (not per-request)
+ * - DebugService: Only accessible in development environment
+ *
+ * scopeAccess() controls VISIBILITY - whether a registered service
+ * can be resolved from a particular scope.
+ *
+ * This provides security-by-design:
+ * - Prevents accidental access to sensitive services
+ * - Enforces architectural boundaries
+ * - Catches misuse at resolution time (not runtime)
+ */
 describe('Visibility', function () {
-  it('should hide from children', () => {
+  it('should restrict admin services to admin routes only', () => {
+    // UserManagementService can delete users - admin only!
     @register(
-      bindTo('logger'),
-      scope((s) => s.hasTag('root')),
+      bindTo('IUserManagement'),
+      scope((s) => s.hasTag('application')), // Registered at app level
       singleton(),
+      // Only accessible from admin scope, not regular request scope
+      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
+    )
+    class UserManagementService {
+      deleteUser(userId: string): string {
+        return `Deleted user ${userId}`;
+      }
+    }
+
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(
+      R.fromClass(UserManagementService),
+    );
+
+    // Admin route scope
+    const adminScope = appContainer.createScope({ tags: ['request', 'admin'] });
+
+    // Regular user route scope
+    const userScope = appContainer.createScope({ tags: ['request', 'user'] });
+
+    // Admin can access UserManagementService
+    const adminService = adminScope.resolve<UserManagementService>('IUserManagement');
+    expect(adminService.deleteUser('user-123')).toBe('Deleted user user-123');
+
+    // Regular users cannot access it - security enforced at DI level
+    expect(() => userScope.resolve('IUserManagement')).toThrowError(DependencyNotFoundError);
+  });
+
+  it('should restrict application-level services from request scope', () => {
+    // AuditLogger should only be used at application initialization
+    // Not from request handlers (to prevent log corruption from concurrent access)
+    @register(
+      bindTo('IAuditLogger'),
+      scope((s) => s.hasTag('application')),
+      singleton(),
+      // Only accessible from the scope where it was registered
       scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope),
     )
-    class FileLogger {}
+    class AuditLogger {
+      log(message: string): string {
+        return `AUDIT: ${message}`;
+      }
+    }
 
-    const parent = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(AuditLogger));
 
-    const child = parent.createScope({ tags: ['child'] });
+    const requestScope = appContainer.createScope({ tags: ['request'] });
 
-    expect(() => child.resolve('logger')).toThrowError(DependencyNotFoundError);
-    expect(parent.resolve('logger')).toBeInstanceOf(FileLogger);
+    // Application can use AuditLogger (for startup logging)
+    expect(appContainer.resolve<AuditLogger>('IAuditLogger').log('App started')).toBe('AUDIT: App started');
+
+    // Request handlers cannot access it directly
+    expect(() => requestScope.resolve('IAuditLogger')).toThrowError(DependencyNotFoundError);
   });
 });
 
@@ -1051,6 +1367,7 @@ Alias is needed to group keys
 - `Provider.fromClass(Logger).pipe(alias('logger'))`
 
 ```typescript
+import 'reflect-metadata';
 import {
   bindTo,
   Container,
@@ -1062,95 +1379,127 @@ import {
   select as s,
 } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Alias Pattern (Multiple Implementations)
+ *
+ * Aliases allow multiple services to be registered under the same key.
+ * This is useful for:
+ * - Plugin systems (multiple notification channels)
+ * - Strategy pattern (multiple authentication providers)
+ * - Event handlers (multiple listeners for same event)
+ *
+ * Example: NotificationService with Email, SMS, and Push implementations
+ */
 describe('alias', () => {
-  const IMiddlewareKey = 'IMiddleware';
-  const middleware = register(bindTo(s.alias(IMiddlewareKey)));
+  // All notification services share this alias
+  const INotificationChannel = 'INotificationChannel';
+  const notificationChannel = register(bindTo(s.alias(INotificationChannel)));
 
-  interface IMiddleware {
-    applyTo(application: IApplication): void;
+  interface INotificationChannel {
+    send(userId: string, message: string): void;
+    getDeliveredMessages(): string[];
   }
 
-  interface IApplication {
-    use(module: IMiddleware): void;
-    markMiddlewareAsApplied(name: string): void;
-  }
+  // Email notification - always available
+  @notificationChannel
+  class EmailNotifier implements INotificationChannel {
+    private delivered: string[] = [];
 
-  @middleware
-  class LoggerMiddleware implements IMiddleware {
-    applyTo(application: IApplication): void {
-      application.markMiddlewareAsApplied('LoggerMiddleware');
+    send(userId: string, message: string): void {
+      this.delivered.push(`EMAIL to ${userId}: ${message}`);
+    }
+
+    getDeliveredMessages(): string[] {
+      return this.delivered;
     }
   }
 
-  @middleware
-  class ErrorHandlerMiddleware implements IMiddleware {
-    applyTo(application: IApplication): void {
-      application.markMiddlewareAsApplied('ErrorHandlerMiddleware');
+  // SMS notification - for urgent messages
+  @notificationChannel
+  class SmsNotifier implements INotificationChannel {
+    private delivered: string[] = [];
+
+    send(userId: string, message: string): void {
+      this.delivered.push(`SMS to ${userId}: ${message}`);
+    }
+
+    getDeliveredMessages(): string[] {
+      return this.delivered;
     }
   }
 
-  it('should resolve by some alias', () => {
-    class App implements IApplication {
-      private appliedMiddleware: Set<string> = new Set();
-      constructor(@inject(s.alias(IMiddlewareKey)) public middleware: IMiddleware[]) {}
+  it('should notify through all channels', () => {
+    // NotificationManager broadcasts to ALL registered channels
+    class NotificationManager {
+      constructor(@inject(s.alias(INotificationChannel)) private channels: INotificationChannel[]) {}
 
-      markMiddlewareAsApplied(name: string): void {
-        this.appliedMiddleware.add(name);
-      }
-
-      isMiddlewareApplied(name: string): boolean {
-        return this.appliedMiddleware.has(name);
-      }
-
-      use(module: IMiddleware): void {
-        module.applyTo(this);
-      }
-
-      run() {
-        for (const module of this.middleware) {
-          module.applyTo(this);
+      notifyUser(userId: string, message: string): void {
+        for (const channel of this.channels) {
+          channel.send(userId, message);
         }
+      }
+
+      getChannelCount(): number {
+        return this.channels.length;
       }
     }
 
     const container = new Container()
-      .addRegistration(R.fromClass(LoggerMiddleware))
-      .addRegistration(R.fromClass(ErrorHandlerMiddleware));
+      .addRegistration(R.fromClass(EmailNotifier))
+      .addRegistration(R.fromClass(SmsNotifier));
 
-    const app = container.resolve(App);
-    app.run();
+    const manager = container.resolve(NotificationManager);
+    manager.notifyUser('user-123', 'Your password was reset');
 
-    expect(app.isMiddlewareApplied('LoggerMiddleware')).toBe(true);
-    expect(app.isMiddlewareApplied('ErrorHandlerMiddleware')).toBe(true);
+    // Both channels received the message
+    expect(manager.getChannelCount()).toBe(2);
   });
 
-  it('should resolve by some alias', () => {
-    @register(bindTo(s.alias('ILogger')))
-    class FileLogger {}
+  it('should resolve single implementation by alias', () => {
+    // Sometimes you only need one implementation (e.g., primary email service)
+    @register(bindTo(s.alias('IPrimaryNotifier')))
+    class PrimaryEmailNotifier {
+      readonly type = 'email';
+    }
 
-    const container = new Container().addRegistration(R.fromClass(FileLogger));
+    const container = new Container().addRegistration(R.fromClass(PrimaryEmailNotifier));
 
-    expect(container.resolveOneByAlias('ILogger')).toBeInstanceOf(FileLogger);
-    expect(() => container.resolve('logger')).toThrowError(DependencyNotFoundError);
+    // resolveOneByAlias returns first matching implementation
+    const notifier = container.resolveOneByAlias<PrimaryEmailNotifier>('IPrimaryNotifier');
+    expect(notifier.type).toBe('email');
+
+    // Direct key resolution fails - only alias is registered
+    expect(() => container.resolve('IPrimaryNotifier')).toThrowError(DependencyNotFoundError);
   });
 
-  it('should resolve by alias', () => {
-    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('root')))
-    class FileLogger {}
+  it('should use different implementations per scope', () => {
+    // Development: Console logger for easy debugging
+    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('development')))
+    class ConsoleLogger {
+      readonly type = 'console';
+    }
 
-    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('child')))
-    class DbLogger {}
+    // Production: Database logger for audit trail
+    @register(bindTo(s.alias('ILogger')), scope((s) => s.hasTag('production')))
+    class DatabaseLogger {
+      readonly type = 'database';
+    }
 
-    const container = new Container({ tags: ['root'] })
-      .addRegistration(R.fromClass(FileLogger))
-      .addRegistration(R.fromClass(DbLogger));
+    // Development environment
+    const devContainer = new Container({ tags: ['development'] })
+      .addRegistration(R.fromClass(ConsoleLogger))
+      .addRegistration(R.fromClass(DatabaseLogger));
 
-    const result1 = container.resolveOneByAlias('ILogger');
-    const child = container.createScope({ tags: ['child'] });
-    const result2 = child.resolveOneByAlias('ILogger');
+    // Production environment
+    const prodContainer = new Container({ tags: ['production'] })
+      .addRegistration(R.fromClass(ConsoleLogger))
+      .addRegistration(R.fromClass(DatabaseLogger));
 
-    expect(result1).toBeInstanceOf(FileLogger);
-    expect(result2).toBeInstanceOf(DbLogger);
+    const devLogger = devContainer.resolveOneByAlias<ConsoleLogger | DatabaseLogger>('ILogger');
+    const prodLogger = prodContainer.resolveOneByAlias<ConsoleLogger | DatabaseLogger>('ILogger');
+
+    expect(devLogger.type).toBe('console');
+    expect(prodLogger.type).toBe('database');
   });
 });
 
@@ -1347,41 +1696,122 @@ describe('ScopeProvider', function () {
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
 ```typescript
+import 'reflect-metadata';
 import { bindTo, Container, type IContainer, type IContainerModule, register, Registration as R } from 'ts-ioc-container';
 
-@register(bindTo('ILogger'))
-class Logger {}
+/**
+ * User Management Domain - Container Modules
+ *
+ * Modules organize related registrations and allow swapping implementations
+ * based on environment (development, testing, production).
+ *
+ * Common module patterns:
+ * - ProductionModule: Real database, external APIs, email service
+ * - DevelopmentModule: In-memory database, mock APIs, console logging
+ * - TestingModule: Mocks with assertion capabilities
+ *
+ * This enables:
+ * - Easy environment switching
+ * - Isolated testing without external dependencies
+ * - Feature flags via module composition
+ */
 
-@register(bindTo('ILogger'))
-class TestLogger {}
+// Auth service interface - same API for all environments
+interface IAuthService {
+  authenticate(email: string, password: string): boolean;
+  getServiceType(): string;
+}
 
-class Production implements IContainerModule {
-  applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(Logger));
+// Production: Real authentication with database lookup
+@register(bindTo('IAuthService'))
+class ProductionAuthService implements IAuthService {
+  authenticate(email: string, password: string): boolean {
+    // In production, this would query the database
+    return email === 'admin@example.com' && password === 'secure_password';
+  }
+
+  getServiceType(): string {
+    return 'production';
   }
 }
 
-class Development implements IContainerModule {
+// Development: Accepts any credentials for easy testing
+@register(bindTo('IAuthService'))
+class DevelopmentAuthService implements IAuthService {
+  authenticate(_email: string, _password: string): boolean {
+    // Always succeed in development for easier testing
+    return true;
+  }
+
+  getServiceType(): string {
+    return 'development';
+  }
+}
+
+// Production module - real services with security
+class ProductionModule implements IContainerModule {
   applyTo(container: IContainer): void {
-    container.addRegistration(R.fromClass(TestLogger));
+    container.addRegistration(R.fromClass(ProductionAuthService));
+    // In a real app, also register:
+    // - Real database connection
+    // - External email service
+    // - Payment gateway
+  }
+}
+
+// Development module - mocks and conveniences
+class DevelopmentModule implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container.addRegistration(R.fromClass(DevelopmentAuthService));
+    // In a real app, also register:
+    // - In-memory database
+    // - Console email logger
+    // - Mock payment gateway
   }
 }
 
 describe('Container Modules', function () {
   function createContainer(isProduction: boolean) {
-    return new Container().useModule(isProduction ? new Production() : new Development());
+    const module = isProduction ? new ProductionModule() : new DevelopmentModule();
+    return new Container().useModule(module);
   }
 
-  it('should register production dependencies', function () {
+  it('should use production auth with strict validation', function () {
     const container = createContainer(true);
+    const auth = container.resolve<IAuthService>('IAuthService');
 
-    expect(container.resolve('ILogger')).toBeInstanceOf(Logger);
+    expect(auth.getServiceType()).toBe('production');
+    expect(auth.authenticate('admin@example.com', 'secure_password')).toBe(true);
+    expect(auth.authenticate('admin@example.com', 'wrong_password')).toBe(false);
   });
 
-  it('should register development dependencies', function () {
+  it('should use development auth with permissive validation', function () {
     const container = createContainer(false);
+    const auth = container.resolve<IAuthService>('IAuthService');
 
-    expect(container.resolve('ILogger')).toBeInstanceOf(TestLogger);
+    expect(auth.getServiceType()).toBe('development');
+    // Development mode accepts any credentials
+    expect(auth.authenticate('any@email.com', 'any_password')).toBe(true);
+  });
+
+  it('should allow composing multiple modules', function () {
+    // Modules can be composed for feature flags or A/B testing
+    class FeatureFlagModule implements IContainerModule {
+      constructor(private enableNewFeature: boolean) {}
+
+      applyTo(container: IContainer): void {
+        if (this.enableNewFeature) {
+          // Register new feature implementations
+        }
+      }
+    }
+
+    const container = new Container()
+      .useModule(new ProductionModule())
+      .useModule(new FeatureFlagModule(true));
+
+    // Base services from ProductionModule
+    expect(container.resolve<IAuthService>('IAuthService').getServiceType()).toBe('production');
   });
 });
 
