@@ -56,9 +56,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Cache Jest
-        uses: ./.github/actions/cache-jest
-
       - name: Test with coverage
         run: pnpm run test:coverage --maxWorkers=2
 
