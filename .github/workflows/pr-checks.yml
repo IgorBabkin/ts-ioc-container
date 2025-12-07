@@ -28,24 +28,29 @@ jobs:
         id: nvm
         run: echo "version=$(cat .nvmrc | sed 's/^v//')" >> $GITHUB_OUTPUT
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ steps.nvm.outputs.version }}
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Type check
-        run: npm run type-check
+        run: pnpm run type-check
 
       - name: Cache Jest
         uses: ./.github/actions/cache-jest
 
       - name: Test
-        run: npm test -- --maxWorkers=2
+        run: pnpm test -- --maxWorkers=2
 

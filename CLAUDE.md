@@ -6,42 +6,63 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a TypeScript IoC (Inversion of Control) container library providing dependency injection with type safety, scoping, lifecycle hooks, and multiple injection strategies. Zero runtime dependencies (except `reflect-metadata`).
 
+### Package Manager
+
+This project uses **pnpm** for package management with workspaces:
+- Root project: TypeScript IoC container library
+- Workspace: `docs/` (Astro documentation site)
+
+Install pnpm if not already installed:
+```bash
+npm install -g pnpm
+# or
+corepack enable
+```
+
 ## Common Commands
 
 ### Development
 ```bash
-npm test                 # Run tests with Jest
-npm run test:coverage    # Run tests with coverage report
-npm run type-check       # TypeScript type checking (no emit)
-npm run lint             # Lint lib/, __tests__/, and scripts/
-npm run lint:fix         # Auto-fix linting issues
-npm run format           # Format all TypeScript files with Prettier
+pnpm test                 # Run tests with Jest
+pnpm run test:coverage    # Run tests with coverage report
+pnpm run type-check       # TypeScript type checking (no emit)
+pnpm run lint             # Lint lib/, __tests__/, and scripts/
+pnpm run lint:fix         # Auto-fix linting issues
+pnpm run format           # Format all TypeScript files with Prettier
 ```
 
 ### Building
 ```bash
-npm run build            # Build all formats (CommonJS, ESM, types)
-npm run build:cjm        # Build CommonJS output to cjm/
-npm run build:esm        # Build ES Modules output to esm/
-npm run build:types      # Generate TypeScript declarations to typings/
+pnpm run build            # Build all formats (CommonJS, ESM, types)
+pnpm run build:cjm        # Build CommonJS output to cjm/
+pnpm run build:esm        # Build ES Modules output to esm/
+pnpm run build:types      # Generate TypeScript declarations to typings/
 ```
 
 ### Single Test
 ```bash
-npx jest __tests__/path/to/test.spec.ts           # Run specific test file
-npx jest -t "test name pattern"                    # Run tests matching pattern
+pnpm exec jest __tests__/path/to/test.spec.ts     # Run specific test file
+pnpm exec jest -t "test name pattern"              # Run tests matching pattern
 ```
 
 ### Documentation
 ```bash
-npm run generate:docs    # Generate README.md from .readme.hbs.md
-npm run docs:dev         # Start documentation dev server (in docs/)
-npm run docs:build       # Build documentation site
+pnpm run generate:docs    # Generate README.md from .readme.hbs.md
+pnpm run docs:dev         # Start documentation dev server (workspace)
+pnpm run docs:build       # Build documentation site (workspace)
+pnpm run docs:preview     # Preview built documentation site
 ```
 
 ### Release
 ```bash
-npm run release          # Build, test, and publish to npm
+pnpm run release          # Build, test, and publish to npm
+```
+
+### Workspace Management
+```bash
+pnpm install                                      # Install all dependencies (root + workspaces)
+pnpm --filter ts-ioc-container-docs <command>    # Run command in docs workspace
+pnpm --filter ts-ioc-container-docs add <pkg>    # Add package to docs workspace
 ```
 
 ## Architecture Overview
@@ -99,6 +120,18 @@ Lifecycle hooks for dependency management:
 - **@onDispose**: Executed on container disposal (requires `AddOnDisposeHookModule`)
 - **@hook**: Generic hook decorator for custom lifecycle events
 - **injectProp**: Property injection helper
+
+## Code Style & Conventions
+
+- Use TypeScript with strict typing
+- Follow existing patterns in the codebase
+- Use decorators for metadata injection (`@inject`, `@onConstruct`, `@onDispose`)
+- Prefer explicit types over `any` (use `any` only when necessary, with warnings)
+- Use interfaces for contracts (e.g., `IContainer`, `IProvider`, `IInjector`)
+- Follow the existing error handling patterns with custom error classes
+- All public APIs should be exported from `lib/index.ts`
+- Keep bundle size minimal
+- Maintain backward compatibility when possible
 
 ## Important File Conventions
 
@@ -202,19 +235,45 @@ Custom error classes in `lib/errors/`:
 - `UnexpectedHookResultError`: Hook returned unexpected result
 - `UnsupportedTokenTypeError`: Token type not supported
 
+## Testing
+
+- All code must have corresponding tests in `__tests__/`
+- Tests use Jest with `ts-jest`
+- Test files mirror the source structure
+- Use `moq.ts` for mocking when needed
+- Maintain high test coverage
+- Use consistent test scope legends (see Test Scope Conventions above)
+
+## Project Structure
+
+- `lib/` - Source TypeScript code (main development directory)
+- `__tests__/` - Test files using Jest (mirrors lib/ structure)
+- `cjm/` - Compiled CommonJS output (generated, do not edit)
+- `esm/` - Compiled ES Module output (generated, do not edit)
+- `typings/` - TypeScript declaration files (generated, do not edit)
+- `docs/` - Astro-based documentation site (separate pnpm workspace)
+- `scripts/` - Build and maintenance scripts
+- `.readme.hbs.md` - README template source (edit this, not README.md)
+- `README.md` - Generated from .readme.hbs.md (do not edit directly)
+- `pnpm-workspace.yaml` - pnpm workspace configuration
+- `pnpm-lock.yaml` - pnpm lock file
+
 ## Development Workflow
 
 1. Make changes in `lib/`
 2. Add/update tests in `__tests__/`
-3. Run `npm test` to verify
-4. Run `npm run type-check` for type safety
-5. Run `npm run lint:fix` to fix linting issues
-6. Run `npm run build` to generate outputs
-7. If changing API, update `.readme.hbs.md` and run `npm run generate:docs`
-8. Commit follows conventional commits (use `npm run commit` for help)
+3. Run `pnpm test` to verify
+4. Run `pnpm run type-check` for type safety
+5. Run `pnpm run lint:fix` to fix linting issues
+6. Run `pnpm run build` to generate outputs
+7. If changing API, update `.readme.hbs.md` and run `pnpm run generate:docs`
+8. Commit follows conventional commits (use `pnpm run commit` for help)
 
 ## Notes on Docs Directory
 
-- `docs/` is a separate Astro project with its own dependencies and configs
+- `docs/` is a separate pnpm workspace (Astro project) with its own package.json
+- Managed via pnpm workspace in `pnpm-workspace.yaml`
 - Root ESLint ignores `docs/**` (docs has its own Astro-specific config)
 - Documentation site has separate lint-staged rules for Astro files
+- Use `pnpm --filter ts-ioc-container-docs <command>` to run commands in docs workspace
+- Docs dependencies are isolated from root project dependencies

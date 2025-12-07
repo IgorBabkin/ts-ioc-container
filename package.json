@@ -57,10 +57,10 @@
     "audit": "npm audit",
     "prepare": "husky",
     "release": "npm run build && npm test && npm publish",
-    "docs:dev": "npm run dev --workspace=docs",
-    "docs:serve": "npm run dev --workspace=docs",
-    "docs:build": "npm run build --workspace=docs",
-    "docs:preview": "npm run preview --workspace=docs"
+    "docs:dev": "pnpm --filter ts-ioc-container-docs run dev",
+    "docs:serve": "pnpm --filter ts-ioc-container-docs run dev",
+    "docs:build": "pnpm --filter ts-ioc-container-docs run build",
+    "docs:preview": "pnpm --filter ts-ioc-container-docs run preview"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

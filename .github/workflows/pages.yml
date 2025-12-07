@@ -33,23 +33,25 @@ jobs:
         id: nvm
         run: echo "version=$(cat .nvmrc | sed 's/^v//')" >> $GITHUB_OUTPUT
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ steps.nvm.outputs.version }}
-          cache: 'npm'
-          cache-dependency-path: docs/package-lock.json
+          cache: 'pnpm'
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Install docs dependencies
-        working-directory: docs
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build Astro site
-        working-directory: docs
-        run: npm run build
+        run: pnpm --filter ts-ioc-container-docs run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -34,12 +34,17 @@ jobs:
         id: nvm
         run: echo "version=$(cat .nvmrc | sed 's/^v//')" >> $GITHUB_OUTPUT
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node.js with OIDC
         uses: actions/setup-node@v4
         with:
           node-version: ${{ steps.nvm.outputs.version }}
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
+          cache: 'pnpm'
         # OIDC authentication is automatically used when:
         # 1. permissions.id-token: write is set (see top of file)
         # 2. npm 11.5.1+ is installed (next step)
@@ -51,13 +56,13 @@ jobs:
           npm --version
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Cache Jest
         uses: ./.github/actions/cache-jest
 
       - name: Test with coverage
-        run: npm run test:coverage -- --maxWorkers=2
+        run: pnpm run test:coverage -- --maxWorkers=2
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
@@ -66,7 +71,7 @@ jobs:
           file: ./coverage/lcov.info
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
 
       - name: Configure Git
         run: |
