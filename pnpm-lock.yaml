@@ -86,6 +86,9 @@ importers:
       '@astrojs/sitemap':
         specifier: ^3.2.1
         version: 3.6.0
+      '@popperjs/core':
+        specifier: ^2.11.8
+        version: 2.11.8
       '@sentry/astro':
         specifier: ^10.29.0
         version: 10.29.0(astro@4.16.19(@types/node@24.10.1)(rollup@4.53.3)(sass@1.94.2)(typescript@5.8.3))

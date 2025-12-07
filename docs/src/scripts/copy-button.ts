@@ -2,6 +2,8 @@
  * Copy-to-clipboard functionality for code blocks
  */
 
+import { showSuccessToast, showErrorToast } from "./toast";
+
 export function initializeCopyButton(button: HTMLElement): void {
   if (button.dataset.initialized) return;
   button.dataset.initialized = "true";
@@ -20,6 +22,9 @@ export function initializeCopyButton(button: HTMLElement): void {
         copyText.textContent = "Copied!";
       }
 
+      // Show success toast
+      showSuccessToast("Code copied to clipboard!");
+
       // Reset after 2 seconds
       setTimeout(() => {
         this.classList.remove("copied");
@@ -29,6 +34,8 @@ export function initializeCopyButton(button: HTMLElement): void {
       }, 2000);
     } catch (error) {
       console.error("Failed to copy code:", error);
+      // Show error toast
+      showErrorToast("Failed to copy code to clipboard");
     }
   });
 }

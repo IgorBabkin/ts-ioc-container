@@ -55,6 +55,13 @@ const currentPath = normalizePath(Astro.url.pathname);
       }
     </style>
 
+    <!-- Bootstrap Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+
     <!-- Initialize theme before page render to prevent flash -->
     <script is:inline>
       (function () {
@@ -104,6 +111,13 @@ const currentPath = normalizePath(Astro.url.pathname);
     </div>
 
     <Footer />
+
+    <!-- Toast container for notifications -->
+    <div
+      class="toast-container position-fixed bottom-0 end-0 p-3"
+      id="toast-container"
+    >
+    </div>
 
     <!-- Main client-side scripts -->
     <script>

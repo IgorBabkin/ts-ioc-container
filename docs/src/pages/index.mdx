@@ -4,10 +4,11 @@ title: Overview
 description: Overview - Core architecture and class diagrams of the IoC container
 ---
 
-import CodeBlock from "../components/CodeBlock.astro";
-import architectureDiagram from "../diagrams/architecture-overview.mermaid?raw";
-import classDiagram from "../diagrams/class-diagram.mermaid?raw";
-import basicSpecCode from "../../../__tests__/readme/basic.spec.ts?raw";
+
+import CodeBlock from '../components/CodeBlock.astro';
+import architectureDiagram from '../diagrams/architecture-overview.mermaid?raw';
+import classDiagram from '../diagrams/class-diagram.mermaid?raw';
+import basicSpecCode from '../../../__tests__/readme/basic.spec.ts?raw';
 
 # TypeScript IoC Container
 
@@ -39,11 +40,11 @@ import basicSpecCode from "../../../__tests__/readme/basic.spec.ts?raw";
 <p>Configure <code>tsconfig.json</code>:</p>
 <CodeBlock
   code={`{
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
-  }
-}`}
+    "compilerOptions": {
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true
+    }
+  }`}
   lang="json"
 />
 
