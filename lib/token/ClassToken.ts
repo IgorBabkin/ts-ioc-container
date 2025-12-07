@@ -23,12 +23,12 @@ export class ClassToken<T = any> extends InjectionToken<T> {
     });
   }
 
-  args(...args: unknown[]): InjectionToken<T> {
+  args(...args: unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
     return new ClassToken(this.token, { ...this.options, argsFn: (s) => [...argsFn(s), ...args] });
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
+  argsFn(getArgsFn: (s: IContainer) => unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
     return new ClassToken(this.token, { ...this.options, argsFn: (s) => [...argsFn(s), ...getArgsFn(s)] });
   }

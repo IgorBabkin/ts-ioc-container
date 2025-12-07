@@ -20,7 +20,7 @@ describe('Filtering Instances', function () {
     // Create multiple instances
     const logger1 = container.resolve('ILogger');
     const logger2 = container.resolve('ILogger');
-    const service = container.resolve('IService');
+    container.resolve('IService');
 
     const app = container.resolve(App);
 

@@ -27,24 +27,24 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
     r.bindToAlias(this.token);
   }
 
-  args(...args: unknown[]): GroupAliasToken<T> {
+  args(...args: unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new GroupAliasToken(this.token, {
+    return new GroupAliasToken<T>(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...args],
     });
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]): GroupAliasToken<T> {
+  argsFn(getArgsFn: (s: IContainer) => unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new GroupAliasToken(this.token, {
+    return new GroupAliasToken<T>(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
     });
   }
 
-  lazy(): InjectionToken<T[]> {
-    return new GroupAliasToken(this.token, {
+  lazy() {
+    return new GroupAliasToken<T>(this.token, {
       ...this.options,
       lazy: true,
     });

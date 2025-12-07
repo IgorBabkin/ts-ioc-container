@@ -27,24 +27,24 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
     r.bindToAlias(this.token);
   }
 
-  args(...args: unknown[]): InjectionToken<T> {
+  args(...args: unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new SingleAliasToken(this.token, {
+    return new SingleAliasToken<T>(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...args],
     });
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
+  argsFn(getArgsFn: (s: IContainer) => unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new SingleAliasToken(this.token, {
+    return new SingleAliasToken<T>(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
     });
   }
 
-  lazy(): InjectionToken<T> {
-    return new SingleAliasToken(this.token, {
+  lazy() {
+    return new SingleAliasToken<T>(this.token, {
       ...this.options,
       lazy: true,
     });

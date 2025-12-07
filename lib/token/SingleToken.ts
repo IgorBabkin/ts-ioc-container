@@ -26,23 +26,23 @@ export class SingleToken<T = any> extends InjectionToken {
     r.bindToKey(this.token);
   }
 
-  args(...args: unknown[]): SingleToken<T> {
+  args(...args: unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new SingleToken(this.token, {
+    return new SingleToken<T>(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...args],
     });
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]): SingleToken<T> {
+  argsFn(getArgsFn: (s: IContainer) => unknown[]) {
     const argsFn = this.options.argsFn ?? setArgs();
-    return new SingleToken(this.token, {
+    return new SingleToken<T>(this.token, {
       ...this.options,
       argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
     });
   }
 
-  lazy(): SingleToken<T> {
-    return new SingleToken(this.token, { ...this.options, lazy: true });
+  lazy() {
+    return new SingleToken<T>(this.token, { ...this.options, lazy: true });
   }
 }
