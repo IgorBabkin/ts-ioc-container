@@ -5,9 +5,11 @@ flowchart TD
     Apply --> AddScope[Add scope to<br/>scopes list]
     AddScope --> Return([Return new scope])
 
-    style Create fill:#e1e4e8
-    style CopyHooks fill:#f1e05a
-    style GetRegs fill:#c6e48b
-    style AddScope fill:#7bc96f
-    style Return fill:#0366d6,color:#fff
+    classDef startEnd fill:#64748b,stroke:#475569,color:#fff
+    classDef process fill:#3b82f6,stroke:#2563eb,color:#fff
+    classDef action fill:#8b5cf6,stroke:#7c3aed,color:#fff
+
+    class Create,Return startEnd
+    class CopyHooks,GetRegs,AddScope process
+    class Apply action
 
