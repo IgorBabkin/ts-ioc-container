@@ -285,6 +285,18 @@ This project follows conventional commits with specific scope rules:
 - ❌ `fix(docs): update container examples` (incorrect - use `docs(pages)`)
 - ❌ `feat(docs): add metadata page` (incorrect - use `docs(pages)`)
 
+### CI Performance Commits
+- **ALWAYS use** `ci(perf):` for CI/CD performance improvements (NOT `perf(ci):`)
+- This prevents triggering unnecessary package releases via semantic-release
+- The `ci` scope indicates the change location, `perf` type might trigger releases
+
+**Examples:**
+- ✅ `ci(perf): remove Jest cache to speed up workflow`
+- ✅ `ci(perf): parallelize test execution`
+- ✅ `ci(perf): reduce build matrix combinations`
+- ❌ `perf(ci): remove Jest cache` (incorrect - may trigger release)
+- ❌ `perf(github): speed up CI` (incorrect - use `ci(perf):`)
+
 ### Other Common Scopes
 - `feat(container):` - New container features
 - `fix(provider):` - Provider bug fixes
