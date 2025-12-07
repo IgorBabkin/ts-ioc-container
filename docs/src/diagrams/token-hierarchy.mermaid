@@ -33,10 +33,42 @@ classDiagram
         +lazy() InjectionToken~T~
     }
 
+    class ClassToken {
+        +target: constructor~T~
+        +resolve(IContainer) T
+        +args(...args) ClassToken~T~
+        +argsFn(getArgsFn) ClassToken~T~
+        +lazy() ClassToken~T~
+    }
+
+    class FunctionToken {
+        +fn: ResolveFn~T~
+        +resolve(IContainer) T
+    }
+
+    class ConstantToken {
+        +value: T
+        +resolve(IContainer) T
+    }
+
+    class GroupInstanceToken {
+        +predicate: InstancePredicate
+        +resolve(IContainer) Instance[]
+        +cascade(value) GroupInstanceToken
+    }
+
     InjectionToken <|-- SingleToken
     InjectionToken <|-- GroupAliasToken
     InjectionToken <|-- SingleAliasToken
+    InjectionToken <|-- ClassToken
+    InjectionToken <|-- FunctionToken
+    InjectionToken <|-- ConstantToken
+    InjectionToken <|-- GroupInstanceToken
 
     note for GroupAliasToken "Resolves to array of T\nSupports alias grouping"
     note for SingleAliasToken "Resolves to single T\nSupports alias grouping"
+    note for ClassToken "Wraps class constructor\nFully supports all methods"
+    note for FunctionToken "Custom resolution function\nUsed by select.scope"
+    note for ConstantToken "Returns constant value\nUsed internally"
+    note for GroupInstanceToken "Filters instances by predicate\nUsed by select.instances()"
 

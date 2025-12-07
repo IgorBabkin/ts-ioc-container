@@ -40,7 +40,10 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
   }
 
   lazy(): InjectionToken<T> {
-    return this;
+    return new SingleAliasToken(this.token, {
+      ...this.options,
+      lazy: true,
+    });
   }
 }
 

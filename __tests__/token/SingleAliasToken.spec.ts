@@ -62,7 +62,8 @@ describe('SingleAliasToken', () => {
   it('should support lazy method', () => {
     const token = new SingleAliasToken<string>('myAlias');
     const lazyToken = token.lazy();
-    expect(lazyToken).toBe(token);
+    expect(lazyToken).not.toBe(token);
+    expect(lazyToken).toBeInstanceOf(SingleAliasToken);
   });
 
   it('should bind to alias', () => {

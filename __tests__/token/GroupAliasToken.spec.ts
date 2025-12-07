@@ -63,7 +63,8 @@ describe('GroupAliasToken', () => {
   it('should support lazy method', () => {
     const token = new GroupAliasToken<string>('myAlias');
     const lazyToken = token.lazy();
-    expect(lazyToken).toBe(token);
+    expect(lazyToken).not.toBe(token);
+    expect(lazyToken).toBeInstanceOf(GroupAliasToken);
   });
 
   it('should bind to alias', () => {

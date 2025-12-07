@@ -40,7 +40,10 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
   }
 
   lazy(): InjectionToken<T[]> {
-    return this;
+    return new GroupAliasToken(this.token, {
+      ...this.options,
+      lazy: true,
+    });
   }
 }
 
