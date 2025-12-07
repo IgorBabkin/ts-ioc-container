@@ -267,52 +267,69 @@ Sometimes you want to get all instances from container and its scopes. For examp
 ```typescript
 import { bindTo, Container, inject, register, Registration as R, select } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Instance Collection
+ *
+ * Sometimes you need access to all instances of a certain type:
+ * - Collect all active database connections for health checks
+ * - Gather all loggers to flush buffers before shutdown
+ * - Find all request handlers for metrics collection
+ *
+ * The `select.instances()` token resolves all created instances,
+ * optionally filtered by a predicate function.
+ */
 describe('Instances', function () {
   @register(bindTo('ILogger'))
   class Logger {}
 
-  it('should return injected instances', () => {
+  it('should collect instances across scope hierarchy', () => {
+    // App that needs access to all logger instances (e.g., for flushing)
     class App {
       constructor(@inject(select.instances()) public loggers: Logger[]) {}
     }
 
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const child = root.createScope({ tags: ['child'] });
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+    const requestScope = appContainer.createScope({ tags: ['request'] });
 
-    root.resolve('ILogger');
-    child.resolve('ILogger');
+    // Create loggers in different scopes
+    appContainer.resolve('ILogger');
+    requestScope.resolve('ILogger');
 
-    const rootApp = root.resolve(App);
-    const childApp = child.resolve(App);
+    const appLevel = appContainer.resolve(App);
+    const requestLevel = requestScope.resolve(App);
 
-    expect(childApp.loggers.length).toBe(1);
-    expect(rootApp.loggers.length).toBe(2);
+    // Request scope sees only its own instance
+    expect(requestLevel.loggers.length).toBe(1);
+    // Application scope sees all instances (cascades up from children)
+    expect(appLevel.loggers.length).toBe(2);
   });
 
-  it('should return only current scope instances', () => {
+  it('should return only current scope instances when cascade is disabled', () => {
+    // Only get instances from current scope, not parent scopes
     class App {
       constructor(@inject(select.instances().cascade(false)) public loggers: Logger[]) {}
     }
 
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const child = root.createScope({ tags: ['child'] });
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+    const requestScope = appContainer.createScope({ tags: ['request'] });
 
-    root.resolve('ILogger');
-    child.resolve('ILogger');
+    appContainer.resolve('ILogger');
+    requestScope.resolve('ILogger');
 
-    const rootApp = root.resolve(App);
+    const appLevel = appContainer.resolve(App);
 
-    expect(rootApp.loggers.length).toBe(1);
+    // Only application-level instance, not request-level
+    expect(appLevel.loggers.length).toBe(1);
   });
 
-  it('should return injected instances by decorator', () => {
+  it('should filter instances by predicate', () => {
     const isLogger = (instance: unknown) => instance instanceof Logger;
 
     class App {
       constructor(@inject(select.instances(isLogger)) public loggers: Logger[]) {}
     }
 
-    const container = new Container().addRegistration(R.fromClass(Logger));
+    const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
 
     const logger0 = container.resolve('ILogger');
     const logger1 = container.resolve('ILogger');
@@ -573,26 +590,44 @@ Also you can [inject property.](#inject-property)
 ```typescript
 import { Container, inject, Registration as R } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Metadata Injection
+ *
+ * The MetadataInjector (default) uses TypeScript decorators and reflect-metadata
+ * to automatically inject dependencies into constructor parameters.
+ *
+ * How it works:
+ * 1. @inject('key') decorator marks a parameter for injection
+ * 2. Container reads metadata at resolution time
+ * 3. Dependencies are resolved and passed to constructor
+ *
+ * This is the most common pattern in Angular, NestJS, and similar frameworks.
+ * Requires: "experimentalDecorators" and "emitDecoratorMetadata" in tsconfig.
+ */
+
 class Logger {
   name = 'Logger';
 }
 
 class App {
+  // @inject tells the container which dependency to resolve for this parameter
   constructor(@inject('ILogger') private logger: Logger) {}
 
-  // OR
-  // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {
-  // }
+  // Alternative: inject via function for dynamic resolution
+  // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {}
 
   getLoggerName(): string {
     return this.logger.name;
   }
 }
 
-describe('Reflection Injector', function () {
-  it('should inject dependencies by @inject decorator', function () {
-    const container = new Container().addRegistration(R.fromClass(Logger).bindToKey('ILogger'));
+describe('Metadata Injector', function () {
+  it('should inject dependencies using @inject decorator', function () {
+    const container = new Container({ tags: ['application'] }).addRegistration(
+      R.fromClass(Logger).bindToKey('ILogger'),
+    );
 
+    // Container reads @inject metadata and resolves 'ILogger' for the logger parameter
     const app = container.resolve(App);
 
     expect(app.getLoggerName()).toBe('Logger');
@@ -755,6 +790,21 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Provider Patterns
+ *
+ * Providers are factories that create dependency instances. They support:
+ * - Different creation strategies (class, value, factory function)
+ * - Lifecycle management (singleton, transient)
+ * - Argument injection (static args, dynamic argsFn)
+ * - Lazy instantiation (defer creation until first use)
+ * - Access control (restrict which scopes can resolve)
+ *
+ * Think of providers as "recipes" for creating instances - they define
+ * HOW to create something, while registrations define WHERE it's available.
+ */
+
+// Domain classes for examples
 class Logger {}
 
 class ConfigService {
@@ -788,8 +838,11 @@ describe('Provider', () => {
   });
 
   it('can be featured by pipe method', () => {
-    const root = new Container({ tags: ['root'] }).register('ILogger', Provider.fromClass(Logger).pipe(singleton()));
-    expect(root.resolve('ILogger')).toBe(root.resolve('ILogger'));
+    const appContainer = new Container({ tags: ['application'] }).register(
+      'ILogger',
+      Provider.fromClass(Logger).pipe(singleton()),
+    );
+    expect(appContainer.resolve('ILogger')).toBe(appContainer.resolve('ILogger'));
   });
 
   it('can be created from a dependency key', () => {
@@ -843,16 +896,16 @@ describe('Provider', () => {
   });
 
   it('supports visibility control between parent and child containers', () => {
-    const rootContainer = new Container({ tags: ['root'] }).register(
+    // Admin-only logger - only accessible from admin request scopes
+    const appContainer = new Container({ tags: ['application'] }).register(
       'ILogger',
-      Provider.fromClass(Logger).pipe(
-        scopeAccess(({ invocationScope, providerScope }) => invocationScope.hasTag('admin')),
-      ),
+      Provider.fromClass(Logger).pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin'))),
     );
-    const adminChild = rootContainer.createScope({ tags: ['admin'] });
-    const userChild = rootContainer.createScope({ tags: ['user'] });
-    expect(() => adminChild.resolve('ILogger')).not.toThrow();
-    expect(() => userChild.resolve('ILogger')).toThrow();
+    const adminRequest = appContainer.createScope({ tags: ['request', 'admin'] });
+    const userRequest = appContainer.createScope({ tags: ['request', 'user'] });
+
+    expect(() => adminRequest.resolve('ILogger')).not.toThrow();
+    expect(() => userRequest.resolve('ILogger')).toThrow();
   });
 
   it('supports chaining multiple pipe transformations', () => {
@@ -897,13 +950,16 @@ describe('Provider', () => {
   });
 
   it('allows direct manipulation of visibility predicate', () => {
+    // Restrict logger to special request scopes only
     const provider = Provider.fromClass(Logger);
-    provider.setAccessRule(({ invocationScope }) => invocationScope.hasTag('special'));
-    const container = new Container({ tags: ['root'] }).register('Logger', provider);
-    const specialChild = container.createScope({ tags: ['special'] });
-    const regularChild = container.createScope({ tags: ['regular'] });
-    expect(() => specialChild.resolve('Logger')).not.toThrow();
-    expect(() => regularChild.resolve('Logger')).toThrow();
+    provider.setAccessRule(({ invocationScope }) => invocationScope.hasTag('admin'));
+
+    const appContainer = new Container({ tags: ['application'] }).register('Logger', provider);
+    const adminRequest = appContainer.createScope({ tags: ['request', 'admin'] });
+    const regularRequest = appContainer.createScope({ tags: ['request'] });
+
+    expect(() => adminRequest.resolve('Logger')).not.toThrow();
+    expect(() => regularRequest.resolve('Logger')).toThrow();
   });
 
   it('allows direct manipulation of args function', () => {
@@ -921,6 +977,7 @@ describe('Provider', () => {
   });
 
   it('allows to register lazy provider', () => {
+    // Lazy providers defer instantiation until first property access
     let isLoggerCreated = false;
 
     @register(bindTo('Logger'), lazy())
@@ -948,17 +1005,20 @@ describe('Provider', () => {
       }
     }
 
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const main = root.resolve(Main);
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+    const main = appContainer.resolve(Main);
 
+    // Logger not created yet - lazy!
     expect(isLoggerCreated).toBe(false);
 
+    // First property access triggers instantiation
     main.getLogs();
 
     expect(isLoggerCreated).toBe(true);
   });
 
   it('allows to resolve with args', () => {
+    // Pass configuration to dependency at injection point
     @register(bindTo('ILogger'))
     class Logger {
       readonly channel: string;
@@ -976,13 +1036,14 @@ describe('Provider', () => {
       }
     }
 
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const main = root.resolve(Main);
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+    const main = appContainer.resolve(Main);
 
     expect(main.getChannel()).toBe('file');
   });
 
   it('allows to resolve with argsFn', () => {
+    // Dynamic arguments resolved from container at injection time
     @register(bindTo('ILogger'))
     class Logger {
       readonly channel: string;
@@ -994,7 +1055,7 @@ describe('Provider', () => {
 
     class Main {
       constructor(
-        @inject(s.token('ILogger').argsFn((s) => [{ channel: s.resolve('channel') }])) private logger: Logger,
+        @inject(s.token('ILogger').argsFn((scope) => [{ channel: scope.resolve('channel') }])) private logger: Logger,
       ) {}
 
       getChannel(): string {
@@ -1002,11 +1063,11 @@ describe('Provider', () => {
       }
     }
 
-    const root = new Container({ tags: ['root'] })
+    const appContainer = new Container({ tags: ['application'] })
       .addRegistration(R.fromValue('file').bindToKey('channel'))
       .addRegistration(R.fromClass(Logger));
 
-    const main = root.resolve(Main);
+    const main = appContainer.resolve(Main);
 
     expect(main.getChannel()).toBe('file');
   });
@@ -1520,7 +1581,23 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
-describe('lazy provider', () => {
+/**
+ * User Management Domain - Decorator Pattern
+ *
+ * The decorator pattern wraps a service with additional behavior:
+ * - Logging: Log all repository operations for audit
+ * - Caching: Cache results of expensive operations
+ * - Retry: Automatically retry failed operations
+ * - Validation: Validate inputs before processing
+ *
+ * In DI, decorators are applied at registration time, so consumers
+ * get the decorated version without knowing about the decoration.
+ *
+ * This example shows a TodoRepository decorated with logging -
+ * every save operation is automatically logged.
+ */
+describe('Decorator Pattern', () => {
+  // Singleton logger collects all log entries
   @register(singleton())
   class Logger {
     private logs: string[] = [];
@@ -1543,50 +1620,58 @@ describe('lazy provider', () => {
     text: string;
   }
 
-  class LogRepository implements IRepository {
+  // Decorator: Wraps any IRepository with logging behavior
+  class LoggingRepository implements IRepository {
     constructor(
       private repository: IRepository,
       @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {
+      // Log the operation
       this.logger.log(item.id);
+      // Delegate to the wrapped repository
       return this.repository.save(item);
     }
   }
 
-  const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
+  // Decorator factory - creates LoggingRepository wrapping the original
+  const withLogging = (repository: IRepository, scope: IContainer) =>
+    scope.resolve(LoggingRepository, { args: [repository] });
 
-  @register(bindTo('IRepository'), decorate(logRepo))
+  // TodoRepository is automatically decorated with logging
+  @register(bindTo('IRepository'), decorate(withLogging))
   class TodoRepository implements IRepository {
-    async save(item: Todo): Promise<void> {}
+    async save(item: Todo): Promise<void> {
+      // Actual database save logic would go here
+    }
   }
 
   class App {
     constructor(@inject('IRepository') public repository: IRepository) {}
 
     async run() {
-      await this.repository.save({ id: '1', text: 'Hello' });
-      await this.repository.save({ id: '2', text: 'Hello' });
+      await this.repository.save({ id: '1', text: 'Buy groceries' });
+      await this.repository.save({ id: '2', text: 'Walk the dog' });
     }
   }
 
-  function createContainer() {
-    const container = new Container();
-    container.addRegistration(R.fromClass(TodoRepository)).addRegistration(R.fromClass(Logger));
-    return container;
+  function createAppContainer() {
+    return new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(TodoRepository))
+      .addRegistration(R.fromClass(Logger));
   }
 
-  it('should decorate repo by logger middleware', async () => {
-    // Arrange
-    const container = createContainer();
+  it('should automatically log all repository operations via decorator', async () => {
+    const container = createAppContainer();
 
-    // Act
     const app = container.resolve(App);
     const logger = container.resolve<Logger>('Logger');
+
+    // App uses repository normally - unaware of logging decorator
     await app.run();
 
-    // Assert
+    // All operations were logged transparently
     expect(logger.printLogs()).toBe('1,2');
   });
 });
@@ -1619,52 +1704,75 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
+/**
+ * User Management Domain - Registration Patterns
+ *
+ * Registrations define how dependencies are bound to the container.
+ * Common patterns:
+ * - Register by class (auto-generates key from class name)
+ * - Register by value (constants, configuration)
+ * - Register by factory function (dynamic creation)
+ * - Register with aliases (multiple keys for same service)
+ *
+ * This is the foundation for dependency injection - telling the container
+ * "when someone asks for X, give them Y".
+ */
 describe('Registration module', function () {
-  const createContainer = () => new Container({ tags: ['root'] });
+  const createAppContainer = () => new Container({ tags: ['application'] });
 
-  it('should register class', function () {
-    @register(bindTo('ILogger'), scope((s) => s.hasTag('root')), singleton())
+  it('should register class with scope and lifecycle', function () {
+    // Logger is registered at application scope as a singleton
+    @register(bindTo('ILogger'), scope((s) => s.hasTag('application')), singleton())
     class Logger {}
 
-    const root = createContainer().addRegistration(R.fromClass(Logger));
+    const appContainer = createAppContainer().addRegistration(R.fromClass(Logger));
 
-    expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
+    expect(appContainer.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 
-  it('should register value', function () {
-    const root = createContainer().addRegistration(R.fromValue('smth').bindToKey('ISmth'));
+  it('should register configuration value', function () {
+    // Register application configuration as a value
+    const appContainer = createAppContainer().addRegistration(R.fromValue('production').bindToKey('Environment'));
 
-    expect(root.resolve('ISmth')).toBe('smth');
+    expect(appContainer.resolve('Environment')).toBe('production');
   });
 
-  it('should register fn', function () {
-    const root = createContainer().addRegistration(R.fromFn(() => 'smth').bindToKey('ISmth'));
+  it('should register factory function', function () {
+    // Factory functions are useful for dynamic creation
+    const appContainer = createAppContainer().addRegistration(
+      R.fromFn(() => `app-${Date.now()}`).bindToKey('RequestId'),
+    );
 
-    expect(root.resolve('ISmth')).toBe('smth');
+    expect(appContainer.resolve('RequestId')).toContain('app-');
   });
 
-  it('should raise an error if key is not provider', () => {
+  it('should raise an error if binding key is not provided', () => {
+    // Values and functions must have explicit keys (classes use class name by default)
     expect(() => {
-      createContainer().addRegistration(R.fromValue('smth'));
+      createAppContainer().addRegistration(R.fromValue('orphan-value'));
     }).toThrowError(DependencyMissingKeyError);
   });
 
-  it('should register dependency by class name if @key is not provided', function () {
+  it('should register dependency by class name when no key decorator is used', function () {
+    // Without @register(bindTo('key')), the class name becomes the key
     class FileLogger {}
 
-    const root = createContainer().addRegistration(R.fromClass(FileLogger));
+    const appContainer = createAppContainer().addRegistration(R.fromClass(FileLogger));
 
-    expect(root.resolve('FileLogger')).toBeInstanceOf(FileLogger);
+    expect(appContainer.resolve('FileLogger')).toBeInstanceOf(FileLogger);
   });
 
-  it('should assign additional key which redirects to original one', function () {
+  it('should register with multiple keys using aliases', function () {
+    // Same service accessible via direct key and alias
     @register(bindTo('ILogger'), bindTo(s.alias('Logger')), singleton())
     class Logger {}
 
-    const root = createContainer().addRegistration(R.fromClass(Logger));
+    const appContainer = createAppContainer().addRegistration(R.fromClass(Logger));
 
-    expect(root.resolveByAlias('Logger')[0]).toBeInstanceOf(Logger);
-    expect(root.resolve('ILogger')).toBeInstanceOf(Logger);
+    // Accessible via alias (for group resolution)
+    expect(appContainer.resolveByAlias('Logger')[0]).toBeInstanceOf(Logger);
+    // Accessible via direct key
+    expect(appContainer.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 });
 

@@ -10,7 +10,23 @@ import {
   singleton,
 } from '../../lib';
 
-describe('lazy provider', () => {
+/**
+ * User Management Domain - Decorator Pattern
+ *
+ * The decorator pattern wraps a service with additional behavior:
+ * - Logging: Log all repository operations for audit
+ * - Caching: Cache results of expensive operations
+ * - Retry: Automatically retry failed operations
+ * - Validation: Validate inputs before processing
+ *
+ * In DI, decorators are applied at registration time, so consumers
+ * get the decorated version without knowing about the decoration.
+ *
+ * This example shows a TodoRepository decorated with logging -
+ * every save operation is automatically logged.
+ */
+describe('Decorator Pattern', () => {
+  // Singleton logger collects all log entries
   @register(singleton())
   class Logger {
     private logs: string[] = [];
@@ -33,50 +49,58 @@ describe('lazy provider', () => {
     text: string;
   }
 
-  class LogRepository implements IRepository {
+  // Decorator: Wraps any IRepository with logging behavior
+  class LoggingRepository implements IRepository {
     constructor(
       private repository: IRepository,
       @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {
+      // Log the operation
       this.logger.log(item.id);
+      // Delegate to the wrapped repository
       return this.repository.save(item);
     }
   }
 
-  const logRepo = (dep: IRepository, scope: IContainer) => scope.resolve(LogRepository, { args: [dep] });
+  // Decorator factory - creates LoggingRepository wrapping the original
+  const withLogging = (repository: IRepository, scope: IContainer) =>
+    scope.resolve(LoggingRepository, { args: [repository] });
 
-  @register(bindTo('IRepository'), decorate(logRepo))
+  // TodoRepository is automatically decorated with logging
+  @register(bindTo('IRepository'), decorate(withLogging))
   class TodoRepository implements IRepository {
-    async save(item: Todo): Promise<void> {}
+    async save(item: Todo): Promise<void> {
+      // Actual database save logic would go here
+    }
   }
 
   class App {
     constructor(@inject('IRepository') public repository: IRepository) {}
 
     async run() {
-      await this.repository.save({ id: '1', text: 'Hello' });
-      await this.repository.save({ id: '2', text: 'Hello' });
+      await this.repository.save({ id: '1', text: 'Buy groceries' });
+      await this.repository.save({ id: '2', text: 'Walk the dog' });
     }
   }
 
-  function createContainer() {
-    const container = new Container();
-    container.addRegistration(R.fromClass(TodoRepository)).addRegistration(R.fromClass(Logger));
-    return container;
+  function createAppContainer() {
+    return new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(TodoRepository))
+      .addRegistration(R.fromClass(Logger));
   }
 
-  it('should decorate repo by logger middleware', async () => {
-    // Arrange
-    const container = createContainer();
+  it('should automatically log all repository operations via decorator', async () => {
+    const container = createAppContainer();
 
-    // Act
     const app = container.resolve(App);
     const logger = container.resolve<Logger>('Logger');
+
+    // App uses repository normally - unaware of logging decorator
     await app.run();
 
-    // Assert
+    // All operations were logged transparently
     expect(logger.printLogs()).toBe('1,2');
   });
 });

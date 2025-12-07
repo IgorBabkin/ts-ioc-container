@@ -13,6 +13,21 @@ import {
   singleton,
 } from '../../lib';
 
+/**
+ * User Management Domain - Provider Patterns
+ *
+ * Providers are factories that create dependency instances. They support:
+ * - Different creation strategies (class, value, factory function)
+ * - Lifecycle management (singleton, transient)
+ * - Argument injection (static args, dynamic argsFn)
+ * - Lazy instantiation (defer creation until first use)
+ * - Access control (restrict which scopes can resolve)
+ *
+ * Think of providers as "recipes" for creating instances - they define
+ * HOW to create something, while registrations define WHERE it's available.
+ */
+
+// Domain classes for examples
 class Logger {}
 
 class ConfigService {
@@ -46,8 +61,11 @@ describe('Provider', () => {
   });
 
   it('can be featured by pipe method', () => {
-    const root = new Container({ tags: ['root'] }).register('ILogger', Provider.fromClass(Logger).pipe(singleton()));
-    expect(root.resolve('ILogger')).toBe(root.resolve('ILogger'));
+    const appContainer = new Container({ tags: ['application'] }).register(
+      'ILogger',
+      Provider.fromClass(Logger).pipe(singleton()),
+    );
+    expect(appContainer.resolve('ILogger')).toBe(appContainer.resolve('ILogger'));
   });
 
   it('can be created from a dependency key', () => {
@@ -101,16 +119,16 @@ describe('Provider', () => {
   });
 
   it('supports visibility control between parent and child containers', () => {
-    const rootContainer = new Container({ tags: ['root'] }).register(
+    // Admin-only logger - only accessible from admin request scopes
+    const appContainer = new Container({ tags: ['application'] }).register(
       'ILogger',
-      Provider.fromClass(Logger).pipe(
-        scopeAccess(({ invocationScope, providerScope }) => invocationScope.hasTag('admin')),
-      ),
+      Provider.fromClass(Logger).pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin'))),
     );
-    const adminChild = rootContainer.createScope({ tags: ['admin'] });
-    const userChild = rootContainer.createScope({ tags: ['user'] });
-    expect(() => adminChild.resolve('ILogger')).not.toThrow();
-    expect(() => userChild.resolve('ILogger')).toThrow();
+    const adminRequest = appContainer.createScope({ tags: ['request', 'admin'] });
+    const userRequest = appContainer.createScope({ tags: ['request', 'user'] });
+
+    expect(() => adminRequest.resolve('ILogger')).not.toThrow();
+    expect(() => userRequest.resolve('ILogger')).toThrow();
   });
 
   it('supports chaining multiple pipe transformations', () => {
@@ -155,13 +173,16 @@ describe('Provider', () => {
   });
 
   it('allows direct manipulation of visibility predicate', () => {
+    // Restrict logger to special request scopes only
     const provider = Provider.fromClass(Logger);
-    provider.setAccessRule(({ invocationScope }) => invocationScope.hasTag('special'));
-    const container = new Container({ tags: ['root'] }).register('Logger', provider);
-    const specialChild = container.createScope({ tags: ['special'] });
-    const regularChild = container.createScope({ tags: ['regular'] });
-    expect(() => specialChild.resolve('Logger')).not.toThrow();
-    expect(() => regularChild.resolve('Logger')).toThrow();
+    provider.setAccessRule(({ invocationScope }) => invocationScope.hasTag('admin'));
+
+    const appContainer = new Container({ tags: ['application'] }).register('Logger', provider);
+    const adminRequest = appContainer.createScope({ tags: ['request', 'admin'] });
+    const regularRequest = appContainer.createScope({ tags: ['request'] });
+
+    expect(() => adminRequest.resolve('Logger')).not.toThrow();
+    expect(() => regularRequest.resolve('Logger')).toThrow();
   });
 
   it('allows direct manipulation of args function', () => {
@@ -179,6 +200,7 @@ describe('Provider', () => {
   });
 
   it('allows to register lazy provider', () => {
+    // Lazy providers defer instantiation until first property access
     let isLoggerCreated = false;
 
     @register(bindTo('Logger'), lazy())
@@ -206,17 +228,20 @@ describe('Provider', () => {
       }
     }
 
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const main = root.resolve(Main);
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+    const main = appContainer.resolve(Main);
 
+    // Logger not created yet - lazy!
     expect(isLoggerCreated).toBe(false);
 
+    // First property access triggers instantiation
     main.getLogs();
 
     expect(isLoggerCreated).toBe(true);
   });
 
   it('allows to resolve with args', () => {
+    // Pass configuration to dependency at injection point
     @register(bindTo('ILogger'))
     class Logger {
       readonly channel: string;
@@ -234,13 +259,14 @@ describe('Provider', () => {
       }
     }
 
-    const root = new Container({ tags: ['root'] }).addRegistration(R.fromClass(Logger));
-    const main = root.resolve(Main);
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+    const main = appContainer.resolve(Main);
 
     expect(main.getChannel()).toBe('file');
   });
 
   it('allows to resolve with argsFn', () => {
+    // Dynamic arguments resolved from container at injection time
     @register(bindTo('ILogger'))
     class Logger {
       readonly channel: string;
@@ -252,7 +278,7 @@ describe('Provider', () => {
 
     class Main {
       constructor(
-        @inject(s.token('ILogger').argsFn((s) => [{ channel: s.resolve('channel') }])) private logger: Logger,
+        @inject(s.token('ILogger').argsFn((scope) => [{ channel: scope.resolve('channel') }])) private logger: Logger,
       ) {}
 
       getChannel(): string {
@@ -260,11 +286,11 @@ describe('Provider', () => {
       }
     }
 
-    const root = new Container({ tags: ['root'] })
+    const appContainer = new Container({ tags: ['application'] })
       .addRegistration(R.fromValue('file').bindToKey('channel'))
       .addRegistration(R.fromClass(Logger));
 
-    const main = root.resolve(Main);
+    const main = appContainer.resolve(Main);
 
     expect(main.getChannel()).toBe('file');
   });
