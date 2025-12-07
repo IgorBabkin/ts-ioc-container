@@ -2,13 +2,11 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/global.scss";
 import TableOfContents from "../components/TableOfContents.astro";
-import ThemeToggle from "../components/ThemeToggle.astro";
-
-interface Heading {
-  id: string;
-  text: string;
-  level: 2 | 3 | 4;
-}
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { navigation } from "../config/navigation";
+import { getHeadingsForPath } from "../config/headings";
+import { themeColors } from "../config/theme";
 
 interface Props {
   title: string;
@@ -20,113 +18,12 @@ const {
   description = "TypeScript IoC (Inversion Of Control) container library",
 } = Astro.props;
 
-// Hardcoded headings for each page
-const pageHeadings: Record<string, Heading[]> = {
-  "/": [
-    { id: "advantages", text: "Advantages", level: 2 },
-    { id: "quick-start", text: "Quick Start", level: 2 },
-    { id: "documentation", text: "Documentation", level: 2 },
-    { id: "core-architecture", text: "Core Architecture", level: 2 },
-    { id: "class-diagram", text: "Class Diagram", level: 2 },
-  ],
-  "/ts-ioc-container": [
-    { id: "advantages", text: "Advantages", level: 2 },
-    { id: "quick-start", text: "Quick Start", level: 2 },
-    { id: "documentation", text: "Documentation", level: 2 },
-    { id: "core-architecture", text: "Core Architecture", level: 2 },
-    { id: "class-diagram", text: "Class Diagram", level: 2 },
-  ],
-  "/ts-ioc-container/": [
-    { id: "advantages", text: "Advantages", level: 2 },
-    { id: "quick-start", text: "Quick Start", level: 2 },
-    { id: "documentation", text: "Documentation", level: 2 },
-    { id: "core-architecture", text: "Core Architecture", level: 2 },
-    { id: "class-diagram", text: "Class Diagram", level: 2 },
-  ],
-  "/ts-ioc-container/container": [
-    { id: "scopes", text: "Scopes", level: 2 },
-    { id: "dependency-resolution-flow", text: "Dependency Resolution Flow", level: 2 },
-    { id: "instance-management", text: "Instance Management", level: 2 },
-    { id: "disposal", text: "Disposal", level: 2 },
-    { id: "lazy-loading", text: "Lazy Loading", level: 2 },
-    { id: "memory-management", text: "Memory Management", level: 2 },
-    { id: "container-modules", text: "Container Modules", level: 2 },
-    { id: "key-design-decisions", text: "Key Design Decisions", level: 2 },
-    { id: "best-practices", text: "Best Practices", level: 2 },
-    { id: "api-reference", text: "API Reference", level: 2 },
-  ],
-  "/ts-ioc-container/registration": [
-    { id: "registration-flow", text: "Registration Flow", level: 2 },
-    { id: "registration-methods", text: "Registration Methods", level: 2 },
-    { id: "decorator-based-registration", text: "Decorator-Based Registration", level: 2 },
-    { id: "fluent-api-registration", text: "Fluent API Registration", level: 2 },
-    { id: "keys", text: "Keys", level: 2 },
-    { id: "scope-registration", text: "Scope Registration", level: 2 },
-    { id: "registration-pipeline", text: "Registration Pipeline", level: 2 },
-    { id: "container-modules", text: "Container Modules", level: 2 },
-    { id: "best-practices", text: "Best Practices", level: 2 },
-    { id: "registration-lifecycle", text: "Registration Lifecycle", level: 2 },
-  ],
-  "/ts-ioc-container/provider": [
-    { id: "factory-pattern", text: "Factory Pattern", level: 2 },
-    { id: "provider-types", text: "Provider Types", level: 2 },
-    { id: "singleton", text: "Singleton", level: 2 },
-    { id: "arguments", text: "Arguments", level: 2 },
-    { id: "visibility", text: "Visibility", level: 2 },
-    { id: "alias", text: "Alias", level: 2 },
-    { id: "decorator", text: "Decorator", level: 2 },
-    { id: "lazy-loading", text: "Lazy Loading", level: 2 },
-    { id: "provider-pipeline", text: "Provider Pipeline", level: 2 },
-    { id: "performance-considerations", text: "Performance Considerations", level: 2 },
-    { id: "custom-providers", text: "Custom Providers", level: 2 },
-    { id: "best-practices", text: "Best Practices", level: 2 },
-  ],
-  "/ts-ioc-container/injector": [
-    { id: "injection-strategies", text: "Injection Strategies", level: 2 },
-    { id: "available-injectors", text: "Available Injectors", level: 2 },
-    { id: "metadata-injector", text: "Metadata Injector", level: 2 },
-    { id: "simple-injector", text: "Simple Injector", level: 2 },
-    { id: "proxy-injector", text: "Proxy Injector", level: 2 },
-    { id: "choosing-the-right-injector", text: "Choosing the Right Injector", level: 2 },
-    { id: "strategy-pattern", text: "Strategy Pattern", level: 2 },
-    { id: "custom-injectors", text: "Custom Injectors", level: 2 },
-    { id: "best-practices", text: "Best Practices", level: 2 },
-  ],
-  "/ts-ioc-container/hooks": [
-    { id: "what-are-hooks", text: "What are Hooks?", level: 2 },
-    { id: "onconstruct", text: "OnConstruct Hooks", level: 2 },
-    { id: "ondispose", text: "OnDispose Hooks", level: 2 },
-    { id: "property-injection", text: "Property Injection", level: 2 },
-    { id: "custom-hooks", text: "Custom Hooks", level: 2 },
-    { id: "best-practices", text: "Best Practices", level: 2 },
-  ],
-  "/ts-ioc-container/token": [
-    { id: "why-tokens", text: "Why Tokens?", level: 2 },
-    { id: "token-hierarchy", text: "Token Hierarchy", level: 2 },
-    { id: "single-token", text: "SingleToken", level: 2 },
-    { id: "group-alias-token", text: "GroupAliasToken", level: 2 },
-    { id: "single-alias-token", text: "SingleAliasToken", level: 2 },
-    { id: "argument-binding", text: "Argument Binding", level: 2 },
-    { id: "lazy-loading", text: "Lazy Loading", level: 2 },
-    { id: "dynamic-arguments", text: "Dynamic Arguments", level: 2 },
-  ],
-};
-
 // Get headings for current page
+const headingsArray = getHeadingsForPath(Astro.url.pathname);
+
+// Normalize pathnames for comparison
 const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
 const currentPath = normalizePath(Astro.url.pathname);
-// Try both normalized path and with trailing slash for root paths
-const headingsArray = pageHeadings[currentPath] || pageHeadings[`${currentPath}/`] || [];
-
-const navigation = [
-  { title: "Overview", href: "/ts-ioc-container/" },
-  { title: "Container", href: "/ts-ioc-container/container" },
-  { title: "Registration", href: "/ts-ioc-container/registration" },
-  { title: "Provider", href: "/ts-ioc-container/provider" },
-  { title: "Injector", href: "/ts-ioc-container/injector" },
-  { title: "Token", href: "/ts-ioc-container/token" },
-  { title: "Hooks", href: "/ts-ioc-container/hooks" },
-];
 ---
 
 <!doctype html>
@@ -138,242 +35,59 @@ const navigation = [
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title} | ts-ioc-container</title>
-    <style is:inline>
-      /* Override Bootstrap primary color with fresh sage green */
+
+    <style
+      is:inline
+      define:vars={{
+        primaryLight: themeColors.light.primary,
+        primaryRgbLight: themeColors.light.primaryRgb,
+        primaryDark: themeColors.dark.primary,
+        primaryRgbDark: themeColors.dark.primaryRgb,
+      }}
+    >
       :root {
-        --bs-primary: #87a96b;
-        --bs-primary-rgb: 135, 169, 107;
+        --bs-primary: var(--primaryLight);
+        --bs-primary-rgb: var(--primaryRgbLight);
       }
       [data-bs-theme="dark"] {
-        --bs-primary: #a8c585;
-        --bs-primary-rgb: 168, 197, 133;
+        --bs-primary: var(--primaryDark);
+        --bs-primary-rgb: var(--primaryRgbDark);
       }
     </style>
-    <!-- Store original Mermaid diagram content before Mermaid processes it -->
+
+    <!-- Initialize theme before page render to prevent flash -->
     <script is:inline>
-      // Store diagram content synchronously before any modules load
-      (function() {
-        function storeMermaidContent() {
-          const diagrams = document.querySelectorAll(".mermaid");
-          diagrams.forEach((el) => {
-            if (!el.hasAttribute("data-original-content")) {
-              const content = el.innerHTML.trim() || el.textContent;
-              if (content && !el.hasAttribute("data-processed")) {
-                el.setAttribute("data-original-content", content);
-              }
-            }
-          });
-        }
-
-        // Try to store immediately
-        if (document.readyState !== "loading") {
-          storeMermaidContent();
-        }
-
-        // Also store when DOM is ready
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", storeMermaidContent);
-        } else {
-          // Use a small delay to catch elements added by Astro
-          setTimeout(storeMermaidContent, 0);
-        }
-      })();
-    </script>
-    <script type="module" is:inline>
-      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.5/dist/mermaid.esm.min.mjs";
-
-      // Make mermaid globally accessible
-      window.mermaid = mermaid;
-
-      // Get theme from localStorage or system preference
-      function getInitialTheme() {
-        const stored = localStorage.getItem("theme");
-        if (stored) return stored;
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-
-      // Ensure original content is stored before initializing
-      function ensureOriginalContentStored() {
-        document.querySelectorAll(".mermaid").forEach((el) => {
-          if (!el.hasAttribute("data-original-content")) {
-            const content = el.innerHTML.trim() || el.textContent;
-            if (content && !el.hasAttribute("data-processed")) {
-              el.setAttribute("data-original-content", content);
-            }
-          }
-        });
-      }
-
-      // Wait for DOM to be ready
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", () => {
-          ensureOriginalContentStored();
-        });
-      } else {
-        ensureOriginalContentStored();
-      }
-
-      const initialTheme = getInitialTheme();
-      mermaid.initialize({
-        startOnLoad: true,
-        theme: initialTheme === "dark" ? "dark" : "default"
-      });
-    </script>
-    <script is:inline>
-      // Prevent flash of wrong theme
-      (function() {
-        function getInitialTheme() {
-          const stored = localStorage.getItem("theme");
-          if (stored) return stored;
-          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
-        const theme = getInitialTheme();
+      (function () {
+        const theme =
+          localStorage.getItem("theme") ||
+          (window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light");
         document.documentElement.setAttribute("data-bs-theme", theme);
       })();
     </script>
   </head>
+
   <body class="layout-body">
-    <header class="layout-header">
-      <nav class="navbar navbar-expand-lg border-bottom">
-        <div class="container-fluid px-4">
-          <a class="navbar-brand text-decoration-none fw-semibold" href="/ts-ioc-container/">
-            ts-ioc-container
-          </a>
-          <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarContent"
-            aria-controls="navbarContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarContent">
-            <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
-              <ThemeToggle />
-              <img
-                src="https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square"
-                alt="NPM version"
-                class="img-fluid"
-                style="height: 20px;"
-              />
-              <img
-                src="https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square"
-                alt="npm downloads"
-                class="img-fluid"
-                style="height: 20px;"
-              />
-              <img
-                src="https://img.shields.io/bundlejs/size/ts-ioc-container"
-                alt="npm package size"
-                class="img-fluid"
-                style="height: 20px;"
-              />
-              <a
-                href="https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-decoration-none"
-              >
-                <img
-                  src="https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master"
-                  alt="Coverage Status"
-                  class="img-fluid"
-                  style="height: 20px;"
-                />
-              </a>
-              <a
-                href="https://github.com/IgorBabkin/ts-ioc-container/tree/main/LICENSE"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-decoration-none"
-              >
-                <img
-                  src="https://img.shields.io/npm/l/ts-ioc-container"
-                  alt="License"
-                  class="img-fluid"
-                  style="height: 20px;"
-                />
-              </a>
-              <a
-                href="https://github.com/semantic-release/semantic-release"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-decoration-none"
-              >
-                <img
-                  src="https://img.shields.io/badge/semantic--release-e10079.svg"
-                  alt="semantic-release"
-                  class="img-fluid"
-                  style="height: 20px;"
-                />
-              </a>
-              <a
-                href="https://github.com/IgorBabkin/ts-ioc-container"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn btn-link p-1 github-link"
-                title="GitHub Repository"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-label="GitHub"
-                >
-                  <path
-                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-                  ></path>
-                </svg>
-              </a>
-              <a
-                href="https://www.npmjs.com/package/ts-ioc-container"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn btn-link p-1 npm-link"
-                title="NPM Package"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-label="NPM"
-                >
-                  <path
-                    d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331z"
-                  ></path>
-                  <path d="M10.665 10H12v2.667h-1.335V10z"></path>
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </header>
+    <Header />
 
     <div class="layout-container">
       <aside class="layout-sidebar-left">
         <nav class="nav flex-column p-3">
-            {
-              navigation.map((item) => {
-                // Normalize pathnames by removing trailing slashes for comparison
-                const itemPath = normalizePath(item.href);
-
+          {
+            navigation.map((item) => {
+              const itemPath = normalizePath(item.href);
               const isActive =
                 currentPath === itemPath ||
                 (itemPath !== "/ts-ioc-container" &&
                   Astro.url.pathname.startsWith(item.href));
               return (
-              <a
-                href={item.href}
-                class={`nav-link ${isActive ? "active bg-primary text-white" : ""}`}
-              >
-                {item.title}
-              </a>
+                <a
+                  href={item.href}
+                  class={`nav-link ${isActive ? "active bg-primary text-white" : ""}`}
+                >
+                  {item.title}
+                </a>
               );
             })
           }
@@ -389,46 +103,11 @@ const navigation = [
       </aside>
     </div>
 
-    <footer class="layout-footer">
-      <div class="container-fluid px-4 text-center text-muted">
-        <p class="mb-0">
-          Copyright &copy; IgorBabkin. Distributed by an{" "}
-          <a
-            href="https://github.com/IgorBabkin/ts-ioc-container/tree/main/LICENSE"
-            class="text-decoration-none"
-            >ISC license</a
-          >.
-        </p>
-      </div>
-    </footer>
+    <Footer />
 
-    <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>-->
+    <!-- Main client-side scripts -->
     <script>
-      // Sync CodeBlock components with ThemeToggle
-      (function () {
-        function syncCodeBlocksWithTheme() {
-          const codeBlocks = document.querySelectorAll("[data-code-block-id]");
-          codeBlocks.forEach((container) => {
-            // If no explicit theme is set, ensure it's "auto" to follow page theme
-            if (!container.getAttribute("data-code-theme")) {
-              container.setAttribute("data-code-theme", "auto");
-            }
-          });
-        }
-
-        // Initialize immediately if DOM is ready
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", syncCodeBlocksWithTheme);
-        } else {
-          syncCodeBlocksWithTheme();
-        }
-
-        // Also sync for dynamically added content
-        if (typeof window !== "undefined") {
-          const observer = new MutationObserver(syncCodeBlocksWithTheme);
-          observer.observe(document.body, { childList: true, subtree: true });
-        }
-      })();
+      import "../scripts/main";
     </script>
   </body>
 </html>

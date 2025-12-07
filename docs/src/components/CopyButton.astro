@@ -64,36 +64,4 @@ const { code } = Astro.props;
   }
 </style>
 
-<script>
-  function initCopyButton(button: HTMLElement) {
-    if (button.dataset.initialized) return;
-    button.dataset.initialized = "true";
-
-    button.addEventListener("click", async function (this: HTMLElement) {
-      const code = this.getAttribute("data-code");
-      if (!code) return;
-
-      await navigator.clipboard.writeText(code);
-
-      // Add copied state
-      this.classList.add("copied");
-      const copyText = this.querySelector<HTMLElement>(".copy-text");
-      if (copyText) {
-        copyText.textContent = "Copied!";
-      }
-
-      // Reset after 2 seconds
-      setTimeout(() => {
-        this.classList.remove("copied");
-        if (copyText) {
-          copyText.textContent = "Copy";
-        }
-      }, 2000);
-    });
-  }
-
-  // Initialize copy buttons on this component
-  const copyButtons = document.querySelectorAll<HTMLElement>(".code-copy-btn");
-  copyButtons.forEach(initCopyButton);
-</script>
 
