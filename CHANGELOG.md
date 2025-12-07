@@ -1,3 +1,10 @@
+# [46.6.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.5.0...v46.6.0) (2025-12-07)
+
+
+### Features
+
+* **token:** add select method for transforming resolved dependencies ([c9fd39d](https://github.com/IgorBabkin/ts-ioc-container/commit/c9fd39d43f1dd5a7296b71aeecc7bfe8d3e9a400))
+
 # [46.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.1...v46.5.0) (2025-12-07)
 
 
