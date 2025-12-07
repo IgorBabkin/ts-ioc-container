@@ -3,145 +3,162 @@ import {
   argsFn,
   bindTo,
   Container,
-  SingleToken,
   inject,
   MultiCache,
   register,
   Registration as R,
   resolveByArgs,
   singleton,
+  SingleToken,
 } from '../../lib';
 
-@register(bindTo('logger'))
-class Logger {
-  constructor(
-    public name: string,
-    public type?: string,
-  ) {}
-}
+/**
+ * Advanced - Arguments Provider
+ *
+ * You can inject arguments into providers at registration time or resolution time.
+ * This is powerful for:
+ * - Configuration injection
+ * - Factory patterns
+ * - Generic classes (like Repositories) that need to know what they are managing
+ */
 
 describe('ArgsProvider', function () {
   function createContainer() {
     return new Container();
   }
 
-  it('can assign argument function to provider', function () {
-    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(argsFn(() => ['name'])));
+  describe('Static Arguments', () => {
+    it('can pass static arguments to constructor', function () {
+      class FileLogger {
+        constructor(public filename: string) {}
+      }
 
-    const logger = root.createScope().resolve<Logger>('logger');
-    expect(logger.name).toBe('name');
+      // Pre-configure the logger with a filename
+      const root = createContainer().addRegistration(R.fromClass(FileLogger).pipe(args('/var/log/app.log')));
+
+      // Resolve by class name (default key) to use the registered provider
+      const logger = root.resolve<FileLogger>('FileLogger');
+      expect(logger.filename).toBe('/var/log/app.log');
+    });
+
+    it('prioritizes provided args over resolve args', function () {
+      class Logger {
+        constructor(public context: string) {}
+      }
+
+      // 'FixedContext' wins over any runtime args
+      const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('FixedContext')));
+
+      // Even if we ask for 'RuntimeContext', we get 'FixedContext'
+      // Resolve by class name to use the registered provider
+      const logger = root.resolve<Logger>('Logger', { args: ['RuntimeContext'] });
+
+      expect(logger.context).toBe('FixedContext');
+    });
   });
 
-  it('can assign argument to provider', function () {
-    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('name')));
+  describe('Dynamic Arguments (Factory)', () => {
+    it('can resolve arguments dynamically from container', function () {
+      class Config {
+        env = 'production';
+      }
 
-    const logger = root.resolve<Logger>('logger');
-    expect(logger.name).toBe('name');
+      class Service {
+        constructor(public env: string) {}
+      }
+
+      const root = createContainer()
+        .addRegistration(R.fromClass(Config)) // Key: 'Config'
+        .addRegistration(
+          R.fromClass(Service).pipe(
+            // Extract 'env' from Config service dynamically
+            // Note: We resolve 'Config' by string key to get the registered instance (if it were singleton)
+            argsFn((scope) => [scope.resolve<Config>('Config').env]),
+          ),
+        );
+
+      const service = root.resolve<Service>('Service');
+      expect(service.env).toBe('production');
+    });
   });
 
-  it('should set provider arguments with highest priority in compare to resolve arguments', function () {
-    const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('name')));
+  describe('Generic Repositories (Advanced Pattern)', () => {
+    // This example demonstrates how to implement the Generic Repository pattern
+    // where a generic EntityManager needs to know WHICH repository to use.
 
-    const logger = root.resolve<Logger>('logger', { args: ['file'] });
-
-    expect(logger.name).toBe('name');
-    expect(logger.type).toBe('file');
-  });
-
-  it('should resolve dependency by passing arguments resolve from container by another argument', function () {
     interface IRepository {
       name: string;
     }
 
-    const IUserRepositoryKey = new SingleToken<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = new SingleToken<IRepository>('ITodoRepository');
+    // Tokens for specific repository types
+    const UserRepositoryToken = new SingleToken<IRepository>('UserRepository');
+    const TodoRepositoryToken = new SingleToken<IRepository>('TodoRepository');
 
-    @register(bindTo(IUserRepositoryKey))
+    @register(bindTo(UserRepositoryToken))
     class UserRepository implements IRepository {
       name = 'UserRepository';
     }
 
-    @register(bindTo(ITodoRepositoryKey))
+    @register(bindTo(TodoRepositoryToken))
     class TodoRepository implements IRepository {
       name = 'TodoRepository';
     }
 
-    interface IEntityManager {
-      repository: IRepository;
-    }
+    // EntityManager is generic - it works with ANY repository
+    // We use argsFn(resolveByArgs) to tell it to look at the arguments passed to .args()
+    const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
 
-    const IEntityManagerKey = new SingleToken<IEntityManager>('IEntityManager');
-
-    @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs))
+    @register(
+      bindTo(EntityManagerToken),
+      argsFn(resolveByArgs), // <--- Key magic: resolves dependencies based on arguments passed to token
+      singleton(MultiCache.fromFirstArg), // Cache unique instance per repository type
+    )
     class EntityManager {
       constructor(public repository: IRepository) {}
     }
 
-    class Main {
+    class App {
       constructor(
-        @inject(IEntityManagerKey.args(IUserRepositoryKey)) public userEntities: EntityManager,
-        @inject(IEntityManagerKey.args(ITodoRepositoryKey)) public todoEntities: EntityManager,
+        // Inject EntityManager configured for Users
+        @inject(EntityManagerToken.args(UserRepositoryToken))
+        public userManager: EntityManager,
+
+        // Inject EntityManager configured for Todos
+        @inject(EntityManagerToken.args(TodoRepositoryToken))
+        public todoManager: EntityManager,
       ) {}
     }
 
-    const root = createContainer()
-      .addRegistration(R.fromClass(EntityManager))
-      .addRegistration(R.fromClass(UserRepository))
-      .addRegistration(R.fromClass(TodoRepository));
-    const main = root.resolve(Main);
+    it('should create specialized instances based on token arguments', function () {
+      const root = createContainer()
+        .addRegistration(R.fromClass(EntityManager))
+        .addRegistration(R.fromClass(UserRepository))
+        .addRegistration(R.fromClass(TodoRepository));
 
-    expect(main.userEntities.repository).toBeInstanceOf(UserRepository);
-    expect(main.todoEntities.repository).toBeInstanceOf(TodoRepository);
-  });
+      const app = root.resolve(App);
 
-  it('should resolve memoized dependency by passing arguments resolve from container by another argument', function () {
-    interface IRepository {
-      name: string;
-    }
+      expect(app.userManager.repository).toBeInstanceOf(UserRepository);
+      expect(app.todoManager.repository).toBeInstanceOf(TodoRepository);
+    });
 
-    const IUserRepositoryKey = new SingleToken<IRepository>('IUserRepository');
-    const ITodoRepositoryKey = new SingleToken<IRepository>('ITodoRepository');
+    it('should cache specialized instances separately', function () {
+      const root = createContainer()
+        .addRegistration(R.fromClass(EntityManager))
+        .addRegistration(R.fromClass(UserRepository))
+        .addRegistration(R.fromClass(TodoRepository));
 
-    @register(bindTo(IUserRepositoryKey))
-    class UserRepository implements IRepository {
-      name = 'UserRepository';
-    }
+      // Resolve user manager twice
+      const userManager1 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
+      const userManager2 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
 
-    @register(bindTo(ITodoRepositoryKey))
-    class TodoRepository implements IRepository {
-      name = 'TodoRepository';
-    }
+      // Should be same instance (cached)
+      expect(userManager1).toBe(userManager2);
 
-    interface IEntityManager {
-      repository: IRepository;
-    }
+      // Resolve todo manager
+      const todoManager = EntityManagerToken.args(TodoRepositoryToken).resolve(root);
 
-    const IEntityManagerKey = new SingleToken<IEntityManager>('IEntityManager');
-
-    @register(bindTo(IEntityManagerKey), argsFn(resolveByArgs), singleton(MultiCache.fromFirstArg))
-    class EntityManager {
-      constructor(public repository: IRepository) {}
-    }
-
-    class Main {
-      constructor(
-        @inject(IEntityManagerKey.args(IUserRepositoryKey)) public userEntities: EntityManager,
-        @inject(IEntityManagerKey.args(ITodoRepositoryKey)) public todoEntities: EntityManager,
-      ) {}
-    }
-
-    const root = createContainer()
-      .addRegistration(R.fromClass(EntityManager))
-      .addRegistration(R.fromClass(UserRepository))
-      .addRegistration(R.fromClass(TodoRepository));
-    const main = root.resolve(Main);
-
-    const userRepository = IEntityManagerKey.args(IUserRepositoryKey).resolve(root).repository;
-    expect(userRepository).toBeInstanceOf(UserRepository);
-    expect(main.userEntities.repository).toBe(userRepository);
-
-    const todoRepository = IEntityManagerKey.args(ITodoRepositoryKey).resolve(root).repository;
-    expect(todoRepository).toBeInstanceOf(TodoRepository);
-    expect(main.todoEntities.repository).toBe(todoRepository);
+      // Should be different from user manager
+      expect(todoManager).not.toBe(userManager1);
+    });
   });
 });

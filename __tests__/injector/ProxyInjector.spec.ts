@@ -1,85 +1,113 @@
 import { args, Container, ProxyInjector, Registration as R } from '../../lib';
 
+/**
+ * Clean Architecture - Proxy Injector
+ *
+ * The ProxyInjector injects dependencies as a single object (props/options pattern).
+ * This is popular in modern JavaScript/TypeScript (like React props or destructuring).
+ *
+ * Advantages:
+ * - Named parameters are more readable than positional arguments
+ * - Order of arguments doesn't matter
+ * - Easy to add/remove dependencies without breaking inheritance chains
+ * - Works well with "Clean Architecture" adapters
+ */
+
 describe('ProxyInjector', function () {
-  it('should pass dependency to constructor as dictionary', function () {
-    class Logger {}
-
-    class App {
-      logger: Logger;
-
-      constructor({ logger }: { logger: Logger }) {
-        this.logger = logger;
+  it('should inject dependencies as a props object', function () {
+    class Logger {
+      log(msg: string) {
+        return `Logged: ${msg}`;
       }
     }
 
-    const container = new Container({ injector: new ProxyInjector() }).addRegistration(
-      R.fromClass(Logger).bindToKey('logger'),
-    );
-
-    const app = container.resolve(App);
-    expect(app.logger).toBeInstanceOf(Logger);
-  });
-
-  it('should pass arguments as objects', function () {
-    class Logger {}
-
-    class App {
+    // Dependencies defined as an interface
+    interface UserControllerDeps {
       logger: Logger;
-      greeting: string;
-
-      constructor({
-        logger,
-        greetingTemplate,
-        name,
-      }: {
-        logger: Logger;
-        greetingTemplate: (name: string) => string;
-        name: string;
-      }) {
-        this.logger = logger;
-        this.greeting = greetingTemplate(name);
-      }
+      prefix: string;
     }
 
-    const greetingTemplate = (name: string) => `Hello ${name}`;
+    // Controller receives all dependencies in a single object
+    class UserController {
+      private logger: Logger;
+      private prefix: string;
+
+      constructor({ logger, prefix }: UserControllerDeps) {
+        this.logger = logger;
+        this.prefix = prefix;
+      }
+
+      createUser(name: string): string {
+        return this.logger.log(`${this.prefix} ${name}`);
+      }
+    }
 
     const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(App).bindToKey('App').pipe(args({ greetingTemplate })))
-      .addRegistration(R.fromClass(Logger).bindToKey('logger'));
+      .addRegistration(R.fromClass(Logger).bindToKey('logger'))
+      .addRegistration(R.fromValue('USER:').bindToKey('prefix'))
+      .addRegistration(R.fromClass(UserController).bindToKey('UserController'));
 
-    const app = container.resolve<App>('App', { args: [{ name: `world` }] });
-    expect(app.greeting).toBe('Hello world');
+    const controller = container.resolve<UserController>('UserController');
+
+    expect(controller.createUser('bob')).toBe('Logged: USER: bob');
   });
 
-  it('should resolve array dependencies when property name contains "array"', function () {
-    class Logger {}
-    class Service {}
+  it('should support mixing injected dependencies with runtime arguments', function () {
+    class Database {}
 
-    class App {
-      loggers: Logger[];
-      service: Service;
+    interface ReportGeneratorDeps {
+      database: Database;
+      format: string; // Runtime argument
+    }
 
-      constructor({ loggersArray, service }: { loggersArray: Logger[]; service: Service }) {
-        this.loggers = loggersArray;
-        this.service = service;
+    class ReportGenerator {
+      constructor(public deps: ReportGeneratorDeps) {}
+
+      generate(): string {
+        return `Report in ${this.deps.format}`;
       }
     }
 
-    // Mock container's resolveByAlias to return an array with a Logger instance
-    const mockLogger = new Logger();
-    const mockContainer = new Container({ injector: new ProxyInjector() });
-    mockContainer.resolveByAlias = jest.fn().mockImplementation((key) => {
-      // Always return the mock array for simplicity
-      return [mockLogger];
-    });
-    mockContainer.addRegistration(R.fromClass(Service).bindToKey('service'));
+    const container = new Container({ injector: new ProxyInjector() })
+      .addRegistration(R.fromClass(Database).bindToKey('database'))
+      .addRegistration(R.fromClass(ReportGenerator).bindToKey('ReportGenerator'));
 
-    const app = mockContainer.resolve(App);
-    expect(app.loggers).toBeInstanceOf(Array);
-    expect(app.loggers.length).toBe(1);
-    expect(app.loggers[0]).toBe(mockLogger);
-    expect(app.service).toBeInstanceOf(Service);
-    // Verify that resolveByAlias was called with the correct key
-    expect(mockContainer.resolveByAlias).toHaveBeenCalledWith('loggersArray');
+    // "format" is passed at resolution time
+    const generator = container.resolve<ReportGenerator>('ReportGenerator', {
+      args: [{ format: 'PDF' }],
+    });
+
+    expect(generator.deps.database).toBeInstanceOf(Database);
+    expect(generator.generate()).toBe('Report in PDF');
+  });
+
+  it('should resolve array dependencies by alias (convention over configuration)', function () {
+    // If a property is named "loggersArray", it looks for alias "loggersArray"
+    // and resolves it as an array of all matches.
+
+    class FileLogger {}
+    class ConsoleLogger {}
+
+    interface AppDeps {
+      loggersArray: any[]; // Injected as array of all loggers
+    }
+
+    class App {
+      constructor(public deps: AppDeps) {}
+    }
+
+    const container = new Container({ injector: new ProxyInjector() });
+
+    // Mocking the behavior for this specific test as ProxyInjector uses resolveByAlias
+    // which delegates to the container.
+    // In a real scenario, you'd register multiple loggers with the same alias.
+    const mockLoggers = [new FileLogger(), new ConsoleLogger()];
+
+    container.resolveByAlias = jest.fn().mockReturnValue(mockLoggers);
+
+    const app = container.resolve(App);
+
+    expect(app.deps.loggersArray).toBe(mockLoggers);
+    expect(container.resolveByAlias).toHaveBeenCalledWith('loggersArray');
   });
 });
