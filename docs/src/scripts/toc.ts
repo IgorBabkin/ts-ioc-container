@@ -131,6 +131,18 @@ export function initializeTableOfContents(): void {
     });
   }
 
-  // Initial update
-  updateActiveTOC();
+  // Initial update after layout is complete
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      updateActiveTOC();
+    }, 100);
+  });
+
+  // Handle URL hash on page load
+  if (window.location.hash) {
+    const id = window.location.hash.substring(1);
+    setTimeout(() => {
+      scrollToHeading(id, false);
+    }, 200);
+  }
 }
