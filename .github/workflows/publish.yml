@@ -86,39 +86,9 @@ jobs:
       - name: Publish to GitHub Packages
         # Publish to GitHub Packages so it shows up in the Packages section
         continue-on-error: true
-        run: |
-          # Get repository owner (npm scopes must be lowercase)
-          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-
-          # Get current package version
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-
-          # Configure npm to check GitHub Packages
-          echo "@${REPO_OWNER}:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
-
-          # Check if version already exists in GitHub Packages
-          if npm view "@${REPO_OWNER}/ts-ioc-container@${PACKAGE_VERSION}" version --registry=https://npm.pkg.github.com 2>/dev/null; then
-            echo "✓ Version ${PACKAGE_VERSION} already published to GitHub Packages, skipping..."
-            exit 0
-          fi
-
-          echo "Publishing version ${PACKAGE_VERSION} to GitHub Packages..."
-
-          # Temporarily scope the package name for GitHub Packages
-          # GitHub Packages requires scoped packages matching the repository owner
-          npm pkg set name="@${REPO_OWNER}/ts-ioc-container"
-
-          # Add repository field to link package to this repository (required for GitHub Packages)
-          npm pkg set repository.type=git
-          npm pkg set repository.url="git+https://github.com/${{ github.repository }}.git"
-
-          # Publish to GitHub Packages
-          npm publish --registry=https://npm.pkg.github.com
-
-          echo "✓ Successfully published to GitHub Packages"
-
-          # Restore original package name
-          npm pkg set name="ts-ioc-container"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/publish-to-github-packages
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          repository-owner: ${{ github.repository_owner }}
+          package-name: ts-ioc-container
