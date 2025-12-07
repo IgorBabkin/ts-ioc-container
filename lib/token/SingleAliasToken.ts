@@ -11,6 +11,10 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
     super();
   }
 
+  select<R>(fn: (target: T) => R) {
+    return (s: IContainer) => fn(this.resolve(s));
+  }
+
   resolve(s: IContainer): T {
     const argsFn = this.options.argsFn ?? setArgs();
     return s.resolveOneByAlias(this.token, {

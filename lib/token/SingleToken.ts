@@ -10,6 +10,10 @@ export class SingleToken<T = any> extends InjectionToken {
     super();
   }
 
+  select<R>(fn: (target: T) => R) {
+    return (s: IContainer) => fn(this.resolve(s));
+  }
+
   resolve(s: IContainer): T {
     const argsFn = this.options.argsFn ?? setArgs();
     return s.resolve(this.token, {

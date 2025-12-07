@@ -11,6 +11,10 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
     super();
   }
 
+  select<R>(fn: (target: T) => R) {
+    return (s: IContainer) => this.resolve(s).map(fn);
+  }
+
   resolve(s: IContainer): T[] {
     const argsFn = this.options.argsFn ?? setArgs();
     return s.resolveByAlias(this.token, {

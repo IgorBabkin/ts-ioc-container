@@ -11,6 +11,10 @@ export class ClassToken<T = any> extends InjectionToken<T> {
     super();
   }
 
+  select<R>(fn: (target: T) => R) {
+    return (s: IContainer) => fn(this.resolve(s));
+  }
+
   resolve(s: IContainer) {
     const argsFn = this.options.argsFn ?? setArgs();
     return s.resolve(this.token, {

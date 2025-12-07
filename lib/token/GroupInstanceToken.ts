@@ -13,6 +13,10 @@ export class GroupInstanceToken extends InjectionToken<Instance[]> {
     super();
   }
 
+  select<R>(fn: (target: Instance) => R) {
+    return (s: IContainer) => this.resolve(s).map(fn);
+  }
+
   args(...deps: unknown[]): this {
     throw new MethodNotImplementedError('not implemented');
   }
