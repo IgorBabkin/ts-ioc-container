@@ -22,6 +22,9 @@
 ## Content
 
 - [Setup](#setup)
+- [Quickstart](#quickstart)
+- [Cheatsheet](#cheatsheet)
+- [Recipes](#recipes)
 - [Container](#container)
     - [Basic usage](#basic-usage)
     - [Scope](#scope) `tags`
@@ -72,6 +75,86 @@ And `tsconfig.json` should have next options:
     "emitDecoratorMetadata": true
   }
 }
+```
+
+## Quickstart
+
+```typescript
+import 'reflect-metadata';
+import { Container, register, bindTo, singleton } from 'ts-ioc-container';
+
+@register(bindTo('ILogger'), singleton())
+class Logger {
+  log(message: string) {
+    console.log(message);
+  }
+}
+
+class App {
+  constructor(private logger = container.resolve<Logger>('ILogger')) {}
+  start() {
+    this.logger.log('hello');
+  }
+}
+
+const container = new Container({ tags: ['application'] }).addRegistration(Logger);
+container.resolve(App).start();
+```
+
+## Cheatsheet
+
+- Register class with key: `@register(bindTo('Key')) class Service {}`
+- Register value: `R.fromValue(config).bindToKey('Config')`
+- Singleton: `@register(singleton())`
+- Scoped registration: `@register(scope((s) => s.hasTag('request')))`
+- Resolve by alias: `container.resolveByAlias('Alias')`
+- Current scope token: `select.scope.current`
+- Lazy token: `select.token('Service').lazy()`
+- Inject decorator: `@inject('Key')`
+- Property inject: `injectProp(target, 'propName', select.token('Key'))`
+
+## Recipes
+
+### Express/Next handler (per-request scope)
+```typescript
+const app = new Container({ tags: ['application'] })
+  .addRegistration(R.fromClass(Logger).pipe(singleton()));
+
+function handleRequest() {
+  const requestScope = app.createScope({ tags: ['request'] });
+  const logger = requestScope.resolve<Logger>('Logger');
+  logger.log('req started');
+}
+```
+
+### Background worker (singleton client, transient jobs)
+```typescript
+@register(singleton())
+class QueueClient {}
+
+class JobHandler {
+  constructor(@inject('QueueClient') private queue: QueueClient) {}
+}
+
+const worker = new Container({ tags: ['worker'] })
+  .addRegistration(R.fromClass(QueueClient))
+  .addRegistration(R.fromClass(JobHandler));
+```
+
+### Frontend widget/page scope with lazy dependency
+```typescript
+@register(bindTo('FeatureFlags'), singleton())
+class FeatureFlags {
+  load() { /* fetch flags */ }
+}
+
+class Widget {
+  constructor(@inject(select.token('FeatureFlags').lazy()) private flags: FeatureFlags) {}
+}
+
+const page = new Container({ tags: ['page'] })
+  .addRegistration(R.fromClass(FeatureFlags))
+  .addRegistration(R.fromClass(Widget));
 ```
 
 ## Container
@@ -665,7 +748,7 @@ interface ICommandHandler {
 
 class CreateUserCommand implements ICommand {
   readonly type = 'CreateUser';
-  constructor(public readonly username: string) {}
+  constructor(readonly username: string) {}
 }
 
 class CreateUserHandler implements ICommandHandler {
@@ -930,13 +1013,10 @@ describe('Provider', () => {
 
   it('supports args decorator for providing extra arguments', () => {
     class FileService {
-      constructor(public readonly basePath: string) {}
+      constructor(readonly basePath: string) {}
     }
 
-    const container = new Container().register(
-      'FileService',
-      Provider.fromClass(FileService).pipe(args('/var/data')),
-    );
+    const container = new Container().register('FileService', Provider.fromClass(FileService).pipe(args('/var/data')));
 
     const service = container.resolve<FileService>('FileService');
     expect(service.basePath).toBe('/var/data');
@@ -944,18 +1024,16 @@ describe('Provider', () => {
 
   it('supports argsFn decorator for dynamic arguments', () => {
     class Database {
-      constructor(public readonly connectionString: string) {}
+      constructor(readonly connectionString: string) {}
     }
 
-    const container = new Container()
-      .register('DbPath', Provider.fromValue('localhost:5432'))
-      .register(
-        'Database',
-        Provider.fromClass(Database).pipe(
-          // Dynamically resolve connection string at creation time
-          argsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
-        ),
-      );
+    const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(
+      'Database',
+      Provider.fromClass(Database).pipe(
+        // Dynamically resolve connection string at creation time
+        argsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
+      ),
+    );
 
     const db = container.resolve<Database>('Database');
     expect(db.connectionString).toBe('postgres://localhost:5432');
@@ -967,9 +1045,7 @@ describe('Provider', () => {
 
     const appContainer = new Container({ tags: ['application'] }).register(
       'AdminService',
-      Provider.fromClass(AdminService).pipe(
-        scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
-      ),
+      Provider.fromClass(AdminService).pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin'))),
     );
 
     const adminScope = appContainer.createScope({ tags: ['admin'] });
@@ -1135,9 +1211,7 @@ describe('ArgsProvider', function () {
       }
 
       // Pre-configure the logger with a filename
-      const root = createContainer().addRegistration(
-        R.fromClass(FileLogger).pipe(args('/var/log/app.log')),
-      );
+      const root = createContainer().addRegistration(R.fromClass(FileLogger).pipe(args('/var/log/app.log')));
 
       // Resolve by class name (default key) to use the registered provider
       const logger = root.resolve<FileLogger>('FileLogger');
@@ -1150,9 +1224,7 @@ describe('ArgsProvider', function () {
       }
 
       // 'FixedContext' wins over any runtime args
-      const root = createContainer().addRegistration(
-        R.fromClass(Logger).pipe(args('FixedContext')),
-      );
+      const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('FixedContext')));
 
       // Even if we ask for 'RuntimeContext', we get 'FixedContext'
       // Resolve by class name to use the registered provider
@@ -1751,7 +1823,7 @@ describe('ScopeProvider', function () {
       singleton(), // One instance per application
     )
     class SharedState {
-      public data = 'shared';
+      data = 'shared';
     }
 
     const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(SharedState));
@@ -2051,9 +2123,7 @@ describe('inject property', () => {
       }
     }
 
-    const container = new Container().addRegistration(
-      Registration.fromValue('Hello').bindToKey('GreetingService'),
-    );
+    const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     // 1. Create instance (dependencies not yet injected)
     const viewModel = container.resolve(UserViewModel);
