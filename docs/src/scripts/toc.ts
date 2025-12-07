@@ -58,7 +58,7 @@ export function updateActiveTOC(): void {
   });
 }
 
-export function scrollToHeading(id: string, smooth = true): void {
+export function scrollToHeading(id: string, smooth = false): void {
   const target = document.getElementById(id);
   if (!target) return;
 
@@ -87,10 +87,9 @@ export function scrollToHeading(id: string, smooth = true): void {
     });
   }
 
-  // Update URL without triggering scroll
-  setTimeout(() => {
-    history.pushState(null, "", `#${id}`);
-  }, 100);
+  // Update URL and TOC immediately
+  history.pushState(null, "", `#${id}`);
+  updateActiveTOC();
 }
 
 export function initializeTableOfContents(): void {
@@ -135,8 +134,7 @@ export function initializeTableOfContents(): void {
   window.addEventListener("hashchange", () => {
     if (window.location.hash) {
       const id = window.location.hash.substring(1);
-      scrollToHeading(id, true);
-      updateActiveTOC();
+      scrollToHeading(id);
     }
   });
 
