@@ -52,5 +52,5 @@ jobs:
         uses: ./.github/actions/cache-jest
 
       - name: Test
-        run: pnpm test -- --maxWorkers=2
+        run: pnpm test --maxWorkers=2
 
