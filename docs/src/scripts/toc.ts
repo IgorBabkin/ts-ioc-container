@@ -131,6 +131,15 @@ export function initializeTableOfContents(): void {
     });
   }
 
+  // Watch for URL hash changes
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      scrollToHeading(id, true);
+      updateActiveTOC();
+    }
+  });
+
   // Initial update after layout is complete
   requestAnimationFrame(() => {
     setTimeout(() => {
@@ -143,6 +152,7 @@ export function initializeTableOfContents(): void {
     const id = window.location.hash.substring(1);
     setTimeout(() => {
       scrollToHeading(id, false);
+      updateActiveTOC();
     }, 200);
   }
 }
