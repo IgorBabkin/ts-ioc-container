@@ -355,7 +355,7 @@ import { Container, ContainerDisposedError, Registration as R, select } from 'ts
 
 // Simulates a database connection that must be closed
 class DatabaseConnection {
-  public isClosed = false;
+  isClosed = false;
 
   query(sql: string): string[] {
     if (this.isClosed) {
@@ -1312,9 +1312,7 @@ describe('Visibility', function () {
       }
     }
 
-    const appContainer = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(UserManagementService),
-    );
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(UserManagementService));
 
     // Admin route scope
     const adminScope = appContainer.createScope({ tags: ['request', 'admin'] });
@@ -1806,9 +1804,7 @@ describe('Container Modules', function () {
       }
     }
 
-    const container = new Container()
-      .useModule(new ProductionModule())
-      .useModule(new FeatureFlagModule(true));
+    const container = new Container().useModule(new ProductionModule()).useModule(new FeatureFlagModule(true));
 
     // Base services from ProductionModule
     expect(container.resolve<IAuthService>('IAuthService').getServiceType()).toBe('production');

@@ -56,10 +56,10 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
 
 ### Use Cases
 
-- Shared state within a scope
-- Expensive object creation (database connections, HTTP clients)
-- Configuration objects
-- Service locators
+- **PasswordHasher** - Expensive crypto initialization, shared per app
+- **DatabasePool** - Connection pool shared across requests
+- **ConfigService** - Application configuration loaded once
+- **SessionManager** - Singleton per request scope for user session
 
 <h2 id="arguments">Arguments</h2>
 
@@ -98,10 +98,10 @@ Visibility control allows you to restrict which scopes can access certain depend
 
 ### Use Cases
 
-- Admin-only services
-- Environment-specific dependencies (dev/staging/prod)
-- Feature flags
-- Security boundaries
+- **UserManagementService** - Only accessible from admin routes
+- **AuditLogger** - Only accessible at application level (not per-request)
+- **DebugService** - Only accessible in development environment
+- **InternalApiClient** - Only accessible from backend services, not controllers
 
 <h2 id="alias">Alias</h2>
 
@@ -115,10 +115,10 @@ Aliases allow you to group multiple registrations under a common identifier. Thi
 
 ### Use Cases
 
-- Middleware registration
-- Plugin systems
-- Multiple implementations of an interface
-- Event handlers or observers
+- **NotificationChannels** - Email, SMS, Push notifications under one alias
+- **AuthenticationProviders** - OAuth, LDAP, local auth strategies
+- **ValidationRules** - Multiple validators for a form field
+- **EventListeners** - Multiple handlers for user registration events
 
 <h2 id="decorator">Decorator</h2>
 

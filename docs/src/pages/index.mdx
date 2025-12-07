@@ -49,12 +49,52 @@ Configure `tsconfig.json`:
   lang="json"
 />
 
-Creating and using a container:
+### Basic Example: User Authentication
+
+This example demonstrates a real-world pattern: an `AuthService` that depends on a `UserRepository` for database access. The container automatically wires up the dependencies.
 
 <CodeBlock
   code={basicSpecCode}
   lang="typescript"
   filename="__tests__/readme/basic.spec.ts"
+/>
+
+### Express.js Integration
+
+Here's how to integrate the container with Express.js for request-scoped dependencies:
+
+<CodeBlock
+  code={`import express from 'express';
+import { Container, type IContainer } from 'ts-ioc-container';
+
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      container: IContainer;
+    }
+  }
+}
+
+// Application container (singleton services)
+const appContainer = new Container({ tags: ['application'] });
+// ... register your services
+
+// Middleware: Create request scope
+app.use((req, res, next) => {
+  req.container = appContainer.createScope({ tags: ['request'] });
+  res.on('finish', () => req.container.dispose());
+  next();
+});
+
+// Route handler
+app.post('/login', (req, res) => {
+  const authService = req.container.resolve<AuthService>('IAuthService');
+  const result = authService.authenticate(req.body.email, req.body.password);
+  res.json({ success: result });
+});`}
+  lang="typescript"
+  filename="Express.js integration"
 />
 
 <h2 id="documentation">Documentation</h2>

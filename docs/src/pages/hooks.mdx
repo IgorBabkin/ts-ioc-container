@@ -42,10 +42,10 @@ Register an onConstruct hook on your container, then decorate methods with `@onC
 
 ### Use Cases
 
-- Post-construction initialization that requires container access
-- Setting up properties that depend on other container services
-- Validation or setup logic that needs to run after all dependencies are injected
-- Initializing relationships or connections
+- **DatabaseConnection** - Establish connection after service is created
+- **SessionManager** - Load user session from Redis after construction
+- **CacheService** - Warm up cache with frequently accessed data
+- **EmailNotifier** - Validate SMTP configuration before first use
 
 ## OnDispose Hooks
 
@@ -63,11 +63,11 @@ Register an onDispose hook on your container, then decorate methods with `@onDis
 
 ### Use Cases
 
-- Closing database connections or file handles
-- Saving state or flushing buffers
-- Unsubscribing from events or observers
-- Releasing external resources
-- Logging cleanup operations
+- **DatabaseConnection** - Return connection to pool when request ends
+- **SessionManager** - Persist session changes to Redis before disposal
+- **FileUploadService** - Clean up temporary uploaded files
+- **WebSocketHandler** - Close WebSocket connections gracefully
+- **AuditLogger** - Flush pending audit log entries
 
 ## Property Injection
 

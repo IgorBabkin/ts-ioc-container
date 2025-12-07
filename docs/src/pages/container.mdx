@@ -21,11 +21,39 @@ The `Container` is the central component of the IoC system. It manages the lifec
 
 <h2 id="scopes" class="toc-link">Scopes</h2>
 
-Scopes allow you to create isolated dependency contexts. This is perfect for request-level isolation in web applications or feature-level separation. Each scope can have tags that control which providers are available.
+Scopes allow you to create isolated dependency contexts. In web applications, you typically have:
+
+- **Application scope** - Singleton services like database pools, configuration
+- **Request scope** - Per-request services like session, current user context
+- **Transaction scope** - Database transaction boundaries
+
+Each scope can have tags that control which providers are available, preventing accidental access to request-specific data from singletons.
+
+### Request Scope Pattern (Express.js)
+
+The most common pattern is creating a request-scoped container for each HTTP request:
+
+<CodeBlock
+  code={`// Middleware: Create request scope for each request
+app.use((req, res, next) => {
+  // Create isolated scope for this request
+  req.container = appContainer.createScope({ tags: ['request'] });
+
+  // Clean up when response finishes
+  res.on('finish', () => req.container.dispose());
+  next();
+});
+
+// SessionService is isolated per request - no data leaks between users
+const session = req.container.resolve<SessionService>('ISessionService');
+session.setCurrentUser(authenticatedUserId);`}
+  lang="typescript"
+  filename="Express.js middleware"
+/>
 
 ### Tagged Scopes
 
-Tags allow you to control which providers are available in which scopes. This is useful for environment-specific configurations or feature flags.
+Tags allow you to control which providers are available in which scopes. Services can be restricted to specific scope types for security and architectural clarity.
 
 <CodeBlock
   code={scopesSpecCode}
@@ -186,11 +214,12 @@ The `EmptyContainer` class implements the Null Object pattern, providing a safe 
 
 <h2 id="best-practices">Best Practices</h2>
 
-- **Always dispose containers** when they're no longer needed, especially in long-running applications
-- **Use scopes for isolation** - Create request-level scopes in web applications to prevent cross-request contamination
-- **Tag your scopes** - Use meaningful tags to control provider availability and make your code more maintainable
-- **Query instances carefully** - Be aware of cascading behavior when querying instances across scopes
-- **Use lazy loading wisely** - Lazy loading can help with performance, but be aware of when dependencies are actually created
+- **Always dispose request scopes** - In Express.js, use `res.on('finish', () => req.container.dispose())` to clean up
+- **Use tags for scope types** - Common tags: `application`, `request`, `transaction`, `admin`
+- **Restrict sensitive services** - Use `scopeAccess()` to limit access to admin-only or application-only services
+- **Keep singletons stateless** - Application-scoped singletons shouldn't hold request-specific state
+- **Use lazy loading for expensive services** - Defer SMTP connections, external API clients until actually needed
+- **Separate dev/prod with modules** - Use `IContainerModule` to swap implementations by environment
 
 <h2 id="api-reference">API Reference</h2>
 
