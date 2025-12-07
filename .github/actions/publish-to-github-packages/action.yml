@@ -21,37 +21,4 @@ runs:
   steps:
     - name: Publish to GitHub Packages
       shell: bash
-      run: |
-        # Get repository owner (npm scopes must be lowercase)
-        REPO_OWNER=$(echo "${{ inputs.repository-owner }}" | tr '[:upper:]' '[:lower:]')
-
-        # Get current package version
-        PACKAGE_VERSION=$(node -p "require('./package.json').version")
-
-        # Configure npm to check GitHub Packages
-        echo "@${REPO_OWNER}:registry=https://npm.pkg.github.com" >> .npmrc
-        echo "//npm.pkg.github.com/:_authToken=${{ inputs.github-token }}" >> .npmrc
-
-        # Check if version already exists in GitHub Packages
-        if npm view "@${REPO_OWNER}/${{ inputs.package-name }}@${PACKAGE_VERSION}" version --registry=https://npm.pkg.github.com 2>/dev/null; then
-          echo "✓ Version ${PACKAGE_VERSION} already published to GitHub Packages, skipping..."
-          exit 0
-        fi
-
-        echo "Publishing version ${PACKAGE_VERSION} to GitHub Packages..."
-
-        # Temporarily scope the package name for GitHub Packages
-        # GitHub Packages requires scoped packages matching the repository owner
-        npm pkg set name="@${REPO_OWNER}/${{ inputs.package-name }}"
-
-        # Add repository field to link package to this repository (required for GitHub Packages)
-        npm pkg set repository.type=git
-        npm pkg set repository.url="git+https://github.com/${{ inputs.repository }}.git"
-
-        # Publish to GitHub Packages
-        npm publish --registry=https://npm.pkg.github.com
-
-        echo "✓ Successfully published to GitHub Packages"
-
-        # Restore original package name
-        npm pkg set name="${{ inputs.package-name }}"
+      run: ${{ github.action_path }}/publish.sh "${{ inputs.repository-owner }}" "${{ inputs.repository }}" "${{ inputs.package-name }}" "${{ inputs.github-token }}"
