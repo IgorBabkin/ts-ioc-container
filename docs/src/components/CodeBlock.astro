@@ -15,7 +15,12 @@ interface Props {
     | "sh";
   filename?: string;
 }
-const { code, lang = "typescript", filename } = Astro.props;
+let { code, lang = "typescript", filename } = Astro.props;
+
+// Replace lib path imports with package name
+code = code
+  .replace(/from '\.\.\/\.\.\/lib'/g, "from 'ts-ioc-container'")
+  .replace(/from '\.\.\/lib'/g, "from 'ts-ioc-container'");
 
 // Format language for display
 const langDisplayMap: Record<string, string> = {

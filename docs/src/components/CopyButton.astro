@@ -39,14 +39,16 @@ const { code } = Astro.props;
       d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"
       fill="currentColor"></path>
   </svg>
-  <span class="copy-text">Copy</span>
 </button>
 
 <style lang="scss">
   .code-copy-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0.25rem;
 
     &.copied {
       background-color: var(--bs-success-bg-subtle);
