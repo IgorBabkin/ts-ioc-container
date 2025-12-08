@@ -1,7 +1,6 @@
 import { type IHookContext } from './HookContext';
-import { Is } from '../utils';
 import type { IContainer } from '../container/IContainer';
-import { constructor } from '../types';
+import { type constructor, Is } from '../utils/basic';
 
 export type InjectFn<T = unknown> = (s: IContainer) => T;
 

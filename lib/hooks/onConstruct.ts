@@ -1,6 +1,6 @@
 import { hook, HookClass, HookFn } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
-import { constructor, Instance } from '../types';
+import { constructor, Instance } from '../utils/basic';
 import { HooksRunner } from './HooksRunner';
 
 export const onConstructHooksRunner = new HooksRunner('onConstruct');

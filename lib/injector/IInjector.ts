@@ -1,7 +1,7 @@
 import { type IContainer, ResolveOneOptions } from '../container/IContainer';
-import { constructor, Instance } from '../types';
 import { ProviderOptions } from '../provider/IProvider';
-import { toLazyIf } from '../utils';
+import { toLazyIf } from '../utils/proxy';
+import { type constructor, Instance } from '../utils/basic';
 
 type WithArgs = { args: unknown[] };
 export type InjectOptions = Partial<WithArgs>;

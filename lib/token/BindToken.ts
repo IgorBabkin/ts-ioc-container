@@ -1,5 +1,6 @@
 import { IRegistration } from '../registration/IRegistration';
-import { Is } from '../utils';
+
+import { Is } from '../utils/basic';
 
 export interface BindToken<T = any> {
   bindTo(r: IRegistration<T>): void;

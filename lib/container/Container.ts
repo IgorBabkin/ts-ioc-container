@@ -14,12 +14,12 @@ import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
-import { Filter as F, Is } from '../utils';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onDispose';
-import { constructor, Instance } from '../types';
+import { constructor, Instance, Is } from '../utils/basic';
+import { Filter as F } from '../utils/array';
 
 export class Container implements IContainer {
   isDisposed = false;

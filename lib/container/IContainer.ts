@@ -1,8 +1,8 @@
 import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { constructor, Instance } from '../types';
 import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onDispose';
+import { type constructor, Instance } from '../utils/basic';
 
 export type DependencyKey = string | symbol;
 export function isDependencyKey(target: unknown): target is DependencyKey {

@@ -70,14 +70,6 @@ export type { HooksRunnerContext } from './hooks/HooksRunner';
 export { HooksRunner } from './hooks/HooksRunner';
 
 // Metadata
-export {
-  setClassMetadata,
-  getClassMetadata,
-  setParameterMetadata,
-  setMethodMetadata,
-  getMethodMetadata,
-  getParameterMetadata,
-} from './metadata';
 
 // InjectionToken
 export { InjectionToken } from './token/InjectionToken';
@@ -91,6 +83,13 @@ export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanc
 
 // Others
 export { select } from './select';
-export { Is } from './utils';
+export { pipe, type MapFn } from './utils/fp';
 export type { InjectFn } from './hooks/hook';
-export type { Instance, constructor } from './types';
+export { type constructor, type Instance } from './utils/basic';
+export { Is } from './utils/basic';
+export { getClassMetadata } from './metadata/class';
+export { setClassMetadata } from './metadata/class';
+export { getParameterMetadata } from './metadata/parameter';
+export { setParameterMetadata } from './metadata/parameter';
+export { getMethodMetadata } from './metadata/method';
+export { setMethodMetadata } from './metadata/method';

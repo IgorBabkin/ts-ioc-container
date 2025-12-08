@@ -1,7 +1,7 @@
 import { hook, HookClass, HookFn } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
-import { constructor } from '../types';
 import { HooksRunner } from './HooksRunner';
+import { type constructor } from '../utils/basic';
 
 export const onDisposeHooksRunner = new HooksRunner('onDispose');
 export const onDispose = (...fns: (HookFn | constructor<HookClass>)[]) => hook('onDispose', ...fns);

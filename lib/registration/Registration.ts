@@ -1,5 +1,4 @@
 import { DependencyKey, IContainer, isDependencyKey } from '../container/IContainer';
-import { Is, pipe } from '../utils';
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
@@ -9,7 +8,8 @@ import type { ProviderPipe } from '../provider/ProviderPipe';
 import { isProviderPipe } from '../provider/ProviderPipe';
 import { BindToken } from '../token/BindToken';
 import { SingleToken } from '../token/SingleToken';
-import { constructor, MapFn } from '../types';
+import { type MapFn, pipe } from '../utils/fp';
+import { type constructor, Is } from '../utils/basic';
 
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>) {

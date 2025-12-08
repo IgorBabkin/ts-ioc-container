@@ -1,9 +1,10 @@
 import { IContainer, Tagged } from '../container/IContainer';
-import { Is } from '../utils';
 import { isProviderPipe, ProviderPipe, registerPipe } from './ProviderPipe';
 import { InjectOptions } from '../injector/IInjector';
 import { InjectionToken } from '../token/InjectionToken';
-import { MapFn } from '../types';
+
+import { MapFn } from '../utils/fp';
+import { Is } from '../utils/basic';
 
 export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;

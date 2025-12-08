@@ -7,10 +7,10 @@ import {
   ScopeAccessOptions,
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { pipe } from '../utils';
+import { pipe, type MapFn } from '../utils/fp';
 import type { ProviderPipe } from './ProviderPipe';
 import { isProviderPipe } from './ProviderPipe';
-import { constructor, MapFn } from '../types';
+import { type constructor } from '../utils/basic';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {

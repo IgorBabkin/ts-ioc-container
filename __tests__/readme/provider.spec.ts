@@ -45,7 +45,7 @@ describe('Provider', () => {
     expect(container.resolve('ILogger')).toBeInstanceOf(Logger);
   });
 
-  it('can be featured by pipe method (Singleton Pattern)', () => {
+  it('can be featured by fp method (Singleton Pattern)', () => {
     // Pipe "singleton()" to cache the instance
     const appContainer = new Container({ tags: ['application'] }).register(
       'SharedLogger',

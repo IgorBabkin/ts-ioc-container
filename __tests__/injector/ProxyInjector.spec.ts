@@ -1,4 +1,4 @@
-import { args, Container, ProxyInjector, Registration as R } from '../../lib';
+import { Container, ProxyInjector, Registration as R } from '../../lib';
 
 /**
  * Clean Architecture - Proxy Injector

@@ -1,10 +1,11 @@
 import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import { getClassMetadata, setClassMetadata } from '../metadata';
 import type { IProvider } from '../provider/IProvider';
 import { isProviderPipe, ProviderPipe } from '../provider/ProviderPipe';
 import { SingleToken } from '../token/SingleToken';
 import { BindToken, isBindToken } from '../token/BindToken';
-import { constructor, MapFn } from '../types';
+import { MapFn } from '../utils/fp';
+import { getClassMetadata, setClassMetadata } from '../metadata/class';
+import { type constructor } from '../utils/basic';
 
 export type ScopeMatchRule = (s: IContainer, prev?: boolean) => boolean;
 

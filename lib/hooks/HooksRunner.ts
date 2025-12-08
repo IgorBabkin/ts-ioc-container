@@ -2,7 +2,8 @@ import { createHookContext, type CreateHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
 import { getHooks, HookFn, toHookFn } from './hook';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
-import { promisify } from '../utils';
+
+import { promisify } from '../utils/promise';
 
 export type HooksRunnerContext = {
   scope: IContainer;

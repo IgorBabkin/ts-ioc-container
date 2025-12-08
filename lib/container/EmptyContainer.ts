@@ -10,9 +10,9 @@ import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { constructor, Instance } from '../types';
 import { OnDisposeHook } from '../hooks/onDispose';
 import { OnConstructHook } from '../hooks/onConstruct';
+import { type constructor, type Instance } from '../utils/basic';
 
 export class EmptyContainer implements IContainer {
   get isDisposed(): boolean {
