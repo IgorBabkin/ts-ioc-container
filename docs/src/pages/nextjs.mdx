@@ -1,0 +1,720 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Next.js
+description: Next.js integration - Using ts-ioc-container with Next.js applications
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+
+# Next.js Integration
+
+This guide shows how to integrate `ts-ioc-container` with Next.js applications, covering both App Router (Server Components) and Pages Router patterns, as well as client-side usage.
+
+<h2 id="overview" class="toc-link">Overview</h2>
+
+Next.js has unique requirements due to its hybrid rendering model:
+
+- **Server Components** - Run on the server, can use container directly
+- **Client Components** - Run in browser, need React context
+- **API Routes** - Server-side, request-scoped containers
+- **Middleware** - Edge runtime considerations
+
+### Scope Hierarchy in Next.js
+
+- **Application scope** - Singleton services (shared across requests on server)
+- **Request scope** - Per-request services (API routes, server actions)
+- **Page scope** - Per-page client services
+- **Widget scope** - Per-component client services
+
+<h2 id="server-setup" class="toc-link">Server-Side Setup</h2>
+
+Create the server-side container configuration:
+
+<CodeBlock
+  code={`// src/di/server-container.ts
+import 'reflect-metadata';
+import {
+  Container,
+  MetadataInjector,
+  Registration,
+  singleton,
+  scope,
+} from 'ts-ioc-container';
+import type { IContainer } from 'ts-ioc-container';
+import { DatabasePool } from '../services/DatabasePool';
+import { CacheService } from '../services/CacheService';
+import { UserRepository } from '../repositories/UserRepository';
+import { RequestContext } from '../services/RequestContext';
+
+// Singleton container for server-side
+let serverContainer: IContainer | null = null;
+
+export function getServerContainer(): IContainer {
+  if (!serverContainer) {
+    serverContainer = new Container(new MetadataInjector(), { tags: ['application'] })
+      .addRegistration(
+        // Application-scoped services (singleton across all requests)
+        Registration.fromClass(DatabasePool)
+          .pipe(singleton())
+          .to('IDatabasePool'),
+        Registration.fromClass(CacheService)
+          .pipe(singleton())
+          .to('ICacheService'),
+      )
+      .addRegistration(
+        // Request-scoped services
+        Registration.fromClass(UserRepository)
+          .pipe(scope((s) => s.hasTag('request')))
+          .pipe(singleton())
+          .to('IUserRepository'),
+        Registration.fromClass(RequestContext)
+          .pipe(scope((s) => s.hasTag('request')))
+          .pipe(singleton())
+          .to('IRequestContext'),
+      );
+  }
+  return serverContainer;
+}
+
+export function createRequestScope(): IContainer {
+  return getServerContainer().createScope({ tags: ['request'] });
+}`}
+  lang="typescript"
+  filename="src/di/server-container.ts"
+/>
+
+<h2 id="api-routes" class="toc-link">API Routes (App Router)</h2>
+
+Use request-scoped containers in API route handlers:
+
+<CodeBlock
+  code={`// src/app/api/users/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { createRequestScope } from '@/di/server-container';
+import type { IUserRepository } from '@/repositories/UserRepository';
+import type { IRequestContext } from '@/services/RequestContext';
+
+export async function GET(request: NextRequest) {
+  const scope = createRequestScope();
+
+  try {
+    const userRepo = scope.resolve<IUserRepository>('IUserRepository');
+    const context = scope.resolve<IRequestContext>('IRequestContext');
+
+    // Set request context
+    context.setRequestId(crypto.randomUUID());
+
+    const users = await userRepo.findAll();
+
+    return NextResponse.json(users);
+  } finally {
+    scope.dispose();
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const scope = createRequestScope();
+
+  try {
+    const userRepo = scope.resolve<IUserRepository>('IUserRepository');
+    const body = await request.json();
+
+    const user = await userRepo.create(body);
+
+    return NextResponse.json(user, { status: 201 });
+  } finally {
+    scope.dispose();
+  }
+}`}
+  lang="typescript"
+  filename="src/app/api/users/route.ts"
+/>
+
+<h2 id="server-actions" class="toc-link">Server Actions</h2>
+
+Use containers in Server Actions:
+
+<CodeBlock
+  code={`// src/app/actions/user-actions.ts
+'use server';
+
+import { createRequestScope } from '@/di/server-container';
+import type { IUserRepository } from '@/repositories/UserRepository';
+import { revalidatePath } from 'next/cache';
+
+export async function createUser(formData: FormData) {
+  const scope = createRequestScope();
+
+  try {
+    const userRepo = scope.resolve<IUserRepository>('IUserRepository');
+
+    const user = await userRepo.create({
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+    });
+
+    revalidatePath('/users');
+
+    return { success: true, user };
+  } catch (error) {
+    return { success: false, error: 'Failed to create user' };
+  } finally {
+    scope.dispose();
+  }
+}
+
+export async function deleteUser(userId: string) {
+  const scope = createRequestScope();
+
+  try {
+    const userRepo = scope.resolve<IUserRepository>('IUserRepository');
+
+    await userRepo.delete(userId);
+
+    revalidatePath('/users');
+
+    return { success: true };
+  } finally {
+    scope.dispose();
+  }
+}`}
+  lang="typescript"
+  filename="src/app/actions/user-actions.ts"
+/>
+
+<h2 id="server-components" class="toc-link">Server Components</h2>
+
+Use the container directly in Server Components:
+
+<CodeBlock
+  code={`// src/app/users/page.tsx
+import { createRequestScope } from '@/di/server-container';
+import type { IUserRepository } from '@/repositories/UserRepository';
+import { UserList } from '@/components/UserList';
+
+export default async function UsersPage() {
+  const scope = createRequestScope();
+
+  try {
+    const userRepo = scope.resolve<IUserRepository>('IUserRepository');
+    const users = await userRepo.findAll();
+
+    return (
+      <div>
+        <h1>Users</h1>
+        <UserList users={users} />
+      </div>
+    );
+  } finally {
+    scope.dispose();
+  }
+}`}
+  lang="typescript"
+  filename="src/app/users/page.tsx"
+/>
+
+<h2 id="client-setup" class="toc-link">Client-Side Setup</h2>
+
+For client components, create React context-based integration:
+
+<CodeBlock
+  code={`// src/di/client/ScopeContext.tsx
+'use client';
+
+import { createContext, useContext } from 'react';
+import type { IContainer } from 'ts-ioc-container';
+
+export const ScopeContext = createContext<IContainer | null>(null);
+
+export function useContainer(): IContainer {
+  const container = useContext(ScopeContext);
+  if (!container) {
+    throw new Error('useContainer must be used within a ScopeContext.Provider');
+  }
+  return container;
+}`}
+  lang="tsx"
+  filename="src/di/client/ScopeContext.tsx"
+/>
+
+<CodeBlock
+  code={`// src/di/client/useInject.ts
+'use client';
+
+import { useContainer } from './ScopeContext';
+import type { constructor, DependencyKey } from 'ts-ioc-container';
+
+export function useInject<T>(key: DependencyKey | constructor<T>): T {
+  const container = useContainer();
+  return container.resolve<T>(key);
+}`}
+  lang="typescript"
+  filename="src/di/client/useInject.ts"
+/>
+
+<CodeBlock
+  code={`// src/di/client/Scope.tsx
+'use client';
+
+import React, { useEffect, useMemo } from 'react';
+import { ScopeContext, useContainer } from './ScopeContext';
+import type { Tag } from 'ts-ioc-container';
+
+interface ScopeProps {
+  tags: Tag[];
+  children: React.ReactNode;
+}
+
+export function Scope({ tags, children }: ScopeProps) {
+  const parentContainer = useContainer();
+
+  const childScope = useMemo(
+    () => parentContainer.createScope({ tags }),
+    [parentContainer, ...tags]
+  );
+
+  useEffect(() => {
+    return () => {
+      childScope.dispose();
+    };
+  }, [childScope]);
+
+  return (
+    <ScopeContext.Provider value={childScope}>
+      {children}
+    </ScopeContext.Provider>
+  );
+}`}
+  lang="tsx"
+  filename="src/di/client/Scope.tsx"
+/>
+
+<h2 id="client-container" class="toc-link">Client Container Configuration</h2>
+
+Create a client-specific container:
+
+<CodeBlock
+  code={`// src/di/client/client-container.ts
+import {
+  Container,
+  MetadataInjector,
+  Registration,
+  singleton,
+  scope,
+} from 'ts-ioc-container';
+import { ApiClient } from '@/services/client/ApiClient';
+import { AuthStore } from '@/stores/AuthStore';
+import { ThemeStore } from '@/stores/ThemeStore';
+import { FormStateService } from '@/services/client/FormStateService';
+
+export function createClientContainer() {
+  return new Container(new MetadataInjector(), { tags: ['application'] })
+    .addRegistration(
+      // Application-scoped client services
+      Registration.fromClass(ApiClient)
+        .pipe(singleton())
+        .to('IApiClient'),
+      Registration.fromClass(AuthStore)
+        .pipe(singleton())
+        .to('IAuthStore'),
+      Registration.fromClass(ThemeStore)
+        .pipe(singleton())
+        .to('IThemeStore'),
+    )
+    .addRegistration(
+      // Page-scoped services
+      Registration.fromClass(FormStateService)
+        .pipe(scope((s) => s.hasTag('page') || s.hasTag('widget')))
+        .to('IFormStateService'),
+    );
+}`}
+  lang="typescript"
+  filename="src/di/client/client-container.ts"
+/>
+
+<h2 id="providers" class="toc-link">Provider Components</h2>
+
+Create a provider component for client-side DI:
+
+<CodeBlock
+  code={`// src/di/client/ContainerProvider.tsx
+'use client';
+
+import React, { useMemo } from 'react';
+import { ScopeContext } from './ScopeContext';
+import { createClientContainer } from './client-container';
+
+interface ContainerProviderProps {
+  children: React.ReactNode;
+}
+
+export function ContainerProvider({ children }: ContainerProviderProps) {
+  const container = useMemo(() => createClientContainer(), []);
+
+  return (
+    <ScopeContext.Provider value={container}>
+      {children}
+    </ScopeContext.Provider>
+  );
+}`}
+  lang="tsx"
+  filename="src/di/client/ContainerProvider.tsx"
+/>
+
+<CodeBlock
+  code={`// src/app/layout.tsx
+import { ContainerProvider } from '@/di/client/ContainerProvider';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <ContainerProvider>
+          {children}
+        </ContainerProvider>
+      </body>
+    </html>
+  );
+}`}
+  lang="tsx"
+  filename="src/app/layout.tsx"
+/>
+
+<h2 id="client-components" class="toc-link">Client Components</h2>
+
+Use the container in client components:
+
+<CodeBlock
+  code={`// src/components/UserForm.tsx
+'use client';
+
+import { useState } from 'react';
+import { Scope, useInject } from '@/di/client';
+import type { IFormStateService } from '@/services/client/FormStateService';
+import type { IApiClient } from '@/services/client/ApiClient';
+import { createUser } from '@/app/actions/user-actions';
+
+function UserFormInner() {
+  const formState = useInject<IFormStateService>('IFormStateService');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.set('name', name);
+    formData.set('email', email);
+
+    const result = await createUser(formData);
+
+    if (result.success) {
+      setName('');
+      setEmail('');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Name"
+      />
+      <input
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        type="email"
+      />
+      <button type="submit">Create User</button>
+    </form>
+  );
+}
+
+export function UserForm() {
+  return (
+    <Scope tags={['widget']}>
+      <UserFormInner />
+    </Scope>
+  );
+}`}
+  lang="tsx"
+  filename="src/components/UserForm.tsx"
+/>
+
+<h2 id="pages-router" class="toc-link">Pages Router Integration</h2>
+
+For Pages Router, use `getServerSideProps` with request scopes:
+
+<CodeBlock
+  code={`// src/pages/users/index.tsx
+import type { GetServerSideProps } from 'next';
+import { createRequestScope } from '@/di/server-container';
+import type { IUserRepository } from '@/repositories/UserRepository';
+
+interface UsersPageProps {
+  users: User[];
+}
+
+export default function UsersPage({ users }: UsersPageProps) {
+  return (
+    <div>
+      <h1>Users</h1>
+      <ul>
+        {users.map((user) => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps<UsersPageProps> = async () => {
+  const scope = createRequestScope();
+
+  try {
+    const userRepo = scope.resolve<IUserRepository>('IUserRepository');
+    const users = await userRepo.findAll();
+
+    return {
+      props: { users },
+    };
+  } finally {
+    scope.dispose();
+  }
+};`}
+  lang="tsx"
+  filename="src/pages/users/index.tsx"
+/>
+
+<h2 id="api-routes-pages" class="toc-link">API Routes (Pages Router)</h2>
+
+<CodeBlock
+  code={`// src/pages/api/users/index.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { createRequestScope } from '@/di/server-container';
+import type { IUserRepository } from '@/repositories/UserRepository';
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  const scope = createRequestScope();
+
+  try {
+    const userRepo = scope.resolve<IUserRepository>('IUserRepository');
+
+    switch (req.method) {
+      case 'GET': {
+        const users = await userRepo.findAll();
+        return res.status(200).json(users);
+      }
+      case 'POST': {
+        const user = await userRepo.create(req.body);
+        return res.status(201).json(user);
+      }
+      default:
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+  } finally {
+    scope.dispose();
+  }
+}`}
+  lang="typescript"
+  filename="src/pages/api/users/index.ts"
+/>
+
+<h2 id="complete-example" class="toc-link">Complete Example</h2>
+
+Here's a complete example showing server and client integration:
+
+<CodeBlock
+  code={`// Complete Next.js App Router example
+
+// === src/di/server-container.ts ===
+import 'reflect-metadata';
+import { Container, MetadataInjector, Registration, singleton, scope } from 'ts-ioc-container';
+
+class UserRepository {
+  private users = [
+    { id: '1', name: 'Alice', email: 'alice@example.com' },
+    { id: '2', name: 'Bob', email: 'bob@example.com' },
+  ];
+
+  async findAll() {
+    return this.users;
+  }
+
+  async create(data: { name: string; email: string }) {
+    const user = { id: String(this.users.length + 1), ...data };
+    this.users.push(user);
+    return user;
+  }
+}
+
+let serverContainer: IContainer | null = null;
+
+export function getServerContainer() {
+  if (!serverContainer) {
+    serverContainer = new Container(new MetadataInjector(), { tags: ['application'] })
+      .addRegistration(
+        Registration.fromClass(UserRepository)
+          .pipe(scope((s) => s.hasTag('request')))
+          .pipe(singleton())
+          .to('IUserRepository')
+      );
+  }
+  return serverContainer;
+}
+
+export function createRequestScope() {
+  return getServerContainer().createScope({ tags: ['request'] });
+}
+
+// === src/app/api/users/route.ts ===
+import { NextResponse } from 'next/server';
+import { createRequestScope } from '@/di/server-container';
+
+export async function GET() {
+  const scope = createRequestScope();
+  try {
+    const userRepo = scope.resolve('IUserRepository');
+    const users = await userRepo.findAll();
+    return NextResponse.json(users);
+  } finally {
+    scope.dispose();
+  }
+}
+
+// === src/di/client/ContainerProvider.tsx ===
+'use client';
+
+import { createContext, useContext, useMemo, useEffect } from 'react';
+import { Container, MetadataInjector, Registration, singleton } from 'ts-ioc-container';
+
+const ScopeContext = createContext(null);
+
+export function useContainer() {
+  const container = useContext(ScopeContext);
+  if (!container) throw new Error('No container');
+  return container;
+}
+
+export function useInject(key) {
+  return useContainer().resolve(key);
+}
+
+export function Scope({ tags, children }) {
+  const parent = useContainer();
+  const scope = useMemo(() => parent.createScope({ tags }), [parent, ...tags]);
+  useEffect(() => () => scope.dispose(), [scope]);
+  return <ScopeContext.Provider value={scope}>{children}</ScopeContext.Provider>;
+}
+
+class ApiClient {
+  async getUsers() {
+    const res = await fetch('/api/users');
+    return res.json();
+  }
+}
+
+function createClientContainer() {
+  return new Container(new MetadataInjector())
+    .addRegistration(Registration.fromClass(ApiClient).pipe(singleton()).to('IApiClient'));
+}
+
+export function ContainerProvider({ children }) {
+  const container = useMemo(() => createClientContainer(), []);
+  return <ScopeContext.Provider value={container}>{children}</ScopeContext.Provider>;
+}
+
+// === src/app/layout.tsx ===
+import { ContainerProvider } from '@/di/client/ContainerProvider';
+
+export default function RootLayout({ children }) {
+  return (
+    <html><body>
+      <ContainerProvider>{children}</ContainerProvider>
+    </body></html>
+  );
+}
+
+// === src/components/UserList.tsx ===
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useInject } from '@/di/client/ContainerProvider';
+
+export function UserList() {
+  const apiClient = useInject('IApiClient');
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    apiClient.getUsers().then(setUsers);
+  }, [apiClient]);
+
+  return (
+    <ul>
+      {users.map(user => <li key={user.id}>{user.name}</li>)}
+    </ul>
+  );
+}`}
+  lang="tsx"
+  filename="Complete Next.js Example"
+/>
+
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
+
+### Server vs Client Containers
+
+| Environment | Container | Scope |
+|-------------|-----------|-------|
+| Server | Singleton + request scopes | `application`, `request` |
+| Client | Per-app instance | `application`, `page`, `widget` |
+
+### Memory Management
+
+- **Server**: Always dispose request scopes in `finally` blocks
+- **Client**: Use the `Scope` component for automatic cleanup
+- **Server Components**: Create and dispose scopes within the component
+
+### Next.js-Specific Considerations
+
+1. **Server Container Singleton** - The server container persists across requests in development but may be recreated in production
+2. **Client Hydration** - Ensure client container is created in `useMemo` to prevent hydration mismatches
+3. **Server Actions** - Create request scopes for each action invocation
+4. **Edge Runtime** - Consider using `SimpleInjector` if `reflect-metadata` causes issues
+
+<h2 id="api-reference" class="toc-link">API Reference</h2>
+
+### Server Functions
+
+```typescript
+// Get the singleton server container
+function getServerContainer(): IContainer
+
+// Create a request-scoped container
+function createRequestScope(): IContainer
+```
+
+### Client Components
+
+```typescript
+// Provider component for client-side DI
+function ContainerProvider({ children }: { children: React.ReactNode }): JSX.Element
+
+// Hook to get current container
+function useContainer(): IContainer
+
+// Hook to resolve dependencies
+function useInject<T>(key: DependencyKey | constructor<T>): T
+
+// Scope component for creating child scopes
+function Scope({ tags, children }: { tags: Tag[]; children: React.ReactNode }): JSX.Element
+```
+

@@ -13,4 +13,9 @@ export const navigation: NavigationItem[] = [
   { title: "Token", href: "/ts-ioc-container/token" },
   { title: "Hooks", href: "/ts-ioc-container/hooks" },
   { title: "Metadata", href: "/ts-ioc-container/metadata" },
+  { title: "React", href: "/ts-ioc-container/react" },
+  { title: "SolidJS", href: "/ts-ioc-container/solidjs" },
+  { title: "Next.js", href: "/ts-ioc-container/nextjs" },
+  { title: "Express.js", href: "/ts-ioc-container/expressjs" },
+  { title: "Fastify", href: "/ts-ioc-container/fastify" },
 ];

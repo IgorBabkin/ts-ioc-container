@@ -1,0 +1,829 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Express.js
+description: Express.js integration - Using ts-ioc-container with Express.js applications
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+
+# Express.js Integration
+
+This guide shows how to integrate `ts-ioc-container` with Express.js applications. Express's middleware-based architecture works well with request-scoped dependency injection.
+
+<h2 id="overview" class="toc-link">Overview</h2>
+
+Express.js integration provides:
+
+- **Application scope** - Singleton services attached to the app
+- **Request scope** - Per-request services via middleware
+- **Transaction scope** - Database transaction boundaries
+
+### Scope Hierarchy
+
+- **Application scope** - Database pools, config, loggers
+- **Request scope** - Request context, repositories, audit logging
+- **Transaction scope** - Unit of work boundaries
+
+<h2 id="setup" class="toc-link">Basic Setup</h2>
+
+Create the container configuration:
+
+<CodeBlock
+  code={`// src/container/index.ts
+import 'reflect-metadata';
+import {
+  Container,
+  MetadataInjector,
+  Registration,
+  singleton,
+  scope,
+} from 'ts-ioc-container';
+import type { IContainer } from 'ts-ioc-container';
+import { DatabasePool } from '../services/DatabasePool';
+import { ConfigService } from '../services/ConfigService';
+import { Logger } from '../services/Logger';
+import { UserRepository } from '../repositories/UserRepository';
+import { RequestContext } from '../services/RequestContext';
+import { AuditLogger } from '../services/AuditLogger';
+
+export function createAppContainer(): IContainer {
+  return new Container(new MetadataInjector(), { tags: ['application'] })
+    .addRegistration(
+      // Application-scoped services (singletons)
+      Registration.fromClass(ConfigService)
+        .pipe(singleton())
+        .to('IConfigService'),
+      Registration.fromClass(DatabasePool)
+        .pipe(singleton())
+        .to('IDatabasePool'),
+      Registration.fromClass(Logger)
+        .pipe(singleton())
+        .to('ILogger'),
+    )
+    .addRegistration(
+      // Request-scoped services
+      Registration.fromClass(UserRepository)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IUserRepository'),
+      Registration.fromClass(RequestContext)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IRequestContext'),
+      Registration.fromClass(AuditLogger)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IAuditLogger'),
+    );
+}`}
+  lang="typescript"
+  filename="src/container/index.ts"
+/>
+
+<h2 id="middleware" class="toc-link">Container Middleware</h2>
+
+Create middleware to manage request scopes:
+
+<CodeBlock
+  code={`// src/middleware/container.ts
+import { Request, Response, NextFunction } from 'express';
+import type { IContainer } from 'ts-ioc-container';
+
+// Extend Express Request to include container
+declare global {
+  namespace Express {
+    interface Request {
+      container: IContainer;
+    }
+  }
+}
+
+export function containerMiddleware(appContainer: IContainer) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    // Create request-scoped container
+    const requestScope = appContainer.createScope({ tags: ['request'] });
+
+    // Attach to request
+    req.container = requestScope;
+
+    // Cleanup on response finish
+    res.on('finish', () => {
+      requestScope.dispose();
+    });
+
+    // Cleanup on error
+    res.on('close', () => {
+      if (!res.writableEnded) {
+        requestScope.dispose();
+      }
+    });
+
+    next();
+  };
+}`}
+  lang="typescript"
+  filename="src/middleware/container.ts"
+/>
+
+<h2 id="app-setup" class="toc-link">Application Setup</h2>
+
+Configure Express with the container:
+
+<CodeBlock
+  code={`// src/app.ts
+import express from 'express';
+import { createAppContainer } from './container';
+import { containerMiddleware } from './middleware/container';
+import { usersRouter } from './routes/users';
+import { ordersRouter } from './routes/orders';
+import { errorHandler } from './middleware/errorHandler';
+
+// Create application container
+const appContainer = createAppContainer();
+
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(containerMiddleware(appContainer));
+
+// Routes
+app.use('/api/users', usersRouter);
+app.use('/api/orders', ordersRouter);
+
+// Error handling
+app.use(errorHandler);
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  appContainer.dispose();
+  process.exit(0);
+});
+
+export { app, appContainer };`}
+  lang="typescript"
+  filename="src/app.ts"
+/>
+
+<h2 id="routes" class="toc-link">Using in Routes</h2>
+
+Resolve dependencies in route handlers:
+
+<CodeBlock
+  code={`// src/routes/users.ts
+import { Router, Request, Response, NextFunction } from 'express';
+import type { IUserRepository } from '../repositories/UserRepository';
+import type { IAuditLogger } from '../services/AuditLogger';
+import type { IRequestContext } from '../services/RequestContext';
+
+const router = Router();
+
+// GET /api/users
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userRepo = req.container.resolve<IUserRepository>('IUserRepository');
+    const auditLogger = req.container.resolve<IAuditLogger>('IAuditLogger');
+
+    const users = await userRepo.findAll();
+
+    await auditLogger.log('users_listed', { count: users.length });
+
+    res.json(users);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/users/:id
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userRepo = req.container.resolve<IUserRepository>('IUserRepository');
+
+    const user = await userRepo.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/users
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userRepo = req.container.resolve<IUserRepository>('IUserRepository');
+    const auditLogger = req.container.resolve<IAuditLogger>('IAuditLogger');
+    const context = req.container.resolve<IRequestContext>('IRequestContext');
+
+    const user = await userRepo.create(req.body);
+
+    await auditLogger.log('user_created', {
+      userId: user.id,
+      requestId: context.requestId,
+    });
+
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+export { router as usersRouter };`}
+  lang="typescript"
+  filename="src/routes/users.ts"
+/>
+
+<h2 id="services" class="toc-link">Service Definitions</h2>
+
+Define services with dependency injection:
+
+<CodeBlock
+  code={`// src/services/RequestContext.ts
+import { v4 as uuid } from 'uuid';
+
+export interface IRequestContext {
+  requestId: string;
+  startTime: Date;
+  userId?: string;
+  setUserId(userId: string): void;
+}
+
+export class RequestContext implements IRequestContext {
+  requestId = uuid();
+  startTime = new Date();
+  userId?: string;
+
+  setUserId(userId: string) {
+    this.userId = userId;
+  }
+}`}
+  lang="typescript"
+  filename="src/services/RequestContext.ts"
+/>
+
+<CodeBlock
+  code={`// src/services/AuditLogger.ts
+import { inject } from 'ts-ioc-container';
+import type { ILogger } from './Logger';
+import type { IRequestContext } from './RequestContext';
+
+export interface IAuditLogger {
+  log(action: string, data: Record<string, unknown>): Promise<void>;
+}
+
+export class AuditLogger implements IAuditLogger {
+  constructor(
+    @inject('ILogger') private logger: ILogger,
+    @inject('IRequestContext') private context: IRequestContext,
+  ) {}
+
+  async log(action: string, data: Record<string, unknown>): Promise<void> {
+    this.logger.info({
+      type: 'audit',
+      action,
+      requestId: this.context.requestId,
+      userId: this.context.userId,
+      timestamp: new Date().toISOString(),
+      ...data,
+    });
+  }
+}`}
+  lang="typescript"
+  filename="src/services/AuditLogger.ts"
+/>
+
+<CodeBlock
+  code={`// src/repositories/UserRepository.ts
+import { inject } from 'ts-ioc-container';
+import type { IDatabasePool } from '../services/DatabasePool';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface IUserRepository {
+  findAll(): Promise<User[]>;
+  findById(id: string): Promise<User | null>;
+  create(data: Omit<User, 'id'>): Promise<User>;
+}
+
+export class UserRepository implements IUserRepository {
+  constructor(
+    @inject('IDatabasePool') private db: IDatabasePool,
+  ) {}
+
+  async findAll(): Promise<User[]> {
+    return this.db.query<User>('SELECT * FROM users');
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const users = await this.db.query<User>(
+      'SELECT * FROM users WHERE id = $1',
+      [id]
+    );
+    return users[0] ?? null;
+  }
+
+  async create(data: Omit<User, 'id'>): Promise<User> {
+    const [user] = await this.db.query<User>(
+      'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+      [data.name, data.email]
+    );
+    return user;
+  }
+}`}
+  lang="typescript"
+  filename="src/repositories/UserRepository.ts"
+/>
+
+<h2 id="transaction-scope" class="toc-link">Transaction Scope</h2>
+
+Create transaction-scoped containers:
+
+<CodeBlock
+  code={`// src/middleware/transaction.ts
+import { Request, Response, NextFunction } from 'express';
+import type { IContainer } from 'ts-ioc-container';
+import type { IDatabasePool, IConnection } from '../services/DatabasePool';
+
+// Extend request to include transaction scope
+declare global {
+  namespace Express {
+    interface Request {
+      transactionScope?: IContainer;
+    }
+  }
+}
+
+export function withTransaction() {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const dbPool = req.container.resolve<IDatabasePool>('IDatabasePool');
+    const connection = await dbPool.getConnection();
+
+    // Create transaction scope
+    const txScope = req.container.createScope({ tags: ['transaction'] });
+
+    // Register transaction-specific connection
+    txScope.register('IConnection', () => connection);
+
+    req.transactionScope = txScope;
+
+    try {
+      await connection.beginTransaction();
+
+      // Intercept response to commit/rollback
+      const originalJson = res.json.bind(res);
+      res.json = (body: any) => {
+        connection.commit()
+          .then(() => txScope.dispose())
+          .catch(() => txScope.dispose());
+        return originalJson(body);
+      };
+
+      next();
+    } catch (error) {
+      await connection.rollback();
+      txScope.dispose();
+      next(error);
+    }
+  };
+}`}
+  lang="typescript"
+  filename="src/middleware/transaction.ts"
+/>
+
+<CodeBlock
+  code={`// src/routes/orders.ts
+import { Router, Request, Response, NextFunction } from 'express';
+import { withTransaction } from '../middleware/transaction';
+import type { IOrderRepository } from '../repositories/OrderRepository';
+import type { IInventoryService } from '../services/InventoryService';
+
+const router = Router();
+
+// POST /api/orders - with transaction
+router.post(
+  '/',
+  withTransaction(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const scope = req.transactionScope!;
+
+      const orderRepo = scope.resolve<IOrderRepository>('IOrderRepository');
+      const inventoryService = scope.resolve<IInventoryService>('IInventoryService');
+
+      // All operations within transaction
+      const order = await orderRepo.create(req.body);
+      await inventoryService.reserve(order.items);
+
+      res.status(201).json(order);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+export { router as ordersRouter };`}
+  lang="typescript"
+  filename="src/routes/orders.ts"
+/>
+
+<h2 id="helper-functions" class="toc-link">Helper Functions</h2>
+
+Create utility functions for common patterns:
+
+<CodeBlock
+  code={`// src/utils/resolve.ts
+import { Request } from 'express';
+import type { constructor, DependencyKey } from 'ts-ioc-container';
+
+/**
+ * Resolve a dependency from the request container
+ */
+export function resolve<T>(req: Request, key: DependencyKey | constructor<T>): T {
+  return req.container.resolve<T>(key);
+}
+
+/**
+ * Create a route handler with automatic dependency resolution
+ */
+export function withDeps<TDeps extends Record<string, DependencyKey>>(
+  deps: TDeps,
+  handler: (
+    req: Request,
+    res: Response,
+    services: { [K in keyof TDeps]: unknown }
+  ) => Promise<void>
+) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const services = {} as { [K in keyof TDeps]: unknown };
+
+      for (const [name, key] of Object.entries(deps)) {
+        services[name as keyof TDeps] = req.container.resolve(key);
+      }
+
+      await handler(req, res, services);
+    } catch (error) {
+      next(error);
+    }
+  };
+}`}
+  lang="typescript"
+  filename="src/utils/resolve.ts"
+/>
+
+<CodeBlock
+  code={`// src/routes/users-v2.ts
+// Using the helper function for cleaner code
+import { Router, Request, Response } from 'express';
+import { withDeps } from '../utils/resolve';
+import type { IUserRepository } from '../repositories/UserRepository';
+import type { IAuditLogger } from '../services/AuditLogger';
+
+const router = Router();
+
+router.get(
+  '/',
+  withDeps(
+    { userRepo: 'IUserRepository', auditLogger: 'IAuditLogger' },
+    async (req, res, { userRepo, auditLogger }) => {
+      const users = await (userRepo as IUserRepository).findAll();
+      await (auditLogger as IAuditLogger).log('users_listed', { count: users.length });
+      res.json(users);
+    }
+  )
+);
+
+export { router as usersRouterV2 };`}
+  lang="typescript"
+  filename="src/routes/users-v2.ts"
+/>
+
+<h2 id="testing" class="toc-link">Testing</h2>
+
+Test routes with mock containers:
+
+<CodeBlock
+  code={`// src/routes/users.test.ts
+import request from 'supertest';
+import express, { Express } from 'express';
+import { Container, MetadataInjector, Registration } from 'ts-ioc-container';
+import { containerMiddleware } from '../middleware/container';
+import { usersRouter } from './users';
+
+describe('Users API', () => {
+  let app: Express;
+  let mockContainer: IContainer;
+  let mockUserRepo: jest.Mocked<IUserRepository>;
+  let mockAuditLogger: jest.Mocked<IAuditLogger>;
+
+  beforeEach(() => {
+    // Create mocks
+    mockUserRepo = {
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      create: jest.fn(),
+    };
+
+    mockAuditLogger = {
+      log: jest.fn(),
+    };
+
+    // Create test container
+    mockContainer = new Container(new MetadataInjector())
+      .addRegistration(
+        Registration.fromValue(mockUserRepo).to('IUserRepository'),
+        Registration.fromValue(mockAuditLogger).to('IAuditLogger'),
+        Registration.fromValue({ requestId: 'test-123' }).to('IRequestContext'),
+      );
+
+    // Setup Express app
+    app = express();
+    app.use(express.json());
+    app.use(containerMiddleware(mockContainer));
+    app.use('/api/users', usersRouter);
+  });
+
+  describe('GET /api/users', () => {
+    it('should return all users', async () => {
+      const users = [
+        { id: '1', name: 'Alice', email: 'alice@example.com' },
+        { id: '2', name: 'Bob', email: 'bob@example.com' },
+      ];
+      mockUserRepo.findAll.mockResolvedValue(users);
+
+      const response = await request(app).get('/api/users');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(users);
+      expect(mockAuditLogger.log).toHaveBeenCalledWith(
+        'users_listed',
+        { count: 2 }
+      );
+    });
+  });
+
+  describe('POST /api/users', () => {
+    it('should create a new user', async () => {
+      const newUser = { id: '3', name: 'Charlie', email: 'charlie@example.com' };
+      mockUserRepo.create.mockResolvedValue(newUser);
+
+      const response = await request(app)
+        .post('/api/users')
+        .send({ name: 'Charlie', email: 'charlie@example.com' });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(newUser);
+    });
+  });
+
+  describe('GET /api/users/:id', () => {
+    it('should return user by id', async () => {
+      const user = { id: '1', name: 'Alice', email: 'alice@example.com' };
+      mockUserRepo.findById.mockResolvedValue(user);
+
+      const response = await request(app).get('/api/users/1');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(user);
+    });
+
+    it('should return 404 when user not found', async () => {
+      mockUserRepo.findById.mockResolvedValue(null);
+
+      const response = await request(app).get('/api/users/999');
+
+      expect(response.status).toBe(404);
+    });
+  });
+});`}
+  lang="typescript"
+  filename="src/routes/users.test.ts"
+/>
+
+<h2 id="complete-example" class="toc-link">Complete Example</h2>
+
+Here's a complete working example:
+
+<CodeBlock
+  code={`// Complete Express.js example with ts-ioc-container
+
+import 'reflect-metadata';
+import express, { Request, Response, NextFunction } from 'express';
+import {
+  Container,
+  MetadataInjector,
+  Registration,
+  singleton,
+  scope,
+  inject,
+} from 'ts-ioc-container';
+import type { IContainer } from 'ts-ioc-container';
+
+// ============ Type Definitions ============
+declare global {
+  namespace Express {
+    interface Request {
+      container: IContainer;
+    }
+  }
+}
+
+// ============ Services ============
+interface ILogger {
+  info(message: string, data?: Record<string, unknown>): void;
+}
+
+class Logger implements ILogger {
+  info(message: string, data?: Record<string, unknown>) {
+    console.log(\`[INFO] \${message}\`, data ?? '');
+  }
+}
+
+interface IUserRepository {
+  findAll(): Promise<User[]>;
+  create(data: { name: string; email: string }): Promise<User>;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+class UserRepository implements IUserRepository {
+  private users: User[] = [
+    { id: '1', name: 'Alice', email: 'alice@example.com' },
+    { id: '2', name: 'Bob', email: 'bob@example.com' },
+  ];
+
+  async findAll() {
+    return this.users;
+  }
+
+  async create(data: { name: string; email: string }) {
+    const user = { id: String(this.users.length + 1), ...data };
+    this.users.push(user);
+    return user;
+  }
+}
+
+interface IAuditLogger {
+  log(action: string, data: Record<string, unknown>): void;
+}
+
+class AuditLogger implements IAuditLogger {
+  constructor(@inject('ILogger') private logger: ILogger) {}
+
+  log(action: string, data: Record<string, unknown>) {
+    this.logger.info(\`AUDIT: \${action}\`, data);
+  }
+}
+
+// ============ Container Setup ============
+function createAppContainer(): IContainer {
+  return new Container(new MetadataInjector(), { tags: ['application'] })
+    .addRegistration(
+      Registration.fromClass(Logger).pipe(singleton()).to('ILogger')
+    )
+    .addRegistration(
+      Registration.fromClass(UserRepository)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IUserRepository'),
+      Registration.fromClass(AuditLogger)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IAuditLogger')
+    );
+}
+
+// ============ Middleware ============
+function containerMiddleware(appContainer: IContainer) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const requestScope = appContainer.createScope({ tags: ['request'] });
+    req.container = requestScope;
+
+    res.on('finish', () => requestScope.dispose());
+    res.on('close', () => {
+      if (!res.writableEnded) requestScope.dispose();
+    });
+
+    next();
+  };
+}
+
+// ============ Routes ============
+const app = express();
+const appContainer = createAppContainer();
+
+app.use(express.json());
+app.use(containerMiddleware(appContainer));
+
+app.get('/users', async (req: Request, res: Response) => {
+  const userRepo = req.container.resolve<IUserRepository>('IUserRepository');
+  const auditLogger = req.container.resolve<IAuditLogger>('IAuditLogger');
+
+  const users = await userRepo.findAll();
+  auditLogger.log('users_listed', { count: users.length });
+
+  res.json(users);
+});
+
+app.post('/users', async (req: Request, res: Response) => {
+  const userRepo = req.container.resolve<IUserRepository>('IUserRepository');
+  const auditLogger = req.container.resolve<IAuditLogger>('IAuditLogger');
+
+  const user = await userRepo.create(req.body);
+  auditLogger.log('user_created', { userId: user.id });
+
+  res.status(201).json(user);
+});
+
+// ============ Error Handler ============
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ============ Start Server ============
+const PORT = process.env.PORT ?? 3000;
+
+app.listen(PORT, () => {
+  console.log(\`Server running on port \${PORT}\`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  appContainer.dispose();
+  process.exit(0);
+});`}
+  lang="typescript"
+  filename="Complete Express.js Example"
+/>
+
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
+
+### Scope Naming Convention
+
+| Scope | Tag | Use Case |
+|-------|-----|----------|
+| Application | `application` | Global singletons (pools, config, loggers) |
+| Request | `request` | Per-request services (context, repos) |
+| Transaction | `transaction` | Database transaction boundaries |
+
+### Memory Management
+
+- Use `res.on('finish')` and `res.on('close')` for cleanup
+- Dispose transaction scopes in middleware
+- Implement graceful shutdown for app container
+
+### Express-Specific Patterns
+
+1. **Extend Request type** with TypeScript declaration merging
+2. **Create helper functions** for common resolution patterns
+3. **Use middleware** for cross-cutting concerns
+4. **Test with supertest** and mock containers
+
+<h2 id="api-reference" class="toc-link">API Reference</h2>
+
+### Container Middleware
+
+```typescript
+function containerMiddleware(appContainer: IContainer): RequestHandler
+```
+
+Creates middleware that attaches a request-scoped container to each request and handles cleanup.
+
+### Request Extension
+
+```typescript
+declare global {
+  namespace Express {
+    interface Request {
+      container: IContainer;
+      transactionScope?: IContainer;
+    }
+  }
+}
+```
+
+### Helper Functions
+
+```typescript
+// Resolve from request container
+function resolve<T>(req: Request, key: DependencyKey): T
+
+// Create handler with auto-resolution
+function withDeps<TDeps>(
+  deps: TDeps,
+  handler: (req, res, services) => Promise<void>
+): RequestHandler
+```
+

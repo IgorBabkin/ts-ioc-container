@@ -1,0 +1,869 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Fastify
+description: Fastify integration - Using ts-ioc-container with Fastify applications
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+
+# Fastify Integration
+
+This guide shows how to integrate `ts-ioc-container` with Fastify applications. Fastify's plugin architecture and decorator system work well with dependency injection patterns.
+
+<h2 id="overview" class="toc-link">Overview</h2>
+
+Fastify integration provides:
+
+- **Application scope** - Singleton services via Fastify decorators
+- **Request scope** - Per-request services via request decorators
+- **Transaction scope** - Database transaction boundaries
+
+### Scope Hierarchy
+
+- **Application scope** - Database pools, config, loggers
+- **Request scope** - Request context, repositories, audit logging
+- **Transaction scope** - Unit of work boundaries
+
+<h2 id="setup" class="toc-link">Basic Setup</h2>
+
+Create the container configuration:
+
+<CodeBlock
+  code={`// src/container/index.ts
+import 'reflect-metadata';
+import {
+  Container,
+  MetadataInjector,
+  Registration,
+  singleton,
+  scope,
+} from 'ts-ioc-container';
+import type { IContainer } from 'ts-ioc-container';
+import { DatabasePool } from '../services/DatabasePool';
+import { ConfigService } from '../services/ConfigService';
+import { Logger } from '../services/Logger';
+import { UserRepository } from '../repositories/UserRepository';
+import { RequestContext } from '../services/RequestContext';
+import { AuditLogger } from '../services/AuditLogger';
+
+export function createAppContainer(): IContainer {
+  return new Container(new MetadataInjector(), { tags: ['application'] })
+    .addRegistration(
+      // Application-scoped services (singletons)
+      Registration.fromClass(ConfigService)
+        .pipe(singleton())
+        .to('IConfigService'),
+      Registration.fromClass(DatabasePool)
+        .pipe(singleton())
+        .to('IDatabasePool'),
+      Registration.fromClass(Logger)
+        .pipe(singleton())
+        .to('ILogger'),
+    )
+    .addRegistration(
+      // Request-scoped services
+      Registration.fromClass(UserRepository)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IUserRepository'),
+      Registration.fromClass(RequestContext)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IRequestContext'),
+      Registration.fromClass(AuditLogger)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IAuditLogger'),
+    );
+}`}
+  lang="typescript"
+  filename="src/container/index.ts"
+/>
+
+<h2 id="plugin" class="toc-link">Container Plugin</h2>
+
+Create a Fastify plugin to manage the container:
+
+<CodeBlock
+  code={`// src/plugins/container.ts
+import { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import fp from 'fastify-plugin';
+import type { IContainer } from 'ts-ioc-container';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    container: IContainer;
+  }
+  interface FastifyRequest {
+    container: IContainer;
+  }
+}
+
+export interface ContainerPluginOptions {
+  container: IContainer;
+}
+
+const containerPlugin: FastifyPluginAsync<ContainerPluginOptions> = async (
+  fastify,
+  options
+) => {
+  const { container } = options;
+
+  // Decorate fastify instance with app container
+  fastify.decorate('container', container);
+
+  // Decorate request with request-scoped container
+  fastify.decorateRequest('container', null);
+
+  // Create request scope for each request
+  fastify.addHook('onRequest', async (request) => {
+    request.container = container.createScope({ tags: ['request'] });
+  });
+
+  // Dispose request scope after response
+  fastify.addHook('onResponse', async (request) => {
+    request.container.dispose();
+  });
+
+  // Dispose on error as well
+  fastify.addHook('onError', async (request) => {
+    if (request.container) {
+      request.container.dispose();
+    }
+  });
+
+  // Cleanup on close
+  fastify.addHook('onClose', async () => {
+    container.dispose();
+  });
+};
+
+export default fp(containerPlugin, {
+  name: 'container',
+  fastify: '5.x',
+});`}
+  lang="typescript"
+  filename="src/plugins/container.ts"
+/>
+
+<h2 id="app-setup" class="toc-link">Application Setup</h2>
+
+Configure Fastify with the container plugin:
+
+<CodeBlock
+  code={`// src/app.ts
+import Fastify from 'fastify';
+import { createAppContainer } from './container';
+import containerPlugin from './plugins/container';
+import usersRoutes from './routes/users';
+import ordersRoutes from './routes/orders';
+
+export async function buildApp() {
+  const fastify = Fastify({
+    logger: true,
+  });
+
+  // Create and register container
+  const container = createAppContainer();
+  await fastify.register(containerPlugin, { container });
+
+  // Register routes
+  await fastify.register(usersRoutes, { prefix: '/api/users' });
+  await fastify.register(ordersRoutes, { prefix: '/api/orders' });
+
+  return fastify;
+}
+
+// Start server
+async function start() {
+  const app = await buildApp();
+
+  try {
+    await app.listen({ port: 3000 });
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
+
+start();`}
+  lang="typescript"
+  filename="src/app.ts"
+/>
+
+<h2 id="routes" class="toc-link">Using in Routes</h2>
+
+Resolve dependencies in route handlers:
+
+<CodeBlock
+  code={`// src/routes/users.ts
+import { FastifyPluginAsync } from 'fastify';
+import type { IUserRepository } from '../repositories/UserRepository';
+import type { IAuditLogger } from '../services/AuditLogger';
+import type { IRequestContext } from '../services/RequestContext';
+
+interface UserBody {
+  name: string;
+  email: string;
+}
+
+interface UserParams {
+  id: string;
+}
+
+const usersRoutes: FastifyPluginAsync = async (fastify) => {
+  // GET /api/users
+  fastify.get('/', async (request, reply) => {
+    const userRepo = request.container.resolve<IUserRepository>('IUserRepository');
+    const auditLogger = request.container.resolve<IAuditLogger>('IAuditLogger');
+
+    const users = await userRepo.findAll();
+
+    await auditLogger.log('users_listed', { count: users.length });
+
+    return users;
+  });
+
+  // GET /api/users/:id
+  fastify.get<{ Params: UserParams }>('/:id', async (request, reply) => {
+    const userRepo = request.container.resolve<IUserRepository>('IUserRepository');
+
+    const user = await userRepo.findById(request.params.id);
+
+    if (!user) {
+      return reply.status(404).send({ error: 'User not found' });
+    }
+
+    return user;
+  });
+
+  // POST /api/users
+  fastify.post<{ Body: UserBody }>('/', async (request, reply) => {
+    const userRepo = request.container.resolve<IUserRepository>('IUserRepository');
+    const auditLogger = request.container.resolve<IAuditLogger>('IAuditLogger');
+    const context = request.container.resolve<IRequestContext>('IRequestContext');
+
+    const user = await userRepo.create(request.body);
+
+    await auditLogger.log('user_created', {
+      userId: user.id,
+      requestId: context.requestId,
+    });
+
+    return reply.status(201).send(user);
+  });
+};
+
+export default usersRoutes;`}
+  lang="typescript"
+  filename="src/routes/users.ts"
+/>
+
+<h2 id="services" class="toc-link">Service Definitions</h2>
+
+Define services with dependency injection:
+
+<CodeBlock
+  code={`// src/services/RequestContext.ts
+import { randomUUID } from 'crypto';
+
+export interface IRequestContext {
+  requestId: string;
+  startTime: Date;
+  userId?: string;
+  setUserId(userId: string): void;
+}
+
+export class RequestContext implements IRequestContext {
+  requestId = randomUUID();
+  startTime = new Date();
+  userId?: string;
+
+  setUserId(userId: string) {
+    this.userId = userId;
+  }
+}`}
+  lang="typescript"
+  filename="src/services/RequestContext.ts"
+/>
+
+<CodeBlock
+  code={`// src/services/AuditLogger.ts
+import { inject } from 'ts-ioc-container';
+import type { ILogger } from './Logger';
+import type { IRequestContext } from './RequestContext';
+
+export interface IAuditLogger {
+  log(action: string, data: Record<string, unknown>): Promise<void>;
+}
+
+export class AuditLogger implements IAuditLogger {
+  constructor(
+    @inject('ILogger') private logger: ILogger,
+    @inject('IRequestContext') private context: IRequestContext,
+  ) {}
+
+  async log(action: string, data: Record<string, unknown>): Promise<void> {
+    this.logger.info({
+      type: 'audit',
+      action,
+      requestId: this.context.requestId,
+      userId: this.context.userId,
+      timestamp: new Date().toISOString(),
+      ...data,
+    });
+  }
+}`}
+  lang="typescript"
+  filename="src/services/AuditLogger.ts"
+/>
+
+<CodeBlock
+  code={`// src/repositories/UserRepository.ts
+import { inject } from 'ts-ioc-container';
+import type { IDatabasePool } from '../services/DatabasePool';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface IUserRepository {
+  findAll(): Promise<User[]>;
+  findById(id: string): Promise<User | null>;
+  create(data: Omit<User, 'id'>): Promise<User>;
+}
+
+export class UserRepository implements IUserRepository {
+  constructor(
+    @inject('IDatabasePool') private db: IDatabasePool,
+  ) {}
+
+  async findAll(): Promise<User[]> {
+    return this.db.query<User>('SELECT * FROM users');
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const users = await this.db.query<User>(
+      'SELECT * FROM users WHERE id = $1',
+      [id]
+    );
+    return users[0] ?? null;
+  }
+
+  async create(data: Omit<User, 'id'>): Promise<User> {
+    const [user] = await this.db.query<User>(
+      'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+      [data.name, data.email]
+    );
+    return user;
+  }
+}`}
+  lang="typescript"
+  filename="src/repositories/UserRepository.ts"
+/>
+
+<h2 id="transaction-scope" class="toc-link">Transaction Scope</h2>
+
+Create a plugin for transaction-scoped containers:
+
+<CodeBlock
+  code={`// src/plugins/transaction.ts
+import { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import fp from 'fastify-plugin';
+import type { IContainer } from 'ts-ioc-container';
+import type { IDatabasePool, IConnection } from '../services/DatabasePool';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    transactionScope?: IContainer;
+    startTransaction(): Promise<IContainer>;
+    commitTransaction(): Promise<void>;
+    rollbackTransaction(): Promise<void>;
+  }
+}
+
+const transactionPlugin: FastifyPluginAsync = async (fastify) => {
+  fastify.decorateRequest('transactionScope', null);
+
+  fastify.decorateRequest('startTransaction', async function (this: FastifyRequest) {
+    const dbPool = this.container.resolve<IDatabasePool>('IDatabasePool');
+    const connection = await dbPool.getConnection();
+
+    // Create transaction scope
+    const txScope = this.container.createScope({ tags: ['transaction'] });
+
+    // Register connection in transaction scope
+    txScope.register('IConnection', () => connection);
+
+    await connection.beginTransaction();
+
+    this.transactionScope = txScope;
+    return txScope;
+  });
+
+  fastify.decorateRequest('commitTransaction', async function (this: FastifyRequest) {
+    if (!this.transactionScope) {
+      throw new Error('No transaction in progress');
+    }
+
+    const connection = this.transactionScope.resolve<IConnection>('IConnection');
+    await connection.commit();
+    this.transactionScope.dispose();
+    this.transactionScope = undefined;
+  });
+
+  fastify.decorateRequest('rollbackTransaction', async function (this: FastifyRequest) {
+    if (!this.transactionScope) return;
+
+    const connection = this.transactionScope.resolve<IConnection>('IConnection');
+    await connection.rollback();
+    this.transactionScope.dispose();
+    this.transactionScope = undefined;
+  });
+
+  // Auto-rollback on error
+  fastify.addHook('onError', async (request) => {
+    await request.rollbackTransaction();
+  });
+};
+
+export default fp(transactionPlugin, {
+  name: 'transaction',
+  dependencies: ['container'],
+});`}
+  lang="typescript"
+  filename="src/plugins/transaction.ts"
+/>
+
+<CodeBlock
+  code={`// src/routes/orders.ts
+import { FastifyPluginAsync } from 'fastify';
+import type { IOrderRepository } from '../repositories/OrderRepository';
+import type { IInventoryService } from '../services/InventoryService';
+import type { IAuditLogger } from '../services/AuditLogger';
+
+interface CreateOrderBody {
+  items: Array<{ productId: string; quantity: number }>;
+}
+
+const ordersRoutes: FastifyPluginAsync = async (fastify) => {
+  // POST /api/orders - with transaction
+  fastify.post<{ Body: CreateOrderBody }>('/', async (request, reply) => {
+    const txScope = await request.startTransaction();
+
+    try {
+      const orderRepo = txScope.resolve<IOrderRepository>('IOrderRepository');
+      const inventoryService = txScope.resolve<IInventoryService>('IInventoryService');
+      const auditLogger = txScope.resolve<IAuditLogger>('IAuditLogger');
+
+      // All operations within transaction
+      const order = await orderRepo.create(request.body);
+      await inventoryService.reserve(order.items);
+      await auditLogger.log('order_created', { orderId: order.id });
+
+      await request.commitTransaction();
+
+      return reply.status(201).send(order);
+    } catch (error) {
+      await request.rollbackTransaction();
+      throw error;
+    }
+  });
+};
+
+export default ordersRoutes;`}
+  lang="typescript"
+  filename="src/routes/orders.ts"
+/>
+
+<h2 id="schemas" class="toc-link">JSON Schema Validation</h2>
+
+Combine Fastify's schema validation with dependency injection:
+
+<CodeBlock
+  code={`// src/routes/users-with-schema.ts
+import { FastifyPluginAsync } from 'fastify';
+import type { IUserRepository } from '../repositories/UserRepository';
+import type { IAuditLogger } from '../services/AuditLogger';
+
+const userSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    name: { type: 'string' },
+    email: { type: 'string', format: 'email' },
+  },
+  required: ['name', 'email'],
+} as const;
+
+const createUserSchema = {
+  body: {
+    type: 'object',
+    properties: {
+      name: { type: 'string', minLength: 1 },
+      email: { type: 'string', format: 'email' },
+    },
+    required: ['name', 'email'],
+  },
+  response: {
+    201: userSchema,
+  },
+} as const;
+
+const usersRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.post(
+    '/',
+    { schema: createUserSchema },
+    async (request, reply) => {
+      const userRepo = request.container.resolve<IUserRepository>('IUserRepository');
+      const auditLogger = request.container.resolve<IAuditLogger>('IAuditLogger');
+
+      const { name, email } = request.body as { name: string; email: string };
+      const user = await userRepo.create({ name, email });
+
+      await auditLogger.log('user_created', { userId: user.id });
+
+      return reply.status(201).send(user);
+    }
+  );
+};
+
+export default usersRoutes;`}
+  lang="typescript"
+  filename="src/routes/users-with-schema.ts"
+/>
+
+<h2 id="testing" class="toc-link">Testing</h2>
+
+Test routes with mock containers:
+
+<CodeBlock
+  code={`// src/routes/users.test.ts
+import Fastify, { FastifyInstance } from 'fastify';
+import { Container, MetadataInjector, Registration } from 'ts-ioc-container';
+import containerPlugin from '../plugins/container';
+import usersRoutes from './users';
+
+describe('Users API', () => {
+  let app: FastifyInstance;
+  let mockUserRepo: jest.Mocked<IUserRepository>;
+  let mockAuditLogger: jest.Mocked<IAuditLogger>;
+
+  beforeEach(async () => {
+    // Create mocks
+    mockUserRepo = {
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      create: jest.fn(),
+    };
+
+    mockAuditLogger = {
+      log: jest.fn(),
+    };
+
+    // Create test container
+    const container = new Container(new MetadataInjector())
+      .addRegistration(
+        Registration.fromValue(mockUserRepo).to('IUserRepository'),
+        Registration.fromValue(mockAuditLogger).to('IAuditLogger'),
+        Registration.fromValue({ requestId: 'test-123' }).to('IRequestContext'),
+      );
+
+    // Build app with test container
+    app = Fastify();
+    await app.register(containerPlugin, { container });
+    await app.register(usersRoutes, { prefix: '/api/users' });
+    await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  describe('GET /api/users', () => {
+    it('should return all users', async () => {
+      const users = [
+        { id: '1', name: 'Alice', email: 'alice@example.com' },
+        { id: '2', name: 'Bob', email: 'bob@example.com' },
+      ];
+      mockUserRepo.findAll.mockResolvedValue(users);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/users',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual(users);
+      expect(mockAuditLogger.log).toHaveBeenCalledWith(
+        'users_listed',
+        { count: 2 }
+      );
+    });
+  });
+
+  describe('POST /api/users', () => {
+    it('should create a new user', async () => {
+      const newUser = { id: '3', name: 'Charlie', email: 'charlie@example.com' };
+      mockUserRepo.create.mockResolvedValue(newUser);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/users',
+        payload: { name: 'Charlie', email: 'charlie@example.com' },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(JSON.parse(response.body)).toEqual(newUser);
+    });
+  });
+
+  describe('GET /api/users/:id', () => {
+    it('should return user by id', async () => {
+      const user = { id: '1', name: 'Alice', email: 'alice@example.com' };
+      mockUserRepo.findById.mockResolvedValue(user);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/users/1',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual(user);
+    });
+
+    it('should return 404 when user not found', async () => {
+      mockUserRepo.findById.mockResolvedValue(null);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/users/999',
+      });
+
+      expect(response.statusCode).toBe(404);
+    });
+  });
+});`}
+  lang="typescript"
+  filename="src/routes/users.test.ts"
+/>
+
+<h2 id="complete-example" class="toc-link">Complete Example</h2>
+
+Here's a complete working example:
+
+<CodeBlock
+  code={`// Complete Fastify example with ts-ioc-container
+
+import 'reflect-metadata';
+import Fastify, { FastifyRequest } from 'fastify';
+import fp from 'fastify-plugin';
+import {
+  Container,
+  MetadataInjector,
+  Registration,
+  singleton,
+  scope,
+  inject,
+} from 'ts-ioc-container';
+import type { IContainer } from 'ts-ioc-container';
+
+// ============ Type Definitions ============
+declare module 'fastify' {
+  interface FastifyInstance {
+    container: IContainer;
+  }
+  interface FastifyRequest {
+    container: IContainer;
+  }
+}
+
+// ============ Services ============
+interface ILogger {
+  info(message: string, data?: Record<string, unknown>): void;
+}
+
+class Logger implements ILogger {
+  info(message: string, data?: Record<string, unknown>) {
+    console.log(\`[INFO] \${message}\`, data ?? '');
+  }
+}
+
+interface IUserRepository {
+  findAll(): Promise<User[]>;
+  create(data: { name: string; email: string }): Promise<User>;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+class UserRepository implements IUserRepository {
+  private users: User[] = [
+    { id: '1', name: 'Alice', email: 'alice@example.com' },
+    { id: '2', name: 'Bob', email: 'bob@example.com' },
+  ];
+
+  async findAll() {
+    return this.users;
+  }
+
+  async create(data: { name: string; email: string }) {
+    const user = { id: String(this.users.length + 1), ...data };
+    this.users.push(user);
+    return user;
+  }
+}
+
+interface IAuditLogger {
+  log(action: string, data: Record<string, unknown>): void;
+}
+
+class AuditLogger implements IAuditLogger {
+  constructor(@inject('ILogger') private logger: ILogger) {}
+
+  log(action: string, data: Record<string, unknown>) {
+    this.logger.info(\`AUDIT: \${action}\`, data);
+  }
+}
+
+// ============ Container Setup ============
+function createAppContainer(): IContainer {
+  return new Container(new MetadataInjector(), { tags: ['application'] })
+    .addRegistration(
+      Registration.fromClass(Logger).pipe(singleton()).to('ILogger')
+    )
+    .addRegistration(
+      Registration.fromClass(UserRepository)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IUserRepository'),
+      Registration.fromClass(AuditLogger)
+        .pipe(scope((s) => s.hasTag('request')))
+        .pipe(singleton())
+        .to('IAuditLogger')
+    );
+}
+
+// ============ Container Plugin ============
+const containerPlugin = fp(async (fastify, opts: { container: IContainer }) => {
+  fastify.decorate('container', opts.container);
+  fastify.decorateRequest('container', null);
+
+  fastify.addHook('onRequest', async (request) => {
+    request.container = opts.container.createScope({ tags: ['request'] });
+  });
+
+  fastify.addHook('onResponse', async (request) => {
+    request.container.dispose();
+  });
+
+  fastify.addHook('onClose', async () => {
+    opts.container.dispose();
+  });
+});
+
+// ============ Application ============
+async function buildApp() {
+  const fastify = Fastify({ logger: true });
+  const container = createAppContainer();
+
+  await fastify.register(containerPlugin, { container });
+
+  // Routes
+  fastify.get('/users', async (request) => {
+    const userRepo = request.container.resolve<IUserRepository>('IUserRepository');
+    const auditLogger = request.container.resolve<IAuditLogger>('IAuditLogger');
+
+    const users = await userRepo.findAll();
+    auditLogger.log('users_listed', { count: users.length });
+
+    return users;
+  });
+
+  fastify.post<{ Body: { name: string; email: string } }>('/users', async (request, reply) => {
+    const userRepo = request.container.resolve<IUserRepository>('IUserRepository');
+    const auditLogger = request.container.resolve<IAuditLogger>('IAuditLogger');
+
+    const user = await userRepo.create(request.body);
+    auditLogger.log('user_created', { userId: user.id });
+
+    return reply.status(201).send(user);
+  });
+
+  return fastify;
+}
+
+// ============ Start Server ============
+buildApp().then((app) => {
+  app.listen({ port: 3000 }, (err) => {
+    if (err) {
+      app.log.error(err);
+      process.exit(1);
+    }
+  });
+});`}
+  lang="typescript"
+  filename="Complete Fastify Example"
+/>
+
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
+
+### Scope Naming Convention
+
+| Scope | Tag | Use Case |
+|-------|-----|----------|
+| Application | `application` | Global singletons (pools, config, loggers) |
+| Request | `request` | Per-request services (context, repos) |
+| Transaction | `transaction` | Database transaction boundaries |
+
+### Memory Management
+
+- Use `onResponse` hook for normal cleanup
+- Use `onError` hook for error case cleanup  
+- Use `onClose` hook for application shutdown
+- Transaction scopes should be explicitly committed/rolled back
+
+### Fastify-Specific Patterns
+
+1. **Use `fastify-plugin`** to properly encapsulate plugins
+2. **Decorate instance and request** for type-safe access
+3. **Register plugins in dependency order** (container before transaction)
+4. **Use Fastify's injection system** with `app.inject()` for testing
+
+<h2 id="api-reference" class="toc-link">API Reference</h2>
+
+### Container Plugin
+
+```typescript
+interface ContainerPluginOptions {
+  container: IContainer;
+}
+
+// Register with:
+await fastify.register(containerPlugin, { container });
+```
+
+### Request Decorations
+
+```typescript
+// Access container in route handlers
+request.container.resolve<T>(key)
+
+// Transaction methods (with transaction plugin)
+await request.startTransaction()
+await request.commitTransaction()
+await request.rollbackTransaction()
+```
+
+### Instance Decorations
+
+```typescript
+// Access app container
+fastify.container.resolve<T>(key)
+```
+

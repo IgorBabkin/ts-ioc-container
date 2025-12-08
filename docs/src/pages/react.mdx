@@ -1,0 +1,576 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: React
+description: React integration - Using ts-ioc-container with React applications
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+
+# React Integration
+
+This guide shows how to integrate `ts-ioc-container` with React applications using Context and hooks. The integration provides a clean, declarative way to manage dependency injection scopes in your React component tree.
+
+<h2 id="overview" class="toc-link">Overview</h2>
+
+React integration consists of three main parts:
+
+- **ScopeContext** - React context that holds the current container scope
+- **Scope** - Component that creates child scopes with tags
+- **useInject** - Hook to resolve dependencies from the current scope
+
+### Scope Hierarchy in React
+
+In frontend applications, we typically use these scope levels:
+
+- **Application scope** - Root container, global services (API clients, auth, theme)
+- **Page scope** - Per-page services (page state, data loaders)
+- **Widget scope** - Per-component services (form state, local caches)
+
+<h2 id="setup" class="toc-link">Setup</h2>
+
+First, create the React integration utilities:
+
+<CodeBlock
+  code={`// src/di/ScopeContext.ts
+import { createContext, useContext } from 'react';
+import type { IContainer } from 'ts-ioc-container';
+
+export const ScopeContext = createContext<IContainer | null>(null);
+
+export function useContainer(): IContainer {
+  const container = useContext(ScopeContext);
+  if (!container) {
+    throw new Error('useContainer must be used within a ScopeContext.Provider');
+  }
+  return container;
+}`}
+  lang="typescript"
+  filename="src/di/ScopeContext.ts"
+/>
+
+<CodeBlock
+  code={`// src/di/useInject.ts
+import { useContainer } from './ScopeContext';
+import type { constructor, DependencyKey } from 'ts-ioc-container';
+
+/**
+ * Hook to resolve a dependency from the current scope
+ * @param key - The dependency key or class constructor
+ * @returns The resolved dependency instance
+ */
+export function useInject<T>(key: DependencyKey | constructor<T>): T {
+  const container = useContainer();
+  return container.resolve<T>(key);
+}`}
+  lang="typescript"
+  filename="src/di/useInject.ts"
+/>
+
+<CodeBlock
+  code={`// src/di/Scope.tsx
+import React, { useEffect, useMemo } from 'react';
+import { ScopeContext, useContainer } from './ScopeContext';
+import type { Tag } from 'ts-ioc-container';
+
+interface ScopeProps {
+  tags: Tag[];
+  children: React.ReactNode;
+}
+
+/**
+ * Creates a child scope with the specified tags.
+ * The scope is automatically disposed when the component unmounts.
+ */
+export function Scope({ tags, children }: ScopeProps) {
+  const parentContainer = useContainer();
+
+  const childScope = useMemo(
+    () => parentContainer.createScope({ tags }),
+    [parentContainer, ...tags]
+  );
+
+  useEffect(() => {
+    return () => {
+      childScope.dispose();
+    };
+  }, [childScope]);
+
+  return (
+    <ScopeContext.Provider value={childScope}>
+      {children}
+    </ScopeContext.Provider>
+  );
+}`}
+  lang="tsx"
+  filename="src/di/Scope.tsx"
+/>
+
+<CodeBlock
+  code={`// src/di/index.ts
+export { ScopeContext, useContainer } from './ScopeContext';
+export { useInject } from './useInject';
+export { Scope } from './Scope';`}
+  lang="typescript"
+  filename="src/di/index.ts"
+/>
+
+<h2 id="container-setup" class="toc-link">Container Setup</h2>
+
+Create your application container with registrations scoped to different levels:
+
+<CodeBlock
+  code={`// src/di/container.ts
+import 'reflect-metadata';
+import {
+  Container,
+  Registration,
+  MetadataInjector,
+  singleton,
+  scope,
+} from 'ts-ioc-container';
+import { ApiClient } from '../services/ApiClient';
+import { AuthService } from '../services/AuthService';
+import { ThemeService } from '../services/ThemeService';
+import { PageDataLoader } from '../services/PageDataLoader';
+import { FormStateService } from '../services/FormStateService';
+
+export function createAppContainer() {
+  return new Container(new MetadataInjector())
+    .addRegistration(
+      // Application-scoped services (singletons at root level)
+      Registration.fromClass(ApiClient)
+        .pipe(singleton())
+        .to('IApiClient'),
+      Registration.fromClass(AuthService)
+        .pipe(singleton())
+        .to('IAuthService'),
+      Registration.fromClass(ThemeService)
+        .pipe(singleton())
+        .to('IThemeService'),
+    )
+    .addRegistration(
+      // Page-scoped services (created fresh for each page)
+      Registration.fromClass(PageDataLoader)
+        .pipe(scope((s) => s.hasTag('page')))
+        .pipe(singleton())
+        .to('IPageDataLoader'),
+    )
+    .addRegistration(
+      // Widget-scoped services (created fresh for each widget instance)
+      Registration.fromClass(FormStateService)
+        .pipe(scope((s) => s.hasTag('widget')))
+        .to('IFormStateService'),
+    );
+}`}
+  lang="typescript"
+  filename="src/di/container.ts"
+/>
+
+<h2 id="app-integration" class="toc-link">App Integration</h2>
+
+Wrap your application with the root scope provider:
+
+<CodeBlock
+  code={`// src/App.tsx
+import React, { useMemo } from 'react';
+import { ScopeContext } from './di';
+import { createAppContainer } from './di/container';
+import { Router } from './Router';
+
+export function App() {
+  const container = useMemo(() => createAppContainer(), []);
+
+  return (
+    <ScopeContext.Provider value={container}>
+      <Router />
+    </ScopeContext.Provider>
+  );
+}`}
+  lang="tsx"
+  filename="src/App.tsx"
+/>
+
+<h2 id="page-scope" class="toc-link">Page Scope</h2>
+
+Create page-level scopes for page-specific services:
+
+<CodeBlock
+  code={`// src/pages/UserProfilePage.tsx
+import React, { useEffect } from 'react';
+import { Scope, useInject } from '../di';
+import { UserWidget } from '../widgets/UserWidget';
+import type { IPageDataLoader } from '../services/PageDataLoader';
+
+function UserProfileContent() {
+  const dataLoader = useInject<IPageDataLoader>('IPageDataLoader');
+
+  useEffect(() => {
+    dataLoader.loadUserProfile();
+  }, [dataLoader]);
+
+  return (
+    <div className="user-profile-page">
+      <h1>User Profile</h1>
+      {/* Widgets get their own scope */}
+      <Scope tags={['widget']}>
+        <UserWidget />
+      </Scope>
+    </div>
+  );
+}
+
+export function UserProfilePage() {
+  return (
+    <Scope tags={['page']}>
+      <UserProfileContent />
+    </Scope>
+  );
+}`}
+  lang="tsx"
+  filename="src/pages/UserProfilePage.tsx"
+/>
+
+<h2 id="widget-scope" class="toc-link">Widget Scope</h2>
+
+Widgets can have isolated scopes with their own service instances:
+
+<CodeBlock
+  code={`// src/widgets/UserWidget.tsx
+import React from 'react';
+import { Scope, useInject } from '../di';
+import type { IFormStateService } from '../services/FormStateService';
+
+function EditUserForm() {
+  const formState = useInject<IFormStateService>('IFormStateService');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    formState.submit();
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={formState.getValue('name')}
+        onChange={(e) => formState.setValue('name', e.target.value)}
+      />
+      <button type="submit">Save</button>
+    </form>
+  );
+}
+
+export function UserWidget() {
+  return (
+    <div className="user-widget">
+      {/* Each widget gets its own form state */}
+      <Scope tags={['widget']}>
+        <EditUserForm />
+      </Scope>
+    </div>
+  );
+}`}
+  lang="tsx"
+  filename="src/widgets/UserWidget.tsx"
+/>
+
+<h2 id="using-tokens" class="toc-link">Using Tokens</h2>
+
+For type-safe dependency injection, use tokens with `useInject`:
+
+<CodeBlock
+  code={`// src/di/tokens.ts
+import { SingleToken } from 'ts-ioc-container';
+import type { IApiClient } from '../services/ApiClient';
+import type { IAuthService } from '../services/AuthService';
+import type { IThemeService } from '../services/ThemeService';
+
+export const ApiClientToken = new SingleToken<IApiClient>('IApiClient');
+export const AuthServiceToken = new SingleToken<IAuthService>('IAuthService');
+export const ThemeServiceToken = new SingleToken<IThemeService>('IThemeService');`}
+  lang="typescript"
+  filename="src/di/tokens.ts"
+/>
+
+<CodeBlock
+  code={`// src/hooks/useAuth.ts
+import { useInject } from '../di';
+import { AuthServiceToken } from '../di/tokens';
+
+export function useAuth() {
+  const authService = useInject(AuthServiceToken);
+
+  return {
+    user: authService.getCurrentUser(),
+    login: authService.login.bind(authService),
+    logout: authService.logout.bind(authService),
+    isAuthenticated: authService.isAuthenticated(),
+  };
+}`}
+  lang="typescript"
+  filename="src/hooks/useAuth.ts"
+/>
+
+<h2 id="complete-example" class="toc-link">Complete Example</h2>
+
+Here's a complete example showing the scope hierarchy in action:
+
+<CodeBlock
+  code={`// Complete example: Todo application with scoped services
+import React, { useMemo, useEffect, useState } from 'react';
+import {
+  Container,
+  MetadataInjector,
+  Registration,
+  singleton,
+  scope,
+  inject,
+} from 'ts-ioc-container';
+
+// ============ DI Setup ============
+import { createContext, useContext } from 'react';
+import type { IContainer, constructor, DependencyKey } from 'ts-ioc-container';
+
+const ScopeContext = createContext<IContainer | null>(null);
+
+function useContainer(): IContainer {
+  const container = useContext(ScopeContext);
+  if (!container) throw new Error('No container found');
+  return container;
+}
+
+function useInject<T>(key: DependencyKey | constructor<T>): T {
+  return useContainer().resolve<T>(key);
+}
+
+function Scope({ tags, children }: { tags: string[]; children: React.ReactNode }) {
+  const parent = useContainer();
+  const scope = useMemo(() => parent.createScope({ tags }), [parent, ...tags]);
+  useEffect(() => () => scope.dispose(), [scope]);
+  return <ScopeContext.Provider value={scope}>{children}</ScopeContext.Provider>;
+}
+
+// ============ Services ============
+interface ITodoApi {
+  fetchTodos(): Promise<{ id: number; text: string }[]>;
+}
+
+class TodoApi implements ITodoApi {
+  async fetchTodos() {
+    return [
+      { id: 1, text: 'Learn ts-ioc-container' },
+      { id: 2, text: 'Build awesome apps' },
+    ];
+  }
+}
+
+interface ITodoPageService {
+  todos: { id: number; text: string }[];
+  loadTodos(): Promise<void>;
+}
+
+class TodoPageService implements ITodoPageService {
+  todos: { id: number; text: string }[] = [];
+
+  constructor(@inject('ITodoApi') private api: ITodoApi) {}
+
+  async loadTodos() {
+    this.todos = await this.api.fetchTodos();
+  }
+}
+
+interface ITodoFormService {
+  draft: string;
+  setDraft(value: string): void;
+}
+
+class TodoFormService implements ITodoFormService {
+  draft = '';
+  setDraft(value: string) {
+    this.draft = value;
+  }
+}
+
+// ============ Container ============
+function createContainer() {
+  return new Container(new MetadataInjector())
+    .addRegistration(
+      Registration.fromClass(TodoApi).pipe(singleton()).to('ITodoApi')
+    )
+    .addRegistration(
+      Registration.fromClass(TodoPageService)
+        .pipe(scope((s) => s.hasTag('page')))
+        .pipe(singleton())
+        .to('ITodoPageService')
+    )
+    .addRegistration(
+      Registration.fromClass(TodoFormService)
+        .pipe(scope((s) => s.hasTag('widget')))
+        .to('ITodoFormService')
+    );
+}
+
+// ============ Components ============
+function TodoForm() {
+  const formService = useInject<ITodoFormService>('ITodoFormService');
+  const [draft, setDraft] = useState(formService.draft);
+
+  return (
+    <input
+      value={draft}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        formService.setDraft(e.target.value);
+      }}
+      placeholder="New todo..."
+    />
+  );
+}
+
+function TodoList() {
+  const pageService = useInject<ITodoPageService>('ITodoPageService');
+  const [todos, setTodos] = useState(pageService.todos);
+
+  useEffect(() => {
+    pageService.loadTodos().then(() => setTodos([...pageService.todos]));
+  }, [pageService]);
+
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>{todo.text}</li>
+      ))}
+    </ul>
+  );
+}
+
+function TodoPage() {
+  return (
+    <Scope tags={['page']}>
+      <h1>Todos</h1>
+      <TodoList />
+      <Scope tags={['widget']}>
+        <TodoForm />
+      </Scope>
+    </Scope>
+  );
+}
+
+function App() {
+  const container = useMemo(() => createContainer(), []);
+
+  return (
+    <ScopeContext.Provider value={container}>
+      <TodoPage />
+    </ScopeContext.Provider>
+  );
+}`}
+  lang="tsx"
+  filename="Complete Todo App Example"
+/>
+
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
+
+### Scope Naming Convention
+
+Use consistent scope names across your application:
+
+| Scope | Tag | Use Case |
+|-------|-----|----------|
+| Application | `application` | Global singletons (API clients, auth, theme) |
+| Page | `page` | Page-level state and data loaders |
+| Widget | `widget` | Component-local services and form state |
+
+### Memory Management
+
+- Always dispose scopes when components unmount (handled automatically by the `Scope` component)
+- Use `singleton()` for services that should be cached within a scope
+- Avoid storing React state in services - use services for business logic only
+
+### Testing
+
+When testing components, provide a mock container:
+
+<CodeBlock
+  code={`// src/__tests__/TodoList.test.tsx
+import { render, screen } from '@testing-library/react';
+import { Container, MetadataInjector, Registration } from 'ts-ioc-container';
+import { ScopeContext } from '../di';
+import { TodoList } from '../components/TodoList';
+
+test('renders todos', async () => {
+  const mockPageService = {
+    todos: [{ id: 1, text: 'Test todo' }],
+    loadTodos: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const container = new Container(new MetadataInjector())
+    .addRegistration(
+      Registration.fromValue(mockPageService).to('ITodoPageService')
+    );
+
+  render(
+    <ScopeContext.Provider value={container}>
+      <TodoList />
+    </ScopeContext.Provider>
+  );
+
+  expect(await screen.findByText('Test todo')).toBeInTheDocument();
+});`}
+  lang="tsx"
+  filename="Testing with mock container"
+/>
+
+### Avoiding Common Pitfalls
+
+1. **Don't resolve in render** - Call `useInject` at the top of your component, not inside render logic
+2. **Don't create containers in render** - Use `useMemo` for container creation
+3. **Don't forget to dispose** - The `Scope` component handles this, but if creating scopes manually, always dispose
+
+<h2 id="api-reference" class="toc-link">API Reference</h2>
+
+### ScopeContext
+
+React context for the current IoC container scope.
+
+```typescript
+const ScopeContext = createContext<IContainer | null>(null);
+```
+
+### useContainer
+
+Hook to get the current container from context.
+
+```typescript
+function useContainer(): IContainer
+```
+
+Throws an error if used outside of a `ScopeContext.Provider`.
+
+### useInject
+
+Hook to resolve a dependency from the current scope.
+
+```typescript
+function useInject<T>(key: DependencyKey | constructor<T>): T
+```
+
+- `key` - The dependency key (string) or class constructor
+- Returns the resolved dependency instance
+
+### Scope
+
+Component that creates a child scope with tags.
+
+```typescript
+interface ScopeProps {
+  tags: Tag[];
+  children: React.ReactNode;
+}
+
+function Scope({ tags, children }: ScopeProps): JSX.Element
+```
+
+- `tags` - Array of scope tags (e.g., `['page']`, `['widget']`)
+- `children` - Child components that will have access to the new scope
+- Automatically disposes the scope on unmount
+
