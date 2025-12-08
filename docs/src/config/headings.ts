@@ -214,5 +214,16 @@ export const pageHeadings: Record<string, Heading[]> = {
  */
 export function getHeadingsForPath(pathname: string): Heading[] {
   const normalized = pathname.replace(/\/$/, "") || "/";
-  return pageHeadings[normalized] || pageHeadings[`${normalized}/`] || [];
+  const headings =
+    pageHeadings[normalized] || pageHeadings[`${normalized}/`] || [];
+
+  // Debug logging for development
+  if (headings.length === 0 && import.meta.env.DEV) {
+    console.log(
+      `[TOC Debug] No headings found for: "${pathname}" (normalized: "${normalized}")`,
+    );
+    console.log("[TOC Debug] Available paths:", Object.keys(pageHeadings));
+  }
+
+  return headings;
 }
