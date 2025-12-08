@@ -13,7 +13,7 @@ import containerModuleSpecCode from "../../../__tests__/readme/containerModule.s
 
 Registrations connect providers to the container with keys and configuration. They can be created using decorators or the fluent API, providing flexibility in how you organize your dependency configuration.
 
-<h2 id="registration-flow">Registration Flow</h2>
+<h2 id="registration-flow" class="toc-link">Registration Flow</h2>
 
 The following diagram shows how registrations are processed and applied to containers:
 
@@ -21,7 +21,7 @@ The following diagram shows how registrations are processed and applied to conta
   <div class="mermaid" set:html={registrationFlowDiagram} />
 </div>
 
-<h2 id="registration-methods">Registration Methods</h2>
+<h2 id="registration-methods" class="toc-link">Registration Methods</h2>
 
 There are several ways to create and apply registrations:
 
@@ -29,31 +29,31 @@ There are several ways to create and apply registrations:
 - **Fluent API**: Using `Registration` class methods
 - **Direct registration**: Using `container.register()`
 
-<h2 id="decorator-based-registration">Decorator-Based Registration</h2>
+<h2 id="decorator-based-registration" class="toc-link">Decorator-Based Registration</h2>
 
 The `@register` decorator provides a declarative way to register classes. This is the most convenient approach for most use cases.
 
 <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
-<h2 id="fluent-api-registration">Fluent API Registration</h2>
+<h2 id="fluent-api-registration" class="toc-link">Fluent API Registration</h2>
 
 The fluent API provides more control and is useful when you need dynamic registration or want to avoid decorators.
 
 <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
-<h2 id="keys">Keys</h2>
+<h2 id="keys" class="toc-link">Keys</h2>
 
 Keys identify dependencies in the container. They can be strings, symbols, or tokens. Understanding how keys work is essential for effective dependency management.
 
 <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
-<h2 id="scope-registration">Scope Registration</h2>
+<h2 id="scope-registration" class="toc-link">Scope Registration</h2>
 
 Scope match rules (`ScopeMatchRule`) control which scopes a provider is available in. This allows you to register different implementations for different environments or contexts.
 
 <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
-<h2 id="registration-pipeline">Registration Pipeline</h2>
+<h2 id="registration-pipeline" class="toc-link">Registration Pipeline</h2>
 
 Registrations support the pipeline pattern, allowing you to chain multiple transformations:
 
@@ -69,13 +69,13 @@ const container = new Container()
       .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
   );`} lang="typescript" />
 
-<h2 id="container-modules">Container Modules</h2>
+<h2 id="container-modules" class="toc-link">Container Modules</h2>
 
 Container modules encapsulate registration logic, making it easy to organize and compose your dependency configuration.
 
 <CodeBlock code={containerModuleSpecCode} lang="typescript" filename="__tests__/readme/containerModule.spec.ts" />
 
-<h2 id="best-practices">Best Practices</h2>
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
 
 - **Use decorators for simple cases** - When you have straightforward class registrations
 - **Use fluent API for dynamic registration** - When keys or providers are determined at runtime
@@ -85,7 +85,7 @@ Container modules encapsulate registration logic, making it easy to organize and
 - **Export tokens as constants** - Create keys once and reuse them
 - **Use aliases for grouping** - When you need multiple implementations
 
-<h2 id="registration-lifecycle">Registration Lifecycle</h2>
+<h2 id="registration-lifecycle" class="toc-link">Registration Lifecycle</h2>
 
 1. **Creation**: Registration is created with a provider
 2. **Configuration**: Keys, scopes, and features are configured

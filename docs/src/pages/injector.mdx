@@ -15,7 +15,7 @@ import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spe
 
 The injector determines how dependencies are passed to constructors. The container supports three injection strategies, each suited for different use cases and coding styles.
 
-<h2 id="injection-strategies">Injection Strategies</h2>
+<h2 id="injection-strategies" class="toc-link">Injection Strategies</h2>
 
 The container supports three injection strategies, each implementing the `IInjector` interface:
 
@@ -23,13 +23,13 @@ The container supports three injection strategies, each implementing the `IInjec
   <div class="mermaid" set:html={injectionStrategiesDiagram} />
 </div>
 
-<h2 id="available-injectors">Available Injectors</h2>
+<h2 id="available-injectors" class="toc-link">Available Injectors</h2>
 
 - **MetadataInjector** (default): Uses `@inject` decorators with reflection metadata
 - **ProxyInjector**: Injects dependencies as a dictionary object, perfect for destructuring
 - **SimpleInjector**: Passes the container as the first constructor argument for manual resolution
 
-<h2 id="metadata-injector">Metadata Injector</h2>
+<h2 id="metadata-injector" class="toc-link">Metadata Injector</h2>
 
 The default injector uses TypeScript decorators and reflection metadata to inject dependencies. This provides a clean, declarative syntax that's easy to read and maintain.
 
@@ -45,7 +45,7 @@ The default injector uses TypeScript decorators and reflection metadata to injec
 
 The Metadata Injector also supports property injection using hooks. This is useful when constructor injection isn't possible or when you need to inject into base class properties. See the [Hooks](/ts-ioc-container/hooks#property-injection) chapter for detailed information about property injection.
 
-<h2 id="simple-injector">Simple Injector</h2>
+<h2 id="simple-injector" class="toc-link">Simple Injector</h2>
 
 The Simple Injector passes the container instance as the first constructor parameter, giving you direct access to resolve dependencies manually. This approach is useful when you need more control over dependency resolution.
 
@@ -62,7 +62,7 @@ The Simple Injector passes the container instance as the first constructor param
 - Legacy code integration
 - Framework integration where container access is needed
 
-<h2 id="proxy-injector">Proxy Injector</h2>
+<h2 id="proxy-injector" class="toc-link">Proxy Injector</h2>
 
 The Proxy Injector matches constructor parameter names to dependency keys and injects them as a dictionary object. This is useful for object destructuring patterns and functional programming styles.
 
@@ -79,7 +79,7 @@ The Proxy Injector matches constructor parameter names to dependency keys and in
 - Functional programming styles
 - When you prefer explicit parameter names over decorators
 
-<h2 id="choosing-the-right-injector">Choosing the Right Injector</h2>
+<h2 id="choosing-the-right-injector" class="toc-link">Choosing the Right Injector</h2>
 
 <div class="table-responsive mb-4">
   <table class="table table-striped table-hover">
@@ -114,11 +114,11 @@ The Proxy Injector matches constructor parameter names to dependency keys and in
   </table>
 </div>
 
-<h2 id="strategy-pattern">Strategy Pattern</h2>
+<h2 id="strategy-pattern" class="toc-link">Strategy Pattern</h2>
 
 The `IInjector` interface uses the Strategy pattern, allowing different injection strategies to be used interchangeably. This makes the system flexible and extensible.
 
-<h2 id="custom-injectors">Custom Injectors</h2>
+<h2 id="custom-injectors" class="toc-link">Custom Injectors</h2>
 
 You can create custom injectors by implementing the `Injector` interface. This allows you to implement injection strategies tailored to your specific needs.
 
@@ -137,7 +137,7 @@ Custom injectors are one of the key extension points in the architecture. They a
 - Integrate with legacy codebases
 - Support alternative dependency injection styles
 
-<h2 id="best-practices">Best Practices</h2>
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
 
 - **Use MetadataInjector by default** - It provides the best developer experience for most TypeScript projects
 - **Choose SimpleInjector for manual control** - When you need explicit control over dependency resolution

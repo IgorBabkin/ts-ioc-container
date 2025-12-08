@@ -10,7 +10,7 @@ import CodeBlock from "../components/CodeBlock.astro";
 
 The metadata module provides a low-level API for storing and retrieving metadata on classes, methods, and parameters using the `reflect-metadata` library. This system forms the foundation for decorators like `@register`, `@inject`, `@onConstruct`, and `@onDispose`.
 
-<h2 id="what-is-metadata">What is Metadata?</h2>
+<h2 id="what-is-metadata" class="toc-link">What is Metadata?</h2>
 
 Metadata is data about your code that can be attached to classes, methods, and parameters at design time. The TypeScript compiler with `reflect-metadata` enables reading and writing this metadata at runtime. The metadata system allows you to:
 
@@ -22,7 +22,7 @@ Metadata is data about your code that can be attached to classes, methods, and p
 
 This library provides a simplified, functional API over `reflect-metadata` that supports accumulation patterns through mapper functions.
 
-<h2 id="prerequisites">Prerequisites</h2>
+<h2 id="prerequisites" class="toc-link">Prerequisites</h2>
 
 To use the metadata system, you need:
 
@@ -43,7 +43,7 @@ import 'reflect-metadata';
   lang="typescript"
 />
 
-<h2 id="api-overview">API Overview</h2>
+<h2 id="api-overview" class="toc-link">API Overview</h2>
 
 The metadata module exports six functions organized in pairs:
 
@@ -51,7 +51,7 @@ The metadata module exports six functions organized in pairs:
 - **Parameter Metadata**: `setParameterMetadata` and `getParameterMetadata`
 - **Method Metadata**: `setMethodMetadata` and `getMethodMetadata`
 
-<h2 id="class-metadata">Class Metadata</h2>
+<h2 id="class-metadata" class="toc-link">Class Metadata</h2>
 
 Class metadata is stored on the class constructor itself. Use this to attach configuration, tags, or registration information to classes.
 
@@ -91,7 +91,7 @@ console.log(tags); // ['api', 'service']`}
   lang="typescript"
 />
 
-<h2 id="parameter-metadata">Parameter Metadata</h2>
+<h2 id="parameter-metadata" class="toc-link">Parameter Metadata</h2>
 
 Parameter metadata is stored as an array indexed by parameter position. This is crucial for constructor and method parameter injection.
 
@@ -134,7 +134,7 @@ console.log(metadata); // ['config', 'logger']`}
   lang="typescript"
 />
 
-<h2 id="method-metadata">Method Metadata</h2>
+<h2 id="method-metadata" class="toc-link">Method Metadata</h2>
 
 Method metadata is stored per method on the class. Use this for hooks, validators, middleware, or any method-level configuration.
 
@@ -178,7 +178,7 @@ console.log(middleware); // ['validate', 'auth']`}
   lang="typescript"
 />
 
-<h2 id="how-it-works">How It Works</h2>
+<h2 id="how-it-works" class="toc-link">How It Works</h2>
 
 The metadata system is built on top of `reflect-metadata`:
 
@@ -186,7 +186,7 @@ The metadata system is built on top of `reflect-metadata`:
 - **Parameter metadata** stores an array where each index corresponds to a parameter position
 - **Method metadata** uses `Reflect.defineMetadata` with the class constructor and property key
 
-<h2 id="usage-in-container">Usage in ts-ioc-container</h2>
+<h2 id="usage-in-container" class="toc-link">Usage in ts-ioc-container</h2>
 
 The metadata system powers the core decorators:
 
@@ -194,7 +194,7 @@ The metadata system powers the core decorators:
 - **@inject** - Uses `setParameterMetadata` to specify constructor dependencies
 - **@onConstruct/@onDispose/@hook** - Use `setMethodMetadata` for lifecycle hooks
 
-<h2 id="best-practices">Best Practices</h2>
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
 
 - **Use unique metadata keys** - Namespace your keys to avoid collisions (e.g., `'mylib:feature'`)
 - **Document metadata keys** - Create constants for keys and document their purpose
@@ -203,7 +203,7 @@ The metadata system powers the core decorators:
 - **Handle undefined gracefully** - Always check if metadata exists before using it
 - **Don't overuse metadata** - Prefer explicit configuration over implicit metadata when possible
 
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations" class="toc-link">Limitations</h2>
 
 - **Requires reflect-metadata** - Adds a runtime dependency and polyfill
 - **TypeScript experimental feature** - Decorators are still experimental in TypeScript
@@ -211,7 +211,7 @@ The metadata system powers the core decorators:
 - **Reflection overhead** - There's a small performance cost to reading metadata
 - **Not serializable** - Metadata doesn't survive JSON serialization
 
-<h2 id="alternative-approaches">Alternative Approaches</h2>
+<h2 id="alternative-approaches" class="toc-link">Alternative Approaches</h2>
 
 If you want to avoid metadata, consider:
 

@@ -15,11 +15,11 @@ import visibilitySpecCode from "../../../__tests__/readme/visibility.spec.ts?raw
 
 Providers are factories that create dependency instances. They can be configured with various features like singletons, argument binding, visibility control, aliases, and decorators. Understanding providers is key to mastering the IoC container.
 
-<h2 id="factory-pattern">Factory Pattern</h2>
+<h2 id="factory-pattern" class="toc-link">Factory Pattern</h2>
 
 Providers implement the Factory pattern, encapsulating the creation logic of dependencies. This allows for complex instantiation logic while keeping the container simple.
 
-<h2 id="provider-types">Provider Types</h2>
+<h2 id="provider-types" class="toc-link">Provider Types</h2>
 
 There are three main ways to create providers:
 
@@ -27,7 +27,7 @@ There are three main ways to create providers:
 - **Value Provider**: `Provider.fromValue(value)` - Returns a constant value
 - **Factory Provider**: `new Provider((container, ...args) => ...)` - Custom factory function
 
-<h2 id="singleton">Singleton</h2>
+<h2 id="singleton" class="toc-link">Singleton</h2>
 
 Singleton providers ensure only one instance is created per scope. This is perfect for services like loggers, database connections, or configuration managers.
 
@@ -61,7 +61,7 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
 - **ConfigService** - Application configuration loaded once
 - **SessionManager** - Singleton per request scope for user session
 
-<h2 id="arguments">Arguments</h2>
+<h2 id="arguments" class="toc-link">Arguments</h2>
 
 Argument providers allow you to bind constructor arguments at registration time. This is useful for configuration values, dependencies that should be resolved at provider creation, or default values.
 
@@ -86,7 +86,7 @@ expect(logger.type).toBe('file'); // Second argument still passed`}
   lang="typescript"
 />
 
-<h2 id="visibility">Visibility</h2>
+<h2 id="visibility" class="toc-link">Visibility</h2>
 
 Visibility control allows you to restrict which scopes can access certain dependencies using `ScopeAccessRule`. This is useful for implementing access control, feature flags, or environment-specific services.
 
@@ -103,7 +103,7 @@ Visibility control allows you to restrict which scopes can access certain depend
 - **DebugService** - Only accessible in development environment
 - **InternalApiClient** - Only accessible from backend services, not controllers
 
-<h2 id="alias">Alias</h2>
+<h2 id="alias" class="toc-link">Alias</h2>
 
 Aliases allow you to group multiple registrations under a common identifier. This is perfect for plugin systems, middleware, or any scenario where you need to resolve multiple implementations of the same interface.
 
@@ -120,7 +120,7 @@ Aliases allow you to group multiple registrations under a common identifier. Thi
 - **ValidationRules** - Multiple validators for a form field
 - **EventListeners** - Multiple handlers for user registration events
 
-<h2 id="decorator">Decorator</h2>
+<h2 id="decorator" class="toc-link">Decorator</h2>
 
 The decorator pattern allows you to wrap instances with additional functionality without modifying the original class. This is useful for cross-cutting concerns like logging, caching, or transaction management.
 
@@ -137,7 +137,7 @@ The decorator pattern allows you to wrap instances with additional functionality
 - Wrapping services with additional behavior
 - Proxy patterns
 
-<h2 id="lazy-loading">Lazy Loading</h2>
+<h2 id="lazy-loading" class="toc-link">Lazy Loading</h2>
 
 Lazy providers defer instantiation until the dependency is actually accessed. This can improve startup performance and enable circular dependency resolution.
 
@@ -147,7 +147,7 @@ Lazy providers defer instantiation until the dependency is actually accessed. Th
   filename="__tests__/readme/provider.spec.ts"
 />
 
-<h2 id="provider-pipeline">Provider Pipeline</h2>
+<h2 id="provider-pipeline" class="toc-link">Provider Pipeline</h2>
 
 Providers can be composed using the pipeline pattern. Each transformation wraps the provider with additional functionality:
 
@@ -196,7 +196,7 @@ You can also use the `pipe` method in registrations:
   lang="typescript"
 />
 
-<h2 id="performance-considerations">Performance Considerations</h2>
+<h2 id="performance-considerations" class="toc-link">Performance Considerations</h2>
 
 ### Singleton Caching
 
@@ -210,7 +210,7 @@ Lazy providers use JavaScript proxies to defer instantiation until access. This 
 
 Providers are stored in a `Map` keyed by `DependencyKey`, providing O(1) lookup performance. Alias resolution uses a separate `AliasMap` for efficient multi-key lookups.
 
-<h2 id="custom-providers">Custom Providers</h2>
+<h2 id="custom-providers" class="toc-link">Custom Providers</h2>
 
 Implement `IProvider` or extend `ProviderDecorator` to create custom providers:
 <CodeBlock
@@ -222,7 +222,7 @@ Implement `IProvider` or extend `ProviderDecorator` to create custom providers:
   lang="typescript"
 />
 
-<h2 id="best-practices">Best Practices</h2>
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
 
 - **Use singletons for expensive resources** - Database connections, HTTP clients, configuration objects
 - **Prefer argsFn for dynamic values** - When arguments depend on other container values
