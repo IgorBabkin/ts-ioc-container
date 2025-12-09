@@ -1,3 +1,10 @@
+## [46.6.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.1...v46.6.2) (2025-12-09)
+
+
+### Bug Fixes
+
+* **groupaliastoken:** update select method signature ([97d1cec](https://github.com/IgorBabkin/ts-ioc-container/commit/97d1cec5b24da2ba49b6069fa116fb1500b7ef1b))
+
 ## [46.6.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.0...v46.6.1) (2025-12-07)
 
 
