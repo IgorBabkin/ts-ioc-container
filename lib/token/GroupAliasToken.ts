@@ -11,8 +11,8 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
     super();
   }
 
-  select<R>(fn: (target: T) => R) {
-    return (s: IContainer) => this.resolve(s).map(fn);
+  select<R>(fn: (target: T[]) => R[]) {
+    return (s: IContainer) => fn(this.resolve(s));
   }
 
   resolve(s: IContainer): T[] {
