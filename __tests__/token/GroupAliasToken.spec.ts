@@ -100,7 +100,7 @@ describe('GroupAliasToken', () => {
         .bindTo(token),
     );
 
-    const selectFn = token.select((value) => value.toUpperCase());
+    const selectFn = token.select((values) => values.map((v) => v.toUpperCase()));
     const result = selectFn(container);
     expect(result).toEqual(['VALUE1', 'VALUE2']);
   });
@@ -114,7 +114,7 @@ describe('GroupAliasToken', () => {
     );
 
     const tokenWithArgs = token.args('arg1', 'arg2');
-    const selectFn = tokenWithArgs.select((value) => value.toUpperCase());
+    const selectFn = tokenWithArgs.select((values) => values.map((v) => v.toUpperCase()));
     const result = selectFn(container);
     expect(result).toEqual(['VALUE-ARG1-ARG2']);
   });
