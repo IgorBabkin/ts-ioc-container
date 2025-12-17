@@ -24,18 +24,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Read Node.js version from .nvmrc
-        id: nvm
-        run: echo "version=$(cat .nvmrc | sed 's/^v//')" >> $GITHUB_OUTPUT
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ steps.nvm.outputs.version }}
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

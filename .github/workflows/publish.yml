@@ -30,19 +30,13 @@ jobs:
           fetch-depth: 0  # Required for semantic-release to analyze commits
           token: ${{ secrets.GH_TOKEN }}  # Required for semantic-release to push commits
 
-      - name: Read Node.js version from .nvmrc
-        id: nvm
-        run: echo "version=$(cat .nvmrc | sed 's/^v//')" >> $GITHUB_OUTPUT
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js with OIDC
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ steps.nvm.outputs.version }}
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
         # OIDC authentication is automatically used when:
         # 1. permissions.id-token: write is set (see top of file)
         # 2. npm 11.5.1+ is installed (next step)
