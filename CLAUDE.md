@@ -77,6 +77,7 @@ The Container is structured as a **linked list** with parent references:
 ### Four Main Components
 
 1. **Container** (`lib/container/Container.ts`)
+   - **Goal**: Manage the lifecycle of dependencies, resolve them when requested, and maintain scoped instances
    - Main IoC container managing registrations and resolutions
    - Linked list structure: each container holds a reference to its parent
    - Contains: scopes (child containers), registrations, providers, instances
@@ -84,18 +85,21 @@ The Container is structured as a **linked list** with parent references:
    - Resolution cascades up the parent chain if not found in current scope
 
 2. **Registration** (`lib/registration/Registration.ts`)
+   - **Goal**: Create a provider and register it in a certain scope
    - Provider factory that registers providers in the container
    - Contains: Provider instance, binding key, scope rules (which scopes to apply to)
    - Determines when and where a provider should be available
    - Uses decorators like `@register`, `bindTo`, `scope` for configuration
 
 3. **Provider** (`lib/provider/Provider.ts`)
+   - **Goal**: Create a dependency (instance)
    - Factory function that creates/returns dependency instances
    - Handles instance creation and caching strategies (singleton, transient, etc.)
    - Three creation methods: `fromClass`, `fromValue`, `fromKey`
    - Supports transformations via `pipe` method (singleton, args, lazy, decorators)
 
 4. **Injector** (`lib/injector/`)
+   - **Goal**: Inject dependencies into constructor
    - Defines how dependencies are injected into constructors
    - Three types:
      - **MetadataInjector**: Uses `@inject` decorator and `reflect-metadata`
@@ -199,6 +203,59 @@ Providers support transformation via `pipe` method:
 Two types of rules:
 1. **ScopeMatchRule**: Determines if provider should exist in scope (registration-level)
 2. **ScopeAccessRule**: Controls visibility when resolving (provider-level)
+
+### Cross-Scope Dependency Injection Limitation
+
+**Scope System Rule (Similar to JavaScript Scoping):**
+The container scope system works like JavaScript's lexical scoping:
+- **Inner scopes can access outer scopes**: Dependencies in child scopes can access dependencies from parent scopes ✅
+- **Outer scopes cannot access inner scopes**: Dependencies in parent scopes cannot access dependencies from child scopes ❌
+
+**Important:** If dependency A is registered in a parent scope and ONLY for that parent scope (e.g., `scope((c) => c.hasTag('parent'))`), and dependency B is registered per child scope (e.g., `scope((c) => c.hasTag('child'))`), then **dependency A cannot be injected into dependency B** - it will throw a `DependencyNotFoundError`.
+
+This happens because:
+1. When **A** is resolved from the parent scope, it tries to resolve its dependencies (including **B**)
+2. Resolution searches from child scope upward to parent scope
+3. **A** is registered with a scope match rule that only adds it to parent-tagged scopes
+4. **A** would try to search dependency **B** in parent scope first and then on parent of parent which is EmptyContainer
+5. Result: `DependencyNotFoundError` is thrown when trying to resolve **A**
+6. Event if **A** is resolve by child container, internally it would be resolved only from parent container.
+
+**Example of problematic setup:**
+
+```typescript
+// Service A - registered only for parent scope
+import { inject } from './inject';
+
+@register(
+        bindTo('ServiceA'),
+        scope((c) => c.hasTag('parent'))
+)
+class ServiceA {
+   constructor(@inject('ServiceB') serviceB: ServiceB) {
+      // ❌ Throws DependencyNotFoundError
+   }
+}
+
+// Service B - registered for child scope, depends on ServiceA
+@register(
+        bindTo('ServiceB'),
+        scope((c) => c.hasTag('child'))
+)
+class ServiceB {
+   constructor(@inject('ServiceA') serviceA: ServiceA) {
+     // works out
+   }  
+}
+```
+
+**Workaround:** Register A for both parent and child scopes, or use a less restrictive scope rule:
+```typescript
+// Option 1: Register for both scopes
+scope((c) => c.hasTag('parent') || c.hasTag('child'))
+
+// Option 2: Use scopeAccess for visibility control instead of scope match rules
+```
 
 ### Metadata System
 Uses `reflect-metadata` for decorator information:

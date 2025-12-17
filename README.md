@@ -279,7 +279,6 @@ import {
  */
 
 // SessionService is only available in request scope - not at application level
-// This prevents accidental access to request-specific data from singletons
 @register(bindTo('ISessionService'), scope((s) => s.hasTag('request')), singleton())
 class SessionService {
   private userId: string | null = null;

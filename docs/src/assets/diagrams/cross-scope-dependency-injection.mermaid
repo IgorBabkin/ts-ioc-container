@@ -1,0 +1,57 @@
+flowchart TB
+    subgraph Scenario1["❌ Parent → Child (FAILS)"]
+        direction TB
+        P1[Parent Scope<br/>tag: 'parent']
+        C1[Child Scope<br/>tag: 'child']
+
+        SA1["Service A<br/>scope: parent only<br/>needs Service B"]
+        SB1["Service B<br/>scope: child only"]
+
+        P1 -.contains.-> SA1
+        C1 -.contains.-> SB1
+        P1 -->|parent of| C1
+
+        R1_1["1️⃣ Resolve Service A"]
+        R1_2["2️⃣ A's context = Parent"]
+        R1_3["3️⃣ A needs B"]
+        R1_4["4️⃣ Search: Parent → EmptyContainer"]
+        R1_5["❌ B not found<br/>DependencyNotFoundError"]
+
+        R1_1 --> R1_2 --> R1_3 --> R1_4 --> R1_5
+
+        style P1 fill:#FFF3E0,stroke:#E65100,stroke-width:2px
+        style C1 fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
+        style SA1 fill:#FFCCBC,stroke:#D84315,stroke-width:2px
+        style SB1 fill:#BBDEFB,stroke:#1976D2,stroke-width:2px
+        style R1_5 fill:#FFCDD2,stroke:#C62828,stroke-width:3px,color:#000
+    end
+
+    subgraph Scenario2["✅ Child → Parent (WORKS)"]
+        direction TB
+        P2[Parent Scope<br/>tag: 'parent']
+        C2[Child Scope<br/>tag: 'child']
+
+        SA2["Service A<br/>scope: parent only"]
+        SB2["Service B<br/>scope: child only<br/>needs Service A"]
+
+        P2 -.contains.-> SA2
+        C2 -.contains.-> SB2
+        P2 -->|parent of| C2
+
+        R2_1["1️⃣ Resolve Service B"]
+        R2_2["2️⃣ B's context = Child"]
+        R2_3["3️⃣ B needs A"]
+        R2_4["4️⃣ Search: Child → Parent"]
+        R2_5["✅ A found in Parent<br/>Success"]
+
+        R2_1 --> R2_2 --> R2_3 --> R2_4 --> R2_5
+
+        style P2 fill:#FFF3E0,stroke:#E65100,stroke-width:2px
+        style C2 fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
+        style SA2 fill:#FFCCBC,stroke:#D84315,stroke-width:2px
+        style SB2 fill:#BBDEFB,stroke:#1976D2,stroke-width:2px
+        style R2_5 fill:#C8E6C9,stroke:#2E7D32,stroke-width:3px,color:#000
+    end
+
+    style Scenario1 fill:#FFF,stroke:#F44336,stroke-width:3px
+    style Scenario2 fill:#FFF,stroke:#4CAF50,stroke-width:3px

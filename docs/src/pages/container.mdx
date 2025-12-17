@@ -8,6 +8,7 @@ import CodeBlock from "../components/CodeBlock.astro";
 import dependencyResolutionFlowDiagram from "@assets/diagrams/dependency-resolution-flow.mermaid?raw";
 import scopeHierarchyDiagram from "@assets/diagrams/scope-hierarchy.mermaid?raw";
 import createScopeFlowDiagram from "@assets/diagrams/create-scope-flow.mermaid?raw";
+import crossScopeDependencyInjectionDiagram from "@assets/diagrams/cross-scope-dependency-injection.mermaid?raw";
 import scopesSpecCode from "../../../__tests__/readme/scopes.spec.ts?raw";
 import instancesSpecCode from "../../../__tests__/readme/instances.spec.ts?raw";
 import filteringInstancesSpecCode from "../../../__tests__/readme/filteringInstances.spec.ts?raw";
@@ -17,7 +18,9 @@ import containerModuleSpecCode from "../../../__tests__/readme/containerModule.s
 
 # Container
 
-The `Container` is the central component of the IoC system. It manages the lifecycle of dependencies, resolves them when requested, and maintains scoped instances. Understanding containers is essential for effective dependency injection.
+**Goal:** Manage the lifecycle of dependencies, resolve them when requested, and maintain scoped instances.
+
+The `Container` is the central component of the IoC system. Understanding containers is essential for effective dependency injection.
 
 <h2 id="scopes" class="toc-link">Scopes</h2>
 
@@ -88,6 +91,137 @@ When resolving a dependency, the container follows this strategy:
 3. If not found, recursively check parent scopes
 4. If found in parent, check access from current scope
 5. Throw `DependencyNotFoundError` if not found anywhere
+
+<h2 id="cross-scope-dependency-injection" class="toc-link">Cross-Scope Dependency Injection</h2>
+
+### Scope System Rule (Similar to JavaScript Scoping)
+
+The container scope system works like JavaScript's lexical scoping:
+
+- **Inner scopes can access outer scopes**: Dependencies in child scopes can access dependencies from parent scopes ✅
+- **Outer scopes cannot access inner scopes**: Dependencies in parent scopes cannot access dependencies from child scopes ❌
+
+<CodeBlock
+  code={`// JavaScript analogy
+function parent() {
+  const parentVar = 'accessible from child';
+
+  function child() {
+    const childVar = 'NOT accessible from parent';
+    console.log(parentVar); // ✅ Works - child can access parent
+  }
+
+  console.log(childVar); // ❌ ReferenceError - parent cannot access child
+}`}
+  lang="typescript"
+/>
+
+**Important:** A service's resolution context is determined by **where it is registered**, not where it's requested from. This creates an important limitation when parent-scoped services try to inject child-scoped dependencies.
+
+<div class="diagram">
+  <div class="mermaid" set:html={crossScopeDependencyInjectionDiagram} />
+</div>
+
+### Resolution Context Principle
+
+When a service is registered with `scope((c) => c.hasTag('parent'))`, it always resolves from the parent container—even if the service is requested through a child scope.
+
+#### Parent → Child Dependency (❌ FAILS)
+
+**Scenario:** Parent-scoped service A tries to inject child-scoped service B
+
+<CodeBlock
+  code={`// Service A - registered only for parent scope
+@register(
+  bindTo('ServiceA'),
+  scope((c) => c.hasTag('parent'))
+)
+class ServiceA {
+  constructor(@inject('ServiceB') serviceB: ServiceB) {
+    // ❌ Throws DependencyNotFoundError
+  }
+}
+
+// Service B - registered for child scope
+@register(
+  bindTo('ServiceB'),
+  scope((c) => c.hasTag('child'))
+)
+class ServiceB { }`}
+  lang="typescript"
+/>
+
+**Resolution flow:**
+
+1. A is registered for parent scope only
+2. A's resolution context = parent container
+3. A looks for B in parent scope → parent's parent (EmptyContainer)
+4. B only exists in child scope (invisible to parent)
+5. **Result:** `DependencyNotFoundError` thrown
+
+Even if A is requested from a child scope, A still resolves from the parent container internally.
+
+#### Child → Parent Dependency (✅ WORKS)
+
+**Scenario:** Child-scoped service B tries to inject parent-scoped service A
+
+<CodeBlock
+  code={`// Service A - registered for parent scope
+@register(
+  bindTo('ServiceA'),
+  scope((c) => c.hasTag('parent'))
+)
+class ServiceA { }
+
+// Service B - registered for child scope
+@register(
+  bindTo('ServiceB'),
+  scope((c) => c.hasTag('child'))
+)
+class ServiceB {
+  constructor(@inject('ServiceA') serviceA: ServiceA) {
+    // ✅ Works - A is found via upward cascade
+  }
+}`}
+  lang="typescript"
+/>
+
+**Resolution flow:**
+
+1. B is registered for child scope
+2. B's resolution context = child container
+3. B looks for A: child scope → parent scope
+4. A found in parent scope (accessible via cascade)
+5. **Result:** Success
+
+#### Summary
+
+- **Upward resolution** (child → parent): ✅ Works via cascade
+- **Downward resolution** (parent → child): ❌ Fails - parents can't see children
+
+#### Workarounds
+
+If you need a parent-scoped service to access child-scoped dependencies, consider these options:
+
+<CodeBlock
+  code={`// Option 1: Register for both scopes
+@register(
+  bindTo('ServiceA'),
+  scope((c) => c.hasTag('parent') || c.hasTag('child'))
+)
+class ServiceA { }
+
+// Option 2: Use scopeAccess for visibility control instead
+@register(
+  bindTo('ServiceA'),
+  // Available in all scopes
+  scopeAccess(({ invocationScope }) =>
+    invocationScope.hasTag('parent') || invocationScope.hasTag('child')
+  )
+)
+class ServiceA { }`}
+  lang="typescript"
+/>
 
 <h2 id="dependency-resolution-flow" class="toc-link">Dependency Resolution Flow</h2>
 
