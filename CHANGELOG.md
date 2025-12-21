@@ -1,3 +1,10 @@
+## [46.7.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.0...v46.7.1) (2025-12-21)
+
+
+### Bug Fixes
+
+* **docs:** use HTML heading for generic type to avoid MDX parsing error ([67d6548](https://github.com/IgorBabkin/ts-ioc-container/commit/67d65488a66d184eec319432965b68139d5a8e69))
+
 # [46.7.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.2...v46.7.0) (2025-12-21)
 
 
