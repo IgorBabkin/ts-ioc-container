@@ -1,3 +1,10 @@
+# [46.7.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.2...v46.7.0) (2025-12-21)
+
+
+### Features
+
+* **container:** add addTags method for dynamic tag management ([1e4f244](https://github.com/IgorBabkin/ts-ioc-container/commit/1e4f244523f04ab30392438b3cff4d2ac992e968))
+
 ## [46.6.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.1...v46.6.2) (2025-12-09)
 
 
