@@ -34,7 +34,8 @@
     "compile": "tsc -p tsconfig.json --outDir cjm"
   },
   "dependencies": {
-    "@ibabkin/openapi-framework": "^1.19.0",
+    "@ibabkin/openapi-framework": "workspace:*",
+    "ts-ioc-container": "^46.6.2",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0"
   },
