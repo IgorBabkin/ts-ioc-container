@@ -193,32 +193,40 @@ Pipes use the Decorator pattern to compose transformations. Each pipe wraps the 
   lang="typescript"
 />
 
-### Pipe Order Matters
+### Pipe Order
 
-The order of pipes affects behavior. Generally, follow this pattern:
-
-1. **Arguments first** - `args()`, `argsFn()`
-2. **Transformations second** - `decorate()`
-3. **Lazy third** - `lazy()`
-4. **Singleton last** - `singleton()`
-5. **Access control last** - `scopeAccess()`
+**In most cases, pipe order does not matter.** The container is designed so that pipes like `singleton()`, `lazy()`, `args()`, `argsFn()`, and `scopeAccess()` can be applied in any order and will work correctly.
 
 <CodeBlock
-  code={`// ✅ Good order
+  code={`// Order doesn't matter for most pipes
+R.fromClass(Service)
+  .pipe(singleton(), lazy(), args('config.json'))     // ✅ Works
+
+R.fromClass(Service)
+  .pipe(args('config.json'), singleton(), lazy())     // ✅ Also works
+
+R.fromClass(Service)
+  .pipe(lazy(), scopeAccess(adminOnly), singleton())  // ✅ Also works`}
+  lang="typescript"
+/>
+
+### Exception: decorate() Pipe
+
+The `decorate()` pipe is the exception where order matters. This is because `decorate()` wraps the instance after creation, so its position relative to `lazy()` determines what gets decorated:
+
+<CodeBlock
+  code={`// decorate() BEFORE lazy() - decorates the real instance
 R.fromClass(Service)
   .pipe(
-    args('config.json'),        // 1. Arguments
-    lazy(),                     // 2. Lazy
-    singleton(),                // 3. Singleton
-    scopeAccess(adminOnly)      // 4. Access control
+    decorate(withLogging),    // Wraps the actual Service instance
+    lazy()                    // Returns lazy proxy to decorated instance
   )
 
-// ❌ Bad order - singleton won't cache lazy instances properly
+// decorate() AFTER lazy() - decorates the lazy proxy
 R.fromClass(Service)
   .pipe(
-    singleton(),               // Wrong - caching happens before lazy
-    lazy(),                    // Wrong - each resolve creates new proxy
-    args('config.json')        // Wrong - args applied after lazy wrapper
+    lazy(),                   // Creates lazy proxy first
+    decorate(withLogging)     // Wraps the proxy, not the real instance
   )`}
   lang="typescript"
 />
@@ -532,14 +540,9 @@ container.resolve('ConsoleLogger');`}
 
 ### Pipe Order
 
-Always apply pipes in this order for predictable behavior:
+**Most pipes can be applied in any order** - `singleton()`, `lazy()`, `args()`, `argsFn()`, and `scopeAccess()` are designed to work regardless of their position in the pipe chain.
 
-1. **Binding and scope** - `bindTo()`, `scope()`
-2. **Arguments** - `args()`, `argsFn()`
-3. **Decorators** - `decorate()`
-4. **Lazy loading** - `lazy()`
-5. **Singleton** - `singleton()`
-6. **Access control** - `scopeAccess()`
+**Exception:** The `decorate()` pipe order matters relative to `lazy()`. Place `decorate()` before `lazy()` to wrap the actual instance, or after to wrap the lazy proxy.
 
 ### Use ProviderPipes for Reusability
 
@@ -691,29 +694,16 @@ Provider.fromClass(Service).bindToKey('Service')`}
   lang="typescript"
 />
 
-### Singleton Not Caching Lazy Instances
+### Decorator Not Wrapping Actual Instance
 
-**Problem:** Wrong pipe order - singleton before lazy
-
-<CodeBlock
-  code={`// ❌ Wrong order
-.pipe(singleton(), lazy())
-
-// ✅ Correct order
-.pipe(lazy(), singleton())`}
-  lang="typescript"
-/>
-
-### Arguments Not Being Injected
-
-**Problem:** Arguments applied after lazy wrapper
+**Problem:** `decorate()` applied after `lazy()` wraps the proxy instead of the real instance
 
 <CodeBlock
-  code={`// ❌ Wrong order
-.pipe(lazy(), args('value'))
+  code={`// If you want to decorate the actual instance:
+.pipe(decorate(withLogging), lazy())  // ✅ Decorates real instance
 
-// ✅ Correct order
-.pipe(args('value'), lazy())`}
+// This decorates the lazy proxy instead:
+.pipe(lazy(), decorate(withLogging))  // Decorates proxy, not instance`}
   lang="typescript"
 />
 

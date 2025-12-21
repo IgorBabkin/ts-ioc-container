@@ -288,6 +288,22 @@ Provider.fromClass(Service)
   )
 ```
 
+#### Pipe Order
+
+**In most cases, pipe order does not matter.** The container is designed so that pipes like `singleton()`, `lazy()`, `args()`, `argsFn()`, and `scopeAccess()` can be applied in any order and will work correctly.
+
+**Exception: `decorate()` pipe** - The `decorate()` pipe order matters because it wraps the instance after creation. If you need to decorate, apply `decorate()` before `lazy()` if you want the decorator to wrap the actual instance, or after `lazy()` if you want to decorate the lazy proxy.
+
+```typescript
+// Order doesn't matter for these pipes
+.pipe(singleton(), lazy(), args('value'))     // ✅ Works
+.pipe(args('value'), singleton(), lazy())     // ✅ Also works
+
+// decorate() order matters
+.pipe(decorate(withLogging), lazy())  // Decorates the real instance
+.pipe(lazy(), decorate(withLogging))  // Decorates the lazy proxy
+```
+
 #### Pipe Processing Details
 
 **IProvider.pipe() accepts:**
