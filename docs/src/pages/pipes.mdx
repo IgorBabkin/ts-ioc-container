@@ -56,7 +56,7 @@ This dual nature allows ProviderPipes to work seamlessly with:
 
 **Key Insight:** All built-in pipe functions (`singleton()`, `lazy()`, `args()`, etc.) use `registerPipe()` internally. This is why they work everywhere - they're all ProviderPipes!
 
-### MapFn<IRegistration>
+### MapFn&lt;IRegistration&gt;
 
 Some transformations only make sense at the registration level, like `bindTo()` and `scope()`. These are plain functions of type `MapFn<IRegistration>`:
 
