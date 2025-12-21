@@ -223,16 +223,16 @@ export const registerPipe = <T>(
 
 #### Available Pipes
 
-| Pipe Name | ProviderPipe | RegisterPipe | Purpose | File |
-|-----------|:------------:|:------------:|---------|------|
-| `singleton()` | ✅ | ✅ | Caches single instance per scope | `lib/provider/SingletonProvider.ts` |
-| `args(...values)` | ✅ | ✅ | Injects static arguments into constructor | `lib/provider/IProvider.ts` |
-| `argsFn(fn)` | ✅ | ✅ | Injects dynamically resolved arguments | `lib/provider/IProvider.ts` |
-| `lazy()` | ✅ | ✅ | Defers instantiation until first access | `lib/provider/IProvider.ts` |
-| `scopeAccess(rule)` | ✅ | ✅ | Controls visibility based on scope rules | `lib/provider/IProvider.ts` |
-| `decorate(fn)` | ✅ | ✅ | Wraps instance with decorator function | `lib/provider/DecoratorProvider.ts` |
-| `scope(...rules)` | ❌ | ✅ | Determines which scopes registration applies to | `lib/registration/IRegistration.ts` |
-| `bindTo(...tokens)` | ❌ | ✅ | Binds registration to dependency keys | `lib/registration/IRegistration.ts` |
+| Pipe Name           | ProviderPipe | RegisterPipe | Purpose                                         | File                                |
+| ------------------- | :----------: | :----------: | ----------------------------------------------- | ----------------------------------- |
+| `singleton()`       |      ✅       |      ✅       | Caches single instance per scope                | `lib/provider/SingletonProvider.ts` |
+| `args(...values)`   |      ✅       |      ✅       | Injects static arguments into constructor       | `lib/provider/IProvider.ts`         |
+| `argsFn(fn)`        |      ✅       |      ✅       | Injects dynamically resolved arguments          | `lib/provider/IProvider.ts`         |
+| `lazy()`            |      ✅       |      ✅       | Defers instantiation until first access         | `lib/provider/IProvider.ts`         |
+| `scopeAccess(rule)` |      ✅       |      ✅       | Controls visibility based on scope rules        | `lib/provider/IProvider.ts`         |
+| `decorate(fn)`      |      ✅       |      ✅       | Wraps instance with decorator function          | `lib/provider/DecoratorProvider.ts` |
+| `scope(...rules)`   |      ❌       |      ✅       | Determines which scopes registration applies to | `lib/registration/IRegistration.ts` |
+| `bindTo(...tokens)` |      ❌       |      ✅       | Binds registration to dependency keys           | `lib/registration/IRegistration.ts` |
 
 **Legend:**
 - ✅ **ProviderPipe**: Can be used in `.pipe()` on IProvider and IRegistration
