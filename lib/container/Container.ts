@@ -200,6 +200,12 @@ export class Container implements IContainer {
     return this.tags.has(tag);
   }
 
+  addTags(...tags: Tag[]) {
+    for (const tag of tags) {
+      this.tags.add(tag);
+    }
+  }
+
   private validateContainer(): void {
     if (this.isDisposed) {
       throw new ContainerDisposedError('Container is already disposed');

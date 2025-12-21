@@ -10,6 +10,7 @@ import scopeHierarchyDiagram from "@assets/diagrams/scope-hierarchy.mermaid?raw"
 import createScopeFlowDiagram from "@assets/diagrams/create-scope-flow.mermaid?raw";
 import crossScopeDependencyInjectionDiagram from "@assets/diagrams/cross-scope-dependency-injection.mermaid?raw";
 import scopesSpecCode from "../../../__tests__/readme/scopes.spec.ts?raw";
+import addTagsSpecCode from "../../../__tests__/readme/addTags.spec.ts?raw";
 import instancesSpecCode from "../../../__tests__/readme/instances.spec.ts?raw";
 import filteringInstancesSpecCode from "../../../__tests__/readme/filteringInstances.spec.ts?raw";
 import disposingSpecCode from "../../../__tests__/readme/disposing.spec.ts?raw";
@@ -91,6 +92,36 @@ When resolving a dependency, the container follows this strategy:
 3. If not found, recursively check parent scopes
 4. If found in parent, check access from current scope
 5. Throw `DependencyNotFoundError` if not found anywhere
+
+<h2 id="dynamic-tag-management" class="toc-link">Dynamic Tag Management</h2>
+
+The `addTags()` method allows you to dynamically add tags to a container after it's been created. This is particularly useful for:
+
+- **Environment-based configuration** - Add tags based on `NODE_ENV` or other runtime configuration
+- **Feature flags** - Enable/disable features by adding tags conditionally
+- **Progressive configuration** - Add tags incrementally as the application initializes
+- **Testing** - Configure containers differently for different test scenarios
+
+**Important:** Tags must be added **before** registrations are applied. Scope matching happens at registration time, so adding tags after registration won't retroactively make providers available.
+
+<CodeBlock
+  code={addTagsSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/addTags.spec.ts"
+/>
+
+### Usage Pattern
+
+```typescript
+// 1. Create container
+const container = new Container();
+
+// 2. Add tags based on configuration
+container.addTags('production', 'api', 'v2');
+
+// 3. Apply registrations (scope matching happens here)
+container.addRegistration(R.fromClass(ProductionService));
+```
 
 <h2 id="cross-scope-dependency-injection" class="toc-link">Cross-Scope Dependency Injection</h2>
 
@@ -365,3 +396,4 @@ The `EmptyContainer` class implements the Null Object pattern, providing a safe 
 - `dispose(): void` - Dispose the container and all resources
 - `getInstances(): Iterable<Instance>` - Get all instances created by this container
 - `hasTag(tag: Tag): boolean` - Check if container has a specific tag
+- `addTags(...tags: Tag[]): void` - Add one or more tags to the container dynamically

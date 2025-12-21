@@ -15,6 +15,7 @@ type WithChild = { child: Tagged };
 type WithExcludedKeys = { excludedKeys: DependencyKey[] };
 export interface Tagged {
   hasTag(tag: Tag): boolean;
+  addTags(...tags: Tag[]): void;
 }
 
 export type ResolveOneOptions = ProviderOptions & Partial<WithChild>;

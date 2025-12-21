@@ -6,6 +6,7 @@ import {
   DependencyNotFoundError,
   register,
   Registration as R,
+  scope,
   select,
   singleton,
 } from '../../lib';
@@ -93,5 +94,99 @@ describe('IocContainer', function () {
     const container = createContainer().addRegistration(R.fromClass(Logger1).bindToKey('logger'));
 
     expect(container.resolve('logger')).toBe(container.resolve('logger'));
+  });
+
+  describe('addTags', () => {
+    it('should add a single tag to container', () => {
+      const container = createContainer();
+
+      expect(container.hasTag('production')).toBe(false);
+
+      container.addTags('production');
+
+      expect(container.hasTag('production')).toBe(true);
+    });
+
+    it('should add multiple tags at once', () => {
+      const container = createContainer();
+
+      container.addTags('production', 'api', 'v2');
+
+      expect(container.hasTag('production')).toBe(true);
+      expect(container.hasTag('api')).toBe(true);
+      expect(container.hasTag('v2')).toBe(true);
+    });
+
+    it('should add tags incrementally', () => {
+      const container = createContainer();
+
+      container.addTags('development');
+      expect(container.hasTag('development')).toBe(true);
+
+      container.addTags('debug');
+      expect(container.hasTag('development')).toBe(true);
+      expect(container.hasTag('debug')).toBe(true);
+    });
+
+    it('should handle duplicate tags without error', () => {
+      const container = createContainer();
+
+      container.addTags('production');
+      container.addTags('production');
+
+      expect(container.hasTag('production')).toBe(true);
+    });
+
+    it('should work with scope matching when tags are added before registration', () => {
+      @register(bindTo('service'), scope((s) => s.hasTag('production')))
+      class ProductionService {}
+
+      const container = createContainer();
+
+      // Add the tag before registration
+      container.addTags('production');
+
+      // Now add the registration - it should match the scope
+      container.addRegistration(R.fromClass(ProductionService));
+
+      // Service should be available
+      expect(container.resolve('service')).toBeInstanceOf(ProductionService);
+    });
+
+    it('should affect child scope creation based on added tags', () => {
+      @register(bindTo('service'), scope((s) => s.hasTag('api')))
+      class ApiService {}
+
+      const container = createContainer();
+
+      // Add tag to parent container
+      container.addTags('api');
+      container.addRegistration(R.fromClass(ApiService));
+
+      // Create child scope - should inherit the registration because parent has 'api' tag
+      const childScope = container.createScope({ tags: ['request'] });
+
+      expect(container.resolve('service')).toBeInstanceOf(ApiService);
+      expect(childScope.resolve('service')).toBeInstanceOf(ApiService);
+    });
+
+    it('should allow conditional tag addition for environment-based configuration', () => {
+      @register(bindTo('logger'), scope((s) => s.hasTag('development')))
+      class ConsoleLogger {}
+
+      @register(bindTo('logger'), scope((s) => s.hasTag('production')))
+      class FileLogger {}
+
+      const container = createContainer();
+
+      // Simulate environment-based tag addition
+      const environment = 'development';
+      container.addTags(environment);
+
+      // Add registrations after tag is set
+      container.addRegistration(R.fromClass(ConsoleLogger)).addRegistration(R.fromClass(FileLogger));
+
+      expect(container.resolve('logger')).toBeInstanceOf(ConsoleLogger);
+    });
   });
 });

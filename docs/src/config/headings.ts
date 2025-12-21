@@ -29,6 +29,11 @@ export const pageHeadings: Record<string, Heading[]> = {
   "/ts-ioc-container/container": [
     { id: "scopes", text: "Scopes", level: 2 },
     {
+      id: "dynamic-tag-management",
+      text: "Dynamic Tag Management",
+      level: 2,
+    },
+    {
       id: "cross-scope-dependency-injection",
       text: "Cross-Scope Dependency Injection",
       level: 2,

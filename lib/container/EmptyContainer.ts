@@ -49,6 +49,10 @@ export class EmptyContainer implements IContainer {
     throw new MethodNotImplementedError();
   }
 
+  addTags(...tags: Tag[]): void {
+    throw new MethodNotImplementedError();
+  }
+
   getRegistrations() {
     return [];
   }
