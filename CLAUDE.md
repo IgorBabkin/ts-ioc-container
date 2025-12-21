@@ -194,10 +194,121 @@ class MyClass { }
 ## Key Implementation Details
 
 ### Provider Pipe System
-Providers support transformation via `pipe` method:
-- Accepts `MapFn<IProvider<T>>` or `ProviderPipe<T>`
-- Chains transformations: `Provider.fromClass(X).pipe(singleton(), args('value'))`
-- Common pipes: `singleton()`, `args()`, `argsFn()`, `lazy()`, `decorate()`, `scopeAccess()`
+
+The pipe system provides composable transformations for both Providers and Registrations.
+
+#### ProviderPipe vs registerPipe
+
+**ProviderPipe** (`lib/provider/ProviderPipe.ts`) is an interface with two transformation methods:
+```typescript
+export interface ProviderPipe<T = unknown> {
+  mapProvider(p: IProvider<T>): IProvider<T>;    // Transforms a Provider
+  mapRegistration(r: IRegistration<T>): IRegistration<T>;  // Transforms a Registration
+}
+```
+
+**registerPipe** is a helper factory function that creates ProviderPipe objects:
+```typescript
+export const registerPipe = <T>(
+  mapProvider: (p: IProvider<T>) => IProvider<T>
+): ProviderPipe<T> => ({
+  mapProvider,
+  mapRegistration: (r) => r.pipe(mapProvider),
+});
+```
+
+**Key Insight:** All exported pipe functions (`singleton()`, `lazy()`, etc.) use `registerPipe()` internally to create ProviderPipe objects. This allows them to work seamlessly with both:
+- **Provider.pipe()** - Uses `mapProvider` to transform the provider
+- **Registration.pipe()** and **@register()** - Uses `mapRegistration` to transform the registration
+
+#### Available Pipes
+
+| Pipe Name | ProviderPipe | RegisterPipe | Purpose | File |
+|-----------|:------------:|:------------:|---------|------|
+| `singleton()` | ✅ | ✅ | Caches single instance per scope | `lib/provider/SingletonProvider.ts` |
+| `args(...values)` | ✅ | ✅ | Injects static arguments into constructor | `lib/provider/IProvider.ts` |
+| `argsFn(fn)` | ✅ | ✅ | Injects dynamically resolved arguments | `lib/provider/IProvider.ts` |
+| `lazy()` | ✅ | ✅ | Defers instantiation until first access | `lib/provider/IProvider.ts` |
+| `scopeAccess(rule)` | ✅ | ✅ | Controls visibility based on scope rules | `lib/provider/IProvider.ts` |
+| `decorate(fn)` | ✅ | ✅ | Wraps instance with decorator function | `lib/provider/DecoratorProvider.ts` |
+| `scope(...rules)` | ❌ | ✅ | Determines which scopes registration applies to | `lib/registration/IRegistration.ts` |
+| `bindTo(...tokens)` | ❌ | ✅ | Binds registration to dependency keys | `lib/registration/IRegistration.ts` |
+
+**Legend:**
+- ✅ **ProviderPipe**: Can be used in `.pipe()` on IProvider and IRegistration
+- ✅ **RegisterPipe**: Can be used in `@register()` decorator and `.pipe()` on IRegistration
+- ❌ Not a ProviderPipe (registration-only)
+
+**Note:** `scope()` and `bindTo()` are `MapFn<IRegistration>` functions, not ProviderPipes. They only work at the registration level, not the provider level.
+
+#### Usage Examples
+
+**1. Using pipes with @register decorator:**
+```typescript
+@register(
+  bindTo('IPasswordHasher'),  // RegisterPipe (registration-only)
+  singleton(),                // ProviderPipe (works everywhere)
+  scopeAccess(...)           // ProviderPipe (works everywhere)
+)
+class PasswordHasher { }
+```
+
+**2. Using pipes with Provider.pipe():**
+```typescript
+const container = new Container().addRegistration(
+  R.fromClass(EmailService)
+    .bindToKey('EmailService')
+    .pipe(
+      singleton(),           // ProviderPipe
+      lazy(),               // ProviderPipe
+      args('config.json')   // ProviderPipe
+    )
+);
+```
+
+**3. Using pipes with Registration.pipe():**
+```typescript
+const container = new Container().addRegistration(
+  R.fromClass(ConfigService)
+    .pipe(
+      bindTo('Config'),                    // Registration pipe
+      scope((c) => c.hasTag('application')),  // Registration pipe
+      singleton()                          // Provider pipe (converted automatically)
+    )
+);
+```
+
+**4. Chaining multiple pipes:**
+```typescript
+Provider.fromClass(Service)
+  .pipe(
+    (p) => p.setArgs(() => ['arg1', 'arg2']),  // Raw function
+    lazy(),                                      // ProviderPipe
+    singleton()                                  // ProviderPipe
+  )
+```
+
+#### Pipe Processing Details
+
+**IProvider.pipe() accepts:**
+- Raw functions: `(p) => p.lazy()`
+- ProviderPipe objects: `lazy()`
+- Automatically extracts `mapProvider` from ProviderPipe objects
+
+**IRegistration.pipe() accepts:**
+- Raw functions: `(r) => r.bindToKey('key')`
+- ProviderPipe objects (extracts `mapProvider` internally)
+- Registration-specific pipes: `bindTo()`, `scope()`
+
+**@register() decorator accepts:**
+- `MapFn<IRegistration>` functions
+- ProviderPipe objects (calls `mapRegistration()` internally)
+
+**Type Guards:**
+```typescript
+export const isProviderPipe = <T>(obj: unknown): obj is ProviderPipe<T> =>
+  obj !== null && typeof obj === 'object' && 'mapProvider' in obj;
+```
 
 ### Scope Access Rules
 Two types of rules:

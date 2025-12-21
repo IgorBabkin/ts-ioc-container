@@ -10,6 +10,7 @@ import providerSpecCode from "../../../__tests__/readme/Singleton.spec.ts?raw";
 import aliasSpecCode from "../../../__tests__/readme/alias.spec.ts?raw";
 import decorateSpecCode from "../../../__tests__/readme/decorate.spec.ts?raw";
 import visibilitySpecCode from "../../../__tests__/readme/visibility.spec.ts?raw";
+import lazyPipeSpecCode from "../../../__tests__/readme/lazyPipe.spec.ts?raw";
 
 # Provider
 
@@ -141,12 +142,91 @@ The decorator pattern allows you to wrap instances with additional functionality
 
 <h2 id="lazy-loading" class="toc-link">Lazy Loading</h2>
 
-Lazy providers defer instantiation until the dependency is actually accessed. This can improve startup performance and enable circular dependency resolution.
+Lazy providers defer instantiation until the dependency is actually accessed. This improves startup performance by avoiding initialization of expensive services until they're needed.
+
+### Use Cases
+
+- **Performance optimization** - Defer expensive initialization (database connections, SMTP, external APIs)
+- **Conditional features** - Don't initialize features that may not be used
+- **Circular dependencies** - Break dependency cycles
+- **Memory optimization** - Reduce memory footprint for optional services
+
+### Two Ways to Use Lazy Loading
+
+#### 1. With `@register` Decorator
+
+Use the `lazy()` registerPipe directly in the decorator:
 
 <CodeBlock
-  code={providerSpecCode}
+  code={`import { register, bindTo, lazy, singleton } from 'ts-ioc-container';
+
+// Expensive service - deferred initialization
+@register(bindTo('AnalyticsService'), lazy(), singleton())
+class AnalyticsService {
+  constructor() {
+    // Expensive: Connects to analytics API
+    console.log('Analytics initialized');
+  }
+
+  trackEvent(event: string): void {
+    // Track analytics event
+  }
+}`}
   lang="typescript"
-  filename="__tests__/readme/provider.spec.ts"
+/>
+
+#### 2. With Provider Pipe
+
+Call `.lazy()` directly on the provider in the pipe:
+
+<CodeBlock
+  code={`import { Registration as R, singleton } from 'ts-ioc-container';
+
+// Manual registration with lazy loading
+const container = new Container()
+  .addRegistration(
+    R.fromClass(EmailService)
+      .bindToKey('EmailService')
+      .pipe(singleton(), (p) => p.lazy())
+  );`}
+  lang="typescript"
+/>
+
+### Complete Examples
+
+<CodeBlock
+  code={lazyPipeSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/lazyPipe.spec.ts"
+/>
+
+### How Lazy Loading Works
+
+When a lazy provider is resolved:
+
+1. **Initial Resolution** - A proxy is returned instead of the actual instance
+2. **First Access** - When any property or method is accessed, the real instance is created
+3. **Subsequent Access** - The proxy delegates all calls to the real instance
+4. **Singleton Behavior** - Combined with `singleton()`, ensures only one instance is created
+
+### Combining with Other Pipes
+
+Lazy loading works seamlessly with other provider features:
+
+<CodeBlock
+  code={`// Lazy + Singleton + Arguments
+R.fromClass(ConfigService)
+  .pipe(
+    (p) => p.setArgs(() => ['https://api.example.com', 5000]),
+    (p) => p.lazy(),
+    singleton()
+  );
+
+// Order matters - typically:
+// 1. Arguments
+// 2. Lazy
+// 3. Singleton`}
+  lang="typescript"
 />
 
 <h2 id="provider-pipeline" class="toc-link">Provider Pipeline</h2>
