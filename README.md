@@ -768,7 +768,7 @@ describe('lazy provider', () => {
 ```
 
 ### Lazy with registerPipe
-The `lazy()` registerPipe can be used in two ways: with the `@register` decorator or directly on the provider pipe. This allows you to defer expensive service initialization until first access.
+The `lazy()` registerPipe can be used in two ways: with the `@register` decorator or directly on the `Provider` pipe. This allows you to defer expensive service initialization until first access.
 
 **Use cases:**
 - Defer expensive initialization (database connections, SMTP, external APIs)
@@ -778,12 +778,12 @@ The `lazy()` registerPipe can be used in two ways: with the `@register` decorato
 
 **Two approaches:**
 
-1. **With @register decorator**: Use `lazy()` as a registerPipe
-2. **With provider pipe**: Call `.pipe((p) => p.lazy())` on the provider
+1. **With @register decorator**: Use `lazy()` as a registerPipe in the decorator
+2. **With Provider pipe**: Use `Provider.fromClass().pipe(lazy())` directly
 
 ```typescript
 import 'reflect-metadata';
-import { bindTo, Container, inject, lazy, register, Registration as R, singleton } from 'ts-ioc-container';
+import { bindTo, Container, inject, lazy, Provider, register, Registration as R, singleton } from 'ts-ioc-container';
 
 /**
  * Lazy Loading with registerPipe
@@ -883,11 +883,7 @@ describe('lazy registerPipe', () => {
       app.handleRequest('/admin/dashboard');
 
       // AnalyticsService was initialized on first access (DatabasePool too, as a dependency)
-      expect(initLog).toEqual([
-        'AppService initialized',
-        'DatabasePool initialized',
-        'AnalyticsService initialized',
-      ]);
+      expect(initLog).toEqual(['AppService initialized', 'DatabasePool initialized', 'AnalyticsService initialized']);
     });
 
     it('should create only one instance even with multiple accesses', () => {
@@ -959,7 +955,11 @@ describe('lazy registerPipe', () => {
     it('should allow selective lazy loading - email lazy, SMS eager', () => {
       const container = new Container()
         // EmailService is lazy - won't connect to SMTP until used
-        .addRegistration(R.fromClass(EmailService).bindToKey('EmailService').pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(
+          R.fromClass(EmailService)
+            .bindToKey('EmailService')
+            .pipe(singleton(), (p) => p.lazy()),
+        )
         // SmsService is eager - connects to gateway immediately
         .addRegistration(R.fromClass(SmsService).bindToKey('SmsService').pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
@@ -978,7 +978,11 @@ describe('lazy registerPipe', () => {
 
     it('should initialize lazy email service when first accessed', () => {
       const container = new Container()
-        .addRegistration(R.fromClass(EmailService).bindToKey('EmailService').pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(
+          R.fromClass(EmailService)
+            .bindToKey('EmailService')
+            .pipe(singleton(), (p) => p.lazy()),
+        )
         .addRegistration(R.fromClass(SmsService).bindToKey('SmsService').pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
 
@@ -994,8 +998,16 @@ describe('lazy registerPipe', () => {
     it('should work with multiple lazy providers', () => {
       const container = new Container()
         // Both services are lazy
-        .addRegistration(R.fromClass(EmailService).bindToKey('EmailService').pipe(singleton(), (p) => p.lazy()))
-        .addRegistration(R.fromClass(SmsService).bindToKey('SmsService').pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(
+          R.fromClass(EmailService)
+            .bindToKey('EmailService')
+            .pipe(singleton(), (p) => p.lazy()),
+        )
+        .addRegistration(
+          R.fromClass(SmsService)
+            .bindToKey('SmsService')
+            .pipe(singleton(), (p) => p.lazy()),
+        )
         .addRegistration(R.fromClass(NotificationService));
 
       const notifications = container.resolve<NotificationService>(NotificationService);
@@ -1018,13 +1030,77 @@ describe('lazy registerPipe', () => {
   });
 
   /**
-   * Example 3: Combining lazy with other pipes
+   * Example 3: Pure Provider usage (without Registration)
+   *
+   * Use Provider.fromClass() directly with lazy() for maximum flexibility.
+   */
+  describe('with pure Provider', () => {
+    class CacheService {
+      constructor() {
+        initLog.push('CacheService initialized - Redis connected');
+      }
+
+      get(key: string): string | null {
+        return `cached:${key}`;
+      }
+    }
+
+    class ApiService {
+      constructor(@inject('CacheService') private cache: CacheService) {
+        initLog.push('ApiService initialized');
+      }
+
+      fetchData(id: string): string {
+        const cached = this.cache.get(id);
+        return cached || `fresh:${id}`;
+      }
+    }
+
+    it('should use Provider.fromClass with lazy() helper', () => {
+      // Create pure provider with lazy loading
+      const cacheProvider = Provider.fromClass(CacheService).pipe(lazy(), singleton());
+
+      const container = new Container();
+      container.register('CacheService', cacheProvider);
+      container.addRegistration(R.fromClass(ApiService));
+
+      const api = container.resolve<ApiService>(ApiService);
+
+      // CacheService not initialized yet (lazy)
+      expect(initLog).toEqual(['ApiService initialized']);
+
+      // Access cache - NOW it's initialized
+      api.fetchData('user:1');
+      expect(initLog).toContain('CacheService initialized - Redis connected');
+    });
+
+    it('should allow importing lazy as named export', () => {
+      // Demonstrate that lazy() is imported from the library
+      const cacheProvider = Provider.fromClass(CacheService).pipe(lazy());
+
+      const container = new Container();
+      container.register('CacheService', cacheProvider);
+
+      const cache = container.resolve<CacheService>('CacheService');
+
+      // Not initialized until accessed
+      expect(initLog).toEqual([]);
+      cache.get('test');
+      expect(initLog).toEqual(['CacheService initialized - Redis connected']);
+    });
+  });
+
+  /**
+   * Example 4: Combining lazy with other pipes
    *
    * lazy() works seamlessly with other provider transformations.
    */
   describe('combining with other pipes', () => {
     class ConfigService {
-      constructor(public apiUrl: string, public timeout: number) {
+      constructor(
+        public apiUrl: string,
+        public timeout: number,
+      ) {
         initLog.push(`ConfigService initialized with ${apiUrl}`);
       }
     }
@@ -1060,7 +1136,7 @@ describe('lazy registerPipe', () => {
   });
 
   /**
-   * Example 4: Real-world use case - Resource Management
+   * Example 5: Real-world use case - Resource Management
    *
    * Lazy loading is ideal for:
    * - Database connections

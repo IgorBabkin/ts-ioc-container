@@ -90,6 +90,28 @@ export const pageHeadings: Record<string, Heading[]> = {
     { id: "custom-providers", text: "Custom Providers", level: 2 },
     { id: "best-practices", text: "Best Practices", level: 2 },
   ],
+  "/ts-ioc-container/pipes": [
+    { id: "what-are-pipes", text: "What are Pipes?", level: 2 },
+    {
+      id: "providerpipe-vs-registerpipe",
+      text: "ProviderPipe vs RegisterPipe",
+      level: 2,
+    },
+    { id: "available-pipes", text: "Available Pipes", level: 2 },
+    { id: "usage-examples", text: "Usage Examples", level: 2 },
+    { id: "pipe-composition", text: "Pipe Composition", level: 2 },
+    { id: "how-pipes-work", text: "How Pipes Work Internally", level: 2 },
+    { id: "creating-custom-pipes", text: "Creating Custom Pipes", level: 2 },
+    {
+      id: "built-in-pipes-reference",
+      text: "Built-in Pipes Reference",
+      level: 2,
+    },
+    { id: "best-practices", text: "Best Practices", level: 2 },
+    { id: "common-patterns", text: "Common Patterns", level: 2 },
+    { id: "troubleshooting", text: "Troubleshooting", level: 2 },
+    { id: "advanced-topics", text: "Advanced Topics", level: 2 },
+  ],
   "/ts-ioc-container/injector": [
     { id: "injection-strategies", text: "Injection Strategies", level: 2 },
     { id: "available-injectors", text: "Available Injectors", level: 2 },

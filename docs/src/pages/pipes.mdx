@@ -1,0 +1,772 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Pipes
+description: Composable transformations for Providers and Registrations - ProviderPipe and RegisterPipe
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+import pipeDiagramCode from "@assets/diagrams/provider-pipeline.mermaid?raw";
+
+# Pipes
+
+**Goal:** Provide composable transformations for both Providers and Registrations.
+
+Pipes are the foundation of the IoC container's composability. They allow you to transform providers and registrations with features like singleton caching, lazy loading, argument injection, and more. Understanding pipes is essential for building flexible, maintainable dependency injection systems.
+
+<h2 id="what-are-pipes" class="toc-link">What are Pipes?</h2>
+
+Pipes are transformation functions that modify how providers create instances or how registrations are configured. Think of them as middleware that wraps your dependencies with additional behavior.
+
+There are two types of pipes:
+- **ProviderPipe**: Can transform both providers and registrations
+- **RegisterPipe**: Functions that only work at the registration level
+
+<h2 id="providerpipe-vs-registerpipe" class="toc-link">ProviderPipe vs RegisterPipe</h2>
+
+### ProviderPipe Interface
+
+A **ProviderPipe** is an object with two transformation methods:
+
+<CodeBlock
+  code={`export interface ProviderPipe<T = unknown> {
+  mapProvider(p: IProvider<T>): IProvider<T>;          // Transforms a Provider
+  mapRegistration(r: IRegistration<T>): IRegistration<T>;  // Transforms a Registration
+}`}
+  lang="typescript"
+/>
+
+This dual nature allows ProviderPipes to work seamlessly with:
+- **Provider.pipe()** - Uses `mapProvider` to transform the provider
+- **Registration.pipe()** - Uses `mapProvider` internally
+- **@register()** decorator - Uses `mapRegistration` to transform the registration
+
+### registerPipe Helper Factory
+
+**registerPipe** is a helper function that creates ProviderPipe objects from a simple transformation function:
+
+<CodeBlock
+  code={`export const registerPipe = <T>(
+  mapProvider: (p: IProvider<T>) => IProvider<T>
+): ProviderPipe<T> => ({
+  mapProvider,
+  mapRegistration: (r) => r.pipe(mapProvider),
+});`}
+  lang="typescript"
+/>
+
+**Key Insight:** All built-in pipe functions (`singleton()`, `lazy()`, `args()`, etc.) use `registerPipe()` internally. This is why they work everywhere - they're all ProviderPipes!
+
+### MapFn<IRegistration>
+
+Some transformations only make sense at the registration level, like `bindTo()` and `scope()`. These are plain functions of type `MapFn<IRegistration>`:
+
+<CodeBlock
+  code={`type MapFn<T> = (value: T) => T;
+
+// Registration-only pipes
+export const bindTo = (...tokens: DependencyKey[]): MapFn<IRegistration> =>
+  (r) => r.bindToKey(...tokens);
+
+export const scope = (...rules: ScopeMatchRule[]): MapFn<IRegistration> =>
+  (r) => r.when(...rules);`}
+  lang="typescript"
+/>
+
+<h2 id="available-pipes" class="toc-link">Available Pipes</h2>
+
+Here's a complete reference of all available pipes in the container:
+
+| Pipe Name | ProviderPipe | RegisterPipe | Purpose | File |
+|-----------|:------------:|:------------:|---------|------|
+| `singleton()` | ✅ | ✅ | Caches single instance per scope | `SingletonProvider.ts` |
+| `args(...values)` | ✅ | ✅ | Injects static arguments into constructor | `IProvider.ts` |
+| `argsFn(fn)` | ✅ | ✅ | Injects dynamically resolved arguments | `IProvider.ts` |
+| `lazy()` | ✅ | ✅ | Defers instantiation until first access | `IProvider.ts` |
+| `scopeAccess(rule)` | ✅ | ✅ | Controls visibility based on scope rules | `IProvider.ts` |
+| `decorate(fn)` | ✅ | ✅ | Wraps instance with decorator function | `DecoratorProvider.ts` |
+| `scope(...rules)` | ❌ | ✅ | Determines which scopes registration applies to | `IRegistration.ts` |
+| `bindTo(...tokens)` | ❌ | ✅ | Binds registration to dependency keys | `IRegistration.ts` |
+
+**Legend:**
+- ✅ **ProviderPipe**: Can be used in `.pipe()` on IProvider and IRegistration
+- ✅ **RegisterPipe**: Can be used in `@register()` decorator and `.pipe()` on IRegistration
+- ❌ Not a ProviderPipe (registration-only)
+
+**Note:** The last two (`scope()` and `bindTo()`) are `MapFn<IRegistration>` functions that only work at the registration level, not the provider level.
+
+<h2 id="usage-examples" class="toc-link">Usage Examples</h2>
+
+### Using ProviderPipes with @register Decorator
+
+ProviderPipes work seamlessly with the `@register` decorator:
+
+<CodeBlock
+  code={`import { register, bindTo, singleton, scopeAccess } from 'ts-ioc-container';
+
+@register(
+  bindTo('IPasswordHasher'),    // RegisterPipe (registration-only)
+  singleton(),                   // ProviderPipe (works everywhere)
+  scopeAccess((opts) =>          // ProviderPipe (works everywhere)
+    opts.invocationScope.hasTag('authenticated')
+  )
+)
+class PasswordHasher {
+  private readonly salt: string;
+
+  constructor() {
+    this.salt = 'random_salt_' + Math.random().toString(36);
+  }
+
+  hash(password: string): string {
+    return \`hashed_\${password}_\${this.salt}\`;
+  }
+}`}
+  lang="typescript"
+/>
+
+### Using Pipes with Provider.pipe()
+
+When creating providers manually, you can chain multiple pipes:
+
+<CodeBlock
+  code={`import { Container, Provider as R, singleton, lazy, args } from 'ts-ioc-container';
+
+const container = new Container().addRegistration(
+  R.fromClass(EmailService)
+    .bindToKey('EmailService')
+    .pipe(
+      singleton(),              // ProviderPipe - cache instance
+      lazy(),                   // ProviderPipe - defer creation
+      args('smtp.gmail.com')    // ProviderPipe - inject argument
+    )
+);`}
+  lang="typescript"
+/>
+
+### Using Pipes with Registration.pipe()
+
+Registrations can also use pipes, accepting both ProviderPipes and registration-specific pipes:
+
+<CodeBlock
+  code={`import { Container, Registration as R, bindTo, scope, singleton } from 'ts-ioc-container';
+
+const container = new Container().addRegistration(
+  R.fromClass(ConfigService)
+    .pipe(
+      bindTo('Config'),                         // Registration pipe
+      scope((c) => c.hasTag('application')),    // Registration pipe
+      singleton()                               // Provider pipe (auto-converted)
+    )
+);`}
+  lang="typescript"
+/>
+
+### Mixing ProviderPipes and Raw Functions
+
+You can mix ProviderPipe objects with raw transformation functions:
+
+<CodeBlock
+  code={`import { Provider as R, lazy, singleton } from 'ts-ioc-container';
+
+R.fromClass(Service)
+  .pipe(
+    (p) => p.setArgs(() => ['arg1', 'arg2']),  // Raw function
+    lazy(),                                      // ProviderPipe
+    singleton()                                  // ProviderPipe
+  )`}
+  lang="typescript"
+/>
+
+<h2 id="pipe-composition" class="toc-link">Pipe Composition</h2>
+
+Pipes use the Decorator pattern to compose transformations. Each pipe wraps the previous provider with additional functionality:
+
+<CodeBlock
+  code={`const provider = Provider.fromClass(Logger)
+  .pipe(args('/var/log/app.log'))     // 1. Bind arguments
+  .pipe(singleton())                  // 2. Cache instances
+  .pipe(scopeAccess(adminOnly))       // 3. Control visibility
+  .pipe(lazy());                      // 4. Defer creation
+
+// Each pipe wraps the previous provider:
+// Final provider: Lazy(ScopeAccess(Singleton(Args(Base))))`}
+  lang="typescript"
+/>
+
+### Pipe Order Matters
+
+The order of pipes affects behavior. Generally, follow this pattern:
+
+1. **Arguments first** - `args()`, `argsFn()`
+2. **Transformations second** - `decorate()`
+3. **Lazy third** - `lazy()`
+4. **Singleton last** - `singleton()`
+5. **Access control last** - `scopeAccess()`
+
+<CodeBlock
+  code={`// ✅ Good order
+R.fromClass(Service)
+  .pipe(
+    args('config.json'),        // 1. Arguments
+    lazy(),                     // 2. Lazy
+    singleton(),                // 3. Singleton
+    scopeAccess(adminOnly)      // 4. Access control
+  )
+
+// ❌ Bad order - singleton won't cache lazy instances properly
+R.fromClass(Service)
+  .pipe(
+    singleton(),               // Wrong - caching happens before lazy
+    lazy(),                    // Wrong - each resolve creates new proxy
+    args('config.json')        // Wrong - args applied after lazy wrapper
+  )`}
+  lang="typescript"
+/>
+
+<h2 id="how-pipes-work" class="toc-link">How Pipes Work Internally</h2>
+
+### IProvider.pipe() Implementation
+
+The `IProvider.pipe()` method accepts both raw functions and ProviderPipe objects:
+
+<CodeBlock
+  code={`pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T> {
+  const fns = mappers.map((m): MapFn<IProvider<T>> =>
+    isProviderPipe<T>(m) ? m.mapProvider.bind(m) : m
+  );
+  return pipe(...fns)(this);
+}`}
+  lang="typescript"
+/>
+
+When you pass a ProviderPipe, it extracts the `mapProvider` method. Raw functions are used as-is.
+
+### IRegistration.pipe() Implementation
+
+Similar to `IProvider.pipe()`, but stores transformations for later application:
+
+<CodeBlock
+  code={`pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): this {
+  const fns = mappers.map((m): MapFn<IProvider<T>> =>
+    isProviderPipe<T>(m) ? m.mapProvider.bind(m) : m
+  );
+  this.mappers.push(...fns);
+  return this;
+}`}
+  lang="typescript"
+/>
+
+### @register() Decorator Processing
+
+The `@register` decorator accepts both `MapFn<IRegistration>` and ProviderPipe:
+
+<CodeBlock
+  code={`export const register =
+  (...mappers: Array<MapFn<IRegistration> | ProviderPipe>) =>
+  setClassMetadata(METADATA_KEY, (acc: MapFn<IRegistration>[] | undefined) => {
+    const result = mappers.map((m) =>
+      isProviderPipe(m)
+        ? (r: IRegistration) => m.mapRegistration(r)  // Use mapRegistration
+        : m                                            // Use as-is
+    ) as MapFn<IRegistration>[];
+    return acc ? [...result, ...acc] : result;
+  });`}
+  lang="typescript"
+/>
+
+When processing ProviderPipes, the decorator calls `mapRegistration()` to transform the registration.
+
+### Type Guard for ProviderPipe
+
+The container uses a simple type guard to detect ProviderPipes:
+
+<CodeBlock
+  code={`export const isProviderPipe = <T>(obj: unknown): obj is ProviderPipe<T> =>
+  obj !== null &&
+  typeof obj === 'object' &&
+  'mapProvider' in obj;`}
+  lang="typescript"
+/>
+
+<h2 id="creating-custom-pipes" class="toc-link">Creating Custom Pipes</h2>
+
+### Creating a ProviderPipe
+
+Use the `registerPipe` helper to create custom ProviderPipes:
+
+<CodeBlock
+  code={`import { registerPipe, IProvider } from 'ts-ioc-container';
+
+// Custom pipe that logs instance creation
+export const logCreation = <T>() => registerPipe<T>((provider: IProvider<T>) => {
+  return new Provider((container, options) => {
+    console.log(\`Creating instance of \${provider.constructor.name}\`);
+    const instance = provider.resolve(container, options);
+    console.log(\`Created instance:\`, instance);
+    return instance;
+  });
+});
+
+// Usage
+@register(bindTo('MyService'), logCreation())
+class MyService {}`}
+  lang="typescript"
+/>
+
+### Creating a Registration-Only Pipe
+
+For registration-specific transformations, create a `MapFn<IRegistration>`:
+
+<CodeBlock
+  code={`import { IRegistration, MapFn } from 'ts-ioc-container';
+
+// Custom pipe that adds multiple tags
+export const withTags = (...tags: string[]): MapFn<IRegistration> =>
+  (r) => {
+    // Add custom metadata or transformation
+    return r.pipe(
+      scope((c) => tags.some(tag => c.hasTag(tag)))
+    );
+  };
+
+// Usage
+@register(
+  bindTo('Service'),
+  withTags('admin', 'authenticated')
+)
+class SecureService {}`}
+  lang="typescript"
+/>
+
+<h2 id="built-in-pipes-reference" class="toc-link">Built-in Pipes Reference</h2>
+
+### singleton()
+
+Caches a single instance per scope. Essential for expensive resources.
+
+<CodeBlock
+  code={`import { singleton } from 'ts-ioc-container';
+
+@register(bindTo('DbConnection'), singleton())
+class DatabaseConnection {
+  constructor() {
+    console.log('Expensive DB connection created');
+  }
+}
+
+// Only logs once per scope
+const db1 = container.resolve('DbConnection');
+const db2 = container.resolve('DbConnection');
+console.log(db1 === db2); // true`}
+  lang="typescript"
+/>
+
+### args(...values)
+
+Injects static arguments into constructor.
+
+<CodeBlock
+  code={`import { args } from 'ts-ioc-container';
+
+class Logger {
+  constructor(public filename: string) {}
+}
+
+container.addRegistration(
+  R.fromClass(Logger).pipe(args('/var/log/app.log'))
+);
+
+const logger = container.resolve<Logger>('Logger');
+console.log(logger.filename); // '/var/log/app.log'`}
+  lang="typescript"
+/>
+
+### argsFn(fn)
+
+Injects dynamically resolved arguments.
+
+<CodeBlock
+  code={`import { argsFn } from 'ts-ioc-container';
+
+class Service {
+  constructor(public env: string) {}
+}
+
+container
+  .addRegistration(R.fromClass(Config))
+  .addRegistration(
+    R.fromClass(Service).pipe(
+      argsFn((scope) => [scope.resolve<Config>('Config').env])
+    )
+  );`}
+  lang="typescript"
+/>
+
+### lazy()
+
+Defers instantiation until first access using JavaScript Proxies.
+
+<CodeBlock
+  code={`import { lazy, singleton } from 'ts-ioc-container';
+
+@register(bindTo('ExpensiveService'), lazy(), singleton())
+class ExpensiveService {
+  constructor() {
+    console.log('Expensive initialization');
+  }
+
+  doWork() {
+    console.log('Working...');
+  }
+}
+
+const service = container.resolve('ExpensiveService');
+// Nothing logged yet - proxy returned
+
+service.doWork();
+// Now logs: "Expensive initialization"
+// Then logs: "Working..."`}
+  lang="typescript"
+/>
+
+### scopeAccess(rule)
+
+Controls which scopes can access a dependency.
+
+<CodeBlock
+  code={`import { scopeAccess } from 'ts-ioc-container';
+
+@register(
+  bindTo('AdminService'),
+  scopeAccess((opts) => opts.invocationScope.hasTag('admin'))
+)
+class AdminService {}
+
+const adminScope = container.createScope({ tags: ['admin'] });
+const userScope = container.createScope({ tags: ['user'] });
+
+adminScope.resolve('AdminService'); // ✅ Works
+userScope.resolve('AdminService');  // ❌ Throws DependencyNotFoundError`}
+  lang="typescript"
+/>
+
+### decorate(fn)
+
+Wraps instances with additional behavior using the Decorator pattern.
+
+<CodeBlock
+  code={`import { decorate } from 'ts-ioc-container';
+
+interface IRepository {
+  save(item: unknown): Promise<void>;
+}
+
+const withLogging = <T extends IRepository>(instance: T): T => {
+  return new Proxy(instance, {
+    get(target, prop) {
+      if (prop === 'save') {
+        return async (...args: unknown[]) => {
+          console.log('Saving:', args);
+          const result = await target[prop](...args);
+          console.log('Saved successfully');
+          return result;
+        };
+      }
+      return target[prop as keyof T];
+    }
+  });
+};
+
+@register(bindTo('IRepository'), decorate(withLogging))
+class TodoRepository implements IRepository {
+  async save(item: unknown): Promise<void> {
+    // Database save logic
+  }
+}`}
+  lang="typescript"
+/>
+
+### scope(...rules)
+
+Determines which container scopes should have this registration.
+
+<CodeBlock
+  code={`import { scope } from 'ts-ioc-container';
+
+@register(
+  bindTo('RequestLogger'),
+  scope((c) => c.hasTag('request')),
+  singleton()
+)
+class RequestLogger {}
+
+const appContainer = new Container({ tags: ['application'] });
+const requestScope = appContainer.createScope({ tags: ['request'] });
+
+appContainer.resolve('RequestLogger');  // ❌ Not registered here
+requestScope.resolve('RequestLogger');  // ✅ Available in request scope`}
+  lang="typescript"
+/>
+
+### bindTo(...tokens)
+
+Binds a registration to one or more dependency keys.
+
+<CodeBlock
+  code={`import { bindTo } from 'ts-ioc-container';
+
+@register(
+  bindTo('ILogger', 'Logger', 'ConsoleLogger'),
+  singleton()
+)
+class Logger {}
+
+// All three keys resolve to same instance
+container.resolve('ILogger');
+container.resolve('Logger');
+container.resolve('ConsoleLogger');`}
+  lang="typescript"
+/>
+
+<h2 id="best-practices" class="toc-link">Best Practices</h2>
+
+### Pipe Order
+
+Always apply pipes in this order for predictable behavior:
+
+1. **Binding and scope** - `bindTo()`, `scope()`
+2. **Arguments** - `args()`, `argsFn()`
+3. **Decorators** - `decorate()`
+4. **Lazy loading** - `lazy()`
+5. **Singleton** - `singleton()`
+6. **Access control** - `scopeAccess()`
+
+### Use ProviderPipes for Reusability
+
+Create ProviderPipes (not registration pipes) when you need reusability across both provider and registration contexts:
+
+<CodeBlock
+  code={`// ✅ Good - ProviderPipe, works everywhere
+export const cached = <T>() => registerPipe<T>((p) =>
+  new SingletonProvider(p)
+);
+
+// ❌ Limited - Only works with registrations
+export const cached = <T>(): MapFn<IRegistration<T>> =>
+  (r) => r.pipe((p) => new SingletonProvider(p));`}
+  lang="typescript"
+/>
+
+### Prefer Built-in Pipes
+
+Use built-in pipes when possible - they're well-tested and optimized:
+
+<CodeBlock
+  code={`// ✅ Good - use built-in singleton()
+@register(bindTo('Service'), singleton())
+class MyService {}
+
+// ❌ Avoid - custom implementation
+@register(bindTo('Service'), customSingleton())
+class MyService {}`}
+  lang="typescript"
+/>
+
+### Keep Pipes Focused
+
+Each pipe should do one thing well. Avoid creating complex pipes that combine multiple concerns:
+
+<CodeBlock
+  code={`// ✅ Good - focused pipes
+@register(
+  bindTo('Service'),
+  singleton(),
+  lazy(),
+  scopeAccess(adminOnly)
+)
+
+// ❌ Bad - mega-pipe doing everything
+@register(
+  bindTo('Service'),
+  megaPipe({ singleton: true, lazy: true, admin: true })
+)`}
+  lang="typescript"
+/>
+
+### Document Custom Pipes
+
+Always document what your custom pipes do and any side effects:
+
+<CodeBlock
+  code={`/**
+ * Logs all method calls on the resolved instance.
+ *
+ * @param logger - The logger instance to use
+ * @returns ProviderPipe that wraps instances with logging
+ *
+ * @example
+ * @register(bindTo('UserService'), withMethodLogging(console))
+ * class UserService {
+ *   getUser(id: string) { ... }
+ * }
+ */
+export const withMethodLogging = (logger: Console) =>
+  registerPipe((provider) => { ... });`}
+  lang="typescript"
+/>
+
+<h2 id="common-patterns" class="toc-link">Common Patterns</h2>
+
+### Request-Scoped Singleton
+
+Singleton per request, but different instances across requests:
+
+<CodeBlock
+  code={`@register(
+  bindTo('SessionService'),
+  scope((c) => c.hasTag('request')),
+  singleton()
+)
+class SessionService {}`}
+  lang="typescript"
+/>
+
+### Lazy Singleton
+
+Defer creation until access, but only create once:
+
+<CodeBlock
+  code={`@register(
+  bindTo('DatabaseConnection'),
+  lazy(),
+  singleton()
+)
+class DatabaseConnection {}`}
+  lang="typescript"
+/>
+
+### Conditional Registration
+
+Register only in specific environments:
+
+<CodeBlock
+  code={`@register(
+  bindTo('DebugService'),
+  scope((c) => c.hasTag('development')),
+  singleton()
+)
+class DebugService {}`}
+  lang="typescript"
+/>
+
+### Decorated Singleton
+
+Add cross-cutting concerns to cached instances:
+
+<CodeBlock
+  code={`@register(
+  bindTo('ApiClient'),
+  decorate(withRetry),
+  decorate(withLogging),
+  singleton()
+)
+class ApiClient {}`}
+  lang="typescript"
+/>
+
+<h2 id="troubleshooting" class="toc-link">Troubleshooting</h2>
+
+### "Cannot use bindTo in Provider.pipe()"
+
+**Problem:** Trying to use registration-only pipes with `Provider.pipe()`
+
+<CodeBlock
+  code={`// ❌ Wrong
+Provider.fromClass(Service).pipe(bindTo('Service'))
+
+// ✅ Correct
+Registration.fromClass(Service).pipe(bindTo('Service'))
+// or
+Provider.fromClass(Service).bindToKey('Service')`}
+  lang="typescript"
+/>
+
+### Singleton Not Caching Lazy Instances
+
+**Problem:** Wrong pipe order - singleton before lazy
+
+<CodeBlock
+  code={`// ❌ Wrong order
+.pipe(singleton(), lazy())
+
+// ✅ Correct order
+.pipe(lazy(), singleton())`}
+  lang="typescript"
+/>
+
+### Arguments Not Being Injected
+
+**Problem:** Arguments applied after lazy wrapper
+
+<CodeBlock
+  code={`// ❌ Wrong order
+.pipe(lazy(), args('value'))
+
+// ✅ Correct order
+.pipe(args('value'), lazy())`}
+  lang="typescript"
+/>
+
+<h2 id="advanced-topics" class="toc-link">Advanced Topics</h2>
+
+### Pipe Composition with Functional Programming
+
+Leverage functional composition for complex transformations:
+
+<CodeBlock
+  code={`import { pipe } from 'fp-ts/function';
+
+const createCachedLazyService = <T>() =>
+  pipe(
+    args<T>(),
+    lazy<T>(),
+    singleton<T>()
+  );
+
+@register(bindTo('Service'), createCachedLazyService())
+class MyService {}`}
+  lang="typescript"
+/>
+
+### Type-Safe Pipe Builders
+
+Create type-safe builders for common pipe combinations:
+
+<CodeBlock
+  code={`class PipeBuilder<T> {
+  private pipes: ProviderPipe<T>[] = [];
+
+  singleton(): this {
+    this.pipes.push(singleton<T>());
+    return this;
+  }
+
+  lazy(): this {
+    this.pipes.push(lazy<T>());
+    return this;
+  }
+
+  build(): ProviderPipe<T> {
+    return registerPipe((p) =>
+      this.pipes.reduce((acc, pipe) => pipe.mapProvider(acc), p)
+    );
+  }
+}
+
+// Usage
+const myPipe = new PipeBuilder()
+  .lazy()
+  .singleton()
+  .build();`}
+  lang="typescript"
+/>

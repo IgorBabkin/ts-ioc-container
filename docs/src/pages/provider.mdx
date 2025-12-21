@@ -177,18 +177,18 @@ class AnalyticsService {
 
 #### 2. With Provider Pipe
 
-Call `.lazy()` directly on the provider in the pipe:
+Use `Provider.fromClass()` directly with the `lazy()` helper:
 
 <CodeBlock
-  code={`import { Registration as R, singleton } from 'ts-ioc-container';
+  code={`import { Provider, lazy, singleton } from 'ts-ioc-container';
 
-// Manual registration with lazy loading
-const container = new Container()
-  .addRegistration(
-    R.fromClass(EmailService)
-      .bindToKey('EmailService')
-      .pipe(singleton(), (p) => p.lazy())
-  );`}
+// Pure provider with lazy loading
+const emailProvider = Provider.fromClass(EmailService)
+  .pipe(lazy(), singleton());
+
+// Register the provider
+const container = new Container();
+container.register('EmailService', emailProvider);`}
   lang="typescript"
 />
 
