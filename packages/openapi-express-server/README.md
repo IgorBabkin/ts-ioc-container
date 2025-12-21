@@ -14,9 +14,9 @@ Express.js server implementation for OpenAPI-generated interfaces from `@ibabkin
 ## Installation
 
 ```bash
-npm install @ibabkin/openapi-express-server @ibabkin/openapi-framework express
+pnpm add @ibabkin/openapi-express-server @ibabkin/openapi-framework express
 # or
-yarn add @ibabkin/openapi-express-server @ibabkin/openapi-framework express
+npm install @ibabkin/openapi-express-server @ibabkin/openapi-framework express
 ```
 
 ## Quick Start
