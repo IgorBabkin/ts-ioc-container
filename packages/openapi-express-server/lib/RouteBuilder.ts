@@ -73,9 +73,8 @@ export class RouteBuilder {
       throw new Error(`Result is not object`);
     }
 
-    if ('status' in result) {
-      res.status(result.status);
-    }
+    const status = 'status' in result ? result.status : 200;
+    res.status(status);
 
     if ('headers' in result && typeof result.headers === 'object') {
       for (const [key, value] of Object.entries(result.headers)) {
@@ -87,9 +86,8 @@ export class RouteBuilder {
 
     if ('body' in result) {
       res.json(result.body);
-      return;
+    } else {
+      res.end();
     }
-
-    res.end();
   }
 }

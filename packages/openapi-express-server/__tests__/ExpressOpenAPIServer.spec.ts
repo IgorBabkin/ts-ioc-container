@@ -1,9 +1,9 @@
+import 'reflect-metadata';
 import request from 'supertest';
-import { type Express } from 'express';
-import * as express from 'express';
+import express, { type Express } from 'express';
 import * as path from 'path';
 import { containerMiddleware } from '../lib/containerMiddleware';
-import { Container } from 'ts-ioc-container';
+import { Container, Provider } from 'ts-ioc-container';
 import { RouteBuilder } from '../lib/RouteBuilder';
 import { z } from 'zod';
 
@@ -59,7 +59,7 @@ describe('ExpressOpenAPIServer', () => {
     const container = new Container({ tags: ['application'] });
 
     // Register controllers in the container
-    container.register('Items', { useClass: ItemsController });
+    container.register('Items', Provider.fromClass(ItemsController));
 
     const routeBuilder = new RouteBuilder({
       specPath,

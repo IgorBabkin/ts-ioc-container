@@ -10,7 +10,7 @@ import { containerMiddleware } from '../../lib/containerMiddleware';
 import { RouteBuilder } from '../../lib/RouteBuilder';
 
 const API_SPEC = path.resolve(__dirname, './api.yaml');
-const GENERATED_TYPES = path.resolve(__dirname, './generated-types.d.ts');
+const GENERATED_TYPES = path.resolve(__dirname, './generated-types.ts');
 const GENERATED_VALIDATORS = path.resolve(__dirname, './generated-validators.ts');
 
 describe('Generated Types Integration Test', () => {
@@ -336,18 +336,14 @@ describe('Integration Test with Generated Types and Validators', () => {
 
   describe('GET /users/:id', () => {
     it('should return a specific user', async () => {
-      const response = await request(app)
-        .get('/users/123e4567-e89b-12d3-a456-426614174000')
-        .expect(200);
+      const response = await request(app).get('/users/123e4567-e89b-12d3-a456-426614174000').expect(200);
 
       expect(response.body.id).toBe('123e4567-e89b-12d3-a456-426614174000');
       expect(response.body.email).toBe('john@example.com');
     });
 
     it('should return 500 for non-existent user', async () => {
-      const response = await request(app)
-        .get('/users/999e4567-e89b-12d3-a456-426614174999')
-        .expect(500);
+      const response = await request(app).get('/users/999e4567-e89b-12d3-a456-426614174999').expect(500);
 
       expect(response.body).toHaveProperty('error');
     });
@@ -360,10 +356,7 @@ describe('Integration Test with Generated Types and Validators', () => {
         role: 'user',
       };
 
-      const response = await request(app)
-        .put('/users/123e4567-e89b-12d3-a456-426614174000')
-        .send(updates)
-        .expect(200);
+      const response = await request(app).put('/users/123e4567-e89b-12d3-a456-426614174000').send(updates).expect(200);
 
       expect(response.body.name).toBe('John Updated');
       expect(response.body.role).toBe('user');
