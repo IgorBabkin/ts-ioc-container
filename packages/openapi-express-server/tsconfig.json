@@ -9,7 +9,9 @@
     "incremental": true,
     "target": "ES6",
     "module": "commonjs",
-    "baseUrl": "./lib"
+    "baseUrl": "./lib",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "references": [
     { "path": "../openapi-framework" }

@@ -1,7 +1,11 @@
 import request from 'supertest';
-import { Express } from 'express';
-import { createServer } from '../lib';
+import { type Express } from 'express';
+import * as express from 'express';
 import * as path from 'path';
+import { containerMiddleware } from '../lib/containerMiddleware';
+import { Container } from 'ts-ioc-container';
+import { RouteBuilder } from '../lib/RouteBuilder';
+import { z } from 'zod';
 
 enum HttpStatus {
   OK = 200,
@@ -52,13 +56,38 @@ describe('ExpressOpenAPIServer', () => {
 
   beforeAll(() => {
     const specPath = path.resolve(__dirname, './swagger.yaml');
+    const container = new Container({ tags: ['application'] });
 
-    app = createServer({
+    // Register controllers in the container
+    container.register('Items', { useClass: ItemsController });
+
+    const routeBuilder = new RouteBuilder({
       specPath,
       server: {
         Items: ItemsController,
       },
+      payloadValidators: {
+        getItems: z.object({
+          query: z.object({ limit: z.string().optional() }).optional(),
+        }),
+        createItem: z.object({
+          body: z.object({ name: z.string() }),
+        }),
+        getItem: z.object({
+          params: z.object({ id: z.string() }),
+        }),
+        deleteItem: z.object({
+          params: z.object({ id: z.string() }),
+        }),
+      },
     });
+
+    app = express();
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(containerMiddleware(container));
+
+    routeBuilder.applyTo(app);
   });
 
   describe('GET /items', () => {
@@ -80,10 +109,7 @@ describe('ExpressOpenAPIServer', () => {
 
   describe('POST /items', () => {
     it('should create a new item', async () => {
-      const response = await request(app)
-        .post('/items')
-        .send({ name: 'New Item' })
-        .expect(201);
+      const response = await request(app).post('/items').send({ name: 'New Item' }).expect(201);
 
       expect(response.body).toEqual({
         id: '123',

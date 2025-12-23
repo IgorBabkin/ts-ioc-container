@@ -1,40 +1,38 @@
-import { Express } from 'express';
-import { OpenAPIV3 } from 'openapi-types';
-import { ExpressOpenAPIServer } from './ExpressOpenAPIServer';
-import { OpenAPIServerConfig } from './types';
-import * as fs from 'fs';
-import * as yaml from 'js-yaml';
+import * as express from 'express';
+import { Express, NextFunction, Request, Response } from 'express';
+import { RouteBuilder } from './RouteBuilder';
+import { ZodObject } from 'zod';
+
+const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Error:', error);
+
+  if (res.headersSent) {
+    return next(error);
+  }
+};
 
 export interface CreateServerOptions {
-  specPath?: string;
-  spec?: OpenAPIV3.Document;
+  specPath: string;
   server: Record<string, any>;
-  basePath?: string;
-  errorHandler?: OpenAPIServerConfig['errorHandler'];
-}
-
-function loadYAML(filePath: string): OpenAPIV3.Document {
-  const content = fs.readFileSync(filePath, 'utf8');
-  return yaml.load(content) as OpenAPIV3.Document;
+  payloadValidators: Record<string, ZodObject>;
 }
 
 export function createServer(options: CreateServerOptions): Express {
-  if (!options.spec && !options.specPath) {
-    throw new Error('Either spec or specPath must be provided');
+  if (!options.specPath) {
+    throw new Error('specPath must be provided');
   }
 
-  const spec = options.spec || (options.specPath ? loadYAML(options.specPath) : undefined);
-
-  if (!spec) {
-    throw new Error('Failed to load OpenAPI specification');
-  }
-
-  const serverInstance = new ExpressOpenAPIServer({
-    spec,
-    controllers: options.server,
-    basePath: options.basePath,
-    errorHandler: options.errorHandler,
+  const routeBuilder = new RouteBuilder({
+    specPath: options.specPath,
+    server: options.server,
+    payloadValidators: options.payloadValidators,
   });
 
-  return serverInstance.getApp();
+  const app = express();
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
+  routeBuilder.applyTo(app);
+  app.use(errorHandler);
+
+  return app;
 }

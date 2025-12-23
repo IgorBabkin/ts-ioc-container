@@ -1,0 +1,406 @@
+import { openapiToServer } from '@ibabkin/openapi-framework';
+import { openapiToZod } from '@ibabkin/openapi-framework/validation';
+import * as path from 'path';
+import * as fs from 'fs';
+import request from 'supertest';
+import { type Express } from 'express';
+import * as express from 'express';
+import { Container } from 'ts-ioc-container';
+import { containerMiddleware } from '../../lib/containerMiddleware';
+import { RouteBuilder } from '../../lib/RouteBuilder';
+
+const API_SPEC = path.resolve(__dirname, './api.yaml');
+const GENERATED_TYPES = path.resolve(__dirname, './generated-types.d.ts');
+const GENERATED_VALIDATORS = path.resolve(__dirname, './generated-validators.ts');
+
+describe('Generated Types Integration Test', () => {
+  beforeAll(() => {
+    // Generate TypeScript types
+    openapiToServer({
+      inputFile: API_SPEC,
+      outputFile: GENERATED_TYPES,
+      emitJSON: false,
+    });
+
+    // Generate Zod validators
+    openapiToZod({
+      inputFile: API_SPEC,
+      outputFile: GENERATED_VALIDATORS,
+    });
+
+    // Verify files were generated
+    expect(fs.existsSync(GENERATED_TYPES)).toBe(true);
+    expect(fs.existsSync(GENERATED_VALIDATORS)).toBe(true);
+  });
+
+  it('should generate TypeScript types', () => {
+    const content = fs.readFileSync(GENERATED_TYPES, 'utf-8');
+
+    // Check for type definitions
+    expect(content).toContain('export type User');
+    expect(content).toContain('export type CreateUserRequest');
+    expect(content).toContain('export type UpdateUserRequest');
+
+    // Check for payload types
+    expect(content).toContain('export type GetUsersPayload');
+    expect(content).toContain('export type CreateUserPayload');
+    expect(content).toContain('export type GetUserPayload');
+    expect(content).toContain('export type UpdateUserPayload');
+    expect(content).toContain('export type DeleteUserPayload');
+
+    // Check for response types
+    expect(content).toContain('export interface GetUsersResponse');
+    expect(content).toContain('export interface CreateUserResponse');
+    expect(content).toContain('export interface GetUserResponse');
+    expect(content).toContain('export interface UpdateUserResponse');
+    expect(content).toContain('export interface DeleteUserResponse');
+
+    // Check for controller interface
+    expect(content).toContain('export interface IUsersController');
+    expect(content).toContain('getUsers(payload: GetUsersPayload)');
+    expect(content).toContain('createUser(payload: CreateUserPayload)');
+    expect(content).toContain('getUser(payload: GetUserPayload)');
+    expect(content).toContain('updateUser(payload: UpdateUserPayload)');
+    expect(content).toContain('deleteUser(payload: DeleteUserPayload)');
+
+    // Check for IServer interface
+    expect(content).toContain('export interface IServer');
+    expect(content).toContain('users: constructor<IUsersController>');
+  });
+
+  it('should generate Zod validators', () => {
+    const content = fs.readFileSync(GENERATED_VALIDATORS, 'utf-8');
+
+    // Check for schema exports
+    expect(content).toContain('export const UserSchema');
+    expect(content).toContain('export const CreateUserRequestSchema');
+    expect(content).toContain('export const UpdateUserRequestSchema');
+
+    // Check for payload validator exports
+    expect(content).toContain('export const GetUsersPayloadSchema');
+    expect(content).toContain('export const CreateUserPayloadSchema');
+    expect(content).toContain('export const GetUserPayloadSchema');
+    expect(content).toContain('export const UpdateUserPayloadSchema');
+    expect(content).toContain('export const DeleteUserPayloadSchema');
+  });
+
+  afterAll(() => {
+    // Clean up generated files
+    if (fs.existsSync(GENERATED_TYPES)) {
+      fs.unlinkSync(GENERATED_TYPES);
+    }
+    if (fs.existsSync(GENERATED_VALIDATORS)) {
+      fs.unlinkSync(GENERATED_VALIDATORS);
+    }
+  });
+});
+
+// In-memory user store for testing
+const users = new Map<string, any>([
+  [
+    '123e4567-e89b-12d3-a456-426614174000',
+    {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      email: 'john@example.com',
+      name: 'John Doe',
+      role: 'admin',
+      createdAt: new Date('2024-01-01T00:00:00Z'),
+    },
+  ],
+  [
+    '223e4567-e89b-12d3-a456-426614174001',
+    {
+      id: '223e4567-e89b-12d3-a456-426614174001',
+      email: 'jane@example.com',
+      name: 'Jane Smith',
+      role: 'user',
+      createdAt: new Date('2024-01-02T00:00:00Z'),
+    },
+  ],
+]);
+
+let nextId = 3;
+
+// Implementation of UsersController using generated types
+class UsersController {
+  async getUsers(payload: any) {
+    let filteredUsers = Array.from(users.values());
+
+    if (payload.query?.role) {
+      filteredUsers = filteredUsers.filter((u: any) => u.role === payload.query.role);
+    }
+
+    const page = payload.query?.page || 1;
+    const limit = payload.query?.limit || 10;
+    const start = (page - 1) * limit;
+    const paginatedUsers = filteredUsers.slice(start, start + limit);
+
+    return {
+      status: 200,
+      headers: {},
+      body: {
+        users: paginatedUsers,
+        total: filteredUsers.length,
+      },
+    };
+  }
+
+  async createUser(payload: any) {
+    const id = `${nextId++}23e4567-e89b-12d3-a456-42661417400${nextId}`;
+    const user = {
+      id,
+      email: payload.body.email,
+      name: payload.body.name,
+      role: payload.body.role,
+      createdAt: new Date(),
+    };
+
+    users.set(id, user);
+
+    return {
+      status: 201,
+      headers: {
+        Location: `/users/${id}`,
+      },
+      body: user,
+    };
+  }
+
+  async getUser(payload: any) {
+    const user = users.get(payload.params.id);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return {
+      status: 200,
+      headers: {},
+      body: user,
+    };
+  }
+
+  async updateUser(payload: any) {
+    const user = users.get(payload.params.id);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updated = {
+      ...user,
+      ...(payload.body.email && { email: payload.body.email }),
+      ...(payload.body.name && { name: payload.body.name }),
+      ...(payload.body.role && { role: payload.body.role }),
+    };
+
+    users.set(payload.params.id, updated);
+
+    return {
+      status: 200,
+      headers: {},
+      body: updated,
+    };
+  }
+
+  async deleteUser(payload: any) {
+    const deleted = users.delete(payload.params.id);
+
+    if (!deleted) {
+      throw new Error('User not found');
+    }
+
+    return {
+      status: 204,
+      headers: {},
+    };
+  }
+}
+
+describe('Integration Test with Generated Types and Validators', () => {
+  let app: Express;
+  let validatorsModule: any;
+
+  beforeAll(async () => {
+    // Generate types and validators
+    openapiToServer({
+      inputFile: API_SPEC,
+      outputFile: GENERATED_TYPES,
+      emitJSON: false,
+    });
+
+    openapiToZod({
+      inputFile: API_SPEC,
+      outputFile: GENERATED_VALIDATORS,
+    });
+
+    // Dynamically import generated validators
+    validatorsModule = await import('./generated-validators');
+
+    const container = new Container({ tags: ['application'] });
+    container.register('Users', { useClass: UsersController });
+
+    const routeBuilder = new RouteBuilder({
+      specPath: API_SPEC,
+      server: {
+        Users: UsersController,
+      },
+      payloadValidators: {
+        getUsers: validatorsModule.GetUsersPayloadSchema,
+        createUser: validatorsModule.CreateUserPayloadSchema,
+        getUser: validatorsModule.GetUserPayloadSchema,
+        updateUser: validatorsModule.UpdateUserPayloadSchema,
+        deleteUser: validatorsModule.DeleteUserPayloadSchema,
+      },
+    });
+
+    app = express();
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(containerMiddleware(container));
+
+    routeBuilder.applyTo(app);
+  });
+
+  describe('GET /users', () => {
+    it('should return all users', async () => {
+      const response = await request(app).get('/users').expect(200);
+
+      expect(response.body).toHaveProperty('users');
+      expect(response.body).toHaveProperty('total');
+      expect(Array.isArray(response.body.users)).toBe(true);
+      expect(response.body.total).toBe(2);
+    });
+
+    it('should filter users by role', async () => {
+      const response = await request(app).get('/users?role=admin').expect(200);
+
+      expect(response.body.users).toHaveLength(1);
+      expect(response.body.users[0].role).toBe('admin');
+    });
+
+    it('should paginate results', async () => {
+      const response = await request(app).get('/users?page=1&limit=1').expect(200);
+
+      expect(response.body.users).toHaveLength(1);
+      expect(response.body.total).toBe(2);
+    });
+
+    it('should validate query parameters', async () => {
+      const response = await request(app).get('/users?limit=invalid').expect(400);
+
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('POST /users', () => {
+    it('should create a new user', async () => {
+      const newUser = {
+        email: 'bob@example.com',
+        name: 'Bob Wilson',
+        role: 'user',
+      };
+
+      const response = await request(app).post('/users').send(newUser).expect(201);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.email).toBe(newUser.email);
+      expect(response.body.name).toBe(newUser.name);
+      expect(response.body.role).toBe(newUser.role);
+      expect(response.body).toHaveProperty('createdAt');
+      expect(response.headers.location).toMatch(/^\/users\/.+$/);
+    });
+
+    it('should validate request body', async () => {
+      const invalidUser = {
+        email: 'invalid-email',
+        name: 'B',
+        role: 'invalid-role',
+      };
+
+      const response = await request(app).post('/users').send(invalidUser).expect(400);
+
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should require all required fields', async () => {
+      const incompleteUser = {
+        email: 'test@example.com',
+      };
+
+      const response = await request(app).post('/users').send(incompleteUser).expect(400);
+
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('GET /users/:id', () => {
+    it('should return a specific user', async () => {
+      const response = await request(app)
+        .get('/users/123e4567-e89b-12d3-a456-426614174000')
+        .expect(200);
+
+      expect(response.body.id).toBe('123e4567-e89b-12d3-a456-426614174000');
+      expect(response.body.email).toBe('john@example.com');
+    });
+
+    it('should return 500 for non-existent user', async () => {
+      const response = await request(app)
+        .get('/users/999e4567-e89b-12d3-a456-426614174999')
+        .expect(500);
+
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('PUT /users/:id', () => {
+    it('should update a user', async () => {
+      const updates = {
+        name: 'John Updated',
+        role: 'user',
+      };
+
+      const response = await request(app)
+        .put('/users/123e4567-e89b-12d3-a456-426614174000')
+        .send(updates)
+        .expect(200);
+
+      expect(response.body.name).toBe('John Updated');
+      expect(response.body.role).toBe('user');
+      expect(response.body.email).toBe('john@example.com'); // Unchanged
+    });
+
+    it('should validate update data', async () => {
+      const invalidUpdates = {
+        email: 'not-an-email',
+        name: 'X',
+      };
+
+      const response = await request(app)
+        .put('/users/123e4567-e89b-12d3-a456-426614174000')
+        .send(invalidUpdates)
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('DELETE /users/:id', () => {
+    it('should delete a user', async () => {
+      await request(app).delete('/users/223e4567-e89b-12d3-a456-426614174001').expect(204);
+
+      // Verify user is deleted
+      await request(app).get('/users/223e4567-e89b-12d3-a456-426614174001').expect(500);
+    });
+  });
+
+  afterAll(() => {
+    // Clean up generated files
+    if (fs.existsSync(GENERATED_TYPES)) {
+      fs.unlinkSync(GENERATED_TYPES);
+    }
+    if (fs.existsSync(GENERATED_VALIDATORS)) {
+      fs.unlinkSync(GENERATED_VALIDATORS);
+    }
+  });
+});
