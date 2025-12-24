@@ -14,15 +14,16 @@
   "author": "ibabkin <igba14@gmail.com>",
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/openapi-to-server-interface",
   "license": "ISC",
-  "main": "cjm/index.js",
-  "types": "cjm/index.d.ts",
+  "type": "module",
+  "main": "esm/index.js",
+  "types": "esm/index.d.ts",
   "exports": {
     ".": {
-      "import": "./cjm/index.js",
-      "require": "./cjm/index.js",
-      "types": "./cjm/index.d.ts"
+      "import": "./esm/index.js",
+      "types": "./esm/index.d.ts"
     }
   },
+  "module": "esm/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IgorBabkin/ts-ioc-container.git"
@@ -33,7 +34,7 @@
     "test": "__tests__"
   },
   "files": [
-    "cjm/**/*",
+    "esm/**/*",
     "precompiled/**/*"
   ],
   "scripts": {
@@ -41,9 +42,9 @@
     "test": "npm run hbs:compile && make-dir .generated && jest",
     "test:watch": "jest --coverage --watch",
     "hbs:compile": "handlebars lib/templates/*.hbs -f precompiled.js -c handlebars/runtime",
-    "clean": "rimraf cjm",
+    "clean": "rimraf esm",
     "watch": "nodemon --watch lib --exec 'npm run compile'",
-    "compile": "npm run hbs:compile && tsc -p tsconfig.json --outDir cjm"
+    "compile": "npm run hbs:compile && tsc -p tsconfig.json --outDir esm"
   },
   "dependencies": {
     "handlebars": "^4.7.7",
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/js-yaml": "^4.0.5",
+    "@types/minimatch": "^6.0.0",
     "jest": "29.7.0",
     "make-dir-cli": "^3.0.0",
     "nodemon": "^2.0.22",

@@ -9,13 +9,14 @@
     "incremental": true,
     "target": "ES6",
     "module": "commonjs",
-    "baseUrl": "./lib",
+    "baseUrl": ".",
+    "paths": {
+      "@ibabkin/openapi-to-server-interface": ["../openapi-to-server-interface/cjm/index"],
+      "@ibabkin/openapi-to-request-validator": ["../openapi-to-request-validator/cjm/index"]
+    },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "references": [
-    { "path": "../openapi-framework" }
-  ],
   "include": [
     "lib/**/*"
   ],

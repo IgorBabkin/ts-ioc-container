@@ -1,0 +1,21 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "roots": ["<rootDir>/__tests__"],
+  "testMatch": ["**/?(*.)+(spec|test).+(ts)"],
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+  "collectCoverageFrom": ["lib/**/*.{ts,tsx}", "!lib/**/*.d.ts"],
+  "transform": {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.test.json"
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^@ibabkin/openapi-to-server-interface$": "<rootDir>/../openapi-to-server-interface/cjm/index.js",
+    "^@ibabkin/openapi-to-request-validator$": "<rootDir>/../openapi-to-request-validator/cjm/index.js"
+  }
+}
+

@@ -1,4 +1,4 @@
-import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-framework';
+import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server-interface';
 import { renderValidators } from '@ibabkin/openapi-to-request-validator';
 import * as path from 'path';
 import * as fs from 'fs';

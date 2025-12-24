@@ -1,5 +1,5 @@
 import { createServer } from '../lib';
-import { HttpStatus } from '@ibabkin/openapi-framework';
+import { HttpStatus } from '@ibabkin/openapi-to-server-interface';
 import * as path from 'path';
 
 interface Todo {

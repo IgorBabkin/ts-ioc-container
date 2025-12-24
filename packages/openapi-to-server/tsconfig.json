@@ -3,14 +3,15 @@
     "baseUrl": "./lib",
     "lib": ["es2016"],
     "types": ["jest", "node"],
-    "target": "ES6",
-    "module": "commonjs",
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "incremental": true,
     "rootDir": "./lib",
-    "outDir": "./cjm",
+    "outDir": "./esm",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
@@ -20,7 +21,7 @@
   ],
   "exclude": [
     "node_modules",
-    "cjm",
+    "esm",
     "__tests__"
   ]
 }
