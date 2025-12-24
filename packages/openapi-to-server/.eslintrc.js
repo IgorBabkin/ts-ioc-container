@@ -3,7 +3,7 @@ module.exports = {
   extends: ['../../.eslintrc.js'],
   overrides: [
     {
-      files: ['jest.config.js', '.eslintrc.js'],
+      files: ['.eslintrc.js'],
       env: {
         node: true,
       },
