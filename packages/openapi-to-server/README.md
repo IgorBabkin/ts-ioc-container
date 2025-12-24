@@ -305,7 +305,7 @@ npm run watch
 
 ## Related Packages
 
-- [`@ibabkin/openapi-to-request-validator`](../openapi-to-zod-payloads): Generate Zod validation schemas from OpenAPI specs
+- [`@ibabkin/openapi-to-request-validator`](../openapi-to-request-validator): Generate Zod validation schemas from OpenAPI specs
 - [`@ibabkin/openapi-express-server`](../openapi-express-server): Express.js server implementation using generated interfaces
 
 ## License

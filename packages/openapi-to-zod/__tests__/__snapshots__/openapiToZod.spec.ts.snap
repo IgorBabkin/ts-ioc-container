@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`openapiToZod should generate Zod validators from OpenAPI spec 1`] = `
+"import {z} from 'zod';
+
+const zNumber = z.string().regex(/^\\d+$/).transform(Number);
+
+const zDate = z.preprocess((arg) => {
+  if (typeof arg === 'string' || typeof arg === 'number') {
+    return new Date(arg);
+  }
+
+  return arg;
+}, z.date());
+
+export const Manufacturer =     z.object({
+      name: z.string(),
+      homePage: z.string().optional(),
+      phone: z.string().optional(),
+    })
+;
+export const InventoryItem =     z.object({
+      id: z.string(),
+      name: z.string(),
+      releaseDate: zDate,
+      manufacturer: Manufacturer,
+    })
+;
+
+export const PAYLOADS = {
+    deleteInventory: z.object({
+      params: z.object({
+  id: z.string(),
+})
+,
+})
+,
+    addInventory: z.object({
+    body: InventoryItem,
+})
+,
+    searchInventory: z.object({
+      query: z.object({
+  searchString: z.string().optional(),
+  skip: zNumber.optional(),
+  limit: zNumber.optional(),
+})
+,
+})
+,
+};
+"
+`;

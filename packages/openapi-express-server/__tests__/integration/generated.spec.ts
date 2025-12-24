@@ -1,13 +1,15 @@
-import { openapiToServer } from '@ibabkin/openapi-framework';
-import { openapiToZod } from '@ibabkin/openapi-framework/validation';
+import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-framework';
+import { renderValidators } from '@ibabkin/openapi-to-request-validator';
 import * as path from 'path';
 import * as fs from 'fs';
 import request from 'supertest';
 import { type Express } from 'express';
-import * as express from 'express';
-import { Container } from 'ts-ioc-container';
+import express from 'express';
+import { Container, Provider } from 'ts-ioc-container';
 import { containerMiddleware } from '../../lib/containerMiddleware';
 import { RouteBuilder } from '../../lib/RouteBuilder';
+import { read } from 'yaml-import';
+import { OpenAPIV3 } from 'openapi-types';
 
 const API_SPEC = path.resolve(__dirname, './api.yaml');
 const GENERATED_TYPES = path.resolve(__dirname, './generated-types.ts');
@@ -15,18 +17,18 @@ const GENERATED_VALIDATORS = path.resolve(__dirname, './generated-validators.ts'
 
 describe('Generated Types Integration Test', () => {
   beforeAll(() => {
+    // Load OpenAPI document
+    const doc = read(API_SPEC) as OpenAPIV3.Document;
+
     // Generate TypeScript types
-    openapiToServer({
-      inputFile: API_SPEC,
-      outputFile: GENERATED_TYPES,
-      emitJSON: false,
-    });
+    const components = renderComponents(doc);
+    const controllers = renderControllers(doc);
+    const server = renderServer(doc);
+    fs.writeFileSync(GENERATED_TYPES, components + controllers + server);
 
     // Generate Zod validators
-    openapiToZod({
-      inputFile: API_SPEC,
-      outputFile: GENERATED_VALIDATORS,
-    });
+    const validators = renderValidators(doc);
+    fs.writeFileSync(GENERATED_VALIDATORS, validators);
 
     // Verify files were generated
     expect(fs.existsSync(GENERATED_TYPES)).toBe(true);
@@ -222,23 +224,24 @@ describe('Integration Test with Generated Types and Validators', () => {
   let validatorsModule: any;
 
   beforeAll(async () => {
-    // Generate types and validators
-    openapiToServer({
-      inputFile: API_SPEC,
-      outputFile: GENERATED_TYPES,
-      emitJSON: false,
-    });
+    // Load OpenAPI document
+    const doc = read(API_SPEC) as OpenAPIV3.Document;
 
-    openapiToZod({
-      inputFile: API_SPEC,
-      outputFile: GENERATED_VALIDATORS,
-    });
+    // Generate TypeScript types
+    const components = renderComponents(doc);
+    const controllers = renderControllers(doc);
+    const server = renderServer(doc);
+    fs.writeFileSync(GENERATED_TYPES, components + controllers + server);
+
+    // Generate Zod validators
+    const validators = renderValidators(doc);
+    fs.writeFileSync(GENERATED_VALIDATORS, validators);
 
     // Dynamically import generated validators
-    validatorsModule = await import('./generated-validators');
+    validatorsModule = await import('./generated-validators' as any);
 
     const container = new Container({ tags: ['application'] });
-    container.register('Users', { useClass: UsersController });
+    container.register('Users', Provider.fromClass(UsersController));
 
     const routeBuilder = new RouteBuilder({
       specPath: API_SPEC,

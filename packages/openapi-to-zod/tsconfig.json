@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./lib",
+    "lib": ["es2016"],
+    "types": ["jest", "node"],
+    "target": "ES6",
+    "module": "commonjs",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "rootDir": "./lib",
+    "outDir": "./cjm",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "lib"
+  ],
+  "exclude": [
+    "node_modules",
+    "cjm",
+    "__tests__"
+  ]
+}
