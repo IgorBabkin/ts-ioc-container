@@ -1,3 +1,11 @@
+# [46.8.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.1...v46.8.0) (2025-12-24)
+
+
+### Features
+
+* **container:** add hasRegistration method ([8bd6595](https://github.com/IgorBabkin/ts-ioc-container/commit/8bd6595adda37ae8b66fec6bdcd14f673371d01a))
+* **container:** implement hasRegistration method ([b47ae1d](https://github.com/IgorBabkin/ts-ioc-container/commit/b47ae1dd8667615733681c5239f12537be8f62ac))
+
 ## [46.7.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.0...v46.7.1) (2025-12-21)
 
 
