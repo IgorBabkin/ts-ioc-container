@@ -1,0 +1,21 @@
+// Controller Interfaces
+{{#each (group_by_tags paths) as |operations tag|}}
+  /**
+  * Controller interface for {{tag}} operations
+  * Each method corresponds to an OpenAPI operation defined in swagger.yaml
+  */
+  export interface {{controller_name tag}} {
+  {{#each operations}}
+    /**
+    * {{operation.summary}}
+    {{#if operation.description}}
+      * {{operation.description}}
+    {{/if}}
+    * @param payload - Request payload including path params, query params, and body
+    * @returns Promise with the operation response
+    */
+    {{operationId}}(payload: {{payload_name operationId}}): Promise<{{response_name operationId}}>;
+
+  {{/each}}
+  }
+{{/each}}

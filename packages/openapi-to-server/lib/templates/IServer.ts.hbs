@@ -1,0 +1,6 @@
+// Server Interface
+export interface IServer {
+{{#each (group_by_tags paths) as |operations tag|}}
+  {{tag}}: constructor<{{controller_name tag}}>;
+{{/each}}
+}
