@@ -10,6 +10,8 @@ import { type constructor } from '../utils/basic';
 export type ScopeMatchRule = (s: IContainer, prev?: boolean) => boolean;
 
 export interface IRegistration<T = any> extends IContainerModule {
+  getKeyOrFail(): DependencyKey;
+
   when(...predicates: ScopeMatchRule[]): this;
 
   bindToKey(key: DependencyKey): this;

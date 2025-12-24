@@ -57,6 +57,10 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
+  hasRegistration(key: DependencyKey): boolean {
+    return false;
+  }
+
   removeScope(): void {}
 
   useModule(module: IContainerModule): this {

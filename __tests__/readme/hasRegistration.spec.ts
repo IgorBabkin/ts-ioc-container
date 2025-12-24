@@ -42,7 +42,7 @@ describe('hasRegistration', function () {
     const loggerToken = new SingleToken<{ log: (msg: string) => void }>('ILogger');
     container.addRegistration(R.fromValue({ log: () => {} }).bindTo(loggerToken));
 
-    expect(container.hasRegistration(loggerToken)).toBe(true);
+    expect(container.hasRegistration(loggerToken.token)).toBe(true);
   });
 
   it('should only check current container, not parent registrations', function () {

@@ -587,7 +587,7 @@ describe('hasRegistration', function () {
     const loggerToken = new SingleToken<{ log: (msg: string) => void }>('ILogger');
     container.addRegistration(R.fromValue({ log: () => {} }).bindTo(loggerToken));
 
-    expect(container.hasRegistration(loggerToken)).toBe(true);
+    expect(container.hasRegistration(loggerToken.token)).toBe(true);
   });
 
   it('should only check current container, not parent registrations', function () {
@@ -632,7 +632,6 @@ describe('hasRegistration', function () {
     expect(container.hasRegistration('ExtensionService')).toBe(true);
   });
 });
-
 
 ```
 
@@ -1259,7 +1258,7 @@ describe('lazy registerPipe', () => {
 
     @register(bindTo('PremiumFeature'), lazy(), singleton())
     class PremiumFeature {
-      constructor(@inject('FeatureFlagService') private flags: FeatureFlagService) {
+      constructor() {
         initLog.push('PremiumFeature initialized - expensive operation');
       }
 

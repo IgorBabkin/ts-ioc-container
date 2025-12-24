@@ -153,6 +153,10 @@ export class Container implements IContainer {
     return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
+  hasRegistration(key: DependencyKey): boolean {
+    return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
+  }
+
   addOnConstructHook(...hooks: OnConstructHook[]): this {
     this.onConstructHookList.push(...hooks);
     return this;

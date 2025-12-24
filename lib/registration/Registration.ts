@@ -38,7 +38,7 @@ export class Registration<T = any> implements IRegistration<T> {
 
   constructor(
     private createProvider: () => IProvider<T>,
-    private key?: DependencyKey,
+    public key?: DependencyKey,
     private scopeRules: ScopeMatchRule[] = [],
   ) {}
 
@@ -92,5 +92,12 @@ export class Registration<T = any> implements IRegistration<T> {
 
     const provider = this.createProvider();
     container.register(this.key, provider.pipe(...this.mappers), { aliases: [...this.aliases] });
+  }
+
+  getKeyOrFail(): DependencyKey {
+    if (!this.key) {
+      throw new DependencyMissingKeyError('No key provided for registration');
+    }
+    return this.key;
   }
 }

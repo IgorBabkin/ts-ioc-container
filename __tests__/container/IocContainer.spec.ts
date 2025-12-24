@@ -218,7 +218,7 @@ describe('IocContainer', function () {
       const token = new SingleToken<string>('TokenKey');
       container.addRegistration(R.fromValue('test-value').bindTo(token));
 
-      expect(container.hasRegistration(token)).toBe(true);
+      expect(container.hasRegistration(token.token)).toBe(true);
     });
 
     it('should return false for different key even if registration exists', () => {

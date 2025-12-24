@@ -373,7 +373,7 @@ describe('lazy registerPipe', () => {
 
     @register(bindTo('PremiumFeature'), lazy(), singleton())
     class PremiumFeature {
-      constructor(@inject('FeatureFlagService') private flags: FeatureFlagService) {
+      constructor() {
         initLog.push('PremiumFeature initialized - expensive operation');
       }
 
