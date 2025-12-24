@@ -537,8 +537,8 @@ describe('Instances', function () {
 ### Check Registration
 Sometimes you want to check if a registration with a specific key exists in the container. This is useful for conditional registration logic, validation, and debugging.
 
-- `hasRegistration(key)` checks if a registration exists in the current container
-- Only checks the current container's registrations (not parent containers)
+- `hasRegistration(key)` checks if a registration exists in the current container or parent containers
+- Checks both the current container's registrations and parent container registrations
 - Works with string keys, symbol keys, and token keys
 - Returns false after container disposal
 
@@ -590,7 +590,7 @@ describe('hasRegistration', function () {
     expect(container.hasRegistration(loggerToken.token)).toBe(true);
   });
 
-  it('should only check current container, not parent registrations', function () {
+  it('should check current container and parent registrations', function () {
     // Parent container has a registration
     const parent = createAppContainer();
     parent.addRegistration(R.fromValue('parent-config').bindToKey('Config'));
@@ -599,9 +599,9 @@ describe('hasRegistration', function () {
     const child = parent.createScope();
     child.addRegistration(R.fromValue('child-service').bindToKey('Service'));
 
-    // Child should not see parent's registration
-    expect(child.hasRegistration('Config')).toBe(false);
-    // But child should see its own registration
+    // Child should see parent's registration (checks parent as well)
+    expect(child.hasRegistration('Config')).toBe(true);
+    // Child should see its own registration
     expect(child.hasRegistration('Service')).toBe(true);
     // Parent should see its own registration
     expect(parent.hasRegistration('Config')).toBe(true);

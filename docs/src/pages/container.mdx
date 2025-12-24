@@ -16,6 +16,7 @@ import filteringInstancesSpecCode from "../../../__tests__/readme/filteringInsta
 import disposingSpecCode from "../../../__tests__/readme/disposing.spec.ts?raw";
 import lazySpecCode from "../../../__tests__/readme/lazy.spec.ts?raw";
 import containerModuleSpecCode from "../../../__tests__/readme/containerModule.spec.ts?raw";
+import hasRegistrationSpecCode from "../../../__tests__/readme/hasRegistration.spec.ts?raw";
 
 # Container
 
@@ -282,6 +283,30 @@ The container tracks all instances it creates, allowing you to query and manage 
   filename="__tests__/readme/filteringInstances.spec.ts"
 />
 
+<h2 id="checking-registrations" class="toc-link">Checking Registrations</h2>
+
+The `hasRegistration()` method allows you to check if a registration with a specific key exists in the container. This is useful for conditional registration logic, validation, and debugging.
+
+### Key Features
+
+- Checks both the current container's registrations and parent container registrations
+- Works with string keys, symbol keys, and token keys
+- Returns `false` after container disposal
+- Useful for conditional registration patterns and validation
+
+<CodeBlock
+  code={hasRegistrationSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/hasRegistration.spec.ts"
+/>
+
+### Use Cases
+
+- **Conditional registration** - Register extensions only if base services exist
+- **Validation** - Verify required dependencies are registered before use
+- **Debugging** - Check if a registration exists during development
+- **Dynamic configuration** - Build container configuration based on existing registrations
+
 <h2 id="disposal" class="toc-link">Disposal</h2>
 
 Proper resource cleanup is essential for preventing memory leaks. The container provides a disposal mechanism that cleans up all resources and prevents further usage.
@@ -393,6 +418,8 @@ The `EmptyContainer` class implements the Null Object pattern, providing a safe 
 - `resolve<T>(key: DependencyKey | constructor<T>, options?: ResolveOptions): T` - Resolve a dependency
 - `createScope(options?: ScopeOptions): IContainer` - Create a child scope
 - `addRegistration(registration: IRegistration): IContainer` - Register a provider
+- `hasRegistration(key: DependencyKey): boolean` - Check if a registration exists in the current container or parent containers
+- `getRegistrations(): IRegistration[]` - Get all registrations from current container and parent containers
 - `dispose(): void` - Dispose the container and all resources
 - `getInstances(): Iterable<Instance>` - Get all instances created by this container
 - `hasTag(tag: Tag): boolean` - Check if container has a specific tag

@@ -45,7 +45,7 @@ describe('hasRegistration', function () {
     expect(container.hasRegistration(loggerToken.token)).toBe(true);
   });
 
-  it('should only check current container, not parent registrations', function () {
+  it('should check current container and parent registrations', function () {
     // Parent container has a registration
     const parent = createAppContainer();
     parent.addRegistration(R.fromValue('parent-config').bindToKey('Config'));
@@ -54,9 +54,9 @@ describe('hasRegistration', function () {
     const child = parent.createScope();
     child.addRegistration(R.fromValue('child-service').bindToKey('Service'));
 
-    // Child should not see parent's registration
-    expect(child.hasRegistration('Config')).toBe(false);
-    // But child should see its own registration
+    // Child should see parent's registration (checks parent as well)
+    expect(child.hasRegistration('Config')).toBe(true);
+    // Child should see its own registration
     expect(child.hasRegistration('Service')).toBe(true);
     // Parent should see its own registration
     expect(parent.hasRegistration('Config')).toBe(true);

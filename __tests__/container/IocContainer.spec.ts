@@ -238,7 +238,7 @@ describe('IocContainer', function () {
       expect(container.hasRegistration('key2')).toBe(true);
     });
 
-    it('should only check current container registrations, not parent', () => {
+    it('should check current container and parent registrations', () => {
       const parent = createContainer();
       parent.addRegistration(R.fromValue('parent-value').bindToKey('parentKey'));
 
@@ -247,9 +247,9 @@ describe('IocContainer', function () {
 
       // Child should have its own registration
       expect(child.hasRegistration('childKey')).toBe(true);
-      // Child should NOT have parent's registration (only checks current container)
-      expect(child.hasRegistration('parentKey')).toBe(false);
-      // But parent should have its registration
+      // Child should also see parent's registration (checks parent as well)
+      expect(child.hasRegistration('parentKey')).toBe(true);
+      // Parent should have its registration
       expect(parent.hasRegistration('parentKey')).toBe(true);
     });
 
