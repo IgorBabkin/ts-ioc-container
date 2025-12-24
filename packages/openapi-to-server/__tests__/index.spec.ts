@@ -134,4 +134,3 @@ describe('openapi-to-server-interface', () => {
     });
   });
 });
-

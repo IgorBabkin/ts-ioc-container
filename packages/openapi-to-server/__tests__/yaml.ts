@@ -7,4 +7,3 @@ export function loadYAML<T>(inputFile: string): T {
 export function isYAML(inputFile: string): boolean {
   return inputFile.search(/\.yaml$/) > 0;
 }
-

@@ -6,9 +6,7 @@ describe('Utility functions', () => {
   describe('convertOpenAPIPathToExpress', () => {
     it('should convert OpenAPI path parameters to Express format', () => {
       expect(convertOpenAPIPathToExpress('/users/{id}')).toBe('/users/:id');
-      expect(convertOpenAPIPathToExpress('/users/{userId}/posts/{postId}')).toBe(
-        '/users/:userId/posts/:postId'
-      );
+      expect(convertOpenAPIPathToExpress('/users/{userId}/posts/{postId}')).toBe('/users/:userId/posts/:postId');
       expect(convertOpenAPIPathToExpress('/items')).toBe('/items');
     });
   });
