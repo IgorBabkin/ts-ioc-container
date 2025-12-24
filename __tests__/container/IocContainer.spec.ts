@@ -9,6 +9,7 @@ import {
   scope,
   select,
   singleton,
+  SingleToken,
 } from '../../lib';
 
 @register(bindTo('logger'))
@@ -187,6 +188,100 @@ describe('IocContainer', function () {
       container.addRegistration(R.fromClass(ConsoleLogger)).addRegistration(R.fromClass(FileLogger));
 
       expect(container.resolve('logger')).toBeInstanceOf(ConsoleLogger);
+    });
+  });
+
+  describe('hasRegistration', () => {
+    it('should return true when registration exists with string key', () => {
+      const container = createContainer();
+      container.addRegistration(R.fromValue('test-value').bindToKey('testKey'));
+
+      expect(container.hasRegistration('testKey')).toBe(true);
+    });
+
+    it('should return false when registration does not exist', () => {
+      const container = createContainer();
+
+      expect(container.hasRegistration('nonExistentKey')).toBe(false);
+    });
+
+    it('should return true when registration exists with symbol key', () => {
+      const container = createContainer();
+      const symbolKey = Symbol('testSymbol');
+      container.addRegistration(R.fromValue('test-value').bindToKey(symbolKey));
+
+      expect(container.hasRegistration(symbolKey)).toBe(true);
+    });
+
+    it('should return true when registration exists with token key', () => {
+      const container = createContainer();
+      const token = new SingleToken<string>('TokenKey');
+      container.addRegistration(R.fromValue('test-value').bindTo(token));
+
+      expect(container.hasRegistration(token)).toBe(true);
+    });
+
+    it('should return false for different key even if registration exists', () => {
+      const container = createContainer();
+      container.addRegistration(R.fromValue('test-value').bindToKey('key1'));
+
+      expect(container.hasRegistration('key2')).toBe(false);
+    });
+
+    it('should return true for multiple registrations with different keys', () => {
+      const container = createContainer();
+      container
+        .addRegistration(R.fromValue('value1').bindToKey('key1'))
+        .addRegistration(R.fromValue('value2').bindToKey('key2'));
+
+      expect(container.hasRegistration('key1')).toBe(true);
+      expect(container.hasRegistration('key2')).toBe(true);
+    });
+
+    it('should only check current container registrations, not parent', () => {
+      const parent = createContainer();
+      parent.addRegistration(R.fromValue('parent-value').bindToKey('parentKey'));
+
+      const child = parent.createScope();
+      child.addRegistration(R.fromValue('child-value').bindToKey('childKey'));
+
+      // Child should have its own registration
+      expect(child.hasRegistration('childKey')).toBe(true);
+      // Child should NOT have parent's registration (only checks current container)
+      expect(child.hasRegistration('parentKey')).toBe(false);
+      // But parent should have its registration
+      expect(parent.hasRegistration('parentKey')).toBe(true);
+    });
+
+    it('should return false after container is disposed', () => {
+      const container = createContainer();
+      container.addRegistration(R.fromValue('test-value').bindToKey('testKey'));
+
+      expect(container.hasRegistration('testKey')).toBe(true);
+
+      container.dispose();
+
+      // After disposal, registrations are cleared, so should return false
+      expect(container.hasRegistration('testKey')).toBe(false);
+    });
+
+    it('should work with class-based registrations using class name as key', () => {
+      class TestService {}
+
+      const container = createContainer();
+      container.addRegistration(R.fromClass(TestService));
+
+      expect(container.hasRegistration('TestService')).toBe(true);
+    });
+
+    it('should work with class-based registrations using explicit key', () => {
+      class TestService {}
+
+      const container = createContainer();
+      container.addRegistration(R.fromClass(TestService).bindToKey('IService'));
+
+      expect(container.hasRegistration('IService')).toBe(true);
+      expect(container.hasRegistration('TestService')).toBe(false);
     });
   });
 });
