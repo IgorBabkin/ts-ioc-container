@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`openapiToZod should generate Zod validators from OpenAPI spec 1`] = `
+exports[`renderValidators should generate Zod validators from OpenAPI spec 1`] = `
 "import {z} from 'zod';
 
 const zNumber = z.string().regex(/^\\d+$/).transform(Number);
