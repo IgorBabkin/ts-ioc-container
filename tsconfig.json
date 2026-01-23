@@ -18,7 +18,8 @@
   "include": [
     "lib",
     "__tests__",
-    "scripts"
+    "scripts",
+    "benchmarks"
   ],
   "exclude": [
     "node_modules",

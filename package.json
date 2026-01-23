@@ -50,6 +50,7 @@
     "test:coverage": "jest --coverage --coverageReporters=lcov --coverageReporters=text-summary",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
+    "benchmark": "ts-node benchmarks/run-all.ts",
     "commit": "cz",
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint lib/**/*.ts  __tests__/**/*.ts scripts/**/*.ts",
@@ -65,6 +66,8 @@
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.2",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
@@ -72,6 +75,7 @@
     "@types/jest": "29.5.14",
     "@typescript-eslint/eslint-plugin": "8.29.1",
     "@typescript-eslint/parser": "8.29.1",
+    "benny": "^3.7.1",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "9.24.0",
     "eslint-config-prettier": "10.1.1",
@@ -87,6 +91,8 @@
     "rimraf": "6.0.1",
     "semantic-release": "^25.0.2",
     "ts-jest": "29.3.1",
+    "ts-node": "^10.9.2",
+    "tsyringe": "^4.10.0",
     "typescript": "5.8.3"
   },
   "lint-staged": {
