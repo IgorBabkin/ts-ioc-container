@@ -1,0 +1,17 @@
+{
+  "name": "ts-ioc-container-benchmarks",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "benchmark": "ts-node ./run-all.ts",
+    "lint": "eslint . --ext .js,.ts",
+    "lint:fix": "eslint . --ext .js,.ts --fix",
+    "format": "prettier --write \"**/*.{js,ts,json}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,json}\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "benny": "^3.7.1",
+    "ts-node": "^10.9.2"
+  }
+}
