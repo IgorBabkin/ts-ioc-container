@@ -92,6 +92,9 @@ importers:
       bootstrap:
         specifier: ^5.3.3
         version: 5.3.8(@popperjs/core@2.11.8)
+      d3-sankey:
+        specifier: ^0.12.3
+        version: 0.12.3
       mermaid:
         specifier: ^10.9.5
         version: 10.9.5
