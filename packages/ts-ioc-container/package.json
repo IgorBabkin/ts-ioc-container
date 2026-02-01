@@ -43,15 +43,15 @@
     "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
     "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
     "build": "pnpm run build:cjm && pnpm run build:esm && pnpm run build:types",
-    "test": "jest",
-    "test:coverage": "jest --coverage --coverageReporters=lcov --coverageReporters=text-summary",
+    "test": "jest --maxWorkers=2",
+    "test:coverage": "jest --maxWorkers=2 --coverage --coverageReporters=lcov --coverageReporters=text-summary",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "lint": "eslint lib/**/*.ts __tests__/**/*.ts scripts/**/*.ts",
     "lint:fix": "pnpm run lint -- --fix",
     "format": "prettier --write \"**/*.ts\"",
     "generate:docs": "scripts/generate-readme/generate-readme.ts",
-    "release": "pnpm run build && pnpm test && pnpm publish"
+    "release": "pnpm run build && pnpm run test && pnpm publish"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
