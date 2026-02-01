@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import fastify from 'fastify';
-import { Container, type IContainer, Registration as R, scope, singleton } from 'ts-ioc-container';
+import { Container, type IContainer, Registration as R, singleton } from 'ts-ioc-container';
 import { containerPlugin } from '../lib/plugin';
 
 describe('containerPlugin', () => {
@@ -115,7 +115,7 @@ describe('containerPlugin', () => {
       rootContainer.addRegistration(
         R.fromValue(requestService)
           .bindTo('IRequestService')
-          .pipe(scope((c) => c.hasTag('request'))),
+          .when((c) => c.hasTag('request')),
       );
 
       await app.register(containerPlugin(rootContainer));
@@ -184,7 +184,8 @@ describe('containerPlugin', () => {
       await app.register(containerPlugin(rootContainer));
 
       app.get('/test', async (request) => {
-        const container = request.container;
+        // Access container to verify it exists
+        void request.container;
         return { success: true };
       });
 
@@ -232,7 +233,7 @@ describe('containerPlugin', () => {
       rootContainer.addRegistration(
         R.fromClass(RequestScopedService)
           .bindTo('IRequestScopedService')
-          .pipe(scope((c) => c.hasTag('request')))
+          .when((c) => c.hasTag('request'))
           .pipe(singleton()),
       );
 

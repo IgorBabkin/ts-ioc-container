@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import type { Request, Response, NextFunction } from 'express';
-import { Container, type IContainer, Registration as R, scope, singleton } from 'ts-ioc-container';
+import { Container, type IContainer, Registration as R, singleton } from 'ts-ioc-container';
 import { containerMiddleware } from '../lib/middleware';
 
 describe('containerMiddleware', () => {
@@ -96,7 +96,7 @@ describe('containerMiddleware', () => {
       rootContainer.addRegistration(
         R.fromValue(requestService)
           .bindTo('IRequestService')
-          .pipe(scope((c) => c.hasTag('request'))),
+          .when((c) => c.hasTag('request')),
       );
 
       const middleware = containerMiddleware(rootContainer);
@@ -131,7 +131,7 @@ describe('containerMiddleware', () => {
       expect(requestContainer.isDisposed).toBe(false);
 
       // Simulate response close without ending
-      (mockResponse as Partial<Response>).writableEnded = false;
+      (mockResponse as { writableEnded: boolean }).writableEnded = false;
       closeHandlers.forEach((handler) => handler());
 
       expect(requestContainer.isDisposed).toBe(true);
@@ -148,7 +148,7 @@ describe('containerMiddleware', () => {
       expect(requestContainer.isDisposed).toBe(true);
 
       // Simulate response close after finish (should not dispose again)
-      (mockResponse as Partial<Response>).writableEnded = true;
+      (mockResponse as { writableEnded: boolean }).writableEnded = true;
       const disposeSpy = jest.spyOn(requestContainer, 'dispose');
       closeHandlers.forEach((handler) => handler());
 
@@ -165,7 +165,7 @@ describe('containerMiddleware', () => {
 
       // Simulate both finish and close
       finishHandlers.forEach((handler) => handler());
-      (mockResponse as Partial<Response>).writableEnded = false;
+      (mockResponse as { writableEnded: boolean }).writableEnded = false;
       closeHandlers.forEach((handler) => handler());
 
       // dispose should be called only once
@@ -249,7 +249,7 @@ describe('containerMiddleware', () => {
       rootContainer.addRegistration(
         R.fromClass(RequestScopedService)
           .bindTo('IRequestScopedService')
-          .pipe(scope((c) => c.hasTag('request')))
+          .when((c) => c.hasTag('request'))
           .pipe(singleton()),
       );
 

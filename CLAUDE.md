@@ -504,6 +504,10 @@ ts-ioc-container/                    # Root (workspace orchestrator)
 7. If changing API, update `packages/ts-ioc-container/.readme.hbs.md` and run `pnpm run generate:docs`
 8. Commit follows conventional commits (use `pnpm run commit` for help)
 
+## Git Rules
+
+- **Never use `--no-verify` with git push.** Always let git hooks run and fix any issues they catch before pushing. If hooks fail, resolve the underlying problems rather than bypassing the checks.
+
 ## Commit Message Conventions
 
 This project follows conventional commits with package-based scopes.
