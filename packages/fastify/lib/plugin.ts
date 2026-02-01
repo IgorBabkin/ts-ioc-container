@@ -49,41 +49,27 @@ export function containerPlugin(
   const tags = options.tags ?? ['request'];
 
   return async (fastify: FastifyInstance): Promise<void> => {
-    // Track if container has been disposed to avoid double disposal
-    const requestContainers = new WeakMap<FastifyRequest, { container: IContainer; disposed: boolean }>();
-
     // Create request-scoped container on each request
     fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+      // Create request-scoped container
       const requestContainer = rootContainer.createScope({ tags });
-      requestContainers.set(request, { container: requestContainer, disposed: false });
+
+      // Attach to request
       request.container = requestContainer;
-    });
 
-    // Dispose container when response is sent
-    fastify.addHook('onResponse', async (request: FastifyRequest) => {
-      const containerInfo = requestContainers.get(request);
-      if (containerInfo && !containerInfo.disposed) {
-        containerInfo.disposed = true;
-        containerInfo.container.dispose();
-        requestContainers.delete(request);
-      }
-    });
+      const disposeContainer = (): void => {
+        if (!requestContainer.isDisposed) {
+          requestContainer.dispose();
+        }
+      };
 
-    // Dispose container on error
-    fastify.addHook('onError', async (request: FastifyRequest) => {
-      const containerInfo = requestContainers.get(request);
-      if (containerInfo && !containerInfo.disposed) {
-        containerInfo.disposed = true;
-        containerInfo.container.dispose();
-        requestContainers.delete(request);
-      }
-    });
+      // Dispose on response finish (successful completion)
+      reply.raw.on('finish', disposeContainer);
 
-    // Cleanup on server close
-    fastify.addHook('onClose', async (instance: FastifyInstance, done: () => void) => {
-      // Clean up any remaining containers on server close
-      // Individual request containers should already be disposed via onResponse/onError
-      done();
+      // Dispose on response close (error or client disconnect)
+      reply.raw.on('close', () => {
+        disposeContainer();
+      });
     });
   };
 }
