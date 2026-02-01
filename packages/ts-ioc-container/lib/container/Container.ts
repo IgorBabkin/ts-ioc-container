@@ -96,7 +96,7 @@ export class Container implements IContainer {
   resolveOneByAlias<T>(alias: DependencyKey, { args, child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    const [key, ..._] = this.aliases.getKeysByAlias(alias);
+    const key = this.aliases.getKeysByAlias(alias)[0];
     const provider = key ? this.findProviderByKeyOrFail<T>(key) : undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
