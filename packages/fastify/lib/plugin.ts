@@ -1,4 +1,5 @@
-import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import fp from 'fastify-plugin';
 import type { IContainer, Tag } from 'ts-ioc-container';
 
 /**
@@ -42,34 +43,35 @@ export interface ContainerPluginOptions {
  * });
  * ```
  */
-export function containerPlugin(
-  rootContainer: IContainer,
-  options: ContainerPluginOptions = {},
-): (fastify: FastifyInstance, opts: FastifyPluginOptions) => Promise<void> {
-  const tags = options.tags ?? ['request'];
+export function containerPlugin(rootContainer: IContainer, { tags = ['request'] }: ContainerPluginOptions = {}) {
+  return fp(
+    async (fastify: FastifyInstance): Promise<void> => {
+      // Create request-scoped container on each request
+      fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+        // Create request-scoped container
+        const requestContainer = rootContainer.createScope({ tags });
 
-  return async (fastify: FastifyInstance): Promise<void> => {
-    // Create request-scoped container on each request
-    fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-      // Create request-scoped container
-      const requestContainer = rootContainer.createScope({ tags });
+        // Attach to request
+        request.container = requestContainer;
 
-      // Attach to request
-      request.container = requestContainer;
+        const disposeContainer = (): void => {
+          if (!requestContainer.isDisposed) {
+            requestContainer.dispose();
+          }
+        };
 
-      const disposeContainer = (): void => {
-        if (!requestContainer.isDisposed) {
-          requestContainer.dispose();
-        }
-      };
+        // Dispose on response finish (successful completion)
+        reply.raw.on('finish', disposeContainer);
 
-      // Dispose on response finish (successful completion)
-      reply.raw.on('finish', disposeContainer);
-
-      // Dispose on response close (error or client disconnect)
-      reply.raw.on('close', () => {
-        disposeContainer();
+        // Dispose on response close (error or client disconnect)
+        reply.raw.on('close', () => {
+          disposeContainer();
+        });
       });
-    });
-  };
+    },
+    {
+      name: '@ts-ioc-container/fastify',
+      fastify: '>=4.0.0',
+    },
+  );
 }
