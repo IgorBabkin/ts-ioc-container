@@ -266,8 +266,8 @@ export const registerPipe = <T>(
 
 #### Available Pipes
 
-| Pipe Name           | ProviderPipe | RegisterPipe | Purpose                                         | File                                |
-| ------------------- | :----------: | :----------: | ----------------------------------------------- | ----------------------------------- |
+| Pipe Name           | ProviderPipe | RegisterPipe | Purpose                                         | File                                                          |
+| ------------------- | :----------: | :----------: | ----------------------------------------------- | ------------------------------------------------------------- |
 | `singleton()`       |      ✅       |      ✅       | Caches single instance per scope                | `packages/ts-ioc-container/lib/provider/SingletonProvider.ts` |
 | `args(...values)`   |      ✅       |      ✅       | Injects static arguments into constructor       | `packages/ts-ioc-container/lib/provider/IProvider.ts`         |
 | `argsFn(fn)`        |      ✅       |      ✅       | Injects dynamically resolved arguments          | `packages/ts-ioc-container/lib/provider/IProvider.ts`         |
@@ -506,38 +506,20 @@ ts-ioc-container/                    # Root (workspace orchestrator)
 
 ## Commit Message Conventions
 
-This project follows conventional commits with specific scope rules:
+This project follows conventional commits with package-based scopes.
 
-### Documentation Commits
-- **ALWAYS use** `docs(pages):` for documentation site changes (files in `docs/src/pages/`)
-- **NEVER use** `fix(docs):` or `feat(docs):` for documentation changes
-- The `docs` scope is reserved for documentation infrastructure, not content
+### Allowed Scopes (Package Names)
+Scope must be one of:
+- `container` - Core IoC container library (ts-ioc-container)
+- `react` - React integration package
+- `solidjs` - SolidJS integration package
+- `express` - Express middleware package
+- `fastify` - Fastify plugin package
 
-**Examples:**
-- ✅ `docs(pages): migrate all pages from Astro to MDX`
-- ✅ `docs(pages): add new token usage examples`
-- ✅ `docs(pages): fix typo in provider documentation`
-- ❌ `fix(docs): update container examples` (incorrect - use `docs(pages)`)
-- ❌ `feat(docs): add metadata page` (incorrect - use `docs(pages)`)
-
-### CI Performance Commits
-- **ALWAYS use** `ci(perf):` for CI/CD performance improvements (NOT `perf(ci):`)
-- This prevents triggering unnecessary package releases via semantic-release
-- The `ci` scope indicates the change location, `perf` type might trigger releases
-
-**Examples:**
-- ✅ `ci(perf): remove Jest cache to speed up workflow`
-- ✅ `ci(perf): parallelize test execution`
-- ✅ `ci(perf): reduce build matrix combinations`
-- ❌ `perf(ci): remove Jest cache` (incorrect - may trigger release)
-- ❌ `perf(github): speed up CI` (incorrect - use `ci(perf):`)
-
-### Semantic Release Rules (CRITICAL)
-**BEFORE pushing commits, verify they won't trigger unintended package releases:**
-
-- This project uses semantic-release to automatically publish new package versions
-- Only certain commit types trigger releases: `feat:`, `fix:`, `perf:` (and breaking changes)
-- Changes that should NOT trigger releases must use appropriate scopes/types
+### Semantic Release Rules
+Each package is released independently using semantic-release-monorepo:
+- Commits are filtered by package path
+- Only commits affecting a package trigger its release
 
 **Commit types that WILL trigger releases:**
 - `feat(scope):` - Minor version bump (new feature)
@@ -553,25 +535,12 @@ This project follows conventional commits with specific scope rules:
 - `refactor(scope):` - Code refactoring without behavior change
 - `style(scope):` - Code style/formatting
 
-**Examples of commits that should NOT trigger releases:**
-- ✅ `docs(pages): update API examples` (not `fix(docs):`)
-- ✅ `test(container): add edge case tests` (not `feat(test):`)
-- ✅ `ci(github): update workflow` (not `fix(ci):`)
-- ✅ `refactor(docs): extract SVG icons` (not `feat(docs):`)
-- ✅ `chore(deps): update dev dependencies` (not `fix(deps):`)
-
-**Before creating commits:**
-1. Ask yourself: "Should this trigger a new package release?"
-2. If NO → use `docs`, `test`, `ci`, `chore`, `refactor`, or `style` type
-3. If YES → use `feat`, `fix`, or `perf` type
-4. When in doubt, use a non-release type and ask the user
-
-### Other Common Scopes
-- `feat(container):` - New container features
-- `fix(provider):` - Provider bug fixes
-- `test(hooks):` - Test updates for hooks
-- `chore(release):` - Release automation
-- `ci(github):` - CI/CD changes
+### Examples
+- ✅ `feat(container): add new provider type`
+- ✅ `fix(react): resolve context hook issue`
+- ✅ `docs(express): update middleware examples`
+- ✅ `chore(fastify): update dependencies`
+- ✅ `test(solidjs): add integration tests`
 
 ## Notes on Docs Directory
 
