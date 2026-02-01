@@ -1,14 +1,14 @@
 # Build outputs
-cjm/
-esm/
-typings/
-coverage/
-dist/
-.astro/
+**/cjm/
+**/esm/
+**/typings/
+**/coverage/
+**/dist/
+**/.astro/
 
 # Dependencies
-node_modules/
+**/node_modules/
 
 # Docs (Astro files)
-docs/**/*.astro
+packages/docs/**/*.astro
 *.astro

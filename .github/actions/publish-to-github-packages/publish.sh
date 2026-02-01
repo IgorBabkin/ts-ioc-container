@@ -2,12 +2,16 @@
 set -e
 
 # Publish to GitHub Packages
-# Usage: ./publish.sh <repository-owner> <repository> <package-name> <github-token>
+# Usage: ./publish.sh <repository-owner> <repository> <package-name> <github-token> [package-path]
 
 REPO_OWNER_INPUT="$1"
 REPOSITORY="$2"
 PACKAGE_NAME="$3"
 GITHUB_TOKEN="$4"
+PACKAGE_PATH="${5:-.}"
+
+# Change to the package directory
+cd "$PACKAGE_PATH"
 
 # Get repository owner (npm scopes must be lowercase)
 REPO_OWNER=$(echo "${REPO_OWNER_INPUT}" | tr '[:upper:]' '[:lower:]')

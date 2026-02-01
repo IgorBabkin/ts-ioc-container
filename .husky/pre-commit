@@ -1,2 +1,2 @@
-npm run generate:docs
+pnpm -r --if-present run generate:docs && git add packages/*/README.md
 lint-staged

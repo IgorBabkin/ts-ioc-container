@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./lib",
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["es2022", "dom"],
+    "types": ["react", "node"],
+    "moduleResolution": "Node",
+    "jsx": "react",
+    "noImplicitReturns": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["lib"],
+  "exclude": ["node_modules", "cjm", "esm", "typings"]
+}
