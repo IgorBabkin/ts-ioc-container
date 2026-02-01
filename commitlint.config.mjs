@@ -20,36 +20,11 @@ export default {
       ],
     ],
 
-    // Scope enum - restrict to known scopes
+    // Scope enum - restrict to package names only
     'scope-enum': [
       2,
       'always',
-      [
-        // Core library scopes
-        'container',
-        'provider',
-        'registration',
-        'injector',
-        'hooks',
-        'token',
-        'errors',
-
-        // Documentation scopes
-        'pages', // Documentation site pages (in docs/src/pages/)
-
-        // CI/CD scopes
-        'github', // GitHub workflows
-        'perf', // CI performance improvements (use with ci: type)
-
-        // Other scopes
-        'release', // Release automation
-        'deps', // Dependencies
-        'config', // Configuration files
-        'react', // React integration package
-        'express', // Express integration package
-        'fastify', // Fastify integration package
-        'solidjs', // SolidJS integration package
-      ],
+      ['container', 'solidjs', 'react', 'express', 'fastify'],
     ],
 
     // Require scope for all commits
