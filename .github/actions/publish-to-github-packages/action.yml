@@ -15,10 +15,14 @@ inputs:
     description: 'Package name (without scope)'
     required: true
     default: 'ts-ioc-container'
+  package-path:
+    description: 'Path to the package directory'
+    required: false
+    default: '.'
 
 runs:
   using: composite
   steps:
     - name: Publish to GitHub Packages
       shell: bash
-      run: ${{ github.action_path }}/publish.sh "${{ inputs.repository-owner }}" "${{ inputs.repository }}" "${{ inputs.package-name }}" "${{ inputs.github-token }}"
+      run: ${{ github.action_path }}/publish.sh "${{ inputs.repository-owner }}" "${{ inputs.repository }}" "${{ inputs.package-name }}" "${{ inputs.github-token }}" "${{ inputs.package-path }}"

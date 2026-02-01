@@ -51,13 +51,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Test with coverage
-        run: pnpm run test:coverage --maxWorkers=2
+        run: pnpm run test:coverage -- --maxWorkers=2
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./coverage/lcov.info
+          file: ./packages/ts-ioc-container/coverage/lcov.info
 
       - name: Build
         run: pnpm run build
@@ -72,6 +72,7 @@ jobs:
         id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        working-directory: packages/ts-ioc-container
         run: npx semantic-release
 
       - name: Publish to GitHub Packages
@@ -83,3 +84,4 @@ jobs:
           repository: ${{ github.repository }}
           repository-owner: ${{ github.repository_owner }}
           package-name: ts-ioc-container
+          package-path: packages/ts-ioc-container

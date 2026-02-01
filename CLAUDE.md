@@ -9,8 +9,9 @@ This is a TypeScript IoC (Inversion of Control) container library providing depe
 ### Package Manager
 
 This project uses **pnpm** for package management with workspaces:
-- Root project: TypeScript IoC container library
-- Workspace: `docs/` (Astro documentation site)
+- Root: Workspace orchestrator (private, not published)
+- `packages/ts-ioc-container/`: TypeScript IoC container library (published to npm)
+- `packages/docs/`: Astro documentation site
 
 Install pnpm if not already installed:
 ```bash
@@ -41,8 +42,8 @@ pnpm run build:types      # Generate TypeScript declarations to typings/
 
 ### Single Test
 ```bash
-pnpm exec jest __tests__/path/to/test.spec.ts     # Run specific test file
-pnpm exec jest -t "test name pattern"              # Run tests matching pattern
+pnpm --filter ts-ioc-container exec jest __tests__/path/to/test.spec.ts     # Run specific test file
+pnpm --filter ts-ioc-container exec jest -t "test name pattern"              # Run tests matching pattern
 ```
 
 ### Documentation
@@ -61,6 +62,7 @@ pnpm run release          # Build, test, and publish to npm
 ### Workspace Management
 ```bash
 pnpm install                                      # Install all dependencies (root + workspaces)
+pnpm --filter ts-ioc-container <command>         # Run command in library workspace
 pnpm --filter ts-ioc-container-docs <command>    # Run command in docs workspace
 pnpm --filter ts-ioc-container-docs add <pkg>    # Add package to docs workspace
 ```
@@ -76,7 +78,7 @@ The Container is structured as a **linked list** with parent references:
 
 ### Four Main Components
 
-1. **Container** (`lib/container/Container.ts`)
+1. **Container** (`packages/ts-ioc-container/lib/container/Container.ts`)
    - **Goal**: Manage the lifecycle of dependencies, resolve them when requested, and maintain scoped instances
    - Main IoC container managing registrations and resolutions
    - Linked list structure: each container holds a reference to its parent
@@ -84,21 +86,21 @@ The Container is structured as a **linked list** with parent references:
    - Supports tagged scopes for isolation (e.g., request-level, feature-level)
    - Resolution cascades up the parent chain if not found in current scope
 
-2. **Registration** (`lib/registration/Registration.ts`)
+2. **Registration** (`packages/ts-ioc-container/lib/registration/Registration.ts`)
    - **Goal**: Create a provider and register it in a certain scope
    - Provider factory that registers providers in the container
    - Contains: Provider instance, binding key, scope rules (which scopes to apply to)
    - Determines when and where a provider should be available
    - Uses decorators like `@register`, `bindTo`, `scope` for configuration
 
-3. **Provider** (`lib/provider/Provider.ts`)
+3. **Provider** (`packages/ts-ioc-container/lib/provider/Provider.ts`)
    - **Goal**: Create a dependency (instance)
    - Factory function that creates/returns dependency instances
    - Handles instance creation and caching strategies (singleton, transient, etc.)
    - Three creation methods: `fromClass`, `fromValue`, `fromKey`
    - Supports transformations via `pipe` method (singleton, args, lazy, decorators)
 
-4. **Injector** (`lib/injector/`)
+4. **Injector** (`packages/ts-ioc-container/lib/injector/`)
    - **Goal**: Inject dependencies into constructor
    - Defines how dependencies are injected into constructors
    - Three types:
@@ -133,23 +135,64 @@ Lifecycle hooks for dependency management:
 - Prefer explicit types over `any` (use `any` only when necessary, with warnings)
 - Use interfaces for contracts (e.g., `IContainer`, `IProvider`, `IInjector`)
 - Follow the existing error handling patterns with custom error classes
-- All public APIs should be exported from `lib/index.ts`
+- All public APIs should be exported from `packages/ts-ioc-container/lib/index.ts`
 - Keep bundle size minimal
 - Maintain backward compatibility when possible
+
+### Token Usage Rule
+
+**Always use `SingleToken` (or other typed tokens) instead of raw strings for dependency keys.** Raw string keys are error-prone (typos, no type safety, no IDE autocomplete). `SingleToken` is the default and recommended way to define and resolve dependencies.
+
+**Correct — use `SingleToken`:**
+```typescript
+// Define typed tokens
+const ILoggerToken = new SingleToken<ILogger>('ILogger');
+const IUserRepoToken = new SingleToken<IUserRepository>('IUserRepository');
+
+// Register with token
+container.addRegistration(R.fromClass(Logger).bindTo(ILoggerToken));
+
+// Inject with token
+class AuthService {
+  constructor(@inject(ILoggerToken) private logger: ILogger) {}
+}
+
+// Resolve with token
+const logger = ILoggerToken.resolve(container);
+```
+
+**Incorrect — do not use raw strings:**
+```typescript
+// ❌ Raw string in @inject — no type safety, typos fail at runtime
+class AuthService {
+  constructor(@inject('ILogger') private logger: ILogger) {}
+}
+
+// ❌ Raw string in resolve — no autocomplete, no compile-time check
+const logger = container.resolve('ILogger');
+
+// ❌ Raw string in bindToKey — disconnected from injection site
+R.fromClass(Logger).bindToKey('ILogger');
+```
+
+**When to use other token types instead of `SingleToken`:**
+- `SingleAliasToken` — multiple implementations of the same interface, resolve one
+- `GroupAliasToken` — multiple implementations, resolve all as an array
+- `ClassToken` — direct class resolution (auto-created by `toToken()` for classes)
 
 ## Important File Conventions
 
 ### Source Files
 - **NEVER edit generated files**: `cjm/`, `esm/`, `typings/` are build outputs
-- **Edit source only**: All code changes go in `lib/` directory
-- **Tests mirror source**: `__tests__/` structure mirrors `lib/` structure
+- **Edit source only**: All code changes go in `packages/ts-ioc-container/lib/` directory
+- **Tests mirror source**: `packages/ts-ioc-container/__tests__/` structure mirrors `lib/` structure
 
 ### Documentation
-- **Source**: `.readme.hbs.md` (Handlebars template) - **EDIT THIS**
-- **Generated**: `README.md` - **DO NOT EDIT DIRECTLY**
-- Run `npm run generate:docs` to regenerate README.md from template
+- **Source**: `packages/ts-ioc-container/.readme.hbs.md` (Handlebars template) - **EDIT THIS**
+- **Generated**: `packages/ts-ioc-container/README.md` - **DO NOT EDIT DIRECTLY**
+- Run `pnpm run generate:docs` to regenerate README.md from template
 
-### Build Targets
+### Build Targets (inside `packages/ts-ioc-container/`)
 - `cjm/` - CommonJS for Node.js (via `tsconfig.production.json`)
 - `esm/` - ES Modules (via `tsconfig.production.json`)
 - `typings/` - TypeScript declaration files
@@ -199,7 +242,7 @@ The pipe system provides composable transformations for both Providers and Regis
 
 #### ProviderPipe vs registerPipe
 
-**ProviderPipe** (`lib/provider/ProviderPipe.ts`) is an interface with two transformation methods:
+**ProviderPipe** (`packages/ts-ioc-container/lib/provider/ProviderPipe.ts`) is an interface with two transformation methods:
 ```typescript
 export interface ProviderPipe<T = unknown> {
   mapProvider(p: IProvider<T>): IProvider<T>;    // Transforms a Provider
@@ -225,14 +268,14 @@ export const registerPipe = <T>(
 
 | Pipe Name           | ProviderPipe | RegisterPipe | Purpose                                         | File                                |
 | ------------------- | :----------: | :----------: | ----------------------------------------------- | ----------------------------------- |
-| `singleton()`       |      ✅       |      ✅       | Caches single instance per scope                | `lib/provider/SingletonProvider.ts` |
-| `args(...values)`   |      ✅       |      ✅       | Injects static arguments into constructor       | `lib/provider/IProvider.ts`         |
-| `argsFn(fn)`        |      ✅       |      ✅       | Injects dynamically resolved arguments          | `lib/provider/IProvider.ts`         |
-| `lazy()`            |      ✅       |      ✅       | Defers instantiation until first access         | `lib/provider/IProvider.ts`         |
-| `scopeAccess(rule)` |      ✅       |      ✅       | Controls visibility based on scope rules        | `lib/provider/IProvider.ts`         |
-| `decorate(fn)`      |      ✅       |      ✅       | Wraps instance with decorator function          | `lib/provider/DecoratorProvider.ts` |
-| `scope(...rules)`   |      ❌       |      ✅       | Determines which scopes registration applies to | `lib/registration/IRegistration.ts` |
-| `bindTo(...tokens)` |      ❌       |      ✅       | Binds registration to dependency keys           | `lib/registration/IRegistration.ts` |
+| `singleton()`       |      ✅       |      ✅       | Caches single instance per scope                | `packages/ts-ioc-container/lib/provider/SingletonProvider.ts` |
+| `args(...values)`   |      ✅       |      ✅       | Injects static arguments into constructor       | `packages/ts-ioc-container/lib/provider/IProvider.ts`         |
+| `argsFn(fn)`        |      ✅       |      ✅       | Injects dynamically resolved arguments          | `packages/ts-ioc-container/lib/provider/IProvider.ts`         |
+| `lazy()`            |      ✅       |      ✅       | Defers instantiation until first access         | `packages/ts-ioc-container/lib/provider/IProvider.ts`         |
+| `scopeAccess(rule)` |      ✅       |      ✅       | Controls visibility based on scope rules        | `packages/ts-ioc-container/lib/provider/IProvider.ts`         |
+| `decorate(fn)`      |      ✅       |      ✅       | Wraps instance with decorator function          | `packages/ts-ioc-container/lib/provider/DecoratorProvider.ts` |
+| `scope(...rules)`   |      ❌       |      ✅       | Determines which scopes registration applies to | `packages/ts-ioc-container/lib/registration/IRegistration.ts` |
+| `bindTo(...tokens)` |      ❌       |      ✅       | Binds registration to dependency keys           | `packages/ts-ioc-container/lib/registration/IRegistration.ts` |
 
 **Legend:**
 - ✅ **ProviderPipe**: Can be used in `.pipe()` on IProvider and IRegistration
@@ -411,7 +454,7 @@ Key compiler options:
 
 ## Error Handling
 
-Custom error classes in `lib/errors/`:
+Custom error classes in `packages/ts-ioc-container/lib/errors/`:
 - `DependencyNotFoundError`: Dependency not found in container chain
 - `DependencyMissingKeyError`: Registration without binding key
 - `ContainerDisposedError`: Operation on disposed container
@@ -421,7 +464,7 @@ Custom error classes in `lib/errors/`:
 
 ## Testing
 
-- All code must have corresponding tests in `__tests__/`
+- All code must have corresponding tests in `packages/ts-ioc-container/__tests__/`
 - Tests use Jest with `ts-jest`
 - Test files mirror the source structure
 - Use `moq.ts` for mocking when needed
@@ -430,27 +473,35 @@ Custom error classes in `lib/errors/`:
 
 ## Project Structure
 
-- `lib/` - Source TypeScript code (main development directory)
-- `__tests__/` - Test files using Jest (mirrors lib/ structure)
-- `cjm/` - Compiled CommonJS output (generated, do not edit)
-- `esm/` - Compiled ES Module output (generated, do not edit)
-- `typings/` - TypeScript declaration files (generated, do not edit)
-- `docs/` - Astro-based documentation site (separate pnpm workspace)
-- `scripts/` - Build and maintenance scripts
-- `.readme.hbs.md` - README template source (edit this, not README.md)
-- `README.md` - Generated from .readme.hbs.md (do not edit directly)
-- `pnpm-workspace.yaml` - pnpm workspace configuration
-- `pnpm-lock.yaml` - pnpm lock file
+```
+ts-ioc-container/                    # Root (workspace orchestrator)
+├── packages/
+│   ├── ts-ioc-container/            # Library package (published to npm)
+│   │   ├── lib/                     # Source TypeScript code
+│   │   ├── __tests__/               # Test files (mirrors lib/ structure)
+│   │   ├── scripts/                 # Build and maintenance scripts
+│   │   ├── cjm/, esm/, typings/    # Build outputs (generated, do not edit)
+│   │   ├── .readme.hbs.md          # README template source (edit this)
+│   │   ├── README.md               # Generated (do not edit directly)
+│   │   ├── package.json            # Library npm package config
+│   │   ├── tsconfig.json           # TypeScript config
+│   │   └── jest.config.json        # Jest config
+│   └── docs/                        # Astro documentation site (workspace)
+├── package.json                     # Root orchestrator (private)
+├── pnpm-workspace.yaml              # Workspace configuration
+├── eslint.config.mjs                # Shared ESLint config
+└── pnpm-lock.yaml                   # Lock file
+```
 
 ## Development Workflow
 
-1. Make changes in `lib/`
-2. Add/update tests in `__tests__/`
+1. Make changes in `packages/ts-ioc-container/lib/`
+2. Add/update tests in `packages/ts-ioc-container/__tests__/`
 3. Run `pnpm test` to verify
 4. Run `pnpm run type-check` for type safety
 5. Run `pnpm run lint:fix` to fix linting issues
 6. Run `pnpm run build` to generate outputs
-7. If changing API, update `.readme.hbs.md` and run `pnpm run generate:docs`
+7. If changing API, update `packages/ts-ioc-container/.readme.hbs.md` and run `pnpm run generate:docs`
 8. Commit follows conventional commits (use `pnpm run commit` for help)
 
 ## Commit Message Conventions
@@ -458,7 +509,7 @@ Custom error classes in `lib/errors/`:
 This project follows conventional commits with specific scope rules:
 
 ### Documentation Commits
-- **ALWAYS use** `docs(pages):` for documentation site changes (files in `docs/src/pages/`)
+- **ALWAYS use** `docs(pages):` for documentation site changes (files in `packages/docs/src/pages/`)
 - **NEVER use** `fix(docs):` or `feat(docs):` for documentation changes
 - The `docs` scope is reserved for documentation infrastructure, not content
 
@@ -524,9 +575,9 @@ This project follows conventional commits with specific scope rules:
 
 ## Notes on Docs Directory
 
-- `docs/` is a separate pnpm workspace (Astro project) with its own package.json
+- `packages/docs/` is a separate pnpm workspace (Astro project) with its own package.json
 - Managed via pnpm workspace in `pnpm-workspace.yaml`
-- Root ESLint ignores `docs/**` (docs has its own Astro-specific config)
+- Root ESLint ignores `packages/docs/**` (docs has its own Astro-specific config)
 - Documentation site has separate lint-staged rules for Astro files
 - Use `pnpm --filter ts-ioc-container-docs <command>` to run commands in docs workspace
 - Docs dependencies are isolated from root project dependencies
