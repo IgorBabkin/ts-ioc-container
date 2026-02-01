@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "Monorepo for ts-ioc-container",
+  "workspaces": [
+    "docs",
+    "packages/*"
+  ],
   "scripts": {
     "build": "pnpm --filter './packages/*' --if-present run build",
     "test": "pnpm --filter './packages/*' --if-present run test",
