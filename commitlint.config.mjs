@@ -46,6 +46,7 @@ export default {
         'deps', // Dependencies
         'config', // Configuration files
         'react', // React integration package
+        'express', // Express integration package
       ],
     ],
 
