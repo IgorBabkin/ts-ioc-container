@@ -27,6 +27,7 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.2",
+    "semantic-release-monorepo": "^8.0.2",
     "@typescript-eslint/eslint-plugin": "8.29.1",
     "@typescript-eslint/parser": "8.29.1",
     "cz-conventional-changelog": "^3.3.0",
@@ -44,10 +45,10 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "packages/docs/**/*.{js,ts,tsx,mjs,astro}": [
+    "docs/**/*.{js,ts,tsx,mjs,astro}": [
       "prettier --write"
     ],
-    "packages/docs/**/*.astro": [
+    "docs/**/*.astro": [
       "eslint --fix"
     ]
   },

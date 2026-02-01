@@ -11,7 +11,7 @@ This is a TypeScript IoC (Inversion of Control) container library providing depe
 This project uses **pnpm** for package management with workspaces:
 - Root: Workspace orchestrator (private, not published)
 - `packages/ts-ioc-container/`: TypeScript IoC container library (published to npm)
-- `packages/docs/`: Astro documentation site
+- `docs/`: Astro documentation site
 
 Install pnpm if not already installed:
 ```bash
@@ -486,7 +486,7 @@ ts-ioc-container/                    # Root (workspace orchestrator)
 │   │   ├── package.json            # Library npm package config
 │   │   ├── tsconfig.json           # TypeScript config
 │   │   └── jest.config.json        # Jest config
-│   └── docs/                        # Astro documentation site (workspace)
+├── docs/                            # Astro documentation site (workspace)
 ├── package.json                     # Root orchestrator (private)
 ├── pnpm-workspace.yaml              # Workspace configuration
 ├── eslint.config.mjs                # Shared ESLint config
@@ -509,7 +509,7 @@ ts-ioc-container/                    # Root (workspace orchestrator)
 This project follows conventional commits with specific scope rules:
 
 ### Documentation Commits
-- **ALWAYS use** `docs(pages):` for documentation site changes (files in `packages/docs/src/pages/`)
+- **ALWAYS use** `docs(pages):` for documentation site changes (files in `docs/src/pages/`)
 - **NEVER use** `fix(docs):` or `feat(docs):` for documentation changes
 - The `docs` scope is reserved for documentation infrastructure, not content
 
@@ -575,9 +575,9 @@ This project follows conventional commits with specific scope rules:
 
 ## Notes on Docs Directory
 
-- `packages/docs/` is a separate pnpm workspace (Astro project) with its own package.json
+- `docs/` is a separate pnpm workspace (Astro project) with its own package.json
 - Managed via pnpm workspace in `pnpm-workspace.yaml`
-- Root ESLint ignores `packages/docs/**` (docs has its own Astro-specific config)
+- Root ESLint ignores `docs/**` (docs has its own Astro-specific config)
 - Documentation site has separate lint-staged rules for Astro files
 - Use `pnpm --filter ts-ioc-container-docs <command>` to run commands in docs workspace
 - Docs dependencies are isolated from root project dependencies
