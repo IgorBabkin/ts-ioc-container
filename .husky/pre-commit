@@ -1,2 +1,2 @@
-pnpm --filter ts-ioc-container run generate:docs && git add packages/ts-ioc-container/README.md
+pnpm -r --if-present run generate:docs && git add packages/*/README.md
 lint-staged

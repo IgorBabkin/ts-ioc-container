@@ -43,7 +43,7 @@
     "semantic-release-monorepo": "^8.0.2"
   },
   "lint-staged": {
-    "packages/ts-ioc-container/**/*.{js,ts,tsx}": [
+    "packages/**/*.{js,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
