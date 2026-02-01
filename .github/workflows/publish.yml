@@ -27,8 +27,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for semantic-release to analyze commits
-          token: ${{ secrets.GH_TOKEN }}  # Required for semantic-release to push commits
+          fetch-depth: 0  # Required for lerna to analyze commits
+          token: ${{ secrets.GH_TOKEN }}  # Required for lerna to push commits
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -53,6 +53,15 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run type-check
+
+      - name: Cache Jest
+        uses: ./.github/actions/cache-jest
+
       - name: Test with coverage
         run: pnpm run test:coverage
 
@@ -68,17 +77,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config core.hooksPath /dev/null  # Disable git hooks on CI
 
-      - name: Release ts-ioc-container
-        id: release
+      - name: Release packages with Lerna
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        working-directory: packages/ts-ioc-container
-        run: npx semantic-release
-
-      - name: Release integration packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: pnpm --filter "@ts-ioc-container/*" --workspace-concurrency=1 exec npx semantic-release
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npx lerna version --conventional-commits --create-release github --yes
+          npx lerna publish from-git --yes
 
       - name: Publish to GitHub Packages
         # Publish to GitHub Packages so it shows up in the Packages section

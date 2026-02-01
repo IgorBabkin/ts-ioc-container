@@ -1,2 +1,2 @@
-pnpm -r --if-present run generate:docs && git add packages/*/README.md
-lint-staged
+pnpm run generate:docs && git add packages/*/README.md
+npx lint-staged
