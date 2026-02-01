@@ -1,6 +1,6 @@
 {
   "name": "@ts-ioc-container/solidjs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "SolidJS integration for ts-ioc-container",
   "publishConfig": {
     "access": "public",

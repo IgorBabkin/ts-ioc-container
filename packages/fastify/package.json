@@ -1,6 +1,6 @@
 {
   "name": "@ts-ioc-container/fastify",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Fastify plugin for ts-ioc-container with automatic request-scoped container management",
   "publishConfig": {
     "access": "public",
@@ -70,8 +70,8 @@
     "prettier": "3.5.3",
     "reflect-metadata": "^0.2.2",
     "rimraf": "6.0.1",
-    "ts-jest": "29.3.1",
     "ts-ioc-container": "workspace:*",
+    "ts-jest": "29.3.1",
     "typescript": "5.8.3"
   }
 }

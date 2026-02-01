@@ -1,245 +1,232 @@
-## [46.8.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.8.0...v46.8.1) (2026-02-01)
+# Change Log
 
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-### Bug Fixes
+# [47.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/ts-ioc-container@35.7.1...ts-ioc-container@47.0.0) (2026-02-01)
 
-* **container:** simplify array access in resolveOneByAlias ([68a59aa](https://github.com/IgorBabkin/ts-ioc-container/commit/68a59aa6a3cac73daf2b8b19e54c09f27d5c17d3))
-
-# [46.8.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.1...v46.8.0) (2025-12-24)
-
-
-### Features
-
-* **container:** add hasRegistration method ([8bd6595](https://github.com/IgorBabkin/ts-ioc-container/commit/8bd6595adda37ae8b66fec6bdcd14f673371d01a))
-* **container:** implement hasRegistration method ([b47ae1d](https://github.com/IgorBabkin/ts-ioc-container/commit/b47ae1dd8667615733681c5239f12537be8f62ac))
-
-## [46.7.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.0...v46.7.1) (2025-12-21)
-
+## 46.8.1 (2026-02-01)
 
 ### Bug Fixes
 
-* **docs:** use HTML heading for generic type to avoid MDX parsing error ([67d6548](https://github.com/IgorBabkin/ts-ioc-container/commit/67d65488a66d184eec319432965b68139d5a8e69))
+- **container:** simplify array access in resolveOneByAlias ([68a59aa](https://github.com/IgorBabkin/ts-ioc-container/commit/68a59aa6a3cac73daf2b8b19e54c09f27d5c17d3))
 
-# [46.7.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.2...v46.7.0) (2025-12-21)
+### Code Refactoring
 
-
-### Features
-
-* **container:** add addTags method for dynamic tag management ([1e4f244](https://github.com/IgorBabkin/ts-ioc-container/commit/1e4f244523f04ab30392438b3cff4d2ac992e968))
-
-## [46.6.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.1...v46.6.2) (2025-12-09)
-
-
-### Bug Fixes
-
-* **groupaliastoken:** update select method signature ([97d1cec](https://github.com/IgorBabkin/ts-ioc-container/commit/97d1cec5b24da2ba49b6069fa116fb1500b7ef1b))
-
-## [46.6.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.0...v46.6.1) (2025-12-07)
-
-
-### Performance Improvements
-
-* **ci:** remove Jest cache to speed up workflow ([6c2e5a2](https://github.com/IgorBabkin/ts-ioc-container/commit/6c2e5a271a42eb37df53ccf23c9acc14cd0b9d6c))
-
-# [46.6.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.5.0...v46.6.0) (2025-12-07)
-
-
-### Features
-
-* **token:** add select method for transforming resolved dependencies ([c9fd39d](https://github.com/IgorBabkin/ts-ioc-container/commit/c9fd39d43f1dd5a7296b71aeecc7bfe8d3e9a400))
-
-# [46.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.1...v46.5.0) (2025-12-07)
-
-
-### Features
-
-* **docs:** add Spotlight debugging integration for local development ([a9728c5](https://github.com/IgorBabkin/ts-ioc-container/commit/a9728c529aa32b1df2661fba210feb17e8abf29c))
-
-## [46.4.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.0...v46.4.1) (2025-12-07)
-
-
-### Bug Fixes
-
-* **docs:** fix diagram dark mode background ([1b945a7](https://github.com/IgorBabkin/ts-ioc-container/commit/1b945a788a4f57280ebf3a4bf39a1561e5b6d90f))
-* **token:** fix lazy() methods returning same instance instead of new one ([96dafe6](https://github.com/IgorBabkin/ts-ioc-container/commit/96dafe6486fee035977fc67ce9380509d51e733c))
-
-# [46.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.3.0...v46.4.0) (2025-12-05)
-
-
-### Features
-
-* **hooks:** improve prop declaration ([55f9494](https://github.com/IgorBabkin/ts-ioc-container/commit/55f9494fcd0869a54a4e31d6f3d85a61247e6b3c))
-
-# [46.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.2.0...v46.3.0) (2025-12-05)
-
-
-### Features
-
-* **register:** make register function as monoid ([9845ab3](https://github.com/IgorBabkin/ts-ioc-container/commit/9845ab3a3af021b44f05ae112688c8c2c81b3577))
-
-# [46.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.1.0...v46.2.0) (2025-12-05)
-
-
-### Features
-
-* **hooks:** add hook modules ([5f9aa68](https://github.com/IgorBabkin/ts-ioc-container/commit/5f9aa689eaa806f7590ebf69c1d1994cc9e6df86))
-
-# [46.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.0.1...v46.1.0) (2025-11-30)
-
-
-### Features
-
-* **refactor:** update some types - ScopePredicate -> ScopeMatchRule, ScopeAccessFn -> ScopeAccessRule ([1f2f607](https://github.com/IgorBabkin/ts-ioc-container/commit/1f2f607e0549a2261064c0f0df774e3dbdcbf11a))
-
-## [46.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.0.0...v46.0.1) (2025-11-29)
-
-
-### Bug Fixes
-
-* **docs:** update ([701b89a](https://github.com/IgorBabkin/ts-ioc-container/commit/701b89a15172994d50527a7757d3c8d77b8f54af))
-
-# [46.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.16...v46.0.0) (2025-11-29)
-
-
-### Features
-
-* **tokens:** rename tokens ([386f596](https://github.com/IgorBabkin/ts-ioc-container/commit/386f596f10417b27ffda89798af27e5e8658e401))
-
+- 💡 cleanup api ([3b30e49](https://github.com/IgorBabkin/ts-ioc-container/commit/3b30e4947e93fa58f3fb4856d61d9d834f1fc118))
 
 ### BREAKING CHANGES
 
-* **tokens:** tokens
+- 🧨 yes
 
-## [45.1.16](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.15...v45.1.16) (2025-11-28)
-
-
-### Bug Fixes
-
-* **deployments:** add release-notification env ([24377cf](https://github.com/IgorBabkin/ts-ioc-container/commit/24377cf50b6bc4b5d4a41815ecedeb1c428f3dbe))
-
-## [45.1.15](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.14...v45.1.15) (2025-11-28)
-
+## [46.8.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.8.0...v46.8.1) (2026-02-01)
 
 ### Bug Fixes
 
-* **email:** asda ([2231355](https://github.com/IgorBabkin/ts-ioc-container/commit/2231355e0011e6d801709eb98fbceb8a8aef0953))
+- **container:** simplify array access in resolveOneByAlias ([68a59aa](https://github.com/IgorBabkin/ts-ioc-container/commit/68a59aa6a3cac73daf2b8b19e54c09f27d5c17d3))
 
-## [45.1.14](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.13...v45.1.14) (2025-11-28)
-
-
-### Bug Fixes
-
-* **notification:** test notifications by email ([e8d67aa](https://github.com/IgorBabkin/ts-ioc-container/commit/e8d67aa9c2269c80b19ec92dbceb43a223501bb2))
-
-## [45.1.13](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.12...v45.1.13) (2025-11-28)
-
-
-### Bug Fixes
-
-* **github-registry:** publish to github registry ([cb23e86](https://github.com/IgorBabkin/ts-ioc-container/commit/cb23e861d9fce3847c69f2d2f1bc0f49431f7fec))
-
-## [45.1.12](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.11...v45.1.12) (2025-11-28)
-
-
-### Bug Fixes
-
-* **github-packages:** upload package to github paclages ([51bc699](https://github.com/IgorBabkin/ts-ioc-container/commit/51bc69991256ae8610cac5dbbacdb836c414b82f))
-
-## [45.1.11](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.10...v45.1.11) (2025-11-28)
-
-
-### Bug Fixes
-
-* **license:** add license file ([5811b52](https://github.com/IgorBabkin/ts-ioc-container/commit/5811b52601e4dff76f22d8c2f7b64193aea18b0a))
-
-## [45.1.10](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.9...v45.1.10) (2025-11-28)
-
-
-### Bug Fixes
-
-* **readme:** remove template from package ([b10e044](https://github.com/IgorBabkin/ts-ioc-container/commit/b10e044c00036a9080c30a82e363d4ff069d0e45))
-
-## [45.1.9](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.8...v45.1.9) (2025-11-28)
-
-
-### Bug Fixes
-
-* **readme:** remove template file from package ([acc9d29](https://github.com/IgorBabkin/ts-ioc-container/commit/acc9d295c94c25e34567de100cbc981a2efb1901))
-
-## [45.1.8](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.7...v45.1.8) (2025-11-28)
-
-
-### Bug Fixes
-
-* **docs:** check docs generation ([4bacd8f](https://github.com/IgorBabkin/ts-ioc-container/commit/4bacd8f1be6bfe7b44bf392766b37d3ec3c2f496))
-
-## [45.1.7](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.6...v45.1.7) (2025-11-28)
-
-
-### Bug Fixes
-
-* **docs:** pages and readme ([8aaab52](https://github.com/IgorBabkin/ts-ioc-container/commit/8aaab522be2555c5fc3d5ba9fdefdf3ecec79b4a))
-
-## [45.1.6](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.5...v45.1.6) (2025-11-28)
-
-
-### Bug Fixes
-
-* **docs:** readme ([bf7ebcd](https://github.com/IgorBabkin/ts-ioc-container/commit/bf7ebcd789af058525c78d0da4b4cb9fab1ef19d))
-
-## [45.1.5](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.4...v45.1.5) (2025-11-28)
-
-
-### Bug Fixes
-
-* **ci:** asdas ([c58d8d0](https://github.com/IgorBabkin/ts-ioc-container/commit/c58d8d07d5fda2661050d09bd8c2174c27a8954c))
-* **ci:** jest ([6265f5f](https://github.com/IgorBabkin/ts-ioc-container/commit/6265f5f5d53f63ee63eead07e99e651468eecf57))
-
-## [45.1.4](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.3...v45.1.4) (2025-11-28)
-
-
-### Bug Fixes
-
-* **ci:** jest speed ([49f435b](https://github.com/IgorBabkin/ts-ioc-container/commit/49f435b03ec98c9b8a8220e186035ea344ca3790))
-
-## [45.1.3](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.2...v45.1.3) (2025-11-28)
-
-
-### Bug Fixes
-
-* **ci:** add semantic-release badge ([4a71f6d](https://github.com/IgorBabkin/ts-ioc-container/commit/4a71f6df0506d44dd6f1db6b2a26765aaf8cf740)), closes [#42](https://github.com/IgorBabkin/ts-ioc-container/issues/42)
-
-## [45.1.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.1...v45.1.2) (2025-11-28)
-
-
-### Bug Fixes
-
-* **ci:** add pr support ([7abeee2](https://github.com/IgorBabkin/ts-ioc-container/commit/7abeee20e06f9c3ed1b6429e80f1c6666b5f7336))
-* **ci:** semver ([bea8b58](https://github.com/IgorBabkin/ts-ioc-container/commit/bea8b588f0f68abc8522e15462352bbad7a2e5d1))
-* **ci:** semver ([90f81b1](https://github.com/IgorBabkin/ts-ioc-container/commit/90f81b1ea6e00a411ba237ccea902c804506bee1))
-* **ci:** split pr-checks and publish ([668aa99](https://github.com/IgorBabkin/ts-ioc-container/commit/668aa99af0c6eb3e5c4900810a2866d2a992f626))
-
-## [45.1.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.0...v45.1.1) (2025-11-28)
-
-
-### Bug Fixes
-
-* **ci-fix:** check ([343cd4d](https://github.com/IgorBabkin/ts-ioc-container/commit/343cd4d04b52a167b309710f977cb14079b49a47))
-* **ci-optimization:** check ([29a921c](https://github.com/IgorBabkin/ts-ioc-container/commit/29a921c6107dfff70e224ca57e1fb4e93bec57b4))
-* **ci-test:** check ([f2d30db](https://github.com/IgorBabkin/ts-ioc-container/commit/f2d30db936b920fa15e258504680ae629b8f234c))
-* **ci:** fix github flow ([1d32b2b](https://github.com/IgorBabkin/ts-ioc-container/commit/1d32b2b0ac8bc61e1e915c9542f60979d5f1dde5))
-
-# [45.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.0.7...v45.1.0) (2025-11-28)
-
-
-### Bug Fixes
-
-* **ci:** disable hooks on ci ([5ce8a43](https://github.com/IgorBabkin/ts-ioc-container/commit/5ce8a43f95908d07c6056cd43dd28e75f783507b))
-
+# [46.8.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.1...v46.8.0) (2025-12-24)
 
 ### Features
 
-* **test-sem-ver:** check ([de4b1a7](https://github.com/IgorBabkin/ts-ioc-container/commit/de4b1a7d9335782e973c794bb9b84fd93e405db3))
+- **container:** add hasRegistration method ([8bd6595](https://github.com/IgorBabkin/ts-ioc-container/commit/8bd6595adda37ae8b66fec6bdcd14f673371d01a))
+- **container:** implement hasRegistration method ([b47ae1d](https://github.com/IgorBabkin/ts-ioc-container/commit/b47ae1dd8667615733681c5239f12537be8f62ac))
+
+## [46.7.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.0...v46.7.1) (2025-12-21)
+
+### Bug Fixes
+
+- **docs:** use HTML heading for generic type to avoid MDX parsing error ([67d6548](https://github.com/IgorBabkin/ts-ioc-container/commit/67d65488a66d184eec319432965b68139d5a8e69))
+
+# [46.7.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.2...v46.7.0) (2025-12-21)
+
+### Features
+
+- **container:** add addTags method for dynamic tag management ([1e4f244](https://github.com/IgorBabkin/ts-ioc-container/commit/1e4f244523f04ab30392438b3cff4d2ac992e968))
+
+## [46.6.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.1...v46.6.2) (2025-12-09)
+
+### Bug Fixes
+
+- **groupaliastoken:** update select method signature ([97d1cec](https://github.com/IgorBabkin/ts-ioc-container/commit/97d1cec5b24da2ba49b6069fa116fb1500b7ef1b))
+
+## [46.6.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.6.0...v46.6.1) (2025-12-07)
+
+### Performance Improvements
+
+- **ci:** remove Jest cache to speed up workflow ([6c2e5a2](https://github.com/IgorBabkin/ts-ioc-container/commit/6c2e5a271a42eb37df53ccf23c9acc14cd0b9d6c))
+
+# [46.6.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.5.0...v46.6.0) (2025-12-07)
+
+### Features
+
+- **token:** add select method for transforming resolved dependencies ([c9fd39d](https://github.com/IgorBabkin/ts-ioc-container/commit/c9fd39d43f1dd5a7296b71aeecc7bfe8d3e9a400))
+
+# [46.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.1...v46.5.0) (2025-12-07)
+
+### Features
+
+- **docs:** add Spotlight debugging integration for local development ([a9728c5](https://github.com/IgorBabkin/ts-ioc-container/commit/a9728c529aa32b1df2661fba210feb17e8abf29c))
+
+## [46.4.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.4.0...v46.4.1) (2025-12-07)
+
+### Bug Fixes
+
+- **docs:** fix diagram dark mode background ([1b945a7](https://github.com/IgorBabkin/ts-ioc-container/commit/1b945a788a4f57280ebf3a4bf39a1561e5b6d90f))
+- **token:** fix lazy() methods returning same instance instead of new one ([96dafe6](https://github.com/IgorBabkin/ts-ioc-container/commit/96dafe6486fee035977fc67ce9380509d51e733c))
+
+# [46.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.3.0...v46.4.0) (2025-12-05)
+
+### Features
+
+- **hooks:** improve prop declaration ([55f9494](https://github.com/IgorBabkin/ts-ioc-container/commit/55f9494fcd0869a54a4e31d6f3d85a61247e6b3c))
+
+# [46.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.2.0...v46.3.0) (2025-12-05)
+
+### Features
+
+- **register:** make register function as monoid ([9845ab3](https://github.com/IgorBabkin/ts-ioc-container/commit/9845ab3a3af021b44f05ae112688c8c2c81b3577))
+
+# [46.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.1.0...v46.2.0) (2025-12-05)
+
+### Features
+
+- **hooks:** add hook modules ([5f9aa68](https://github.com/IgorBabkin/ts-ioc-container/commit/5f9aa689eaa806f7590ebf69c1d1994cc9e6df86))
+
+# [46.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.0.1...v46.1.0) (2025-11-30)
+
+### Features
+
+- **refactor:** update some types - ScopePredicate -> ScopeMatchRule, ScopeAccessFn -> ScopeAccessRule ([1f2f607](https://github.com/IgorBabkin/ts-ioc-container/commit/1f2f607e0549a2261064c0f0df774e3dbdcbf11a))
+
+## [46.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.0.0...v46.0.1) (2025-11-29)
+
+### Bug Fixes
+
+- **docs:** update ([701b89a](https://github.com/IgorBabkin/ts-ioc-container/commit/701b89a15172994d50527a7757d3c8d77b8f54af))
+
+# [46.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.16...v46.0.0) (2025-11-29)
+
+### Features
+
+- **tokens:** rename tokens ([386f596](https://github.com/IgorBabkin/ts-ioc-container/commit/386f596f10417b27ffda89798af27e5e8658e401))
+
+### BREAKING CHANGES
+
+- **tokens:** tokens
+
+## [45.1.16](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.15...v45.1.16) (2025-11-28)
+
+### Bug Fixes
+
+- **deployments:** add release-notification env ([24377cf](https://github.com/IgorBabkin/ts-ioc-container/commit/24377cf50b6bc4b5d4a41815ecedeb1c428f3dbe))
+
+## [45.1.15](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.14...v45.1.15) (2025-11-28)
+
+### Bug Fixes
+
+- **email:** asda ([2231355](https://github.com/IgorBabkin/ts-ioc-container/commit/2231355e0011e6d801709eb98fbceb8a8aef0953))
+
+## [45.1.14](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.13...v45.1.14) (2025-11-28)
+
+### Bug Fixes
+
+- **notification:** test notifications by email ([e8d67aa](https://github.com/IgorBabkin/ts-ioc-container/commit/e8d67aa9c2269c80b19ec92dbceb43a223501bb2))
+
+## [45.1.13](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.12...v45.1.13) (2025-11-28)
+
+### Bug Fixes
+
+- **github-registry:** publish to github registry ([cb23e86](https://github.com/IgorBabkin/ts-ioc-container/commit/cb23e861d9fce3847c69f2d2f1bc0f49431f7fec))
+
+## [45.1.12](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.11...v45.1.12) (2025-11-28)
+
+### Bug Fixes
+
+- **github-packages:** upload package to github paclages ([51bc699](https://github.com/IgorBabkin/ts-ioc-container/commit/51bc69991256ae8610cac5dbbacdb836c414b82f))
+
+## [45.1.11](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.10...v45.1.11) (2025-11-28)
+
+### Bug Fixes
+
+- **license:** add license file ([5811b52](https://github.com/IgorBabkin/ts-ioc-container/commit/5811b52601e4dff76f22d8c2f7b64193aea18b0a))
+
+## [45.1.10](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.9...v45.1.10) (2025-11-28)
+
+### Bug Fixes
+
+- **readme:** remove template from package ([b10e044](https://github.com/IgorBabkin/ts-ioc-container/commit/b10e044c00036a9080c30a82e363d4ff069d0e45))
+
+## [45.1.9](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.8...v45.1.9) (2025-11-28)
+
+### Bug Fixes
+
+- **readme:** remove template file from package ([acc9d29](https://github.com/IgorBabkin/ts-ioc-container/commit/acc9d295c94c25e34567de100cbc981a2efb1901))
+
+## [45.1.8](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.7...v45.1.8) (2025-11-28)
+
+### Bug Fixes
+
+- **docs:** check docs generation ([4bacd8f](https://github.com/IgorBabkin/ts-ioc-container/commit/4bacd8f1be6bfe7b44bf392766b37d3ec3c2f496))
+
+## [45.1.7](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.6...v45.1.7) (2025-11-28)
+
+### Bug Fixes
+
+- **docs:** pages and readme ([8aaab52](https://github.com/IgorBabkin/ts-ioc-container/commit/8aaab522be2555c5fc3d5ba9fdefdf3ecec79b4a))
+
+## [45.1.6](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.5...v45.1.6) (2025-11-28)
+
+### Bug Fixes
+
+- **docs:** readme ([bf7ebcd](https://github.com/IgorBabkin/ts-ioc-container/commit/bf7ebcd789af058525c78d0da4b4cb9fab1ef19d))
+
+## [45.1.5](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.4...v45.1.5) (2025-11-28)
+
+### Bug Fixes
+
+- **ci:** asdas ([c58d8d0](https://github.com/IgorBabkin/ts-ioc-container/commit/c58d8d07d5fda2661050d09bd8c2174c27a8954c))
+- **ci:** jest ([6265f5f](https://github.com/IgorBabkin/ts-ioc-container/commit/6265f5f5d53f63ee63eead07e99e651468eecf57))
+
+## [45.1.4](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.3...v45.1.4) (2025-11-28)
+
+### Bug Fixes
+
+- **ci:** jest speed ([49f435b](https://github.com/IgorBabkin/ts-ioc-container/commit/49f435b03ec98c9b8a8220e186035ea344ca3790))
+
+## [45.1.3](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.2...v45.1.3) (2025-11-28)
+
+### Bug Fixes
+
+- **ci:** add semantic-release badge ([4a71f6d](https://github.com/IgorBabkin/ts-ioc-container/commit/4a71f6df0506d44dd6f1db6b2a26765aaf8cf740)), closes [#42](https://github.com/IgorBabkin/ts-ioc-container/issues/42)
+
+## [45.1.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.1...v45.1.2) (2025-11-28)
+
+### Bug Fixes
+
+- **ci:** add pr support ([7abeee2](https://github.com/IgorBabkin/ts-ioc-container/commit/7abeee20e06f9c3ed1b6429e80f1c6666b5f7336))
+- **ci:** semver ([bea8b58](https://github.com/IgorBabkin/ts-ioc-container/commit/bea8b588f0f68abc8522e15462352bbad7a2e5d1))
+- **ci:** semver ([90f81b1](https://github.com/IgorBabkin/ts-ioc-container/commit/90f81b1ea6e00a411ba237ccea902c804506bee1))
+- **ci:** split pr-checks and publish ([668aa99](https://github.com/IgorBabkin/ts-ioc-container/commit/668aa99af0c6eb3e5c4900810a2866d2a992f626))
+
+## [45.1.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.1.0...v45.1.1) (2025-11-28)
+
+### Bug Fixes
+
+- **ci-fix:** check ([343cd4d](https://github.com/IgorBabkin/ts-ioc-container/commit/343cd4d04b52a167b309710f977cb14079b49a47))
+- **ci-optimization:** check ([29a921c](https://github.com/IgorBabkin/ts-ioc-container/commit/29a921c6107dfff70e224ca57e1fb4e93bec57b4))
+- **ci-test:** check ([f2d30db](https://github.com/IgorBabkin/ts-ioc-container/commit/f2d30db936b920fa15e258504680ae629b8f234c))
+- **ci:** fix github flow ([1d32b2b](https://github.com/IgorBabkin/ts-ioc-container/commit/1d32b2b0ac8bc61e1e915c9542f60979d5f1dde5))
+
+# [45.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v45.0.7...v45.1.0) (2025-11-28)
+
+### Bug Fixes
+
+- **ci:** disable hooks on ci ([5ce8a43](https://github.com/IgorBabkin/ts-ioc-container/commit/5ce8a43f95908d07c6056cd43dd28e75f783507b))
+
+### Features
+
+- **test-sem-ver:** check ([de4b1a7](https://github.com/IgorBabkin/ts-ioc-container/commit/de4b1a7d9335782e973c794bb9b84fd93e405db3))
 
 # Changelog
 
@@ -247,96 +234,83 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [6.28.0](https://github.com/IgorBabkin/service-locator/compare/v6.27.0...v6.28.0) (2021-09-26)
 
-
 ### Features
 
-* add context ([28aef4f](https://github.com/IgorBabkin/service-locator/commit/28aef4f9bb379d93a175db4a7157ca799489dd15))
+- add context ([28aef4f](https://github.com/IgorBabkin/service-locator/commit/28aef4f9bb379d93a175db4a7157ca799489dd15))
 
 ## [6.27.0](https://github.com/IgorBabkin/service-locator/compare/v6.26.0...v6.27.0) (2021-09-26)
 
-
 ### Features
 
-* add context ([faee0f2](https://github.com/IgorBabkin/service-locator/commit/faee0f21a24da2a41589553261cb3724d31e1cab))
+- add context ([faee0f2](https://github.com/IgorBabkin/service-locator/commit/faee0f21a24da2a41589553261cb3724d31e1cab))
 
 ## [6.26.0](https://github.com/IgorBabkin/service-locator/compare/v6.25.0...v6.26.0) (2021-09-26)
 
-
 ### Features
 
-* add context ([beba845](https://github.com/IgorBabkin/service-locator/commit/beba8455f5cddaac28f6398dc3fe2f77d11aacd4))
+- add context ([beba845](https://github.com/IgorBabkin/service-locator/commit/beba8455f5cddaac28f6398dc3fe2f77d11aacd4))
 
 ## [6.25.0](https://github.com/IgorBabkin/service-locator/compare/v6.24.0...v6.25.0) (2021-09-25)
 
-
 ### Features
 
-* add context ([ae35215](https://github.com/IgorBabkin/service-locator/commit/ae3521510c44fce8f7c99416a9b6e6c3cc1b05e6))
+- add context ([ae35215](https://github.com/IgorBabkin/service-locator/commit/ae3521510c44fce8f7c99416a9b6e6c3cc1b05e6))
 
 ## [6.24.0](https://github.com/IgorBabkin/service-locator/compare/v6.23.0...v6.24.0) (2021-09-25)
 
-
 ### Features
 
-* add context ([2dd7b7a](https://github.com/IgorBabkin/service-locator/commit/2dd7b7a66497e7456e4c48d4d34b26d6c855c53c))
+- add context ([2dd7b7a](https://github.com/IgorBabkin/service-locator/commit/2dd7b7a66497e7456e4c48d4d34b26d6c855c53c))
 
 ## [6.23.0](https://github.com/IgorBabkin/service-locator/compare/v6.22.5...v6.23.0) (2021-09-25)
 
-
 ### Features
 
-* add context ([43e1384](https://github.com/IgorBabkin/service-locator/commit/43e13847ea527f9d68eb3e0cacd1b81fd0436120))
+- add context ([43e1384](https://github.com/IgorBabkin/service-locator/commit/43e13847ea527f9d68eb3e0cacd1b81fd0436120))
 
 ### [6.22.5](https://github.com/IgorBabkin/service-locator/compare/v6.22.4...v6.22.5) (2021-09-25)
 
-
 ### Bug Fixes
 
-* single provider ([c262ffe](https://github.com/IgorBabkin/service-locator/commit/c262ffe75a117d03c3835c845e4c98327df6b584))
+- single provider ([c262ffe](https://github.com/IgorBabkin/service-locator/commit/c262ffe75a117d03c3835c845e4c98327df6b584))
 
 ### [6.22.4](https://github.com/IgorBabkin/service-locator/compare/v6.22.3...v6.22.4) (2021-09-25)
 
-
 ### Bug Fixes
 
-* single provider ([ceddcf4](https://github.com/IgorBabkin/service-locator/commit/ceddcf4ed6dcfd3980af83a42d399edb9f173b9e))
+- single provider ([ceddcf4](https://github.com/IgorBabkin/service-locator/commit/ceddcf4ed6dcfd3980af83a42d399edb9f173b9e))
 
 ### [6.22.3](https://github.com/IgorBabkin/service-locator/compare/v6.22.2...v6.22.3) (2021-09-25)
 
 ### [6.22.2](https://github.com/IgorBabkin/service-locator/compare/v6.22.1...v6.22.2) (2021-09-25)
 
-
 ### Bug Fixes
 
-* refactor ([9378701](https://github.com/IgorBabkin/service-locator/commit/9378701a0414a473dc25aa867b0225285dd535dc))
+- refactor ([9378701](https://github.com/IgorBabkin/service-locator/commit/9378701a0414a473dc25aa867b0225285dd535dc))
 
 ### [6.22.1](https://github.com/IgorBabkin/service-locator/compare/v6.22.0...v6.22.1) (2021-09-25)
 
-
 ### Bug Fixes
 
-* refactor ([4f52cf0](https://github.com/IgorBabkin/service-locator/commit/4f52cf07d8e2dabf1f1b60d22d4ae8b97e73cf47))
+- refactor ([4f52cf0](https://github.com/IgorBabkin/service-locator/commit/4f52cf07d8e2dabf1f1b60d22d4ae8b97e73cf47))
 
 ## [6.22.0](https://github.com/IgorBabkin/service-locator/compare/v6.21.4...v6.22.0) (2021-09-14)
 
-
 ### Features
 
-* add locator builders ([491fab8](https://github.com/IgorBabkin/service-locator/commit/491fab8f31115be8970c7cdc0f5f562a71932efc))
+- add locator builders ([491fab8](https://github.com/IgorBabkin/service-locator/commit/491fab8f31115be8970c7cdc0f5f562a71932efc))
 
 ### [6.21.4](https://github.com/IgorBabkin/service-locator/compare/v6.21.3...v6.21.4) (2021-09-13)
 
-
 ### Bug Fixes
 
-* add missing interfaces ([2ec5c1d](https://github.com/IgorBabkin/service-locator/commit/2ec5c1dc625b8f5f192f18789a81bf4d3255ff85))
+- add missing interfaces ([2ec5c1d](https://github.com/IgorBabkin/service-locator/commit/2ec5c1dc625b8f5f192f18789a81bf4d3255ff85))
 
 ### [6.21.3](https://github.com/IgorBabkin/service-locator/compare/v6.21.2...v6.21.3) (2021-09-13)
 
-
 ### Bug Fixes
 
-* mock provider storage from moq wrong link ([33ecafd](https://github.com/IgorBabkin/service-locator/commit/33ecafd3a5f3312fcf1c410d7692893953d07a8d))
+- mock provider storage from moq wrong link ([33ecafd](https://github.com/IgorBabkin/service-locator/commit/33ecafd3a5f3312fcf1c410d7692893953d07a8d))
 
 ### [6.21.2](https://github.com/IgorBabkin/service-locator/compare/v6.21.1...v6.21.2) (2021-09-12)
 
@@ -344,25 +318,22 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [6.21.0](https://github.com/IgorBabkin/service-locator/compare/v6.20.0...v6.21.0) (2021-09-12)
 
-
 ### Features
 
-* hooks ([d3de948](https://github.com/IgorBabkin/service-locator/commit/d3de94887466bf1485ee5b0a572a490dcd840613))
+- hooks ([d3de948](https://github.com/IgorBabkin/service-locator/commit/d3de94887466bf1485ee5b0a572a490dcd840613))
 
 ## [6.20.0](https://github.com/IgorBabkin/service-locator/compare/v6.19.0...v6.20.0) (2021-09-11)
 
-
 ### Features
 
-* upgrade mocking ([91918c2](https://github.com/IgorBabkin/service-locator/commit/91918c2247a88a16b0e5f9247b709616d999a9ce))
+- upgrade mocking ([91918c2](https://github.com/IgorBabkin/service-locator/commit/91918c2247a88a16b0e5f9247b709616d999a9ce))
 
 ## [6.19.0](https://github.com/IgorBabkin/service-locator/compare/v6.18.5...v6.19.0) (2021-09-11)
 
-
 ### Features
 
-* refactor injectors ([740f2eb](https://github.com/IgorBabkin/service-locator/commit/740f2eb65e4bac3ff1849e9a4285182a35ecdeb8))
-* refactor injectors ([a528ac3](https://github.com/IgorBabkin/service-locator/commit/a528ac39049344019c4d430a4794b4fc105304bb))
+- refactor injectors ([740f2eb](https://github.com/IgorBabkin/service-locator/commit/740f2eb65e4bac3ff1849e9a4285182a35ecdeb8))
+- refactor injectors ([a528ac3](https://github.com/IgorBabkin/service-locator/commit/a528ac39049344019c4d430a4794b4fc105304bb))
 
 ### [6.18.5](https://github.com/IgorBabkin/service-locator/compare/v6.18.4...v6.18.5) (2021-09-11)
 
@@ -370,194 +341,167 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [6.18.3](https://github.com/IgorBabkin/service-locator/compare/v6.18.2...v6.18.3) (2021-09-11)
 
-
 ### Bug Fixes
 
-* errors checking ([bc2d1c7](https://github.com/IgorBabkin/service-locator/commit/bc2d1c77485683f8d801542d87db03165b951bc5))
+- errors checking ([bc2d1c7](https://github.com/IgorBabkin/service-locator/commit/bc2d1c77485683f8d801542d87db03165b951bc5))
 
 ### [6.18.2](https://github.com/IgorBabkin/service-locator/compare/v6.18.1...v6.18.2) (2021-09-11)
 
-
 ### Bug Fixes
 
-* improve readme ([80565e6](https://github.com/IgorBabkin/service-locator/commit/80565e6a3ffb52de722052d595e53e229f3deff9))
+- improve readme ([80565e6](https://github.com/IgorBabkin/service-locator/commit/80565e6a3ffb52de722052d595e53e229f3deff9))
 
 ### [6.18.1](https://github.com/IgorBabkin/service-locator/compare/v6.18.0...v6.18.1) (2021-09-11)
 
-
 ### Bug Fixes
 
-* improve readme ([5c58e41](https://github.com/IgorBabkin/service-locator/commit/5c58e41d76b397104f40781c78c1d07475c3cf66))
+- improve readme ([5c58e41](https://github.com/IgorBabkin/service-locator/commit/5c58e41d76b397104f40781c78c1d07475c3cf66))
 
 ## [6.18.0](https://github.com/IgorBabkin/service-locator/compare/v6.17.5...v6.18.0) (2021-09-11)
 
-
 ### Features
 
-* remove compatibility mode ([7cc9f5f](https://github.com/IgorBabkin/service-locator/commit/7cc9f5fac99c8dbba952314cade098ec6beaa70c))
+- remove compatibility mode ([7cc9f5f](https://github.com/IgorBabkin/service-locator/commit/7cc9f5fac99c8dbba952314cade098ec6beaa70c))
 
 ### [6.17.5](https://github.com/IgorBabkin/service-locator/compare/v6.17.4...v6.17.5) (2021-09-11)
 
-
 ### Bug Fixes
 
-* improve readme ([431d569](https://github.com/IgorBabkin/service-locator/commit/431d5695acf4e5972fc277f350a5ea6640d126b3))
+- improve readme ([431d569](https://github.com/IgorBabkin/service-locator/commit/431d5695acf4e5972fc277f350a5ea6640d126b3))
 
 ### [6.17.4](https://github.com/IgorBabkin/service-locator/compare/v6.17.3...v6.17.4) (2021-09-11)
 
-
 ### Bug Fixes
 
-* improve readme ([7660160](https://github.com/IgorBabkin/service-locator/commit/7660160d48450247bc9f7f15f8b30d44eb9cbea3))
+- improve readme ([7660160](https://github.com/IgorBabkin/service-locator/commit/7660160d48450247bc9f7f15f8b30d44eb9cbea3))
 
 ### [6.17.3](https://github.com/IgorBabkin/service-locator/compare/v6.17.2...v6.17.3) (2021-09-11)
 
-
 ### Bug Fixes
 
-* improve readme ([159ed9d](https://github.com/IgorBabkin/service-locator/commit/159ed9dafe9ea99f1ee20b8dc288ac2fd7906bc2))
+- improve readme ([159ed9d](https://github.com/IgorBabkin/service-locator/commit/159ed9dafe9ea99f1ee20b8dc288ac2fd7906bc2))
 
 ### [6.17.2](https://github.com/IgorBabkin/service-locator/compare/v6.17.1...v6.17.2) (2021-09-11)
 
-
 ### Bug Fixes
 
-* improve readme ([6b37faf](https://github.com/IgorBabkin/service-locator/commit/6b37faf9411855ce0b34ed09212b06ddc4563f5a))
+- improve readme ([6b37faf](https://github.com/IgorBabkin/service-locator/commit/6b37faf9411855ce0b34ed09212b06ddc4563f5a))
 
 ### [6.17.1](https://github.com/IgorBabkin/service-locator/compare/v6.17.0...v6.17.1) (2021-09-11)
 
-
 ### Bug Fixes
 
-* improve readme ([8e3a6d5](https://github.com/IgorBabkin/service-locator/commit/8e3a6d5bfd7b141c5e9eb5ac59e95fcc46dd8dce))
+- improve readme ([8e3a6d5](https://github.com/IgorBabkin/service-locator/commit/8e3a6d5bfd7b141c5e9eb5ac59e95fcc46dd8dce))
 
 ## [6.17.0](https://github.com/IgorBabkin/service-locator/compare/v6.16.1...v6.17.0) (2021-09-11)
 
-
 ### Features
 
-* improve mocking ([21ac83d](https://github.com/IgorBabkin/service-locator/commit/21ac83df60c78d69b0baddd2340770154bcf7a8c))
+- improve mocking ([21ac83d](https://github.com/IgorBabkin/service-locator/commit/21ac83df60c78d69b0baddd2340770154bcf7a8c))
 
 ### [6.16.1](https://github.com/IgorBabkin/service-locator/compare/v6.16.0...v6.16.1) (2021-09-11)
 
 ## [6.16.0](https://github.com/IgorBabkin/service-locator/compare/v6.15.3...v6.16.0) (2021-09-11)
 
-
 ### Features
 
-* improve mocking ([95c67ca](https://github.com/IgorBabkin/service-locator/commit/95c67cac84fef4b282fde40933a3594a656e8936))
+- improve mocking ([95c67ca](https://github.com/IgorBabkin/service-locator/commit/95c67cac84fef4b282fde40933a3594a656e8936))
 
 ### [6.15.3](https://github.com/IgorBabkin/service-locator/compare/v6.15.2...v6.15.3) (2021-09-11)
 
-
 ### Bug Fixes
 
-* update readme ([142693f](https://github.com/IgorBabkin/service-locator/commit/142693fee33758adc1bfe31a179cd9d3a86cbb55))
+- update readme ([142693f](https://github.com/IgorBabkin/service-locator/commit/142693fee33758adc1bfe31a179cd9d3a86cbb55))
 
 ### [6.15.2](https://github.com/IgorBabkin/service-locator/compare/v6.15.1...v6.15.2) (2021-09-11)
 
-
 ### Bug Fixes
 
-* update readme ([589c45f](https://github.com/IgorBabkin/service-locator/commit/589c45f8bd2ffcc9cd7a732151223ef11f4dba67))
+- update readme ([589c45f](https://github.com/IgorBabkin/service-locator/commit/589c45f8bd2ffcc9cd7a732151223ef11f4dba67))
 
 ### [6.15.1](https://github.com/IgorBabkin/service-locator/compare/v6.14.0...v6.15.1) (2021-09-11)
 
-
 ### Bug Fixes
 
-* update readme ([a65c775](https://github.com/IgorBabkin/service-locator/commit/a65c77566fa47c8710a1790af6a0abaea2549386))
+- update readme ([a65c775](https://github.com/IgorBabkin/service-locator/commit/a65c77566fa47c8710a1790af6a0abaea2549386))
 
 ## [6.15.0](https://github.com/IgorBabkin/service-locator/compare/v6.13.3...v6.15.0) (2021-09-11)
 
-
 ### Features
 
-* update license ([9e312aa](https://github.com/IgorBabkin/service-locator/commit/9e312aabdfb7691684e78454a8a60feff69e8ac6))
+- update license ([9e312aa](https://github.com/IgorBabkin/service-locator/commit/9e312aabdfb7691684e78454a8a60feff69e8ac6))
 
 ## [6.14.0](https://github.com/IgorBabkin/service-locator/compare/v6.13.3...v6.14.0) (2021-09-11)
 
-
 ### Features
 
-* update license ([9e312aa](https://github.com/IgorBabkin/service-locator/commit/9e312aabdfb7691684e78454a8a60feff69e8ac6))
+- update license ([9e312aa](https://github.com/IgorBabkin/service-locator/commit/9e312aabdfb7691684e78454a8a60feff69e8ac6))
 
 ### [6.13.3](https://github.com/IgorBabkin/service-locator/compare/v6.13.2...v6.13.3) (2021-09-11)
 
-
 ### Bug Fixes
 
-* update readme ([3bc217e](https://github.com/IgorBabkin/service-locator/commit/3bc217e4f5558ea84553f0671a523178c066a7a6))
+- update readme ([3bc217e](https://github.com/IgorBabkin/service-locator/commit/3bc217e4f5558ea84553f0671a523178c066a7a6))
 
 ### [6.13.2](https://github.com/IgorBabkin/service-locator/compare/v6.13.1...v6.13.2) (2021-09-11)
 
-
 ### Bug Fixes
 
-* husky ([019cb2b](https://github.com/IgorBabkin/service-locator/commit/019cb2b36c096448c67e9f96170fc1892cb95784))
+- husky ([019cb2b](https://github.com/IgorBabkin/service-locator/commit/019cb2b36c096448c67e9f96170fc1892cb95784))
 
 ### [6.13.1](https://github.com/IgorBabkin/service-locator/compare/v6.13.0...v6.13.1) (2021-09-11)
 
-
 ### Bug Fixes
 
-* update readme ([e7698f8](https://github.com/IgorBabkin/service-locator/commit/e7698f86f8e2bbec53355088f694e673d3261879))
+- update readme ([e7698f8](https://github.com/IgorBabkin/service-locator/commit/e7698f86f8e2bbec53355088f694e673d3261879))
 
 ## [6.13.0](https://github.com/IgorBabkin/service-locator/compare/v6.12.0...v6.13.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([59172af](https://github.com/IgorBabkin/service-locator/commit/59172af9057ca3fb411c4d9453f5cb5fb6eedf56))
+- update readme ([59172af](https://github.com/IgorBabkin/service-locator/commit/59172af9057ca3fb411c4d9453f5cb5fb6eedf56))
 
 ## [6.12.0](https://github.com/IgorBabkin/service-locator/compare/v6.11.0...v6.12.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([bcc1b16](https://github.com/IgorBabkin/service-locator/commit/bcc1b164a631a5f7513884112343baa544776013))
+- update readme ([bcc1b16](https://github.com/IgorBabkin/service-locator/commit/bcc1b164a631a5f7513884112343baa544776013))
 
 ## [6.11.0](https://github.com/IgorBabkin/service-locator/compare/v6.10.0...v6.11.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([3e757d2](https://github.com/IgorBabkin/service-locator/commit/3e757d21b42afd4d29dff034be7120c94474a40a))
+- update readme ([3e757d2](https://github.com/IgorBabkin/service-locator/commit/3e757d21b42afd4d29dff034be7120c94474a40a))
 
 ## [6.10.0](https://github.com/IgorBabkin/service-locator/compare/v6.9.0...v6.10.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([728bf8e](https://github.com/IgorBabkin/service-locator/commit/728bf8efd06227131d7f2dbbeacbe901ef9517e9))
+- update readme ([728bf8e](https://github.com/IgorBabkin/service-locator/commit/728bf8efd06227131d7f2dbbeacbe901ef9517e9))
 
 ## [6.9.0](https://github.com/IgorBabkin/service-locator/compare/v6.8.0...v6.9.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([5048bfb](https://github.com/IgorBabkin/service-locator/commit/5048bfb0659127ece9e940f79f8d37a304f7157b))
+- update readme ([5048bfb](https://github.com/IgorBabkin/service-locator/commit/5048bfb0659127ece9e940f79f8d37a304f7157b))
 
 ## [6.8.0](https://github.com/IgorBabkin/service-locator/compare/v6.7.0...v6.8.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([5564ce8](https://github.com/IgorBabkin/service-locator/commit/5564ce89e823ca969e1b86270acf1247409779e1))
+- update readme ([5564ce8](https://github.com/IgorBabkin/service-locator/commit/5564ce89e823ca969e1b86270acf1247409779e1))
 
 ## [6.7.0](https://github.com/IgorBabkin/service-locator/compare/v6.6.0...v6.7.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([645a14c](https://github.com/IgorBabkin/service-locator/commit/645a14c4fa0ba21c4205a518cf7a791fa49b10f6))
+- update readme ([645a14c](https://github.com/IgorBabkin/service-locator/commit/645a14c4fa0ba21c4205a518cf7a791fa49b10f6))
 
 ## [6.6.0](https://github.com/IgorBabkin/service-locator/compare/v6.5.4...v6.6.0) (2021-09-11)
 
-
 ### Features
 
-* update readme ([f54634d](https://github.com/IgorBabkin/service-locator/commit/f54634d2648a6b27e6017362dad1da3125c5968b))
+- update readme ([f54634d](https://github.com/IgorBabkin/service-locator/commit/f54634d2648a6b27e6017362dad1da3125c5968b))
 
 ### [6.5.4](https://github.com/IgorBabkin/service-locator/compare/v6.5.3...v6.5.4) (2021-09-10)
 
@@ -569,25 +513,22 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [6.5.0](https://github.com/IgorBabkin/service-locator/compare/v6.4.0...v6.5.0) (2021-09-10)
 
-
 ### Features
 
-* improve errors ([32988c5](https://github.com/IgorBabkin/service-locator/commit/32988c56086c133fdf08d6b369dc70a6f6549e72))
+- improve errors ([32988c5](https://github.com/IgorBabkin/service-locator/commit/32988c56086c133fdf08d6b369dc70a6f6549e72))
 
 ## [6.4.0](https://github.com/IgorBabkin/service-locator/compare/v6.3.0...v6.4.0) (2021-09-10)
 
-
 ### Features
 
-* improve types ([3e181bd](https://github.com/IgorBabkin/service-locator/commit/3e181bd16e7f82ed50c09df93d0015211a34c57b))
-* update types ([1d72b78](https://github.com/IgorBabkin/service-locator/commit/1d72b7880178959651541b51c9e3ffd726cb57d2))
+- improve types ([3e181bd](https://github.com/IgorBabkin/service-locator/commit/3e181bd16e7f82ed50c09df93d0015211a34c57b))
+- update types ([1d72b78](https://github.com/IgorBabkin/service-locator/commit/1d72b7880178959651541b51c9e3ffd726cb57d2))
 
 ## [6.3.0](https://github.com/IgorBabkin/service-locator/compare/v6.2.2...v6.3.0) (2021-09-10)
 
-
 ### Features
 
-* improve error messages ([bf2dbfd](https://github.com/IgorBabkin/service-locator/commit/bf2dbfdd75eced7fb113711445486aa37636d3cf))
+- improve error messages ([bf2dbfd](https://github.com/IgorBabkin/service-locator/commit/bf2dbfdd75eced7fb113711445486aa37636d3cf))
 
 ### [6.2.2](https://github.com/IgorBabkin/service-locator/compare/v6.2.1...v6.2.2) (2021-09-10)
 
@@ -595,46 +536,40 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [6.2.0](https://github.com/IgorBabkin/service-locator/compare/v6.1.1...v6.2.0) (2021-09-10)
 
-
 ### Features
 
-* extract metadata ([cb01757](https://github.com/IgorBabkin/service-locator/commit/cb01757cb4a0a944167f1d08129b7cbb441da84d))
-
+- extract metadata ([cb01757](https://github.com/IgorBabkin/service-locator/commit/cb01757cb4a0a944167f1d08129b7cbb441da84d))
 
 ### Bug Fixes
 
-* upgrade deps ([7a63408](https://github.com/IgorBabkin/service-locator/commit/7a63408b0a66649f7d0babc14fef55b73e669d54))
-* upgrade deps ([36447eb](https://github.com/IgorBabkin/service-locator/commit/36447eb66eb2450daca4ab2c9edabc5d53ef0b3d))
+- upgrade deps ([7a63408](https://github.com/IgorBabkin/service-locator/commit/7a63408b0a66649f7d0babc14fef55b73e669d54))
+- upgrade deps ([36447eb](https://github.com/IgorBabkin/service-locator/commit/36447eb66eb2450daca4ab2c9edabc5d53ef0b3d))
 
 ### [6.1.1](https://github.com/IgorBabkin/service-locator/compare/v6.1.0...v6.1.1) (2021-07-11)
 
 ## [6.1.0](https://github.com/IgorBabkin/service-locator/compare/v6.0.5...v6.1.0) (2021-07-11)
 
-
 ### Features
 
-* cleanup ([b6af54a](https://github.com/IgorBabkin/service-locator/commit/b6af54acc69b7d2bc5dc675f980dc5540b2b8c85))
-
+- cleanup ([b6af54a](https://github.com/IgorBabkin/service-locator/commit/b6af54acc69b7d2bc5dc675f980dc5540b2b8c85))
 
 ### Bug Fixes
 
-* cleanup ([7aefbe5](https://github.com/IgorBabkin/service-locator/commit/7aefbe50fa294809a6dd178ac24ad28a9148c1d6))
+- cleanup ([7aefbe5](https://github.com/IgorBabkin/service-locator/commit/7aefbe50fa294809a6dd178ac24ad28a9148c1d6))
 
 ### [6.0.5](https://github.com/IgorBabkin/service-locator/compare/v6.0.4...v6.0.5) (2021-07-11)
 
-
 ### Bug Fixes
 
-* exports ([54dcc99](https://github.com/IgorBabkin/service-locator/commit/54dcc9930c4dcdece90185ba2d4e985acb4113cf))
+- exports ([54dcc99](https://github.com/IgorBabkin/service-locator/commit/54dcc9930c4dcdece90185ba2d4e985acb4113cf))
 
 ### [6.0.4](https://github.com/IgorBabkin/service-locator/compare/v6.0.3...v6.0.4) (2021-07-11)
 
 ### [6.0.3](https://github.com/IgorBabkin/service-locator/compare/v6.0.2...v6.0.3) (2021-07-11)
 
-
 ### Bug Fixes
 
-* test ([53d37d6](https://github.com/IgorBabkin/service-locator/commit/53d37d68cb92e86223f510ef37842e7a6f11dc9a))
+- test ([53d37d6](https://github.com/IgorBabkin/service-locator/commit/53d37d68cb92e86223f510ef37842e7a6f11dc9a))
 
 ### [6.0.2](https://github.com/IgorBabkin/service-locator/compare/v6.0.1...v6.0.2) (2021-07-11)
 
@@ -642,155 +577,143 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [6.0.0](https://github.com/IgorBabkin/service-locator/compare/v5.1.6...v6.0.0) (2021-07-11)
 
-
 ### ⚠ BREAKING CHANGES
 
-* new api
-* everything
+- new api
+- everything
 
 ### Features
 
-* test helpers ([177bf70](https://github.com/IgorBabkin/service-locator/commit/177bf70942162babad0e7aeafd85b00a27b384e2))
-* test helpers ([f77078d](https://github.com/IgorBabkin/service-locator/commit/f77078d65457c1bc5a4df635630b2b8caadf001a))
-
+- test helpers ([177bf70](https://github.com/IgorBabkin/service-locator/commit/177bf70942162babad0e7aeafd85b00a27b384e2))
+- test helpers ([f77078d](https://github.com/IgorBabkin/service-locator/commit/f77078d65457c1bc5a4df635630b2b8caadf001a))
 
 ### Bug Fixes
 
-* cleanup ([4dc73e5](https://github.com/IgorBabkin/service-locator/commit/4dc73e519a4fe0cadce993d8c26198414c11642f))
-* singleton ([60f5176](https://github.com/IgorBabkin/service-locator/commit/60f517609ca5f07ece3aeae1557c4c7d10be03d1))
+- cleanup ([4dc73e5](https://github.com/IgorBabkin/service-locator/commit/4dc73e519a4fe0cadce993d8c26198414c11642f))
+- singleton ([60f5176](https://github.com/IgorBabkin/service-locator/commit/60f517609ca5f07ece3aeae1557c4c7d10be03d1))
 
-
-* everything ([50b2a2b](https://github.com/IgorBabkin/service-locator/commit/50b2a2b15dd96526df6d38fd26d2ccd911eb9f0a))
-* new api ([7cdcba2](https://github.com/IgorBabkin/service-locator/commit/7cdcba2f95cf2b3e35bc95c203753650e56047bb))
+- everything ([50b2a2b](https://github.com/IgorBabkin/service-locator/commit/50b2a2b15dd96526df6d38fd26d2ccd911eb9f0a))
+- new api ([7cdcba2](https://github.com/IgorBabkin/service-locator/commit/7cdcba2f95cf2b3e35bc95c203753650e56047bb))
 
 ### [5.1.6](https://github.com/IgorBabkin/service-locator/compare/v5.1.5...v5.1.6) (2021-06-16)
 
-
 ### Bug Fixes
 
-* docs ([5ef6b60](https://github.com/IgorBabkin/service-locator/commit/5ef6b608c2702c65fabf80c155a17410ae363f87))
+- docs ([5ef6b60](https://github.com/IgorBabkin/service-locator/commit/5ef6b608c2702c65fabf80c155a17410ae363f87))
 
 ### [5.1.5](https://github.com/IgorBabkin/service-locator/compare/v5.1.4...v5.1.5) (2021-06-16)
 
-
 ### Bug Fixes
 
-* docs ([cda3d2b](https://github.com/IgorBabkin/service-locator/commit/cda3d2b31a5233355a1c8685694f2b135852a790))
+- docs ([cda3d2b](https://github.com/IgorBabkin/service-locator/commit/cda3d2b31a5233355a1c8685694f2b135852a790))
 
 ### [5.1.4](https://github.com/IgorBabkin/service-locator/compare/v5.1.3...v5.1.4) (2021-06-16)
 
-
 ### Bug Fixes
 
-* docs ([2e7a017](https://github.com/IgorBabkin/service-locator/commit/2e7a017954a600b98147ddffc3cade1990b398ef))
+- docs ([2e7a017](https://github.com/IgorBabkin/service-locator/commit/2e7a017954a600b98147ddffc3cade1990b398ef))
 
 ### [5.1.3](https://github.com/IgorBabkin/service-locator/compare/v5.1.2...v5.1.3) (2021-06-16)
 
-
 ### Bug Fixes
 
-* docs ([560b8a9](https://github.com/IgorBabkin/service-locator/commit/560b8a99cdbc2b01481ba95cf8c0fe630c564ab6))
+- docs ([560b8a9](https://github.com/IgorBabkin/service-locator/commit/560b8a99cdbc2b01481ba95cf8c0fe630c564ab6))
 
 ### [5.1.2](https://github.com/IgorBabkin/service-locator/compare/v5.1.1...v5.1.2) (2021-06-16)
 
-
 ### Bug Fixes
 
-* remove push and publish ([c960152](https://github.com/IgorBabkin/service-locator/commit/c9601522380aa709dd37916202169f6629a8dda2))
+- remove push and publish ([c960152](https://github.com/IgorBabkin/service-locator/commit/c9601522380aa709dd37916202169f6629a8dda2))
 
 ### [5.1.1](https://github.com/IgorBabkin/service-locator/compare/v5.1.0...v5.1.1) (2021-06-16)
 
 ## [5.1.0](https://github.com/IgorBabkin/service-locator/compare/v5.0.1...v5.1.0) (2021-06-16)
 
-
 ### Features
 
-* prerelease ([9b5391e](https://github.com/IgorBabkin/service-locator/commit/9b5391e4414df687705ace06a40cbc8efee4cdff))
+- prerelease ([9b5391e](https://github.com/IgorBabkin/service-locator/commit/9b5391e4414df687705ace06a40cbc8efee4cdff))
 
 ### [5.0.1](https://github.com/IgorBabkin/service-locator/compare/v5.0.0...v5.0.1) (2021-06-16)
 
-
 ### Bug Fixes
 
-* docs ([99bf978](https://github.com/IgorBabkin/service-locator/commit/99bf97845ab91539fd088da23f056e1af59e0639))
+- docs ([99bf978](https://github.com/IgorBabkin/service-locator/commit/99bf97845ab91539fd088da23f056e1af59e0639))
 
 ## 5.0.0 (2021-06-14)
 
-
 ### ⚠ BREAKING CHANGES
 
-* 🧨 update api
-* refactoring
-* change api
-* Change naming
-* constructor
-* remove register-function register-contructor and register-instance
+- 🧨 update api
+- refactoring
+- change api
+- Change naming
+- constructor
+- remove register-function register-contructor and register-instance
 
 ### Features
 
-* 🎸 simplify api ([0e33499](https://github.com/IgorBabkin/service-locator/commit/0e33499200d739c04a5eea6235e12ad9c42ecfb5))
-* add args to decorators ([6d2a9ca](https://github.com/IgorBabkin/service-locator/commit/6d2a9ca0b55568ab0f198c34a021a2791e947f58))
-* add arguments ([26fbc42](https://github.com/IgorBabkin/service-locator/commit/26fbc42ac05fac40eee64704610a87e2c76be89b))
-* add hook ([22de328](https://github.com/IgorBabkin/service-locator/commit/22de328b7485770facff8e81ce11b8a4e431d7d2))
-* add hooks ([0dae9a8](https://github.com/IgorBabkin/service-locator/commit/0dae9a8fb51107b9ddbd035856ca98e906428d68))
-* add hooks ([b67191c](https://github.com/IgorBabkin/service-locator/commit/b67191c5e2f9150d22015374fbbcd9d1db11c9a0))
-* add locator context ([5025076](https://github.com/IgorBabkin/service-locator/commit/5025076f8341aa8f792536354760bac6e5191891))
-* add on dispose hook ([43e5523](https://github.com/IgorBabkin/service-locator/commit/43e5523b9aab08684cb4c2d6d86c9e753258feaf))
-* add simple strategy compatible options ([dad3b4e](https://github.com/IgorBabkin/service-locator/commit/dad3b4e485928e9a650a2cb33e192a5d2f0f4d72))
-* add with options api ([8a82fd2](https://github.com/IgorBabkin/service-locator/commit/8a82fd23479fa61af52baf78c245617ad8592e50))
-* change api to use providers ([764cad5](https://github.com/IgorBabkin/service-locator/commit/764cad5b32f25bd3c18ddeb4e0c644099589e365))
-* cleanup ([5137a0b](https://github.com/IgorBabkin/service-locator/commit/5137a0bca1a570b2a3d6d353751f6ff40bc05161))
-* cleanup ([b17fbe3](https://github.com/IgorBabkin/service-locator/commit/b17fbe3b2909003b732ee836b32021a3aaa151e8))
-* exports decorators ([278a4b6](https://github.com/IgorBabkin/service-locator/commit/278a4b663737ca245d16791b29c26fc22eab0730))
-* make all hook methods required ([534c12f](https://github.com/IgorBabkin/service-locator/commit/534c12fcc32c5e0c501ba7873b05ddeca2a3837e))
-* parameter ordering ([2c63d89](https://github.com/IgorBabkin/service-locator/commit/2c63d89529b88849d1831246a09c92343ac1fd00))
-* pass locator as last dep for ioc ([7ef87f4](https://github.com/IgorBabkin/service-locator/commit/7ef87f4f7ef01a0bc114b681914707cd179de174))
-* refactor ([3d3aa99](https://github.com/IgorBabkin/service-locator/commit/3d3aa994f0a7efdbb0ff29f413c1e94c3259d6b3))
-* refactor ([4208173](https://github.com/IgorBabkin/service-locator/commit/42081730abf523464e1ccdbb0e9601475117780d))
-* refactor ([cfcf29b](https://github.com/IgorBabkin/service-locator/commit/cfcf29b727efb3550c02c9564b9fc04270a74296))
-* refactor ([d192e9e](https://github.com/IgorBabkin/service-locator/commit/d192e9e236cefa4b38b91e71f453fac9a3281cee))
-* refactor ([4438ac3](https://github.com/IgorBabkin/service-locator/commit/4438ac33161f47e0cfd26a2b058fe8bf202675e7))
-* refactor ([2ac82aa](https://github.com/IgorBabkin/service-locator/commit/2ac82aa46fe0777963b683f2ee3a38dd6546abc7))
-* refactor ([1d63e79](https://github.com/IgorBabkin/service-locator/commit/1d63e79f32a1549bdaa2aba48913345cca2fac79))
-* refactor ([8dfeb1b](https://github.com/IgorBabkin/service-locator/commit/8dfeb1bb9cfa6411639088e4202ca71dc3ea494e))
-* refactor ([aafd935](https://github.com/IgorBabkin/service-locator/commit/aafd935f748a9d4ae1c90639fb1d81db0df937d6))
-* refactor provider ([9c8564a](https://github.com/IgorBabkin/service-locator/commit/9c8564a259b2be14540461a49690db497faa8293))
-* refactor provider api ([7c1bddb](https://github.com/IgorBabkin/service-locator/commit/7c1bddb61569fa33750d964be8cbdc9578c64f6f))
-* refactoring ([54af40e](https://github.com/IgorBabkin/service-locator/commit/54af40e55749566a1d85db153de5fa1107dec639))
-* remove context ([abbc44e](https://github.com/IgorBabkin/service-locator/commit/abbc44e524ba7264c7496a0e5f2bb8cebbd39441))
-* remove moq ([9ce043a](https://github.com/IgorBabkin/service-locator/commit/9ce043a0e890653fc983112456dcb4c21047c2d1))
-* simplify ([0bb6c04](https://github.com/IgorBabkin/service-locator/commit/0bb6c047d809e02ae7cdfe2cb33db355f932c88e))
-* upgrade provider ([940b78b](https://github.com/IgorBabkin/service-locator/commit/940b78bc925b9eb66d615e9903b724fb9ff7f72b))
-* **initial:** initia commit ([9b1e960](https://github.com/IgorBabkin/service-locator/commit/9b1e96035d757490f2f8d649a18e5a4475fe49b9))
-
+- 🎸 simplify api ([0e33499](https://github.com/IgorBabkin/service-locator/commit/0e33499200d739c04a5eea6235e12ad9c42ecfb5))
+- add args to decorators ([6d2a9ca](https://github.com/IgorBabkin/service-locator/commit/6d2a9ca0b55568ab0f198c34a021a2791e947f58))
+- add arguments ([26fbc42](https://github.com/IgorBabkin/service-locator/commit/26fbc42ac05fac40eee64704610a87e2c76be89b))
+- add hook ([22de328](https://github.com/IgorBabkin/service-locator/commit/22de328b7485770facff8e81ce11b8a4e431d7d2))
+- add hooks ([0dae9a8](https://github.com/IgorBabkin/service-locator/commit/0dae9a8fb51107b9ddbd035856ca98e906428d68))
+- add hooks ([b67191c](https://github.com/IgorBabkin/service-locator/commit/b67191c5e2f9150d22015374fbbcd9d1db11c9a0))
+- add locator context ([5025076](https://github.com/IgorBabkin/service-locator/commit/5025076f8341aa8f792536354760bac6e5191891))
+- add on dispose hook ([43e5523](https://github.com/IgorBabkin/service-locator/commit/43e5523b9aab08684cb4c2d6d86c9e753258feaf))
+- add simple strategy compatible options ([dad3b4e](https://github.com/IgorBabkin/service-locator/commit/dad3b4e485928e9a650a2cb33e192a5d2f0f4d72))
+- add with options api ([8a82fd2](https://github.com/IgorBabkin/service-locator/commit/8a82fd23479fa61af52baf78c245617ad8592e50))
+- change api to use providers ([764cad5](https://github.com/IgorBabkin/service-locator/commit/764cad5b32f25bd3c18ddeb4e0c644099589e365))
+- cleanup ([5137a0b](https://github.com/IgorBabkin/service-locator/commit/5137a0bca1a570b2a3d6d353751f6ff40bc05161))
+- cleanup ([b17fbe3](https://github.com/IgorBabkin/service-locator/commit/b17fbe3b2909003b732ee836b32021a3aaa151e8))
+- exports decorators ([278a4b6](https://github.com/IgorBabkin/service-locator/commit/278a4b663737ca245d16791b29c26fc22eab0730))
+- make all hook methods required ([534c12f](https://github.com/IgorBabkin/service-locator/commit/534c12fcc32c5e0c501ba7873b05ddeca2a3837e))
+- parameter ordering ([2c63d89](https://github.com/IgorBabkin/service-locator/commit/2c63d89529b88849d1831246a09c92343ac1fd00))
+- pass locator as last dep for ioc ([7ef87f4](https://github.com/IgorBabkin/service-locator/commit/7ef87f4f7ef01a0bc114b681914707cd179de174))
+- refactor ([3d3aa99](https://github.com/IgorBabkin/service-locator/commit/3d3aa994f0a7efdbb0ff29f413c1e94c3259d6b3))
+- refactor ([4208173](https://github.com/IgorBabkin/service-locator/commit/42081730abf523464e1ccdbb0e9601475117780d))
+- refactor ([cfcf29b](https://github.com/IgorBabkin/service-locator/commit/cfcf29b727efb3550c02c9564b9fc04270a74296))
+- refactor ([d192e9e](https://github.com/IgorBabkin/service-locator/commit/d192e9e236cefa4b38b91e71f453fac9a3281cee))
+- refactor ([4438ac3](https://github.com/IgorBabkin/service-locator/commit/4438ac33161f47e0cfd26a2b058fe8bf202675e7))
+- refactor ([2ac82aa](https://github.com/IgorBabkin/service-locator/commit/2ac82aa46fe0777963b683f2ee3a38dd6546abc7))
+- refactor ([1d63e79](https://github.com/IgorBabkin/service-locator/commit/1d63e79f32a1549bdaa2aba48913345cca2fac79))
+- refactor ([8dfeb1b](https://github.com/IgorBabkin/service-locator/commit/8dfeb1bb9cfa6411639088e4202ca71dc3ea494e))
+- refactor ([aafd935](https://github.com/IgorBabkin/service-locator/commit/aafd935f748a9d4ae1c90639fb1d81db0df937d6))
+- refactor provider ([9c8564a](https://github.com/IgorBabkin/service-locator/commit/9c8564a259b2be14540461a49690db497faa8293))
+- refactor provider api ([7c1bddb](https://github.com/IgorBabkin/service-locator/commit/7c1bddb61569fa33750d964be8cbdc9578c64f6f))
+- refactoring ([54af40e](https://github.com/IgorBabkin/service-locator/commit/54af40e55749566a1d85db153de5fa1107dec639))
+- remove context ([abbc44e](https://github.com/IgorBabkin/service-locator/commit/abbc44e524ba7264c7496a0e5f2bb8cebbd39441))
+- remove moq ([9ce043a](https://github.com/IgorBabkin/service-locator/commit/9ce043a0e890653fc983112456dcb4c21047c2d1))
+- simplify ([0bb6c04](https://github.com/IgorBabkin/service-locator/commit/0bb6c047d809e02ae7cdfe2cb33db355f932c88e))
+- upgrade provider ([940b78b](https://github.com/IgorBabkin/service-locator/commit/940b78bc925b9eb66d615e9903b724fb9ff7f72b))
+- **initial:** initia commit ([9b1e960](https://github.com/IgorBabkin/service-locator/commit/9b1e96035d757490f2f8d649a18e5a4475fe49b9))
 
 ### Bug Fixes
 
-* args ([6bc141e](https://github.com/IgorBabkin/service-locator/commit/6bc141edfc9f63668995a3b66145692437800be7))
-* builds ([65be848](https://github.com/IgorBabkin/service-locator/commit/65be8486cf1e8352b1e3dd6c9c408e035e843334))
-* cleanup ([15f69b1](https://github.com/IgorBabkin/service-locator/commit/15f69b112cb1bee843479bcbf01edbdc79c17ddd))
-* expose hook metadata collector ([a4b7a38](https://github.com/IgorBabkin/service-locator/commit/a4b7a388096112dc5c0826e91d300e3defe8bee8))
-* expose provider ([e31eed8](https://github.com/IgorBabkin/service-locator/commit/e31eed8f5084c79c10650acb65b51add94f83add))
-* fix docs ([e97e6c5](https://github.com/IgorBabkin/service-locator/commit/e97e6c51a3e11a3a021fa9829874a44383fa4513))
-* fix docs ([7830de8](https://github.com/IgorBabkin/service-locator/commit/7830de8105b577e1a76fb06f4e08287b3be55c1c))
-* fix entry point ([5086fcf](https://github.com/IgorBabkin/service-locator/commit/5086fcf83c72d03bf70d12cc5a5e9d436bec7dba))
-* force publish ([a493d9f](https://github.com/IgorBabkin/service-locator/commit/a493d9ff6530c29eef4a94bb43ee05385f5a47cf))
-* make provider safer ([0340b33](https://github.com/IgorBabkin/service-locator/commit/0340b33e5ef2c054cd13e173251574269ad1cb8b))
-* merge ([d0df619](https://github.com/IgorBabkin/service-locator/commit/d0df619b3740d3f60d67e8a1f3467e644a55bda9))
-* on dispose hook ([2012627](https://github.com/IgorBabkin/service-locator/commit/2012627362427e52546100dded5aac9e7b01a3eb))
-* remove inject of property ([5de84d9](https://github.com/IgorBabkin/service-locator/commit/5de84d9b1f4445973f0faf43375fd5b2f3767cca))
-* sdfs ([d0c0796](https://github.com/IgorBabkin/service-locator/commit/d0c07969ced0de946241dd5964330defdafe906c))
-* throw an error if resolved object is undefined ([403d75f](https://github.com/IgorBabkin/service-locator/commit/403d75fbfc21dc9d818c4fd114df4fad82c39567))
-* update iservice locator ([bf0a3d3](https://github.com/IgorBabkin/service-locator/commit/bf0a3d3e962127c85fe2a8254e5789440067fa4a))
-* **builds:** remove test deps from index file ([d9fd264](https://github.com/IgorBabkin/service-locator/commit/d9fd264adc6807a9e6628fecda6eaa0440e1d085))
-* **cleanup:** cleanup ([83d81c6](https://github.com/IgorBabkin/service-locator/commit/83d81c687619527e1443a9ba5270964e301d67cd))
-* **collect-coverage:** collect coverage ([fae6945](https://github.com/IgorBabkin/service-locator/commit/fae6945525e6c35b0224e5f08edf8efc47fec97e))
-* **coverall:** add coverall ([5d94a03](https://github.com/IgorBabkin/service-locator/commit/5d94a03fda39250706ead1f1584d0679e820ec22))
-* **docs:** add readme ([08da520](https://github.com/IgorBabkin/service-locator/commit/08da5201dfa4f0608620b95653e942c2abc4de63))
-* **docs:** fix docs ([e02d31f](https://github.com/IgorBabkin/service-locator/commit/e02d31f3d25218b94980699e30fdf591a7286113))
-* **prepublish:** build before publish ([a9e8145](https://github.com/IgorBabkin/service-locator/commit/a9e8145add239ac521291a74f4532ab9c3d2217c))
-* **service-locator:** cleanup ([ee1e8ed](https://github.com/IgorBabkin/service-locator/commit/ee1e8ed8f0f8c17d49d4a3e0030262255bf87620))
-* **service-locator:** fix passing deps for simple locator ([2f23c3a](https://github.com/IgorBabkin/service-locator/commit/2f23c3aa584f522e5086f7f21ef6c25147fb879f))
-* **tests:** add tests ([f96f18f](https://github.com/IgorBabkin/service-locator/commit/f96f18f047a7e5bf8435b4edf0bb2f717afb0adb))
-* **types:** change type directory ([0b56d92](https://github.com/IgorBabkin/service-locator/commit/0b56d929916450044033043ea1c1df7dfdea290b))
-* **unit-test:** unit test container ([0be5d93](https://github.com/IgorBabkin/service-locator/commit/0be5d93c49c32ba7c4394b29758c338ac92fd165))
+- args ([6bc141e](https://github.com/IgorBabkin/service-locator/commit/6bc141edfc9f63668995a3b66145692437800be7))
+- builds ([65be848](https://github.com/IgorBabkin/service-locator/commit/65be8486cf1e8352b1e3dd6c9c408e035e843334))
+- cleanup ([15f69b1](https://github.com/IgorBabkin/service-locator/commit/15f69b112cb1bee843479bcbf01edbdc79c17ddd))
+- expose hook metadata collector ([a4b7a38](https://github.com/IgorBabkin/service-locator/commit/a4b7a388096112dc5c0826e91d300e3defe8bee8))
+- expose provider ([e31eed8](https://github.com/IgorBabkin/service-locator/commit/e31eed8f5084c79c10650acb65b51add94f83add))
+- fix docs ([e97e6c5](https://github.com/IgorBabkin/service-locator/commit/e97e6c51a3e11a3a021fa9829874a44383fa4513))
+- fix docs ([7830de8](https://github.com/IgorBabkin/service-locator/commit/7830de8105b577e1a76fb06f4e08287b3be55c1c))
+- fix entry point ([5086fcf](https://github.com/IgorBabkin/service-locator/commit/5086fcf83c72d03bf70d12cc5a5e9d436bec7dba))
+- force publish ([a493d9f](https://github.com/IgorBabkin/service-locator/commit/a493d9ff6530c29eef4a94bb43ee05385f5a47cf))
+- make provider safer ([0340b33](https://github.com/IgorBabkin/service-locator/commit/0340b33e5ef2c054cd13e173251574269ad1cb8b))
+- merge ([d0df619](https://github.com/IgorBabkin/service-locator/commit/d0df619b3740d3f60d67e8a1f3467e644a55bda9))
+- on dispose hook ([2012627](https://github.com/IgorBabkin/service-locator/commit/2012627362427e52546100dded5aac9e7b01a3eb))
+- remove inject of property ([5de84d9](https://github.com/IgorBabkin/service-locator/commit/5de84d9b1f4445973f0faf43375fd5b2f3767cca))
+- sdfs ([d0c0796](https://github.com/IgorBabkin/service-locator/commit/d0c07969ced0de946241dd5964330defdafe906c))
+- throw an error if resolved object is undefined ([403d75f](https://github.com/IgorBabkin/service-locator/commit/403d75fbfc21dc9d818c4fd114df4fad82c39567))
+- update iservice locator ([bf0a3d3](https://github.com/IgorBabkin/service-locator/commit/bf0a3d3e962127c85fe2a8254e5789440067fa4a))
+- **builds:** remove test deps from index file ([d9fd264](https://github.com/IgorBabkin/service-locator/commit/d9fd264adc6807a9e6628fecda6eaa0440e1d085))
+- **cleanup:** cleanup ([83d81c6](https://github.com/IgorBabkin/service-locator/commit/83d81c687619527e1443a9ba5270964e301d67cd))
+- **collect-coverage:** collect coverage ([fae6945](https://github.com/IgorBabkin/service-locator/commit/fae6945525e6c35b0224e5f08edf8efc47fec97e))
+- **coverall:** add coverall ([5d94a03](https://github.com/IgorBabkin/service-locator/commit/5d94a03fda39250706ead1f1584d0679e820ec22))
+- **docs:** add readme ([08da520](https://github.com/IgorBabkin/service-locator/commit/08da5201dfa4f0608620b95653e942c2abc4de63))
+- **docs:** fix docs ([e02d31f](https://github.com/IgorBabkin/service-locator/commit/e02d31f3d25218b94980699e30fdf591a7286113))
+- **prepublish:** build before publish ([a9e8145](https://github.com/IgorBabkin/service-locator/commit/a9e8145add239ac521291a74f4532ab9c3d2217c))
+- **service-locator:** cleanup ([ee1e8ed](https://github.com/IgorBabkin/service-locator/commit/ee1e8ed8f0f8c17d49d4a3e0030262255bf87620))
+- **service-locator:** fix passing deps for simple locator ([2f23c3a](https://github.com/IgorBabkin/service-locator/commit/2f23c3aa584f522e5086f7f21ef6c25147fb879f))
+- **tests:** add tests ([f96f18f](https://github.com/IgorBabkin/service-locator/commit/f96f18f047a7e5bf8435b4edf0bb2f717afb0adb))
+- **types:** change type directory ([0b56d92](https://github.com/IgorBabkin/service-locator/commit/0b56d929916450044033043ea1c1df7dfdea290b))
+- **unit-test:** unit test container ([0be5d93](https://github.com/IgorBabkin/service-locator/commit/0be5d93c49c32ba7c4394b29758c338ac92fd165))
