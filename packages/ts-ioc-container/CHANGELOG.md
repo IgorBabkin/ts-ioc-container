@@ -1,3 +1,10 @@
+## [46.8.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.8.0...v46.8.1) (2026-02-01)
+
+
+### Bug Fixes
+
+* **container:** simplify array access in resolveOneByAlias ([68a59aa](https://github.com/IgorBabkin/ts-ioc-container/commit/68a59aa6a3cac73daf2b8b19e54c09f27d5c17d3))
+
 # [46.8.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.1...v46.8.0) (2025-12-24)
 
 
