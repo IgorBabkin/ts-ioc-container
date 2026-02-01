@@ -47,6 +47,7 @@ export default {
         'config', // Configuration files
         'react', // React integration package
         'express', // Express integration package
+        'fastify', // Fastify integration package
       ],
     ],
 

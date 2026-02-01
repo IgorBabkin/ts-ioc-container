@@ -1,0 +1,26 @@
+{
+  "testMatch": [
+    "**/?(*.)+(spec|test).+(ts)"
+  ],
+  "transform": {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "tsconfig": "./tsconfig.json"
+      }
+    ]
+  },
+  "cache": true,
+  "cacheDirectory": "<rootDir>/.jest-cache",
+  "coveragePathIgnorePatterns": [
+    "/node_modules/",
+    "/__tests__/",
+    "cjm/",
+    "esm/",
+    "typings/"
+  ],
+  "moduleDirectories": [
+    "node_modules"
+  ],
+  "setupFiles": ["<rootDir>/jest.setup.ts"]
+}
