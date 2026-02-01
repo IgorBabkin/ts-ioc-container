@@ -514,11 +514,11 @@ This project follows conventional commits with package-based scopes.
 
 ### Allowed Scopes (Package Names)
 Scope must be one of:
-- `container` - Core IoC container library (ts-ioc-container)
-- `react` - React integration package
-- `solidjs` - SolidJS integration package
-- `express` - Express middleware package
-- `fastify` - Fastify plugin package
+- `ts-ioc-container` - Core IoC container library (ts-ioc-container)
+- `@ts-ioc-container/react` - React integration package
+- `@ts-ioc-container/solidjs` - SolidJS integration package
+- `@ts-ioc-container/express` - Express middleware package
+- `@ts-ioc-container/fastify` - Fastify plugin package
 
 ### Semantic Release Rules
 Each package is released independently using semantic-release-monorepo:
@@ -540,11 +540,11 @@ Each package is released independently using semantic-release-monorepo:
 - `style(scope):` - Code style/formatting
 
 ### Examples
-- ✅ `feat(container): add new provider type`
-- ✅ `fix(react): resolve context hook issue`
-- ✅ `docs(express): update middleware examples`
-- ✅ `chore(fastify): update dependencies`
-- ✅ `test(solidjs): add integration tests`
+- ✅ `feat(ts-ioc-container): add new provider type`
+- ✅ `fix(@ts-ioc-container/react): resolve context hook issue`
+- ✅ `docs(@ts-ioc-container/express): update middleware examples`
+- ✅ `chore(@ts-ioc-container/fastify): update dependencies`
+- ✅ `test(@ts-ioc-container/solidjs): add integration tests`
 
 ## Notes on Docs Directory
 

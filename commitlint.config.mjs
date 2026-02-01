@@ -24,7 +24,7 @@ export default {
     'scope-enum': [
       2,
       'always',
-      ['root', 'container', 'solidjs', 'react', 'express', 'fastify'],
+      ['ts-ioc-container', '@ts-ioc-container/solidjs', '@ts-ioc-container/react', '@ts-ioc-container/express', '@ts-ioc-container/fastify'],
     ],
 
     // Require scope for all commits

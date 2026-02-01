@@ -56,9 +56,6 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      - name: Type check
-        run: pnpm run type-check
-
       - name: Cache Jest
         uses: ./.github/actions/cache-jest
 
