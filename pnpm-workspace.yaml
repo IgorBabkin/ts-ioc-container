@@ -1,3 +1,3 @@
 # pnpm workspace configuration
 packages:
-  - 'docs'
+  - 'packages/*'

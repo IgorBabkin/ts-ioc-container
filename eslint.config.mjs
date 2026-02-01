@@ -47,6 +47,6 @@ export default [
     },
   },
   {
-    ignores: ['docs/**'],
+    ignores: ['packages/docs/**'],
   },
 ];
