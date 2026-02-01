@@ -22,14 +22,17 @@ export function Scope({ tags, children }: ScopeProps) {
   // Normalize tags to array
   const tagsArray = useMemo(() => {
     if (typeof tags === 'string') {
-      return tags.split(',').map((tag) => tag.trim()).filter(Boolean);
+      return tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
     }
     return tags;
   }, [tags]);
 
+  // Using tagsArray.join(',') as dependency to avoid recreation when array reference changes but content is same
   const childScope = useMemo(
     () => parentContainer.createScope({ tags: tagsArray }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [parentContainer, tagsArray.join(',')],
   );
 

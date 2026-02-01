@@ -55,12 +55,8 @@ export function containerMiddleware(
     // Attach to request
     req.container = requestContainer;
 
-    // Track if container has been disposed to avoid double disposal
-    let disposed = false;
-
     const disposeContainer = (): void => {
-      if (!disposed) {
-        disposed = true;
+      if (!requestContainer.isDisposed) {
         requestContainer.dispose();
       }
     };
@@ -70,9 +66,7 @@ export function containerMiddleware(
 
     // Dispose on response close (error or client disconnect)
     res.on('close', () => {
-      if (!res.writableEnded) {
-        disposeContainer();
-      }
+      disposeContainer();
     });
 
     next();
