@@ -12,7 +12,7 @@
     "lint:fix": "pnpm --filter './packages/*' --if-present run lint:fix",
     "format": "pnpm --filter './packages/*' --if-present run format",
     "generate:docs": "pnpm --filter './packages/*' --if-present run generate:docs",
-    "commit": "cz",
+    "commit": "npx cz",
     "prepare": "husky",
     "release": "pnpm --filter './packages/*' --if-present run release",
     "docs:build": "pnpm --filter ts-ioc-container-docs run build",

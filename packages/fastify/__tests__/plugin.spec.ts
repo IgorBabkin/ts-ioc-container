@@ -167,12 +167,9 @@ describe('containerPlugin', () => {
 
       app.get('/test', async (request) => {
         const container = request.container;
-        // Wrap dispose to count calls
-        const originalContainerDispose = container.dispose.bind(container);
-        container.dispose = () => {
+        container.addOnDisposeHook(() => {
           disposeCallCount++;
-          return originalContainerDispose();
-        };
+        });
         return { success: true };
       });
 
