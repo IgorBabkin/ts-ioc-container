@@ -22,7 +22,10 @@ export function Scope(props: ScopeProps) {
   // Normalize tags to array
   const tagsArray = createMemo(() => {
     if (typeof props.tags === 'string') {
-      return props.tags.split(',').map((tag) => tag.trim()).filter(Boolean);
+      return props.tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
     }
     return props.tags;
   });

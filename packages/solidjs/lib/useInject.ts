@@ -18,9 +18,7 @@ import { useScopeOrFail } from './ScopeContext';
  * const service = useInject(ServiceClass);
  * ```
  */
-export function useInject<T>(
-  token: DependencyKey | InjectionToken<T> | constructor<T>,
-): T {
+export function useInject<T>(token: DependencyKey | InjectionToken<T> | constructor<T>): T {
   const container = useScopeOrFail();
 
   // If it's an InjectionToken, use its resolve method

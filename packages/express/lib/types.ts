@@ -16,6 +16,7 @@ import type { IContainer } from 'ts-ioc-container';
  * ```
  */
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       /**
