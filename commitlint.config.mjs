@@ -48,6 +48,7 @@ export default {
         'react', // React integration package
         'express', // Express integration package
         'fastify', // Fastify integration package
+        'solidjs', // SolidJS integration package
       ],
     ],
 
