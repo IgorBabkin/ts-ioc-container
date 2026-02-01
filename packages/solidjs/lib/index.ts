@@ -1,3 +1,7 @@
+/**
+ * SolidJS integration for ts-ioc-container
+ * @packageDocumentation
+ */
 export { Scope, type ScopeProps } from './Scope';
 export { useScopeOrFail, ScopeContext } from './ScopeContext';
 export { useInject } from './useInject';
