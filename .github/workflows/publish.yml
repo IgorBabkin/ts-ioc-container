@@ -68,12 +68,17 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config core.hooksPath /dev/null  # Disable git hooks on CI
 
-      - name: Release
+      - name: Release ts-ioc-container
         id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         working-directory: packages/ts-ioc-container
         run: npx semantic-release
+
+      - name: Release integration packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm --filter "@ts-ioc-container/*" --workspace-concurrency=1 exec npx semantic-release
 
       - name: Publish to GitHub Packages
         # Publish to GitHub Packages so it shows up in the Packages section
