@@ -9,6 +9,7 @@ import CodeBlock from '../components/CodeBlock.astro';
 import architectureDiagram from '@assets/diagrams/architecture-overview.mermaid?raw';
 import classDiagram from '@assets/diagrams/class-diagram.mermaid?raw';
 import basicSpecCode from '../../../packages/ts-ioc-container/__tests__/readme/basic.spec.ts?raw';
+import expressSpecCode from '../../../packages/ts-ioc-container/__tests__/readme/express.spec.ts?raw';
 
 # TypeScript IoC Container
 
@@ -64,37 +65,9 @@ This example demonstrates a real-world pattern: an `AuthService` that depends on
 Here's how to integrate the container with Express.js for request-scoped dependencies:
 
 <CodeBlock
-  code={`import express from 'express';
-import { Container, type IContainer } from 'ts-ioc-container';
-
-// Extend Express Request type
-declare global {
-  namespace Express {
-    interface Request {
-      container: IContainer;
-    }
-  }
-}
-
-// Application container (singleton services)
-const appContainer = new Container({ tags: ['application'] });
-// ... register your services
-
-// Middleware: Create request scope
-app.use((req, res, next) => {
-  req.container = appContainer.createScope({ tags: ['request'] });
-  res.on('finish', () => req.container.dispose());
-  next();
-});
-
-// Route handler
-app.post('/login', (req, res) => {
-  const authService = req.container.resolve<AuthService>('IAuthService');
-  const result = authService.authenticate(req.body.email, req.body.password);
-  res.json({ success: result });
-});`}
+  code={expressSpecCode}
   lang="typescript"
-  filename="Express.js integration"
+  filename="__tests__/readme/express.spec.ts"
 />
 
 <h2 id="documentation" class="toc-link">Documentation</h2>
