@@ -27,8 +27,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for lerna to analyze commits
-          token: ${{ secrets.GH_TOKEN }}  # Required for lerna to push commits
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -74,21 +74,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config core.hooksPath /dev/null  # Disable git hooks on CI
 
-      - name: Release packages with Lerna
+      - name: Release packages
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          npx lerna version --conventional-commits --create-release github --yes
-          npx lerna publish from-git --yes
-
-      - name: Publish to GitHub Packages
-        # Publish to GitHub Packages so it shows up in the Packages section
-        continue-on-error: true
-        uses: ./.github/actions/publish-to-github-packages
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          repository-owner: ${{ github.repository_owner }}
-          package-name: ts-ioc-container
-          package-path: packages/ts-ioc-container
+        run: pnpm run release

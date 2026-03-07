@@ -56,7 +56,7 @@ pnpm run docs:preview     # Preview built documentation site
 
 ### Release
 ```bash
-pnpm run release          # Build, test, and publish to npm
+pnpm run release          # Create release commit, changelog,tags,publish and push
 ```
 
 ### Workspace Management

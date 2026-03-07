@@ -8,19 +8,17 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "lerna run build --ignore ts-ioc-container-docs",
-    "test": "lerna run test",
-    "test:coverage": "lerna run test:coverage",
-    "type-check": "lerna run type-check",
-    "lint": "lerna run lint --ignore ts-ioc-container-docs",
-    "lint:fix": "lerna run lint:fix --ignore ts-ioc-container-docs",
-    "format": "lerna run format --ignore ts-ioc-container-docs",
-    "generate:docs": "lerna run generate:docs",
+    "build": "pnpm -r --filter \"./packages/*\" run build",
+    "test": "pnpm -r --filter \"./packages/*\" --if-present run test",
+    "test:coverage": "pnpm -r --filter \"./packages/*\" --if-present run test:coverage",
+    "type-check": "pnpm -r --filter \"./packages/*\" run type-check",
+    "lint": "pnpm -r --filter \"./packages/*\" run lint",
+    "lint:fix": "pnpm -r --filter \"./packages/*\" run lint:fix",
+    "format": "pnpm -r --filter \"./packages/*\" run format",
+    "generate:docs": "pnpm --filter ts-ioc-container run generate:docs",
     "commit": "npx cz",
     "prepare": "husky",
-    "release": "lerna publish",
-    "changed": "lerna changed",
-    "diff": "lerna diff",
+    "release": "pnpm exec monorepo-semantic-release",
     "docs:build": "pnpm --filter ts-ioc-container-docs run build",
     "docs:preview": "pnpm --filter ts-ioc-container-docs run preview"
   },
@@ -36,11 +34,10 @@
     "eslint-config-prettier": "10.1.1",
     "eslint-plugin-prettier": "5.2.6",
     "husky": "^9.1.7",
-    "lerna": "^9.0.3",
     "lint-staged": "^15.5.0",
     "prettier": "3.5.3",
     "prettier-plugin-astro": "^0.14.1",
-    "release-monorepo-semantically": "^1.1.2"
+    "release-monorepo-semantically": "^1.5.0"
   },
   "lint-staged": {
     "packages/**/*.{js,ts,tsx}": [
