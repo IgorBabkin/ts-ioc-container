@@ -39,7 +39,8 @@
     "lerna": "^9.0.3",
     "lint-staged": "^15.5.0",
     "prettier": "3.5.3",
-    "prettier-plugin-astro": "^0.14.1"
+    "prettier-plugin-astro": "^0.14.1",
+    "release-monorepo-semantically": "^1.1.2"
   },
   "lint-staged": {
     "packages/**/*.{js,ts,tsx}": [
