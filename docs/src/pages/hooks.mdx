@@ -128,6 +128,32 @@ Hooks receive a `HookContext` that provides access to:
 - `methodName` - The name of the method being executed
 - `resolveArgs()` - Resolve method arguments from the container
 - `invokeMethod(options)` - Invoke the hook method with arguments
+- `setInitialArgs(...args)` - Prepend explicit values before dependency-resolved hook arguments
+
+### Preloading Hook Arguments
+
+Use `setInitialArgs()` when a hook should supply fixed positional arguments before the container resolves decorated parameters. This is useful with custom `HooksRunner` flows where part of the argument list is known by the caller and the rest should still come from `@inject`.
+
+```typescript
+const beforeHooksRunner = new HooksRunner('syncBefore');
+
+class MyClass {
+  @hook('syncBefore', (ctx) => {
+    ctx.invokeMethod();
+  })
+  start(firstArg: string, @inject('suffix') suffix: string) {
+    console.log(firstArg, suffix);
+  }
+}
+
+beforeHooksRunner.execute(instance, {
+  scope: root,
+  createContext: (target, scope, methodName) =>
+    new HookContext(target, scope, methodName).setInitialArgs('initial'),
+});
+```
+
+In this example, `firstArg` receives `'initial'` and `suffix` is still resolved from the container.
 
 ## Best Practices
 

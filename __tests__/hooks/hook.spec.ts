@@ -2,6 +2,7 @@ import {
   AddOnConstructHookModule,
   AddOnDisposeHookModule,
   Container,
+  HookContext,
   hasHooks,
   hook,
   type HookFn,
@@ -25,6 +26,37 @@ const executeAsync: HookFn = async (ctx) => {
 
 const beforeHooksRunner = new HooksRunner('syncBefore');
 describe('hooks', () => {
+  it('should return the same context from setInitialArgs', () => {
+    const root = new Container({ tags: ['root'] });
+    const context = new HookContext({}, root, 'constructor');
+
+    expect(context.setInitialArgs('arg1')).toBe(context);
+  });
+
+  it('should prepend initial args when resolving hook method arguments', () => {
+    class MyClass {
+      receivedArgs: unknown[] = [];
+
+      @hook('syncBefore', (ctx) => {
+        ctx.invokeMethod();
+      })
+      start(firstArg: string, @inject('suffix') suffix: string, runtimeArg: string) {
+        this.receivedArgs = [firstArg, suffix, runtimeArg];
+      }
+    }
+
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue('injected').bindTo('suffix'));
+    const instance = root.resolve(MyClass);
+
+    beforeHooksRunner.execute(instance, {
+      scope: root,
+      createContext: (Target, scope, methodName) =>
+        new HookContext(Target, scope, methodName).setInitialArgs('initial'),
+    });
+
+    expect(instance.receivedArgs).toEqual(['initial', 'injected']);
+  });
+
   it('should run runHooks only for sync hooks', () => {
     class MyClass {
       isStarted = false;

@@ -129,6 +129,11 @@ export const pageHeadings: Record<string, Heading[]> = {
     { id: "ondispose", text: "OnDispose Hooks", level: 2 },
     { id: "property-injection", text: "Property Injection", level: 2 },
     { id: "custom-hooks", text: "Custom Hooks", level: 2 },
+    {
+      id: "preloading-hook-arguments",
+      text: "Preloading Hook Arguments",
+      level: 3,
+    },
     { id: "best-practices", text: "Best Practices", level: 2 },
   ],
   "/ts-ioc-container/token": [
