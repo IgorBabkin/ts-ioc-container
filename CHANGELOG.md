@@ -1,3 +1,10 @@
+# [46.9.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.8.0...v46.9.0) (2026-03-27)
+
+
+### Features
+
+* **hooks:** document setInitialArgs support ([79e28a5](https://github.com/IgorBabkin/ts-ioc-container/commit/79e28a581b99cc3ef09b6430fa2242f9699abf53))
+
 # [46.8.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.7.1...v46.8.0) (2025-12-24)
 
 
