@@ -1,6 +1,7 @@
 import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
 import { type constructor, Is } from '../utils/basic';
+import { getProxyTarget, isProxy } from '../utils/proxy';
 
 export type InjectFn<T = unknown> = (s: IContainer) => T;
 
@@ -24,13 +25,21 @@ const isHookClassConstructor = <C extends IHookContext>(
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
   isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
 
+const getReflectionTarget = (target: object) => {
+  return isProxy(target) ? getProxyTarget(target) : target;
+};
+
 // Get hooks metadata
 export function getHooks(target: object, key: string | symbol): HooksOfClass {
-  return Reflect.hasMetadata(key, target.constructor) ? Reflect.getMetadata(key, target.constructor) : new Map();
+  const reflectionTarget = getReflectionTarget(target);
+  return Reflect.hasMetadata(key, reflectionTarget.constructor)
+    ? Reflect.getMetadata(key, reflectionTarget.constructor)
+    : new Map();
 }
 
 export function hasHooks(target: object, key: string | symbol): boolean {
-  return Reflect.hasMetadata(key, target.constructor);
+  const reflectionTarget = getReflectionTarget(target);
+  return Reflect.hasMetadata(key, reflectionTarget.constructor);
 }
 
 // Hook decorator

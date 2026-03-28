@@ -1,18 +1,43 @@
-export function lazyProxy<T>(resolveInstance: () => T): T {
+type ProxyState<T extends object> = {
+  getTarget: () => T;
+};
+
+const proxyStateMap = new WeakMap<object, ProxyState<object>>();
+
+export function isProxy(value: object): boolean {
+  return proxyStateMap.has(value);
+}
+
+export function getProxyTarget<T extends object>(value: T): T {
+  return proxyStateMap.get(value)!.getTarget() as T;
+}
+
+export function lazyProxy<T extends object>(resolveInstance: () => T): T {
   let instance: T | undefined;
-  return new Proxy(
+  const state: ProxyState<T> = {
+    getTarget: () => {
+      instance = instance ?? resolveInstance();
+      return instance;
+    },
+  };
+
+  const proxy = new Proxy(
     {},
     {
       get: (_, prop) => {
-        instance = instance ?? resolveInstance();
+        const target = state.getTarget();
         // @ts-ignore
-        return instance[prop];
+        return target[prop];
       },
     },
   ) as T;
+
+  proxyStateMap.set(proxy, state as ProxyState<object>);
+
+  return proxy;
 }
 
-export function toLazyIf<T>(resolveInstance: () => T, isLazy: boolean = false): T {
+export function toLazyIf<T extends object>(resolveInstance: () => T, isLazy: boolean = false): T {
   if (isLazy) {
     return lazyProxy(resolveInstance);
   }

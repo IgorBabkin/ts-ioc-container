@@ -1,15 +1,18 @@
 import {
   AddOnConstructHookModule,
   AddOnDisposeHookModule,
+  bindTo,
   Container,
-  HookContext,
+  GroupAliasToken,
   hasHooks,
   hook,
+  HookContext,
   type HookFn,
   HooksRunner,
   inject,
   onConstruct,
   onDispose,
+  register,
   Registration as R,
   UnexpectedHookResultError,
 } from '../../lib';
@@ -17,11 +20,11 @@ import {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const execute: HookFn = (ctx) => {
-  ctx.invokeMethod({ args: ctx.resolveArgs() });
+  ctx.invokeMethod();
 };
 
 const executeAsync: HookFn = async (ctx) => {
-  await ctx.invokeMethod({ args: ctx.resolveArgs() });
+  await ctx.invokeMethod();
 };
 
 const beforeHooksRunner = new HooksRunner('syncBefore');
@@ -146,5 +149,56 @@ describe('hooks', () => {
 
     expect(instance.isStarted).toBe(true);
     expect(hasHooks(instance, 'onStart')).toBe(true);
+  });
+
+  it('should execute plugin hooks for lazily injected plugins', () => {
+    const onPluginStartHooksRunner = new HooksRunner('onPluginStart');
+    const PluginToken = new GroupAliasToken<Plugin>('Plugin');
+
+    interface Plugin {
+      isStarted: boolean;
+    }
+
+    @register(bindTo(PluginToken))
+    class FirstPlugin implements Plugin {
+      isStarted = false;
+
+      @hook('onPluginStart', execute)
+      start() {
+        this.isStarted = true;
+      }
+    }
+
+    @register(bindTo(PluginToken))
+    class SecondPlugin implements Plugin {
+      isStarted = false;
+
+      @hook('onPluginStart', execute)
+      start() {
+        this.isStarted = true;
+      }
+    }
+
+    class App {
+      constructor(@inject(PluginToken.lazy()) private readonly plugins: Plugin[]) {}
+
+      runPlugins(scope: Container) {
+        this.plugins.forEach((plugin) => onPluginStartHooksRunner.execute(plugin, { scope }));
+      }
+
+      getPlugins() {
+        return this.plugins;
+      }
+    }
+
+    const container = new Container()
+      .addRegistration(R.fromClass(FirstPlugin))
+      .addRegistration(R.fromClass(SecondPlugin));
+
+    const app = container.resolve(App);
+
+    app.runPlugins(container);
+
+    expect(app.getPlugins().every((plugin) => plugin.isStarted)).toBe(true);
   });
 });
