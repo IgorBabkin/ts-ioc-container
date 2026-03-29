@@ -1,3 +1,11 @@
+## [46.9.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.9.0...v46.9.1) (2026-03-29)
+
+
+### Bug Fixes
+
+* **hooks:** normalize lazy proxy targets ([00fc6f5](https://github.com/IgorBabkin/ts-ioc-container/commit/00fc6f59ea955c6d3456c5f4cdf4112c8116d466))
+* **hooks:** unwrap lazy proxies in hooks ([528d2fe](https://github.com/IgorBabkin/ts-ioc-container/commit/528d2fefe836f4d0fb3736c6f224be7bc9a3a8b7))
+
 # [46.9.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.8.0...v46.9.0) (2026-03-27)
 
 
