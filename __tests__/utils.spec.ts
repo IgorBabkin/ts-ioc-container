@@ -1,5 +1,6 @@
-import { pipe } from '../lib/utils/fp';
+import { pipe } from '../lib';
 import { fillEmptyIndexes } from '../lib/utils/array';
+import { getProxyTarget, isProxy, toLazyIf } from '../lib/utils/proxy';
 
 describe('utils', () => {
   it('should merge arrays', function () {
@@ -104,5 +105,41 @@ describe('fp', () => {
     const result = pipe(toFullName, extractFull, toUpperCase);
 
     expect(result({ firstName: 'John', lastName: 'Doe' })).toBe('JOHN DOE');
+  });
+});
+
+describe('proxy', () => {
+  it('should prevent repeated lazy wrapping', () => {
+    const target = { value: 1 };
+    const lazyTarget = toLazyIf(() => target, true);
+    const doubleLazyTarget = toLazyIf(() => lazyTarget, true);
+    const tripleLazyTarget = toLazyIf(() => doubleLazyTarget, true);
+    const quadrupleLazyTarget = toLazyIf(() => tripleLazyTarget, true);
+
+    expect(isProxy(lazyTarget)).toBe(true);
+    expect(isProxy(doubleLazyTarget)).toBe(true);
+    expect(isProxy(tripleLazyTarget)).toBe(true);
+    expect(isProxy(quadrupleLazyTarget)).toBe(true);
+    expect(isProxy(getProxyTarget(doubleLazyTarget))).toBe(false);
+    expect(isProxy(getProxyTarget(tripleLazyTarget))).toBe(false);
+    expect(isProxy(getProxyTarget(quadrupleLazyTarget))).toBe(false);
+    expect(getProxyTarget(doubleLazyTarget)).toBe(target);
+    expect(getProxyTarget(tripleLazyTarget)).toBe(target);
+    expect(getProxyTarget(quadrupleLazyTarget)).toBe(target);
+  });
+
+  it('should return the original target for each level of triple wrapping', () => {
+    const target = { value: 1 };
+    const firstWrap = toLazyIf(() => target, true);
+    const secondWrap = toLazyIf(() => firstWrap, true);
+    const thirdWrap = toLazyIf(() => secondWrap, true);
+
+    expect(isProxy(firstWrap)).toBe(true);
+    expect(isProxy(secondWrap)).toBe(true);
+    expect(isProxy(thirdWrap)).toBe(true);
+
+    expect(getProxyTarget(firstWrap)).toBe(target);
+    expect(getProxyTarget(secondWrap)).toBe(target);
+    expect(getProxyTarget(thirdWrap)).toBe(target);
   });
 });

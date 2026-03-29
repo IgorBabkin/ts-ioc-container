@@ -20,19 +20,19 @@ export interface IHookContext {
 }
 
 export class HookContext implements IHookContext {
+  readonly instance: object;
   private initialArgs: unknown[] = [];
-  private readonly targetInstance: object; // if instance is proxy
 
   constructor(
-    public instance: object,
+    instance: object,
     public scope: IContainer,
     public methodName?: string,
   ) {
-    this.targetInstance = isProxy(instance) ? getProxyTarget(instance) : instance;
+    this.instance = isProxy(instance) ? getProxyTarget(instance) : instance;
   }
 
   resolveArgs(...args: unknown[]): unknown[] {
-    return resolveArgs(this.targetInstance.constructor as constructor<unknown>, this.methodName)(
+    return resolveArgs(this.instance.constructor as constructor<unknown>, this.methodName)(
       this.scope,
       ...[...this.initialArgs, ...args],
     );

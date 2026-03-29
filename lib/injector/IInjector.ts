@@ -16,6 +16,7 @@ export interface IInjectFnResolver<T> {
 
 export abstract class Injector {
   resolve<T>(scope: IContainer, Target: constructor<T>, { args, lazy }: ProviderOptions = {}): T {
+    // @ts-ignore
     return toLazyIf(() => {
       const instance = this.createInstance(scope, Target, { args });
       scope.addInstance(instance as Instance);
