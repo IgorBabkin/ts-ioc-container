@@ -20,19 +20,6 @@ export default {
       ],
     ],
 
-    // Scope enum - restrict to package names only
-    'scope-enum': [
-      2,
-      'always',
-      [
-        'release',
-        '@ts-ioc-container/solidjs',
-        '@ts-ioc-container/react',
-        '@ts-ioc-container/express',
-        '@ts-ioc-container/fastify',
-      ],
-    ],
-
     // Require scope for all commits
     'scope-empty': [2, 'never'],
 

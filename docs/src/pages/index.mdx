@@ -5,11 +5,11 @@ description: Overview - Core architecture and class diagrams of the IoC containe
 ---
 
 
+
 import CodeBlock from '../components/CodeBlock.astro';
 import architectureDiagram from '@assets/diagrams/architecture-overview.mermaid?raw';
 import classDiagram from '@assets/diagrams/class-diagram.mermaid?raw';
 import basicSpecCode from '../../../packages/ts-ioc-container/__tests__/readme/basic.spec.ts?raw';
-import expressSpecCode from '../../../packages/ts-ioc-container/__tests__/readme/express.spec.ts?raw';
 
 # TypeScript IoC Container
 
@@ -58,16 +58,6 @@ This example demonstrates a real-world pattern: an `AuthService` that depends on
   code={basicSpecCode}
   lang="typescript"
   filename="__tests__/readme/basic.spec.ts"
-/>
-
-### Express.js Integration
-
-Here's how to integrate the container with Express.js for request-scoped dependencies:
-
-<CodeBlock
-  code={expressSpecCode}
-  lang="typescript"
-  filename="__tests__/readme/express.spec.ts"
 />
 
 <h2 id="documentation" class="toc-link">Documentation</h2>
