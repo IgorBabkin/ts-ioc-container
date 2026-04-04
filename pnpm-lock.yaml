@@ -69,8 +69,8 @@ importers:
         specifier: ^15.5.0
         version: 15.5.2
       moq.ts:
-        specifier: ^7.4.1
-        version: 7.4.1
+        specifier: ^10.0.8
+        version: 10.0.8
       prettier:
         specifier: 3.5.3
         version: 3.5.3
@@ -4703,8 +4703,8 @@ packages:
   module-details-from-path@1.0.4:
     resolution: {integrity: sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==}
 
-  moq.ts@7.4.1:
-    resolution: {integrity: sha512-P97MjGUkkMKQrAHbNScyJvSv3S7pMxnuxd3HgaOrPuoC6okwPqru3ZX8W/mTdU7Ms74622MeeWHqoDaGyYKonw==}
+  moq.ts@10.0.8:
+    resolution: {integrity: sha512-9zAJcsqhVCNczXz8xfDHSjU0SYq6umAFRB1CDRpgE1vwK7EMqc+DAUV6vUS+Ttl8CAQFFtTiWB46g3axdcrzmQ==}
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -5871,9 +5871,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  tslib@2.1.0:
-    resolution: {integrity: sha512-hcVC3wYEziELGGmEEXue7D75zbwIIVUMWAVbHItGPx0ziyXxrOMQx4rQEVEV45Ut/1IotuEvwqPopzIOkDMf0A==}
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -12049,9 +12046,9 @@ snapshots:
 
   module-details-from-path@1.0.4: {}
 
-  moq.ts@7.4.1:
+  moq.ts@10.0.8:
     dependencies:
-      tslib: 2.1.0
+      tslib: 2.8.1
 
   mri@1.2.0: {}
 
@@ -13276,8 +13273,6 @@ snapshots:
   tsconfck@3.1.6(typescript@5.8.3):
     optionalDependencies:
       typescript: 5.8.3
-
-  tslib@2.1.0: {}
 
   tslib@2.8.1: {}
 
