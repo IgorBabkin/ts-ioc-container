@@ -37,6 +37,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
+          cache: 'pnpm'
         # OIDC authentication is automatically used when:
         # 1. permissions.id-token: write is set (see top of file)
         # 2. npm 11.5.1+ is installed (next step)

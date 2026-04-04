@@ -1,3 +1,2 @@
-# pnpm workspace configuration
 packages:
-  - 'docs'
+  - docs

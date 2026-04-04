@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 import * as fs from 'fs';
 import Handlebars from 'handlebars';
