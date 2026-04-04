@@ -34,7 +34,17 @@ jobs:
         uses: actions/setup-node@v6.3.0
         with:
           node-version-file: '.nvmrc'
-          cache: 'pnpm'
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
