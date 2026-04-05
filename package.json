@@ -47,7 +47,7 @@
     "generate:docs": "scripts/generate-readme/generate-readme.ts && git add README.md",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage --reporter=lcov",
+    "test:coverage": "vitest run --coverage --coverage.reporter=lcov",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "commit": "cz",
