@@ -1,3 +1,10 @@
+# [47.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.0.2...v47.1.0) (2026-04-05)
+
+
+### Features
+
+* **hooks:** replace createContext with HookContextBuilder ([#59](https://github.com/IgorBabkin/ts-ioc-container/issues/59)) ([2d321b8](https://github.com/IgorBabkin/ts-ioc-container/commit/2d321b817058ef70e07dfc67c64f61e424deaa40)), closes [#58](https://github.com/IgorBabkin/ts-ioc-container/issues/58)
+
 ## [47.0.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.0.1...v47.0.2) (2026-04-05)
 
 
