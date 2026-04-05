@@ -1,3 +1,10 @@
+## [47.0.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.0.1...v47.0.2) (2026-04-05)
+
+
+### Bug Fixes
+
+* **hooks:** export HooksOfClass from index.ts ([#57](https://github.com/IgorBabkin/ts-ioc-container/issues/57)) ([8164888](https://github.com/IgorBabkin/ts-ioc-container/commit/816488873cdd86d9bcbaa2f03c3a5861e59995e3)), closes [#56](https://github.com/IgorBabkin/ts-ioc-container/issues/56)
+
 ## [47.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.0.0...v47.0.1) (2026-04-05)
 
 
