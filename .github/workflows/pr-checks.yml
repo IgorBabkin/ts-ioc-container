@@ -52,8 +52,5 @@ jobs:
       - name: Type check
         run: pnpm run type-check
 
-      - name: Cache Jest
-        uses: ./.github/actions/cache-jest
-
       - name: Test
         run: pnpm test --maxWorkers=2
