@@ -45,6 +45,7 @@ export default {
         'release', // Release automation
         'deps', // Dependencies
         'config', // Configuration files
+        'linter',
       ],
     ],
 

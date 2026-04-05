@@ -1,16 +1,16 @@
-import { getMethodMetadata, setMethodMetadata } from '../lib';
+import { getMethodMeta, methodMeta } from '../lib';
 
 describe('metadata', () => {
-  it('should test setMethodMetadata', () => {
+  it('should test methodMeta', () => {
     class Logger {
-      @setMethodMetadata('firstname', () => 'John')
+      @methodMeta('firstname', () => 'John')
       start() {}
 
-      @setMethodMetadata('lastname', () => 'Doe')
+      @methodMeta('lastname', () => 'Doe')
       stop() {}
     }
 
     const logger = new Logger();
-    expect(getMethodMetadata('firstname', logger, 'start')).toBe('John');
+    expect(getMethodMeta('firstname', logger, 'start')).toBe('John');
   });
 });

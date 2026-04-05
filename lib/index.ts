@@ -59,19 +59,14 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 
 // Hooks
-export { getHooks, hook, hasHooks, type HookFn, type HookClass } from './hooks/hook';
+export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn } from './hooks/hook';
 export { HookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct, AddOnConstructHookModule } from './hooks/onConstruct';
 export { onDisposeHooksRunner, onDispose, AddOnDisposeHookModule } from './hooks/onDispose';
+export { HooksRunner, type HooksRunnerContext } from './hooks/HooksRunner';
 
-// Hooks runner
-export type { HooksRunnerContext } from './hooks/HooksRunner';
-export { HooksRunner } from './hooks/HooksRunner';
-
-// Metadata
-
-// InjectionToken
+// Tokens
 export { InjectionToken } from './token/InjectionToken';
 export { GroupAliasToken, toGroupAlias } from './token/GroupAliasToken';
 export { SingleAliasToken, toSingleAlias } from './token/SingleAliasToken';
@@ -81,15 +76,13 @@ export { FunctionToken } from './token/FunctionToken';
 export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanceToken';
 
-// Others
+// Metadata
+export { handleError, handleAsyncError, type HandleErrorParams } from './metadata/errorHandler';
+export { classMeta, getClassMeta, classLabel, getClassLabels, classTag, getClassTags } from './metadata/class';
+export { paramMeta, getParamMeta, paramLabel, getParamLabels, paramTag, getParamTags } from './metadata/parameter';
+export { methodMeta, getMethodMeta, methodLabel, getMethodLabels, methodTag, getMethodTags } from './metadata/method';
+
+// Utils
 export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
-export type { InjectFn } from './hooks/hook';
-export { type constructor, type Instance } from './utils/basic';
-export { Is } from './utils/basic';
-export { getClassMetadata } from './metadata/class';
-export { setClassMetadata } from './metadata/class';
-export { getParameterMetadata } from './metadata/parameter';
-export { setParameterMetadata } from './metadata/parameter';
-export { getMethodMetadata } from './metadata/method';
-export { setMethodMetadata } from './metadata/method';
+export { type constructor, type Instance, Is, resolveConstructor } from './utils/basic';
