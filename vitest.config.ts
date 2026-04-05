@@ -18,6 +18,7 @@ export default defineConfig({
     include: ['**/?(*.)+(spec|test).+(ts)'],
     coverage: {
       provider: 'v8',
+      reporter: ['lcov', 'text-summary'],
       exclude: [
         'node_modules/**',
         '__tests__/**',
