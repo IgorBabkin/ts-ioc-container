@@ -3,25 +3,25 @@ import {
   getParameterLabels,
   parameterTag,
   getParameterTags,
-  getParameterMetadata,
-  parameterMetadata,
+  getParameterMeta,
+  parameterMeta,
 } from '../../lib';
 
-describe('getParameterMetadata', () => {
+describe('getParameterMeta', () => {
   it('should resolve metadata from a constructor', () => {
     class MyService {
-      constructor(@parameterMetadata('role', () => 'db') _db: unknown) {}
+      constructor(@parameterMeta('role', () => 'db') _db: unknown) {}
     }
 
-    expect(getParameterMetadata('role', MyService)[0]).toBe('db');
+    expect(getParameterMeta('role', MyService)[0]).toBe('db');
   });
 
   it('should resolve metadata from an instance', () => {
     class MyService {
-      constructor(@parameterMetadata('role', () => 'db') _db: unknown) {}
+      constructor(@parameterMeta('role', () => 'db') _db: unknown) {}
     }
 
-    expect(getParameterMetadata('role', new MyService(null))[0]).toBe('db');
+    expect(getParameterMeta('role', new MyService(null))[0]).toBe('db');
   });
 
   it('should return empty array when no metadata is set', () => {
@@ -29,7 +29,7 @@ describe('getParameterMetadata', () => {
       constructor(_db: unknown) {}
     }
 
-    expect(getParameterMetadata('role', MyService)).toEqual([]);
+    expect(getParameterMeta('role', MyService)).toEqual([]);
   });
 });
 

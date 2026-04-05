@@ -1,24 +1,24 @@
-import { classLabel, getClassLabels, classTag, getClassTags, getClassMetadata, classMetadata } from '../../lib';
+import { classLabel, getClassLabels, classTag, getClassTags, getClassMeta, classMeta } from '../../lib';
 
-describe('getClassMetadata', () => {
+describe('getClassMeta', () => {
   it('should resolve metadata from a constructor', () => {
-    @classMetadata('role', () => 'service')
+    @classMeta('role', () => 'service')
     class MyService {}
 
-    expect(getClassMetadata(MyService, 'role')).toBe('service');
+    expect(getClassMeta(MyService, 'role')).toBe('service');
   });
 
   it('should resolve metadata from an instance', () => {
-    @classMetadata('role', () => 'service')
+    @classMeta('role', () => 'service')
     class MyService {}
 
-    expect(getClassMetadata(new MyService(), 'role')).toBe('service');
+    expect(getClassMeta(new MyService(), 'role')).toBe('service');
   });
 
   it('should return undefined when no metadata is set', () => {
     class MyService {}
 
-    expect(getClassMetadata(MyService, 'role')).toBeUndefined();
+    expect(getClassMeta(MyService, 'role')).toBeUndefined();
   });
 });
 
