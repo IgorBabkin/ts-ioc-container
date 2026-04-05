@@ -59,7 +59,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 
 // Hooks
-export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn } from './hooks/hook';
+export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn, type HooksOfClass } from './hooks/hook';
 export { HookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct, AddOnConstructHookModule } from './hooks/onConstruct';

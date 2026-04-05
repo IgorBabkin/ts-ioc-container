@@ -14,7 +14,7 @@ export interface HookClass<T extends IHookContext = IHookContext> {
 }
 
 // HooksOfClass
-type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
+export type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
 
 const isHookClassConstructor = <C extends IHookContext>(
   execute: HookFn<C> | constructor<HookClass<C>>,
