@@ -1,3 +1,10 @@
+## [47.1.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.1.0...v47.1.1) (2026-04-05)
+
+
+### Bug Fixes
+
+* **hooks:** revert HookContextBuilder, restore createContext ([3daaf6f](https://github.com/IgorBabkin/ts-ioc-container/commit/3daaf6f6155af46a7363392bf99f8d16f5bd9103)), closes [#59](https://github.com/IgorBabkin/ts-ioc-container/issues/59)
+
 # [47.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.0.2...v47.1.0) (2026-04-05)
 
 
