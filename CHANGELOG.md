@@ -1,3 +1,25 @@
+# [47.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.9.1...v47.0.0) (2026-04-05)
+
+
+### Features
+
+* **container:** extend metadata API with labels, tags, and noun-style decorators ([#55](https://github.com/IgorBabkin/ts-ioc-container/issues/55)) ([e62c43d](https://github.com/IgorBabkin/ts-ioc-container/commit/e62c43d40f7e46522b56eb2539a1c053f2d38caf))
+
+
+### BREAKING CHANGES
+
+* **container:** parameterMeta→paramMeta, getParameterMeta→getParamMeta,
+parameterLabel→paramLabel, getParameterLabels→getParamLabels,
+parameterTag→paramTag, getParameterTags→getParamTags
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+* chore(linter): disable no-unused-vars
+
+* fix(hooks): use IHookContext instead of HookContext in test
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
 ## [46.9.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.9.0...v46.9.1) (2026-03-29)
 
 
