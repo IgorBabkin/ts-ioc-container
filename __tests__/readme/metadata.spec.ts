@@ -1,9 +1,9 @@
 import {
-  setClassMetadata,
+  classMetadata,
   getClassMetadata,
-  setParameterMetadata,
+  parameterMetadata,
   getParameterMetadata,
-  setMethodMetadata,
+  methodMetadata,
   getMethodMetadata,
 } from '../../lib';
 
@@ -12,7 +12,7 @@ describe('metadata', () => {
     it('should store and retrieve class metadata', () => {
       const FEATURE_KEY = 'feature:enabled';
 
-      @setClassMetadata(FEATURE_KEY, () => true)
+      @classMetadata(FEATURE_KEY, () => true)
       class FeatureService {
         getName() {
           return 'feature';
@@ -26,8 +26,8 @@ describe('metadata', () => {
     it('should accumulate class metadata with multiple decorators', () => {
       const TAGS_KEY = 'tags';
 
-      @setClassMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
-      @setClassMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
+      @classMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
+      @classMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
       class ApiService {
         getName() {
           return 'api';
@@ -46,8 +46,8 @@ describe('metadata', () => {
 
       class DatabaseService {
         constructor(
-          @setParameterMetadata(INJECT_KEY, () => 'config') config: any,
-          @setParameterMetadata(INJECT_KEY, () => 'logger') logger: any,
+          @parameterMetadata(INJECT_KEY, () => 'config') config: any,
+          @parameterMetadata(INJECT_KEY, () => 'logger') logger: any,
         ) {}
       }
 
@@ -61,9 +61,9 @@ describe('metadata', () => {
       class SparseService {
         constructor(
           first: any,
-          @setParameterMetadata(INJECT_KEY, () => 'second') second: any,
+          @parameterMetadata(INJECT_KEY, () => 'second') second: any,
           third: any,
-          @setParameterMetadata(INJECT_KEY, () => 'fourth') fourth: any,
+          @parameterMetadata(INJECT_KEY, () => 'fourth') fourth: any,
         ) {}
       }
 
@@ -78,10 +78,10 @@ describe('metadata', () => {
   describe('Method Metadata', () => {
     it('should store and retrieve method metadata', () => {
       class Logger {
-        @setMethodMetadata('logLevel', () => 'info')
+        @methodMetadata('logLevel', () => 'info')
         info(message: string) {}
 
-        @setMethodMetadata('logLevel', () => 'error')
+        @methodMetadata('logLevel', () => 'error')
         error(message: string) {}
       }
 
@@ -94,8 +94,8 @@ describe('metadata', () => {
       const MIDDLEWARE_KEY = 'middleware';
 
       class Controller {
-        @setMethodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
-        @setMethodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
+        @methodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
+        @methodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
         handleRequest() {}
       }
 
@@ -111,7 +111,7 @@ describe('metadata', () => {
       const VALIDATORS_KEY = 'validators';
 
       const validate = (validator: (value: any) => boolean): MethodDecorator =>
-        setMethodMetadata(VALIDATORS_KEY, (prev: Array<(v: any) => boolean> = []) => [...prev, validator]);
+        methodMetadata(VALIDATORS_KEY, (prev: Array<(v: any) => boolean> = []) => [...prev, validator]);
 
       const runValidators = (instance: any, methodName: string, value: any): boolean => {
         const validators = getMethodMetadata(VALIDATORS_KEY, instance, methodName) as Array<(v: any) => boolean>;

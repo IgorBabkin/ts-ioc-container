@@ -1,12 +1,12 @@
-import { getMethodMetadata, setMethodMetadata } from '../lib';
+import { getMethodMetadata, methodMetadata } from '../lib';
 
 describe('metadata', () => {
-  it('should test setMethodMetadata', () => {
+  it('should test methodMetadata', () => {
     class Logger {
-      @setMethodMetadata('firstname', () => 'John')
+      @methodMetadata('firstname', () => 'John')
       start() {}
 
-      @setMethodMetadata('lastname', () => 'Doe')
+      @methodMetadata('lastname', () => 'Doe')
       stop() {}
     }
 

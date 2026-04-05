@@ -45,22 +45,22 @@ import 'reflect-metadata';
 
 <h2 id="api-overview" class="toc-link">API Overview</h2>
 
-The metadata module exports six functions organized in pairs:
+The metadata module exports functions organized in pairs per target type:
 
-- **Class Metadata**: `setClassMetadata` and `getClassMetadata`
-- **Parameter Metadata**: `setParameterMetadata` and `getParameterMetadata`
-- **Method Metadata**: `setMethodMetadata` and `getMethodMetadata`
+- **Class Metadata**: `classMetadata`, `getClassMetadata`, `classLabel`, `getClassLabels`, `classTag`, `getClassTags`
+- **Parameter Metadata**: `parameterMetadata`, `getParameterMetadata`, `parameterLabel`, `getParameterLabels`, `parameterTag`, `getParameterTags`
+- **Method Metadata**: `methodMetadata`, `getMethodMetadata`, `methodLabel`, `getMethodLabels`, `methodTag`, `getMethodTags`
 
 <h2 id="class-metadata" class="toc-link">Class Metadata</h2>
 
 Class metadata is stored on the class constructor itself. Use this to attach configuration, tags, or registration information to classes.
 
-### setClassMetadata
+### classMetadata
 
 Creates a class decorator that stores metadata using a mapper function. The mapper receives the previous value (if any) and returns the new value.
 
 ```typescript
-setClassMetadata<T>(
+classMetadata<T>(
   key: string | symbol,
   mapFn: (prev: T | undefined) => T
 ): ClassDecorator
@@ -68,7 +68,7 @@ setClassMetadata<T>(
 
 ### getClassMetadata
 
-Retrieves metadata from a class constructor.
+Retrieves metadata from a class. Accepts either the constructor or an instance — if an instance is passed, the constructor is resolved automatically.
 
 ```typescript
 getClassMetadata<T>(
@@ -77,13 +77,45 @@ getClassMetadata<T>(
 ): T | undefined
 ```
 
+### classLabel
+
+Attaches a key/value label to a class. Labels are stored as a `Map<string, string>` and can be used to categorize or describe classes.
+
+```typescript
+classLabel(key: string, label: string): ClassDecorator
+```
+
+### getClassLabels
+
+Retrieves all labels attached to a class. Accepts either the constructor or an instance.
+
+```typescript
+getClassLabels(target: object): Map<string, string>
+```
+
+### classTag
+
+Attaches a string tag to a class. Tags are stored as a `Set<string>`, so duplicates are ignored automatically.
+
+```typescript
+classTag(tag: string): ClassDecorator
+```
+
+### getClassTags
+
+Retrieves all tags attached to a class. Accepts either the constructor or an instance.
+
+```typescript
+getClassTags(target: object): Set<string>
+```
+
 ### Example
 
 <CodeBlock
   code={`const TAGS_KEY = 'tags';
 
-@setClassMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
-@setClassMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
+@classMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
+@classMetadata(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
 class ApiService {}
 
 const tags = getClassMetadata<string[]>(ApiService, TAGS_KEY);
@@ -91,16 +123,33 @@ console.log(tags); // ['api', 'service']`}
   lang="typescript"
 />
 
+<CodeBlock
+  code={`@classTag('singleton')
+@classTag('service')
+@classLabel('env', 'production')
+@classLabel('region', 'us-east')
+class MyService {}
+
+const instance = new MyService();
+
+// Works with both constructor and instance
+console.log(getClassTags(MyService));          // Set { 'service', 'singleton' }
+console.log(getClassTags(instance));           // Set { 'service', 'singleton' }
+console.log(getClassLabels(MyService).get('env'));    // 'production'
+console.log(getClassLabels(instance).get('region')); // 'us-east'`}
+  lang="typescript"
+/>
+
 <h2 id="parameter-metadata" class="toc-link">Parameter Metadata</h2>
 
 Parameter metadata is stored as an array indexed by parameter position. This is crucial for constructor and method parameter injection.
 
-### setParameterMetadata
+### parameterMetadata
 
 Creates a parameter decorator that stores metadata for a specific parameter. The mapper receives the previous value for that parameter index.
 
 ```typescript
-setParameterMetadata(
+parameterMetadata(
   key: string | symbol,
   mapFn: (prev: unknown) => unknown
 ): ParameterDecorator
@@ -108,13 +157,45 @@ setParameterMetadata(
 
 ### getParameterMetadata
 
-Retrieves parameter metadata as an array. Undecorated parameters will have `undefined` at their index.
+Retrieves parameter metadata as an array. Undecorated parameters will have `undefined` at their index. Accepts either the constructor or an instance.
 
 ```typescript
 getParameterMetadata(
   key: string | symbol,
-  target: constructor<unknown>
+  target: object
 ): unknown[]
+```
+
+### parameterLabel
+
+Attaches a key/value label to a constructor parameter at the given position. Labels are stored per parameter as a `Map<string, string>`.
+
+```typescript
+parameterLabel(key: string, label: string): ParameterDecorator
+```
+
+### getParameterLabels
+
+Retrieves all labels for a specific parameter by index. Accepts either the constructor or an instance.
+
+```typescript
+getParameterLabels(target: object, parameterIndex: number): Map<string, string>
+```
+
+### parameterTag
+
+Attaches a string tag to a constructor parameter. Tags are stored per parameter as a `Set<string>`.
+
+```typescript
+parameterTag(tag: string): ParameterDecorator
+```
+
+### getParameterTags
+
+Retrieves all tags for a specific parameter by index. Accepts either the constructor or an instance.
+
+```typescript
+getParameterTags(target: object, parameterIndex: number): Set<string>
 ```
 
 ### Example
@@ -124,8 +205,8 @@ getParameterMetadata(
 
 class DatabaseService {
   constructor(
-    @setParameterMetadata(INJECT_KEY, () => 'config') config: any,
-    @setParameterMetadata(INJECT_KEY, () => 'logger') logger: any,
+    @parameterMetadata(INJECT_KEY, () => 'config') config: any,
+    @parameterMetadata(INJECT_KEY, () => 'logger') logger: any,
   ) {}
 }
 
@@ -134,16 +215,36 @@ console.log(metadata); // ['config', 'logger']`}
   lang="typescript"
 />
 
+<CodeBlock
+  code={`class MyService {
+  constructor(
+    @parameterTag('optional')
+    @parameterLabel('source', 'env')
+    _config: unknown,
+
+    @parameterTag('required')
+    @parameterLabel('source', 'di')
+    _db: unknown,
+  ) {}
+}
+
+// Works with both constructor and instance
+console.log(getParameterTags(MyService, 0).has('optional'));       // true
+console.log(getParameterLabels(MyService, 1).get('source'));       // 'di'
+console.log(getParameterTags(new MyService(null, null), 1).has('required')); // true`}
+  lang="typescript"
+/>
+
 <h2 id="method-metadata" class="toc-link">Method Metadata</h2>
 
 Method metadata is stored per method on the class. Use this for hooks, validators, middleware, or any method-level configuration.
 
-### setMethodMetadata
+### methodMetadata
 
 Creates a method decorator that stores metadata for a specific method. The mapper receives the previous value for that method.
 
 ```typescript
-setMethodMetadata<T>(
+methodMetadata<T>(
   key: string,
   mapFn: (prev: T | undefined) => T
 ): MethodDecorator
@@ -151,7 +252,7 @@ setMethodMetadata<T>(
 
 ### getMethodMetadata
 
-Retrieves metadata for a specific method.
+Retrieves metadata for a specific method. Accepts either the constructor or an instance.
 
 ```typescript
 getMethodMetadata(
@@ -161,20 +262,73 @@ getMethodMetadata(
 ): unknown
 ```
 
+### methodLabel
+
+Attaches a key/value label to a method. Labels are stored as a `Map<string, string>`.
+
+```typescript
+methodLabel(key: string, label: string): MethodDecorator
+```
+
+### getMethodLabels
+
+Retrieves all labels attached to a method. Accepts either the constructor or an instance.
+
+```typescript
+getMethodLabels(target: object, propertyKey: string): Map<string, string>
+```
+
+### methodTag
+
+Attaches a string tag to a method. Tags are stored as a `Set<string>`, so duplicates are ignored automatically.
+
+```typescript
+methodTag(tag: string): MethodDecorator
+```
+
+### getMethodTags
+
+Retrieves all tags attached to a method. Accepts either the constructor or an instance.
+
+```typescript
+getMethodTags(target: object, propertyKey: string): Set<string>
+```
+
 ### Example
 
 <CodeBlock
   code={`const MIDDLEWARE_KEY = 'middleware';
 
 class Controller {
-  @setMethodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
-  @setMethodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
+  @methodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
+  @methodMetadata(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
   handleRequest() {}
 }
 
 const controller = new Controller();
 const middleware = getMethodMetadata(MIDDLEWARE_KEY, controller, 'handleRequest');
 console.log(middleware); // ['validate', 'auth']`}
+  lang="typescript"
+/>
+
+<CodeBlock
+  code={`class UserController {
+  @methodTag('public')
+  @methodTag('deprecated')
+  @methodLabel('version', 'v1')
+  getUsers() {}
+
+  @methodTag('public')
+  @methodLabel('version', 'v2')
+  getUsersV2() {}
+}
+
+const ctrl = new UserController();
+
+// Works with both constructor and instance
+console.log(getMethodTags(UserController, 'getUsers').has('deprecated')); // true
+console.log(getMethodLabels(ctrl, 'getUsers').get('version'));             // 'v1'
+console.log(getMethodTags(ctrl, 'getUsersV2').has('deprecated'));          // false`}
   lang="typescript"
 />
 
@@ -185,14 +339,15 @@ The metadata system is built on top of `reflect-metadata`:
 - **Class metadata** uses `Reflect.defineMetadata` and `Reflect.getOwnMetadata` on the class constructor
 - **Parameter metadata** stores an array where each index corresponds to a parameter position
 - **Method metadata** uses `Reflect.defineMetadata` with the class constructor and property key
+- All getter functions accept **both a constructor and an instance** — instances are resolved to their constructor automatically via `resolveConstructor`
 
 <h2 id="usage-in-container" class="toc-link">Usage in ts-ioc-container</h2>
 
 The metadata system powers the core decorators:
 
-- **@register** - Uses `setClassMetadata` to store registration transformers
-- **@inject** - Uses `setParameterMetadata` to specify constructor dependencies
-- **@onConstruct/@onDispose/@hook** - Use `setMethodMetadata` for lifecycle hooks
+- **@register** - Uses `classMetadata` to store registration transformers
+- **@inject** - Uses `parameterMetadata` to specify constructor dependencies
+- **@onConstruct/@onDispose/@hook** - Use `methodMetadata` for lifecycle hooks
 
 <h2 id="best-practices" class="toc-link">Best Practices</h2>
 
@@ -201,6 +356,8 @@ The metadata system powers the core decorators:
 - **Use mapper functions for accumulation** - When stacking decorators, use the `prev` parameter to accumulate values
 - **Type your metadata** - Use TypeScript generics to type your metadata values
 - **Handle undefined gracefully** - Always check if metadata exists before using it
+- **Prefer labels over raw metadata for key/value data** - `classLabel` / `methodLabel` / `parameterLabel` provide a typed, structured alternative to raw metadata keys
+- **Prefer tags for boolean flags** - `classTag` / `methodTag` / `parameterTag` avoid duplicates automatically via `Set`
 - **Don't overuse metadata** - Prefer explicit configuration over implicit metadata when possible
 
 <h2 id="limitations" class="toc-link">Limitations</h2>

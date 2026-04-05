@@ -5,14 +5,14 @@ import { toToken } from '../token/toToken';
 import { InjectFn } from '../hooks/hook';
 import { fillEmptyIndexes } from '../utils/array';
 import { type constructor, Is } from '../utils/basic';
-import { getParameterMetadata, setParameterMetadata } from '../metadata/parameter';
+import { getParameterMetadata, parameterMetadata } from '../metadata/parameter';
 
 const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
 
 export const inject =
   <T>(fn: InjectionToken<T> | InjectFn<T> | symbol | string | constructor<T>): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
-    setParameterMetadata(hookMetaKey(propertyKey as string), () => toToken(fn))(
+    parameterMetadata(hookMetaKey(propertyKey as string), () => toToken(fn))(
       Is.instance(target) ? target.constructor : target,
       propertyKey,
       parameterIndex,

@@ -161,6 +161,7 @@ export const pageHeadings: Record<string, Heading[]> = {
     { id: "limitations", text: "Limitations", level: 2 },
     { id: "alternative-approaches", text: "Alternative Approaches", level: 2 },
   ],
+
   "/ts-ioc-container/react": [
     { id: "overview", text: "Overview", level: 2 },
     { id: "setup", text: "Setup", level: 2 },
