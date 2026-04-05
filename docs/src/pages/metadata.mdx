@@ -48,7 +48,7 @@ import 'reflect-metadata';
 The metadata module exports functions organized in pairs per target type:
 
 - **Class Metadata**: `classMeta`, `getClassMeta`, `classLabel`, `getClassLabels`, `classTag`, `getClassTags`
-- **Parameter Metadata**: `parameterMeta`, `getParameterMeta`, `parameterLabel`, `getParameterLabels`, `parameterTag`, `getParameterTags`
+- **Parameter Metadata**: `paramMeta`, `getParamMeta`, `paramLabel`, `getParamLabels`, `paramTag`, `getParamTags`
 - **Method Metadata**: `methodMeta`, `getMethodMeta`, `methodLabel`, `getMethodLabels`, `methodTag`, `getMethodTags`
 
 <h2 id="class-metadata" class="toc-link">Class Metadata</h2>
@@ -144,58 +144,58 @@ console.log(getClassLabels(instance).get('region')); // 'us-east'`}
 
 Parameter metadata is stored as an array indexed by parameter position. This is crucial for constructor and method parameter injection.
 
-### parameterMeta
+### paramMeta
 
 Creates a parameter decorator that stores metadata for a specific parameter. The mapper receives the previous value for that parameter index.
 
 ```typescript
-parameterMeta(
+paramMeta(
   key: string | symbol,
   mapFn: (prev: unknown) => unknown
 ): ParameterDecorator
 ```
 
-### getParameterMeta
+### getParamMeta
 
 Retrieves parameter metadata as an array. Undecorated parameters will have `undefined` at their index. Accepts either the constructor or an instance.
 
 ```typescript
-getParameterMeta(
+getParamMeta(
   key: string | symbol,
   target: object
 ): unknown[]
 ```
 
-### parameterLabel
+### paramLabel
 
 Attaches a key/value label to a constructor parameter at the given position. Labels are stored per parameter as a `Map<string, string>`.
 
 ```typescript
-parameterLabel(key: string, label: string): ParameterDecorator
+paramLabel(key: string, label: string): ParameterDecorator
 ```
 
-### getParameterLabels
+### getParamLabels
 
 Retrieves all labels for a specific parameter by index. Accepts either the constructor or an instance.
 
 ```typescript
-getParameterLabels(target: object, parameterIndex: number): Map<string, string>
+getParamLabels(target: object, parameterIndex: number): Map<string, string>
 ```
 
-### parameterTag
+### paramTag
 
 Attaches a string tag to a constructor parameter. Tags are stored per parameter as a `Set<string>`.
 
 ```typescript
-parameterTag(tag: string): ParameterDecorator
+paramTag(tag: string): ParameterDecorator
 ```
 
-### getParameterTags
+### getParamTags
 
 Retrieves all tags for a specific parameter by index. Accepts either the constructor or an instance.
 
 ```typescript
-getParameterTags(target: object, parameterIndex: number): Set<string>
+getParamTags(target: object, parameterIndex: number): Set<string>
 ```
 
 ### Example
@@ -205,12 +205,12 @@ getParameterTags(target: object, parameterIndex: number): Set<string>
 
 class DatabaseService {
   constructor(
-    @parameterMeta(INJECT_KEY, () => 'config') config: any,
-    @parameterMeta(INJECT_KEY, () => 'logger') logger: any,
+    @paramMeta(INJECT_KEY, () => 'config') config: any,
+    @paramMeta(INJECT_KEY, () => 'logger') logger: any,
   ) {}
 }
 
-const metadata = getParameterMeta(INJECT_KEY, DatabaseService);
+const metadata = getParamMeta(INJECT_KEY, DatabaseService);
 console.log(metadata); // ['config', 'logger']`}
   lang="typescript"
 />
@@ -218,20 +218,20 @@ console.log(metadata); // ['config', 'logger']`}
 <CodeBlock
   code={`class MyService {
   constructor(
-    @parameterTag('optional')
-    @parameterLabel('source', 'env')
+    @paramTag('optional')
+    @paramLabel('source', 'env')
     _config: unknown,
 
-    @parameterTag('required')
-    @parameterLabel('source', 'di')
+    @paramTag('required')
+    @paramLabel('source', 'di')
     _db: unknown,
   ) {}
 }
 
 // Works with both constructor and instance
-console.log(getParameterTags(MyService, 0).has('optional'));       // true
-console.log(getParameterLabels(MyService, 1).get('source'));       // 'di'
-console.log(getParameterTags(new MyService(null, null), 1).has('required')); // true`}
+console.log(getParamTags(MyService, 0).has('optional'));       // true
+console.log(getParamLabels(MyService, 1).get('source'));       // 'di'
+console.log(getParamTags(new MyService(null, null), 1).has('required')); // true`}
   lang="typescript"
 />
 
@@ -346,7 +346,7 @@ The metadata system is built on top of `reflect-metadata`:
 The metadata system powers the core decorators:
 
 - **@register** - Uses `classMeta` to store registration transformers
-- **@inject** - Uses `parameterMeta` to specify constructor dependencies
+- **@inject** - Uses `paramMeta` to specify constructor dependencies
 - **@onConstruct/@onDispose/@hook** - Use `methodMeta` for lifecycle hooks
 
 <h2 id="best-practices" class="toc-link">Best Practices</h2>
@@ -356,8 +356,8 @@ The metadata system powers the core decorators:
 - **Use mapper functions for accumulation** - When stacking decorators, use the `prev` parameter to accumulate values
 - **Type your metadata** - Use TypeScript generics to type your metadata values
 - **Handle undefined gracefully** - Always check if metadata exists before using it
-- **Prefer labels over raw metadata for key/value data** - `classLabel` / `methodLabel` / `parameterLabel` provide a typed, structured alternative to raw metadata keys
-- **Prefer tags for boolean flags** - `classTag` / `methodTag` / `parameterTag` avoid duplicates automatically via `Set`
+- **Prefer labels over raw metadata for key/value data** - `classLabel` / `methodLabel` / `paramLabel` provide a typed, structured alternative to raw metadata keys
+- **Prefer tags for boolean flags** - `classTag` / `methodTag` / `paramTag` avoid duplicates automatically via `Set`
 - **Don't overuse metadata** - Prefer explicit configuration over implicit metadata when possible
 
 <h2 id="limitations" class="toc-link">Limitations</h2>

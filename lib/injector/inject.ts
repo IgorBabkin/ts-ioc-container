@@ -5,14 +5,14 @@ import { toToken } from '../token/toToken';
 import { InjectFn } from '../hooks/hook';
 import { fillEmptyIndexes } from '../utils/array';
 import { type constructor, Is } from '../utils/basic';
-import { getParameterMeta, parameterMeta } from '../metadata/parameter';
+import { getParamMeta, paramMeta } from '../metadata/parameter';
 
 const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
 
 export const inject =
   <T>(fn: InjectionToken<T> | InjectFn<T> | symbol | string | constructor<T>): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
-    parameterMeta(hookMetaKey(propertyKey as string), () => toToken(fn))(
+    paramMeta(hookMetaKey(propertyKey as string), () => toToken(fn))(
       Is.instance(target) ? target.constructor : target,
       propertyKey,
       parameterIndex,
@@ -20,7 +20,7 @@ export const inject =
   };
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
-  const argsTokens = getParameterMeta(hookMetaKey(methodName), Target) as InjectionToken[];
+  const argsTokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
   return (scope: IContainer, ...deps: unknown[]): unknown[] => {
     const depsTokens = deps.map((v) => new ConstantToken(v));
     const allTokens = fillEmptyIndexes(argsTokens, depsTokens);

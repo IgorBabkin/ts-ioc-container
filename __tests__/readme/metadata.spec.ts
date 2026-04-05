@@ -1,4 +1,4 @@
-import { classMeta, getClassMeta, parameterMeta, getParameterMeta, methodMeta, getMethodMeta } from '../../lib';
+import { classMeta, getClassMeta, paramMeta, getParamMeta, methodMeta, getMethodMeta } from '../../lib';
 
 describe('metadata', () => {
   describe('Class Metadata', () => {
@@ -39,12 +39,12 @@ describe('metadata', () => {
 
       class DatabaseService {
         constructor(
-          @parameterMeta(INJECT_KEY, () => 'config') config: any,
-          @parameterMeta(INJECT_KEY, () => 'logger') logger: any,
+          @paramMeta(INJECT_KEY, () => 'config') config: any,
+          @paramMeta(INJECT_KEY, () => 'logger') logger: any,
         ) {}
       }
 
-      const metadata = getParameterMeta(INJECT_KEY, DatabaseService);
+      const metadata = getParamMeta(INJECT_KEY, DatabaseService);
       expect(metadata).toEqual(['config', 'logger']);
     });
 
@@ -54,13 +54,13 @@ describe('metadata', () => {
       class SparseService {
         constructor(
           first: any,
-          @parameterMeta(INJECT_KEY, () => 'second') second: any,
+          @paramMeta(INJECT_KEY, () => 'second') second: any,
           third: any,
-          @parameterMeta(INJECT_KEY, () => 'fourth') fourth: any,
+          @paramMeta(INJECT_KEY, () => 'fourth') fourth: any,
         ) {}
       }
 
-      const metadata = getParameterMeta(INJECT_KEY, SparseService);
+      const metadata = getParamMeta(INJECT_KEY, SparseService);
       expect(metadata[1]).toBe('second');
       expect(metadata[3]).toBe('fourth');
       expect(metadata[0]).toBeUndefined();

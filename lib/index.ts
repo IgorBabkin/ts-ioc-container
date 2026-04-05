@@ -79,14 +79,7 @@ export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanc
 // Metadata
 export { handleError, handleAsyncError, type HandleErrorParams } from './metadata/errorHandler';
 export { classMeta, getClassMeta, classLabel, getClassLabels, classTag, getClassTags } from './metadata/class';
-export {
-  parameterMeta,
-  getParameterMeta,
-  parameterLabel,
-  getParameterLabels,
-  parameterTag,
-  getParameterTags,
-} from './metadata/parameter';
+export { paramMeta, getParamMeta, paramLabel, getParamLabels, paramTag, getParamTags } from './metadata/parameter';
 export { methodMeta, getMethodMeta, methodLabel, getMethodLabels, methodTag, getMethodTags } from './metadata/method';
 
 // Utils
