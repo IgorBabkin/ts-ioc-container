@@ -103,7 +103,7 @@ describe('ProxyInjector', function () {
     // In a real scenario, you'd register multiple loggers with the same alias.
     const mockLoggers = [new FileLogger(), new ConsoleLogger()];
 
-    container.resolveByAlias = jest.fn().mockReturnValue(mockLoggers);
+    container.resolveByAlias = vi.fn().mockReturnValue(mockLoggers);
 
     const app = container.resolve(App);
 
