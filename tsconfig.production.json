@@ -1,8 +1,18 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
+    "baseUrl": "./lib",
+    "target": "ES2022",
+    "lib": ["es2022"],
     "types": ["reflect-metadata"],
-    "module": "esnext",
+    "moduleResolution": "Node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitReturns": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "isolatedModules": true,
     "allowImportingTsExtensions": false
   },
   "include": [

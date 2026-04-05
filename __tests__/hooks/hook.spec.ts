@@ -57,7 +57,7 @@ describe('hooks', () => {
         new HookContext(Target, scope, methodName).setInitialArgs('initial'),
     });
 
-    expect(instance.receivedArgs).toEqual(['initial', 'injected']);
+    expect(instance.receivedArgs).toEqual(['initial', 'injected', undefined]);
   });
 
   it('should run runHooks only for sync hooks', () => {
