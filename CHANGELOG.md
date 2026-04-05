@@ -1,3 +1,10 @@
+## [47.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.0.0...v47.0.1) (2026-04-05)
+
+
+### Bug Fixes
+
+* **container:** trigger patch release for metadata API ([1fea04c](https://github.com/IgorBabkin/ts-ioc-container/commit/1fea04c365283c5acbfdaacacbc5af579337a10d))
+
 # [47.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v46.9.1...v47.0.0) (2026-04-05)
 
 
