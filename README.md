@@ -2626,7 +2626,7 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 import {
   AddOnConstructHookModule,
   Container,
-  HookContext,
+  IHookContext,
   HookFn,
   inject,
   onConstruct,
@@ -2646,7 +2646,7 @@ import {
  * Note: You must register the AddOnConstructHookModule or manually add the hook runner.
  */
 
-const execute: HookFn = (ctx: HookContext) => {
+const execute: HookFn = (ctx: IHookContext) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
