@@ -86,4 +86,3 @@ export { methodMeta, getMethodMeta, methodLabel, getMethodLabels, methodTag, get
 export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
 export { type constructor, type Instance, Is, resolveConstructor } from './utils/basic';
-export { type IHookContextBuilder, DefaultHookContextBuilder } from './hooks/HookContextBuilder';

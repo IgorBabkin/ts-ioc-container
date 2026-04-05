@@ -53,3 +53,7 @@ export class HookContext implements IHookContext {
     return this;
   }
 }
+
+export type CreateHookContext = (Target: object, scope: IContainer, methodName?: string) => IHookContext;
+export const createHookContext: CreateHookContext = (Target, scope, methodName = 'constructor') =>
+  new HookContext(Target, scope, methodName);
