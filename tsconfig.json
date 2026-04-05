@@ -2,10 +2,10 @@
   "compilerOptions": {
     "baseUrl": "./lib",
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "NodeNext",
     "lib": ["es2022"],
     "types": ["reflect-metadata", "vitest/globals", "node"],
-    "moduleResolution": "Bundler",
+    "moduleResolution": "NodeNext",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitReturns": true,
