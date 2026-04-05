@@ -3,6 +3,7 @@ import {
   AddOnDisposeHookModule,
   bindTo,
   Container,
+  DefaultHookContextBuilder,
   GroupAliasToken,
   hasHooks,
   hook,
@@ -53,10 +54,8 @@ describe('hooks', () => {
 
     beforeHooksRunner.execute(instance, {
       scope: root,
-      createContext: (Target, scope, methodName) =>
-        new HookContext(Target, scope, methodName).setInitialArgs('initial'),
+      contextBuilder: new DefaultHookContextBuilder().appendArgs('initial'),
     });
-
     expect(instance.receivedArgs).toEqual(['initial', 'injected']);
   });
 
