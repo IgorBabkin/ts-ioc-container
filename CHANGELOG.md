@@ -1,3 +1,10 @@
+# [47.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.1.1...v47.2.0) (2026-04-06)
+
+
+### Features
+
+* **hooks:** export createHookContextFactory and createHookContext ([bfa48d3](https://github.com/IgorBabkin/ts-ioc-container/commit/bfa48d308bd13baea7fd7279cb3cdcfdca6bd207))
+
 ## [47.1.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.1.0...v47.1.1) (2026-04-05)
 
 
