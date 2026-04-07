@@ -2,8 +2,8 @@
   "compilerOptions": {
     "baseUrl": "./lib",
     "target": "ES2022",
-    "lib": ["es2022", "dom"],
-    "types": ["reflect-metadata"],
+    "lib": ["es2022"],
+    "types": ["reflect-metadata", "node"],
     "moduleResolution": "Node",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
