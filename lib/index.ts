@@ -78,6 +78,10 @@ export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanc
 
 // Metadata
 export { handleError, handleAsyncError, type HandleErrorParams } from './metadata/errorHandler';
+export { throttle } from './metadata/throttle';
+export { debounce } from './metadata/debounce';
+export { shallowCache } from './metadata/shallowCache';
+export { once } from './metadata/once';
 export { classMeta, getClassMeta, classLabel, getClassLabels, classTag, getClassTags } from './metadata/class';
 export { paramMeta, getParamMeta, paramLabel, getParamLabels, paramTag, getParamTags } from './metadata/parameter';
 export { methodMeta, getMethodMeta, methodLabel, getMethodLabels, methodTag, getMethodTags } from './metadata/method';

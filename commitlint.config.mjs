@@ -33,6 +33,7 @@ export default {
         'hooks',
         'token',
         'errors',
+        'metadata',
 
         // Documentation scopes
         'pages', // Documentation site pages (in docs/src/pages/)
