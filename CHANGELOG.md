@@ -1,3 +1,10 @@
+## [47.3.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.3.0...v47.3.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* **config:** use node types instead of dom lib for setTimeout resolution ([fc6c938](https://github.com/IgorBabkin/ts-ioc-container/commit/fc6c93883d6a29a61cf16bec21d55957c840be56))
+
 # [47.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.2.0...v47.3.0) (2026-04-07)
 
 
