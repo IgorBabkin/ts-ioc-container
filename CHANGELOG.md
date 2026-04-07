@@ -1,3 +1,15 @@
+# [47.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.2.0...v47.3.0) (2026-04-07)
+
+
+### Bug Fixes
+
+* **config:** add dom lib to tsconfig.production to resolve setTimeout types ([1eaad43](https://github.com/IgorBabkin/ts-ioc-container/commit/1eaad43196ce4ca22f4c692ded4b16c3fce0a3eb))
+
+
+### Features
+
+* **metadata:** add throttle, debounce, shallowCache, and once method decorators ([eb1cf37](https://github.com/IgorBabkin/ts-ioc-container/commit/eb1cf37d6e9f00bbe2501f48241d6012d04e9434))
+
 # [47.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.1.1...v47.2.0) (2026-04-06)
 
 
