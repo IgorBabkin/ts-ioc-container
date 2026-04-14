@@ -82,7 +82,7 @@
     "eslint-plugin-prettier": "5.2.6",
     "handlebars": "^4.7.8",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.0",
+    "lint-staged": "^16.4.0",
     "moq.ts": "^10.0.8",
     "prettier": "3.5.3",
     "prettier-plugin-astro": "^0.14.1",
