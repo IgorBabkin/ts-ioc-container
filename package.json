@@ -78,7 +78,7 @@
     "@vitest/coverage-v8": "^4.1.2",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "9.24.0",
-    "eslint-config-prettier": "10.1.1",
+    "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.2.6",
     "handlebars": "^4.7.8",
     "husky": "^9.1.7",
