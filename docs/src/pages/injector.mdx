@@ -10,6 +10,7 @@ import metadataInjectorSpecCode from "../../../__tests__/readme/metadataInjector
 import simpleInjectorSpecCode from "../../../__tests__/injector/SimpleInjector.spec.ts?raw";
 import proxyInjectorSpecCode from "../../../__tests__/injector/ProxyInjector.spec.ts?raw";
 import customInjectorSpecCode from "../../../__tests__/readme/customInjector.spec.ts?raw";
+import injectSpecCode from "../../../__tests__/injector/inject.spec.ts?raw";
 
 # Injector
 
@@ -41,6 +42,18 @@ The default injector uses TypeScript decorators and reflection metadata to injec
   code={metadataInjectorSpecCode}
   lang="typescript"
   filename="__tests__/readme/metadataInjector.spec.ts"
+/>
+
+### `args(index)` — Positional Arg Injection
+
+`args(index)` is an `InjectFn` that extracts a specific element from the `args` array passed via `ProviderOptions`. Use it with `@inject` when you want a constructor parameter to receive a positional argument from the resolution context rather than a registered dependency.
+
+This is especially useful with the `setArgsFn(resolveByArgs)` pattern, where token-based arguments are resolved and forwarded as positional constructor args.
+
+<CodeBlock
+  code={injectSpecCode}
+  lang="typescript"
+  filename="__tests__/injector/inject.spec.ts"
 />
 
 ### Property Injection

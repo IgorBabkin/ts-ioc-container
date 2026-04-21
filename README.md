@@ -39,7 +39,7 @@
     - [Proxy](#proxy)
 - [Provider](#provider) `provider`
     - [Singleton](#singleton) `singleton`
-    - [Arguments](#arguments) `args` `argsFn`
+    - [Arguments](#arguments) `setArgs` `setArgsFn`
     - [Visibility](#visibility) `visible`
     - [Alias](#alias) `asAlias`
     - [Decorator](#decorator) `decorate`
@@ -1828,10 +1828,15 @@ describe('Singleton', function () {
 
 ### Arguments
 Sometimes you want to bind some arguments to provider. This is what `ArgsProvider` is for.
-- `provider(args('someArgument'))`
-- `provider(argsFn((container) => [container.resolve(Logger), 'someValue']))`
-- `Provider.fromClass(Logger).pipe(args('someArgument'))`
+- `provider(setArgs('someArgument'))`
+- `provider(setArgsFn((container) => [container.resolve(Logger), 'someValue']))`
+- `Provider.fromClass(Logger).pipe(setArgs('someArgument'))`
 - NOTICE: args from this provider has higher priority than args from `resolve` method.
+
+### Positional arg injection with `args(index)`
+Use `@inject(args(index))` to explicitly bind a constructor parameter to a positional argument from `ProviderOptions`. This is useful when combining `setArgsFn(resolveByArgs)` with token-based arg passing.
+- `@inject(args(0))` — resolves the first element of the `args` array passed at resolution time
+- Works together with `token.args(...)` to pass typed dependencies through the args context
 
 ```typescript
 import {
