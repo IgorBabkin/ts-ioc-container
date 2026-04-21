@@ -1,3 +1,10 @@
+# [47.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.3.1...v47.4.0) (2026-04-21)
+
+
+### Features
+
+* **injector:** add args(index) InjectFn and extend InjectFn with ProviderOptions context ([cc3a9b0](https://github.com/IgorBabkin/ts-ioc-container/commit/cc3a9b0a990cd7e8ef553fa6fa0a2110316e6215))
+
 ## [47.3.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.3.0...v47.3.1) (2026-04-07)
 
 
