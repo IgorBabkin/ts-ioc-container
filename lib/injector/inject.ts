@@ -6,6 +6,7 @@ import { InjectFn } from '../hooks/hook';
 import { fillEmptyIndexes } from '../utils/array';
 import { type constructor, Is } from '../utils/basic';
 import { getParamMeta, paramMeta } from '../metadata/parameter';
+import { ProviderOptions } from '../provider/IProvider';
 
 const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
 
@@ -19,11 +20,17 @@ export const inject =
     );
   };
 
+export const args =
+  (index: number) =>
+  (c: IContainer, { args = [] }: ProviderOptions): unknown => {
+    return args[index];
+  };
+
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const argsTokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
-  return (scope: IContainer, ...deps: unknown[]): unknown[] => {
-    const depsTokens = deps.map((v) => new ConstantToken(v));
+  return (scope: IContainer, { args = [], lazy }: ProviderOptions): unknown[] => {
+    const depsTokens = args.map((v) => new ConstantToken(v));
     const allTokens = fillEmptyIndexes(argsTokens, depsTokens);
-    return allTokens.map((fn) => fn.resolve(scope));
+    return allTokens.map((fn) => fn.resolve(scope, { args, lazy }));
   };
 };

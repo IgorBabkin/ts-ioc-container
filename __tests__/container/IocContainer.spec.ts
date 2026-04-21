@@ -1,5 +1,5 @@
 import {
-  args,
+  setArgs,
   bindTo,
   Container,
   ContainerDisposedError,
@@ -83,7 +83,7 @@ describe('IocContainer', function () {
   });
 
   it('should keep argument for provider', function () {
-    const container = createContainer().addRegistration(R.fromClass(Logger).pipe(args('main')));
+    const container = createContainer().addRegistration(R.fromClass(Logger).pipe(setArgs('main')));
 
     expect(container.resolve<Logger>('logger').topic).toBe('main');
   });

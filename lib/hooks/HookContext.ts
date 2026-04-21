@@ -32,10 +32,9 @@ export class HookContext implements IHookContext {
   }
 
   resolveArgs(...args: unknown[]): unknown[] {
-    return resolveArgs(this.instance.constructor as constructor<unknown>, this.methodName)(
-      this.scope,
-      ...[...this.initialArgs, ...args],
-    );
+    return resolveArgs(this.instance.constructor as constructor<unknown>, this.methodName)(this.scope, {
+      args: [...this.initialArgs, ...args],
+    });
   }
 
   invokeMethod({ args = this.resolveArgs() }: { args?: unknown[] } = {}): unknown {

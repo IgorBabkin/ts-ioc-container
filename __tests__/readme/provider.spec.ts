@@ -1,6 +1,6 @@
 import {
-  args,
-  argsFn,
+  setArgs,
+  setArgsFn,
   bindTo,
   Container,
   lazy,
@@ -79,7 +79,10 @@ describe('Provider', () => {
       constructor(readonly basePath: string) {}
     }
 
-    const container = new Container().register('FileService', Provider.fromClass(FileService).pipe(args('/var/data')));
+    const container = new Container().register(
+      'FileService',
+      Provider.fromClass(FileService).pipe(setArgs('/var/data')),
+    );
 
     const service = container.resolve<FileService>('FileService');
     expect(service.basePath).toBe('/var/data');
@@ -94,7 +97,7 @@ describe('Provider', () => {
       'Database',
       Provider.fromClass(Database).pipe(
         // Dynamically resolve connection string at creation time
-        argsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
+        setArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
       ),
     );
 

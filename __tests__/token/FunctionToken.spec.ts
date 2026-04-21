@@ -1,4 +1,4 @@
-import { Container, FunctionToken, MethodNotImplementedError } from '../../lib';
+import { Container, FunctionToken } from '../../lib';
 import type { IContainer } from '../../lib/container/IContainer';
 
 describe('FunctionToken', () => {
@@ -23,21 +23,25 @@ describe('FunctionToken', () => {
     expect(result).toBe('result');
   });
 
-  it('should throw error on args method', () => {
-    const token = new FunctionToken(() => 'value');
-    expect(() => token.args('arg1')).toThrow(MethodNotImplementedError);
-    expect(() => token.args('arg1')).toThrow('not implemented');
+  it('should support args method', () => {
+    const token = new FunctionToken((_, { args = [] }) => args[0] as string);
+    const result = token.args('custom').resolve(container);
+    expect(result).toBe('custom');
   });
 
-  it('should throw error on argsFn method', () => {
-    const token = new FunctionToken(() => 'value');
-    expect(() => token.argsFn(() => [])).toThrow(MethodNotImplementedError);
-    expect(() => token.argsFn(() => [])).toThrow('not implemented');
+  it('should support argsFn method', () => {
+    const token = new FunctionToken((_, { args = [] }) => args[0] as string);
+    const result = token.argsFn(() => ['from-fn']).resolve(container);
+    expect(result).toBe('from-fn');
   });
 
-  it('should throw error on lazy method', () => {
-    const token = new FunctionToken(() => 'value');
-    expect(() => token.lazy()).toThrow(MethodNotImplementedError);
-    expect(() => token.lazy()).toThrow('not implemented');
+  it('should support lazy method', () => {
+    let receivedLazy: boolean | undefined;
+    const token = new FunctionToken((_, { lazy }) => {
+      receivedLazy = lazy;
+      return 'value';
+    });
+    token.lazy().resolve(container);
+    expect(receivedLazy).toBe(true);
   });
 });

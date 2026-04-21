@@ -5,7 +5,7 @@ import { type constructor } from '../utils/basic';
 
 export class MetadataInjector extends Injector implements IInjector {
   protected createInstance<T>(scope: IContainer, Target: constructor<T>, { args: deps = [] }: InjectOptions = {}): T {
-    const args = resolveArgs(Target)(scope, ...deps);
+    const args = resolveArgs(Target)(scope, { args: deps });
     return new Target(...args);
   }
 }

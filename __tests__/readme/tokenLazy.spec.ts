@@ -1,4 +1,4 @@
-import { args, Container, inject, Registration as R, SingleToken } from '../../lib';
+import { setArgs, Container, inject, Registration as R, SingleToken } from '../../lib';
 
 interface IConfig {
   apiUrl: string;
@@ -18,7 +18,7 @@ class App {
 describe('Token Lazy Loading', function () {
   it('should support lazy loading with tokens', function () {
     const container = new Container().addRegistration(
-      R.fromClass(ConfigService).pipe(args('https://api.example.com')).bindToKey('IConfig'),
+      R.fromClass(ConfigService).pipe(setArgs('https://api.example.com')).bindToKey('IConfig'),
     );
 
     const app = container.resolve(App);

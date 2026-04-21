@@ -1,6 +1,6 @@
 import {
-  args,
-  argsFn,
+  setArgs,
+  setArgsFn,
   bindTo,
   Container,
   inject,
@@ -34,7 +34,7 @@ describe('ArgsProvider', function () {
       }
 
       // Pre-configure the logger with a filename
-      const root = createContainer().addRegistration(R.fromClass(FileLogger).pipe(args('/var/log/app.log')));
+      const root = createContainer().addRegistration(R.fromClass(FileLogger).pipe(setArgs('/var/log/app.log')));
 
       // Resolve by class name (default key) to use the registered provider
       const logger = root.resolve<FileLogger>('FileLogger');
@@ -47,7 +47,7 @@ describe('ArgsProvider', function () {
       }
 
       // 'FixedContext' wins over any runtime args
-      const root = createContainer().addRegistration(R.fromClass(Logger).pipe(args('FixedContext')));
+      const root = createContainer().addRegistration(R.fromClass(Logger).pipe(setArgs('FixedContext')));
 
       // Even if we ask for 'RuntimeContext', we get 'FixedContext'
       // Resolve by class name to use the registered provider
@@ -73,7 +73,7 @@ describe('ArgsProvider', function () {
           R.fromClass(Service).pipe(
             // Extract 'env' from Config service dynamically
             // Note: We resolve 'Config' by string key to get the registered instance (if it were singleton)
-            argsFn((scope) => [scope.resolve<Config>('Config').env]),
+            setArgsFn((scope) => [scope.resolve<Config>('Config').env]),
           ),
         );
 
@@ -110,7 +110,7 @@ describe('ArgsProvider', function () {
 
     @register(
       bindTo(EntityManagerToken),
-      argsFn(resolveByArgs), // <--- Key magic: resolves dependencies based on arguments passed to token
+      setArgsFn(resolveByArgs), // <--- Key magic: resolves dependencies based on arguments passed to token
       singleton(MultiCache.fromFirstArg), // Cache unique instance per repository type
     )
     class EntityManager {

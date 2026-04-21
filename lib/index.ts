@@ -14,7 +14,7 @@ export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
 
 // Injectors
-export { inject, resolveArgs } from './injector/inject';
+export { inject, resolveArgs, args } from './injector/inject';
 export { type IInjector, type InjectOptions, type IInjectFnResolver, Injector } from './injector/IInjector';
 export { MetadataInjector } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
@@ -26,8 +26,8 @@ export {
   type IProvider,
   scopeAccess,
   lazy,
-  argsFn,
-  args,
+  setArgsFn,
+  setArgs,
   type ArgsFn,
   ProviderDecorator,
   resolveByArgs,

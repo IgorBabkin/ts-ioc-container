@@ -31,9 +31,9 @@ export interface IProvider<T = any> {
   lazy(): this;
 }
 
-export const args = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.setArgs(() => extraArgs));
+export const setArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.setArgs(() => extraArgs));
 
-export const argsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
+export const setArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
 
 export const resolveByArgs = (s: IContainer, ...deps: unknown[]) =>
   deps.map((d) => {
