@@ -21,10 +21,15 @@ export const inject =
   };
 
 export const args =
-  (index: number) =>
-  (c: IContainer, { args = [] }: ProviderOptions): unknown => {
+  (index: number): InjectFn =>
+  (c, { args = [] }): unknown => {
     return args[index];
   };
+
+export const argsFn =
+  <T>(fn: (args: unknown[]) => T): InjectFn<T> =>
+  (c, options) =>
+    fn(options.args ?? []);
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const argsTokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];

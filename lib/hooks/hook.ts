@@ -4,7 +4,7 @@ import { type constructor, Is } from '../utils/basic';
 import { getProxyTarget, isProxy } from '../utils/proxy';
 import { ProviderOptions } from '../provider/IProvider';
 
-export type InjectFn<T = unknown> = (s: IContainer, context: ProviderOptions) => T;
+export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
 
 // HookFn
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;
