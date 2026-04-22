@@ -1,12 +1,13 @@
-import type { IContainer } from '../container/IContainer';
-import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
+import { DependencyKey, IContainer } from '../container/IContainer';
+import { InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
+import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 
 export class SingleToken<T = any> extends InjectionToken {
-  constructor(
-    public token: string | symbol,
-    private options: TokenOptions = {},
-  ) {
+  private getArgsFn: ArgsFn = () => [];
+  private isLazy: boolean = false;
+
+  constructor(public token: DependencyKey) {
     super();
   }
 
@@ -14,11 +15,10 @@ export class SingleToken<T = any> extends InjectionToken {
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer): T {
-    const argsFn = this.options.argsFn ?? setArgs();
+  resolve(s: IContainer, { args = [], lazy = false }: ProviderOptions = {}): T {
     return s.resolve(this.token, {
-      args: argsFn(s),
-      lazy: this.options.lazy,
+      args: this.getArgsFn(s, { args }),
+      lazy: this.isLazy || lazy,
     });
   }
 
@@ -27,22 +27,17 @@ export class SingleToken<T = any> extends InjectionToken {
   }
 
   args(...args: unknown[]) {
-    const argsFn = this.options.argsFn ?? setArgs();
-    return new SingleToken<T>(this.token, {
-      ...this.options,
-      argsFn: (s) => [...argsFn(s), ...args],
-    });
+    this.getArgsFn = () => args;
+    return this;
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]) {
-    const argsFn = this.options.argsFn ?? setArgs();
-    return new SingleToken<T>(this.token, {
-      ...this.options,
-      argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
-    });
+  argsFn(fn: ArgsFn) {
+    this.getArgsFn = fn;
+    return this;
   }
 
   lazy() {
-    return new SingleToken<T>(this.token, { ...this.options, lazy: true });
+    this.isLazy = true;
+    return this;
   }
 }

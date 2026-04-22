@@ -1,13 +1,14 @@
-import type { DependencyKey, IContainer } from '../container/IContainer';
-import { InjectionToken, setArgs, TokenOptions } from './InjectionToken';
+import { DependencyKey, IContainer } from '../container/IContainer';
+import { InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { BindToken } from './BindToken';
+import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 
 export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T> {
-  constructor(
-    readonly token: string | symbol,
-    private options: TokenOptions = {},
-  ) {
+  private getArgsFn: ArgsFn = () => [];
+  private isLazy: boolean = false;
+
+  constructor(readonly token: DependencyKey) {
     super();
   }
 
@@ -15,11 +16,10 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer): T[] {
-    const argsFn = this.options.argsFn ?? setArgs();
+  resolve(s: IContainer, { args = [], lazy = false }: ProviderOptions = {}): T[] {
     return s.resolveByAlias(this.token, {
-      args: argsFn(s),
-      lazy: this.options.lazy,
+      args: this.getArgsFn(s, { args }),
+      lazy: this.isLazy || lazy,
     });
   }
 
@@ -28,26 +28,18 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
   }
 
   args(...args: unknown[]) {
-    const argsFn = this.options.argsFn ?? setArgs();
-    return new GroupAliasToken<T>(this.token, {
-      ...this.options,
-      argsFn: (s) => [...argsFn(s), ...args],
-    });
+    this.getArgsFn = () => args;
+    return this;
   }
 
-  argsFn(getArgsFn: (s: IContainer) => unknown[]) {
-    const argsFn = this.options.argsFn ?? setArgs();
-    return new GroupAliasToken<T>(this.token, {
-      ...this.options,
-      argsFn: (s) => [...argsFn(s), ...getArgsFn(s)],
-    });
+  argsFn(fn: ArgsFn) {
+    this.getArgsFn = fn;
+    return this;
   }
 
   lazy() {
-    return new GroupAliasToken<T>(this.token, {
-      ...this.options,
-      lazy: true,
-    });
+    this.isLazy = true;
+    return this;
   }
 }
 

@@ -3,11 +3,11 @@ import {
   IProvider,
   ProviderOptions,
   ResolveDependency,
-  ScopeAccessRule,
   ScopeAccessOptions,
+  ScopeAccessRule,
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { pipe, type MapFn } from '../utils/fp';
+import { type MapFn, pipe } from '../utils/fp';
 import type { ProviderPipe } from './ProviderPipe';
 import { isProviderPipe } from './ProviderPipe';
 import { type constructor } from '../utils/basic';
@@ -38,7 +38,7 @@ export class Provider<T = any> implements IProvider<T> {
 
   resolve(container: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
     return this.resolveDependency(container, {
-      args: [...this.argsFn(container, ...args), ...args],
+      args: this.argsFn(container, { args }),
       lazy: lazy ?? this.isLazy,
     });
   }

@@ -12,7 +12,7 @@ export type ResolveDependency<T = unknown> = (container: IContainer, options: Pr
 export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
 export type ScopeAccessRule = (options: ScopeAccessOptions) => boolean;
 
-export type ArgsFn = (l: IContainer, ...args: unknown[]) => unknown[];
+export type ArgsFn = (l: IContainer, options?: InjectOptions) => unknown[];
 export interface IMapper {
   mapItem<T>(target: IProvider<T>): IProvider<T>;
 }

@@ -1,8 +1,8 @@
-import { type IContainer, ResolveOneOptions } from '../container/IContainer';
-import { ArgsFn, WithLazy } from '../provider/IProvider';
+import { type IContainer } from '../container/IContainer';
+import { ArgsFn, ProviderOptions, WithLazy } from '../provider/IProvider';
 
 export abstract class InjectionToken<T = any> {
-  abstract resolve(s: IContainer, options?: ResolveOneOptions): T;
+  abstract resolve(s: IContainer, options?: ProviderOptions): T;
   abstract args(...deps: unknown[]): InjectionToken<T>;
   abstract argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T>;
   abstract lazy(): InjectionToken<T>;
