@@ -1,3 +1,10 @@
+# [47.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.4.0...v47.5.0) (2026-04-26)
+
+
+### Features
+
+* **injector:** add argsFn ([c3ac48e](https://github.com/IgorBabkin/ts-ioc-container/commit/c3ac48e7472e9c98572050d19a545c1a220d1e95))
+
 # [47.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.3.1...v47.4.0) (2026-04-21)
 
 
