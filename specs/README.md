@@ -23,8 +23,16 @@ need to understand intended behavior without reading all of `lib/`.
 specs/
   README.md
   epics/
+    container-modules.md
     dependency-resolution.md
+    dependency-registration.md
+    errors-and-boundaries.md
+    injector-strategies.md
+    lifecycle-hooks.md
+    metadata-utilities.md
+    provider-behavior.md
     scoped-lifecycle.md
+    token-based-injection.md
   templates/
     feature-spec.md
 ```
@@ -42,10 +50,18 @@ specs/
 
 ## Traceability
 
-| Spec                                                    | Acceptance tests                                | Related docs                   |
-| ------------------------------------------------------- | ----------------------------------------------- | ------------------------------ |
-| [Dependency resolution](epics/dependency-resolution.md) | `__tests__/specs/dependency-resolution.spec.ts` | `docs/src/pages/index.mdx`     |
-| [Scoped lifecycle](epics/scoped-lifecycle.md)           | `__tests__/specs/scoped-lifecycle.spec.ts`      | `docs/src/pages/container.mdx` |
+| Spec                                                            | Acceptance tests                                     | Related docs / ADRs                                                   |
+| --------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
+| [Dependency resolution](epics/dependency-resolution.md)         | `__tests__/specs/dependency-resolution.spec.ts`      | `docs/src/pages/index.mdx`                                            |
+| [Scoped lifecycle](epics/scoped-lifecycle.md)                   | `__tests__/specs/scoped-lifecycle.spec.ts`           | `docs/src/pages/container.mdx`, ADR 0001, ADR 0006                    |
+| [Dependency registration](epics/dependency-registration.md)     | Planned: `__tests__/specs/dependency-registration.spec.ts` | `docs/src/pages/registration.mdx`, ADR 0003                      |
+| [Provider behavior](epics/provider-behavior.md)                 | Planned: `__tests__/specs/provider-behavior.spec.ts` | `docs/src/pages/provider.mdx`, `docs/src/pages/pipes.mdx`, ADR 0004   |
+| [Token-based injection](epics/token-based-injection.md)         | Planned: `__tests__/specs/token-based-injection.spec.ts` | `docs/src/pages/token.mdx`, ADR 0005, ADR 0009                   |
+| [Injector strategies](epics/injector-strategies.md)             | Planned: `__tests__/specs/injector-strategies.spec.ts` | `docs/src/pages/injector.mdx`, ADR 0002                          |
+| [Lifecycle hooks](epics/lifecycle-hooks.md)                     | Planned: `__tests__/specs/lifecycle-hooks.spec.ts` | `docs/src/pages/hooks.mdx`, ADR 0007                                  |
+| [Metadata utilities](epics/metadata-utilities.md)               | Planned: `__tests__/specs/metadata-utilities.spec.ts` | `docs/src/pages/metadata.mdx`, ADR 0008                          |
+| [Container modules](epics/container-modules.md)                 | Planned: `__tests__/specs/container-modules.spec.ts` | `docs/src/pages/container.mdx`, ADR 0007                         |
+| [Errors and boundaries](epics/errors-and-boundaries.md)         | Planned: `__tests__/specs/errors-and-boundaries.spec.ts` | ADR 0001                                                         |
 
 ## Style
 
