@@ -2,19 +2,26 @@
 
 This directory contains the Astro-based documentation for ts-ioc-container.
 
+Architecture decisions live in `docs/adr/`. Product-facing behavior specs live
+in the repository-level `specs/` directory and are linked to executable
+acceptance tests in `__tests__/specs/`.
+
 ## Setup
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Run development server:
+
 ```bash
 npm run dev
 ```
 
 3. Build for production:
+
 ```bash
 npm run build
 ```

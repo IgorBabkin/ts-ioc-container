@@ -8,6 +8,7 @@
 [![semantic-release](https://img.shields.io/badge/%20%20%20FLO%20-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
 ## Advantages
+
 - battle tested :boom:
 - written on `typescript`
 - simple and lightweight :heart:
@@ -24,34 +25,35 @@
 - [Setup](#setup)
 - [Quickstart](#quickstart)
 - [Cheatsheet](#cheatsheet)
+- [Spec-driven workflow](#spec-driven-workflow)
 - [Recipes](#recipes)
 - [Container](#container)
-    - [Basic usage](#basic-usage)
-    - [Scope](#scope) `tags`
-    - [Dynamic Tag Management](#dynamic-tag-management) `addTags`
-    - [Instances](#instances)
-    - [Dispose](#dispose)
-    - [Lazy](#lazy) `lazy`
-    - [Lazy with registerPipe](#lazy-with-registerpipe) `lazy()`
+  - [Basic usage](#basic-usage)
+  - [Scope](#scope) `tags`
+  - [Dynamic Tag Management](#dynamic-tag-management) `addTags`
+  - [Instances](#instances)
+  - [Dispose](#dispose)
+  - [Lazy](#lazy) `lazy`
+  - [Lazy with registerPipe](#lazy-with-registerpipe) `lazy()`
 - [Injector](#injector)
-    - [Metadata](#metadata) `@inject`
-    - [Simple](#simple)
-    - [Proxy](#proxy)
+  - [Metadata](#metadata) `@inject`
+  - [Simple](#simple)
+  - [Proxy](#proxy)
 - [Provider](#provider) `provider`
-    - [Singleton](#singleton) `singleton`
-    - [Arguments](#arguments) `setArgs` `setArgsFn`
-    - [Visibility](#visibility) `visible`
-    - [Alias](#alias) `asAlias`
-    - [Decorator](#decorator) `decorate`
+  - [Singleton](#singleton) `singleton`
+  - [Arguments](#arguments) `setArgs` `setArgsFn`
+  - [Visibility](#visibility) `visible`
+  - [Alias](#alias) `asAlias`
+  - [Decorator](#decorator) `decorate`
 - [Registration](#registration) `@register`
-    - [Key](#key) `asKey`
-    - [Scope](#scope) `scope`
+  - [Key](#key) `asKey`
+  - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
-    - [OnConstruct](#onconstruct) `@onConstruct`
-    - [OnDispose](#ondispose) `@onDispose`
-    - [Inject Property](#inject-property)
-    - [Inject Method](#inject-method)
+  - [OnConstruct](#onconstruct) `@onConstruct`
+  - [OnDispose](#ondispose) `@onDispose`
+  - [Inject Property](#inject-property)
+  - [Inject Method](#inject-method)
 - [Mock](#mock)
 - [Error](#error)
 
@@ -60,16 +62,19 @@
 ```shell script
 npm install ts-ioc-container reflect-metadata
 ```
+
 ```shell script
 yarn add ts-ioc-container reflect-metadata
 ```
 
 Just put it in the entrypoint file of your project. It should be the first line of the code.
+
 ```typescript
 import 'reflect-metadata';
 ```
 
 And `tsconfig.json` should have next options:
+
 ```json
 {
   "compilerOptions": {
@@ -115,12 +120,27 @@ container.resolve(App).start();
 - Inject decorator: `@inject('Key')`
 - Property inject: `injectProp(target, 'propName', select.token('Key'))`
 
+## Spec-driven workflow
+
+Public behavior is described before it is implemented:
+
+```text
+ADR -> spec -> acceptance test -> implementation -> executable docs example
+```
+
+- ADRs in `docs/adr/` explain durable architecture and process decisions.
+- Specs in `specs/` describe epics, stories, use cases, and acceptance criteria.
+- Acceptance tests in `__tests__/specs/` execute the public contract.
+- README examples in `__tests__/readme/` stay executable and are rendered from `.readme.hbs.md`.
+
+Use `pnpm run test:spec` to run only the executable acceptance specs.
+
 ## Recipes
 
 ### Express/Next handler (per-request scope)
+
 ```typescript
-const app = new Container({ tags: ['application'] })
-  .addRegistration(R.fromClass(Logger).pipe(singleton()));
+const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger).pipe(singleton()));
 
 function handleRequest() {
   const requestScope = app.createScope({ tags: ['request'] });
@@ -130,6 +150,7 @@ function handleRequest() {
 ```
 
 ### Background worker (singleton client, transient jobs)
+
 ```typescript
 @register(singleton())
 class QueueClient {}
@@ -144,10 +165,13 @@ const worker = new Container({ tags: ['worker'] })
 ```
 
 ### Frontend widget/page scope with lazy dependency
+
 ```typescript
 @register(bindTo('FeatureFlags'), singleton())
 class FeatureFlags {
-  load() { /* fetch flags */ }
+  load() {
+    /* fetch flags */
+  }
 }
 
 class Widget {
@@ -160,6 +184,7 @@ const page = new Container({ tags: ['page'] })
 ```
 
 ## Container
+
 `IContainer` consists of:
 
 - Provider is dependency factory which creates dependency
@@ -246,6 +271,7 @@ describe('Basic usage', function () {
 ```
 
 ### Scope
+
 Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application. You can assign tags to scope and provider and resolve dependencies only from certain scope.
 
 > [!IMPORTANT]
@@ -349,6 +375,7 @@ describe('Scopes', function () {
 ```
 
 ### Dynamic Tag Management
+
 You can dynamically add tags to a container after it's been created using the `addTags()` method. This is useful for environment-based configuration, feature flags, and progressive container setup.
 
 - Tags can be added one at a time or multiple at once
@@ -458,6 +485,7 @@ describe('addTags', () => {
 ```
 
 ### Instances
+
 Sometimes you want to get all instances from container and its scopes. For example, when you want to dispose all instances of container.
 
 - you can get instances from container and scope which were created by injector
@@ -542,6 +570,7 @@ describe('Instances', function () {
 ```
 
 ### Check Registration
+
 Sometimes you want to check if a registration with a specific key exists in the container. This is useful for conditional registration logic, validation, and debugging.
 
 - `hasRegistration(key)` checks if a registration exists in the current container or parent containers
@@ -643,6 +672,7 @@ describe('hasRegistration', function () {
 ```
 
 ### Dispose
+
 Sometimes you want to dispose a container or scope. For example, when a request, page, widget, or other local lifecycle ends.
 
 - container can be disposed
@@ -751,6 +781,7 @@ describe('Disposing', function () {
 ```
 
 ### Lazy
+
 Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
 
 - Lazy class instances are wrapped in a JavaScript `Proxy`; the real class instance is created on first property or method access.
@@ -886,9 +917,11 @@ describe('lazy provider', () => {
 ```
 
 ### Lazy with registerPipe
+
 The `lazy()` registerPipe can be used in two ways: with the `@register` decorator or directly on the `Provider` pipe. This allows you to defer expensive class instance initialization until first access.
 
 **Use cases:**
+
 - Defer expensive initialization (database connections, SMTP, external APIs)
 - Conditional features that may not be used
 - Breaking circular dependencies
@@ -1333,6 +1366,7 @@ describe('lazy registerPipe', () => {
 ```
 
 ## Injector
+
 `IInjector` is used to describe how dependencies should be injected to constructor.
 
 - `MetadataInjector` - injects dependencies using `@inject` decorator
@@ -1340,6 +1374,7 @@ describe('lazy registerPipe', () => {
 - `SimpleInjector` - just passes container to constructor with others arguments
 
 ### Metadata
+
 This type of injector uses `@inject` decorator to mark where dependencies should be injected. It's bases on `reflect-metadata` package. That's why I call it `MetadataInjector`.
 Also you can [inject property.](#inject-property)
 
@@ -1393,6 +1428,7 @@ describe('Metadata Injector', function () {
 ```
 
 ### Simple
+
 This type of injector just passes container to constructor with others arguments.
 
 ```typescript
@@ -1481,6 +1517,7 @@ describe('SimpleInjector', function () {
 ```
 
 ### Proxy
+
 This type of injector injects dependencies as dictionary `Record<string, unknown>`.
 
 - **`args` reserved keyword**: accessing `deps.args` returns the raw `args[]` array passed at resolve time
@@ -1582,6 +1619,7 @@ describe('ProxyInjector', function () {
 ```
 
 ## Provider
+
 Provider is dependency factory which creates dependency.
 
 - `Provider.fromClass(Logger)`
@@ -1735,6 +1773,7 @@ describe('Provider', () => {
 ```
 
 ### Singleton
+
 Sometimes you need to create only one instance of dependency per scope. For example, you want to create only one logger per scope.
 
 - Singleton provider creates only one instance in every scope where it's resolved.
@@ -1827,23 +1866,30 @@ describe('Singleton', function () {
 ```
 
 ### Arguments
+
 Sometimes you want to bind some arguments to provider. This is what `ArgsProvider` is for.
+
 - `provider(setArgs('someArgument'))`
 - `provider(setArgsFn((container) => [container.resolve(Logger), 'someValue']))`
 - `Provider.fromClass(Logger).pipe(setArgs('someArgument'))`
 - Use `setArgsFn(resolveByArgs)` to resolve `InjectionToken` args at resolution time (tokens are resolved, primitives pass through)
 
 ### Token as argument
+
 When passing args via `token.args(...)`, if an argument is an `InjectionToken` and the provider uses `setArgsFn(resolveByArgs)`, the token is resolved to its value rather than wrapped as a constant.
+
 - `ServiceToken.args(ValueToken)` — `ValueToken` is resolved from the container, its value is passed as arg
 - `ServiceToken.args('literal')` — literal value passed directly
 
 ### Positional arg injection with `args(index)`
+
 Use `@inject(args(index))` to explicitly bind a constructor parameter to a positional argument from `ProviderOptions`. This is useful when combining `setArgsFn(resolveByArgs)` with token-based arg passing.
+
 - `@inject(args(0))` — resolves the first element of the `args` array passed at resolution time
 - Works together with `token.args(...)` to pass typed dependencies through the args context
 
 ### Immutable token chaining
+
 `token.args(...)`, `token.argsFn(...)`, and `token.lazy()` all return **new token instances** — the parent token is never mutated. This allows the same token to be specialized in multiple independent ways (one-way linked list: parent → many children).
 
 ```typescript
@@ -2022,6 +2068,7 @@ describe('ArgsProvider', function () {
 ```
 
 ### Visibility
+
 Sometimes you want to hide dependency if somebody wants to resolve it from certain scope. This uses `ScopeAccessRule` to control access.
 
 > [!IMPORTANT]
@@ -2122,7 +2169,9 @@ describe('Visibility', function () {
 ```
 
 ### Alias
+
 Alias is needed to group keys
+
 - `@register(asAlias('logger'))` helper assigns `logger` alias to registration.
 - `by.aliases((it) => it.has('logger') || it.has('a'))` resolves dependencies which have `logger` or `a` aliases
 - `Provider.fromClass(Logger).pipe(alias('logger'))`
@@ -2267,7 +2316,9 @@ describe('alias', () => {
 ```
 
 ### Decorator
+
 Sometimes you want to decorate you class with some logic. This is what `DecoratorProvider` is for.
+
 - `provider(decorate((instance, container) => new LoggerDecorator(instance)))`
 
 ```typescript
@@ -2381,7 +2432,9 @@ describe('Decorator Pattern', () => {
 ```
 
 ## Registration
+
 Registration is provider factory which registers provider in container.
+
 - `@register(asKey('logger'))`
 - `Registration.fromClass(Logger).to('logger')`
 - `Registration.fromClass(Logger)`
@@ -2389,6 +2442,7 @@ Registration is provider factory which registers provider in container.
 - `Registration.fromFn((container, ...args) => container.resolve(Logger, {args}))`
 
 ### Key
+
 Sometimes you want to register provider with certain key. This is what `key` is for.
 
 - by default, key is class name
@@ -2481,7 +2535,9 @@ describe('Registration module', function () {
 ```
 
 ### Scope
+
 Sometimes you need to register provider only in scope which matches to certain condition and their sub scopes. Especially if you want to register dependency as singleton for some tags, for example `root`. This uses `ScopeMatchRule` to determine which scopes should have the provider.
+
 - `@register(scope((container) => container.hasTag('root'))` - register provider only in root scope
 - `Registration.fromClass(Logger).when((container) => container.hasTag('root'))`
 
@@ -2523,6 +2579,7 @@ describe('ScopeProvider', function () {
 ```
 
 ## Module
+
 Sometimes you want to encapsulate registration logic in separate module. This is what `IContainerModule` is for.
 
 ```typescript
@@ -2646,9 +2703,11 @@ describe('Container Modules', function () {
 ```
 
 ## Hook
+
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
 ### OnConstruct
+
 ```typescript
 import {
   AddOnConstructHookModule,
@@ -2709,6 +2768,7 @@ describe('onConstruct', function () {
 ```
 
 ### OnDispose
+
 ```typescript
 import {
   AddOnDisposeHookModule,

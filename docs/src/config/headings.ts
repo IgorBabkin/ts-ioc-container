@@ -26,6 +26,17 @@ export const pageHeadings: Record<string, Heading[]> = {
     { id: "core-architecture", text: "Core Architecture", level: 2 },
     { id: "class-diagram", text: "Class Diagram", level: 2 },
   ],
+  "/ts-ioc-container/spec-driven": [
+    { id: "artifact-map", text: "Artifact Map", level: 2 },
+    { id: "workflow", text: "Workflow", level: 2 },
+    { id: "tdd-and-bdd", text: "TDD and BDD", level: 2 },
+    { id: "current-specs", text: "Current Specs", level: 2 },
+    {
+      id: "pull-request-checklist",
+      text: "Pull Request Checklist",
+      level: 2,
+    },
+  ],
   "/ts-ioc-container/container": [
     { id: "scopes", text: "Scopes", level: 2 },
     {

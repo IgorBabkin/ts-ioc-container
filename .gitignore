@@ -6,10 +6,10 @@ node_modules
 typings
 lerna-debug.log
 yarn-error.log
-precompiled
-.generated
+precompiledƒ
+.generatedƒ
 .vscode
-.yarn/cache
+.yarn/cacheƒƒƒ
 .yarn/install-state.gz
 yarn.log
 prev-coverage-result.json
