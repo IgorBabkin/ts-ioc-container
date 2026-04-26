@@ -101,6 +101,11 @@ Creates a new child scope on resolution. The new scope is created each time the 
 
 Tokens support argument binding via `.args(...)`, `.argsFn(...)`, and `.lazy()`. These methods always return a **new token instance** — the parent token is never mutated. This makes tokens safe to reuse and specialize independently (one-way linked list: parent → many children).
 
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>Token modifiers are immutable. <code>args(...)</code>, <code>argsFn(...)</code>, and <code>lazy()</code> return new token instances and never mutate the shared token constant.</p>
+</div>
+
 ```typescript
 const ApiToken = new SingleToken<IApiClient>('IApiClient');
 // Each call creates an independent child — ApiToken is unchanged
@@ -121,7 +126,12 @@ token.args('arg1').argsFn(() => ['from', 'fn'])
 
 <h2 id="lazy-loading" class="toc-link">Lazy Loading</h2>
 
-Tokens support lazy loading, deferring instantiation until access:
+Tokens support lazy loading for class instances, deferring class instantiation until access:
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p><code>lazy()</code> on a token is meaningful only when that token eventually resolves a class instance.</p>
+</div>
 
 <CodeBlock code={tokenLazySpecCode} lang="typescript" filename="__tests__/readme/tokenLazy.spec.ts" />
 
@@ -152,7 +162,10 @@ Supports `args()`, `argsFn()`, and `lazy()` — all return new instances (immuta
 
 `ConstantToken` always returns a constant value. It's used internally by the `@inject` decorator to pass literal values. The token ignores the container and always returns the same value.
 
-**Note:** Does not support `args()`, `argsFn()`, or `lazy()` methods.
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p><code>ConstantToken</code> does not support <code>args()</code>, <code>argsFn()</code>, or <code>lazy()</code> methods.</p>
+</div>
 
 ### GroupInstanceToken
 
@@ -162,4 +175,7 @@ Supports `args()`, `argsFn()`, and `lazy()` — all return new instances (immuta
 - `new GroupInstanceToken(predicate)` - Filter instances
 - `token.cascade(false)` - Current scope only
 
-**Note:** Does not support `args()`, `argsFn()`, or `lazy()` methods.
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p><code>GroupInstanceToken</code> does not support <code>args()</code>, <code>argsFn()</code>, or <code>lazy()</code> methods.</p>
+</div>

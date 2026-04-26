@@ -248,9 +248,14 @@ describe('Basic usage', function () {
 ### Scope
 Sometimes you need to create a scope of container. For example, when you want to create a scope per request in web application. You can assign tags to scope and provider and resolve dependencies only from certain scope.
 
-- NOTICE: remember that when scope doesn't have dependency then it will be resolved from parent container
-- NOTICE: when you create a scope of container then all providers are cloned to new scope. For that reason every provider has methods `clone` and `isValid` to clone itself and check if it's valid for certain scope accordingly.
-- NOTICE: when you create a scope then we clone ONLY tags-matched providers.
+> [!IMPORTANT]
+> Scope creation is snapshot-like. Existing parent registrations are applied to the child scope when `createScope()` is called, and when a scope doesn't have a dependency it resolves from the parent container.
+
+> [!WARNING]
+> Registrations added to a parent after a child scope has already been created are not automatically applied to that existing child. Create a new scope or add the registration to the child explicitly.
+
+> [!WARNING]
+> Scope matching happens when a registration is applied to a container. Only registrations whose scope rules match that container are registered there.
 
 ```typescript
 import 'reflect-metadata';
@@ -347,9 +352,11 @@ describe('Scopes', function () {
 You can dynamically add tags to a container after it's been created using the `addTags()` method. This is useful for environment-based configuration, feature flags, and progressive container setup.
 
 - Tags can be added one at a time or multiple at once
-- Tags must be added **before** registrations are applied - scope matching happens at registration time
 - Useful for conditional configuration based on `NODE_ENV` or runtime flags
 - Container can be configured incrementally as the application initializes
+
+> [!WARNING]
+> Tags must be added **before** registrations are applied. Scope matching happens at registration time, so adding tags later does not retroactively make providers available.
 
 ```typescript
 import { bindTo, Container, register, Registration as R, scope } from 'ts-ioc-container';
@@ -636,11 +643,13 @@ describe('hasRegistration', function () {
 ```
 
 ### Dispose
-Sometimes you want to dispose container and all its scopes. For example, when you want to prevent memory leaks. Or you want to ensure that nobody can use container after it was disposed.
+Sometimes you want to dispose a container or scope. For example, when a request, page, widget, or other local lifecycle ends.
 
 - container can be disposed
-- when container is disposed then all scopes are disposed too
-- when container is disposed then it unregisters all providers and remove all instances
+- when container is disposed then it runs its `onDispose` hooks, unregisters its providers, removes its local instances, and detaches from its parent
+
+> [!IMPORTANT]
+> Dispose is local to the container being disposed. Child scopes are not disposed automatically; dispose them explicitly when their own lifecycle ends.
 
 ```typescript
 import 'reflect-metadata';
@@ -743,6 +752,14 @@ describe('Disposing', function () {
 
 ### Lazy
 Sometimes you want to create dependency only when somebody want to invoke it's method or property. This is what `lazy` is for.
+
+- Lazy class instances are wrapped in a JavaScript `Proxy`; the real class instance is created on first property or method access.
+
+> [!IMPORTANT]
+> `lazy` is designed only for class instances resolved from class providers.
+
+> [!WARNING]
+> Do not use `lazy` for primitive values, plain values, functions, or non-class provider results.
 
 ```typescript
 import 'reflect-metadata';
@@ -869,7 +886,7 @@ describe('lazy provider', () => {
 ```
 
 ### Lazy with registerPipe
-The `lazy()` registerPipe can be used in two ways: with the `@register` decorator or directly on the `Provider` pipe. This allows you to defer expensive service initialization until first access.
+The `lazy()` registerPipe can be used in two ways: with the `@register` decorator or directly on the `Provider` pipe. This allows you to defer expensive class instance initialization until first access.
 
 **Use cases:**
 - Defer expensive initialization (database connections, SMTP, external APIs)
@@ -1513,8 +1530,8 @@ describe('ProxyInjector', function () {
     class Database {}
 
     class ReportGenerator {
-      public database: Database;
-      public format: string;
+      database: Database;
+      format: string;
 
       constructor({ database, args }: { database: Database; args: string[] }) {
         this.database = database;
@@ -1561,6 +1578,7 @@ describe('ProxyInjector', function () {
     expect(container.resolveByAlias).toHaveBeenCalledWith('loggersAlias');
   });
 });
+
 ```
 
 ## Provider
@@ -1720,7 +1738,9 @@ describe('Provider', () => {
 Sometimes you need to create only one instance of dependency per scope. For example, you want to create only one logger per scope.
 
 - Singleton provider creates only one instance in every scope where it's resolved.
-- NOTICE: if you create a scope 'A' of container 'root' then Logger of A !== Logger of root.
+
+> [!IMPORTANT]
+> Singleton means one instance per scope. If you create a scope `A` of container `root`, then `Logger` of `A` !== `Logger` of `root`.
 
 ```typescript
 import 'reflect-metadata';
@@ -2003,6 +2023,10 @@ describe('ArgsProvider', function () {
 
 ### Visibility
 Sometimes you want to hide dependency if somebody wants to resolve it from certain scope. This uses `ScopeAccessRule` to control access.
+
+> [!IMPORTANT]
+> Use `scope()` to decide where a provider is registered. Use `scopeAccess()` to decide which invocation scopes can see an already registered provider.
+
 - `provider(scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope))` - dependency will be accessible only from the scope where it's registered
 - `Provider.fromClass(Logger).pipe(scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope))`
 
@@ -2803,4 +2827,3 @@ describe('inject property', () => {
 - [MethodNotImplementedError.ts](..%2F..%2Flib%2Ferrors%2FMethodNotImplementedError.ts)
 - [DependencyMissingKeyError.ts](..%2F..%2Flib%2Ferrors%2FDependencyMissingKeyError.ts)
 - [ContainerDisposedError.ts](..%2F..%2Flib%2Ferrors%2FContainerDisposedError.ts)
-

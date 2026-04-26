@@ -101,7 +101,7 @@ export class Container implements IContainer {
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this })
       ? provider.resolve(this, { args, lazy })
-      : this.parent.resolveOneByAlias<T>(key, { args, child, lazy });
+      : this.parent.resolveOneByAlias<T>(alias, { args, child, lazy });
   }
 
   createScope({ tags }: CreateScopeOptions = {}): IContainer {

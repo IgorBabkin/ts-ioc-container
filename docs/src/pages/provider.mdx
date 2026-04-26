@@ -34,6 +34,11 @@ There are three main ways to create providers:
 
 Singleton providers ensure only one instance is created per scope. This is perfect for services like loggers, database connections, or configuration managers.
 
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>Singleton means one instance per scope. Root and child scopes can each have their own singleton instance.</p>
+</div>
+
 <CodeBlock
   code={providerSpecCode}
   lang="typescript"
@@ -144,7 +149,12 @@ The decorator pattern allows you to wrap instances with additional functionality
 
 <h2 id="lazy-loading" class="toc-link">Lazy Loading</h2>
 
-Lazy providers defer instantiation until the dependency is actually accessed. This improves startup performance by avoiding initialization of expensive services until they're needed.
+Lazy providers are designed only for class instances. They defer class instantiation until the resolved proxy is actually accessed, improving startup performance by avoiding initialization of expensive services until they're needed.
+
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p><code>lazy()</code> is designed only for class instances created by class providers.</p>
+</div>
 
 ### Use Cases
 
@@ -152,6 +162,11 @@ Lazy providers defer instantiation until the dependency is actually accessed. Th
 - **Conditional features** - Don't initialize features that may not be used
 - **Circular dependencies** - Break dependency cycles
 - **Memory optimization** - Reduce memory footprint for optional services
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Do not use <code>lazy()</code> for primitive values, plain values, functions, or non-class provider results.</p>
+</div>
 
 ### Two Ways to Use Lazy Loading
 
@@ -206,7 +221,7 @@ container.register('EmailService', emailProvider);`}
 
 When a lazy provider is resolved:
 
-1. **Initial Resolution** - A proxy is returned instead of the actual instance
+1. **Initial Resolution** - A proxy is returned instead of the actual class instance
 2. **First Access** - When any property or method is accessed, the real instance is created
 3. **Subsequent Access** - The proxy delegates all calls to the real instance
 4. **Singleton Behavior** - Combined with `singleton()`, ensures only one instance is created
@@ -288,7 +303,7 @@ Singleton providers cache instances per scope, avoiding unnecessary object creat
 
 ### Lazy Loading
 
-Lazy providers use JavaScript proxies to defer instantiation until access. This improves startup time by avoiding eager initialization of unused dependencies.
+Lazy providers use JavaScript proxies to defer class instantiation until access. This improves startup time by avoiding eager initialization of unused class instances.
 
 ### Provider Lookup
 
@@ -313,4 +328,4 @@ Implement `IProvider` or extend `ProviderDecorator` to create custom providers:
 - **Use visibility for security** - Restrict access to sensitive services
 - **Aliases for collections** - Group related services together
 - **Decorators for cross-cutting concerns** - Keep your core classes clean
-- **Lazy loading for performance** - Defer expensive object creation
+- **Lazy loading for performance** - Defer expensive class instance creation

@@ -157,6 +157,16 @@ In this example, `firstArg` receives `'initial'` and `suffix` is still resolved 
 
 ## Best Practices
 
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>Lifecycle hooks are opt-in. Register the construct/dispose modules, or add equivalent hooks manually, before expecting decorated lifecycle methods to run.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Disposing a parent scope does not run child-scope dispose hooks. Dispose each child scope explicitly when its lifecycle ends.</p>
+</div>
+
 - **Use OnConstruct for initialization** - Initialize dependencies, validate state, or set up connections after construction
 - **Use OnDispose for cleanup** - Close resources, save state, or unsubscribe from events before disposal
 - **Keep hook logic simple** - Hooks should perform focused operations, not complex business logic

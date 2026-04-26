@@ -92,7 +92,10 @@ Here's a complete reference of all available pipes in the container:
 - ✅ **RegisterPipe**: Can be used in `@register()` decorator and `.pipe()` on IRegistration
 - ❌ Not a ProviderPipe (registration-only)
 
-**Note:** The last two (`scope()` and `bindTo()`) are `MapFn<IRegistration>` functions that only work at the registration level, not the provider level.
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p><code>scope()</code> and <code>bindTo()</code> are registration-only functions. They work at registration time, not on an already-created provider.</p>
+</div>
 
 <h2 id="usage-examples" class="toc-link">Usage Examples</h2>
 
@@ -195,7 +198,15 @@ Pipes use the Decorator pattern to compose transformations. Each pipe wraps the 
 
 ### Pipe Order
 
-**In most cases, pipe order does not matter.** The container is designed so that pipes like `singleton()`, `lazy()`, `args()`, `argsFn()`, and `scopeAccess()` can be applied in any order and will work correctly.
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>In most cases, pipe order does not matter. The container is designed so that pipes like <code>singleton()</code>, <code>lazy()</code>, <code>args()</code>, <code>argsFn()</code>, and <code>scopeAccess()</code> can be applied in any order and will work correctly.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Pipe order can be observable for wrappers such as <code>decorate()</code> and for custom pipes. Document custom pipe ordering expectations.</p>
+</div>
 
 <CodeBlock
   code={`// Order doesn't matter for most pipes
@@ -347,7 +358,17 @@ container
 
 ### lazy()
 
-Defers instantiation until first access using JavaScript Proxies.
+Defers class instance creation until first access using JavaScript Proxies. `lazy()` is designed only for class instances; do not use it for primitive values, plain values, functions, or non-class provider results.
+
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p><code>lazy()</code> is a provider pipe for class instance creation.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Do not apply <code>lazy()</code> to value providers, function providers, primitive values, or other non-class provider results.</p>
+</div>
 
 <CodeBlock
   code={`import { lazy, singleton } from 'ts-ioc-container';

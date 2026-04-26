@@ -12,9 +12,9 @@ import { type MapFn, pipe } from '../utils/fp';
 import { type constructor, Is } from '../utils/basic';
 
 export class Registration<T = any> implements IRegistration<T> {
-  static fromClass<T>(Target: constructor<T>) {
+  static fromClass<T>(Target: constructor<T>, { name }: { name?: string } = {}) {
     const transform = pipe(...getTransformers(Target));
-    return transform(new Registration(() => Provider.fromClass(Target), Target.name));
+    return transform(new Registration(() => Provider.fromClass(Target), name ?? Target.name));
   }
 
   static fromValue<T>(value: T) {

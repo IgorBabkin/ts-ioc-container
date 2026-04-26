@@ -29,6 +29,11 @@ To use the metadata system, you need:
 - Import `reflect-metadata` at your application entry point
 - Enable `experimentalDecorators` and `emitDecoratorMetadata` in your `tsconfig.json`
 
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p><code>reflect-metadata</code> is an optional consumer dependency. The runtime package stays dependency-free, so applications using metadata decorators must install and initialize it themselves.</p>
+</div>
+
 <CodeBlock
   code={`// At application entry point
 import 'reflect-metadata';

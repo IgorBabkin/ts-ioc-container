@@ -208,6 +208,36 @@ article h3 {
   margin-bottom: 0.75rem;
 }
 
+/* Design-intent callouts */
+.callout,
+article blockquote {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 0.3rem solid var(--bs-border-color);
+  background: var(--bs-tertiary-bg);
+  border-radius: 0.25rem;
+}
+
+.callout p:last-child,
+article blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.callout-title {
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+}
+
+.callout-important {
+  border-left-color: var(--bs-primary);
+  background: var(--bs-primary-bg-subtle);
+}
+
+.callout-warning {
+  border-left-color: var(--bs-warning);
+  background: var(--bs-warning-bg-subtle);
+}
+
 /* Cards in dark theme */
 [data-bs-theme="dark"] .card {
   background-color: var(--bs-secondary-bg);
@@ -338,4 +368,3 @@ a:hover {
   height: 20px;
   display: block;
 }
-

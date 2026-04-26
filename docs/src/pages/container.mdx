@@ -82,7 +82,17 @@ When you create a new scope using `createScope()`, the container follows a speci
   <div class="mermaid" set:html={createScopeFlowDiagram} />
 </div>
 
-The scope creation process ensures that lifecycle hooks are properly inherited, all relevant registrations are available, and the new scope is properly registered in the parent's scope list for management and disposal.
+The scope creation process ensures that lifecycle hooks are properly inherited, all currently matching registrations are available, and the new scope is registered in the parent's scope list for inspection and instance traversal.
+
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>Scope creation is snapshot-like. Existing parent registrations are applied when <code>createScope()</code> is called.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Registrations added to a parent after a child scope already exists are not pushed into that child. Create a new scope or add the registration to the child explicitly.</p>
+</div>
 
 ### Scope Resolution Strategy
 
@@ -103,7 +113,10 @@ The `addTags()` method allows you to dynamically add tags to a container after i
 - **Progressive configuration** - Add tags incrementally as the application initializes
 - **Testing** - Configure containers differently for different test scenarios
 
-**Important:** Tags must be added **before** registrations are applied. Scope matching happens at registration time, so adding tags after registration won't retroactively make providers available.
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Tags must be added <strong>before</strong> registrations are applied. Scope matching happens at registration time, so adding tags after registration will not retroactively make providers available.</p>
+</div>
 
 <CodeBlock
   code={addTagsSpecCode}
@@ -148,7 +161,15 @@ function parent() {
   lang="typescript"
 />
 
-**Important:** A service's resolution context is determined by **where it is registered**, not where it's requested from. This creates an important limitation when parent-scoped services try to inject child-scoped dependencies.
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>A service's resolution context is determined by <strong>where it is registered</strong>, not where it is requested from.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Parent-scoped services cannot inject child-scoped dependencies. Use <code>scopeAccess()</code> when a parent provider should be visible only to selected invocation scopes.</p>
+</div>
 
 <div class="diagram">
   <div class="mermaid" set:html={crossScopeDependencyInjectionDiagram} />
@@ -309,7 +330,7 @@ The `hasRegistration()` method allows you to check if a registration with a spec
 
 <h2 id="disposal" class="toc-link">Disposal</h2>
 
-Proper resource cleanup is essential for preventing memory leaks. The container provides a disposal mechanism that cleans up all resources and prevents further usage.
+Proper resource cleanup is essential for preventing memory leaks. The container provides a disposal mechanism that cleans up the current container's local resources and prevents further usage.
 
 <CodeBlock
   code={disposingSpecCode}
@@ -324,9 +345,29 @@ Proper resource cleanup is essential for preventing memory leaks. The container 
 - Clears all cached instances
 - Throws `ContainerDisposedError` on any subsequent operations
 
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>Disposal is local to the container being disposed. This is intentional so host frameworks can own page, request, component, or widget lifecycles explicitly.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Child scopes are not automatically disposed when a parent is disposed. Dispose each child scope explicitly when its lifecycle ends.</p>
+</div>
+
 <h2 id="lazy-loading" class="toc-link">Lazy Loading</h2>
 
-Lazy loading defers the instantiation of dependencies until they're actually accessed. This can improve startup performance and enable circular dependency resolution.
+Lazy loading is designed only for class instances. It defers class instantiation until the resolved proxy is actually accessed, which can improve startup performance and enable circular dependency resolution.
+
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p><code>lazy</code> is designed only for class instances resolved from class providers.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Do not use <code>lazy</code> for primitive values, plain values, functions, or non-class provider results.</p>
+</div>
 
 <CodeBlock
   code={lazySpecCode}
@@ -339,7 +380,7 @@ Lazy loading defers the instantiation of dependencies until they're actually acc
 The container provides explicit disposal to prevent memory leaks:
 
 - `dispose()` clears all providers and instances
-- Child scopes are automatically disposed when parent is disposed
+- Child scopes are not automatically disposed when parent is disposed
 - Instance tracking allows manual cleanup if needed
 - [Hooks](/ts-ioc-container/hooks#ondispose) can be used to release external resources during disposal
 
@@ -408,7 +449,7 @@ The `EmptyContainer` class implements the Null Object pattern, providing a safe 
 - **Use tags for scope types** - Common tags: `application`, `request`, `transaction`, `admin`
 - **Restrict sensitive services** - Use `scopeAccess()` to limit access to admin-only or application-only services
 - **Keep singletons stateless** - Application-scoped singletons shouldn't hold request-specific state
-- **Use lazy loading for expensive services** - Defer SMTP connections, external API clients until actually needed
+- **Use lazy loading for expensive class instances** - Defer SMTP clients and external API clients until actually needed
 - **Separate dev/prod with modules** - Use `IContainerModule` to swap implementations by environment
 
 <h2 id="api-reference" class="toc-link">API Reference</h2>
@@ -420,7 +461,7 @@ The `EmptyContainer` class implements the Null Object pattern, providing a safe 
 - `addRegistration(registration: IRegistration): IContainer` - Register a provider
 - `hasRegistration(key: DependencyKey): boolean` - Check if a registration exists in the current container or parent containers
 - `getRegistrations(): IRegistration[]` - Get all registrations from current container and parent containers
-- `dispose(): void` - Dispose the container and all resources
+- `dispose(): void` - Dispose the container's local resources
 - `getInstances(): Iterable<Instance>` - Get all instances created by this container
 - `hasTag(tag: Tag): boolean` - Check if container has a specific tag
 - `addTags(...tags: Tag[]): void` - Add one or more tags to the container dynamically

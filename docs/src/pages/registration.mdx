@@ -53,6 +53,16 @@ Keys identify dependencies in the container. They can be strings, symbols, or to
 
 Scope match rules (`ScopeMatchRule`) control which scopes a provider is available in. This allows you to register different implementations for different environments or contexts.
 
+<div class="callout callout-important">
+  <div class="callout-title">[!IMPORTANT]</div>
+  <p>Scope match rules control registration placement. They decide whether a provider is registered into a container when the registration is applied.</p>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p>Scope match rules are not runtime visibility checks. Use <code>scopeAccess()</code> when a provider is registered but should only be visible to selected invocation scopes.</p>
+</div>
+
 <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
 <h2 id="registration-pipeline" class="toc-link">Registration Pipeline</h2>

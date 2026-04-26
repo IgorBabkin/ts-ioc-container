@@ -81,6 +81,11 @@ The Simple Injector passes the container instance as the first constructor param
 
 The Proxy Injector matches constructor parameter names to dependency keys and injects them as a dictionary object. This is useful for object destructuring patterns and functional programming styles.
 
+<div class="callout callout-warning">
+  <div class="callout-title">[!WARNING]</div>
+  <p><code>ProxyInjector</code> resolves dependencies from property names. Renaming, minification, or unclear alias naming can change resolution behavior.</p>
+</div>
+
 ### Reserved keywords and conventions
 
 - **`args`** — accessing `deps.args` returns the raw `args[]` array passed at resolve time, allowing runtime arguments to be forwarded directly to the constructor
