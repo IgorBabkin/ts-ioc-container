@@ -25,7 +25,7 @@ export class Provider<T = any> implements IProvider<T> {
     return new Provider<T>((c) => c.resolve(key));
   }
 
-  private argsFn: ArgsFn = () => [];
+  private argsFn: ArgsFn = (s, { args = [] } = {}) => args;
   private checkAccess: ScopeAccessRule = () => true;
   private isLazy = false;
 

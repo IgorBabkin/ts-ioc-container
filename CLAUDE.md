@@ -74,6 +74,39 @@ Workaround: register A for both scopes, or use `scopeAccess` for visibility cont
 
 `SingleToken`, `GroupAliasToken`, `SingleAliasToken`, `GroupInstanceToken`, `ClassToken`, `FunctionToken`, `ConstantToken` — all in `lib/token/`. Tokens define how a dependency key is resolved (single instance, group by alias, group by predicate, etc.).
 
+### Token Immutability (One-Way Linked List)
+
+`token.args(...)`, `token.argsFn(...)`, and `token.lazy()` always return **new token instances** — the parent token is never mutated. Think of it as a one-way linked list: parent → many independent children. Each token stores its own contribution to the args chain and delegates to its parent for the rest.
+
+This means the same base token can be safely specialized at multiple injection sites:
+```typescript
+const ApiToken = new SingleToken<IApiClient>('IApiClient');
+const dataToken = ApiToken.args('https://data.api.com', 5000);  // new token
+const userToken = ApiToken.args('https://users.api.com', 1000); // another new token, ApiToken unchanged
+```
+
+Chaining appends to the sequence: `token.args('a').argsFn(() => ['b', 'c'])` produces args `['a', 'b', 'c']`.
+
+All token classes accept `{ getArgsFn?, isLazy? }` as an optional second constructor argument for internal state propagation. Never pass this from outside — use `.args()`, `.argsFn()`, `.lazy()` instead.
+
+### ProxyInjector Conventions
+
+- **`args` reserved keyword**: `deps.args` returns the raw `args[]` array passed at resolve time
+- **Alias convention**: property names containing `"alias"` (case-insensitive) resolve via `resolveByAlias` instead of `resolve`
+
+### resolveByArgs and Token Args
+
+`resolveByArgs` is an `ArgsFn` that maps each element of the `args` array: `InjectionToken` instances are resolved from the container, constructors are resolved by type, primitives pass through. Use with `setArgsFn(resolveByArgs)` on providers that need to accept token arguments:
+
+```typescript
+@register(bindTo(EntityManagerToken), setArgsFn(resolveByArgs))
+class EntityManager {
+  constructor(public repo: IRepository) {}
+}
+// ValueToken is resolved and its value passed as constructor arg
+EntityManagerToken.args(ValueToken).resolve(container);
+```
+
 ### Hooks
 
 `@onConstruct` and `@onDispose` decorators trigger after construction / on disposal. Requires adding `AddOnConstructHookModule` / `AddOnDisposeHookModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.

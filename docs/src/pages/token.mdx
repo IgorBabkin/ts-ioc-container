@@ -99,7 +99,23 @@ Creates a new child scope on resolution. The new scope is created each time the 
 
 <h2 id="argument-binding" class="toc-link">Argument Binding</h2>
 
-Tokens support argument binding, allowing you to pass arguments when resolving:
+Tokens support argument binding via `.args(...)`, `.argsFn(...)`, and `.lazy()`. These methods always return a **new token instance** — the parent token is never mutated. This makes tokens safe to reuse and specialize independently (one-way linked list: parent → many children).
+
+```typescript
+const ApiToken = new SingleToken<IApiClient>('IApiClient');
+// Each call creates an independent child — ApiToken is unchanged
+const dataToken = ApiToken.args('https://data.api.com', 5000);
+const userToken = ApiToken.args('https://users.api.com', 1000);
+```
+
+Chaining `.args()` and `.argsFn()` **appends** to the existing args sequence:
+
+```typescript
+// args = ['arg1', 'from', 'fn']
+token.args('arg1').argsFn(() => ['from', 'fn'])
+```
+
+**Token as argument**: if a provider uses `setArgsFn(resolveByArgs)` and you pass an `InjectionToken` via `.args(token)`, the token is resolved from the container rather than used as a constant value.
 
 <CodeBlock code={tokenArgsSpecCode} lang="typescript" filename="__tests__/readme/tokenArgs.spec.ts" />
 
@@ -130,7 +146,7 @@ Supports: `args()`, `argsFn()`, `lazy()`
 
 `FunctionToken` wraps a custom resolution function. This is used by `select.scope.current` and `select.scope.create()` to inject container scopes. The function receives the container and returns the resolved value.
 
-**Note:** Does not support `args()`, `argsFn()`, or `lazy()` methods (throws `MethodNotImplementedError`).
+Supports `args()`, `argsFn()`, and `lazy()` — all return new instances (immutable). By default, `FunctionToken` passes the outer `args` context through to the wrapped function, which makes `@inject(args(index))` work correctly.
 
 ### ConstantToken
 

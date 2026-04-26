@@ -4,36 +4,49 @@ import { type constructor } from '../utils/basic';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 
 export class ClassToken<T = any> extends InjectionToken<T> {
-  private getArgsFn: ArgsFn = () => [];
-  private isLazy: boolean = false;
+  private readonly _getArgsFn: ArgsFn;
+  private readonly _isLazy: boolean;
 
-  constructor(private readonly target: constructor<T>) {
+  constructor(
+    private readonly target: constructor<T>,
+    { getArgsFn = () => [], isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+  ) {
     super();
+    this._getArgsFn = getArgsFn;
+    this._isLazy = isLazy;
   }
 
   select<R>(fn: (target: T) => R) {
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, { args = [], lazy = false }: ProviderOptions = {}): T {
+  resolve(s: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
     return s.resolve(this.target, {
-      args: this.getArgsFn(s, { args }),
-      lazy: this.isLazy || lazy,
+      args: this._getArgsFn(s, { args }),
+      lazy: this._isLazy || lazy,
     });
   }
 
-  args(...args: unknown[]) {
-    this.getArgsFn = () => args;
-    return this;
+  args(...newArgs: unknown[]) {
+    const parentFn = this._getArgsFn;
+    return new ClassToken<T>(this.target, {
+      getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
+      isLazy: this._isLazy,
+    });
   }
 
-  argsFn(fn: ArgsFn) {
-    this.getArgsFn = fn;
-    return this;
+  argsFn(fn: (s: IContainer) => unknown[]) {
+    const parentFn = this._getArgsFn;
+    return new ClassToken<T>(this.target, {
+      getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
+      isLazy: this._isLazy,
+    });
   }
 
   lazy() {
-    this.isLazy = true;
-    return this;
+    return new ClassToken<T>(this.target, {
+      getArgsFn: this._getArgsFn,
+      isLazy: true,
+    });
   }
 }

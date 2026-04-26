@@ -81,6 +81,11 @@ The Simple Injector passes the container instance as the first constructor param
 
 The Proxy Injector matches constructor parameter names to dependency keys and injects them as a dictionary object. This is useful for object destructuring patterns and functional programming styles.
 
+### Reserved keywords and conventions
+
+- **`args`** — accessing `deps.args` returns the raw `args[]` array passed at resolve time, allowing runtime arguments to be forwarded directly to the constructor
+- **`alias` convention** — any property whose name contains `"alias"` (case-insensitive, e.g. `loggersAlias`) is resolved via `resolveByAlias` instead of `resolve`, returning an array of all matching registrations
+
 <CodeBlock
   code={proxyInjectorSpecCode}
   lang="typescript"

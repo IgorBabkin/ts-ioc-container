@@ -76,18 +76,20 @@ Argument providers allow you to bind constructor arguments at registration time.
 
 ### Argument Priority
 
-Provider arguments take precedence over arguments passed to `resolve()`:
+When `setArgsFn` is set on a provider it controls the final args. Without it, resolve-time `args` are passed through by default. Use `setArgsFn(resolveByArgs)` to resolve `InjectionToken` arguments:
 
-<CodeBlock
-  code={`const container = new Container()
-  .addRegistration(R.fromClass(Logger).pipe(args('name')));
+```typescript
+// resolveByArgs resolves tokens, passes primitives as-is
+const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
 
-// Provider argument 'name' takes priority
-const logger = container.resolve<Logger>('logger', { args: ['file'] });
-expect(logger.name).toBe('name');
-expect(logger.type).toBe('file'); // Second argument still passed`}
-  lang="typescript"
-/>
+@register(bindTo(EntityManagerToken), setArgsFn(resolveByArgs))
+class EntityManager {
+  constructor(public repository: IRepository) {}
+}
+
+// UserRepositoryToken is resolved and its value passed as the constructor arg
+const em = EntityManagerToken.args(UserRepositoryToken).resolve(container);
+```
 
 <h2 id="visibility" class="toc-link">Visibility</h2>
 

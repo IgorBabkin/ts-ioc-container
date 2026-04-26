@@ -1,18 +1,5 @@
 import { Container, ProxyInjector, Registration as R } from '../../lib';
 
-/**
- * Clean Architecture - Proxy Injector
- *
- * The ProxyInjector injects dependencies as a single object (props/options pattern).
- * This is popular in modern JavaScript/TypeScript (like React props or destructuring).
- *
- * Advantages:
- * - Named parameters are more readable than positional arguments
- * - Order of arguments doesn't matter
- * - Easy to add/remove dependencies without breaking inheritance chains
- * - Works well with "Clean Architecture" adapters
- */
-
 describe('ProxyInjector', function () {
   it('should inject dependencies as a props object', function () {
     class Logger {
@@ -21,13 +8,11 @@ describe('ProxyInjector', function () {
       }
     }
 
-    // Dependencies defined as an interface
     interface UserControllerDeps {
       logger: Logger;
       prefix: string;
     }
 
-    // Controller receives all dependencies in a single object
     class UserController {
       private logger: Logger;
       private prefix: string;
@@ -52,19 +37,20 @@ describe('ProxyInjector', function () {
     expect(controller.createUser('bob')).toBe('Logged: USER: bob');
   });
 
-  it('should support mixing injected dependencies with runtime arguments', function () {
+  it('should expose runtime args through the reserved "args" property', function () {
     class Database {}
 
-    interface ReportGeneratorDeps {
-      database: Database;
-      format: string; // Runtime argument
-    }
-
     class ReportGenerator {
-      constructor(public deps: ReportGeneratorDeps) {}
+      database: Database;
+      format: string;
+
+      constructor({ database, args }: { database: Database; args: string[] }) {
+        this.database = database;
+        this.format = args[0];
+      }
 
       generate(): string {
-        return `Report in ${this.deps.format}`;
+        return `Report in ${this.format}`;
       }
     }
 
@@ -72,24 +58,20 @@ describe('ProxyInjector', function () {
       .addRegistration(R.fromClass(Database).bindToKey('database'))
       .addRegistration(R.fromClass(ReportGenerator).bindToKey('ReportGenerator'));
 
-    // "format" is passed at resolution time
     const generator = container.resolve<ReportGenerator>('ReportGenerator', {
-      args: [{ format: 'PDF' }],
+      args: ['PDF'],
     });
 
-    expect(generator.deps.database).toBeInstanceOf(Database);
+    expect(generator.database).toBeInstanceOf(Database);
     expect(generator.generate()).toBe('Report in PDF');
   });
 
-  it('should resolve array dependencies by alias (convention over configuration)', function () {
-    // If a property is named "loggersArray", it looks for alias "loggersArray"
-    // and resolves it as an array of all matches.
-
+  it('should resolve dependencies by alias when property name contains "alias"', function () {
     class FileLogger {}
     class ConsoleLogger {}
 
     interface AppDeps {
-      loggersArray: any[]; // Injected as array of all loggers
+      loggersAlias: any[];
     }
 
     class App {
@@ -98,16 +80,12 @@ describe('ProxyInjector', function () {
 
     const container = new Container({ injector: new ProxyInjector() });
 
-    // Mocking the behavior for this specific test as ProxyInjector uses resolveByAlias
-    // which delegates to the container.
-    // In a real scenario, you'd register multiple loggers with the same alias.
     const mockLoggers = [new FileLogger(), new ConsoleLogger()];
-
     container.resolveByAlias = vi.fn().mockReturnValue(mockLoggers);
 
     const app = container.resolve(App);
 
-    expect(app.deps.loggersArray).toBe(mockLoggers);
-    expect(container.resolveByAlias).toHaveBeenCalledWith('loggersArray');
+    expect(app.deps.loggersAlias).toBe(mockLoggers);
+    expect(container.resolveByAlias).toHaveBeenCalledWith('loggersAlias');
   });
 });

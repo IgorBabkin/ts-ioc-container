@@ -35,8 +35,8 @@ export const setArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.
 
 export const setArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
 
-export const resolveByArgs = (s: IContainer, ...deps: unknown[]) =>
-  deps.map((d) => {
+export const resolveByArgs: ArgsFn = (s, { args = [] } = {}) =>
+  args.map((d) => {
     if (d instanceof InjectionToken) {
       return d.resolve(s);
     }

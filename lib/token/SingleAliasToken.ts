@@ -5,21 +5,26 @@ import { BindToken } from './BindToken';
 import { ArgsFn } from '../provider/IProvider';
 
 export class SingleAliasToken<T = any> extends InjectionToken<T> implements BindToken<T> {
-  private getArgsFn: ArgsFn = () => [];
-  private isLazy: boolean = false;
+  private readonly _getArgsFn: ArgsFn;
+  private readonly _isLazy: boolean;
 
-  constructor(readonly token: DependencyKey) {
+  constructor(
+    readonly token: DependencyKey,
+    { getArgsFn = () => [], isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+  ) {
     super();
+    this._getArgsFn = getArgsFn;
+    this._isLazy = isLazy;
   }
 
   select<R>(fn: (target: T) => R) {
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, { args = [], lazy = false }: ResolveOneOptions = {}): T {
+  resolve(s: IContainer, { args = [], lazy }: ResolveOneOptions = {}): T {
     return s.resolveOneByAlias(this.token, {
-      args: this.getArgsFn(s, { args }),
-      lazy: this.isLazy || lazy,
+      args: this._getArgsFn(s, { args }),
+      lazy: this._isLazy || lazy,
     });
   }
 
@@ -27,19 +32,27 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
     r.bindToAlias(this.token);
   }
 
-  args(...args: unknown[]) {
-    this.getArgsFn = () => [];
-    return this;
+  args(...newArgs: unknown[]) {
+    const parentFn = this._getArgsFn;
+    return new SingleAliasToken<T>(this.token, {
+      getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
+      isLazy: this._isLazy,
+    });
   }
 
-  argsFn(fn: ArgsFn) {
-    this.getArgsFn = fn;
-    return this;
+  argsFn(fn: (s: IContainer) => unknown[]) {
+    const parentFn = this._getArgsFn;
+    return new SingleAliasToken<T>(this.token, {
+      getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
+      isLazy: this._isLazy,
+    });
   }
 
   lazy() {
-    this.isLazy = true;
-    return this;
+    return new SingleAliasToken<T>(this.token, {
+      getArgsFn: this._getArgsFn,
+      isLazy: true,
+    });
   }
 }
 

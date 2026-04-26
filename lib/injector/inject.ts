@@ -1,5 +1,5 @@
 import { type IContainer } from '../container/IContainer';
-import { InjectionToken } from '../token/InjectionToken';
+import { InjectionToken, isInjectionToken } from '../token/InjectionToken';
 import { ConstantToken } from '../token/ConstantToken';
 import { toToken } from '../token/toToken';
 import { InjectFn } from '../hooks/hook';
@@ -34,7 +34,9 @@ export const argsFn =
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const argsTokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
   return (scope: IContainer, { args = [], lazy }: ProviderOptions): unknown[] => {
-    const depsTokens = args.map((v) => new ConstantToken(v));
+    const depsTokens = args.map((v) => {
+      return !isInjectionToken(v) ? new ConstantToken(v) : v;
+    });
     const allTokens = fillEmptyIndexes(argsTokens, depsTokens);
     return allTokens.map((fn) => fn.resolve(scope, { args, lazy }));
   };
