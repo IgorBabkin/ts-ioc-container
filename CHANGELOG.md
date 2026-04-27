@@ -1,3 +1,18 @@
+# [49.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v48.0.0...v49.0.0) (2026-04-27)
+
+
+* feat(injector)!: spread runtime args into argsFn callback ([5fbcf95](https://github.com/IgorBabkin/ts-ioc-container/commit/5fbcf95327e1fa3f8e8244616d196d4e4e044932))
+
+
+### BREAKING CHANGES
+
+* argsFn callback signature changed from
+`(args: unknown[]) => T` to `(...args: unknown[]) => T`. Update existing
+callers to take positional params, e.g. `argsFn(([t]) => ...)` becomes
+`argsFn((t) => ...)`.
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
+
 # [48.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.5.0...v48.0.0) (2026-04-27)
 
 
