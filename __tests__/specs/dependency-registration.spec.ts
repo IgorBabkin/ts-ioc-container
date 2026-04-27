@@ -21,7 +21,7 @@ describe('Spec: dependency registration', () => {
     }
 
     const container = new Container()
-      .addRegistration(R.fromClass(Repository).bindToKey('Repository'))
+      .addRegistration(R.fromClass(Repository))
       .addRegistration(R.fromValue({ env: 'test' }).bindToKey('Config'))
       .addRegistration(R.fromFn((scope) => new Service(scope.resolve('Repository'))).bindToKey('Service'))
       .addRegistration(R.fromKey<Service>('Service').bindToKey('ServiceAlias'));
@@ -39,17 +39,19 @@ describe('Spec: dependency registration', () => {
       channel: string;
     }
 
+    @register(bindTo(SingleNotifier), bindTo(NotifierGroup))
     class EmailNotifier implements Notifier {
       channel = 'email';
     }
 
+    @register(bindTo(NotifierGroup))
     class SmsNotifier implements Notifier {
       channel = 'sms';
     }
 
     const container = new Container()
-      .addRegistration(R.fromClass(EmailNotifier).bindTo('EmailNotifier').bindTo(SingleNotifier).bindTo(NotifierGroup))
-      .addRegistration(R.fromClass(SmsNotifier).bindTo('SmsNotifier').bindTo(NotifierGroup));
+      .addRegistration(R.fromClass(EmailNotifier))
+      .addRegistration(R.fromClass(SmsNotifier));
 
     expect(container.resolve<Notifier>('EmailNotifier').channel).toBe('email');
     expect(SingleNotifier.resolve(container).channel).toBe('email');

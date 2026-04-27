@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, ContainerDisposedError, Registration as R, select } from '../../lib';
+import { bindTo, Container, ContainerDisposedError, register, Registration as R, select } from '../../lib';
 
 /**
  * User Management Domain - Resource Cleanup
@@ -18,6 +18,7 @@ import { Container, ContainerDisposedError, Registration as R, select } from '..
  */
 
 // Simulates a database connection that must be closed
+@register(bindTo('IDatabase'))
 class DatabaseConnection {
   isClosed = false;
 
@@ -35,9 +36,7 @@ class DatabaseConnection {
 
 describe('Disposing', function () {
   it('should dispose container and prevent further usage', function () {
-    const appContainer = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(DatabaseConnection).bindTo('IDatabase'),
-    );
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(DatabaseConnection));
 
     // Create a request scope with a database connection
     const requestScope = appContainer.createScope({ tags: ['request'] });
@@ -60,9 +59,7 @@ describe('Disposing', function () {
   });
 
   it('should clean up request-scoped resources on request end', function () {
-    const appContainer = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(DatabaseConnection).bindTo('IDatabase'),
-    );
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(DatabaseConnection));
 
     // Simulate Express.js request lifecycle
     function handleRequest(): { connection: DatabaseConnection; scope: Container } {

@@ -1,10 +1,12 @@
 import 'reflect-metadata';
 import {
   AddOnConstructHookModule,
+  bindTo,
   Container,
   type IContainer,
   type IContainerModule,
   onConstruct,
+  register,
   Registration as R,
   singleton,
 } from '../../lib';
@@ -17,7 +19,7 @@ describe('Spec: container modules', () => {
 
     class LoggingModule implements IContainerModule {
       applyTo(container: IContainer): void {
-        container.addRegistration(R.fromClass(Logger).bindToKey('Logger'));
+        container.addRegistration(R.fromClass(Logger));
       }
     }
 
@@ -28,6 +30,7 @@ describe('Spec: container modules', () => {
   });
 
   it('composes feature and environment modules without removing earlier registrations', () => {
+    @register(bindTo('Auth'))
     class StrictAuth {
       readonly mode = 'strict';
     }
@@ -38,13 +41,13 @@ describe('Spec: container modules', () => {
 
     class AuthModule implements IContainerModule {
       applyTo(container: IContainer): void {
-        container.addRegistration(R.fromClass(StrictAuth).bindToKey('Auth'));
+        container.addRegistration(R.fromClass(StrictAuth));
       }
     }
 
     class PaymentsModule implements IContainerModule {
       applyTo(container: IContainer): void {
-        container.addRegistration(R.fromClass(PaymentsClient).bindToKey('PaymentsClient'));
+        container.addRegistration(R.fromClass(PaymentsClient));
       }
     }
 
@@ -55,6 +58,7 @@ describe('Spec: container modules', () => {
   });
 
   it('enables lifecycle behavior through modules and child scope inheritance', () => {
+    @register(singleton())
     class FeatureService {
       started = false;
 
@@ -66,9 +70,7 @@ describe('Spec: container modules', () => {
       }
     }
 
-    const app = new Container()
-      .useModule(new AddOnConstructHookModule())
-      .addRegistration(R.fromClass(FeatureService).bindToKey('FeatureService').pipe(singleton()));
+    const app = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(FeatureService));
     const request = app.createScope({ tags: ['request'] });
 
     expect(request.resolve<FeatureService>('FeatureService').started).toBe(true);

@@ -1,10 +1,12 @@
-import { Container, decorate, lazy, multiCache, Registration as R, setArgsFn, singleton } from '../../lib';
+import { Container, decorate, lazy, multiCache, register, Registration as R, setArgsFn, singleton } from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
+@register(setArgsFn((_, { args = [] } = {}) => args), singleton(() => multiCache((tenant) => tenant)))
 class TsIocBenchmarkTenantRepository {
   constructor(readonly tenant: string) {}
 }
 
+@register(lazy())
 class TsIocBenchmarkHeavyService {
   static constructed = 0;
 
@@ -17,26 +19,16 @@ class TsIocBenchmarkHeavyService {
   }
 }
 
+@register(decorate((service: TsIocBenchmarkAdminService) => Object.assign(service, { audited: true })))
 class TsIocBenchmarkAdminService {
   readonly role = 'admin';
 }
 
 const createProviderBehaviorContainer = () =>
   new Container({ tags: ['admin'] })
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkTenantRepository)
-        .bindToKey('TsIocBenchmarkTenantRepository')
-        .pipe(
-          setArgsFn((_, { args = [] } = {}) => args),
-          singleton(() => multiCache((tenant) => tenant)),
-        ),
-    )
-    .addRegistration(R.fromClass(TsIocBenchmarkHeavyService).bindToKey('TsIocBenchmarkHeavyService').pipe(lazy()))
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkAdminService)
-        .bindToKey('TsIocBenchmarkAdminService')
-        .pipe(decorate((service) => Object.assign(service, { audited: true }))),
-    );
+    .addRegistration(R.fromClass(TsIocBenchmarkTenantRepository))
+    .addRegistration(R.fromClass(TsIocBenchmarkHeavyService))
+    .addRegistration(R.fromClass(TsIocBenchmarkAdminService));
 
 export const benchmarkSpec: BenchmarkSpec = {
   prefix: 'provider-behavior.ts-ioc-container',

@@ -1,6 +1,7 @@
-import { Container, Registration as R, singleton } from '../../lib';
+import { Container, register, Registration as R, singleton } from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
+@register(singleton())
 class TsIocBenchmarkAuditLog {
   readonly events: string[] = [];
 
@@ -20,7 +21,7 @@ class TsIocBenchmarkCreateUser {
 
 const createDependencyResolutionContainer = () =>
   new Container()
-    .addRegistration(R.fromClass(TsIocBenchmarkAuditLog).bindToKey('TsIocBenchmarkAuditLog').pipe(singleton()))
+    .addRegistration(R.fromClass(TsIocBenchmarkAuditLog))
     .addRegistration(
       R.fromFn((container) => new TsIocBenchmarkCreateUser(container.resolve('TsIocBenchmarkAuditLog'))).bindToKey(
         'TsIocBenchmarkCreateUser',

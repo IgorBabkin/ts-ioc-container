@@ -136,7 +136,6 @@ When creating providers manually, you can chain multiple pipes:
 
 const container = new Container().addRegistration(
   R.fromClass(EmailService)
-    .bindToKey('EmailService')
     .pipe(
       singleton(),              // ProviderPipe - cache instance
       lazy(),                   // ProviderPipe - defer creation

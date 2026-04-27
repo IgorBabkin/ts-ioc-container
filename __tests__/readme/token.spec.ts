@@ -1,4 +1,4 @@
-import { SingleToken, Container, inject, Registration as R } from '../../lib';
+import { bindTo, SingleToken, Container, inject, register, Registration as R } from '../../lib';
 
 /**
  * User Management Domain - Type-Safe Tokens
@@ -21,6 +21,7 @@ interface ILogger {
 // Type-safe token - ensures resolved value is ILogger
 const ILoggerToken = new SingleToken<ILogger>('ILogger');
 
+@register(bindTo('ILogger'))
 class Logger implements ILogger {
   log(message: string) {
     console.log(message);
@@ -34,9 +35,7 @@ class App {
 
 describe('SingleToken', function () {
   it('should resolve dependency with type safety using SingleToken', function () {
-    const container = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(Logger).bindToKey('ILogger'),
-    );
+    const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
 
     const app = container.resolve(App);
 

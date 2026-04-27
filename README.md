@@ -125,8 +125,9 @@ container.resolve(App).start();
 
 ## Cheatsheet
 
-- Register class with key: `@register(bindTo('Key')) class Service {}`
+- Register class with key (preferred): `@register(bindTo('Key')) class Service {}` then `container.addRegistration(R.fromClass(Service))`
 - Register value: `R.fromValue(config).bindToKey('Config')`
+- Register factory: `R.fromFn((c) => createX(c)).bindToKey('X')`
 - Singleton: `@register(singleton())`
 - Scoped registration: `@register(scope((s) => s.hasTag('request')))`
 - Resolve by alias: `container.resolveByAlias('Alias')`
@@ -134,6 +135,14 @@ container.resolve(App).start();
 - Lazy token: `select.token('Service').lazy()`
 - Inject decorator: `@inject('Key')`
 - Property inject: `injectProp(target, 'propName', select.token('Key'))`
+
+> [!TIP]
+> For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
+> `R.fromClass(Class).bindToKey('Key')` chain. The decorator co-locates the binding
+> with the class and reads consistently with other registration pipes
+> (`scope`, `singleton`, `setArgsFn`, ...). Use the fluent `bindToKey` chain only
+> for `R.fromValue(...)` and `R.fromFn(...)` (which have no class to decorate)
+> or for third-party classes you don't own.
 
 ## Spec-driven workflow
 
@@ -231,7 +240,7 @@ const page = new Container({ tags: ['page'] })
 
 ```typescript
 import 'reflect-metadata';
-import { Container, type IContainer, inject, Registration as R, select } from 'ts-ioc-container';
+import { bindTo, Container, type IContainer, inject, register, Registration as R, select } from 'ts-ioc-container';
 
 /**
  * User Management Domain - Basic Dependency Injection
@@ -254,6 +263,7 @@ describe('Basic usage', function () {
   }
 
   // Concrete implementation
+  @register(bindTo('IUserRepository'))
   class UserRepository implements IUserRepository {
     private users: User[] = [{ id: '1', email: 'admin@example.com', passwordHash: 'hashed_password' }];
 
@@ -274,7 +284,7 @@ describe('Basic usage', function () {
     }
 
     // Wire up the container
-    const container = new Container().addRegistration(R.fromClass(UserRepository).bindTo('IUserRepository'));
+    const container = new Container().addRegistration(R.fromClass(UserRepository));
 
     // Resolve AuthService - UserRepository is automatically injected
     const authService = container.resolve(AuthService);
@@ -719,7 +729,7 @@ Sometimes you want to dispose a container or scope. For example, when a request,
 
 ```typescript
 import 'reflect-metadata';
-import { Container, ContainerDisposedError, Registration as R, select } from 'ts-ioc-container';
+import { bindTo, Container, ContainerDisposedError, register, Registration as R, select } from 'ts-ioc-container';
 
 /**
  * User Management Domain - Resource Cleanup
@@ -738,6 +748,7 @@ import { Container, ContainerDisposedError, Registration as R, select } from 'ts
  */
 
 // Simulates a database connection that must be closed
+@register(bindTo('IDatabase'))
 class DatabaseConnection {
   isClosed = false;
 
@@ -755,9 +766,7 @@ class DatabaseConnection {
 
 describe('Disposing', function () {
   it('should dispose container and prevent further usage', function () {
-    const appContainer = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(DatabaseConnection).bindTo('IDatabase'),
-    );
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(DatabaseConnection));
 
     // Create a request scope with a database connection
     const requestScope = appContainer.createScope({ tags: ['request'] });
@@ -780,9 +789,7 @@ describe('Disposing', function () {
   });
 
   it('should clean up request-scoped resources on request end', function () {
-    const appContainer = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(DatabaseConnection).bindTo('IDatabase'),
-    );
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(DatabaseConnection));
 
     // Simulate Express.js request lifecycle
     function handleRequest(): { connection: DatabaseConnection; scope: Container } {
@@ -1142,13 +1149,9 @@ describe('lazy registerPipe', () => {
     it('should allow selective lazy loading - email lazy, SMS eager', () => {
       const container = new Container()
         // EmailService is lazy - won't connect to SMTP until used
-        .addRegistration(
-          R.fromClass(EmailService)
-            .bindToKey('EmailService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
         // SmsService is eager - connects to gateway immediately
-        .addRegistration(R.fromClass(SmsService).bindToKey('SmsService').pipe(singleton()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
 
       // Resolve NotificationService
@@ -1165,12 +1168,8 @@ describe('lazy registerPipe', () => {
 
     it('should initialize lazy email service when first accessed', () => {
       const container = new Container()
-        .addRegistration(
-          R.fromClass(EmailService)
-            .bindToKey('EmailService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
-        .addRegistration(R.fromClass(SmsService).bindToKey('SmsService').pipe(singleton()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
 
       const notifications = container.resolve<NotificationService>(NotificationService);
@@ -1185,16 +1184,8 @@ describe('lazy registerPipe', () => {
     it('should work with multiple lazy providers', () => {
       const container = new Container()
         // Both services are lazy
-        .addRegistration(
-          R.fromClass(EmailService)
-            .bindToKey('EmailService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
-        .addRegistration(
-          R.fromClass(SmsService)
-            .bindToKey('SmsService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton(), (p) => p.lazy()))
         .addRegistration(R.fromClass(NotificationService));
 
       const notifications = container.resolve<NotificationService>(NotificationService);
@@ -1283,6 +1274,7 @@ describe('lazy registerPipe', () => {
    * lazy() works seamlessly with other provider transformations.
    */
   describe('combining with other pipes', () => {
+    @register(bindTo('Config'))
     class ConfigService {
       constructor(
         public apiUrl: string,
@@ -1295,7 +1287,6 @@ describe('lazy registerPipe', () => {
     it('should combine lazy with args and singleton', () => {
       const container = new Container().addRegistration(
         R.fromClass(ConfigService)
-          .bindToKey('Config')
           .pipe(
             (p) => p.setArgs(() => ['https://api.example.com', 5000]),
             (p) => p.lazy(),
@@ -1332,6 +1323,7 @@ describe('lazy registerPipe', () => {
    * - Report generators
    */
   describe('real-world example - feature flags', () => {
+    @register(singleton())
     class FeatureFlagService {
       constructor() {
         initLog.push('FeatureFlagService initialized');
@@ -1371,7 +1363,7 @@ describe('lazy registerPipe', () => {
 
     it('should not initialize premium features for standard users', () => {
       const container = new Container()
-        .addRegistration(R.fromClass(FeatureFlagService).bindToKey('FeatureFlagService').pipe(singleton()))
+        .addRegistration(R.fromClass(FeatureFlagService))
         .addRegistration(R.fromClass(PremiumFeature))
         .addRegistration(R.fromClass(Application));
 
@@ -1385,7 +1377,7 @@ describe('lazy registerPipe', () => {
 
     it('should initialize premium features only for premium users', () => {
       const container = new Container()
-        .addRegistration(R.fromClass(FeatureFlagService).bindToKey('FeatureFlagService').pipe(singleton()))
+        .addRegistration(R.fromClass(FeatureFlagService))
         .addRegistration(R.fromClass(PremiumFeature))
         .addRegistration(R.fromClass(Application));
 
@@ -1415,7 +1407,7 @@ This type of injector uses `@inject` decorator to mark where dependencies should
 Also you can [inject property.](#inject-property)
 
 ```typescript
-import { Container, inject, Registration as R } from 'ts-ioc-container';
+import { bindTo, Container, inject, register, Registration as R } from 'ts-ioc-container';
 
 /**
  * User Management Domain - Metadata Injection
@@ -1432,6 +1424,7 @@ import { Container, inject, Registration as R } from 'ts-ioc-container';
  * Requires: "experimentalDecorators" and "emitDecoratorMetadata" in tsconfig.
  */
 
+@register(bindTo('ILogger'))
 class Logger {
   name = 'Logger';
 }
@@ -1450,9 +1443,7 @@ class App {
 
 describe('Metadata Injector', function () {
   it('should inject dependencies using @inject decorator', function () {
-    const container = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(Logger).bindToKey('ILogger'),
-    );
+    const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
 
     // Container reads @inject metadata and resolves 'ILogger' for the logger parameter
     const app = container.resolve(App);
@@ -1468,7 +1459,7 @@ describe('Metadata Injector', function () {
 This type of injector just passes container to constructor with others arguments.
 
 ```typescript
-import { Container, type IContainer, Registration as R, SimpleInjector } from 'ts-ioc-container';
+import { bindTo, Container, type IContainer, register, Registration as R, SimpleInjector } from 'ts-ioc-container';
 
 /**
  * Command Pattern - Simple Injector
@@ -1496,6 +1487,7 @@ class CreateUserCommand implements ICommand {
   constructor(readonly username: string) {}
 }
 
+@register(bindTo('HandlerCreateUser'))
 class CreateUserHandler implements ICommandHandler {
   handle(command: CreateUserCommand): string {
     return `User ${command.username} created`;
@@ -1505,6 +1497,7 @@ class CreateUserHandler implements ICommandHandler {
 describe('SimpleInjector', function () {
   it('should inject container to allow dynamic resolution (Service Locator pattern)', function () {
     // Dispatcher needs the container to find handlers dynamically based on command type
+    @register(bindTo('Dispatcher'))
     class CommandDispatcher {
       constructor(private container: IContainer) {}
 
@@ -1517,8 +1510,8 @@ describe('SimpleInjector', function () {
     }
 
     const container = new Container({ injector: new SimpleInjector() })
-      .addRegistration(R.fromClass(CommandDispatcher).bindToKey('Dispatcher'))
-      .addRegistration(R.fromClass(CreateUserHandler).bindToKey('HandlerCreateUser'));
+      .addRegistration(R.fromClass(CommandDispatcher))
+      .addRegistration(R.fromClass(CreateUserHandler));
 
     const dispatcher = container.resolve<CommandDispatcher>('Dispatcher');
     const result = dispatcher.dispatch(new CreateUserCommand('alice'));
@@ -1539,9 +1532,7 @@ describe('SimpleInjector', function () {
       }
     }
 
-    const container = new Container({ injector: new SimpleInjector() }).addRegistration(
-      R.fromClass(WidgetFactory).bindToKey('WidgetFactory'),
-    );
+    const container = new Container({ injector: new SimpleInjector() }).addRegistration(R.fromClass(WidgetFactory));
 
     // Pass "dark" as the theme argument
     const factory = container.resolve<WidgetFactory>('WidgetFactory', { args: ['dark'] });
@@ -1560,10 +1551,11 @@ This type of injector injects dependencies as dictionary `Record<string, unknown
 - **Alias convention**: any property name containing `"alias"` (case-insensitive) is resolved via `resolveByAlias` instead of `resolve`
 
 ```typescript
-import { Container, ProxyInjector, Registration as R } from 'ts-ioc-container';
+import { bindTo, Container, ProxyInjector, register, Registration as R } from 'ts-ioc-container';
 
 describe('ProxyInjector', function () {
   it('should inject dependencies as a props object', function () {
+    @register(bindTo('logger'))
     class Logger {
       log(msg: string) {
         return `Logged: ${msg}`;
@@ -1590,9 +1582,9 @@ describe('ProxyInjector', function () {
     }
 
     const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(Logger).bindToKey('logger'))
+      .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromValue('USER:').bindToKey('prefix'))
-      .addRegistration(R.fromClass(UserController).bindToKey('UserController'));
+      .addRegistration(R.fromClass(UserController));
 
     const controller = container.resolve<UserController>('UserController');
 
@@ -1600,6 +1592,7 @@ describe('ProxyInjector', function () {
   });
 
   it('should expose runtime args through the reserved "args" property', function () {
+    @register(bindTo('database'))
     class Database {}
 
     class ReportGenerator {
@@ -1617,8 +1610,8 @@ describe('ProxyInjector', function () {
     }
 
     const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(Database).bindToKey('database'))
-      .addRegistration(R.fromClass(ReportGenerator).bindToKey('ReportGenerator'));
+      .addRegistration(R.fromClass(Database))
+      .addRegistration(R.fromClass(ReportGenerator));
 
     const generator = container.resolve<ReportGenerator>('ReportGenerator', {
       args: ['PDF'],

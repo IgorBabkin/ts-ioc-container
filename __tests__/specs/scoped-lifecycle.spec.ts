@@ -51,7 +51,7 @@ describe('Spec: scoped lifecycle', () => {
     const app = new Container({ tags: ['application'] });
     const request = app.createScope({ tags: ['request'] });
 
-    app.addRegistration(R.fromClass(RequestConfiguration).bindToKey('RequestConfiguration'));
+    app.addRegistration(R.fromClass(RequestConfiguration));
 
     expect(request.resolve<RequestConfiguration>('RequestConfiguration').baseUrl).toBe('/api');
   });
@@ -72,9 +72,7 @@ describe('Spec: scoped lifecycle', () => {
   });
 
   it('disposes a child scope without breaking the parent container', () => {
-    const app = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(RequestConfiguration).bindToKey('RequestConfiguration'),
-    );
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(RequestConfiguration));
     const request = app.createScope({ tags: ['request'] });
 
     const requestConfiguration = request.resolve<RequestConfiguration>('RequestConfiguration');

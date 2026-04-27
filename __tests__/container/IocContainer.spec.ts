@@ -89,10 +89,10 @@ describe('IocContainer', function () {
   });
 
   it('should use builder decorators', function () {
-    @register(singleton())
+    @register(bindTo('logger'), singleton())
     class Logger1 {}
 
-    const container = createContainer().addRegistration(R.fromClass(Logger1).bindToKey('logger'));
+    const container = createContainer().addRegistration(R.fromClass(Logger1));
 
     expect(container.resolve('logger')).toBe(container.resolve('logger'));
   });
@@ -275,10 +275,11 @@ describe('IocContainer', function () {
     });
 
     it('should work with class-based registrations using explicit key', () => {
+      @register(bindTo('IService'))
       class TestService {}
 
       const container = createContainer();
-      container.addRegistration(R.fromClass(TestService).bindToKey('IService'));
+      container.addRegistration(R.fromClass(TestService));
 
       expect(container.hasRegistration('IService')).toBe(true);
       expect(container.hasRegistration('TestService')).toBe(false);

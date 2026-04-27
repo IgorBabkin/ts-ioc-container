@@ -1,4 +1,4 @@
-import { Container, type IContainer, Registration as R, SimpleInjector } from '../../lib';
+import { bindTo, Container, type IContainer, register, Registration as R, SimpleInjector } from '../../lib';
 
 /**
  * Command Pattern - Simple Injector
@@ -26,6 +26,7 @@ class CreateUserCommand implements ICommand {
   constructor(readonly username: string) {}
 }
 
+@register(bindTo('HandlerCreateUser'))
 class CreateUserHandler implements ICommandHandler {
   handle(command: CreateUserCommand): string {
     return `User ${command.username} created`;
@@ -35,6 +36,7 @@ class CreateUserHandler implements ICommandHandler {
 describe('SimpleInjector', function () {
   it('should inject container to allow dynamic resolution (Service Locator pattern)', function () {
     // Dispatcher needs the container to find handlers dynamically based on command type
+    @register(bindTo('Dispatcher'))
     class CommandDispatcher {
       constructor(private container: IContainer) {}
 
@@ -47,8 +49,8 @@ describe('SimpleInjector', function () {
     }
 
     const container = new Container({ injector: new SimpleInjector() })
-      .addRegistration(R.fromClass(CommandDispatcher).bindToKey('Dispatcher'))
-      .addRegistration(R.fromClass(CreateUserHandler).bindToKey('HandlerCreateUser'));
+      .addRegistration(R.fromClass(CommandDispatcher))
+      .addRegistration(R.fromClass(CreateUserHandler));
 
     const dispatcher = container.resolve<CommandDispatcher>('Dispatcher');
     const result = dispatcher.dispatch(new CreateUserCommand('alice'));
@@ -69,9 +71,7 @@ describe('SimpleInjector', function () {
       }
     }
 
-    const container = new Container({ injector: new SimpleInjector() }).addRegistration(
-      R.fromClass(WidgetFactory).bindToKey('WidgetFactory'),
-    );
+    const container = new Container({ injector: new SimpleInjector() }).addRegistration(R.fromClass(WidgetFactory));
 
     // Pass "dark" as the theme argument
     const factory = container.resolve<WidgetFactory>('WidgetFactory', { args: ['dark'] });

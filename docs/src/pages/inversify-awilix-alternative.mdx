@@ -36,7 +36,7 @@ hooks instead of requiring every app to adopt a large object graph convention.
 <CodeBlock
   code={`const app = new Container({ tags: ['application'] })
   .addRegistration(R.fromClass(Logger).pipe(singleton()))
-  .addRegistration(R.fromClass(UserService).bindToKey('UserService'));
+  .addRegistration(R.fromClass(UserService));
 
 const request = app.createScope({ tags: ['request'] });
 const service = request.resolve<UserService>('UserService');`}

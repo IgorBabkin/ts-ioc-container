@@ -1,6 +1,7 @@
-import { Container, Registration as R, singleton } from '../../lib';
+import { Container, register, Registration as R, scope, singleton } from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
+@register(scope((container) => container.hasTag('request')), singleton())
 class TsIocBenchmarkSession {
   private userId: string | undefined;
 
@@ -19,13 +20,8 @@ class TsIocBenchmarkRequestConfiguration {
 
 const createScopedLifecycleContainer = () =>
   new Container({ tags: ['application'] })
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkSession)
-        .bindToKey('TsIocBenchmarkSession')
-        .when((container) => container.hasTag('request'))
-        .pipe(singleton()),
-    )
-    .addRegistration(R.fromClass(TsIocBenchmarkRequestConfiguration).bindToKey('TsIocBenchmarkRequestConfiguration'));
+    .addRegistration(R.fromClass(TsIocBenchmarkSession))
+    .addRegistration(R.fromClass(TsIocBenchmarkRequestConfiguration));
 
 export const benchmarkSpec: BenchmarkSpec = {
   prefix: 'scoped-lifecycle.ts-ioc-container',

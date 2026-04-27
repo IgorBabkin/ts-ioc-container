@@ -1,4 +1,4 @@
-import { Container, inject, Registration as R, SingleToken } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
 
 /**
  * Configuration - Token with Arguments
@@ -16,6 +16,7 @@ interface IApiClient {
   get(endpoint: string): string;
 }
 
+@register(bindTo('IApiClient'))
 class ApiClient implements IApiClient {
   constructor(
     public baseUrl: string,
@@ -48,7 +49,7 @@ class UserService {
 
 describe('Token Argument Binding', function () {
   it('should create different instances based on token arguments', function () {
-    const container = new Container().addRegistration(R.fromClass(ApiClient).bindToKey('IApiClient'));
+    const container = new Container().addRegistration(R.fromClass(ApiClient));
 
     const dataService = container.resolve(DataService);
     const userService = container.resolve(UserService);

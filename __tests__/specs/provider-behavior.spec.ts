@@ -5,6 +5,7 @@ import {
   DependencyNotFoundError,
   lazy,
   multiCache,
+  register,
   Registration as R,
   resolveByArgs,
   setArgs,
@@ -21,7 +22,7 @@ describe('Spec: provider behavior', () => {
     }
 
     const container = new Container()
-      .addRegistration(R.fromClass(Repository).bindToKey('Repository'))
+      .addRegistration(R.fromClass(Repository))
       .addRegistration(R.fromValue('test').bindToKey('Environment'))
       .addRegistration(R.fromFn((scope) => `${scope.resolve('Environment')}:service`).bindToKey('ServiceName'))
       .addRegistration(R.fromKey<string>('ServiceName').bindToKey('ServiceAlias'));
@@ -32,18 +33,12 @@ describe('Spec: provider behavior', () => {
   });
 
   it('caches singleton results by configured cache key', () => {
+    @register(setArgsFn((_, { args = [] } = {}) => args), singleton(() => multiCache((tenant) => tenant)))
     class TenantRepository {
       constructor(readonly tenant: string) {}
     }
 
-    const container = new Container().addRegistration(
-      R.fromClass(TenantRepository)
-        .bindToKey('TenantRepository')
-        .pipe(
-          setArgsFn((_, { args = [] } = {}) => args),
-          singleton(() => multiCache((tenant) => tenant)),
-        ),
-    );
+    const container = new Container().addRegistration(R.fromClass(TenantRepository));
 
     const firstA = container.resolve<TenantRepository>('TenantRepository', { args: ['a'] });
     const secondA = container.resolve<TenantRepository>('TenantRepository', { args: ['a'] });
@@ -55,10 +50,12 @@ describe('Spec: provider behavior', () => {
   });
 
   it('parameterizes provider resolution with static, dynamic, and token arguments', () => {
+    @register(singleton())
     class RegionConfig {
       readonly region = 'eu';
     }
 
+    @register(setArgsFn((scope) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing']))
     class Endpoint {
       constructor(
         readonly region: string,
@@ -66,6 +63,7 @@ describe('Spec: provider behavior', () => {
       ) {}
     }
 
+    @register(setArgsFn(resolveByArgs))
     class UsesTokenArg {
       constructor(readonly config: RegionConfig) {}
     }
@@ -73,13 +71,9 @@ describe('Spec: provider behavior', () => {
     const ConfigToken = new SingleToken<RegionConfig>('RegionConfig');
 
     const container = new Container()
-      .addRegistration(R.fromClass(RegionConfig).bindToKey('RegionConfig').pipe(singleton()))
-      .addRegistration(
-        R.fromClass(Endpoint)
-          .bindToKey('Endpoint')
-          .pipe(setArgsFn((scope) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing'])),
-      )
-      .addRegistration(R.fromClass(UsesTokenArg).bindToKey('UsesTokenArg').pipe(setArgsFn(resolveByArgs)));
+      .addRegistration(R.fromClass(RegionConfig))
+      .addRegistration(R.fromClass(Endpoint))
+      .addRegistration(R.fromClass(UsesTokenArg));
 
     expect(container.resolve<Endpoint>('Endpoint').region).toBe('eu');
     expect(container.resolve<Endpoint>('Endpoint').service).toBe('billing');
@@ -87,15 +81,17 @@ describe('Spec: provider behavior', () => {
       container.resolve('RegionConfig'),
     );
 
+    @register(setArgs('fixed'))
     class FixedEndpoint {
       constructor(readonly value: string) {}
     }
 
-    container.addRegistration(R.fromClass(FixedEndpoint).bindToKey('FixedEndpoint').pipe(setArgs('fixed')));
+    container.addRegistration(R.fromClass(FixedEndpoint));
     expect(container.resolve<FixedEndpoint>('FixedEndpoint', { args: ['runtime'] }).value).toBe('fixed');
   });
 
   it('delays class construction for lazy providers until first access', () => {
+    @register(lazy())
     class HeavyService {
       static constructed = 0;
 
@@ -108,7 +104,7 @@ describe('Spec: provider behavior', () => {
       }
     }
 
-    const container = new Container().addRegistration(R.fromClass(HeavyService).bindToKey('HeavyService').pipe(lazy()));
+    const container = new Container().addRegistration(R.fromClass(HeavyService));
 
     const service = container.resolve<HeavyService>('HeavyService');
 
@@ -118,18 +114,15 @@ describe('Spec: provider behavior', () => {
   });
 
   it('restricts visibility and decorates provider results through pipes', () => {
+    @register(
+      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
+      decorate((service) => Object.assign(service, { audited: true })),
+    )
     class AdminService {
       readonly role = 'admin';
     }
 
-    const app = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(AdminService)
-        .bindToKey('AdminService')
-        .pipe(
-          scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
-          decorate((service) => Object.assign(service, { audited: true })),
-        ),
-    );
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(AdminService));
 
     const adminRequest = app.createScope({ tags: ['request', 'admin'] });
     const publicRequest = app.createScope({ tags: ['request'] });

@@ -1,4 +1,4 @@
-import { Container, Registration as R, singleton, toGroupAlias, toSingleAlias } from '../../lib';
+import { bindTo, Container, register, Registration as R, singleton, toGroupAlias, toSingleAlias } from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
 const TsIocBenchmarkSingleNotifier = toSingleAlias<TsIocBenchmarkNotifier>('TsIocBenchmarkSingleNotifier');
@@ -8,6 +8,7 @@ interface TsIocBenchmarkNotifier {
   channel: string;
 }
 
+@register(singleton())
 class TsIocBenchmarkRepository {
   readonly source = 'db';
 }
@@ -16,17 +17,19 @@ class TsIocBenchmarkService {
   constructor(readonly repository: TsIocBenchmarkRepository) {}
 }
 
+@register(bindTo(TsIocBenchmarkSingleNotifier), bindTo(TsIocBenchmarkNotifierGroup))
 class TsIocBenchmarkEmailNotifier implements TsIocBenchmarkNotifier {
   readonly channel = 'email';
 }
 
+@register(bindTo(TsIocBenchmarkNotifierGroup))
 class TsIocBenchmarkSmsNotifier implements TsIocBenchmarkNotifier {
   readonly channel = 'sms';
 }
 
 const createDependencyRegistrationContainer = () =>
   new Container()
-    .addRegistration(R.fromClass(TsIocBenchmarkRepository).bindToKey('TsIocBenchmarkRepository').pipe(singleton()))
+    .addRegistration(R.fromClass(TsIocBenchmarkRepository))
     .addRegistration(R.fromValue({ env: 'benchmark' }).bindToKey('TsIocBenchmarkConfig'))
     .addRegistration(
       R.fromFn((scope) => new TsIocBenchmarkService(scope.resolve('TsIocBenchmarkRepository'))).bindToKey(
@@ -34,15 +37,8 @@ const createDependencyRegistrationContainer = () =>
       ),
     )
     .addRegistration(R.fromKey<TsIocBenchmarkService>('TsIocBenchmarkService').bindToKey('TsIocBenchmarkServiceAlias'))
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkEmailNotifier)
-        .bindTo('TsIocBenchmarkEmailNotifier')
-        .bindTo(TsIocBenchmarkSingleNotifier)
-        .bindTo(TsIocBenchmarkNotifierGroup),
-    )
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkSmsNotifier).bindTo('TsIocBenchmarkSmsNotifier').bindTo(TsIocBenchmarkNotifierGroup),
-    );
+    .addRegistration(R.fromClass(TsIocBenchmarkEmailNotifier))
+    .addRegistration(R.fromClass(TsIocBenchmarkSmsNotifier));
 
 export const benchmarkSpec: BenchmarkSpec = {
   prefix: 'dependency-registration.ts-ioc-container',

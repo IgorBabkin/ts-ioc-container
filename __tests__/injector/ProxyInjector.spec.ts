@@ -1,7 +1,8 @@
-import { Container, ProxyInjector, Registration as R } from '../../lib';
+import { bindTo, Container, ProxyInjector, register, Registration as R } from '../../lib';
 
 describe('ProxyInjector', function () {
   it('should inject dependencies as a props object', function () {
+    @register(bindTo('logger'))
     class Logger {
       log(msg: string) {
         return `Logged: ${msg}`;
@@ -28,9 +29,9 @@ describe('ProxyInjector', function () {
     }
 
     const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(Logger).bindToKey('logger'))
+      .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromValue('USER:').bindToKey('prefix'))
-      .addRegistration(R.fromClass(UserController).bindToKey('UserController'));
+      .addRegistration(R.fromClass(UserController));
 
     const controller = container.resolve<UserController>('UserController');
 
@@ -38,6 +39,7 @@ describe('ProxyInjector', function () {
   });
 
   it('should expose runtime args through the reserved "args" property', function () {
+    @register(bindTo('database'))
     class Database {}
 
     class ReportGenerator {
@@ -55,8 +57,8 @@ describe('ProxyInjector', function () {
     }
 
     const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(Database).bindToKey('database'))
-      .addRegistration(R.fromClass(ReportGenerator).bindToKey('ReportGenerator'));
+      .addRegistration(R.fromClass(Database))
+      .addRegistration(R.fromClass(ReportGenerator));
 
     const generator = container.resolve<ReportGenerator>('ReportGenerator', {
       args: ['PDF'],

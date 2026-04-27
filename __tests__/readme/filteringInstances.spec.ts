@@ -15,6 +15,7 @@ import { bindTo, Container, inject, register, Registration as R, select } from '
 @register(bindTo('ILogger'))
 class Logger {}
 
+@register(bindTo('IService'))
 class Service {}
 
 // Predicate to identify Logger instances
@@ -29,7 +30,7 @@ describe('Filtering Instances', function () {
   it('should filter instances by type predicate', function () {
     const container = new Container({ tags: ['application'] })
       .addRegistration(R.fromClass(Logger))
-      .addRegistration(R.fromClass(Service).bindToKey('IService'));
+      .addRegistration(R.fromClass(Service));
 
     // Create multiple instances of different types
     const logger1 = container.resolve('ILogger');
@@ -47,9 +48,7 @@ describe('Filtering Instances', function () {
   });
 
   it('should return empty array when no instances match predicate', function () {
-    const container = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(Service).bindToKey('IService'),
-    );
+    const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Service));
 
     container.resolve('IService');
 

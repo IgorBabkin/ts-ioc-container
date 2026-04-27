@@ -1,4 +1,4 @@
-import { Container, inject, Registration as R, SingleAliasToken, toSingleAlias } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, SingleAliasToken, toSingleAlias } from '../../lib';
 
 const ILoggerToken = new SingleAliasToken<ILogger>('ILogger');
 
@@ -6,12 +6,14 @@ interface ILogger {
   log(message: string): void;
 }
 
+@register(bindTo('ConsoleLogger'), bindTo(toSingleAlias('ILogger')))
 class ConsoleLogger implements ILogger {
   log(message: string) {
     console.log(message);
   }
 }
 
+@register(bindTo('FileLogger'), bindTo(toSingleAlias('ILogger')))
 class FileLogger implements ILogger {
   log(message: string) {
     // Write to file
@@ -29,8 +31,8 @@ class App {
 describe('SingleAliasToken', function () {
   it('should resolve single implementation by alias', function () {
     const container = new Container()
-      .addRegistration(R.fromClass(ConsoleLogger).bindToKey('ConsoleLogger').bindToAlias('ILogger'))
-      .addRegistration(R.fromClass(FileLogger).bindToKey('FileLogger').bindToAlias('ILogger'));
+      .addRegistration(R.fromClass(ConsoleLogger))
+      .addRegistration(R.fromClass(FileLogger));
 
     const app = container.resolve(App);
     app.run();

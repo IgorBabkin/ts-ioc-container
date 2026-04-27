@@ -1,10 +1,11 @@
-import { Container, inject, Registration as R, SingleToken } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
 
 interface IConfig {
   apiUrl: string;
   timeout: number;
 }
 
+@register(bindTo('IConfig'))
 class ConfigService implements IConfig {
   constructor(
     public apiUrl: string,
@@ -25,7 +26,7 @@ describe('Token Dynamic Arguments', function () {
   it('should resolve arguments dynamically', function () {
     const container = new Container()
       .addRegistration(R.fromValue('https://api.example.com').bindToKey('API_URL'))
-      .addRegistration(R.fromClass(ConfigService).bindToKey('IConfig'));
+      .addRegistration(R.fromClass(ConfigService));
 
     const app = container.resolve(App);
     expect(app.config.apiUrl).toBe('https://api.example.com');

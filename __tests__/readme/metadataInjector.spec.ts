@@ -1,4 +1,4 @@
-import { Container, inject, Registration as R } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R } from '../../lib';
 
 /**
  * User Management Domain - Metadata Injection
@@ -15,6 +15,7 @@ import { Container, inject, Registration as R } from '../../lib';
  * Requires: "experimentalDecorators" and "emitDecoratorMetadata" in tsconfig.
  */
 
+@register(bindTo('ILogger'))
 class Logger {
   name = 'Logger';
 }
@@ -33,9 +34,7 @@ class App {
 
 describe('Metadata Injector', function () {
   it('should inject dependencies using @inject decorator', function () {
-    const container = new Container({ tags: ['application'] }).addRegistration(
-      R.fromClass(Logger).bindToKey('ILogger'),
-    );
+    const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
 
     // Container reads @inject metadata and resolves 'ILogger' for the logger parameter
     const app = container.resolve(App);

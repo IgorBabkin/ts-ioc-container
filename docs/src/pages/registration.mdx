@@ -69,17 +69,18 @@ Scope match rules (`ScopeMatchRule`) control which scopes a provider is availabl
 
 Registrations support the pipeline pattern, allowing you to chain multiple transformations:
 
-<CodeBlock code={`import { args, singleton, scopeAccess } from 'ts-ioc-container';
+<CodeBlock code={`import { register, bindTo, args, singleton, scopeAccess, scope } from 'ts-ioc-container';
 
-const container = new Container()
-  .addRegistration(
-    R.fromClass(ConfigService)
-      .bindToKey('IConfig')
-      .when((s) => s.hasTag('root'))
-      .pipe(args('/config.json'))
-      .pipe(singleton())
-      .pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
-  );`} lang="typescript" />
+@register(
+  bindTo('IConfig'),
+  scope((s) => s.hasTag('root')),
+  args('/config.json'),
+  singleton(),
+  scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
+)
+class ConfigService {}
+
+const container = new Container().addRegistration(R.fromClass(ConfigService));`} lang="typescript" />
 
 <h2 id="container-modules" class="toc-link">Container Modules</h2>
 

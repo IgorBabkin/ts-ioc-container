@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, type IContainer, inject, Registration as R, select } from '../../lib';
+import { bindTo, Container, type IContainer, inject, register, Registration as R, select } from '../../lib';
 
 /**
  * User Management Domain - Basic Dependency Injection
@@ -22,6 +22,7 @@ describe('Basic usage', function () {
   }
 
   // Concrete implementation
+  @register(bindTo('IUserRepository'))
   class UserRepository implements IUserRepository {
     private users: User[] = [{ id: '1', email: 'admin@example.com', passwordHash: 'hashed_password' }];
 
@@ -42,7 +43,7 @@ describe('Basic usage', function () {
     }
 
     // Wire up the container
-    const container = new Container().addRegistration(R.fromClass(UserRepository).bindTo('IUserRepository'));
+    const container = new Container().addRegistration(R.fromClass(UserRepository));
 
     // Resolve AuthService - UserRepository is automatically injected
     const authService = container.resolve(AuthService);

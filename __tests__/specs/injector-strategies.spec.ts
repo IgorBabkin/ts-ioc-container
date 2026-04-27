@@ -2,10 +2,12 @@ import 'reflect-metadata';
 import {
   args,
   argsFn,
+  bindTo,
   Container,
   inject,
   type IInjector,
   ProxyInjector,
+  register,
   Registration as R,
   SimpleInjector,
   toGroupAlias,
@@ -27,9 +29,7 @@ describe('Spec: injector strategies', () => {
       ) {}
     }
 
-    const container = new Container()
-      .addRegistration(R.fromClass(Logger).bindToKey('Logger'))
-      .addRegistration(R.fromClass(Controller).bindToKey('Controller'));
+    const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(Controller));
 
     const controller = container.resolve<Controller>('Controller', { args: ['tenant-a'] });
 
@@ -55,8 +55,8 @@ describe('Spec: injector strategies', () => {
     }
 
     const container = new Container({ injector: new SimpleInjector() })
-      .addRegistration(R.fromClass(Logger).bindToKey('Logger'))
-      .addRegistration(R.fromClass(Service).bindToKey('Service'));
+      .addRegistration(R.fromClass(Logger))
+      .addRegistration(R.fromClass(Service));
 
     const service = container.resolve<Service>('Service', { args: ['tenant-a'] });
 
@@ -70,6 +70,9 @@ describe('Spec: injector strategies', () => {
       readonly name = 'logger';
     }
 
+    const PluginAlias = toGroupAlias<Plugin>('PluginAlias');
+
+    @register(bindTo(PluginAlias))
     class Plugin {
       readonly name = 'plugin';
     }
@@ -86,11 +89,10 @@ describe('Spec: injector strategies', () => {
       }
     }
 
-    const PluginAlias = toGroupAlias<Plugin>('PluginAlias');
     const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(Logger).bindToKey('Logger'))
-      .addRegistration(R.fromClass(Plugin).bindToKey('Plugin').bindTo(PluginAlias))
-      .addRegistration(R.fromClass(Service).bindToKey('Service'));
+      .addRegistration(R.fromClass(Logger))
+      .addRegistration(R.fromClass(Plugin))
+      .addRegistration(R.fromClass(Service));
 
     const service = container.resolve<Service>('Service', { args: ['runtime'] });
 
@@ -112,9 +114,7 @@ describe('Spec: injector strategies', () => {
       }
     }
 
-    const container = new Container({ injector: new StaticFactoryInjector() }).addRegistration(
-      R.fromClass(Service).bindToKey('Service'),
-    );
+    const container = new Container({ injector: new StaticFactoryInjector() }).addRegistration(R.fromClass(Service));
 
     const service = container.resolve<Service>('Service', { args: ['factory'] });
 

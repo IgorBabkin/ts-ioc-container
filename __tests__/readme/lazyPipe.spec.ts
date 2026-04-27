@@ -171,13 +171,9 @@ describe('lazy registerPipe', () => {
     it('should allow selective lazy loading - email lazy, SMS eager', () => {
       const container = new Container()
         // EmailService is lazy - won't connect to SMTP until used
-        .addRegistration(
-          R.fromClass(EmailService)
-            .bindToKey('EmailService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
         // SmsService is eager - connects to gateway immediately
-        .addRegistration(R.fromClass(SmsService).bindToKey('SmsService').pipe(singleton()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
 
       // Resolve NotificationService
@@ -194,12 +190,8 @@ describe('lazy registerPipe', () => {
 
     it('should initialize lazy email service when first accessed', () => {
       const container = new Container()
-        .addRegistration(
-          R.fromClass(EmailService)
-            .bindToKey('EmailService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
-        .addRegistration(R.fromClass(SmsService).bindToKey('SmsService').pipe(singleton()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
 
       const notifications = container.resolve<NotificationService>(NotificationService);
@@ -214,16 +206,8 @@ describe('lazy registerPipe', () => {
     it('should work with multiple lazy providers', () => {
       const container = new Container()
         // Both services are lazy
-        .addRegistration(
-          R.fromClass(EmailService)
-            .bindToKey('EmailService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
-        .addRegistration(
-          R.fromClass(SmsService)
-            .bindToKey('SmsService')
-            .pipe(singleton(), (p) => p.lazy()),
-        )
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton(), (p) => p.lazy()))
         .addRegistration(R.fromClass(NotificationService));
 
       const notifications = container.resolve<NotificationService>(NotificationService);
@@ -312,6 +296,7 @@ describe('lazy registerPipe', () => {
    * lazy() works seamlessly with other provider transformations.
    */
   describe('combining with other pipes', () => {
+    @register(bindTo('Config'))
     class ConfigService {
       constructor(
         public apiUrl: string,
@@ -324,7 +309,6 @@ describe('lazy registerPipe', () => {
     it('should combine lazy with args and singleton', () => {
       const container = new Container().addRegistration(
         R.fromClass(ConfigService)
-          .bindToKey('Config')
           .pipe(
             (p) => p.setArgs(() => ['https://api.example.com', 5000]),
             (p) => p.lazy(),
@@ -361,6 +345,7 @@ describe('lazy registerPipe', () => {
    * - Report generators
    */
   describe('real-world example - feature flags', () => {
+    @register(singleton())
     class FeatureFlagService {
       constructor() {
         initLog.push('FeatureFlagService initialized');
@@ -400,7 +385,7 @@ describe('lazy registerPipe', () => {
 
     it('should not initialize premium features for standard users', () => {
       const container = new Container()
-        .addRegistration(R.fromClass(FeatureFlagService).bindToKey('FeatureFlagService').pipe(singleton()))
+        .addRegistration(R.fromClass(FeatureFlagService))
         .addRegistration(R.fromClass(PremiumFeature))
         .addRegistration(R.fromClass(Application));
 
@@ -414,7 +399,7 @@ describe('lazy registerPipe', () => {
 
     it('should initialize premium features only for premium users', () => {
       const container = new Container()
-        .addRegistration(R.fromClass(FeatureFlagService).bindToKey('FeatureFlagService').pipe(singleton()))
+        .addRegistration(R.fromClass(FeatureFlagService))
         .addRegistration(R.fromClass(PremiumFeature))
         .addRegistration(R.fromClass(Application));
 

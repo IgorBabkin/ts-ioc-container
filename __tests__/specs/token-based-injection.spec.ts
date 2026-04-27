@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  bindTo,
   ClassToken,
   ConstantToken,
   Container,
@@ -7,6 +8,7 @@ import {
   GroupAliasToken,
   GroupInstanceToken,
   MethodNotImplementedError,
+  register,
   Registration as R,
   select,
   SingleAliasToken,
@@ -18,17 +20,17 @@ import { UnsupportedTokenTypeError } from '../../lib/errors/UnsupportedTokenType
 
 describe('Spec: token-based injection', () => {
   it('resolves the supported token shapes', () => {
+    @register(bindTo(toSingleAlias('SingleRepository')))
     class Repository {
       readonly name = 'repository';
     }
 
+    @register(bindTo(toGroupAlias('PluginGroup')))
     class Plugin {
       readonly name = 'plugin';
     }
 
-    const container = new Container()
-      .addRegistration(R.fromClass(Repository).bindToKey('Repository').bindToAlias('SingleRepository'))
-      .addRegistration(R.fromClass(Plugin).bindToKey('Plugin').bindToAlias('PluginGroup'));
+    const container = new Container().addRegistration(R.fromClass(Repository)).addRegistration(R.fromClass(Plugin));
 
     const repository = new SingleToken<Repository>('Repository').resolve(container);
     const classInstance = new ClassToken(Repository).resolve(container);
@@ -57,7 +59,7 @@ describe('Spec: token-based injection', () => {
 
     const token = new SingleToken<Report>('Report');
     const specialized = token.args('pdf').argsFn(() => ['tenant-a']);
-    const container = new Container().addRegistration(R.fromClass(Report).bindToKey('Report'));
+    const container = new Container().addRegistration(R.fromClass(Report));
 
     expect(specialized.resolve(container)).toMatchObject({ format: 'pdf', tenant: 'tenant-a' });
     expect(token.resolve(container)).toMatchObject({ format: undefined, tenant: undefined });
@@ -79,7 +81,7 @@ describe('Spec: token-based injection', () => {
 
     const token = new SingleToken<HeavyService>('HeavyService');
     const lazyToken = token.lazy();
-    const container = new Container().addRegistration(R.fromClass(HeavyService).bindToKey('HeavyService'));
+    const container = new Container().addRegistration(R.fromClass(HeavyService));
 
     const service = lazyToken.resolve(container);
 

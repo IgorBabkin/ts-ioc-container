@@ -40,7 +40,7 @@ describe('Spec: lifecycle hooks', () => {
     const container = new Container()
       .useModule(new AddOnConstructHookModule())
       .useModule(new AddOnDisposeHookModule())
-      .addRegistration(R.fromClass(Resource).bindToKey('Resource'));
+      .addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
 
@@ -63,8 +63,8 @@ describe('Spec: lifecycle hooks', () => {
 
     const container = new Container()
       .useModule(new AddOnConstructHookModule())
-      .addRegistration(R.fromClass(Logger).bindToKey('Logger'))
-      .addRegistration(R.fromClass(Service).bindToKey('Service'));
+      .addRegistration(R.fromClass(Logger))
+      .addRegistration(R.fromClass(Service));
 
     expect(container.resolve<Service>('Service').logger).toBeInstanceOf(Logger);
   });
@@ -91,9 +91,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const runner = new HooksRunner('workflow');
-    const container = new Container()
-      .addRegistration(R.fromClass(AuditHook).bindToKey('AuditHook'))
-      .addRegistration(R.fromClass(Worker).bindToKey('Worker'));
+    const container = new Container().addRegistration(R.fromClass(AuditHook)).addRegistration(R.fromClass(Worker));
     const worker = container.resolve<Worker>('Worker');
 
     runner.execute(worker, {
@@ -127,7 +125,7 @@ describe('Spec: lifecycle hooks', () => {
 
     const container = new Container()
       .addRegistration(R.fromValue('job').bindToKey('prefix'))
-      .addRegistration(R.fromClass(Worker).bindToKey('Worker'));
+      .addRegistration(R.fromClass(Worker));
     const worker = container.resolve<Worker>('Worker');
 
     new HooksRunner('sync').execute(worker, { scope: container });

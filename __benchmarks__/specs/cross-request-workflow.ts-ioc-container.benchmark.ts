@@ -1,4 +1,14 @@
-import { Container, FunctionToken, Registration as R, setArgsFn, singleton, toGroupAlias } from '../../lib';
+import {
+  bindTo,
+  Container,
+  FunctionToken,
+  register,
+  Registration as R,
+  scope,
+  setArgsFn,
+  singleton,
+  toGroupAlias,
+} from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
 const TsIocBenchmarkWorkflowPluginGroup = toGroupAlias<TsIocBenchmarkWorkflowPlugin>(
@@ -9,10 +19,12 @@ interface TsIocBenchmarkWorkflowPlugin {
   enrich(input: string): string;
 }
 
+@register(scope((container) => container.hasTag('request')), setArgsFn((_, { args = [] } = {}) => args), singleton())
 class TsIocBenchmarkWorkflowSession {
   constructor(readonly requestId: string) {}
 }
 
+@register(singleton())
 class TsIocBenchmarkWorkflowAuditLog {
   readonly events: string[] = [];
 
@@ -35,12 +47,14 @@ class TsIocBenchmarkWorkflowService {
   }
 }
 
+@register(bindTo(TsIocBenchmarkWorkflowPluginGroup))
 class TsIocBenchmarkWorkflowDomainPlugin implements TsIocBenchmarkWorkflowPlugin {
   enrich(input: string): string {
     return `${input}:domain`;
   }
 }
 
+@register(bindTo(TsIocBenchmarkWorkflowPluginGroup))
 class TsIocBenchmarkWorkflowAuditPlugin implements TsIocBenchmarkWorkflowPlugin {
   enrich(input: string): string {
     return `${input}:audit`;
@@ -49,28 +63,10 @@ class TsIocBenchmarkWorkflowAuditPlugin implements TsIocBenchmarkWorkflowPlugin 
 
 const createCrossRequestWorkflowContainer = () =>
   new Container({ tags: ['application'] })
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkWorkflowSession)
-        .bindToKey('TsIocBenchmarkWorkflowSession')
-        .when((container) => container.hasTag('request'))
-        .pipe(
-          setArgsFn((_, { args = [] } = {}) => args),
-          singleton(),
-        ),
-    )
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkWorkflowAuditLog).bindToKey('TsIocBenchmarkWorkflowAuditLog').pipe(singleton()),
-    )
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkWorkflowDomainPlugin)
-        .bindToKey('TsIocBenchmarkWorkflowDomainPlugin')
-        .bindTo(TsIocBenchmarkWorkflowPluginGroup),
-    )
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkWorkflowAuditPlugin)
-        .bindToKey('TsIocBenchmarkWorkflowAuditPlugin')
-        .bindTo(TsIocBenchmarkWorkflowPluginGroup),
-    )
+    .addRegistration(R.fromClass(TsIocBenchmarkWorkflowSession))
+    .addRegistration(R.fromClass(TsIocBenchmarkWorkflowAuditLog))
+    .addRegistration(R.fromClass(TsIocBenchmarkWorkflowDomainPlugin))
+    .addRegistration(R.fromClass(TsIocBenchmarkWorkflowAuditPlugin))
     .addRegistration(
       R.fromFn(
         (scope, { args = [] } = {}) =>

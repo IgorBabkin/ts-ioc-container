@@ -1,36 +1,34 @@
 import {
+  bindTo,
   ClassToken,
   ConstantToken,
   Container,
   FunctionToken,
   GroupAliasToken,
   GroupInstanceToken,
+  register,
   Registration as R,
   SingleAliasToken,
   SingleToken,
+  toGroupAlias,
+  toSingleAlias,
 } from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
+@register(bindTo(toSingleAlias('TsIocBenchmarkSingleRepository')))
 class TsIocBenchmarkTokenRepository {
   readonly name = 'repository';
 }
 
+@register(bindTo(toGroupAlias('TsIocBenchmarkTokenPluginGroup')))
 class TsIocBenchmarkTokenPlugin {
   readonly name = 'plugin';
 }
 
 const createTokenBasedInjectionContainer = () =>
   new Container()
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkTokenRepository)
-        .bindToKey('TsIocBenchmarkTokenRepository')
-        .bindToAlias('TsIocBenchmarkSingleRepository'),
-    )
-    .addRegistration(
-      R.fromClass(TsIocBenchmarkTokenPlugin)
-        .bindToKey('TsIocBenchmarkTokenPlugin')
-        .bindToAlias('TsIocBenchmarkTokenPluginGroup'),
-    );
+    .addRegistration(R.fromClass(TsIocBenchmarkTokenRepository))
+    .addRegistration(R.fromClass(TsIocBenchmarkTokenPlugin));
 
 export const benchmarkSpec: BenchmarkSpec = {
   prefix: 'token-based-injection.ts-ioc-container',

@@ -4,10 +4,12 @@ import {
   ContainerDisposedError,
   DependencyNotFoundError,
   inject,
+  register,
   Registration as R,
   singleton,
 } from '../../lib';
 
+@register(singleton())
 class AuditLog {
   readonly events: string[] = [];
 
@@ -27,9 +29,7 @@ class CreateUser {
 
 describe('Spec: dependency resolution', () => {
   it('resolves a registered key and injects it into a constructor', () => {
-    const container = new Container()
-      .addRegistration(R.fromClass(AuditLog).bindToKey('AuditLog').pipe(singleton()))
-      .addRegistration(R.fromClass(CreateUser));
+    const container = new Container().addRegistration(R.fromClass(AuditLog)).addRegistration(R.fromClass(CreateUser));
 
     const service = container.resolve<CreateUser>('CreateUser');
 
