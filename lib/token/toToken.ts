@@ -3,9 +3,10 @@ import { SingleToken } from './SingleToken';
 import { ClassToken } from './ClassToken';
 import { FunctionToken } from './FunctionToken';
 import { UnsupportedTokenTypeError } from '../errors/UnsupportedTokenTypeError';
-import { InjectionToken } from './InjectionToken';
+import { InjectionToken, isInjectionToken } from './InjectionToken';
 import { InjectFn } from '../hooks/hook';
 import { type constructor, Is } from '../utils/basic';
+import { ConstantToken } from './ConstantToken';
 
 export const toToken = <T = any>(
   token: InjectFn<T> | InjectionToken<T> | DependencyKey | constructor<T>,
@@ -28,3 +29,5 @@ export const toToken = <T = any>(
 
   throw new UnsupportedTokenTypeError(`Unknown token ${token}`);
 };
+
+export const argToToken = (v: unknown): InjectionToken<unknown> => (isInjectionToken(v) ? v : new ConstantToken(v));

@@ -1,7 +1,6 @@
 import { type IContainer } from '../container/IContainer';
-import { InjectionToken, isInjectionToken } from '../token/InjectionToken';
-import { ConstantToken } from '../token/ConstantToken';
-import { toToken } from '../token/toToken';
+import { InjectionToken } from '../token/InjectionToken';
+import { argToToken, toToken } from '../token/toToken';
 import { InjectFn } from '../hooks/hook';
 import { type constructor, Is } from '../utils/basic';
 import { getParamMeta, paramMeta } from '../metadata/parameter';
@@ -29,8 +28,6 @@ export const argsFn =
   <T>(fn: (...args: unknown[]) => T): InjectFn<T> =>
   (c, options) =>
     fn(...(options.args ?? []));
-
-const argToToken = (v: unknown): InjectionToken<unknown> => (isInjectionToken(v) ? v : new ConstantToken(v));
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const tokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
