@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import {
   bindTo,
   type constructor,
@@ -15,8 +16,8 @@ import {
 @register(singleton())
 class Logger {}
 
-describe('Singleton', function () {
-  it('should resolve the same dependency if provider registered per root', function () {
+describe('Scopes', function () {
+  it('should resolve the same instance when singleton is registered at root with matching tag', function () {
     const container = new Container({ tags: ['home'] }).addRegistration(R.fromClass(Logger));
 
     const child1 = container.createScope();
@@ -25,7 +26,7 @@ describe('Singleton', function () {
     expect(child1.resolve('logger')).toBe(child2.resolve('logger'));
   });
 
-  it('should resolve unique dependency for every registered scope', function () {
+  it('should resolve unique instance per matching scope when scope rule differs', function () {
     const container = new Container().addRegistration(R.fromClass(Logger));
 
     const home1 = container.createScope({ tags: ['home'] });
@@ -34,7 +35,7 @@ describe('Singleton', function () {
     expect(home1.resolve('logger')).not.toBe(home2.resolve('logger'));
   });
 
-  it('should resolve unique dependency if registered scope has another registered scope', function () {
+  it('should not share singleton between parent and child when both match scope rule', function () {
     const container = new Container({ tags: ['home'] }).addRegistration(R.fromClass(Logger));
 
     const child1 = container.createScope({ tags: ['home'] });
@@ -42,7 +43,7 @@ describe('Singleton', function () {
     expect(child1.resolve('logger')).not.toBe(container.resolve('logger'));
   });
 
-  it('should collect instances from all scopes', function () {
+  it('should collect instances from all child scopes', function () {
     const container = new Container().addRegistration(R.fromClass(Logger));
 
     const childScope1 = container.createScope({ tags: ['home'] });
@@ -56,24 +57,22 @@ describe('Singleton', function () {
     expect(instances).toContain(logger2);
   });
 
-  it('should be not visible from root', () => {
+  it('should not be visible from parent when scope rule excludes parent', () => {
     @register(bindTo('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
     const parent = new Container({ tags: ['root'] }).addRegistration(R.fromClass(FileLogger));
-
     const child = parent.createScope({ tags: ['child'] });
 
     expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
     expect(child.resolve('logger')).toBeInstanceOf(FileLogger);
   });
 
-  it('should register class as value and read metadata', () => {
+  it('should register a class as a value and allow reading metadata', () => {
     @register(bindTo('logger'), scope((s) => s.hasTag('child')))
     class FileLogger {}
 
     const parent = new Container({ tags: ['root'] }).addRegistration(R.fromValue(FileLogger));
-
     const child = parent.createScope({ tags: ['child'] });
 
     const LoggerClass = child.resolve<constructor<FileLogger>>('logger');
@@ -81,7 +80,7 @@ describe('Singleton', function () {
     expect(() => parent.resolve('logger')).toThrowError(DependencyNotFoundError);
   });
 
-  it('should override keys', () => {
+  it('should override the same key in different scopes', () => {
     @register(bindTo('logger'), scope((s) => s.hasTag('root')))
     class FileLogger {}
 
@@ -98,12 +97,11 @@ describe('Singleton', function () {
     expect(child.resolve('logger')).toBeInstanceOf(DbLogger);
   });
 
-  it('should add registration to children', () => {
+  it('should propagate registrations added to a child scope into its own children', () => {
     @register(bindTo('logger'), scope((s) => s.hasTag('child')))
     class DbLogger {}
 
     const parent = new Container({ tags: ['root'] });
-
     const child = parent.createScope({ tags: ['child'] }).addRegistration(R.fromClass(DbLogger));
 
     expect(child.resolve('logger')).toBeInstanceOf(DbLogger);

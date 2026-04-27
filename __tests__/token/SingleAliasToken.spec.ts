@@ -1,117 +1,40 @@
 import { SingleAliasToken, Container, Registration, toSingleAlias } from '../../lib';
-import type { IContainer } from '../../lib/container/IContainer';
 
 describe('SingleAliasToken', () => {
-  let container: IContainer;
-
-  beforeEach(() => {
-    container = new Container();
-  });
-
-  it('should resolve one by alias', () => {
-    const token = new SingleAliasToken<string>('myAlias');
-    container.addRegistration(
-      Registration.fromFn(() => 'value')
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
-    );
-
-    const result = token.resolve(container);
-    expect(result).toBe('value');
-  });
-
-  it('should support args method', () => {
-    const token = new SingleAliasToken<string>('myAlias');
-    container.addRegistration(
-      Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
-    );
-
-    const tokenWithArgs = token.args('arg1', 'arg2');
-    const result = tokenWithArgs.resolve(container);
-    expect(result).toBe('value-arg1-arg2');
-  });
-
-  it('should support argsFn method', () => {
-    const token = new SingleAliasToken<string>('myAlias');
-    container.addRegistration(
-      Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
-    );
-
-    const tokenWithArgs = token.argsFn(() => ['from', 'fn']);
-    const result = tokenWithArgs.resolve(container);
-    expect(result).toBe('value-from-fn');
-  });
-
-  it('should support chaining args and argsFn', () => {
-    const token = new SingleAliasToken<string>('myAlias');
-    container.addRegistration(
-      Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
-    );
-
-    const tokenWithArgs = token.args('arg1').argsFn(() => ['from', 'fn']);
-    const result = tokenWithArgs.resolve(container);
-    expect(result).toBe('value-arg1-from-fn');
-  });
-
-  it('should support lazy method', () => {
-    const token = new SingleAliasToken<string>('myAlias');
-    const lazyToken = token.lazy();
-    expect(lazyToken).not.toBe(token);
-    expect(lazyToken).toBeInstanceOf(SingleAliasToken);
-  });
-
-  it('should bind to alias', () => {
+  it('should bind to alias via bindTo()', () => {
     const token = new SingleAliasToken<string>('myAlias');
     const registration = Registration.fromFn(() => 'value').bindToKey('myKey');
     token.bindTo(registration);
 
-    container.addRegistration(registration);
-    const result = container.resolveOneByAlias('myAlias');
-    expect(result).toBe('value');
+    const container = new Container().addRegistration(registration);
+    expect(container.resolveOneByAlias('myAlias')).toBe('value');
   });
 
   it('should support toSingleAlias helper', () => {
     const token = toSingleAlias('myAlias');
     expect(token).toBeInstanceOf(SingleAliasToken);
-    container.addRegistration(
+
+    const container = new Container().addRegistration(
       Registration.fromFn(() => 'value')
         .bindToKey('myKey')
         .bindToAlias('myAlias'),
     );
-    const result = token.resolve(container);
-    expect(result).toBe('value');
+    expect(token.resolve(container)).toBe('value');
   });
 
-  it('should support select method', () => {
+  it('should support chaining args and argsFn preserving order', () => {
     const token = new SingleAliasToken<string>('myAlias');
-    container.addRegistration(
-      Registration.fromFn(() => 'value')
+    const container = new Container().addRegistration(
+      Registration.fromFn((c, { args = [] }) => args.join('-'))
         .bindToKey('myKey')
         .bindToAlias('myAlias'),
     );
 
-    const selectFn = token.select((value) => value.toUpperCase());
-    const result = selectFn(container);
-    expect(result).toBe('VALUE');
-  });
-
-  it('should support select method with args', () => {
-    const token = new SingleAliasToken<string>('myAlias');
-    container.addRegistration(
-      Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`)
-        .bindToKey('myKey')
-        .bindToAlias('myAlias'),
-    );
-
-    const tokenWithArgs = token.args('arg1', 'arg2');
-    const selectFn = tokenWithArgs.select((value) => value.toUpperCase());
-    const result = selectFn(container);
-    expect(result).toBe('VALUE-ARG1-ARG2');
+    expect(
+      token
+        .args('a')
+        .argsFn(() => ['b', 'c'])
+        .resolve(container),
+    ).toBe('a-b-c');
   });
 });

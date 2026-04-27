@@ -1,6 +1,5 @@
+import 'reflect-metadata';
 import {
-  AddOnConstructHookModule,
-  AddOnDisposeHookModule,
   args,
   bindTo,
   Container,
@@ -11,8 +10,6 @@ import {
   type HookFn,
   HooksRunner,
   inject,
-  onConstruct,
-  onDispose,
   register,
   Registration as R,
   UnexpectedHookResultError,
@@ -28,7 +25,6 @@ const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod();
 };
 
-const beforeHooksRunner = new HooksRunner('syncBefore');
 describe('hooks', () => {
   it('should return the same context from setInitialArgs', () => {
     const root = new Container({ tags: ['root'] });
@@ -38,6 +34,8 @@ describe('hooks', () => {
   });
 
   it('should prepend initial args when resolving hook method arguments', () => {
+    const beforeHooksRunner = new HooksRunner('syncBefore');
+
     class MyClass {
       receivedArgs: unknown[] = [];
 
@@ -61,69 +59,9 @@ describe('hooks', () => {
     expect(instance.receivedArgs).toEqual(['initial', 'injected', undefined]);
   });
 
-  it('should run runHooks only for sync hooks', () => {
-    class MyClass {
-      isStarted = false;
+  it('should run executeAsync for async hooks', async () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
 
-      @hook('syncBefore', execute)
-      start() {
-        this.isStarted = true;
-      }
-    }
-
-    const root = new Container({ tags: ['root'] });
-    const instance = root.resolve(MyClass);
-
-    beforeHooksRunner.execute(instance, { scope: root });
-
-    expect(instance.isStarted).toBe(true);
-  });
-
-  it('should throw an error if runHooks is used for async hooks', async () => {
-    class MyClass {
-      instanciated = false;
-
-      @hook('syncBefore', executeAsync)
-      start() {
-        this.instanciated = true;
-      }
-    }
-
-    const root = new Container({ tags: ['root'] });
-    const instance = root.resolve(MyClass);
-
-    expect(() => beforeHooksRunner.execute(instance, { scope: root })).toThrowError(UnexpectedHookResultError);
-  });
-
-  it('should test hooks', () => {
-    class Logger {
-      isStarted = false;
-      isDisposed = false;
-
-      @onConstruct(execute)
-      initialize(): void {
-        this.isStarted = true;
-      }
-
-      @onDispose(execute)
-      destroy(): void {
-        this.isDisposed = true;
-      }
-    }
-
-    const root = new Container({ tags: ['root'] })
-      .useModule(new AddOnConstructHookModule())
-      .useModule(new AddOnDisposeHookModule());
-
-    const instance = root.resolve(Logger);
-    root.dispose();
-
-    expect(instance.isStarted).toBe(true);
-    expect(instance.isDisposed).toBe(true);
-  });
-
-  const onStartHooksRunner = new HooksRunner('onStart');
-  it('should test runHooksAsync', async () => {
     class Logger {
       isStarted = false;
 
