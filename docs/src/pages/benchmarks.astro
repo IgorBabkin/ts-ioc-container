@@ -97,6 +97,8 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
   </article>
 
   <script>
+    import "reflect-metadata";
+
     const modules = import.meta.glob("../../../__benchmarks__/specs/*.benchmark.ts");
     const moduleByPrefix = new Map(
       Object.entries(modules).map(([path, loader]) => [
