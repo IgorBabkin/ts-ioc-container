@@ -238,6 +238,11 @@ article blockquote p:last-child {
   background: var(--bs-warning-bg-subtle);
 }
 
+.callout-recommend {
+  border-left-color: var(--bs-success);
+  background: var(--bs-success-bg-subtle);
+}
+
 /* Cards in dark theme */
 [data-bs-theme="dark"] .card {
   background-color: var(--bs-secondary-bg);

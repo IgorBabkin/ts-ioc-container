@@ -33,6 +33,14 @@ Use a small taxonomy of `InjectionToken` implementations:
 Alias tokens also implement `BindToken`, allowing registrations to bind to
 aliases through the same fluent API.
 
+> [!RECOMMEND]
+> Prefer exporting token constants as interface identifiers instead of repeating
+> raw interface-name strings at injection sites. For example, pair `ILogger`
+> with `ILoggerToken` or `ILoggerKey`, then bind and inject through that
+> constant. Keep the token beside the interface it identifies, so the
+> TypeScript type and runtime dependency key evolve together and refactors stay
+> local.
+
 > [!IMPORTANT]
 > Token classes intentionally model different resolution shapes. This keeps
 > call sites explicit about whether they expect one value, many alias values, a

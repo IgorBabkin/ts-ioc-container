@@ -26,6 +26,11 @@ While you can use plain strings or symbols as dependency keys, tokens provide ad
 - **Features**: Some tokens support additional features like argument binding and lazy loading
 - **Refactoring**: Tokens make refactoring safer by providing a single source of truth
 
+<div class="callout callout-recommend">
+  <div class="callout-title">[!RECOMMEND]</div>
+  <p>Use token constants as runtime identifiers for TypeScript interfaces. For example, pair <code>ILogger</code> with <code>ILoggerToken</code> or <code>ILoggerKey</code>, keep that token next to the interface definition, then bind and inject through the token instead of repeating <code>'ILogger'</code> string literals.</p>
+</div>
+
 <h2 id="token-hierarchy" class="toc-link">Token Hierarchy</h2>
 
 All tokens in the library extend the abstract `InjectionToken` base class, which defines the common interface for dependency resolution. The following diagram shows the inheritance hierarchy and relationships between different token types:

@@ -80,3 +80,9 @@ Acceptance criteria:
 
 Token modifier methods are intentionally immutable. Specs should preserve this
 as a product contract because tokens are commonly shared constants.
+
+Prefer token constants as interface identifiers in examples and application
+guidance. For example, pair a TypeScript interface such as `ILogger` with an
+`ILoggerToken` or `ILoggerKey` constant, keep that constant next to the
+interface definition, then bind and inject through the token instead of
+repeating raw string keys.
