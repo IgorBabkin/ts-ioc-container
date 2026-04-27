@@ -10,10 +10,6 @@ export { isNavigationGroup };
 export const navigation: NavigationItem[] = [
   { title: "Overview", href: "/ts-ioc-container/" },
   {
-    title: "Product Capabilities",
-    href: "/ts-ioc-container/product-capabilities",
-  },
-  {
     title: "Alternatives",
     children: [
       { title: "tsyringe", href: "/ts-ioc-container/tsyringe-alternative" },
@@ -23,7 +19,6 @@ export const navigation: NavigationItem[] = [
       },
     ],
   },
-  { title: "Spec-driven", href: "/ts-ioc-container/spec-driven" },
   { title: "Benchmarks", href: "/ts-ioc-container/benchmarks" },
   { title: "Dependency & Scope", href: "/ts-ioc-container/container" },
   { title: "Dependency Registration", href: "/ts-ioc-container/registration" },
