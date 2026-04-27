@@ -103,6 +103,18 @@ describe('Spec: lifecycle hooks', () => {
     expect(worker.calls).toEqual(['start']);
   });
 
+  it('runs direct disposal callbacks registered with addOnDisposeHook', () => {
+    const disposed: string[] = [];
+
+    const container = new Container({ tags: ['app'] }).addOnDisposeHook((c) => {
+      if (c.hasTag('app')) disposed.push('app');
+    });
+
+    container.dispose();
+
+    expect(disposed).toEqual(['app']);
+  });
+
   it('resolves hook method arguments and separates sync from async execution', async () => {
     class Worker {
       calls: string[] = [];

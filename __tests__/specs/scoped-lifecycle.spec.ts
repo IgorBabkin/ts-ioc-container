@@ -71,6 +71,28 @@ describe('Spec: scoped lifecycle', () => {
     expect(freshRequest.resolve('RequestId')).toBeInstanceOf(RequestId);
   });
 
+  it('adds tags dynamically and uses them for scope matching', () => {
+    @register(bindTo('FeatureService'), scope((container) => container.hasTag('feature')))
+    class FeatureService {}
+
+    const app = new Container();
+    app.addTags('feature');
+    app.addRegistration(R.fromClass(FeatureService));
+
+    expect(app.hasTag('feature')).toBe(true);
+    expect(app.resolve('FeatureService')).toBeInstanceOf(FeatureService);
+  });
+
+  it('does not include child-scope instances in the parent own tracked collection', () => {
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(RequestConfiguration));
+    const request = app.createScope({ tags: ['request'] });
+
+    const childInstance = request.resolve<RequestConfiguration>('RequestConfiguration');
+
+    expect(app.getInstances()).not.toContain(childInstance);
+    expect(request.getInstances()).toContain(childInstance);
+  });
+
   it('disposes a child scope without breaking the parent container', () => {
     const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(RequestConfiguration));
     const request = app.createScope({ tags: ['request'] });

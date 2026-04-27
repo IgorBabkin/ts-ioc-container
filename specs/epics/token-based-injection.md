@@ -73,9 +73,8 @@ Acceptance criteria:
 
 - By default, `GroupInstanceToken` cascades and collects instances from child
   scopes.
-- Calling `cascade(false)` on a token returns a new token that collects only
-  from the scope it is resolved against.
-- The original token remains unchanged after `cascade` is called.
+- Calling `cascade(false)` configures the token to collect only instances
+  tracked directly by the scope it is resolved against.
 
 ### Story: Convert user input to tokens
 

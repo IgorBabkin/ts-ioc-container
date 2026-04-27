@@ -114,6 +114,23 @@ describe('Spec: token-based injection', () => {
     ).toBe(true);
   });
 
+  it('controls instance collection scope with cascade', () => {
+    class Repo {}
+
+    const app = new Container();
+    const child = app.createScope();
+    child.resolve(Repo);
+
+    const token = new GroupInstanceToken((item) => item instanceof Repo);
+
+    expect(token.resolve(app).length).toBeGreaterThanOrEqual(1);
+
+    token.cascade(false);
+
+    expect(token.resolve(app)).toHaveLength(0);
+    expect(token.resolve(child)).toHaveLength(1);
+  });
+
   it('normalizes supported token inputs and rejects unsupported input', () => {
     class Service {}
 
