@@ -1,34 +1,17 @@
-import {
-  bindTo,
-  ClassToken,
-  ConstantToken,
-  Container,
-  FunctionToken,
-  GroupAliasToken,
-  GroupInstanceToken,
-  register,
-  Registration as R,
-  SingleAliasToken,
-  SingleToken,
-  toGroupAlias,
-  toSingleAlias,
-} from '../../lib';
+import { bindTo, Container, register, Registration as R, SingleToken } from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
-@register(bindTo(toSingleAlias('TsIocBenchmarkSingleRepository')))
+const TsIocBenchmarkTokenRepositoryToken = new SingleToken<TsIocBenchmarkTokenRepository>(
+  'TsIocBenchmarkTokenRepository',
+);
+
+@register(bindTo(TsIocBenchmarkTokenRepositoryToken))
 class TsIocBenchmarkTokenRepository {
   readonly name = 'repository';
 }
 
-@register(bindTo(toGroupAlias('TsIocBenchmarkTokenPluginGroup')))
-class TsIocBenchmarkTokenPlugin {
-  readonly name = 'plugin';
-}
-
 const createTokenBasedInjectionContainer = () =>
-  new Container()
-    .addRegistration(R.fromClass(TsIocBenchmarkTokenRepository))
-    .addRegistration(R.fromClass(TsIocBenchmarkTokenPlugin));
+  new Container().addRegistration(R.fromClass(TsIocBenchmarkTokenRepository));
 
 export const benchmarkSpec: BenchmarkSpec = {
   prefix: 'token-based-injection.ts-ioc-container',
@@ -38,14 +21,6 @@ export const benchmarkSpec: BenchmarkSpec = {
   createTask: () => () => {
     const container = createTokenBasedInjectionContainer();
 
-    new SingleToken<TsIocBenchmarkTokenRepository>('TsIocBenchmarkTokenRepository').resolve(container);
-    new ClassToken(TsIocBenchmarkTokenRepository).resolve(container);
-    new FunctionToken(
-      (scope) => scope.resolve<TsIocBenchmarkTokenRepository>('TsIocBenchmarkTokenRepository').name,
-    ).resolve(container);
-    new ConstantToken('literal').resolve(container);
-    new SingleAliasToken<TsIocBenchmarkTokenRepository>('TsIocBenchmarkSingleRepository').resolve(container);
-    new GroupAliasToken<TsIocBenchmarkTokenPlugin>('TsIocBenchmarkTokenPluginGroup').resolve(container);
-    new GroupInstanceToken((item) => item instanceof TsIocBenchmarkTokenRepository).resolve(container);
+    TsIocBenchmarkTokenRepositoryToken.resolve(container);
   },
 };

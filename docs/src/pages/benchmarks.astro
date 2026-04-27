@@ -81,10 +81,6 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
           Run benchmark
         </button>
       </form>
-
-      <div id="benchmark-status" class="benchmark-status" role="status">
-        Ready to run the selected benchmark.
-      </div>
     </section>
 
     <section aria-labelledby="benchmark-results">
@@ -95,6 +91,7 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
           <thead>
             <tr>
               <th scope="col">Spec</th>
+              <th scope="col">Status</th>
               <th scope="col">Task</th>
               <th scope="col">Ops/sec</th>
               <th scope="col">Mean</th>
@@ -104,7 +101,7 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
           </thead>
           <tbody id="benchmark-results-body">
             <tr>
-              <td colspan="6">No run yet.</td>
+              <td colspan="7">No run yet.</td>
             </tr>
           </tbody>
         </table>
@@ -162,7 +159,6 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
     const benchmarkInput = document.querySelector("#benchmark-pair");
     const durationInput = document.querySelector("#benchmark-duration");
     const runButton = document.querySelector("#benchmark-run");
-    const status = document.querySelector("#benchmark-status");
     const resultsBody = document.querySelector("#benchmark-results-body");
 
     const formatHz = (value) =>
@@ -170,15 +166,13 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
     const formatMean = (value) =>
       `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(value)} ms`;
 
-    const setStatus = (message) => {
-      status.textContent = message;
-    };
-
     const toBenchmarkFile = (prefix) => `${prefix}.benchmark.ts`;
-
-    const renderBenchmarkStatuses = (items) => {
-      setStatus(items.map((item) => `${toBenchmarkFile(item.prefix)}: ${item.state}`).join("\n"));
-    };
+    const escapeHtml = (value) =>
+      String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
 
     const readQuery = () => {
       const params = new URLSearchParams(window.location.search);
@@ -276,26 +270,34 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
       };
     };
 
-    const renderResults = (results) => {
-      const fastest = Math.max(...results.map((result) => result.hz));
+    const renderBenchmarkRows = (rows) => {
+      const doneRows = rows.filter((row) => row.result);
+      const fastest = doneRows.length > 0 ? Math.max(...doneRows.map((row) => row.result.hz)) : 0;
+      const sortedRows = [
+        ...doneRows.toSorted((a, b) => b.result.hz - a.result.hz),
+        ...rows.filter((row) => !row.result),
+      ];
 
-      resultsBody.innerHTML = results
-        .map((result) => {
-          const ratio = result.hz / fastest;
-          const relative =
-            ratio === 1
+      resultsBody.innerHTML = sortedRows
+        .map((row) => {
+          const result = row.result;
+          const ratio = result ? result.hz / fastest : 0;
+          const relative = result
+            ? ratio === 1
               ? "fastest"
-              : `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(1 / ratio)}x slower`;
+              : `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(1 / ratio)}x slower`
+            : "-";
 
           return `<tr>
             <th scope="row">
-              <div>${result.name}</div>
-              <small class="text-body-secondary">${result.prefix}</small>
+              <div>${escapeHtml(result?.name || toBenchmarkFile(row.prefix))}</div>
+              <small class="text-body-secondary">${escapeHtml(row.prefix)}</small>
             </th>
-            <td>${result.taskName}</td>
-            <td>${formatHz(result.hz)}</td>
-            <td>${formatMean(result.meanMs)}</td>
-            <td>${result.samples}</td>
+            <td>${escapeHtml(row.state)}</td>
+            <td>${escapeHtml(row.error || result?.taskName || "-")}</td>
+            <td>${result ? formatHz(result.hz) : "-"}</td>
+            <td>${result ? formatMean(result.meanMs) : "-"}</td>
+            <td>${result ? result.samples : "-"}</td>
             <td>${relative}</td>
           </tr>`;
         })
@@ -305,14 +307,14 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
     const runComparison = async () => {
       const benchmark = benchmarkByKey.get(benchmarkInput.value);
       const duration = Number(durationInput.value);
-      const benchmarkStatuses =
+      const benchmarkRows =
         benchmark?.specs.map((spec) => ({
           prefix: spec,
           state: "pending",
         })) || [];
 
       runButton.disabled = true;
-      resultsBody.innerHTML = '<tr><td colspan="6">Running...</td></tr>';
+      resultsBody.innerHTML = '<tr><td colspan="7">Preparing benchmark files...</td></tr>';
       writeQuery();
 
       try {
@@ -320,30 +322,29 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
           throw new Error("No benchmark selected.");
         }
 
-        const results = [];
-
-        renderBenchmarkStatuses(benchmarkStatuses);
+        renderBenchmarkRows(benchmarkRows);
 
         for (const [index, spec] of benchmark.specs.entries()) {
-          benchmarkStatuses[index].state = "running";
-          renderBenchmarkStatuses(benchmarkStatuses);
+          benchmarkRows[index].state = "running";
+          renderBenchmarkRows(benchmarkRows);
 
-          results.push(await measure(spec, duration));
+          const result = await measure(spec, duration);
 
-          benchmarkStatuses[index].state = "done";
-          renderBenchmarkStatuses(benchmarkStatuses);
+          benchmarkRows[index].state = "done";
+          benchmarkRows[index].result = result;
+          renderBenchmarkRows(benchmarkRows);
         }
-
-        renderResults(results);
       } catch (error) {
-        const runningStatus = benchmarkStatuses.find((item) => item.state === "running");
-        if (runningStatus) {
-          runningStatus.state = "failed";
+        const runningRow = benchmarkRows.find((item) => item.state === "running");
+        if (runningRow) {
+          runningRow.state = "failed";
+          runningRow.error = error.message;
         }
-        if (benchmarkStatuses.length > 0) {
-          renderBenchmarkStatuses(benchmarkStatuses);
+        if (benchmarkRows.length > 0) {
+          renderBenchmarkRows(benchmarkRows);
+        } else {
+          resultsBody.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
         }
-        resultsBody.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
       } finally {
         runButton.disabled = false;
       }
@@ -377,15 +378,6 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
     .benchmark-controls .btn {
       grid-column: 2;
       width: max-content;
-    }
-
-    .benchmark-status {
-      min-height: 2.5rem;
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--bs-border-color);
-      border-radius: 0.25rem;
-      background: var(--bs-tertiary-bg);
-      white-space: pre-line;
     }
 
     .benchmark-note {
