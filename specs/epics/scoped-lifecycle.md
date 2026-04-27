@@ -52,6 +52,33 @@ Acceptance criteria:
 - Disposing a child scope clears instances tracked by that child.
 - The parent container remains usable after the child scope is disposed.
 
+### Story: Add tags to a container after creation
+
+As an application developer, I can add tags to a container after it is created
+so that tag-based scope matching can be applied to containers whose tags are not
+known at construction time.
+
+Acceptance criteria:
+
+- `addTags` adds one or more tags to the container.
+- Tags added with `addTags` are visible through `hasTag`.
+- Tags added before a scoped registration is applied are considered during
+  `addRegistration` scope matching.
+- `addTags` does not remove previously added tags.
+
+### Story: Query instance collection without cascading
+
+As an application developer, I can retrieve instances tracked by the current
+scope only so that diagnostics and cleanup logic do not mix instances from
+child scopes.
+
+Acceptance criteria:
+
+- `getInstances` without arguments returns instances from the current scope and
+  all child scopes (cascade).
+- Instances created in a child scope do not appear in the parent scope's own
+  tracked collection.
+
 ## Notes
 
 Container disposal is local to the container being disposed. Child scopes should

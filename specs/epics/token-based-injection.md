@@ -63,6 +63,20 @@ Acceptance criteria:
 - `select.scope.current` resolves the current scope.
 - `select.scope.create` creates a child scope from the current scope.
 
+### Story: Control instance collection scope for GroupInstanceToken
+
+As a library user, I can configure whether a `GroupInstanceToken` collects
+instances from child scopes so that instance queries can be scoped precisely to
+the container being queried.
+
+Acceptance criteria:
+
+- By default, `GroupInstanceToken` cascades and collects instances from child
+  scopes.
+- Calling `cascade(false)` on a token returns a new token that collects only
+  from the scope it is resolved against.
+- The original token remains unchanged after `cascade` is called.
+
 ### Story: Convert user input to tokens
 
 As a library author, I can normalize supported token inputs so that public APIs

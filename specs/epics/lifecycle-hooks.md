@@ -61,6 +61,18 @@ Acceptance criteria:
 - `hasHooks` identifies whether hook metadata exists.
 - `HooksRunner` can execute only methods accepted by a predicate.
 
+### Story: Register direct disposal callbacks on a container
+
+As an application developer, I can attach disposal callbacks directly to a
+container so that cleanup logic runs when the container is disposed without
+needing a class decorated with `@onDispose`.
+
+Acceptance criteria:
+
+- `addOnDisposeHook` registers a callback that receives the disposing container.
+- The callback is invoked when the container is disposed.
+- `addOnDisposeHook` returns the container for fluent chaining.
+
 ### Story: Handle sync and async hook execution
 
 As a maintainer, I can choose synchronous or asynchronous hook execution so

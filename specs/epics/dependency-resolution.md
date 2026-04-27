@@ -47,6 +47,20 @@ Acceptance criteria:
 - Resolving from a disposed container throws `ContainerDisposedError`.
 - A disposed container cannot be reused as a resolution context.
 
+### Story: Query whether a dependency is registered
+
+As a library user, I can check whether a key is registered in a container so
+that conditional registration and guard logic can avoid unnecessary resolution
+attempts.
+
+Acceptance criteria:
+
+- `hasRegistration` returns `true` when the key has at least one visible
+  registration in the container or its parent chain.
+- `hasRegistration` returns `false` when no registration exists for that key.
+- `hasRegistration` accepts string and symbol keys.
+- `hasRegistration` returns `false` after the container is disposed.
+
 ## Notes
 
 This spec covers observable behavior only. Tests in feature folders can still
