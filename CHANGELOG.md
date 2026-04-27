@@ -1,3 +1,27 @@
+# [48.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.5.0...v48.0.0) (2026-04-27)
+
+
+* feat(injector)!: require explicit [@inject](https://github.com/inject) for every constructor param ([0a45157](https://github.com/IgorBabkin/ts-ioc-container/commit/0a451570de2834c62125676b6f4ea65fd3b76688))
+
+
+### Bug Fixes
+
+* **config:** load reflect metadata for benchmarks ([1f2d1d1](https://github.com/IgorBabkin/ts-ioc-container/commit/1f2d1d12bf8a40a4cabcfa7941b0825bbec2acb3))
+
+
+### Features
+
+* **config:** add browser benchmark specs ([af67f32](https://github.com/IgorBabkin/ts-ioc-container/commit/af67f32607c87cf1acfa0c685d3735c38b687d72))
+
+
+### BREAKING CHANGES
+
+* constructor parameters without `@inject` no longer pick up
+positional arguments — they resolve to `undefined`. `resolveByArgs` is removed
+from the public API.
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
+
 # [47.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v47.4.0...v47.5.0) (2026-04-26)
 
 
