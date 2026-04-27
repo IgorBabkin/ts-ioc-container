@@ -6,8 +6,8 @@ description: Add TypeScript dependency injection lifecycle hooks for instance in
 
 import CodeBlock from "../components/CodeBlock.astro";
 import injectPropSpecCode from "../../../__tests__/readme/injectProp.spec.ts?raw";
-import onConstructSpecCode from "../../../__tests__/hooks/OnConstruct.spec.ts?raw";
-import onDisposeSpecCode from "../../../__tests__/hooks/OnDispose.spec.ts?raw";
+import onConstructSpecCode from "../../../__tests__/readme/onConstruct.spec.ts?raw";
+import onDisposeSpecCode from "../../../__tests__/readme/onDispose.spec.ts?raw";
 import hookSpecCode from "../../../__tests__/hooks/hook.spec.ts?raw";
 import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?raw";
 
@@ -37,7 +37,7 @@ Register an onConstruct hook on your container, then decorate methods with `@onC
 <CodeBlock
   code={onConstructSpecCode}
   lang="typescript"
-  filename="__tests__/hooks/OnConstruct.spec.ts"
+  filename="__tests__/readme/onConstruct.spec.ts"
 />
 
 ### Use Cases
@@ -58,7 +58,7 @@ Register an onDispose hook on your container, then decorate methods with `@onDis
 <CodeBlock
   code={onDisposeSpecCode}
   lang="typescript"
-  filename="__tests__/hooks/OnDispose.spec.ts"
+  filename="__tests__/readme/onDispose.spec.ts"
 />
 
 ### Use Cases
