@@ -7,14 +7,18 @@ import type { BadgeConfig, SiteMetadata } from "./types";
 export const siteMetadata: SiteMetadata = {
   title: "ts-ioc-container",
   description:
-    "Fast, lightweight TypeScript dependency injection container with scoped lifecycles, decorators, tokens, hooks, lazy injection, and customizable providers.",
+    "Fast, lightweight TypeScript dependency injection container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects.",
   url: "https://igorbabkin.github.io/ts-ioc-container",
   basePath: "/ts-ioc-container",
   keywords: [
     "typescript dependency injection",
     "typescript ioc container",
     "tsyringe alternative",
+    "inversify alternative",
+    "awilix alternative",
     "dependency injection container typescript",
+    "clean dependency injection api",
+    "no global container",
     "typescript di decorators",
     "request scoped dependency injection",
     "typescript service container",

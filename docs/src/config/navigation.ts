@@ -14,6 +14,10 @@ export const navigation: NavigationItem[] = [
     title: "tsyringe Alternative",
     href: "/ts-ioc-container/tsyringe-alternative",
   },
+  {
+    title: "Inversify/Awilix Alternative",
+    href: "/ts-ioc-container/inversify-awilix-alternative",
+  },
   { title: "Spec-driven", href: "/ts-ioc-container/spec-driven" },
   { title: "Benchmarks", href: "/ts-ioc-container/benchmarks" },
   { title: "Dependency & Scope", href: "/ts-ioc-container/container" },

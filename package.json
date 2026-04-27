@@ -1,7 +1,7 @@
 {
   "name": "ts-ioc-container",
   "version": "47.5.0",
-  "description": "Fast, lightweight TypeScript dependency injection container with decorators, scoped lifecycles, tokens, hooks, lazy injection, and customizable providers.",
+  "description": "Fast, lightweight TypeScript dependency injection container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects.",
   "workspaces": [
     "docs"
   ],
@@ -28,6 +28,10 @@
     "di",
     "ioc-container",
     "tsyringe-alternative",
+    "inversify-alternative",
+    "awilix-alternative",
+    "clean-api",
+    "no-global-container",
     "scope",
     "scoped-dependencies",
     "hook",

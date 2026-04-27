@@ -8,6 +8,11 @@ export const pageHeadings: Record<string, Heading[]> = {
   "/": [
     { id: "advantages", text: "Why Use ts-ioc-container?", level: 2 },
     { id: "tsyringe-alternative", text: "tsyringe Alternative", level: 2 },
+    {
+      id: "inversify-awilix-alternative",
+      text: "Inversify and Awilix Alternative",
+      level: 2,
+    },
     { id: "quick-start", text: "Quick Start", level: 2 },
     { id: "documentation", text: "Documentation", level: 2 },
     { id: "core-architecture", text: "Core Architecture", level: 2 },
@@ -16,6 +21,11 @@ export const pageHeadings: Record<string, Heading[]> = {
   "/ts-ioc-container": [
     { id: "advantages", text: "Why Use ts-ioc-container?", level: 2 },
     { id: "tsyringe-alternative", text: "tsyringe Alternative", level: 2 },
+    {
+      id: "inversify-awilix-alternative",
+      text: "Inversify and Awilix Alternative",
+      level: 2,
+    },
     { id: "quick-start", text: "Quick Start", level: 2 },
     { id: "documentation", text: "Documentation", level: 2 },
     { id: "core-architecture", text: "Core Architecture", level: 2 },
@@ -24,6 +34,11 @@ export const pageHeadings: Record<string, Heading[]> = {
   "/ts-ioc-container/": [
     { id: "advantages", text: "Why Use ts-ioc-container?", level: 2 },
     { id: "tsyringe-alternative", text: "tsyringe Alternative", level: 2 },
+    {
+      id: "inversify-awilix-alternative",
+      text: "Inversify and Awilix Alternative",
+      level: 2,
+    },
     { id: "quick-start", text: "Quick Start", level: 2 },
     { id: "documentation", text: "Documentation", level: 2 },
     { id: "core-architecture", text: "Core Architecture", level: 2 },
@@ -49,6 +64,26 @@ export const pageHeadings: Record<string, Heading[]> = {
     {
       id: "when-tsyringe-is-enough",
       text: "When tsyringe Is Enough",
+      level: 2,
+    },
+    {
+      id: "when-ts-ioc-container-fits-better",
+      text: "When ts-ioc-container Fits Better",
+      level: 2,
+    },
+  ],
+  "/ts-ioc-container/inversify-awilix-alternative": [
+    {
+      id: "why-look-beyond-heavy-di",
+      text: "Why Look Beyond Heavy DI?",
+      level: 2,
+    },
+    { id: "cleaner-api", text: "Cleaner API", level: 2 },
+    { id: "no-global-objects", text: "No Global Objects", level: 2 },
+    { id: "feature-comparison", text: "Feature Comparison", level: 2 },
+    {
+      id: "when-inversify-or-awilix-is-enough",
+      text: "When Inversify or Awilix Is Enough",
       level: 2,
     },
     {

@@ -1,0 +1,90 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Inversify and Awilix Alternative
+description: Compare ts-ioc-container with Inversify and Awilix for TypeScript dependency injection, clean APIs, explicit scopes, custom providers, lifecycle hooks, and no global container objects
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+
+# Inversify and Awilix Alternative for TypeScript Dependency Injection
+
+`ts-ioc-container` is a thin, explicit TypeScript dependency injection container
+for teams that want richer application features without a heavy container model.
+It keeps containers local to your app boundary, avoids global container objects,
+and exposes a clean API for scopes, tokens, providers, decorators, hooks, and
+lazy dependencies.
+
+<h2 id="why-look-beyond-heavy-di" class="toc-link">
+  Why Look Beyond Heavy DI?
+</h2>
+
+Inversify and Awilix are useful when a project wants their particular container
+style and conventions. `ts-ioc-container` is designed for teams that want the DI
+surface to stay smaller: create a container, create explicit scopes, register
+dependencies, resolve them, and dispose them without making a global container
+the center of the application.
+
+<h2 id="cleaner-api" class="toc-link">
+  Cleaner API
+</h2>
+
+The core API is intentionally direct. Most workflows are expressed through a few
+concepts: `Container`, `Registration`, `Provider`, `Injector`, and typed tokens.
+Advanced behavior lives in composable provider pipes, registration pipes, and
+hooks instead of requiring every app to adopt a large object graph convention.
+
+<CodeBlock
+  code={`const app = new Container({ tags: ['application'] })
+  .addRegistration(R.fromClass(Logger).pipe(singleton()))
+  .addRegistration(R.fromClass(UserService).bindToKey('UserService'));
+
+const request = app.createScope({ tags: ['request'] });
+const service = request.resolve<UserService>('UserService');`}
+  lang="typescript"
+/>
+
+<h2 id="no-global-objects" class="toc-link">
+  No Global Objects
+</h2>
+
+The container is an object you own. Keep it at the composition root, create
+child scopes for requests or UI lifecycles, and pass the current scope through
+framework boundaries such as Express middleware, Fastify decorators, React
+Context, or SolidJS Context.
+
+This makes dependency flow explicit and testable. Tests can build isolated
+containers without resetting shared module-level state.
+
+<h2 id="feature-comparison" class="toc-link">
+  Feature Comparison
+</h2>
+
+| Need | ts-ioc-container fit |
+| ---- | -------------------- |
+| Thin runtime model | Small set of core abstractions instead of a broad container object surface |
+| Clean API | Register, scope, resolve, decorate, hook, and dispose through direct APIs |
+| No global container object | Containers and child scopes are passed explicitly through app boundaries |
+| Richer than basic DI | Scoped lifecycles, tokens, aliases, lazy dependencies, hooks, and provider pipes |
+| Framework-friendly scopes | Request, transaction, page, widget, and application scopes through tags |
+| Customization | Custom providers, custom injectors, hooks, pipes, aliases, and metadata utilities |
+| Testability | Build isolated containers per test without shared global state |
+
+<h2 id="when-inversify-or-awilix-is-enough" class="toc-link">
+  When Inversify or Awilix Is Enough
+</h2>
+
+Choose Inversify or Awilix when your team already wants their container style,
+module conventions, or registration model and the additional surface area is not
+a concern.
+
+<h2 id="when-ts-ioc-container-fits-better" class="toc-link">
+  When ts-ioc-container Fits Better
+</h2>
+
+Choose `ts-ioc-container` when you want a cleaner API than heavy DI containers,
+more application lifecycle features than minimal DI, explicit scope passing, and
+no global container object.
+
+Continue with the [Product Capabilities](/ts-ioc-container/product-capabilities)
+map, the [tsyringe alternative comparison](/ts-ioc-container/tsyringe-alternative),
+or [Dependency and Scope](/ts-ioc-container/container).

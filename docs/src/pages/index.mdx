@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/BaseLayout.astro
 title: TypeScript Dependency Injection Container
-description: Fast TypeScript IoC container with decorators, tokens, scoped lifecycles, lifecycle hooks, lazy injection, and customizable providers
+description: Fast TypeScript IoC container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects
 ---
 
 import CodeBlock from "../components/CodeBlock.astro";
@@ -17,8 +17,9 @@ keeps the API clear while supporting scoped lifecycles, decorators, typed tokens
 lazy dependencies, lifecycle hooks, provider pipelines, and custom injector
 strategies.
 
-Use it when you want tsyringe-style speed and simplicity with richer controls
-for real application architecture.
+Use it when you want tsyringe-style speed and simplicity with richer controls,
+or a thinner and cleaner API than heavier containers such as Inversify and
+Awilix.
 
 <h2 id="advantages" class="toc-link">
   Why Use ts-ioc-container?
@@ -26,6 +27,7 @@ for real application architecture.
 
 - Fast TypeScript dependency resolution with benchmark coverage against `tsyringe`
 - Clean API for registering and resolving services by class, key, token, or alias
+- No global container object; pass scopes explicitly through your app boundary
 - Tagged scopes for application, request, transaction, page, and widget lifecycles
 - Decorator support with `@register`, `@inject`, `@onConstruct`, and `@onDispose`
 - Lazy dependencies, property injection, custom hooks, and provider decoration
@@ -43,6 +45,19 @@ pluggable injector strategies.
 
 Read the [tsyringe alternative comparison](/ts-ioc-container/tsyringe-alternative)
 for the full positioning.
+
+<h2 id="inversify-awilix-alternative" class="toc-link">
+  Inversify and Awilix Alternative
+</h2>
+
+`ts-ioc-container` is intentionally thinner than Inversify-style enterprise DI
+and cleaner than container APIs that push applications toward broad global
+objects. You create containers and scopes explicitly, pass them through the
+application boundary, and compose behavior through providers, tokens, hooks, and
+pipes.
+
+Read the [Inversify and Awilix alternative comparison](/ts-ioc-container/inversify-awilix-alternative)
+for the clean API and no-global-container positioning.
 
 <h2 id="quick-start" class="toc-link">
   Quick Start
@@ -125,6 +140,7 @@ Browse the documentation chapters in the navigation menu to learn about:
 - [Overview](/ts-ioc-container/) - Core architecture and class diagrams
 - [Product Capabilities](/ts-ioc-container/product-capabilities) - Product capability map from user outcomes to specs and docs
 - [tsyringe Alternative](/ts-ioc-container/tsyringe-alternative) - Feature comparison for teams evaluating TypeScript DI libraries
+- [Inversify and Awilix Alternative](/ts-ioc-container/inversify-awilix-alternative) - Cleaner API, thinner runtime model, and no global container object
 - [Spec-driven](/ts-ioc-container/spec-driven) - Epics, use cases, acceptance tests, ADRs, and documentation workflow
 - [Dependency and Scope](/ts-ioc-container/container) - Dependency resolution, scoped lifecycle, instance tracking, and disposal
 - [Dependency Registration](/ts-ioc-container/registration) - Classes, values, factories, keys, aliases, scope rules, and modules
