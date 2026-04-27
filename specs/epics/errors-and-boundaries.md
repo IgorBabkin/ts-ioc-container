@@ -1,6 +1,6 @@
 # Epic: Errors and boundaries
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **ADR:** [ADR 0001 - Container as a linked list of scopes](../../docs/adr/0001-container-as-linked-list.md)
 - **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnexpectedHookResultError`, `UnsupportedTokenTypeError`, `EmptyContainer`
 - **Executable spec:** `__tests__/specs/errors-and-boundaries.spec.ts`

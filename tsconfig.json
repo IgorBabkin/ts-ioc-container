@@ -15,14 +15,6 @@
     "noUnusedLocals": true,
     "isolatedModules": true
   },
-  "include": [
-    "lib",
-    "__tests__",
-    "scripts"
-  ],
-  "exclude": [
-    "node_modules",
-    "cjm",
-    "esm"
-  ]
+  "include": ["lib", "__tests__", "__benchmarks__", "scripts"],
+  "exclude": ["node_modules", "cjm", "esm"]
 }

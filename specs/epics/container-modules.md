@@ -1,6 +1,6 @@
 # Epic: Container modules
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
 - **Public API:** `IContainerModule`, `Container.useModule`, `AddOnConstructHookModule`, `AddOnDisposeHookModule`
 - **Executable spec:** `__tests__/specs/container-modules.spec.ts`

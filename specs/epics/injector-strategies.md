@@ -1,6 +1,6 @@
 # Epic: Injector strategies
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **ADR:** [ADR 0002 - Pluggable injector strategies](../../docs/adr/0002-pluggable-injectors.md)
 - **Public API:** `IInjector`, `Injector`, `MetadataInjector`, `SimpleInjector`, `ProxyInjector`, `inject`, `resolveArgs`, `args`, `argsFn`
 - **Executable spec:** `__tests__/specs/injector-strategies.spec.ts`

@@ -1,6 +1,6 @@
 # Epic: Provider behavior
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **ADR:** [ADR 0004 - Pipe-based composition via ProviderPipe](../../docs/adr/0004-provider-pipe-composition.md)
 - **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `setArgs`, `setArgsFn`, `resolveByArgs`, `lazy`, `scopeAccess`, `decorate`, `ProviderPipe`
 - **Executable spec:** `__tests__/specs/provider-behavior.spec.ts`

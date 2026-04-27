@@ -242,6 +242,14 @@ export const pageHeadings: Record<string, Heading[]> = {
     { id: "limitations", text: "Limitations", level: 2 },
     { id: "alternative-approaches", text: "Alternative Approaches", level: 2 },
   ],
+  "/ts-ioc-container/errors-and-boundaries": [
+    { id: "missing-dependencies", text: "Missing Dependencies", level: 2 },
+    { id: "invalid-registrations", text: "Invalid Registrations", level: 2 },
+    { id: "disposed-containers", text: "Disposed Containers", level: 2 },
+    { id: "unsupported-operations", text: "Unsupported Operations", level: 2 },
+    { id: "empty-container", text: "Empty Container", level: 2 },
+    { id: "acceptance-coverage", text: "Acceptance Coverage", level: 2 },
+  ],
 
   "/ts-ioc-container/react": [
     { id: "overview", text: "Overview", level: 2 },

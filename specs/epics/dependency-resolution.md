@@ -4,6 +4,9 @@
 - **ADR:** [ADR 0011 - Spec-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
 - **Public API:** `Container`, `Registration`, `register`, `inject`, `resolve`
 - **Executable spec:** `__tests__/specs/dependency-resolution.spec.ts`
+- **Benchmarks:**
+  `__benchmarks__/specs/dependency-resolution.ts-ioc-container.bench.ts`,
+  `__benchmarks__/specs/dependency-resolution.tsyringe.bench.ts`
 
 ## Intent
 
@@ -25,6 +28,13 @@ Acceptance criteria:
   container context.
 - Singleton provider behavior returns the same collaborator when the same key is
   resolved repeatedly in the same scope.
+
+Benchmark coverage:
+
+- `__benchmarks__/specs/dependency-resolution.ts-ioc-container.bench.ts` and
+  `__benchmarks__/specs/dependency-resolution.tsyringe.bench.ts` measure this
+  story through equivalent public API usage, while keeping each library in its
+  own TypeScript module.
 
 ### Story: Fail clearly when dependency resolution is impossible
 

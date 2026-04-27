@@ -1,6 +1,6 @@
 # Epic: Metadata utilities
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **ADR:** [ADR 0008 - Zero runtime dependencies](../../docs/adr/0008-zero-runtime-dependencies.md)
 - **Public API:** `classMeta`, `getClassMeta`, `classLabel`, `getClassLabels`, `classTag`, `getClassTags`, `paramMeta`, `getParamMeta`, `paramLabel`, `getParamLabels`, `paramTag`, `getParamTags`, `methodMeta`, `getMethodMeta`, `methodLabel`, `getMethodLabels`, `methodTag`, `getMethodTags`, `once`, `debounce`, `throttle`, `shallowCache`, `handleError`, `handleAsyncError`
 - **Executable spec:** `__tests__/specs/metadata-utilities.spec.ts`

@@ -1,6 +1,6 @@
 # Epic: Dependency registration
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **ADR:** [ADR 0003 - Separate Provider and Registration abstractions](../../docs/adr/0003-provider-vs-registration.md)
 - **Public API:** `Registration`, `register`, `bindTo`, `scope`, `IRegistration`
 - **Executable spec:** `__tests__/specs/dependency-registration.spec.ts`
