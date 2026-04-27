@@ -1,3 +1,10 @@
+# [49.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v49.0.0...v49.1.0) (2026-04-27)
+
+
+### Features
+
+* **token:** add paired benchmark status ([b63a58a](https://github.com/IgorBabkin/ts-ioc-container/commit/b63a58ac2a2efdea5e8066d9e3b4bdfc42bcc4f5))
+
 # [49.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v48.0.0...v49.0.0) (2026-04-27)
 
 
