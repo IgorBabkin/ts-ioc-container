@@ -4,7 +4,7 @@ import "../styles/global.scss";
 import TableOfContents from "../components/TableOfContents.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import { navigation } from "../config/navigation";
+import { navigation, isNavigationGroup } from "../config/navigation";
 import { getHeadingsForPath } from "../config/headings";
 import { themeColors } from "../config/theme";
 import { siteMetadata } from "../config/site";
@@ -140,6 +140,38 @@ const jsonLd = {
         <nav class="nav flex-column p-3">
           {
             navigation.map((item) => {
+              if (isNavigationGroup(item)) {
+                const isGroupActive = item.children.some((child) => {
+                  const childPath = normalizePath(child.href);
+                  return (
+                    currentPath === childPath ||
+                    (childPath !== "/ts-ioc-container" &&
+                      Astro.url.pathname.startsWith(child.href))
+                  );
+                });
+                return (
+                  <div class="nav-group">
+                    <div class={`nav-group-label ${isGroupActive ? "text-primary fw-semibold" : "text-muted"}`}>
+                      {item.title}
+                    </div>
+                    {item.children.map((child) => {
+                      const childPath = normalizePath(child.href);
+                      const isActive =
+                        currentPath === childPath ||
+                        (childPath !== "/ts-ioc-container" &&
+                          Astro.url.pathname.startsWith(child.href));
+                      return (
+                        <a
+                          href={child.href}
+                          class={`nav-link nav-group-item ${isActive ? "active bg-primary text-white" : ""}`}
+                        >
+                          {child.title}
+                        </a>
+                      );
+                    })}
+                  </div>
+                );
+              }
               const itemPath = normalizePath(item.href);
               const isActive =
                 currentPath === itemPath ||

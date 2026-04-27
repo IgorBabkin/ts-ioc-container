@@ -8,9 +8,22 @@ export interface Heading {
   level: 2 | 3 | 4;
 }
 
-export interface NavigationItem {
+export interface NavigationLink {
   title: string;
   href: string;
+}
+
+export interface NavigationGroup {
+  title: string;
+  children: NavigationLink[];
+}
+
+export type NavigationItem = NavigationLink | NavigationGroup;
+
+export function isNavigationGroup(
+  item: NavigationItem,
+): item is NavigationGroup {
+  return "children" in item;
 }
 
 export interface BadgeConfig {
