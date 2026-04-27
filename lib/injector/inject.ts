@@ -30,12 +30,10 @@ export const argsFn =
   (c, options) =>
     fn(...(options.args ?? []));
 
-const resolveTokens = (scope: IContainer, deps: unknown[]): unknown[] =>
-  deps.map((v) => (isInjectionToken(v) ? v : new ConstantToken(v))).map((t) => t.resolve(scope));
+const argToToken = (v: unknown): InjectionToken<unknown> => (isInjectionToken(v) ? v : new ConstantToken(v));
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
-  const argsMetaTokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
-  return (scope: IContainer, { args = [], lazy }: ProviderOptions): unknown[] => {
-    return argsMetaTokens.map((fn) => fn.resolve(scope, { args: resolveTokens(scope, args), lazy }));
-  };
+  const tokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
+  return (scope: IContainer, { args = [], lazy }: ProviderOptions): unknown[] =>
+    tokens.map((fn) => fn.resolve(scope, { args: args.map(argToToken).map((t) => t.resolve(scope)), lazy }));
 };
