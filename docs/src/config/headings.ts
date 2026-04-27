@@ -6,25 +6,56 @@ import type { Heading } from "./types";
 
 export const pageHeadings: Record<string, Heading[]> = {
   "/": [
-    { id: "advantages", text: "Advantages", level: 2 },
+    { id: "advantages", text: "Why Use ts-ioc-container?", level: 2 },
+    { id: "tsyringe-alternative", text: "tsyringe Alternative", level: 2 },
     { id: "quick-start", text: "Quick Start", level: 2 },
     { id: "documentation", text: "Documentation", level: 2 },
     { id: "core-architecture", text: "Core Architecture", level: 2 },
     { id: "class-diagram", text: "Class Diagram", level: 2 },
   ],
   "/ts-ioc-container": [
-    { id: "advantages", text: "Advantages", level: 2 },
+    { id: "advantages", text: "Why Use ts-ioc-container?", level: 2 },
+    { id: "tsyringe-alternative", text: "tsyringe Alternative", level: 2 },
     { id: "quick-start", text: "Quick Start", level: 2 },
     { id: "documentation", text: "Documentation", level: 2 },
     { id: "core-architecture", text: "Core Architecture", level: 2 },
     { id: "class-diagram", text: "Class Diagram", level: 2 },
   ],
   "/ts-ioc-container/": [
-    { id: "advantages", text: "Advantages", level: 2 },
+    { id: "advantages", text: "Why Use ts-ioc-container?", level: 2 },
+    { id: "tsyringe-alternative", text: "tsyringe Alternative", level: 2 },
     { id: "quick-start", text: "Quick Start", level: 2 },
     { id: "documentation", text: "Documentation", level: 2 },
     { id: "core-architecture", text: "Core Architecture", level: 2 },
     { id: "class-diagram", text: "Class Diagram", level: 2 },
+  ],
+  "/ts-ioc-container/product-capabilities": [
+    { id: "capability-map", text: "Capability Map", level: 2 },
+    { id: "reading-path", text: "Reading Path", level: 2 },
+    { id: "traceability-model", text: "Traceability Model", level: 2 },
+    { id: "status", text: "Status", level: 2 },
+  ],
+  "/ts-ioc-container/tsyringe-alternative": [
+    {
+      id: "why-look-beyond-tsyringe",
+      text: "Why Look Beyond tsyringe?",
+      level: 2,
+    },
+    { id: "feature-comparison", text: "Feature Comparison", level: 2 },
+    { id: "scoped-lifecycles", text: "Scoped Lifecycles", level: 2 },
+    { id: "custom-providers", text: "Custom Providers", level: 2 },
+    { id: "tokens-and-aliases", text: "Tokens and Aliases", level: 2 },
+    { id: "hooks-and-disposal", text: "Hooks and Disposal", level: 2 },
+    {
+      id: "when-tsyringe-is-enough",
+      text: "When tsyringe Is Enough",
+      level: 2,
+    },
+    {
+      id: "when-ts-ioc-container-fits-better",
+      text: "When ts-ioc-container Fits Better",
+      level: 2,
+    },
   ],
   "/ts-ioc-container/spec-driven": [
     { id: "artifact-map", text: "Artifact Map", level: 2 },

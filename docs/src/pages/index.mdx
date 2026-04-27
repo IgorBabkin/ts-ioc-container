@@ -1,37 +1,54 @@
 ---
 layout: ../layouts/BaseLayout.astro
-title: Overview
-description: Overview - Core architecture and class diagrams of the IoC container
+title: TypeScript Dependency Injection Container
+description: Fast TypeScript IoC container with decorators, tokens, scoped lifecycles, lifecycle hooks, lazy injection, and customizable providers
 ---
 
+import CodeBlock from "../components/CodeBlock.astro";
+import architectureDiagram from "@assets/diagrams/architecture-overview.mermaid?raw";
+import classDiagram from "@assets/diagrams/class-diagram.mermaid?raw";
+import basicSpecCode from "../../../__tests__/readme/basic.spec.ts?raw";
 
+# TypeScript Dependency Injection Container
 
-import CodeBlock from '../components/CodeBlock.astro';
-import architectureDiagram from '@assets/diagrams/architecture-overview.mermaid?raw';
-import classDiagram from '@assets/diagrams/class-diagram.mermaid?raw';
-import basicSpecCode from '../../../__tests__/readme/basic.spec.ts?raw';
+`ts-ioc-container` is a fast, lightweight TypeScript dependency injection
+container for applications that need more than basic constructor injection. It
+keeps the API clear while supporting scoped lifecycles, decorators, typed tokens,
+lazy dependencies, lifecycle hooks, provider pipelines, and custom injector
+strategies.
 
-# TypeScript IoC Container
+Use it when you want tsyringe-style speed and simplicity with richer controls
+for real application architecture.
 
-<h2 id="advantages" class="toc-link">Advantages</h2>
+<h2 id="advantages" class="toc-link">
+  Why Use ts-ioc-container?
+</h2>
 
-- battle tested 💥
-- written on `typescript`
-- simple and lightweight ❤️
-- clean API 💚
-- supports `tagged scopes`
-- fully test covered 💯
-- can be used with decorators `@inject`
-- can inject properties
-- can inject lazy dependencies
-- composable and open to extend
+- Fast TypeScript dependency resolution with benchmark coverage against `tsyringe`
+- Clean API for registering and resolving services by class, key, token, or alias
+- Tagged scopes for application, request, transaction, page, and widget lifecycles
+- Decorator support with `@register`, `@inject`, `@onConstruct`, and `@onDispose`
+- Lazy dependencies, property injection, custom hooks, and provider decoration
+- Composable provider and registration pipes for project-specific behavior
+- Spec-driven documentation backed by executable acceptance tests
 
-<h2 id="quick-start" class="toc-link">Quick Start</h2>
+<h2 id="tsyringe-alternative" class="toc-link">
+  tsyringe Alternative
+</h2>
 
-<CodeBlock
-  code="npm install ts-ioc-container reflect-metadata"
-  lang="bash"
-/>
+`ts-ioc-container` is a practical `tsyringe` alternative when you want the same
+kind of lightweight TypeScript DI experience, but also need request scopes,
+custom providers, explicit tokens, grouped aliases, lifecycle cleanup, and
+pluggable injector strategies.
+
+Read the [tsyringe alternative comparison](/ts-ioc-container/tsyringe-alternative)
+for the full positioning.
+
+<h2 id="quick-start" class="toc-link">
+  Quick Start
+</h2>
+
+<CodeBlock code="npm install ts-ioc-container reflect-metadata" lang="bash" />
 
 <CodeBlock code="yarn add ts-ioc-container reflect-metadata" lang="bash" />
 
@@ -40,6 +57,7 @@ Put this in your entrypoint file (should be the first line):
 <CodeBlock code="import 'reflect-metadata';" lang="typescript" />
 
 Configure `tsconfig.json`:
+
 <CodeBlock
   code={`{
     "compilerOptions": {
@@ -98,20 +116,29 @@ app.post('/login', (req, res) => {
   filename="Express.js integration"
 />
 
-<h2 id="documentation" class="toc-link">Documentation</h2>
+<h2 id="documentation" class="toc-link">
+  Documentation
+</h2>
 
 Browse the documentation chapters in the navigation menu to learn about:
 
 - [Overview](/ts-ioc-container/) - Core architecture and class diagrams
+- [Product Capabilities](/ts-ioc-container/product-capabilities) - Product capability map from user outcomes to specs and docs
+- [tsyringe Alternative](/ts-ioc-container/tsyringe-alternative) - Feature comparison for teams evaluating TypeScript DI libraries
 - [Spec-driven](/ts-ioc-container/spec-driven) - Epics, use cases, acceptance tests, ADRs, and documentation workflow
-- [Container](/ts-ioc-container/container) - Core container functionality, scopes, and instance management
-- [Registration](/ts-ioc-container/registration) - Registering providers with keys and scopes
-- [Provider](/ts-ioc-container/provider) - Dependency factories with singleton, args, setArgs, visibility, alias, and decorator features
-- [Injector](/ts-ioc-container/injector) - Different injection strategies (Metadata, Simple, Proxy)
-- [Token](/ts-ioc-container/token) - Token types for dependency keys (InjectionToken, SingleToken, GroupAliasToken, etc.)
-- [Hooks](/ts-ioc-container/hooks) - Lifecycle hooks for instance initialization and cleanup (onConstruct, onDispose)
+- [Dependency and Scope](/ts-ioc-container/container) - Dependency resolution, scoped lifecycle, instance tracking, and disposal
+- [Dependency Registration](/ts-ioc-container/registration) - Classes, values, factories, keys, aliases, scope rules, and modules
+- [Provider Behavior](/ts-ioc-container/provider) - Dependency factories with singleton, args, visibility, decoration, and lazy behavior
+- [Pipes](/ts-ioc-container/pipes) - Provider and registration behavior composition
+- [Token-Based Injection](/ts-ioc-container/token) - Explicit token shapes for keys, aliases, classes, functions, constants, and instances
+- [Injector Strategies](/ts-ioc-container/injector) - Metadata, Simple, Proxy, and custom construction strategies
+- [Lifecycle Hooks](/ts-ioc-container/hooks) - Initialization, cleanup, property injection, custom hooks, and hook execution rules
+- [Metadata Utilities](/ts-ioc-container/metadata) - Class, parameter, method, label, tag, and method behavior decorators
+- [Errors and Boundaries](/ts-ioc-container/errors-and-boundaries) - Missing dependencies, invalid registrations, disposed scopes, unsupported tokens, hooks, and EmptyContainer behavior
 
-<h2 id="core-architecture" class="toc-link">Core Architecture</h2>
+<h2 id="core-architecture" class="toc-link">
+  Core Architecture
+</h2>
 
 This chapter provides an overview of the core architecture and design of the TypeScript IoC container library. Understanding these concepts will help you make the most of the library's features.
 
@@ -122,7 +149,9 @@ The IoC container is built on four fundamental abstractions that work together t
     <div class="card h-100">
       <div class="card-body">
         <h5 class="card-title">Container</h5>
-        <p class="card-text">Manages the lifecycle and resolution of dependencies</p>
+        <p class="card-text">
+          Manages the lifecycle and resolution of dependencies
+        </p>
       </div>
     </div>
   </div>
@@ -138,7 +167,9 @@ The IoC container is built on four fundamental abstractions that work together t
     <div class="card h-100">
       <div class="card-body">
         <h5 class="card-title">Injector</h5>
-        <p class="card-text">Determines how dependencies are injected into constructors</p>
+        <p class="card-text">
+          Determines how dependencies are injected into constructors
+        </p>
       </div>
     </div>
   </div>
@@ -146,7 +177,9 @@ The IoC container is built on four fundamental abstractions that work together t
     <div class="card h-100">
       <div class="card-body">
         <h5 class="card-title">Registration</h5>
-        <p class="card-text">Connects providers to containers with keys and configuration</p>
+        <p class="card-text">
+          Connects providers to containers with keys and configuration
+        </p>
       </div>
     </div>
   </div>
@@ -158,7 +191,9 @@ The IoC container is built on four fundamental abstractions that work together t
   <div class="mermaid" set:html={architectureDiagram} />
 </div>
 
-<h2 id="class-diagram" class="toc-link">Class Diagram</h2>
+<h2 id="class-diagram" class="toc-link">
+  Class Diagram
+</h2>
 
 The following diagram shows the main classes and interfaces and their relationships:
 

@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/BaseLayout.astro
-title: Express.js
-description: Express.js integration - Using ts-ioc-container with Express.js applications
+title: TypeScript Dependency Injection with Express.js
+description: Use ts-ioc-container with Express.js for TypeScript dependency injection, request-scoped containers, cleanup, and service resolution
 ---
 
 import CodeBlock from "../components/CodeBlock.astro";
@@ -826,4 +826,3 @@ function withDeps<TDeps>(
   handler: (req, res, services) => Promise<void>
 ): RequestHandler
 ```
-

@@ -7,16 +7,17 @@ import Footer from "../components/Footer.astro";
 import { navigation } from "../config/navigation";
 import { getHeadingsForPath } from "../config/headings";
 import { themeColors } from "../config/theme";
+import { siteMetadata } from "../config/site";
 
 interface Props {
   title: string;
   description?: string;
 }
 
-const {
-  title,
-  description = "TypeScript IoC (Inversion Of Control) container library",
-} = Astro.props;
+const frontmatter = Astro.props.frontmatter ?? {};
+const title = Astro.props.title ?? frontmatter.title ?? siteMetadata.title;
+const description =
+  Astro.props.description ?? frontmatter.description ?? siteMetadata.description;
 
 // Get headings for current page
 const headingsArray = getHeadingsForPath(Astro.url.pathname);
@@ -24,6 +25,50 @@ const headingsArray = getHeadingsForPath(Astro.url.pathname);
 // Normalize pathnames for comparison
 const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
 const currentPath = normalizePath(Astro.url.pathname);
+const canonicalUrl = new URL(Astro.url.pathname, siteMetadata.url).toString();
+const fullTitle =
+  title === siteMetadata.title ? siteMetadata.title : `${title} | ${siteMetadata.title}`;
+const keywords = siteMetadata.keywords.join(", ");
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareSourceCode",
+      name: siteMetadata.title,
+      description: siteMetadata.description,
+      codeRepository: siteMetadata.repository.github,
+      programmingLanguage: "TypeScript",
+      license: siteMetadata.license.url,
+      url: siteMetadata.url,
+      keywords: siteMetadata.keywords,
+      author: {
+        "@type": "Person",
+        name: siteMetadata.author,
+      },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: siteMetadata.title,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Any",
+      description: siteMetadata.description,
+      url: siteMetadata.url,
+      downloadUrl: siteMetadata.repository.npm,
+    },
+    {
+      "@type": "TechArticle",
+      headline: title,
+      description,
+      url: canonicalUrl,
+      mainEntityOfPage: canonicalUrl,
+      about: siteMetadata.keywords,
+      author: {
+        "@type": "Person",
+        name: siteMetadata.author,
+      },
+    },
+  ],
+};
 ---
 
 <!doctype html>
@@ -31,10 +76,22 @@ const currentPath = normalizePath(Astro.url.pathname);
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="robots" content="index, follow" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/svg+xml" href={`${siteMetadata.basePath}/favicon.svg`} />
     <meta name="generator" content={Astro.generator} />
-    <title>{title} | ts-ioc-container</title>
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content={siteMetadata.title} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <title>{fullTitle}</title>
 
     <style
       is:inline

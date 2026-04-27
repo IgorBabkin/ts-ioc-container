@@ -23,6 +23,9 @@ export interface BadgeConfig {
 export interface SiteMetadata {
   title: string;
   description: string;
+  url: string;
+  basePath: string;
+  keywords: string[];
   author: string;
   license: {
     name: string;

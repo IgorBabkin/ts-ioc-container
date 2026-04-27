@@ -1,4 +1,4 @@
-# Typescript IoC (Inversion Of Control) container
+# TypeScript Dependency Injection Container
 
 ![NPM version:latest](https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square)
 ![npm downloads](https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square)
@@ -7,18 +7,26 @@
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 [![semantic-release](https://img.shields.io/badge/%20%20%20FLO%20-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
+`ts-ioc-container` is a fast, lightweight TypeScript dependency injection
+container for applications that need more than basic constructor injection:
+scoped lifecycles, decorators, typed tokens, lazy dependencies, lifecycle hooks,
+provider pipelines, aliases, and custom injector strategies.
+
+Use it as a `tsyringe` alternative when you want a clear API with more flexible
+customization for real application architecture.
+
 ## Advantages
 
-- battle tested :boom:
-- written on `typescript`
-- simple and lightweight :heart:
-- clean API :green_heart:
-- supports `tagged scopes`
-- fully test covered :100:
-- can be used with decorators `@inject`
+- fast TypeScript dependency resolution
+- lightweight and dependency-minimal
+- clean API for classes, keys, tokens, aliases, and scopes
+- supports tagged application, request, transaction, page, and widget scopes
+- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onDispose`
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
-- composable and open to extend
+- composable provider and registration pipelines
+- custom injectors, hooks, and provider behavior
+- product behavior covered by executable specs
 
 ## Content
 
@@ -26,6 +34,9 @@
 - [Quickstart](#quickstart)
 - [Cheatsheet](#cheatsheet)
 - [Spec-driven workflow](#spec-driven-workflow)
+  - [Product capability map](#product-capability-map)
+  - [Acceptance specs](#acceptance-specs)
+- [tsyringe alternative](https://igorbabkin.github.io/ts-ioc-container/tsyringe-alternative)
 - [Recipes](#recipes)
 - [Container](#container)
   - [Basic usage](#basic-usage)
@@ -122,10 +133,12 @@ container.resolve(App).start();
 
 ## Spec-driven workflow
 
-Public behavior is described before it is implemented:
+Public behavior is described as product capabilities before it is implemented.
+The repository keeps the same chain visible in specs, tests, docs, and this
+README:
 
 ```text
-ADR -> spec -> acceptance test -> implementation -> executable docs example
+Business capability -> user story -> acceptance criteria -> executable spec test -> docs and ADRs
 ```
 
 - ADRs in `docs/adr/` explain durable architecture and process decisions.
@@ -133,7 +146,26 @@ ADR -> spec -> acceptance test -> implementation -> executable docs example
 - Acceptance tests in `__tests__/specs/` execute the public contract.
 - README examples in `__tests__/readme/` stay executable and are rendered from `.readme.hbs.md`.
 
-Use `pnpm run test:spec` to run only the executable acceptance specs.
+### Product capability map
+
+| Capability              | User outcome                                                               | Spec                                     | Acceptance test                                   |
+| ----------------------- | -------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------- |
+| Dependency resolution   | Resolve dependencies by key, class, token, or constructor injection.       | `specs/epics/dependency-resolution.md`   | `__tests__/specs/dependency-resolution.spec.ts`   |
+| Scoped lifecycle        | Isolate application, request, transaction, page, or widget lifecycles.     | `specs/epics/scoped-lifecycle.md`        | `__tests__/specs/scoped-lifecycle.spec.ts`        |
+| Dependency registration | Describe classes, values, factories, keys, aliases, and scoped services.   | `specs/epics/dependency-registration.md` | `__tests__/specs/dependency-registration.spec.ts` |
+| Provider behavior       | Cache, decorate, delay, restrict, or parameterize dependency creation.     | `specs/epics/provider-behavior.md`       | `__tests__/specs/provider-behavior.spec.ts`       |
+| Token-based injection   | Make dependency requests explicit, typed, reusable, and composable.        | `specs/epics/token-based-injection.md`   | `__tests__/specs/token-based-injection.spec.ts`   |
+| Injector strategies     | Support metadata, simple container, proxy, and custom injection styles.    | `specs/epics/injector-strategies.md`     | `__tests__/specs/injector-strategies.spec.ts`     |
+| Lifecycle hooks         | Run initialization, cleanup, property injection, and custom hook behavior. | `specs/epics/lifecycle-hooks.md`         | `__tests__/specs/lifecycle-hooks.spec.ts`         |
+| Container modules       | Package container configuration by feature, environment, or lifecycle.     | `specs/epics/container-modules.md`       | `__tests__/specs/container-modules.spec.ts`       |
+| Metadata utilities      | Attach labels, tags, and reusable method behavior to application code.     | `specs/epics/metadata-utilities.md`      | `__tests__/specs/metadata-utilities.spec.ts`      |
+| Errors and boundaries   | Make misconfiguration and unsupported usage diagnosable.                   | `specs/epics/errors-and-boundaries.md`   | `__tests__/specs/errors-and-boundaries.spec.ts`   |
+
+### Acceptance specs
+
+Use `pnpm run test:spec` to run only the executable acceptance specs. These
+tests are intentionally product-facing; lower-level regression and implementation
+tests stay in the feature folders under `__tests__/`.
 
 ## Recipes
 
@@ -2882,6 +2914,10 @@ describe('inject property', () => {
 ```
 
 ## Error
+
+The product-facing error contract is described in
+`specs/epics/errors-and-boundaries.md` and executed by
+`__tests__/specs/errors-and-boundaries.spec.ts`.
 
 - [DependencyNotFoundError.ts](..%2F..%2Flib%2Ferrors%2FDependencyNotFoundError.ts)
 - [MethodNotImplementedError.ts](..%2F..%2Flib%2Ferrors%2FMethodNotImplementedError.ts)

@@ -1,0 +1,104 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: tsyringe Alternative
+description: Compare ts-ioc-container with tsyringe for TypeScript dependency injection, scoped lifecycles, custom providers, tokens, hooks, and flexible injector strategies
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+
+# tsyringe Alternative for TypeScript Dependency Injection
+
+`ts-ioc-container` is a fast, lightweight TypeScript dependency injection
+container for teams that like the simplicity of decorator-based DI but need more
+control over scopes, providers, tokens, lifecycle hooks, and custom injection
+strategies.
+
+<h2 id="why-look-beyond-tsyringe" class="toc-link">
+  Why Look Beyond tsyringe?
+</h2>
+
+`tsyringe` is a good fit when an application mainly needs constructor injection
+and singleton/transient lifetimes. `ts-ioc-container` is designed for projects
+that also need request scopes, page scopes, provider pipelines, explicit tokens,
+aliases, lazy dependencies, lifecycle hooks, and customization points around how
+objects are created.
+
+<h2 id="feature-comparison" class="toc-link">
+  Feature Comparison
+</h2>
+
+| Need | ts-ioc-container fit |
+| ---- | -------------------- |
+| Fast TypeScript dependency resolution | Lightweight runtime with executable benchmark coverage against tsyringe |
+| Request or transaction scopes | Tagged child containers and scoped registration rules |
+| Decorator-based injection | `@register`, `@inject`, `@onConstruct`, `@onDispose`, and metadata utilities |
+| Explicit dependency tokens | Class, key, alias, function, constant, lazy, and grouped token shapes |
+| Custom factories | Provider APIs for values, classes, factories, arguments, singletons, visibility, and decoration |
+| Lifecycle cleanup | Disposable scopes and `onDispose` hooks |
+| Framework integration | Recipes for Express.js, Fastify, Next.js, React, and SolidJS |
+| Custom behavior | Pluggable injectors, provider pipes, registration pipes, and custom hooks |
+
+<h2 id="scoped-lifecycles" class="toc-link">
+  Scoped Lifecycles
+</h2>
+
+Scoped containers make it practical to isolate per-request, per-transaction,
+per-page, or per-widget state while sharing application-wide services from a
+parent container.
+
+<CodeBlock
+  code={`const app = new Container({ tags: ['application'] });
+
+function handleRequest() {
+  const request = app.createScope({ tags: ['request'] });
+  try {
+    return request.resolve('RequestHandler').handle();
+  } finally {
+    request.dispose();
+  }
+}`}
+  lang="typescript"
+/>
+
+<h2 id="custom-providers" class="toc-link">
+  Custom Providers
+</h2>
+
+Provider behavior is composable. You can cache instances, pass runtime
+arguments, decorate services, restrict visibility, expose aliases, or delay work
+until a dependency is actually needed.
+
+<h2 id="tokens-and-aliases" class="toc-link">
+  Tokens and Aliases
+</h2>
+
+The token API keeps dependency requests explicit and reusable. Use keys for
+interfaces, class tokens for constructors, aliases for alternate names, grouped
+aliases for plugin-like collections, and lazy tokens for deferred work.
+
+<h2 id="hooks-and-disposal" class="toc-link">
+  Hooks and Disposal
+</h2>
+
+Lifecycle hooks let services initialize after construction and clean up when a
+scope is disposed. That matters for request state, transactions, sockets,
+subscriptions, and any dependency that owns resources.
+
+<h2 id="when-tsyringe-is-enough" class="toc-link">
+  When tsyringe Is Enough
+</h2>
+
+Choose `tsyringe` when your application only needs straightforward constructor
+injection, a familiar decorator API, and a small set of lifetime options.
+
+<h2 id="when-ts-ioc-container-fits-better" class="toc-link">
+  When ts-ioc-container Fits Better
+</h2>
+
+Choose `ts-ioc-container` when dependency injection is part of the application
+architecture: request isolation, framework integration, lifecycle cleanup,
+provider customization, token composition, and testable product behavior all
+matter.
+
+Continue with the [Product Capabilities](/ts-ioc-container/product-capabilities)
+map or jump into [Dependency and Scope](/ts-ioc-container/container).

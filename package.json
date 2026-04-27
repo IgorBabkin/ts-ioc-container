@@ -1,7 +1,7 @@
 {
   "name": "ts-ioc-container",
   "version": "47.5.0",
-  "description": "Typescript IoC container",
+  "description": "Fast, lightweight TypeScript dependency injection container with decorators, scoped lifecycles, tokens, hooks, lazy injection, and customizable providers.",
   "workspaces": [
     "docs"
   ],
@@ -21,10 +21,20 @@
     "inversion-of-control",
     "container",
     "typescript",
+    "typescript-di",
+    "typescript-ioc",
+    "dependency-injection-container",
     "ioc",
     "di",
+    "ioc-container",
+    "tsyringe-alternative",
     "scope",
+    "scoped-dependencies",
     "hook",
+    "lifecycle-hooks",
+    "decorators",
+    "lazy-injection",
+    "service-container",
     "inject"
   ],
   "directories": {

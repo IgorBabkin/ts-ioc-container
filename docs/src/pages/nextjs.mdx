@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/BaseLayout.astro
-title: Next.js
-description: Next.js integration - Using ts-ioc-container with Next.js applications
+title: Dependency Injection in Next.js with TypeScript
+description: Use ts-ioc-container with Next.js for TypeScript dependency injection, request scopes, server handlers, and application services
 ---
 
 import CodeBlock from "../components/CodeBlock.astro";
@@ -717,4 +717,3 @@ function useInject<T>(key: DependencyKey | constructor<T>): T
 // Scope component for creating child scopes
 function Scope({ tags, children }: { tags: Tag[]; children: React.ReactNode }): JSX.Element
 ```
-

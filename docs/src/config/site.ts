@@ -6,7 +6,20 @@ import type { BadgeConfig, SiteMetadata } from "./types";
 
 export const siteMetadata: SiteMetadata = {
   title: "ts-ioc-container",
-  description: "TypeScript IoC (Inversion Of Control) container library",
+  description:
+    "Fast, lightweight TypeScript dependency injection container with scoped lifecycles, decorators, tokens, hooks, lazy injection, and customizable providers.",
+  url: "https://igorbabkin.github.io/ts-ioc-container",
+  basePath: "/ts-ioc-container",
+  keywords: [
+    "typescript dependency injection",
+    "typescript ioc container",
+    "tsyringe alternative",
+    "dependency injection container typescript",
+    "typescript di decorators",
+    "request scoped dependency injection",
+    "typescript service container",
+    "inversion of control typescript",
+  ],
   author: "IgorBabkin",
   license: {
     name: "ISC",

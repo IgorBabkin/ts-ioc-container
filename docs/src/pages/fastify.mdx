@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/BaseLayout.astro
-title: Fastify
-description: Fastify integration - Using ts-ioc-container with Fastify applications
+title: TypeScript Dependency Injection with Fastify
+description: Use ts-ioc-container with Fastify for TypeScript dependency injection, request scopes, decorators, hooks, and service cleanup
 ---
 
 import CodeBlock from "../components/CodeBlock.astro";
@@ -866,4 +866,3 @@ await request.rollbackTransaction()
 // Access app container
 fastify.container.resolve<T>(key)
 ```
-

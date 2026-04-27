@@ -1,0 +1,120 @@
+---
+layout: ../layouts/BaseLayout.astro
+title: Dependency Injection Errors and Boundaries
+description: Error contracts and boundary behavior for TypeScript dependency resolution, registration, disposed containers, tokens, hooks, and EmptyContainer
+---
+
+import CodeBlock from "../components/CodeBlock.astro";
+
+# Errors and Boundaries
+
+**Product outcome:** Misconfiguration and unsupported usage should fail with
+specific, diagnosable errors.
+
+This page summarizes the user-facing error boundaries described by
+`specs/epics/errors-and-boundaries.md`.
+
+<h2 id="missing-dependencies" class="toc-link">
+  Missing Dependencies
+</h2>
+
+Use `DependencyNotFoundError` to distinguish dependency configuration problems
+from application runtime failures.
+
+Expected behavior:
+
+- Resolving an unknown key fails with `DependencyNotFoundError`.
+- Resolving an alias with no visible provider reaches the same missing
+  dependency boundary.
+- The failure should identify the missing dependency when the dependency key is
+  available.
+
+<CodeBlock
+  code={`import { Container, DependencyNotFoundError } from 'ts-ioc-container';
+
+const container = new Container();
+
+try {
+container.resolve('IUserRepository');
+} catch (error) {
+console.log(error instanceof DependencyNotFoundError); // true
+}`}
+lang="typescript"
+/>
+
+<h2 id="invalid-registrations" class="toc-link">
+  Invalid Registrations
+</h2>
+
+Registrations must have a key before they are applied to a container.
+
+Expected behavior:
+
+- Applying a registration without a key fails with `DependencyMissingKeyError`.
+- Calling `getKeyOrFail()` on an unbound registration also fails with
+  `DependencyMissingKeyError`.
+
+<h2 id="disposed-containers" class="toc-link">
+  Disposed Containers
+</h2>
+
+A disposed container or scope is closed for further use.
+
+Expected behavior:
+
+- Resolving from a disposed container fails with `ContainerDisposedError`.
+- Registering in a disposed container fails with `ContainerDisposedError`.
+- Creating a child scope from a disposed container fails with
+  `ContainerDisposedError`.
+
+<CodeBlock
+  code={`import { Container, ContainerDisposedError } from 'ts-ioc-container';
+
+const requestScope = new Container({ tags: ['request'] });
+requestScope.dispose();
+
+try {
+requestScope.resolve('IRequestContext');
+} catch (error) {
+console.log(error instanceof ContainerDisposedError); // true
+}`}
+lang="typescript"
+/>
+
+<h2 id="unsupported-operations" class="toc-link">
+  Unsupported Operations
+</h2>
+
+Some API shapes intentionally do not support every modifier.
+
+Expected behavior:
+
+- Unsupported input to `toToken` fails with `UnsupportedTokenTypeError`.
+- `ConstantToken` and `GroupInstanceToken` reject unsupported modifiers with
+  `MethodNotImplementedError`.
+- Synchronous hook execution rejects promise-returning hooks with
+  `UnexpectedHookResultError`.
+
+<h2 id="empty-container" class="toc-link">
+  Empty Container
+</h2>
+
+`EmptyContainer` is the parent-chain terminator used by root containers.
+
+Expected behavior:
+
+- It reports no parent scopes, registrations, or instances.
+- It throws `DependencyNotFoundError` when asked to resolve.
+- Unsupported mutations fail with `MethodNotImplementedError`.
+
+<h2 id="acceptance-coverage" class="toc-link">
+  Acceptance Coverage
+</h2>
+
+The product spec is accepted in:
+
+- `specs/epics/errors-and-boundaries.md`
+
+The executable acceptance spec is:
+
+- `__tests__/specs/errors-and-boundaries.spec.ts`

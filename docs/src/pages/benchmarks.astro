@@ -1,0 +1,338 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const benchmarkModules = import.meta.glob("../../../__benchmarks__/specs/*.benchmark.ts");
+const availableSpecs = Object.keys(benchmarkModules)
+  .map((path) => path.split("/").pop()?.replace(/\.benchmark\.ts$/, ""))
+  .filter((prefix): prefix is string => Boolean(prefix))
+  .sort();
+
+const defaultSpec1 = availableSpecs.includes("dependency-resolution.ts-ioc-container")
+  ? "dependency-resolution.ts-ioc-container"
+  : availableSpecs[0];
+const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
+  ? "dependency-resolution.tsyringe"
+  : availableSpecs.find((spec) => spec !== defaultSpec1) || availableSpecs[0];
+---
+
+<BaseLayout
+  title="Benchmarks"
+  description="Run and compare benchmark specs directly in the browser."
+>
+  <article class="benchmark-page">
+    <h1>Benchmarks</h1>
+
+    <section aria-labelledby="benchmark-runner">
+      <h2 id="benchmark-runner">Benchmark Runner</h2>
+
+      <form id="benchmark-form" class="benchmark-controls">
+        <label class="form-label" for="benchmark-spec-1">Spec 1</label>
+        <select class="form-select" id="benchmark-spec-1" name="spec1">
+          {
+            availableSpecs.map((spec) => (
+              <option value={spec} selected={spec === defaultSpec1}>
+                {spec}
+              </option>
+            ))
+          }
+        </select>
+
+        <label class="form-label" for="benchmark-spec-2">Spec 2</label>
+        <select class="form-select" id="benchmark-spec-2" name="spec2">
+          {
+            availableSpecs.map((spec) => (
+              <option value={spec} selected={spec === defaultSpec2}>
+                {spec}
+              </option>
+            ))
+          }
+        </select>
+
+        <label class="form-label" for="benchmark-duration">Duration</label>
+        <select class="form-select" id="benchmark-duration" name="duration">
+          <option value="500">500 ms</option>
+          <option value="1000" selected>1 second</option>
+          <option value="2000">2 seconds</option>
+          <option value="5000">5 seconds</option>
+        </select>
+
+        <button class="btn btn-primary" id="benchmark-run" type="submit">
+          Run comparison
+        </button>
+      </form>
+
+      <div id="benchmark-status" class="benchmark-status" role="status">
+        Ready to run the selected benchmark specs.
+      </div>
+    </section>
+
+    <section aria-labelledby="benchmark-results">
+      <h2 id="benchmark-results">Results</h2>
+
+      <div class="table-responsive">
+        <table class="table table-striped align-middle" id="benchmark-table">
+          <thead>
+            <tr>
+              <th scope="col">Spec</th>
+              <th scope="col">Task</th>
+              <th scope="col">Ops/sec</th>
+              <th scope="col">Mean</th>
+              <th scope="col">Samples</th>
+              <th scope="col">Relative</th>
+            </tr>
+          </thead>
+          <tbody id="benchmark-results-body">
+            <tr>
+              <td colspan="6">No run yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="benchmark-note">
+        Query example:
+        <code>?spec1=dependency-resolution.ts-ioc-container&amp;spec2=dependency-resolution.tsyringe</code>
+      </p>
+    </section>
+  </article>
+
+  <script>
+    const modules = import.meta.glob("../../../__benchmarks__/specs/*.benchmark.ts");
+    const moduleByPrefix = new Map(
+      Object.entries(modules).map(([path, loader]) => [
+        path.split("/").pop().replace(/\.benchmark\.ts$/, ""),
+        loader,
+      ]),
+    );
+    const availableSpecs = Array.from(moduleByPrefix.keys()).sort();
+    const defaultSpec1 = availableSpecs.includes("dependency-resolution.ts-ioc-container")
+      ? "dependency-resolution.ts-ioc-container"
+      : availableSpecs[0];
+    const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
+      ? "dependency-resolution.tsyringe"
+      : availableSpecs.find((spec) => spec !== defaultSpec1) || availableSpecs[0];
+
+    const form = document.querySelector("#benchmark-form");
+    const spec1Input = document.querySelector("#benchmark-spec-1");
+    const spec2Input = document.querySelector("#benchmark-spec-2");
+    const durationInput = document.querySelector("#benchmark-duration");
+    const runButton = document.querySelector("#benchmark-run");
+    const status = document.querySelector("#benchmark-status");
+    const resultsBody = document.querySelector("#benchmark-results-body");
+
+    const formatHz = (value) =>
+      new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value);
+    const formatMean = (value) =>
+      `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(value)} ms`;
+
+    const setStatus = (message) => {
+      status.textContent = message;
+    };
+
+    const readQuery = () => {
+      const params = new URLSearchParams(window.location.search);
+      const spec1 = params.get("spec1");
+      const spec2 = params.get("spec2");
+      const duration = params.get("duration");
+
+      if (availableSpecs.includes(spec1)) {
+        spec1Input.value = spec1;
+      } else {
+        spec1Input.value = defaultSpec1;
+      }
+
+      if (availableSpecs.includes(spec2)) {
+        spec2Input.value = spec2;
+      } else {
+        spec2Input.value = defaultSpec2;
+      }
+
+      if (duration && durationInput.querySelector(`option[value="${duration}"]`)) {
+        durationInput.value = duration;
+      }
+    };
+
+    const writeQuery = () => {
+      const params = new URLSearchParams({
+        spec1: spec1Input.value,
+        spec2: spec2Input.value,
+        duration: durationInput.value,
+      });
+      window.history.replaceState(null, "", `${window.location.pathname}?${params}`);
+    };
+
+    const loadSpec = async (prefix) => {
+      const loader = moduleByPrefix.get(prefix);
+
+      if (!loader) {
+        throw new Error(`Unknown benchmark spec: ${prefix}`);
+      }
+
+      const module = await loader();
+      return module.benchmarkSpec;
+    };
+
+    const measure = async (prefix, durationMs) => {
+      const spec = await loadSpec(prefix);
+      const task = spec.createTask();
+      const warmupUntil = performance.now() + Math.min(250, durationMs / 2);
+
+      while (performance.now() < warmupUntil) {
+        task();
+      }
+
+      const samples = [];
+      let iterations = 0;
+      const startedAt = performance.now();
+      let chunkStartedAt = startedAt;
+      let chunkIterations = 0;
+
+      while (performance.now() - startedAt < durationMs) {
+        task();
+        iterations += 1;
+        chunkIterations += 1;
+
+        const now = performance.now();
+
+        if (now - chunkStartedAt >= 50) {
+          samples.push({
+            iterations: chunkIterations,
+            duration: now - chunkStartedAt,
+          });
+          chunkStartedAt = now;
+          chunkIterations = 0;
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
+
+      const finishedAt = performance.now();
+
+      if (chunkIterations > 0) {
+        samples.push({
+          iterations: chunkIterations,
+          duration: finishedAt - chunkStartedAt,
+        });
+      }
+
+      const duration = finishedAt - startedAt;
+      const hz = iterations / (duration / 1000);
+
+      return {
+        prefix,
+        name: spec.name,
+        taskName: spec.taskName,
+        description: spec.description,
+        iterations,
+        samples: samples.length,
+        duration,
+        hz,
+        meanMs: duration / iterations,
+      };
+    };
+
+    const renderResults = (results) => {
+      const fastest = Math.max(...results.map((result) => result.hz));
+
+      resultsBody.innerHTML = results
+        .map((result) => {
+          const ratio = result.hz / fastest;
+          const relative =
+            ratio === 1
+              ? "fastest"
+              : `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(1 / ratio)}x slower`;
+
+          return `<tr>
+            <th scope="row">
+              <div>${result.name}</div>
+              <small class="text-body-secondary">${result.prefix}</small>
+            </th>
+            <td>${result.taskName}</td>
+            <td>${formatHz(result.hz)}</td>
+            <td>${formatMean(result.meanMs)}</td>
+            <td>${result.samples}</td>
+            <td>${relative}</td>
+          </tr>`;
+        })
+        .join("");
+    };
+
+    const runComparison = async () => {
+      const spec1 = spec1Input.value;
+      const spec2 = spec2Input.value;
+      const duration = Number(durationInput.value);
+
+      runButton.disabled = true;
+      resultsBody.innerHTML = '<tr><td colspan="6">Running...</td></tr>';
+      writeQuery();
+
+      try {
+        setStatus(`Running ${spec1}...`);
+        const first = await measure(spec1, duration);
+        setStatus(`Running ${spec2}...`);
+        const second = await measure(spec2, duration);
+
+        renderResults([first, second]);
+        setStatus(`Finished ${first.prefix} vs ${second.prefix}.`);
+      } catch (error) {
+        resultsBody.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
+        setStatus("Benchmark failed.");
+      } finally {
+        runButton.disabled = false;
+      }
+    };
+
+    readQuery();
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      runComparison();
+    });
+
+    if (window.location.search) {
+      runComparison();
+    }
+  </script>
+
+  <style>
+    .benchmark-page {
+      max-width: 1120px;
+    }
+
+    .benchmark-controls {
+      display: grid;
+      grid-template-columns: minmax(10rem, max-content) minmax(14rem, 1fr);
+      gap: 0.75rem 1rem;
+      align-items: center;
+      margin: 1.5rem 0;
+    }
+
+    .benchmark-controls .btn {
+      grid-column: 2;
+      width: max-content;
+    }
+
+    .benchmark-status {
+      min-height: 2.5rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.25rem;
+      background: var(--bs-tertiary-bg);
+    }
+
+    .benchmark-note {
+      margin-top: 1rem;
+      color: var(--bs-secondary-color);
+    }
+
+    @media (max-width: 720px) {
+      .benchmark-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .benchmark-controls .btn {
+        grid-column: 1;
+        width: 100%;
+      }
+    }
+  </style>
+</BaseLayout>

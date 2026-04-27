@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/BaseLayout.astro
-title: React
-description: React integration - Using ts-ioc-container with React applications
+title: TypeScript Dependency Injection with React
+description: Use ts-ioc-container with React Context and hooks for TypeScript dependency injection, application scopes, page scopes, and widget scopes
 ---
 
 import CodeBlock from "../components/CodeBlock.astro";
@@ -573,4 +573,3 @@ function Scope({ tags, children }: ScopeProps): JSX.Element
 - `tags` - Array of scope tags (e.g., `['page']`, `['widget']`)
 - `children` - Child components that will have access to the new scope
 - Automatically disposes the scope on unmount
-
