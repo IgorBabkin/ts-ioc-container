@@ -7,12 +7,46 @@ const availableSpecs = Object.keys(benchmarkModules)
   .filter((prefix): prefix is string => Boolean(prefix))
   .sort();
 
-const defaultSpec1 = availableSpecs.includes("dependency-resolution.ts-ioc-container")
-  ? "dependency-resolution.ts-ioc-container"
-  : availableSpecs[0];
-const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
-  ? "dependency-resolution.tsyringe"
-  : availableSpecs.find((spec) => spec !== defaultSpec1) || availableSpecs[0];
+const implementationOrder = ["ts-ioc-container", "tsyringe"];
+const getBenchmarkKey = (prefix: string) =>
+  prefix.replace(/\.(ts-ioc-container|tsyringe)$/, "");
+const getImplementation = (prefix: string) => prefix.replace(`${getBenchmarkKey(prefix)}.`, "");
+const formatBenchmarkLabel = (key: string) =>
+  key
+    .split("-")
+    .map((word) => word[0]?.toUpperCase() + word.slice(1))
+    .join(" ");
+const sortSpecs = (specs: string[]) =>
+  specs.toSorted((a, b) => {
+    const implementationA = getImplementation(a);
+    const implementationB = getImplementation(b);
+    const orderA = implementationOrder.indexOf(implementationA);
+    const orderB = implementationOrder.indexOf(implementationB);
+    const normalizedOrderA = orderA === -1 ? implementationOrder.length : orderA;
+    const normalizedOrderB = orderB === -1 ? implementationOrder.length : orderB;
+
+    return normalizedOrderA - normalizedOrderB || a.localeCompare(b);
+  });
+
+const benchmarkGroups = Array.from(
+  availableSpecs.reduce((groups, spec) => {
+    const key = getBenchmarkKey(spec);
+    groups.set(key, [...(groups.get(key) || []), spec]);
+    return groups;
+  }, new Map<string, string[]>()),
+  ([key, specs]) => ({
+    key,
+    specs: sortSpecs(specs),
+  }),
+)
+  .map((group) => ({
+    ...group,
+    label: `${formatBenchmarkLabel(group.key)} (${group.specs.map(getImplementation).join(", ")})`,
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
+const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependency-resolution")
+  ? "dependency-resolution"
+  : benchmarkGroups[0]?.key;
 ---
 
 <BaseLayout
@@ -26,24 +60,11 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
       <h2 id="benchmark-runner">Benchmark Runner</h2>
 
       <form id="benchmark-form" class="benchmark-controls">
-        <label class="form-label" for="benchmark-spec-1">Spec 1</label>
-        <select class="form-select" id="benchmark-spec-1" name="spec1">
+        <label class="form-label" for="benchmark-pair">Benchmark</label>
+        <select class="form-select" id="benchmark-pair" name="benchmark">
           {
-            availableSpecs.map((spec) => (
-              <option value={spec} selected={spec === defaultSpec1}>
-                {spec}
-              </option>
-            ))
-          }
-        </select>
-
-        <label class="form-label" for="benchmark-spec-2">Spec 2</label>
-        <select class="form-select" id="benchmark-spec-2" name="spec2">
-          {
-            availableSpecs.map((spec) => (
-              <option value={spec} selected={spec === defaultSpec2}>
-                {spec}
-              </option>
+            benchmarkGroups.map((group) => (
+              <option value={group.key} selected={group.key === defaultBenchmark}>{group.label}</option>
             ))
           }
         </select>
@@ -57,12 +78,12 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
         </select>
 
         <button class="btn btn-primary" id="benchmark-run" type="submit">
-          Run comparison
+          Run benchmark
         </button>
       </form>
 
       <div id="benchmark-status" class="benchmark-status" role="status">
-        Ready to run the selected benchmark specs.
+        Ready to run the selected benchmark.
       </div>
     </section>
 
@@ -91,7 +112,7 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
 
       <p class="benchmark-note">
         Query example:
-        <code>?spec1=dependency-resolution.ts-ioc-container&amp;spec2=dependency-resolution.tsyringe</code>
+        <code>?benchmark=dependency-resolution</code>
       </p>
     </section>
   </article>
@@ -107,16 +128,38 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
       ]),
     );
     const availableSpecs = Array.from(moduleByPrefix.keys()).sort();
-    const defaultSpec1 = availableSpecs.includes("dependency-resolution.ts-ioc-container")
-      ? "dependency-resolution.ts-ioc-container"
-      : availableSpecs[0];
-    const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
-      ? "dependency-resolution.tsyringe"
-      : availableSpecs.find((spec) => spec !== defaultSpec1) || availableSpecs[0];
+    const implementationOrder = ["ts-ioc-container", "tsyringe"];
+    const getBenchmarkKey = (prefix) => prefix.replace(/\.(ts-ioc-container|tsyringe)$/, "");
+    const getImplementation = (prefix) => prefix.replace(`${getBenchmarkKey(prefix)}.`, "");
+    const sortSpecs = (specs) =>
+      specs.toSorted((a, b) => {
+        const implementationA = getImplementation(a);
+        const implementationB = getImplementation(b);
+        const orderA = implementationOrder.indexOf(implementationA);
+        const orderB = implementationOrder.indexOf(implementationB);
+        const normalizedOrderA = orderA === -1 ? implementationOrder.length : orderA;
+        const normalizedOrderB = orderB === -1 ? implementationOrder.length : orderB;
+
+        return normalizedOrderA - normalizedOrderB || a.localeCompare(b);
+      });
+    const benchmarkGroups = Array.from(
+      availableSpecs.reduce((groups, spec) => {
+        const key = getBenchmarkKey(spec);
+        groups.set(key, [...(groups.get(key) || []), spec]);
+        return groups;
+      }, new Map()),
+      ([key, specs]) => ({
+        key,
+        specs: sortSpecs(specs),
+      }),
+    );
+    const benchmarkByKey = new Map(benchmarkGroups.map((group) => [group.key, group]));
+    const defaultBenchmark = benchmarkByKey.has("dependency-resolution")
+      ? "dependency-resolution"
+      : benchmarkGroups[0]?.key;
 
     const form = document.querySelector("#benchmark-form");
-    const spec1Input = document.querySelector("#benchmark-spec-1");
-    const spec2Input = document.querySelector("#benchmark-spec-2");
+    const benchmarkInput = document.querySelector("#benchmark-pair");
     const durationInput = document.querySelector("#benchmark-duration");
     const runButton = document.querySelector("#benchmark-run");
     const status = document.querySelector("#benchmark-status");
@@ -131,22 +174,24 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
       status.textContent = message;
     };
 
+    const toBenchmarkFile = (prefix) => `${prefix}.benchmark.ts`;
+
+    const renderBenchmarkStatuses = (items) => {
+      setStatus(items.map((item) => `${toBenchmarkFile(item.prefix)}: ${item.state}`).join("\n"));
+    };
+
     const readQuery = () => {
       const params = new URLSearchParams(window.location.search);
+      const benchmark = params.get("benchmark");
       const spec1 = params.get("spec1");
-      const spec2 = params.get("spec2");
       const duration = params.get("duration");
 
-      if (availableSpecs.includes(spec1)) {
-        spec1Input.value = spec1;
+      if (benchmarkByKey.has(benchmark)) {
+        benchmarkInput.value = benchmark;
+      } else if (availableSpecs.includes(spec1)) {
+        benchmarkInput.value = getBenchmarkKey(spec1);
       } else {
-        spec1Input.value = defaultSpec1;
-      }
-
-      if (availableSpecs.includes(spec2)) {
-        spec2Input.value = spec2;
-      } else {
-        spec2Input.value = defaultSpec2;
+        benchmarkInput.value = defaultBenchmark;
       }
 
       if (duration && durationInput.querySelector(`option[value="${duration}"]`)) {
@@ -156,8 +201,7 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
 
     const writeQuery = () => {
       const params = new URLSearchParams({
-        spec1: spec1Input.value,
-        spec2: spec2Input.value,
+        benchmark: benchmarkInput.value,
         duration: durationInput.value,
       });
       window.history.replaceState(null, "", `${window.location.pathname}?${params}`);
@@ -259,25 +303,47 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
     };
 
     const runComparison = async () => {
-      const spec1 = spec1Input.value;
-      const spec2 = spec2Input.value;
+      const benchmark = benchmarkByKey.get(benchmarkInput.value);
       const duration = Number(durationInput.value);
+      const benchmarkStatuses =
+        benchmark?.specs.map((spec) => ({
+          prefix: spec,
+          state: "pending",
+        })) || [];
 
       runButton.disabled = true;
       resultsBody.innerHTML = '<tr><td colspan="6">Running...</td></tr>';
       writeQuery();
 
       try {
-        setStatus(`Running ${spec1}...`);
-        const first = await measure(spec1, duration);
-        setStatus(`Running ${spec2}...`);
-        const second = await measure(spec2, duration);
+        if (!benchmark) {
+          throw new Error("No benchmark selected.");
+        }
 
-        renderResults([first, second]);
-        setStatus(`Finished ${first.prefix} vs ${second.prefix}.`);
+        const results = [];
+
+        renderBenchmarkStatuses(benchmarkStatuses);
+
+        for (const [index, spec] of benchmark.specs.entries()) {
+          benchmarkStatuses[index].state = "running";
+          renderBenchmarkStatuses(benchmarkStatuses);
+
+          results.push(await measure(spec, duration));
+
+          benchmarkStatuses[index].state = "done";
+          renderBenchmarkStatuses(benchmarkStatuses);
+        }
+
+        renderResults(results);
       } catch (error) {
+        const runningStatus = benchmarkStatuses.find((item) => item.state === "running");
+        if (runningStatus) {
+          runningStatus.state = "failed";
+        }
+        if (benchmarkStatuses.length > 0) {
+          renderBenchmarkStatuses(benchmarkStatuses);
+        }
         resultsBody.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
-        setStatus("Benchmark failed.");
       } finally {
         runButton.disabled = false;
       }
@@ -319,6 +385,7 @@ const defaultSpec2 = availableSpecs.includes("dependency-resolution.tsyringe")
       border: 1px solid var(--bs-border-color);
       border-radius: 0.25rem;
       background: var(--bs-tertiary-bg);
+      white-space: pre-line;
     }
 
     .benchmark-note {
