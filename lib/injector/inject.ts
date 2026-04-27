@@ -26,9 +26,9 @@ export const args =
   };
 
 export const argsFn =
-  <T>(fn: (args: unknown[]) => T): InjectFn<T> =>
+  <T>(fn: (...args: unknown[]) => T): InjectFn<T> =>
   (c, options) =>
-    fn(options.args ?? []);
+    fn(...(options.args ?? []));
 
 const resolveTokens = (scope: IContainer, deps: unknown[]): unknown[] =>
   deps.map((v) => (isInjectionToken(v) ? v : new ConstantToken(v))).map((t) => t.resolve(scope));

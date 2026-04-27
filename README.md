@@ -1912,12 +1912,14 @@ When you pass an `InjectionToken` via `token.args(...)`, the container resolves 
 - `ServiceToken.args(new ClassToken(SomeService))` — `SomeService` is constructed by the container
 - `ServiceToken.args('literal')` — literal value passed directly
 
-### Positional arg injection with `args(index)`
+### Positional arg injection with `args(index)` and `argsFn`
 
 Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(args(index))`. Parameters without `@inject` resolve to `undefined`.
 
 - `@inject(args(0))` — resolves the first element of the `args` array passed at resolution time
 - Works together with `token.args(...)` to pass typed dependencies through the args context
+
+`args(index)` and `argsFn(fn)` are thin shortcuts for an `InjectFn`. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array — so `args(0)` is just `(scope, { args = [] }) => args[0]`, and `argsFn(fn)` is `(scope, { args = [] }) => fn(...args)` (the runtime args are spread into your callback as positional parameters).
 
 ### Immutable token chaining
 
@@ -1962,12 +1964,13 @@ describe('ArgsProvider', function () {
 
   describe('Static Arguments', () => {
     it('can pass static arguments to constructor', function () {
+      // Pre-configure the logger with a filename
+      @register(setArgs('/var/log/app.log'))
       class FileLogger {
         constructor(@inject(args(0)) public filename: string) {}
       }
 
-      // Pre-configure the logger with a filename
-      const root = createContainer().addRegistration(R.fromClass(FileLogger).pipe(setArgs('/var/log/app.log')));
+      const root = createContainer().addRegistration(R.fromClass(FileLogger));
 
       // Resolve by class name (default key) to use the registered provider
       const logger = root.resolve<FileLogger>('FileLogger');
@@ -1975,15 +1978,15 @@ describe('ArgsProvider', function () {
     });
 
     it('prioritizes provided args over resolve args', function () {
+      // 'FixedContext' wins over any runtime args
+      @register(setArgs('FixedContext'))
       class Logger {
         constructor(@inject(args(0)) public context: string) {}
       }
 
-      // 'FixedContext' wins over any runtime args
-      const root = createContainer().addRegistration(R.fromClass(Logger).pipe(setArgs('FixedContext')));
+      const root = createContainer().addRegistration(R.fromClass(Logger));
 
       // Even if we ask for 'RuntimeContext', we get 'FixedContext'
-      // Resolve by class name to use the registered provider
       const logger = root.resolve<Logger>('Logger', { args: ['RuntimeContext'] });
 
       expect(logger.context).toBe('FixedContext');
@@ -1996,19 +1999,15 @@ describe('ArgsProvider', function () {
         env = 'production';
       }
 
+      // Extract 'env' from Config service dynamically
+      @register(setArgsFn((scope) => [scope.resolve<Config>('Config').env]))
       class Service {
         constructor(@inject(args(0)) public env: string) {}
       }
 
       const root = createContainer()
         .addRegistration(R.fromClass(Config)) // Key: 'Config'
-        .addRegistration(
-          R.fromClass(Service).pipe(
-            // Extract 'env' from Config service dynamically
-            // Note: We resolve 'Config' by string key to get the registered instance (if it were singleton)
-            setArgsFn((scope) => [scope.resolve<Config>('Config').env]),
-          ),
-        );
+        .addRegistration(R.fromClass(Service));
 
       const service = root.resolve<Service>('Service');
       expect(service.env).toBe('production');

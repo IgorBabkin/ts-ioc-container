@@ -25,7 +25,7 @@ describe('Spec: injector strategies', () => {
       constructor(
         @inject('Logger') readonly logger: Logger,
         @inject(args(0)) readonly tenant: string,
-        @inject(argsFn(([tenant]) => `${tenant}:audit`)) readonly auditKey: string,
+        @inject(argsFn((tenant) => `${tenant}:audit`)) readonly auditKey: string,
       ) {}
     }
 
