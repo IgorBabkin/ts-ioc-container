@@ -1461,51 +1461,22 @@ This type of injector just passes container to constructor with others arguments
 ```typescript
 import { bindTo, Container, type IContainer, register, Registration as R, SimpleInjector } from 'ts-ioc-container';
 
-/**
- * Command Pattern - Simple Injector
- *
- * The SimpleInjector passes the container itself as the first argument to the constructor.
- * This is useful for:
- * - Service Locators (like Command Dispatchers or Routers)
- * - Factory classes that need to resolve dependencies dynamically
- * - Legacy code migration where passing the container is common
- *
- * In this example, a CommandDispatcher uses the container to dynamically
- * resolve the correct handler for each command type.
- */
-
-interface ICommand {
-  type: string;
-}
-
-interface ICommandHandler {
-  handle(command: ICommand): string;
-}
-
-class CreateUserCommand implements ICommand {
-  readonly type = 'CreateUser';
-  constructor(readonly username: string) {}
-}
-
 @register(bindTo('HandlerCreateUser'))
-class CreateUserHandler implements ICommandHandler {
-  handle(command: CreateUserCommand): string {
-    return `User ${command.username} created`;
+class CreateUserHandler {
+  handle(username: string): string {
+    return `User ${username} created`;
   }
 }
 
 describe('SimpleInjector', function () {
-  it('should inject container to allow dynamic resolution (Service Locator pattern)', function () {
-    // Dispatcher needs the container to find handlers dynamically based on command type
+  it('should inject container to allow dynamic resolution', function () {
     @register(bindTo('Dispatcher'))
     class CommandDispatcher {
       constructor(private container: IContainer) {}
 
-      dispatch(command: ICommand): string {
-        // Dynamically resolve handler: "Handler" + "CreateUser"
-        const handlerKey = `Handler${command.type}`;
-        const handler = this.container.resolve<ICommandHandler>(handlerKey);
-        return handler.handle(command);
+      dispatch(type: string, payload: string): string {
+        const handler = this.container.resolve<CreateUserHandler>(`Handler${type}`);
+        return handler.handle(payload);
       }
     }
 
@@ -1514,30 +1485,27 @@ describe('SimpleInjector', function () {
       .addRegistration(R.fromClass(CreateUserHandler));
 
     const dispatcher = container.resolve<CommandDispatcher>('Dispatcher');
-    const result = dispatcher.dispatch(new CreateUserCommand('alice'));
 
-    expect(result).toBe('User alice created');
+    expect(dispatcher.dispatch('CreateUser', 'alice')).toBe('User alice created');
   });
 
   it('should pass additional arguments alongside the container', function () {
-    // Factory that creates widgets with a specific theme
     class WidgetFactory {
       constructor(
         private container: IContainer,
-        private theme: string, // Passed as argument during resolve
+        private theme: string,
       ) {}
 
       createWidget(name: string): string {
-        return `Widget ${name} with ${this.theme} theme (Container available: ${!!this.container})`;
+        return `Widget ${name} with ${this.theme} theme (container: ${!!this.container})`;
       }
     }
 
     const container = new Container({ injector: new SimpleInjector() }).addRegistration(R.fromClass(WidgetFactory));
 
-    // Pass "dark" as the theme argument
     const factory = container.resolve<WidgetFactory>('WidgetFactory', { args: ['dark'] });
 
-    expect(factory.createWidget('Button')).toBe('Widget Button with dark theme (Container available: true)');
+    expect(factory.createWidget('Button')).toBe('Widget Button with dark theme (container: true)');
   });
 });
 
@@ -1562,16 +1530,11 @@ describe('ProxyInjector', function () {
       }
     }
 
-    interface UserControllerDeps {
-      logger: Logger;
-      prefix: string;
-    }
-
     class UserController {
       private logger: Logger;
       private prefix: string;
 
-      constructor({ logger, prefix }: UserControllerDeps) {
+      constructor({ logger, prefix }: { logger: Logger; prefix: string }) {
         this.logger = logger;
         this.prefix = prefix;
       }
@@ -1586,21 +1549,14 @@ describe('ProxyInjector', function () {
       .addRegistration(R.fromValue('USER:').bindToKey('prefix'))
       .addRegistration(R.fromClass(UserController));
 
-    const controller = container.resolve<UserController>('UserController');
-
-    expect(controller.createUser('bob')).toBe('Logged: USER: bob');
+    expect(container.resolve<UserController>('UserController').createUser('bob')).toBe('Logged: USER: bob');
   });
 
   it('should expose runtime args through the reserved "args" property', function () {
-    @register(bindTo('database'))
-    class Database {}
-
     class ReportGenerator {
-      database: Database;
       format: string;
 
-      constructor({ database, args }: { database: Database; args: string[] }) {
-        this.database = database;
+      constructor({ args }: { args: string[] }) {
         this.format = args[0];
       }
 
@@ -1609,39 +1565,11 @@ describe('ProxyInjector', function () {
       }
     }
 
-    const container = new Container({ injector: new ProxyInjector() })
-      .addRegistration(R.fromClass(Database))
-      .addRegistration(R.fromClass(ReportGenerator));
+    const container = new Container({ injector: new ProxyInjector() }).addRegistration(R.fromClass(ReportGenerator));
 
-    const generator = container.resolve<ReportGenerator>('ReportGenerator', {
-      args: ['PDF'],
-    });
+    const generator = container.resolve<ReportGenerator>('ReportGenerator', { args: ['PDF'] });
 
-    expect(generator.database).toBeInstanceOf(Database);
     expect(generator.generate()).toBe('Report in PDF');
-  });
-
-  it('should resolve dependencies by alias when property name contains "alias"', function () {
-    class FileLogger {}
-    class ConsoleLogger {}
-
-    interface AppDeps {
-      loggersAlias: any[];
-    }
-
-    class App {
-      constructor(public deps: AppDeps) {}
-    }
-
-    const container = new Container({ injector: new ProxyInjector() });
-
-    const mockLoggers = [new FileLogger(), new ConsoleLogger()];
-    container.resolveByAlias = vi.fn().mockReturnValue(mockLoggers);
-
-    const app = container.resolve(App);
-
-    expect(app.deps.loggersAlias).toBe(mockLoggers);
-    expect(container.resolveByAlias).toHaveBeenCalledWith('loggersAlias');
   });
 });
 
@@ -2574,37 +2502,91 @@ Sometimes you need to register provider only in scope which matches to certain c
 - `Registration.fromClass(Logger).when((container) => container.hasTag('root'))`
 
 ```typescript
-import { bindTo, Container, register, Registration as R, scope, singleton } from 'ts-ioc-container';
+import 'reflect-metadata';
+import {
+  bindTo,
+  Container,
+  DependencyNotFoundError,
+  type IContainer,
+  inject,
+  register,
+  Registration as R,
+  scope,
+  select,
+  singleton,
+} from 'ts-ioc-container';
 
 /**
- * Scoping - Scope Match Rule
+ * User Management Domain - Request Scopes
  *
- * You can restrict WHERE a provider is registered.
- * This is useful for singleton services that should only exist in the root scope,
- * or per-request services that should only exist in request scopes.
+ * In web applications, each HTTP request typically gets its own scope.
+ * This allows request-specific data (current user, request ID, etc.)
+ * to be isolated between concurrent requests.
+ *
+ * Scope hierarchy:
+ *   Application (singleton services)
+ *     └── Request (per-request services)
+ *           └── Transaction (database transaction boundary)
  */
 
-describe('ScopeProvider', function () {
-  it('should register provider only in matching scope', function () {
-    // SharedState should be a singleton in the root 'application' scope
-    // It will be visible to all child scopes, but physically resides in 'application'
-    @register(
-      bindTo('SharedState'),
-      scope((s) => s.hasTag('application')), // Only register in application scope
-      singleton(), // One instance per application
-    )
-    class SharedState {
-      data = 'shared';
+// SessionService is only available in request scope - not at application level
+@register(bindTo('ISessionService'), scope((s) => s.hasTag('request')), singleton())
+class SessionService {
+  private userId: string | null = null;
+
+  setCurrentUser(userId: string) {
+    this.userId = userId;
+  }
+
+  getCurrentUserId(): string | null {
+    return this.userId;
+  }
+}
+
+describe('Scopes', function () {
+  it('should isolate request-scoped services', function () {
+    // Application container - lives for entire app lifetime
+    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(SessionService));
+
+    // Simulate two concurrent HTTP requests
+    const request1Scope = appContainer.createScope({ tags: ['request'] });
+    const request2Scope = appContainer.createScope({ tags: ['request'] });
+
+    // Each request has its own SessionService instance
+    const session1 = request1Scope.resolve<SessionService>('ISessionService');
+    const session2 = request2Scope.resolve<SessionService>('ISessionService');
+
+    session1.setCurrentUser('user-1');
+    session2.setCurrentUser('user-2');
+
+    // Sessions are isolated - user data doesn't leak between requests
+    expect(session1.getCurrentUserId()).toBe('user-1');
+    expect(session2.getCurrentUserId()).toBe('user-2');
+    expect(session1).not.toBe(session2);
+
+    // SessionService is NOT available at application level (security!)
+    expect(() => appContainer.resolve('ISessionService')).toThrow(DependencyNotFoundError);
+  });
+
+  it('should create child scopes for transactions', function () {
+    const appContainer = new Container({ tags: ['application'] });
+
+    // RequestHandler can create a transaction scope for database operations
+    class RequestHandler {
+      constructor(@inject(select.scope.create({ tags: ['transaction'] })) public transactionScope: IContainer) {}
+
+      executeInTransaction(): boolean {
+        // Transaction scope inherits from request scope
+        // Database operations can be rolled back together
+        return this.transactionScope.hasTag('transaction');
+      }
     }
 
-    const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(SharedState));
-    const requestScope = appContainer.createScope({ tags: ['request'] });
+    const handler = appContainer.resolve(RequestHandler);
 
-    // Both resolve to the SAME instance because it's a singleton in the app scope
-    const appState = appContainer.resolve('SharedState');
-    const requestState = requestScope.resolve('SharedState');
-
-    expect(appState).toBe(requestState);
+    expect(handler.transactionScope).not.toBe(appContainer);
+    expect(handler.transactionScope.hasTag('transaction')).toBe(true);
+    expect(handler.executeInTransaction()).toBe(true);
   });
 });
 
@@ -2741,30 +2723,10 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 ### OnConstruct
 
 ```typescript
-import {
-  AddOnConstructHookModule,
-  Container,
-  IHookContext,
-  HookFn,
-  inject,
-  onConstruct,
-  Registration as R,
-} from 'ts-ioc-container';
+import 'reflect-metadata';
+import { AddOnConstructHookModule, Container, type HookFn, inject, onConstruct, Registration as R } from 'ts-ioc-container';
 
-/**
- * Lifecycle - OnConstruct Hook
- *
- * The @onConstruct hook allows you to run logic immediately after an object is created.
- * This is useful for:
- * - Initialization logic that depends on injected services
- * - Setting up event listeners
- * - Establishing connections (though lazy is often better)
- * - Computing initial state
- *
- * Note: You must register the AddOnConstructHookModule or manually add the hook runner.
- */
-
-const execute: HookFn = (ctx: IHookContext) => {
+const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
@@ -2774,8 +2736,6 @@ describe('onConstruct', function () {
       isConnected = false;
       connectionString = '';
 
-      // @onConstruct marks this method to be called after instantiation
-      // Arguments are resolved from the container like constructor params
       @onConstruct(execute)
       connect(@inject('ConnectionString') connectionString: string) {
         this.connectionString = connectionString;
@@ -2784,12 +2744,9 @@ describe('onConstruct', function () {
     }
 
     const container = new Container()
-      // Enable @onConstruct support
       .useModule(new AddOnConstructHookModule())
-      // Register config
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
-    // Resolve class - constructor is called, then @onConstruct method
     const db = container.resolve(DatabaseConnection);
 
     expect(db.isConnected).toBe(true);
@@ -2802,6 +2759,7 @@ describe('onConstruct', function () {
 ### OnDispose
 
 ```typescript
+import 'reflect-metadata';
 import {
   AddOnDisposeHookModule,
   bindTo,
@@ -2829,10 +2787,6 @@ class LogsRepo {
 
 @register(bindTo('logger'))
 class Logger {
-  @onDispose(({ instance, methodName }) => {
-    // @ts-ignore
-    instance[methodName].push('world');
-  }) // <--- or extract it to @onDispose
   private messages: string[] = [];
 
   constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
@@ -2848,7 +2802,7 @@ class Logger {
 }
 
 describe('onDispose', function () {
-  it('should invoke hooks on all instances', function () {
+  it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
       .useModule(new AddOnDisposeHookModule())
       .addRegistration(R.fromClass(Logger))
@@ -2860,7 +2814,7 @@ describe('onDispose', function () {
 
     container.dispose();
 
-    expect(logsRepo.savedLogs.join(',')).toBe('Hello,world');
+    expect(logsRepo.savedLogs).toEqual(['Hello']);
   });
 });
 

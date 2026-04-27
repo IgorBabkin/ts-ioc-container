@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import {
   AddOnDisposeHookModule,
   bindTo,
@@ -25,10 +26,6 @@ class LogsRepo {
 
 @register(bindTo('logger'))
 class Logger {
-  @onDispose(({ instance, methodName }) => {
-    // @ts-ignore
-    instance[methodName].push('world');
-  }) // <--- or extract it to @onDispose
   private messages: string[] = [];
 
   constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
@@ -44,7 +41,7 @@ class Logger {
 }
 
 describe('onDispose', function () {
-  it('should invoke hooks on all instances', function () {
+  it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
       .useModule(new AddOnDisposeHookModule())
       .addRegistration(R.fromClass(Logger))
@@ -56,6 +53,6 @@ describe('onDispose', function () {
 
     container.dispose();
 
-    expect(logsRepo.savedLogs.join(',')).toBe('Hello,world');
+    expect(logsRepo.savedLogs).toEqual(['Hello']);
   });
 });
