@@ -68,6 +68,10 @@ export const pageHeadings: Record<string, Heading[]> = {
       level: 2,
     },
   ],
+  "/ts-ioc-container/benchmarks": [
+    { id: "benchmark-runner", text: "Benchmark Runner", level: 2 },
+    { id: "benchmark-results", text: "Results", level: 2 },
+  ],
   "/ts-ioc-container/container": [
     { id: "scopes", text: "Scopes", level: 2 },
     {
