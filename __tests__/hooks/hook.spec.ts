@@ -1,6 +1,7 @@
 import {
   AddOnConstructHookModule,
   AddOnDisposeHookModule,
+  args,
   bindTo,
   Container,
   GroupAliasToken,
@@ -43,7 +44,7 @@ describe('hooks', () => {
       @hook('syncBefore', (ctx) => {
         ctx.invokeMethod();
       })
-      start(firstArg: string, @inject('suffix') suffix: string, runtimeArg: string) {
+      start(@inject(args(0)) firstArg: string, @inject('suffix') suffix: string, runtimeArg: string) {
         this.receivedArgs = [firstArg, suffix, runtimeArg];
       }
     }

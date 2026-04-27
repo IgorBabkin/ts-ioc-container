@@ -3,7 +3,6 @@ import { InjectionToken, isInjectionToken } from '../token/InjectionToken';
 import { ConstantToken } from '../token/ConstantToken';
 import { toToken } from '../token/toToken';
 import { InjectFn } from '../hooks/hook';
-import { fillEmptyIndexes } from '../utils/array';
 import { type constructor, Is } from '../utils/basic';
 import { getParamMeta, paramMeta } from '../metadata/parameter';
 import { ProviderOptions } from '../provider/IProvider';
@@ -31,13 +30,12 @@ export const argsFn =
   (c, options) =>
     fn(options.args ?? []);
 
+const resolveTokens = (scope: IContainer, deps: unknown[]): unknown[] =>
+  deps.map((v) => (isInjectionToken(v) ? v : new ConstantToken(v))).map((t) => t.resolve(scope));
+
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
-  const argsTokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
+  const argsMetaTokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
   return (scope: IContainer, { args = [], lazy }: ProviderOptions): unknown[] => {
-    const depsTokens = args.map((v) => {
-      return !isInjectionToken(v) ? new ConstantToken(v) : v;
-    });
-    const allTokens = fillEmptyIndexes(argsTokens, depsTokens);
-    return allTokens.map((fn) => fn.resolve(scope, { args, lazy }));
+    return argsMetaTokens.map((fn) => fn.resolve(scope, { args: resolveTokens(scope, args), lazy }));
   };
 };

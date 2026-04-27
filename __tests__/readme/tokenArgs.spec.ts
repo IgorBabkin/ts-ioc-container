@@ -1,4 +1,4 @@
-import { bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
+import { args, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
 
 /**
  * Configuration - Token with Arguments
@@ -19,8 +19,8 @@ interface IApiClient {
 @register(bindTo('IApiClient'))
 class ApiClient implements IApiClient {
   constructor(
-    public baseUrl: string,
-    public timeout: number,
+    @inject(args(0)) public baseUrl: string,
+    @inject(args(1)) public timeout: number,
   ) {}
 
   get(endpoint: string): string {

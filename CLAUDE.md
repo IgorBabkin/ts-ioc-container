@@ -94,17 +94,25 @@ All token classes accept `{ getArgsFn?, isLazy? }` as an optional second constru
 - **`args` reserved keyword**: `deps.args` returns the raw `args[]` array passed at resolve time
 - **Alias convention**: property names containing `"alias"` (case-insensitive) resolve via `resolveByAlias` instead of `resolve`
 
-### resolveByArgs and Token Args
+### Token Args and Explicit Injection
 
-`resolveByArgs` is an `ArgsFn` that maps each element of the `args` array: `InjectionToken` instances are resolved from the container, constructors are resolved by type, primitives pass through. Use with `setArgsFn(resolveByArgs)` on providers that need to accept token arguments:
+**Constructor params without `@inject` resolve to `undefined`.** Injection is
+explicit — annotate every parameter that should come from the container or the
+runtime args list.
+
+When args are forwarded into a constructor (via `token.args(...)`,
+`setArgs(...)`, `setArgsFn(...)`), the injector resolves any element that is an
+`InjectionToken` and passes everything else through as a literal. **Bare
+constructors are not auto-resolved** — wrap a class in `ClassToken` to opt into
+resolution.
 
 ```typescript
-@register(bindTo(EntityManagerToken), setArgsFn(resolveByArgs))
+@register(bindTo(EntityManagerToken), singleton(MultiCache.fromFirstArg))
 class EntityManager {
-  constructor(public repo: IRepository) {}
+  constructor(@inject(args(0)) public repo: IRepository) {}
 }
-// ValueToken is resolved and its value passed as constructor arg
-EntityManagerToken.args(ValueToken).resolve(container);
+// UserRepositoryToken is an InjectionToken — auto-resolved before reaching @inject(args(0))
+EntityManagerToken.args(UserRepositoryToken).resolve(container);
 ```
 
 ### Hooks

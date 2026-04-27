@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  args,
   bindTo,
   ClassToken,
   ConstantToken,
@@ -7,6 +8,7 @@ import {
   FunctionToken,
   GroupAliasToken,
   GroupInstanceToken,
+  inject,
   MethodNotImplementedError,
   register,
   Registration as R,
@@ -52,8 +54,8 @@ describe('Spec: token-based injection', () => {
   it('composes token arguments immutably', () => {
     class Report {
       constructor(
-        readonly format: string,
-        readonly tenant: string,
+        @inject(args(0)) readonly format: string,
+        @inject(args(1)) readonly tenant: string,
       ) {}
     }
 

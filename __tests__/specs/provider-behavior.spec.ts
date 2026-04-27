@@ -1,13 +1,14 @@
 import 'reflect-metadata';
 import {
+  args,
   Container,
   decorate,
   DependencyNotFoundError,
+  inject,
   lazy,
   multiCache,
   register,
   Registration as R,
-  resolveByArgs,
   setArgs,
   setArgsFn,
   singleton,
@@ -35,7 +36,7 @@ describe('Spec: provider behavior', () => {
   it('caches singleton results by configured cache key', () => {
     @register(setArgsFn((_, { args = [] } = {}) => args), singleton(() => multiCache((tenant) => tenant)))
     class TenantRepository {
-      constructor(readonly tenant: string) {}
+      constructor(@inject(args(0)) readonly tenant: string) {}
     }
 
     const container = new Container().addRegistration(R.fromClass(TenantRepository));
@@ -58,14 +59,13 @@ describe('Spec: provider behavior', () => {
     @register(setArgsFn((scope) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing']))
     class Endpoint {
       constructor(
-        readonly region: string,
-        readonly service: string,
+        @inject(args(0)) readonly region: string,
+        @inject(args(1)) readonly service: string,
       ) {}
     }
 
-    @register(setArgsFn(resolveByArgs))
     class UsesTokenArg {
-      constructor(readonly config: RegionConfig) {}
+      constructor(@inject(args(0)) readonly config: RegionConfig) {}
     }
 
     const ConfigToken = new SingleToken<RegionConfig>('RegionConfig');
@@ -83,7 +83,7 @@ describe('Spec: provider behavior', () => {
 
     @register(setArgs('fixed'))
     class FixedEndpoint {
-      constructor(readonly value: string) {}
+      constructor(@inject(args(0)) readonly value: string) {}
     }
 
     container.addRegistration(R.fromClass(FixedEndpoint));

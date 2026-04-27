@@ -38,6 +38,26 @@ describe('Spec: injector strategies', () => {
     expect(controller.auditKey).toBe('tenant-a:audit');
   });
 
+  it('leaves constructor parameters without @inject metadata as undefined', () => {
+    class Logger {
+      readonly name = 'logger';
+    }
+
+    class Controller {
+      constructor(
+        @inject('Logger') readonly logger: Logger,
+        readonly unannotated?: string,
+      ) {}
+    }
+
+    const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(Controller));
+
+    const controller = container.resolve<Controller>('Controller');
+
+    expect(controller.logger).toBeInstanceOf(Logger);
+    expect(controller.unannotated).toBeUndefined();
+  });
+
   it('uses the simple injector for direct container access', () => {
     class Logger {
       readonly name = 'logger';

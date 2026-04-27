@@ -1,10 +1,8 @@
 import { IContainer, Tagged } from '../container/IContainer';
 import { isProviderPipe, ProviderPipe, registerPipe } from './ProviderPipe';
 import { InjectOptions } from '../injector/IInjector';
-import { InjectionToken } from '../token/InjectionToken';
 
 import { MapFn } from '../utils/fp';
-import { Is } from '../utils/basic';
 
 export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
@@ -34,17 +32,6 @@ export interface IProvider<T = any> {
 export const setArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.setArgs(() => extraArgs));
 
 export const setArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
-
-export const resolveByArgs: ArgsFn = (s, { args = [] } = {}) =>
-  args.map((d) => {
-    if (d instanceof InjectionToken) {
-      return d.resolve(s);
-    }
-    if (Is.constructor(d)) {
-      return s.resolve(d);
-    }
-    return d;
-  });
 
 export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.setAccessRule(rule));
 

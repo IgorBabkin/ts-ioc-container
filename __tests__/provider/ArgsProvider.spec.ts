@@ -4,10 +4,10 @@ import {
   bindTo,
   Container,
   inject,
+  args,
   MultiCache,
   register,
   Registration as R,
-  resolveByArgs,
   singleton,
   SingleToken,
 } from '../../lib';
@@ -30,7 +30,7 @@ describe('ArgsProvider', function () {
   describe('Static Arguments', () => {
     it('can pass static arguments to constructor', function () {
       class FileLogger {
-        constructor(public filename: string) {}
+        constructor(@inject(args(0)) public filename: string) {}
       }
 
       // Pre-configure the logger with a filename
@@ -43,7 +43,7 @@ describe('ArgsProvider', function () {
 
     it('prioritizes provided args over resolve args', function () {
       class Logger {
-        constructor(public context: string) {}
+        constructor(@inject(args(0)) public context: string) {}
       }
 
       // 'FixedContext' wins over any runtime args
@@ -64,7 +64,7 @@ describe('ArgsProvider', function () {
       }
 
       class Service {
-        constructor(public env: string) {}
+        constructor(@inject(args(0)) public env: string) {}
       }
 
       const root = createContainer()
@@ -104,17 +104,18 @@ describe('ArgsProvider', function () {
       name = 'TodoRepository';
     }
 
-    // EntityManager is generic - it works with ANY repository
-    // We use argsFn(resolveByArgs) to tell it to look at the arguments passed to .args()
+    // EntityManager is generic - it works with ANY repository.
+    // The repository is the first arg passed via `EntityManagerToken.args(...)`.
+    // `@inject(args(0))` reads it; the container auto-resolves InjectionToken args
+    // before they reach the constructor.
     const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
 
     @register(
       bindTo(EntityManagerToken),
-      setArgsFn(resolveByArgs), // <--- Key magic: resolves dependencies based on arguments passed to token
       singleton(MultiCache.fromFirstArg), // Cache unique instance per repository type
     )
     class EntityManager {
-      constructor(public repository: IRepository) {}
+      constructor(@inject(args(0)) public repository: IRepository) {}
     }
 
     class App {

@@ -1,8 +1,10 @@
 import {
+  args,
   setArgs,
   setArgsFn,
   bindTo,
   Container,
+  inject,
   lazy,
   Provider,
   register,
@@ -76,7 +78,7 @@ describe('Provider', () => {
 
   it('supports args decorator for providing extra arguments', () => {
     class FileService {
-      constructor(readonly basePath: string) {}
+      constructor(@inject(args(0)) readonly basePath: string) {}
     }
 
     const container = new Container().register(
@@ -90,7 +92,7 @@ describe('Provider', () => {
 
   it('supports argsFn decorator for dynamic arguments', () => {
     class Database {
-      constructor(readonly connectionString: string) {}
+      constructor(@inject(args(0)) readonly connectionString: string) {}
     }
 
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(

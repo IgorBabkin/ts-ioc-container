@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { bindTo, Container, inject, lazy, Provider, register, Registration as R, singleton } from '../../lib';
+import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R, singleton } from '../../lib';
 
 /**
  * Lazy Loading with registerPipe
@@ -299,8 +299,8 @@ describe('lazy registerPipe', () => {
     @register(bindTo('Config'))
     class ConfigService {
       constructor(
-        public apiUrl: string,
-        public timeout: number,
+        @inject(args(0)) public apiUrl: string,
+        @inject(args(1)) public timeout: number,
       ) {
         initLog.push(`ConfigService initialized with ${apiUrl}`);
       }

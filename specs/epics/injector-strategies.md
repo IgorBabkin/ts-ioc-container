@@ -15,15 +15,16 @@ proxy-style access, or a custom construction strategy.
 
 ### Story: Resolve constructor metadata
 
-As a decorator-friendly TypeScript user, I can annotate constructor parameters
-with injection metadata so that collaborators are resolved automatically.
+As a decorator-friendly TypeScript user, I want injection to be explicit, so
+that only constructor parameters annotated with `@inject` (or its derivatives
+like `args` / `argsFn`) are resolved by the container.
 
 Acceptance criteria:
 
 - `@inject` records an injection token for a constructor parameter.
 - `MetadataInjector` resolves annotated constructor arguments from the
   container.
-- Caller-supplied runtime arguments can fill unannotated positions.
+- Constructor parameters without `@inject` metadata resolve to `undefined`.
 
 ### Story: Inject positional runtime arguments
 

@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0004 - Pipe-based composition via ProviderPipe](../../docs/adr/0004-provider-pipe-composition.md)
-- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `setArgs`, `setArgsFn`, `resolveByArgs`, `lazy`, `scopeAccess`, `decorate`, `ProviderPipe`
+- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `setArgs`, `setArgsFn`, `lazy`, `scopeAccess`, `decorate`, `ProviderPipe`
 - **Executable spec:** `__tests__/specs/provider-behavior.spec.ts`
 
 ## Intent
@@ -49,8 +49,11 @@ Acceptance criteria:
 - `setArgs` supplies fixed arguments to the provider.
 - `setArgsFn` computes arguments from the resolving container and incoming
   options.
-- `resolveByArgs` resolves injection tokens and constructors from an argument
-  list while preserving literal values.
+- Arguments forwarded into a class constructor are resolved when they are
+  `InjectionToken` instances and passed through as literals otherwise.
+
+> **!Important** — Bare constructors are **not** auto-resolved when passed as
+> arguments. Consumers must wrap them in a `ClassToken` to opt into resolution.
 
 ### Story: Delay class-instance construction
 

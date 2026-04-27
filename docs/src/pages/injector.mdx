@@ -48,7 +48,7 @@ The default injector uses TypeScript decorators and reflection metadata to injec
 
 `args(index)` is an `InjectFn` that extracts a specific element from the `args` array passed via `ProviderOptions`. Use it with `@inject` when you want a constructor parameter to receive a positional argument from the resolution context rather than a registered dependency.
 
-This is especially useful with the `setArgsFn(resolveByArgs)` pattern, where token-based arguments are resolved and forwarded as positional constructor args.
+Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(args(index))`. Parameters without `@inject` resolve to `undefined`. `InjectionToken` values passed in `args` are resolved automatically before they reach the constructor.
 
 <CodeBlock
   code={injectSpecCode}

@@ -977,7 +977,7 @@ The `lazy()` registerPipe can be used in two ways: with the `@register` decorato
 
 ```typescript
 import 'reflect-metadata';
-import { bindTo, Container, inject, lazy, Provider, register, Registration as R, singleton } from 'ts-ioc-container';
+import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R, singleton } from 'ts-ioc-container';
 
 /**
  * Lazy Loading with registerPipe
@@ -1277,8 +1277,8 @@ describe('lazy registerPipe', () => {
     @register(bindTo('Config'))
     class ConfigService {
       constructor(
-        public apiUrl: string,
-        public timeout: number,
+        @inject(args(0)) public apiUrl: string,
+        @inject(args(1)) public timeout: number,
       ) {
         initLog.push(`ConfigService initialized with ${apiUrl}`);
       }
@@ -1657,10 +1657,12 @@ Provider is dependency factory which creates dependency.
 
 ```typescript
 import {
+  args,
   setArgs,
   setArgsFn,
   bindTo,
   Container,
+  inject,
   lazy,
   Provider,
   register,
@@ -1734,7 +1736,7 @@ describe('Provider', () => {
 
   it('supports args decorator for providing extra arguments', () => {
     class FileService {
-      constructor(readonly basePath: string) {}
+      constructor(@inject(args(0)) readonly basePath: string) {}
     }
 
     const container = new Container().register(
@@ -1748,7 +1750,7 @@ describe('Provider', () => {
 
   it('supports argsFn decorator for dynamic arguments', () => {
     class Database {
-      constructor(readonly connectionString: string) {}
+      constructor(@inject(args(0)) readonly connectionString: string) {}
     }
 
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(
@@ -1901,18 +1903,18 @@ Sometimes you want to bind some arguments to provider. This is what `ArgsProvide
 - `provider(setArgs('someArgument'))`
 - `provider(setArgsFn((container) => [container.resolve(Logger), 'someValue']))`
 - `Provider.fromClass(Logger).pipe(setArgs('someArgument'))`
-- Use `setArgsFn(resolveByArgs)` to resolve `InjectionToken` args at resolution time (tokens are resolved, primitives pass through)
 
 ### Token as argument
 
-When passing args via `token.args(...)`, if an argument is an `InjectionToken` and the provider uses `setArgsFn(resolveByArgs)`, the token is resolved to its value rather than wrapped as a constant.
+When you pass an `InjectionToken` via `token.args(...)`, the container resolves it before the value reaches the constructor. Bare constructors are **not** auto-resolved — wrap a class in `ClassToken` to opt into resolution.
 
 - `ServiceToken.args(ValueToken)` — `ValueToken` is resolved from the container, its value is passed as arg
+- `ServiceToken.args(new ClassToken(SomeService))` — `SomeService` is constructed by the container
 - `ServiceToken.args('literal')` — literal value passed directly
 
 ### Positional arg injection with `args(index)`
 
-Use `@inject(args(index))` to explicitly bind a constructor parameter to a positional argument from `ProviderOptions`. This is useful when combining `setArgsFn(resolveByArgs)` with token-based arg passing.
+Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(args(index))`. Parameters without `@inject` resolve to `undefined`.
 
 - `@inject(args(0))` — resolves the first element of the `args` array passed at resolution time
 - Works together with `token.args(...)` to pass typed dependencies through the args context
@@ -1935,10 +1937,10 @@ import {
   bindTo,
   Container,
   inject,
+  args,
   MultiCache,
   register,
   Registration as R,
-  resolveByArgs,
   singleton,
   SingleToken,
 } from 'ts-ioc-container';
@@ -1961,7 +1963,7 @@ describe('ArgsProvider', function () {
   describe('Static Arguments', () => {
     it('can pass static arguments to constructor', function () {
       class FileLogger {
-        constructor(public filename: string) {}
+        constructor(@inject(args(0)) public filename: string) {}
       }
 
       // Pre-configure the logger with a filename
@@ -1974,7 +1976,7 @@ describe('ArgsProvider', function () {
 
     it('prioritizes provided args over resolve args', function () {
       class Logger {
-        constructor(public context: string) {}
+        constructor(@inject(args(0)) public context: string) {}
       }
 
       // 'FixedContext' wins over any runtime args
@@ -1995,7 +1997,7 @@ describe('ArgsProvider', function () {
       }
 
       class Service {
-        constructor(public env: string) {}
+        constructor(@inject(args(0)) public env: string) {}
       }
 
       const root = createContainer()
@@ -2035,17 +2037,18 @@ describe('ArgsProvider', function () {
       name = 'TodoRepository';
     }
 
-    // EntityManager is generic - it works with ANY repository
-    // We use argsFn(resolveByArgs) to tell it to look at the arguments passed to .args()
+    // EntityManager is generic - it works with ANY repository.
+    // The repository is the first arg passed via `EntityManagerToken.args(...)`.
+    // `@inject(args(0))` reads it; the container auto-resolves InjectionToken args
+    // before they reach the constructor.
     const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
 
     @register(
       bindTo(EntityManagerToken),
-      setArgsFn(resolveByArgs), // <--- Key magic: resolves dependencies based on arguments passed to token
       singleton(MultiCache.fromFirstArg), // Cache unique instance per repository type
     )
     class EntityManager {
-      constructor(public repository: IRepository) {}
+      constructor(@inject(args(0)) public repository: IRepository) {}
     }
 
     class App {
@@ -2352,6 +2355,7 @@ Sometimes you want to decorate you class with some logic. This is what `Decorato
 
 ```typescript
 import {
+  args,
   bindTo,
   Container,
   decorate,
@@ -2405,7 +2409,7 @@ describe('Decorator Pattern', () => {
   // Decorator: Wraps any IRepository with logging behavior
   class LoggingRepository implements IRepository {
     constructor(
-      private repository: IRepository,
+      @inject(args(0)) private repository: IRepository,
       @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 

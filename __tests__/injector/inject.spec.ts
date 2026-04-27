@@ -1,4 +1,4 @@
-import { args, argsFn, Container, inject, Registration as R, resolveByArgs, setArgsFn, SingleToken } from '../../lib';
+import { args, argsFn, Container, inject, Registration as R, setArgsFn, SingleToken } from '../../lib';
 
 describe('inject helpers', () => {
   function createContainer() {
@@ -38,7 +38,7 @@ describe('inject helpers', () => {
       expect(container.resolve<Service>('Service').value).toBeUndefined();
     });
 
-    it('works with resolveByArgs pattern for token-based arg injection', () => {
+    it('resolves InjectionToken args passed via token.args() before reaching @inject(args(...))', () => {
       const ValueToken = new SingleToken<string>('value');
 
       class Service {
@@ -48,7 +48,7 @@ describe('inject helpers', () => {
       const ServiceToken = new SingleToken<Service>('Service');
       const container = createContainer()
         .addRegistration(R.fromValue('injected').bindTo(ValueToken))
-        .addRegistration(R.fromClass(Service).pipe(setArgsFn(resolveByArgs)).bindTo(ServiceToken));
+        .addRegistration(R.fromClass(Service).bindTo(ServiceToken));
 
       const instance = ServiceToken.args(ValueToken).resolve(container);
       expect(instance.value).toBe('injected');

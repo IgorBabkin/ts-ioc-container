@@ -1,9 +1,11 @@
 import {
+  args,
   setArgs,
   bindTo,
   Container,
   ContainerDisposedError,
   DependencyNotFoundError,
+  inject,
   register,
   Registration as R,
   scope,
@@ -14,7 +16,7 @@ import {
 
 @register(bindTo('logger'))
 class Logger {
-  constructor(public topic: string) {}
+  constructor(@inject(args(0)) public topic: string) {}
 }
 
 describe('IocContainer', function () {

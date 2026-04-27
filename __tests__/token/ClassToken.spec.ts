@@ -1,4 +1,4 @@
-import { ClassToken, Container } from '../../lib';
+import { args, ClassToken, Container, inject } from '../../lib';
 import type { IContainer } from '../../lib/container/IContainer';
 
 describe('ClassToken', () => {
@@ -9,7 +9,7 @@ describe('ClassToken', () => {
   });
 
   class TestClass {
-    constructor(public value: string = 'default') {}
+    constructor(@inject(args(0)) public value: string = 'default') {}
   }
 
   it('should resolve class', () => {

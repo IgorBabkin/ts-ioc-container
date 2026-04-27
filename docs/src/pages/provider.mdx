@@ -81,18 +81,18 @@ Argument providers allow you to bind constructor arguments at registration time.
 
 ### Argument Priority
 
-When `setArgsFn` is set on a provider it controls the final args. Without it, resolve-time `args` are passed through by default. Use `setArgsFn(resolveByArgs)` to resolve `InjectionToken` arguments:
+When `setArgsFn` is set on a provider it controls the final args. Without it, resolve-time `args` are passed through by default. The injector resolves any `InjectionToken` in the args list before it reaches the constructor — bare constructors are **not** auto-resolved. Constructor parameters must be annotated with `@inject(args(index))` to read positional args:
 
 ```typescript
-// resolveByArgs resolves tokens, passes primitives as-is
 const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
 
-@register(bindTo(EntityManagerToken), setArgsFn(resolveByArgs))
+@register(bindTo(EntityManagerToken))
 class EntityManager {
-  constructor(public repository: IRepository) {}
+  constructor(@inject(args(0)) public repository: IRepository) {}
 }
 
-// UserRepositoryToken is resolved and its value passed as the constructor arg
+// UserRepositoryToken is an InjectionToken — resolved automatically before
+// reaching @inject(args(0)).
 const em = EntityManagerToken.args(UserRepositoryToken).resolve(container);
 ```
 
