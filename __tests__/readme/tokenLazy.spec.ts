@@ -1,10 +1,10 @@
-import { args, bindTo, setArgs, Container, inject, register, Registration as R, SingleToken } from '../../lib';
+import { args, appendArgs, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
 
 interface IConfig {
   apiUrl: string;
 }
 
-@register(bindTo('IConfig'), setArgs('https://api.example.com'))
+@register(bindTo('IConfig'), appendArgs('https://api.example.com'))
 class ConfigService implements IConfig {
   constructor(@inject(args(0)) public apiUrl: string) {}
 }

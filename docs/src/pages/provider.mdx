@@ -71,7 +71,7 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
 
 <h2 id="arguments" class="toc-link">Arguments</h2>
 
-Argument providers allow you to bind constructor arguments at registration time. This is useful for configuration values, dependencies that should be resolved at provider creation, or default values.
+Argument providers allow you to append constructor arguments at registration time. This is useful for configuration values, dependencies that should be resolved at provider creation, or default values.
 
 <CodeBlock
   code={providerSpecCode}
@@ -79,9 +79,9 @@ Argument providers allow you to bind constructor arguments at registration time.
   filename="__tests__/readme/provider.spec.ts"
 />
 
-### Argument Priority
+### Argument Order
 
-When `setArgsFn` is set on a provider it controls the final args. Without it, resolve-time `args` are passed through by default. The injector resolves any `InjectionToken` in the args list before it reaches the constructor — bare constructors are **not** auto-resolved. Constructor parameters must be annotated with `@inject(args(index))` to read positional args:
+Resolve-time `args` are passed through by default. Provider-level `appendArgs` and `appendArgsFn` add values after those incoming args instead of replacing them. The injector resolves any `InjectionToken` in the args list before it reaches the constructor — bare constructors are **not** auto-resolved. Constructor parameters must be annotated with `@inject(args(index))` to read positional args:
 
 ```typescript
 const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
@@ -234,7 +234,7 @@ Lazy loading works seamlessly with other provider features:
   code={`// Lazy + Singleton + Arguments
 R.fromClass(ConfigService)
   .pipe(
-    (p) => p.setArgs(() => ['https://api.example.com', 5000]),
+    (p) => p.appendArgs('https://api.example.com', 5000),
     (p) => p.lazy(),
     singleton()
   );

@@ -28,8 +28,6 @@ export {
   lazy,
   appendArgs,
   appendArgsFn,
-  setArgsFn,
-  setArgs,
   type ArgsFn,
   ProviderDecorator,
   type IMapper,

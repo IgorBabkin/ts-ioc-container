@@ -48,7 +48,7 @@ describe('IContainer', function () {
       }
     }
 
-    const provider = new MyProvider().setArgs(() => ['world']);
+    const provider = new MyProvider().appendArgs('world');
     const root = new Container({ tags: ['root'] }).register('myProvider', provider, { aliases: ['greeting'] });
 
     expect(root.resolve('myProvider')).toBe('hello world');

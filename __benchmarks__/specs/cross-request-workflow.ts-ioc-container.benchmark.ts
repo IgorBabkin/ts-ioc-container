@@ -5,7 +5,6 @@ import {
   register,
   Registration as R,
   scope,
-  setArgsFn,
   singleton,
   toGroupAlias,
 } from '../../lib';
@@ -19,7 +18,7 @@ interface TsIocBenchmarkWorkflowPlugin {
   enrich(input: string): string;
 }
 
-@register(scope((container) => container.hasTag('request')), setArgsFn((_, { args = [] } = {}) => args), singleton())
+@register(scope((container) => container.hasTag('request')), singleton())
 class TsIocBenchmarkWorkflowSession {
   constructor(readonly requestId: string) {}
 }

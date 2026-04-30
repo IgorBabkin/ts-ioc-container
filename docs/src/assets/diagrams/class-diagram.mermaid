@@ -27,7 +27,8 @@ classDiagram
         +hasAccess(options) boolean
         +pipe(mappers) IProvider
         +setAccessRule(rule) this
-        +setArgs(fn) this
+        +appendArgs(args) this
+        +appendArgsFn(fn) this
         +lazy() this
     }
 
@@ -94,4 +95,3 @@ classDiagram
     IRegistration <|.. Registration
     Registration --> IProvider : creates
     Container --> Container : parent-child
-

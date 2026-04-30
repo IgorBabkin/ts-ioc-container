@@ -55,7 +55,7 @@ have been applied.
 
 - Scope matching runs when a registration is applied to a container, not during
   every successful provider resolution.
-- Provider features such as `singleton`, `lazy`, `setArgsFn`, and
+- Provider features such as `singleton`, `lazy`, `appendArgsFn`, and
   `scopeAccess` compose without requiring registration-specific logic.
   `lazy` is intentionally limited to class instance results; primitive values,
   plain values, functions, and other non-class provider results should resolve

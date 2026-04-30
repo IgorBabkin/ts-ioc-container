@@ -53,11 +53,6 @@ export class Provider<T = any> implements IProvider<T> {
     return this;
   }
 
-  setArgs(argsFn: ArgsFn): this {
-    this.argsFn = argsFn;
-    return this;
-  }
-
   appendArgs(...extraArgs: unknown[]): this {
     const parentFn = this.argsFn;
     this.argsFn = (container, options) => [...parentFn(container, options), ...extraArgs];

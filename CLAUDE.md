@@ -101,7 +101,7 @@ explicit — annotate every parameter that should come from the container or the
 runtime args list.
 
 When args are forwarded into a constructor (via `token.args(...)`,
-`setArgs(...)`, `setArgsFn(...)`), the injector resolves any element that is an
+`appendArgs(...)`, `appendArgsFn(...)`), the injector resolves any element that is an
 `InjectionToken` and passes everything else through as a literal. **Bare
 constructors are not auto-resolved** — wrap a class in `ClassToken` to opt into
 resolution.

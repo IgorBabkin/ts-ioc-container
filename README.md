@@ -56,7 +56,7 @@ no global container objects.
   - [Proxy](#proxy)
 - [Provider](#provider) `provider`
   - [Singleton](#singleton) `singleton`
-  - [Arguments](#arguments) `setArgs` `setArgsFn`
+  - [Arguments](#arguments) `appendArgs` `appendArgsFn`
   - [Visibility](#visibility) `visible`
   - [Alias](#alias) `asAlias`
   - [Decorator](#decorator) `decorate`
@@ -140,7 +140,7 @@ container.resolve(App).start();
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
 > `R.fromClass(Class).bindToKey('Key')` chain. The decorator co-locates the binding
 > with the class and reads consistently with other registration pipes
-> (`scope`, `singleton`, `setArgsFn`, ...). Use the fluent `bindToKey` chain only
+> (`scope`, `singleton`, `appendArgsFn`, ...). Use the fluent `bindToKey` chain only
 > for `R.fromValue(...)` and `R.fromFn(...)` (which have no class to decorate)
 > or for third-party classes you don't own.
 
@@ -1442,7 +1442,7 @@ describe('lazy registerPipe', () => {
       const container = new Container().addRegistration(
         R.fromClass(ConfigService)
           .pipe(
-            (p) => p.setArgs(() => ['https://api.example.com', 5000]),
+            (p) => p.appendArgs('https://api.example.com', 5000),
             (p) => p.lazy(),
           )
           .pipe(singleton()),
@@ -1740,8 +1740,8 @@ Provider is dependency factory which creates dependency.
 ```typescript
 import {
   args,
-  setArgs,
-  setArgsFn,
+  appendArgs,
+  appendArgsFn,
   bindTo,
   Container,
   inject,
@@ -1823,7 +1823,7 @@ describe('Provider', () => {
 
     const container = new Container().register(
       'FileService',
-      Provider.fromClass(FileService).pipe(setArgs('/var/data')),
+      Provider.fromClass(FileService).pipe(appendArgs('/var/data')),
     );
 
     const service = container.resolve<FileService>('FileService');
@@ -1839,7 +1839,7 @@ describe('Provider', () => {
       'Database',
       Provider.fromClass(Database).pipe(
         // Dynamically resolve connection string at creation time
-        setArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
+        appendArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
       ),
     );
 
@@ -1982,9 +1982,9 @@ describe('Singleton', function () {
 
 Sometimes you want to bind some arguments to provider.
 
-- `provider(setArgs('someArgument'))`
-- `provider(setArgsFn((container) => [container.resolve(Logger), 'someValue']))`
-- `Provider.fromClass(Logger).pipe(setArgs('someArgument'))`
+- `provider(appendArgs('someArgument'))`
+- `provider(appendArgsFn((container) => [container.resolve(Logger), 'someValue']))`
+- `Provider.fromClass(Logger).pipe(appendArgs('someArgument'))`
 
 ### Token as argument
 
@@ -2024,8 +2024,6 @@ import {
   inject,
   register,
   Registration as R,
-  setArgs,
-  setArgsFn,
   SingleToken,
   singleton,
 } from 'ts-ioc-container';
@@ -2048,7 +2046,7 @@ describe('IProvider', function () {
   describe('Static Arguments', () => {
     it('can pass static arguments to constructor', function () {
       // Pre-configure the logger with a filename
-      @register(setArgs('/var/log/app.log'))
+      @register(appendArgs('/var/log/app.log'))
       class FileLogger {
         constructor(@inject(args(0)) public filename: string) {}
       }
@@ -2060,19 +2058,21 @@ describe('IProvider', function () {
       expect(logger.filename).toBe('/var/log/app.log');
     });
 
-    it('prioritizes provided args over resolve args', function () {
-      // 'FixedContext' wins over any runtime args
-      @register(setArgs('FixedContext'))
+    it('appends configured args after resolve args', function () {
+      @register(appendArgs('ConfiguredContext'))
       class Logger {
-        constructor(@inject(args(0)) public context: string) {}
+        constructor(
+          @inject(args(0)) public runtimeContext: string,
+          @inject(args(1)) public configuredContext: string,
+        ) {}
       }
 
       const root = createContainer().addRegistration(R.fromClass(Logger));
 
-      // Even if we ask for 'RuntimeContext', we get 'FixedContext'
       const logger = root.resolve<Logger>('Logger', { args: ['RuntimeContext'] });
 
-      expect(logger.context).toBe('FixedContext');
+      expect(logger.runtimeContext).toBe('RuntimeContext');
+      expect(logger.configuredContext).toBe('ConfiguredContext');
     });
   });
 
@@ -2083,7 +2083,7 @@ describe('IProvider', function () {
       }
 
       // Extract 'env' from Config service dynamically
-      @register(setArgsFn((scope) => [scope.resolve<Config>('Config').env]))
+      @register(appendArgsFn((scope) => [scope.resolve<Config>('Config').env]))
       class Service {
         constructor(@inject(args(0)) public env: string) {}
       }
@@ -2114,29 +2114,26 @@ describe('IProvider', function () {
       expect(service.configured).toBe('configured');
     });
 
-    it('can append dynamic arguments after an existing argsFn', function () {
+    it('can append dynamic arguments after runtime args', function () {
       class Config {
         tenant = 'tenant-a';
       }
 
-      @register(
-        setArgs('fixed'),
-        appendArgsFn((scope, { args = [] } = {}) => [scope.resolve<Config>('Config').tenant, ...args]),
-      )
+      @register(appendArgs('fixed'), appendArgsFn((scope) => [scope.resolve<Config>('Config').tenant]))
       class Service {
         constructor(
-          @inject(args(0)) public fixed: string,
-          @inject(args(1)) public tenant: string,
-          @inject(args(2)) public runtime: string,
+          @inject(args(0)) public runtime: string,
+          @inject(args(1)) public fixed: string,
+          @inject(args(2)) public tenant: string,
         ) {}
       }
 
       const root = createContainer().addRegistration(R.fromClass(Config)).addRegistration(R.fromClass(Service));
 
       const service = root.resolve<Service>('Service', { args: ['runtime'] });
+      expect(service.runtime).toBe('runtime');
       expect(service.fixed).toBe('fixed');
       expect(service.tenant).toBe('tenant-a');
-      expect(service.runtime).toBe('runtime');
     });
   });
 

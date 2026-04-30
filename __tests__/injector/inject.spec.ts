@@ -1,5 +1,15 @@
 import 'reflect-metadata';
-import { args, argsFn, Container, inject, register, Registration as R, setArgsFn, SingleToken } from '../../lib';
+import {
+  args,
+  appendArgs,
+  appendArgsFn,
+  argsFn,
+  Container,
+  inject,
+  register,
+  Registration as R,
+  SingleToken,
+} from '../../lib';
 
 describe('inject helpers', () => {
   function createContainer() {
@@ -24,7 +34,7 @@ describe('inject helpers', () => {
     });
 
     it('returns undefined for out-of-bounds index', () => {
-      @register(setArgsFn(() => ['only']))
+      @register(appendArgs('only'))
       class Service {
         constructor(@inject(args(5)) public value: unknown) {}
       }
@@ -45,7 +55,7 @@ describe('inject helpers', () => {
     });
 
     it('can transform args into a complex object', () => {
-      @register(setArgsFn(() => ['x', 'y']))
+      @register(appendArgsFn(() => ['x', 'y']))
       class Service {
         constructor(@inject(argsFn((a, b) => ({ first: a, second: b }))) public data: unknown) {}
       }

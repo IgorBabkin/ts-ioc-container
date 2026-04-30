@@ -11,8 +11,6 @@ import {
   register,
   Registration as R,
   scopeAccess,
-  setArgs,
-  setArgsFn,
   SingleToken,
   singleton,
 } from '../../lib';
@@ -35,7 +33,7 @@ describe('Spec: provider behavior', () => {
   });
 
   it('caches singleton results by configured cache key', () => {
-    @register(setArgsFn((_, { args = [] } = {}) => args), singleton((tenant) => tenant as string))
+    @register(singleton((tenant) => tenant as string))
     class TenantRepository {
       constructor(@inject(args(0)) readonly tenant: string) {}
     }
@@ -57,7 +55,7 @@ describe('Spec: provider behavior', () => {
       readonly region = 'eu';
     }
 
-    @register(setArgsFn((scope) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing']))
+    @register(appendArgsFn((scope) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing']))
     class Endpoint {
       constructor(
         @inject(args(0)) readonly region: string,
@@ -82,13 +80,18 @@ describe('Spec: provider behavior', () => {
       container.resolve('RegionConfig'),
     );
 
-    @register(setArgs('fixed'))
+    @register(appendArgs('fixed'))
     class FixedEndpoint {
-      constructor(@inject(args(0)) readonly value: string) {}
+      constructor(
+        @inject(args(0)) readonly runtimeValue: string,
+        @inject(args(1)) readonly fixedValue: string,
+      ) {}
     }
 
     container.addRegistration(R.fromClass(FixedEndpoint));
-    expect(container.resolve<FixedEndpoint>('FixedEndpoint', { args: ['runtime'] }).value).toBe('fixed');
+    const fixedEndpoint = container.resolve<FixedEndpoint>('FixedEndpoint', { args: ['runtime'] });
+    expect(fixedEndpoint.runtimeValue).toBe('runtime');
+    expect(fixedEndpoint.fixedValue).toBe('fixed');
   });
 
   it('appends provider arguments without replacing the existing argument function', () => {
@@ -96,14 +99,10 @@ describe('Spec: provider behavior', () => {
       readonly tenant = 'tenant-a';
     }
 
-    @register(
-      setArgs('fixed'),
-      appendArgsFn((scope) => [scope.resolve<TenantConfig>('TenantConfig').tenant]),
-      appendArgs('tail'),
-    )
+    @register(appendArgsFn((scope) => [scope.resolve<TenantConfig>('TenantConfig').tenant]), appendArgs('tail'))
     class Endpoint {
       constructor(
-        @inject(args(0)) readonly fixed: string,
+        @inject(args(0)) readonly runtime: string,
         @inject(args(1)) readonly tenant: string,
         @inject(args(2)) readonly tail: string,
       ) {}
@@ -111,8 +110,8 @@ describe('Spec: provider behavior', () => {
 
     const container = new Container().addRegistration(R.fromClass(TenantConfig)).addRegistration(R.fromClass(Endpoint));
 
-    const endpoint = container.resolve<Endpoint>('Endpoint');
-    expect(endpoint.fixed).toBe('fixed');
+    const endpoint = container.resolve<Endpoint>('Endpoint', { args: ['runtime'] });
+    expect(endpoint.runtime).toBe('runtime');
     expect(endpoint.tenant).toBe('tenant-a');
     expect(endpoint.tail).toBe('tail');
   });

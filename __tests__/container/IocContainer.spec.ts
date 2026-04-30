@@ -1,4 +1,4 @@
-import { args, setArgs, bindTo, Container, inject, register, Registration as R, scope } from '../../lib';
+import { args, appendArgs, bindTo, Container, inject, register, Registration as R, scope } from '../../lib';
 
 @register(bindTo('logger'))
 class Logger {
@@ -7,7 +7,7 @@ class Logger {
 
 describe('IocContainer', function () {
   it('should keep argument for provider', function () {
-    const container = new Container().addRegistration(R.fromClass(Logger).pipe(setArgs('main')));
+    const container = new Container().addRegistration(R.fromClass(Logger).pipe(appendArgs('main')));
 
     expect(container.resolve<Logger>('logger').topic).toBe('main');
   });

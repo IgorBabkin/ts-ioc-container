@@ -24,18 +24,12 @@ export interface IProvider<T = any> {
 
   setAccessRule(hasAccessWhen: ScopeAccessRule): this;
 
-  setArgs(argsFn: ArgsFn): this;
-
   appendArgs(...extraArgs: unknown[]): this;
 
   appendArgsFn(argsFn: ArgsFn): this;
 
   lazy(): this;
 }
-
-export const setArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.setArgs(() => extraArgs));
-
-export const setArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
 
 export const appendArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.appendArgs(...extraArgs));
 
@@ -69,11 +63,6 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
       return m;
     });
     this.decorated = this.decorated.pipe(...fns);
-    return this;
-  }
-
-  setArgs(argsFn: ArgsFn): this {
-    this.decorated.setArgs(argsFn);
     return this;
   }
 

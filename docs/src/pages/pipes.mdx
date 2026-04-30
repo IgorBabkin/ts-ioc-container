@@ -172,7 +172,7 @@ You can mix ProviderPipe objects with raw transformation functions:
 
 R.fromClass(Service)
   .pipe(
-    (p) => p.setArgs(() => ['arg1', 'arg2']),  // Raw function
+    (p) => p.appendArgs('arg1', 'arg2'),       // Raw function
     lazy(),                                      // ProviderPipe
     singleton()                                  // ProviderPipe
   )`}

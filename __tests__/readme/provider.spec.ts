@@ -1,7 +1,7 @@
 import {
   args,
-  setArgs,
-  setArgsFn,
+  appendArgs,
+  appendArgsFn,
   bindTo,
   Container,
   inject,
@@ -83,7 +83,7 @@ describe('Provider', () => {
 
     const container = new Container().register(
       'FileService',
-      Provider.fromClass(FileService).pipe(setArgs('/var/data')),
+      Provider.fromClass(FileService).pipe(appendArgs('/var/data')),
     );
 
     const service = container.resolve<FileService>('FileService');
@@ -99,7 +99,7 @@ describe('Provider', () => {
       'Database',
       Provider.fromClass(Database).pipe(
         // Dynamically resolve connection string at creation time
-        setArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
+        appendArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
       ),
     );
 
