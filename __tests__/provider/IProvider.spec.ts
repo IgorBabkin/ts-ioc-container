@@ -21,7 +21,7 @@ import {
  * - Generic classes (like Repositories) that need to know what they are managing
  */
 
-describe('ArgsProvider', function () {
+describe('IProvider', function () {
   function createContainer() {
     return new Container();
   }
