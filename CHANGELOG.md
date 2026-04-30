@@ -1,3 +1,16 @@
+# [50.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v49.1.0...v50.0.0) (2026-04-30)
+
+
+* feat(provider)!: replace Cache abstraction with direct key function in singleton() ([2fb3e86](https://github.com/IgorBabkin/ts-ioc-container/commit/2fb3e86810d5a5fedfefc40067fcf06c4b97a576))
+
+
+### BREAKING CHANGES
+
+* `singleton(cacheProvider)` now takes `(getCacheKey: (...args) => string | symbol)`
+instead of `() => Cache`. Remove imports of `Cache`, `MultiCache`, `multiCache`.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
 # [49.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v49.0.0...v49.1.0) (2026-04-27)
 
 
