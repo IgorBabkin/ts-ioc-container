@@ -168,6 +168,7 @@ export const pageHeadings: Record<string, Heading[]> = {
       level: 2,
     },
     { id: "available-pipes", text: "Available Pipes", level: 2 },
+    { id: "scope-vs-scopeaccess", text: "scope() vs scopeAccess()", level: 2 },
     { id: "usage-examples", text: "Usage Examples", level: 2 },
     { id: "pipe-composition", text: "Pipe Composition", level: 2 },
     { id: "creating-custom-pipes", text: "Creating Custom Pipes", level: 2 },
