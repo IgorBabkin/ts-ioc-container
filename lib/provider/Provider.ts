@@ -58,6 +58,18 @@ export class Provider<T = any> implements IProvider<T> {
     return this;
   }
 
+  addArgs(...extraArgs: unknown[]): this {
+    const parentFn = this.argsFn;
+    this.argsFn = (container, options) => [...parentFn(container, options), ...extraArgs];
+    return this;
+  }
+
+  addArgsFn(argsFn: ArgsFn): this {
+    const parentFn = this.argsFn;
+    this.argsFn = (container, options) => [...parentFn(container, options), ...argsFn(container, options)];
+    return this;
+  }
+
   hasAccess(options: ScopeAccessOptions): boolean {
     return this.checkAccess(options);
   }

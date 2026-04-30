@@ -1,4 +1,4 @@
-# ADR 0011 - Spec-driven development workflow
+# ADR 0011 - Specs-driven development workflow
 
 - **Status:** Accepted
 - **Date:** 2026-04-26
@@ -17,7 +17,7 @@ contributor needs a clear path from product intent to implementation.
 
 ## Decision
 
-Use a spec-driven workflow for public behavior changes.
+Use a specs-driven workflow for public behavior changes.
 
 - ADRs explain important decisions and trade-offs.
 - Specs describe epics, stories, use cases, and acceptance criteria.

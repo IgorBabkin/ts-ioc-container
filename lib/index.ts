@@ -26,6 +26,8 @@ export {
   type IProvider,
   scopeAccess,
   lazy,
+  addArgs,
+  addArgsFn,
   setArgsFn,
   setArgs,
   type ArgsFn,

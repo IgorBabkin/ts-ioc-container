@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 import {
+  addArgs,
+  addArgsFn,
   args,
   Container,
   decorate,
@@ -87,6 +89,32 @@ describe('Spec: provider behavior', () => {
 
     container.addRegistration(R.fromClass(FixedEndpoint));
     expect(container.resolve<FixedEndpoint>('FixedEndpoint', { args: ['runtime'] }).value).toBe('fixed');
+  });
+
+  it('appends provider arguments without replacing the existing argument function', () => {
+    class TenantConfig {
+      readonly tenant = 'tenant-a';
+    }
+
+    @register(
+      setArgs('fixed'),
+      addArgsFn((scope) => [scope.resolve<TenantConfig>('TenantConfig').tenant]),
+      addArgs('tail'),
+    )
+    class Endpoint {
+      constructor(
+        @inject(args(0)) readonly fixed: string,
+        @inject(args(1)) readonly tenant: string,
+        @inject(args(2)) readonly tail: string,
+      ) {}
+    }
+
+    const container = new Container().addRegistration(R.fromClass(TenantConfig)).addRegistration(R.fromClass(Endpoint));
+
+    const endpoint = container.resolve<Endpoint>('Endpoint');
+    expect(endpoint.fixed).toBe('fixed');
+    expect(endpoint.tenant).toBe('tenant-a');
+    expect(endpoint.tail).toBe('tail');
   });
 
   it('delays class construction for lazy providers until first access', () => {

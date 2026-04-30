@@ -1,7 +1,7 @@
 # Epic: Dependency resolution
 
 - **Status:** Accepted
-- **ADR:** [ADR 0011 - Spec-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
+- **ADR:** [ADR 0011 - Specs-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
 - **Public API:** `Container`, `Registration`, `register`, `inject`, `resolve`
 - **Executable spec:** `__tests__/specs/dependency-resolution.spec.ts`
 - **Benchmarks:**

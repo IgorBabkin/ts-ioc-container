@@ -1,4 +1,6 @@
 import {
+  addArgs,
+  addArgsFn,
   args,
   bindTo,
   Container,
@@ -75,6 +77,49 @@ describe('IProvider', function () {
 
       const service = root.resolve<Service>('Service');
       expect(service.env).toBe('production');
+    });
+  });
+
+  describe('Appending Arguments', () => {
+    it('can append static arguments after existing resolve arguments', function () {
+      @register(addArgs('configured'))
+      class Service {
+        constructor(
+          @inject(args(0)) public runtime: string,
+          @inject(args(1)) public configured: string,
+        ) {}
+      }
+
+      const root = createContainer().addRegistration(R.fromClass(Service));
+
+      const service = root.resolve<Service>('Service', { args: ['runtime'] });
+      expect(service.runtime).toBe('runtime');
+      expect(service.configured).toBe('configured');
+    });
+
+    it('can append dynamic arguments after an existing argsFn', function () {
+      class Config {
+        tenant = 'tenant-a';
+      }
+
+      @register(
+        setArgs('fixed'),
+        addArgsFn((scope, { args = [] } = {}) => [scope.resolve<Config>('Config').tenant, ...args]),
+      )
+      class Service {
+        constructor(
+          @inject(args(0)) public fixed: string,
+          @inject(args(1)) public tenant: string,
+          @inject(args(2)) public runtime: string,
+        ) {}
+      }
+
+      const root = createContainer().addRegistration(R.fromClass(Config)).addRegistration(R.fromClass(Service));
+
+      const service = root.resolve<Service>('Service', { args: ['runtime'] });
+      expect(service.fixed).toBe('fixed');
+      expect(service.tenant).toBe('tenant-a');
+      expect(service.runtime).toBe('runtime');
     });
   });
 

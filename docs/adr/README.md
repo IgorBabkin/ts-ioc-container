@@ -21,7 +21,7 @@ is left intact so the historical reasoning remains discoverable.
 | 0008 | [Zero runtime dependencies](0008-zero-runtime-dependencies.md)                                  | Accepted |
 | 0009 | [Token taxonomy — Single / Group / Alias / Class / Function / Constant](0009-token-taxonomy.md) | Accepted |
 | 0010 | [Generated README from Handlebars source](0010-generated-readme.md)                             | Accepted |
-| 0011 | [Spec-driven development workflow](0011-spec-driven-development.md)                             | Accepted |
+| 0011 | [Specs-driven development workflow](0011-spec-driven-development.md)                            | Accepted |
 
 ## Adding a new ADR
 
