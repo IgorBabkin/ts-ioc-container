@@ -35,7 +35,6 @@ export {
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 export { singleton, SingletonProvider } from './provider/SingletonProvider';
-export { type Cache, multiCache, MultiCache } from './provider/Cache';
 export { decorate, type DecorateFn } from './provider/DecoratorProvider';
 export { type ProviderPipe } from './provider/ProviderPipe';
 

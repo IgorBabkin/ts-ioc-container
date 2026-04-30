@@ -6,14 +6,13 @@ import {
   DependencyNotFoundError,
   inject,
   lazy,
-  multiCache,
   register,
   Registration as R,
+  scopeAccess,
   setArgs,
   setArgsFn,
-  singleton,
   SingleToken,
-  scopeAccess,
+  singleton,
 } from '../../lib';
 
 describe('Spec: provider behavior', () => {
@@ -34,7 +33,7 @@ describe('Spec: provider behavior', () => {
   });
 
   it('caches singleton results by configured cache key', () => {
-    @register(setArgsFn((_, { args = [] } = {}) => args), singleton(() => multiCache((tenant) => tenant)))
+    @register(setArgsFn((_, { args = [] } = {}) => args), singleton((tenant) => tenant as string))
     class TenantRepository {
       constructor(@inject(args(0)) readonly tenant: string) {}
     }

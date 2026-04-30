@@ -1,15 +1,14 @@
 import {
-  setArgs,
-  setArgsFn,
+  args,
   bindTo,
   Container,
   inject,
-  args,
-  MultiCache,
   register,
   Registration as R,
-  singleton,
+  setArgs,
+  setArgsFn,
   SingleToken,
+  singleton,
 } from '../../lib';
 
 /**
@@ -109,7 +108,7 @@ describe('ArgsProvider', function () {
 
     @register(
       bindTo(EntityManagerToken),
-      singleton(MultiCache.fromFirstArg), // Cache unique instance per repository type
+      singleton((arg1) => (arg1 as SingleToken).token), // Cache unique instance per repository type
     )
     class EntityManager {
       constructor(@inject(args(0)) public repository: IRepository) {}
