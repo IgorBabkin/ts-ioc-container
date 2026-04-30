@@ -8,7 +8,6 @@ import {
   register,
   Registration as R,
   scope,
-  select,
   SingleToken,
   GroupAliasToken,
   singleton,

@@ -272,6 +272,22 @@ article blockquote p:last-child {
   transition: all 0.2s ease;
 }
 
+.layout-sidebar-left .nav-group {
+  margin: calc(var(--bs-spacer) * 0.25) 0;
+}
+
+.layout-sidebar-left .nav-group-label {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.layout-sidebar-left .nav-group-item {
+  padding-left: 1.5rem;
+}
+
 .layout-sidebar-left .nav-link:hover:not(.active) {
   background-color: var(--bs-gray-200);
 }
