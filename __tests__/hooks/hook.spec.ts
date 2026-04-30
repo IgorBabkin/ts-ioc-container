@@ -12,7 +12,6 @@ import {
   inject,
   register,
   Registration as R,
-  UnexpectedHookResultError,
 } from '../../lib';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
