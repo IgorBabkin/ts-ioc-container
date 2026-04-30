@@ -105,7 +105,7 @@ Both helpers use scope information, but they answer different questions in diffe
 |----------|---------------|---------------------|
 | Where does it belong? | Registration | Provider |
 | Rule type | `ScopeMatchRule` | `ScopeAccessRule` |
-| Question it answers | Can this registration apply to this scope? | Can this provider be resolved for this invocation scope? |
+| Question it answers | Can this registration apply to this scope? | Can this provider be resolved from this scope and with this invocation scope (initial resolution scope)? |
 | What does it define? | Registration application limits | Provider resolving limits |
 | When does it run? | When `addRegistration()` applies a registration, and when `createScope()` replays registrations into a new scope | When a dependency is being resolved and a container has a provider for the requested key or alias |
 | Scope values | The candidate scope receiving the registration | `providerScope`, the container currently checking the provider, and `invocationScope`, the original scope that started resolution |
@@ -128,7 +128,8 @@ Use `scope()` when you are deciding which containers a registration can apply to
 class RequestLogger {}
 
 // Resolving limit:
-// Can this provider be resolved for this invocation scope?
+// Can this provider be resolved from this scope and with this
+// invocation scope (initial resolution scope)?
 @register(
   bindTo('AdminConsole'),
   scope((s) => s.hasTag('application')),
