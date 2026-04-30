@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0004 - Pipe-based composition via ProviderPipe](../../docs/adr/0004-provider-pipe-composition.md), [ADR 0011 - Specs-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
-- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `setArgs`, `setArgsFn`, `addArgs`, `addArgsFn`, `lazy`, `scopeAccess`, `decorate`, `ProviderPipe`
+- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `setArgs`, `setArgsFn`, `appendArgs`, `appendArgsFn`, `lazy`, `scopeAccess`, `decorate`, `ProviderPipe`
 - **Executable spec:** `__tests__/specs/provider-behavior.spec.ts`
 
 ## Intent
@@ -49,7 +49,7 @@ Acceptance criteria:
 - `setArgs` supplies fixed arguments to the provider.
 - `setArgsFn` computes arguments from the resolving container and incoming
   options.
-- `addArgs` and `addArgsFn` append arguments after the provider's existing
+- `appendArgs` and `appendArgsFn` append arguments after the provider's existing
   argument function.
 - Arguments forwarded into a class constructor are resolved when they are
   `InjectionToken` instances and passed through as literals otherwise.

@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import {
-  addArgs,
-  addArgsFn,
   args,
+  appendArgs,
+  appendArgsFn,
   Container,
   decorate,
   DependencyNotFoundError,
@@ -98,8 +98,8 @@ describe('Spec: provider behavior', () => {
 
     @register(
       setArgs('fixed'),
-      addArgsFn((scope) => [scope.resolve<TenantConfig>('TenantConfig').tenant]),
-      addArgs('tail'),
+      appendArgsFn((scope) => [scope.resolve<TenantConfig>('TenantConfig').tenant]),
+      appendArgs('tail'),
     )
     class Endpoint {
       constructor(

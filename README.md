@@ -2016,9 +2016,9 @@ const userToken = ApiToken.args('https://users.api.com', 1000);
 
 ```typescript
 import {
-  addArgs,
-  addArgsFn,
   args,
+  appendArgs,
+  appendArgsFn,
   bindTo,
   Container,
   inject,
@@ -2099,7 +2099,7 @@ describe('IProvider', function () {
 
   describe('Appending Arguments', () => {
     it('can append static arguments after existing resolve arguments', function () {
-      @register(addArgs('configured'))
+      @register(appendArgs('configured'))
       class Service {
         constructor(
           @inject(args(0)) public runtime: string,
@@ -2121,7 +2121,7 @@ describe('IProvider', function () {
 
       @register(
         setArgs('fixed'),
-        addArgsFn((scope, { args = [] } = {}) => [scope.resolve<Config>('Config').tenant, ...args]),
+        appendArgsFn((scope, { args = [] } = {}) => [scope.resolve<Config>('Config').tenant, ...args]),
       )
       class Service {
         constructor(

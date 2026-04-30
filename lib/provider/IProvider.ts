@@ -26,9 +26,9 @@ export interface IProvider<T = any> {
 
   setArgs(argsFn: ArgsFn): this;
 
-  addArgs(...extraArgs: unknown[]): this;
+  appendArgs(...extraArgs: unknown[]): this;
 
-  addArgsFn(argsFn: ArgsFn): this;
+  appendArgsFn(argsFn: ArgsFn): this;
 
   lazy(): this;
 }
@@ -37,9 +37,9 @@ export const setArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.
 
 export const setArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.setArgs(fn));
 
-export const addArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.addArgs(...extraArgs));
+export const appendArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.appendArgs(...extraArgs));
 
-export const addArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.addArgsFn(fn));
+export const appendArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.appendArgsFn(fn));
 
 export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.setAccessRule(rule));
 
@@ -77,13 +77,13 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this;
   }
 
-  addArgs(...extraArgs: unknown[]): this {
-    this.decorated.addArgs(...extraArgs);
+  appendArgs(...extraArgs: unknown[]): this {
+    this.decorated.appendArgs(...extraArgs);
     return this;
   }
 
-  addArgsFn(argsFn: ArgsFn): this {
-    this.decorated.addArgsFn(argsFn);
+  appendArgsFn(argsFn: ArgsFn): this {
+    this.decorated.appendArgsFn(argsFn);
     return this;
   }
 
