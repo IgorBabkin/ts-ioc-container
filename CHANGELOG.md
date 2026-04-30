@@ -1,3 +1,10 @@
+# [50.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.1.0...v50.2.0) (2026-04-30)
+
+
+### Features
+
+* **provider:** remove replacing args api ([8008cbf](https://github.com/IgorBabkin/ts-ioc-container/commit/8008cbf0930f740ba82ae0f46baf91a93cdeef7b))
+
 # [50.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.0.0...v50.1.0) (2026-04-30)
 
 
