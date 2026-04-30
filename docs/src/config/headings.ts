@@ -92,17 +92,6 @@ export const pageHeadings: Record<string, Heading[]> = {
       level: 2,
     },
   ],
-  "/ts-ioc-container/spec-driven": [
-    { id: "artifact-map", text: "Artifact Map", level: 2 },
-    { id: "workflow", text: "Workflow", level: 2 },
-    { id: "tdd-and-bdd", text: "TDD and BDD", level: 2 },
-    { id: "current-specs", text: "Current Specs", level: 2 },
-    {
-      id: "pull-request-checklist",
-      text: "Pull Request Checklist",
-      level: 2,
-    },
-  ],
   "/ts-ioc-container/benchmarks": [
     { id: "benchmark-runner", text: "Benchmark Runner", level: 2 },
     { id: "benchmark-results", text: "Results", level: 2 },
