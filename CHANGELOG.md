@@ -1,3 +1,10 @@
+# [50.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.0.0...v50.1.0) (2026-04-30)
+
+
+### Features
+
+* **provider:** add append args pipes ([9794f31](https://github.com/IgorBabkin/ts-ioc-container/commit/9794f313039dc6d35be31fb6c7af53f3a160093c))
+
 # [50.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v49.1.0...v50.0.0) (2026-04-30)
 
 
