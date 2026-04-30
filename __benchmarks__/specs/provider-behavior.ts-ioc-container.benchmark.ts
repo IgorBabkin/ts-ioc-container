@@ -1,7 +1,7 @@
 import { Container, decorate, lazy, register, Registration as R, setArgsFn, singleton } from '../../lib';
 import type { BenchmarkSpec } from './benchmark-types';
 
-@register(setArgsFn((_, { args = [] } = {}) => args), singleton((_scope, args) => String((args as unknown[])[0])))
+@register(setArgsFn((_, { args = [] } = {}) => args), singleton((arg0) => arg0 as string))
 class TsIocBenchmarkTenantRepository {
   constructor(readonly tenant: string) {}
 }
