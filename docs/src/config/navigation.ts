@@ -11,16 +11,6 @@ export const navigation: NavigationItem[] = [
   { title: "Overview", href: "/ts-ioc-container/" },
   { title: "Benchmarks", href: "/ts-ioc-container/benchmarks" },
   { title: "Dependency & Scope", href: "/ts-ioc-container/container" },
-  {
-    title: "Alternatives",
-    children: [
-      { title: "tsyringe", href: "/ts-ioc-container/tsyringe-alternative" },
-      {
-        title: "Inversify / Awilix",
-        href: "/ts-ioc-container/inversify-awilix-alternative",
-      },
-    ],
-  },
   { title: "Dependency Registration", href: "/ts-ioc-container/registration" },
   { title: "Provider Behavior", href: "/ts-ioc-container/provider" },
   { title: "Pipes", href: "/ts-ioc-container/pipes" },
@@ -31,6 +21,16 @@ export const navigation: NavigationItem[] = [
   {
     title: "Errors & Boundaries",
     href: "/ts-ioc-container/errors-and-boundaries",
+  },
+  {
+    title: "Alternatives",
+    children: [
+      { title: "tsyringe", href: "/ts-ioc-container/tsyringe-alternative" },
+      {
+        title: "Inversify / Awilix",
+        href: "/ts-ioc-container/inversify-awilix-alternative",
+      },
+    ],
   },
   {
     title: "Adapters",
