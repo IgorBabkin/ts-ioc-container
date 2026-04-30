@@ -1826,7 +1826,7 @@ describe('Singleton', function () {
 
 ### Arguments
 
-Sometimes you want to bind some arguments to provider. This is what `ArgsProvider` is for.
+Sometimes you want to bind some arguments to provider.
 
 - `provider(setArgs('someArgument'))`
 - `provider(setArgsFn((container) => [container.resolve(Logger), 'someValue']))`
