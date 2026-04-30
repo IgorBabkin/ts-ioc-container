@@ -6,7 +6,8 @@ description: Build customizable TypeScript DI providers with singleton caching, 
 
 import CodeBlock from "../components/CodeBlock.astro";
 import providerPipelineDiagram from "@assets/diagrams/provider-pipeline.mermaid?raw";
-import providerSpecCode from "../../../__tests__/readme/Singleton.spec.ts?raw";
+import singletonSpecCode from "../../../__tests__/readme/Singleton.spec.ts?raw";
+import providerSpecCode from "../../../__tests__/readme/provider.spec.ts?raw";
 import aliasSpecCode from "../../../__tests__/readme/alias.spec.ts?raw";
 import decorateSpecCode from "../../../__tests__/readme/decorate.spec.ts?raw";
 import visibilitySpecCode from "../../../__tests__/readme/visibility.spec.ts?raw";
@@ -40,9 +41,9 @@ Singleton providers ensure only one instance is created per scope. This is perfe
 </div>
 
 <CodeBlock
-  code={providerSpecCode}
+  code={singletonSpecCode}
   lang="typescript"
-  filename="__tests__/readme/provider.spec.ts"
+  filename="__tests__/readme/Singleton.spec.ts"
 />
 
 ### Per-Scope Singletons
@@ -71,7 +72,7 @@ expect(child.resolve('logger')).toBe(child.resolve('logger'));`}
 
 <h2 id="arguments" class="toc-link">Arguments</h2>
 
-Argument providers allow you to append constructor arguments at registration time. This is useful for configuration values, dependencies that should be resolved at provider creation, or default values.
+Provider argument binding lets you append constructor arguments at registration time with `appendArgs` and `appendArgsFn`. This is useful for configuration values, dependencies that should be resolved when the provider creates an instance, or default values.
 
 <CodeBlock
   code={providerSpecCode}
