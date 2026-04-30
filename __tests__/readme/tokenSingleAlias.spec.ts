@@ -6,14 +6,14 @@ interface ILogger {
   log(message: string): void;
 }
 
-@register(bindTo('ConsoleLogger'), bindTo(toSingleAlias('ILogger')))
+@register(bindTo(ILoggerToken))
 class ConsoleLogger implements ILogger {
   log(message: string) {
     console.log(message);
   }
 }
 
-@register(bindTo('FileLogger'), bindTo(toSingleAlias('ILogger')))
+@register(bindTo(ILoggerToken))
 class FileLogger implements ILogger {
   log(message: string) {
     // Write to file
@@ -37,6 +37,8 @@ describe('SingleAliasToken', function () {
     const app = container.resolve(App);
     app.run();
     expect(app.logger).toBeDefined();
+    expect(container.resolve('ConsoleLogger')).toBeInstanceOf(ConsoleLogger);
+    expect(container.resolve('FileLogger')).toBeInstanceOf(FileLogger);
     expect(app.logger.log).toBeDefined();
   });
 

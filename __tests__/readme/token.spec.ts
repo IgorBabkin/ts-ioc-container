@@ -21,7 +21,7 @@ interface ILogger {
 // Type-safe token - ensures resolved value is ILogger
 const ILoggerToken = new SingleToken<ILogger>('ILogger');
 
-@register(bindTo('ILogger'))
+@register(bindTo(ILoggerToken))
 class Logger implements ILogger {
   log(message: string) {
     console.log(message);

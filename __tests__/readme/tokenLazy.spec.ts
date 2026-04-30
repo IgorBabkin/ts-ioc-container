@@ -9,11 +9,10 @@ class ConfigService implements IConfig {
   constructor(@inject(args(0)) public apiUrl: string) {}
 }
 
+const IConfigToken = new SingleToken<IConfig>('IConfig');
+
 class App {
-  constructor(
-    @inject(new SingleToken<IConfig>('IConfig').lazy())
-    public config: IConfig,
-  ) {}
+  constructor(@inject(IConfigToken.lazy()) public config: IConfig) {}
 }
 
 describe('Token Lazy Loading', function () {
