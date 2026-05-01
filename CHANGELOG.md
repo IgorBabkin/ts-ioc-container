@@ -1,3 +1,10 @@
+## [50.2.3](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.2...v50.2.3) (2026-05-01)
+
+
+### Bug Fixes
+
+* **pages:** remove dynamic tag management and check registration sections from README ([894109f](https://github.com/IgorBabkin/ts-ioc-container/commit/894109f1ec778cb0378c44f32c136bc33c2155ad))
+
 ## [50.2.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.1...v50.2.2) (2026-05-01)
 
 
