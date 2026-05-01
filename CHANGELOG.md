@@ -1,3 +1,10 @@
+## [50.2.4](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.3...v50.2.4) (2026-05-01)
+
+
+### Bug Fixes
+
+* **pages:** remove alternatives sections from README ([51d3683](https://github.com/IgorBabkin/ts-ioc-container/commit/51d3683fafb6bd0676ca434a091019c897c7f3b4))
+
 ## [50.2.3](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.2...v50.2.3) (2026-05-01)
 
 
