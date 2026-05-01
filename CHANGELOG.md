@@ -1,3 +1,10 @@
+## [50.2.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.0...v50.2.1) (2026-05-01)
+
+
+### Bug Fixes
+
+* **pages:** remove specs-driven workflow section from README ([7bd31af](https://github.com/IgorBabkin/ts-ioc-container/commit/7bd31af8be218ecad8e18ceee4c956acb70e27a2))
+
 # [50.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.1.0...v50.2.0) (2026-04-30)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "50.2.0",
+  "version": "50.2.1",
   "description": "Fast, lightweight TypeScript dependency injection container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects.",
   "workspaces": [
     "docs"
