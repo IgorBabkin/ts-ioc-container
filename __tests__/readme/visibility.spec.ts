@@ -34,7 +34,7 @@ describe('Visibility', function () {
       scope((s) => s.hasTag('application')), // Registered at app level
       singleton(),
       // Only accessible from admin scope, not regular request scope
-      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
+      scopeAccess((_prev, { invocationScope }) => invocationScope.hasTag('admin')),
     )
     class UserManagementService {
       deleteUser(userId: string): string {
@@ -66,7 +66,7 @@ describe('Visibility', function () {
       scope((s) => s.hasTag('application')),
       singleton(),
       // Only accessible from the scope where it was registered
-      scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope),
+      scopeAccess((_prev, { invocationScope, providerScope }) => invocationScope === providerScope),
     )
     class AuditLogger {
       log(message: string): string {

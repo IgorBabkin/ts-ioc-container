@@ -26,7 +26,7 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   private argsFn: ArgsFn = (s, { args = [] } = {}) => args;
-  private checkAccess: ScopeAccessRule = () => true;
+  private readonly accessRules: ScopeAccessRule[] = [];
   private isLazy = false;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
@@ -43,8 +43,8 @@ export class Provider<T = any> implements IProvider<T> {
     });
   }
 
-  setAccessRule(predicate: ScopeAccessRule): this {
-    this.checkAccess = predicate;
+  addAccessRule(rule: ScopeAccessRule): this {
+    this.accessRules.push(rule);
     return this;
   }
 
@@ -53,19 +53,19 @@ export class Provider<T = any> implements IProvider<T> {
     return this;
   }
 
-  appendArgs(...extraArgs: unknown[]): this {
+  addArgs(...extraArgs: unknown[]): this {
     const parentFn = this.argsFn;
     this.argsFn = (container, options) => [...parentFn(container, options), ...extraArgs];
     return this;
   }
 
-  appendArgsFn(argsFn: ArgsFn): this {
+  addArgsFn(argsFn: ArgsFn): this {
     const parentFn = this.argsFn;
     this.argsFn = (container, options) => [...parentFn(container, options), ...argsFn(container, options)];
     return this;
   }
 
   hasAccess(options: ScopeAccessOptions): boolean {
-    return this.checkAccess(options);
+    return this.accessRules.reduce((acc, rule) => rule(acc, options), true);
   }
 }

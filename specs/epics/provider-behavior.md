@@ -75,7 +75,11 @@ stored in one scope can allow or deny resolution from another invocation scope.
 
 Acceptance criteria:
 
-- `scopeAccess` receives both the invocation scope and the provider scope.
+- `scopeAccess` receives the previous rule's boolean result and both scope
+  references (`invocationScope`, `providerScope`), enabling reducer-style
+  composition across multiple rules.
+- Multiple `scopeAccess` rules compose as a left-fold starting from `true`: each
+  rule receives the accumulated result of all previous rules.
 - A provider that denies access is skipped during normal resolution.
 - Denied alias providers are not returned in alias-group resolution.
 

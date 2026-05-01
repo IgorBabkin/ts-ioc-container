@@ -310,7 +310,7 @@ describe('lazy registerPipe', () => {
       const container = new Container().addRegistration(
         R.fromClass(ConfigService)
           .pipe(
-            (p) => p.appendArgs('https://api.example.com', 5000),
+            (p) => p.addArgs('https://api.example.com', 5000),
             (p) => p.lazy(),
           )
           .pipe(singleton()),

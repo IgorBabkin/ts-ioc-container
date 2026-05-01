@@ -8,7 +8,7 @@ export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderOptions) => T;
 export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
-export type ScopeAccessRule = (options: ScopeAccessOptions) => boolean;
+export type ScopeAccessRule = (prev: boolean, options: ScopeAccessOptions) => boolean;
 
 export type ArgsFn = (l: IContainer, options?: InjectOptions) => unknown[];
 export interface IMapper {
@@ -22,28 +22,28 @@ export interface IProvider<T = any> {
 
   pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T>;
 
-  setAccessRule(hasAccessWhen: ScopeAccessRule): this;
+  addAccessRule(rule: ScopeAccessRule): this;
 
-  appendArgs(...extraArgs: unknown[]): this;
+  addArgs(...extraArgs: unknown[]): this;
 
-  appendArgsFn(argsFn: ArgsFn): this;
+  addArgsFn(argsFn: ArgsFn): this;
 
   lazy(): this;
 }
 
-export const appendArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.appendArgs(...extraArgs));
+export const appendArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.addArgs(...extraArgs));
 
-export const appendArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.appendArgsFn(fn));
+export const appendArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.addArgsFn(fn));
 
-export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.setAccessRule(rule));
+export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.addAccessRule(rule));
 
 export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
 
-  setAccessRule(rule: ScopeAccessRule): this {
-    this.decorated.setAccessRule(rule);
+  addAccessRule(rule: ScopeAccessRule): this {
+    this.decorated.addAccessRule(rule);
     return this;
   }
 
@@ -66,13 +66,13 @@ export abstract class ProviderDecorator<T> implements IProvider<T> {
     return this;
   }
 
-  appendArgs(...extraArgs: unknown[]): this {
-    this.decorated.appendArgs(...extraArgs);
+  addArgs(...extraArgs: unknown[]): this {
+    this.decorated.addArgs(...extraArgs);
     return this;
   }
 
-  appendArgsFn(argsFn: ArgsFn): this {
-    this.decorated.appendArgsFn(argsFn);
+  addArgsFn(argsFn: ArgsFn): this {
+    this.decorated.addArgsFn(argsFn);
     return this;
   }
 
