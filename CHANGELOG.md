@@ -1,3 +1,10 @@
+## [50.2.5](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.4...v50.2.5) (2026-05-01)
+
+
+### Bug Fixes
+
+* **pages:** replace asKey/bindToKey/.to with bindTo and fix ResolveDependency signature in README ([9144840](https://github.com/IgorBabkin/ts-ioc-container/commit/9144840c8311bb120105b34f9c65cf0d1b1c9827))
+
 ## [50.2.4](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.3...v50.2.4) (2026-05-01)
 
 
