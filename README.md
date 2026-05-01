@@ -102,25 +102,39 @@ And `tsconfig.json` should have next options:
 ## Quickstart
 
 ```typescript
-import 'reflect-metadata';
-import { Container, register, bindTo, singleton } from 'ts-ioc-container';
+import { bindTo, Container, inject, register, Registration as R, singleton, SingleToken } from 'ts-ioc-container';
 
-@register(bindTo('ILogger'), singleton())
-class Logger {
+interface ILogger {
+  log(message: string): void;
+}
+
+const ILoggerToken = new SingleToken<ILogger>('ILogger');
+
+@register(bindTo(ILoggerToken), singleton())
+class Logger implements ILogger {
   log(message: string) {
     console.log(message);
   }
 }
 
 class App {
-  constructor(private logger = container.resolve<Logger>('ILogger')) {}
+  constructor(@inject(ILoggerToken) private logger: ILogger) {}
   start() {
     this.logger.log('hello');
   }
 }
 
-const container = new Container({ tags: ['application'] }).addRegistration(Logger);
-container.resolve(App).start();
+describe('Quickstart', function () {
+  it('should resolve App with injected Logger', function () {
+    const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+
+    const app = container.resolve(App);
+    app.start();
+
+    expect(app).toBeInstanceOf(App);
+  });
+});
+
 ```
 
 ## Cheatsheet
