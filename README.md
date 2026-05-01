@@ -29,16 +29,11 @@ no global container objects.
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
 - custom injectors, hooks, and provider behavior
-- product behavior covered by executable specs
-
 ## Content
 
 - [Setup](#setup)
 - [Quickstart](#quickstart)
 - [Cheatsheet](#cheatsheet)
-- [Specs-driven workflow](#specs-driven-workflow)
-  - [Product capability map](#product-capability-map)
-  - [Acceptance specs](#acceptance-specs)
 - [tsyringe alternative](https://igorbabkin.github.io/ts-ioc-container/tsyringe-alternative)
 - [Inversify and Awilix alternative](https://igorbabkin.github.io/ts-ioc-container/inversify-awilix-alternative)
 - [Recipes](#recipes)
@@ -157,42 +152,6 @@ describe('Quickstart', function () {
 > (`scope`, `singleton`, `appendArgsFn`, ...). Use the fluent `bindToKey` chain only
 > for `R.fromValue(...)` and `R.fromFn(...)` (which have no class to decorate)
 > or for third-party classes you don't own.
-
-## Specs-driven workflow
-
-Public behavior is described as product capabilities before it is implemented.
-The repository keeps the same chain visible in specs, tests, docs, and this
-README:
-
-```text
-Business capability -> user story -> acceptance criteria -> executable spec test -> docs and ADRs
-```
-
-- ADRs in `docs/adr/` explain durable architecture and process decisions.
-- Specs in `specs/` describe epics, stories, use cases, and acceptance criteria.
-- Acceptance tests in `__tests__/specs/` execute the public contract.
-- README examples in `__tests__/readme/` stay executable and are rendered from `.readme.hbs.md`.
-
-### Product capability map
-
-| Capability              | User outcome                                                               | Spec                                     | Acceptance test                                   |
-| ----------------------- | -------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------- |
-| Dependency resolution   | Resolve dependencies by key, class, token, or constructor injection.       | `specs/epics/dependency-resolution.md`   | `__tests__/specs/dependency-resolution.spec.ts`   |
-| Scoped lifecycle        | Isolate application, request, transaction, page, or widget lifecycles.     | `specs/epics/scoped-lifecycle.md`        | `__tests__/specs/scoped-lifecycle.spec.ts`        |
-| Dependency registration | Describe classes, values, factories, keys, aliases, and scoped services.   | `specs/epics/dependency-registration.md` | `__tests__/specs/dependency-registration.spec.ts` |
-| Provider behavior       | Cache, decorate, delay, restrict, or parameterize dependency creation.     | `specs/epics/provider-behavior.md`       | `__tests__/specs/provider-behavior.spec.ts`       |
-| Token-based injection   | Make dependency requests explicit, typed, reusable, and composable.        | `specs/epics/token-based-injection.md`   | `__tests__/specs/token-based-injection.spec.ts`   |
-| Injector strategies     | Support metadata, simple container, proxy, and custom injection styles.    | `specs/epics/injector-strategies.md`     | `__tests__/specs/injector-strategies.spec.ts`     |
-| Lifecycle hooks         | Run initialization, cleanup, property injection, and custom hook behavior. | `specs/epics/lifecycle-hooks.md`         | `__tests__/specs/lifecycle-hooks.spec.ts`         |
-| Container modules       | Package container configuration by feature, environment, or lifecycle.     | `specs/epics/container-modules.md`       | `__tests__/specs/container-modules.spec.ts`       |
-| Metadata utilities      | Attach labels, tags, and reusable method behavior to application code.     | `specs/epics/metadata-utilities.md`      | `__tests__/specs/metadata-utilities.spec.ts`      |
-| Errors and boundaries   | Make misconfiguration and unsupported usage diagnosable.                   | `specs/epics/errors-and-boundaries.md`   | `__tests__/specs/errors-and-boundaries.spec.ts`   |
-
-### Acceptance specs
-
-Use `pnpm run test:spec` to run only the executable acceptance specs. These
-tests are intentionally product-facing; lower-level regression and implementation
-tests stay in the feature folders under `__tests__/`.
 
 ## Recipes
 
