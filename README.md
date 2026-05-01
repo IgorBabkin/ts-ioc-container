@@ -47,7 +47,7 @@ provider pipelines, aliases, and custom injector strategies.
   - [Alias](#alias) `asAlias`
   - [Decorator](#decorator) `decorate`
 - [Registration](#registration) `@register`
-  - [Key](#key) `bindTo`
+  - [Token](#token) `bindTo`
   - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
@@ -2146,12 +2146,9 @@ Registration is provider factory which registers provider in container.
 - `Registration.fromValue(Logger)`
 - `Registration.fromFn((container, options) => container.resolve(Logger, options))`
 
-### Key
+### Token
 
-Sometimes you want to register provider with certain key. This is what `key` is for.
-
-- by default, key is class name
-- you can assign the same key to different registrations
+Use `bindTo(key)` to register a provider under a specific key. By default the key is the class name. Multiple registrations can share the same key.
 
 > [!TIP]
 > Prefer `SingleToken<T>` over plain string literals as registration keys. Tokens are type-safe, rename-friendly, and prevent typos that only surface at runtime.
