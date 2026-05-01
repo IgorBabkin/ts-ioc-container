@@ -12,11 +12,6 @@ container for applications that need more than basic constructor injection:
 scoped lifecycles, decorators, typed tokens, lazy dependencies, lifecycle hooks,
 provider pipelines, aliases, and custom injector strategies.
 
-Use it as a `tsyringe` alternative when you want a clear API with more flexible
-customization for real application architecture. Use it as an Inversify or
-Awilix alternative when you want a thinner, cleaner API with explicit scopes and
-no global container objects.
-
 ## Advantages
 
 - fast TypeScript dependency resolution
@@ -34,8 +29,6 @@ no global container objects.
 - [Setup](#setup)
 - [Quickstart](#quickstart)
 - [Cheatsheet](#cheatsheet)
-- [tsyringe alternative](https://igorbabkin.github.io/ts-ioc-container/tsyringe-alternative)
-- [Inversify and Awilix alternative](https://igorbabkin.github.io/ts-ioc-container/inversify-awilix-alternative)
 - [Container](#container)
   - [Basic usage](#basic-usage)
   - [Scope](#scope) `tags`
