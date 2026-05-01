@@ -47,7 +47,7 @@ provider pipelines, aliases, and custom injector strategies.
   - [Alias](#alias) `asAlias`
   - [Decorator](#decorator) `decorate`
 - [Registration](#registration) `@register`
-  - [Key](#key) `asKey`
+  - [Key](#key) `bindTo`
   - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
@@ -126,8 +126,8 @@ describe('Quickstart', function () {
 ## Cheatsheet
 
 - Register class with key (preferred): `@register(bindTo('Key')) class Service {}` then `container.addRegistration(R.fromClass(Service))`
-- Register value: `R.fromValue(config).bindToKey('Config')`
-- Register factory: `R.fromFn((c) => createX(c)).bindToKey('X')`
+- Register value: `R.fromValue(config).bindTo('Config')`
+- Register factory: `R.fromFn((c) => createX(c)).bindTo('X')`
 - Singleton: `@register(singleton())`
 - Scoped registration: `@register(scope((s) => s.hasTag('request')))`
 - Resolve by alias: `container.resolveByAlias('Alias')`
@@ -138,9 +138,9 @@ describe('Quickstart', function () {
 
 > [!TIP]
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
-> `R.fromClass(Class).bindToKey('Key')` chain. The decorator co-locates the binding
+> `R.fromClass(Class).bindTo('Key')` chain. The decorator co-locates the binding
 > with the class and reads consistently with other registration pipes
-> (`scope`, `singleton`, `appendArgsFn`, ...). Use the fluent `bindToKey` chain only
+> (`scope`, `singleton`, `appendArgsFn`, ...). Use the fluent `bindTo` chain only
 > for `R.fromValue(...)` and `R.fromFn(...)` (which have no class to decorate)
 > or for third-party classes you don't own.
 
@@ -1285,7 +1285,7 @@ Provider is dependency factory which creates dependency.
 
 - `Provider.fromClass(Logger)`
 - `Provider.fromValue(logger)`
-- `new Provider((container, ...args) => container.resolve(Logger, {args}))`
+- `new Provider((container, options) => container.resolve(Logger, options))`
 
 ```typescript
 import {
@@ -2140,11 +2140,11 @@ describe('Decorator Pattern', () => {
 
 Registration is provider factory which registers provider in container.
 
-- `@register(asKey('logger'))`
-- `Registration.fromClass(Logger).to('logger')`
+- `@register(bindTo('logger'))`
+- `Registration.fromClass(Logger).bindTo('logger')`
 - `Registration.fromClass(Logger)`
 - `Registration.fromValue(Logger)`
-- `Registration.fromFn((container, ...args) => container.resolve(Logger, {args}))`
+- `Registration.fromFn((container, options) => container.resolve(Logger, options))`
 
 ### Key
 
