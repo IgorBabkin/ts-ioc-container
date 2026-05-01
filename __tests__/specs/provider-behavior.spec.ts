@@ -141,7 +141,7 @@ describe('Spec: provider behavior', () => {
 
   it('restricts visibility and decorates provider results through pipes', () => {
     @register(
-      scopeAccess((_prev, { invocationScope }) => invocationScope.hasTag('admin')),
+      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
       decorate((service) => Object.assign(service, { audited: true })),
     )
     class AdminService {

@@ -1403,7 +1403,9 @@ describe('Provider', () => {
 
     const appContainer = new Container({ tags: ['application'] }).register(
       'AdminService',
-      Provider.fromClass(AdminService).pipe(scopeAccess((_prev, { invocationScope }) => invocationScope.hasTag('admin'))),
+      Provider.fromClass(AdminService).pipe(
+        scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
+      ),
     );
 
     const adminScope = appContainer.createScope({ tags: ['admin'] });
@@ -1778,8 +1780,8 @@ Sometimes you want to hide dependency if somebody wants to resolve it from certa
 > [!IMPORTANT]
 > Use `scope()` to decide where a provider is registered. Use `scopeAccess()` to decide which invocation scopes can see an already registered provider.
 
-- `provider(scopeAccess((_prev, { invocationScope, providerScope }) => invocationScope === providerScope))` - dependency will be accessible only from the scope where it's registered
-- `Provider.fromClass(Logger).pipe(scopeAccess((_prev, { invocationScope, providerScope }) => invocationScope === providerScope))`
+- `provider(scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope))` - dependency will be accessible only from the scope where it's registered
+- `Provider.fromClass(Logger).pipe(scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope))`
 
 Rules compose as a left-fold starting from `true` — each rule receives the accumulated result of all previous rules, enabling AND/OR logic across multiple `scopeAccess` calls.
 
@@ -1820,7 +1822,7 @@ describe('Visibility', function () {
       scope((s) => s.hasTag('application')), // Registered at app level
       singleton(),
       // Only accessible from admin scope, not regular request scope
-      scopeAccess((_prev, { invocationScope }) => invocationScope.hasTag('admin')),
+      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
     )
     class UserManagementService {
       deleteUser(userId: string): string {
@@ -1852,7 +1854,7 @@ describe('Visibility', function () {
       scope((s) => s.hasTag('application')),
       singleton(),
       // Only accessible from the scope where it was registered
-      scopeAccess((_prev, { invocationScope, providerScope }) => invocationScope === providerScope),
+      scopeAccess(({ invocationScope, providerScope }) => invocationScope === providerScope),
     )
     class AuditLogger {
       log(message: string): string {

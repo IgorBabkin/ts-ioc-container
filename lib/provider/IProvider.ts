@@ -8,7 +8,7 @@ export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderOptions) => T;
 export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
-export type ScopeAccessRule = (prev: boolean, options: ScopeAccessOptions) => boolean;
+export type ScopeAccessRule = (options: ScopeAccessOptions, prev: boolean) => boolean;
 
 export type ArgsFn = (l: IContainer, options?: InjectOptions) => unknown[];
 export interface IMapper {
@@ -22,7 +22,7 @@ export interface IProvider<T = any> {
 
   pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T>;
 
-  addAccessRule(rule: ScopeAccessRule): this;
+  addAccessRule(...rules: ScopeAccessRule[]): this;
 
   addArgs(...extraArgs: unknown[]): this;
 
@@ -42,8 +42,8 @@ export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 export abstract class ProviderDecorator<T> implements IProvider<T> {
   protected constructor(private decorated: IProvider<T>) {}
 
-  addAccessRule(rule: ScopeAccessRule): this {
-    this.decorated.addAccessRule(rule);
+  addAccessRule(...rules: ScopeAccessRule[]): this {
+    this.decorated.addAccessRule(...rules);
     return this;
   }
 

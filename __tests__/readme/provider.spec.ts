@@ -113,9 +113,7 @@ describe('Provider', () => {
 
     const appContainer = new Container({ tags: ['application'] }).register(
       'AdminService',
-      Provider.fromClass(AdminService).pipe(
-        scopeAccess((_prev, { invocationScope }) => invocationScope.hasTag('admin')),
-      ),
+      Provider.fromClass(AdminService).pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin'))),
     );
 
     const adminScope = appContainer.createScope({ tags: ['admin'] });

@@ -43,8 +43,8 @@ export class Provider<T = any> implements IProvider<T> {
     });
   }
 
-  addAccessRule(rule: ScopeAccessRule): this {
-    this.accessRules.push(rule);
+  addAccessRule(...rules: ScopeAccessRule[]): this {
+    this.accessRules.push(...rules);
     return this;
   }
 
@@ -66,6 +66,6 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   hasAccess(options: ScopeAccessOptions): boolean {
-    return this.accessRules.reduce((acc, rule) => rule(acc, options), true);
+    return this.accessRules.reduce((acc, rule) => rule(options, acc), true);
   }
 }

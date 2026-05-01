@@ -7,7 +7,7 @@ import { MapFn } from '../utils/fp';
 import { getClassMeta, classMeta } from '../metadata/class';
 import { type constructor } from '../utils/basic';
 
-export type ScopeMatchRule = (s: IContainer, prev?: boolean) => boolean;
+export type ScopeMatchRule = (s: IContainer, prev: boolean) => boolean;
 
 export interface IRegistration<T = any> extends IContainerModule {
   getKeyOrFail(): DependencyKey;

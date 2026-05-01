@@ -74,11 +74,7 @@ export class Registration<T = any> implements IRegistration<T> {
   }
 
   private matchScope(container: IContainer): boolean {
-    if (this.scopeRules.length === 0) {
-      return true;
-    }
-    const [first, ...rest] = this.scopeRules;
-    return rest.reduce((prev, curr) => curr(container, prev), first(container));
+    return this.scopeRules.reduce((prev, curr) => curr(container, prev), true);
   }
 
   applyTo(container: IContainer): void {
