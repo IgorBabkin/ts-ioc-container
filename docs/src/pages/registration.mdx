@@ -47,6 +47,11 @@ The fluent API provides more control and is useful when you need dynamic registr
 
 Keys identify dependencies in the container. They can be strings, symbols, or tokens. Understanding how keys work is essential for effective dependency management.
 
+<div class="callout callout-tip">
+  <div class="callout-title">[!TIP]</div>
+  <p>Prefer <code>SingleToken&lt;T&gt;</code> over plain string literals as registration keys. Tokens are type-safe, rename-friendly, and prevent typos that only surface at runtime.</p>
+</div>
+
 <CodeBlock code={registrationSpecCode} lang="typescript" filename="__tests__/readme/registration.spec.ts" />
 
 <h2 id="scope-registration" class="toc-link">Scope Registration</h2>

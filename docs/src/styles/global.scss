@@ -243,6 +243,11 @@ article blockquote p:last-child {
   background: var(--bs-success-bg-subtle);
 }
 
+.callout-tip {
+  border-left-color: var(--bs-info);
+  background: var(--bs-info-bg-subtle);
+}
+
 /* Cards in dark theme */
 [data-bs-theme="dark"] .card {
   background-color: var(--bs-secondary-bg);
