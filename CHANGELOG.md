@@ -1,3 +1,20 @@
+# [51.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.6...v51.0.0) (2026-05-01)
+
+
+### Features
+
+* **provider:** rename IProvider methods and change ScopeAccessRule to reducer ([ff7fcf4](https://github.com/IgorBabkin/ts-ioc-container/commit/ff7fcf48ef86f1d4f7ff65157bb969fa728bf08d))
+
+
+### BREAKING CHANGES
+
+* **provider:** `IProvider.appendArgs`/`appendArgsFn`/`setAccessRule` renamed to
+`addArgs`/`addArgsFn`/`addAccessRule`; `ScopeAccessRule` now takes `(prev: boolean,
+options: ScopeAccessOptions) => boolean`, enabling multiple access rules to compose
+as a left-fold starting from `true`.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
 ## [50.2.6](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.5...v50.2.6) (2026-05-01)
 
 
