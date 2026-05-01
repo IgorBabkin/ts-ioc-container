@@ -1,3 +1,10 @@
+## [50.2.6](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.5...v50.2.6) (2026-05-01)
+
+
+### Bug Fixes
+
+* **pages:** update registration key section and cheatsheet in README ([8c5fb30](https://github.com/IgorBabkin/ts-ioc-container/commit/8c5fb3019762ccd22101b33ad323dd96804142ab))
+
 ## [50.2.5](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.4...v50.2.5) (2026-05-01)
 
 
