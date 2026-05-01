@@ -1,3 +1,10 @@
+## [50.2.2](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.1...v50.2.2) (2026-05-01)
+
+
+### Bug Fixes
+
+* **pages:** add tip to prefer SingleToken over string literals for DI keys ([51cbe08](https://github.com/IgorBabkin/ts-ioc-container/commit/51cbe08f676070fab4304beb1fe0e46a83aaa1a2))
+
 ## [50.2.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.0...v50.2.1) (2026-05-01)
 
 
