@@ -57,7 +57,7 @@ export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { ProviderDisposedError } from './errors/ProviderDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
-export { CannonSingletonApplyError } from './errors/CannonSingletonApplyError';
+export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwiceError';
 
 // Hooks
 export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn, type HooksOfClass } from './hooks/hook';

@@ -3,7 +3,7 @@ import {
   args,
   appendArgs,
   appendArgsFn,
-  CannonSingletonApplyError,
+  CannonSingletonApplyTwiceError,
   Container,
   decorate,
   DependencyNotFoundError,
@@ -38,7 +38,7 @@ describe('Spec: provider behavior', () => {
   it('rejects re-applying singleton on a provider that already has one', () => {
     class Service {}
 
-    expect(() => Provider.fromClass(Service).singleton().singleton()).toThrowError(CannonSingletonApplyError);
+    expect(() => Provider.fromClass(Service).singleton().singleton()).toThrowError(CannonSingletonApplyTwiceError);
   });
 
   it('rejects resolving or checking access after provider disposal', () => {

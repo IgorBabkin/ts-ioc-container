@@ -1,16 +1,16 @@
 import {
-  ArgsFn,
-  DecorateFn,
-  GetCacheKey,
-  IProvider,
-  ProviderOptions,
-  ResolveDependency,
-  ScopeAccessOptions,
-  ScopeAccessRule,
+  type ArgsFn,
+  type DecorateFn,
+  type GetCacheKey,
+  type IProvider,
+  type ProviderOptions,
+  type ResolveDependency,
+  type ScopeAccessOptions,
+  type ScopeAccessRule,
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
 import { type constructor } from '../utils/basic';
-import { CannonSingletonApplyError } from '../errors/CannonSingletonApplyError';
+import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
 export class Provider<T = any> implements IProvider<T> {
@@ -87,14 +87,13 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   singleton(getCacheKey: GetCacheKey = () => '1'): this {
-    if (this.getKey) {
-      throw new CannonSingletonApplyError('Provider is already singleton');
-    }
+    CannonSingletonApplyTwiceError.assert(!this.getKey, 'Provider is already singleton');
     this.getKey = getCacheKey;
     return this;
   }
 
   dispose(): void {
+    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
     this.isDisposed = true;
     this.getKey = undefined;
     this.cache.clear();
