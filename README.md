@@ -1294,16 +1294,7 @@ Provider is dependency factory which creates dependency.
 - `new Provider((container, options) => container.resolve(Logger, options))`
 
 ```typescript
-import {
-  args,
-  bindTo,
-  Container,
-  inject,
-  lazy,
-  Provider,
-  register,
-  Registration as R,
-} from 'ts-ioc-container';
+import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R } from 'ts-ioc-container';
 
 /**
  * Data Processing Pipeline - Provider Patterns

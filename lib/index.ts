@@ -39,7 +39,6 @@ export {
   type ScopeAccessRule,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
-export { type ProviderPipe } from './provider/ProviderPipe';
 
 // Registrations
 export {
@@ -91,3 +90,4 @@ export { once } from './utils/once';
 export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
 export { type constructor, type Instance, Is, resolveConstructor } from './utils/basic';
+export { type ProviderPipe } from './registration/IRegistration';

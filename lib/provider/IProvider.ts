@@ -1,6 +1,6 @@
 import { IContainer, Tagged } from '../container/IContainer';
-import { registerPipe } from './ProviderPipe';
 import { InjectOptions } from '../injector/IInjector';
+import { registerPipe } from '../registration/IRegistration';
 
 export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;

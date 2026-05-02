@@ -68,7 +68,7 @@ are not class instances.
 
 ## References
 
-- `lib/provider/ProviderPipe.ts`
+- `lib/registration/IRegistration.ts`
 - `lib/provider/SingletonProvider.ts`
 - `lib/provider/DecoratorProvider.ts`
 - `lib/provider/IProvider.ts`

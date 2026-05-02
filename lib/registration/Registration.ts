@@ -2,10 +2,8 @@ import { DependencyKey, IContainer, isDependencyKey } from '../container/IContai
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
-import type { IRegistration, ScopeMatchRule } from './IRegistration';
+import { IRegistration, isProviderPipe, ProviderPipe, ScopeMatchRule } from './IRegistration';
 import { getTransformers } from './IRegistration';
-import type { ProviderPipe } from '../provider/ProviderPipe';
-import { isProviderPipe } from '../provider/ProviderPipe';
 import { BindToken } from '../token/BindToken';
 import { SingleToken } from '../token/SingleToken';
 import { type MapFn, pipe } from '../utils/fp';
