@@ -14,9 +14,8 @@ export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
 
 // Injectors
-export { inject, resolveArgs, args, argsFn } from './injector/inject';
 export { type IInjector, type InjectOptions, type IInjectFnResolver, Injector } from './injector/IInjector';
-export { MetadataInjector } from './injector/MetadataInjector';
+export { MetadataInjector, inject, args, argsFn, resolveArgs } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 
@@ -24,12 +23,6 @@ export { ProxyInjector } from './injector/ProxyInjector';
 export {
   type ResolveDependency,
   type IProvider,
-  scopeAccess,
-  lazy,
-  appendArgs,
-  appendArgsFn,
-  decorate,
-  singleton,
   type DecorateFn,
   type ArgsFn,
   type IMapper,
@@ -44,10 +37,17 @@ export { Provider } from './provider/Provider';
 export {
   type IRegistration,
   type ReturnTypeOfRegistration,
-  scope,
-  register,
   type ScopeMatchRule,
+  type ProviderPipe,
+  register,
   bindTo,
+  scope,
+  scopeAccess,
+  lazy,
+  singleton,
+  decorate,
+  appendArgs,
+  appendArgsFn,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
@@ -90,4 +90,3 @@ export { once } from './utils/once';
 export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
 export { type constructor, type Instance, Is, resolveConstructor } from './utils/basic';
-export { type ProviderPipe } from './registration/IRegistration';

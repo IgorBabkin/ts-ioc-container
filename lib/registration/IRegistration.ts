@@ -1,5 +1,5 @@
 import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
-import type { IProvider } from '../provider/IProvider';
+import type { ArgsFn, DecorateFn, GetCacheKey, IProvider, ScopeAccessRule } from '../provider/IProvider';
 import { SingleToken } from '../token/SingleToken';
 import { BindToken, isBindToken } from '../token/BindToken';
 import { MapFn } from '../utils/fp';
@@ -38,11 +38,6 @@ export interface IRegistration<T = any> extends IContainerModule {
 
 export type ReturnTypeOfRegistration<T> = T extends IRegistration<infer R> ? R : never;
 
-export const scope =
-  (...rules: ScopeMatchRule[]): MapFn<IRegistration> =>
-  (r) =>
-    r.when(...rules);
-
 const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getClassMeta<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
@@ -64,3 +59,23 @@ export const bindTo =
     }
     return r;
   };
+
+export const scope =
+  (...rules: ScopeMatchRule[]): MapFn<IRegistration> =>
+  (r) =>
+    r.when(...rules);
+
+export const appendArgs = <T>(...extraArgs: unknown[]) =>
+  registerPipe<T>((p) => p.addArgsFn((_, { args = [] } = {}) => [...args, ...extraArgs]));
+
+export const appendArgsFn = <T>(fn: ArgsFn) =>
+  registerPipe<T>((p) => p.addArgsFn((scope, options) => [...(options?.args ?? []), ...fn(scope, options)]));
+
+export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.addAccessRule(rule));
+
+export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
+
+export const decorate = (...fns: DecorateFn[]) => registerPipe((p) => p.map(...fns));
+
+export const singleton = <T = unknown>(getCacheKey: GetCacheKey = () => '1') =>
+  registerPipe<T>((p) => p.singleton(getCacheKey));
