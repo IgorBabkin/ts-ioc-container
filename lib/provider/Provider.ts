@@ -37,7 +37,7 @@ export class Provider<T = any> implements IProvider<T> {
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
   resolve(scope: IContainer, options: ProviderOptions): T {
-    ProviderDisposedError.assert(this.isDisposed, 'Provider is already disposed');
+    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
 
     if (!this.getKey) {
       return this.resolveDep(scope, options);
@@ -81,7 +81,7 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   hasAccess(options: ScopeAccessOptions): boolean {
-    ProviderDisposedError.assert(this.isDisposed, 'Provider is already disposed');
+    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
 
     return this.accessRules.reduce((acc, rule) => rule(options, acc), true);
   }

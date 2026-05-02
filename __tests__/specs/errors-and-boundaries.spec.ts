@@ -9,6 +9,7 @@ import {
   GroupInstanceToken,
   MethodNotImplementedError,
   Provider,
+  ProviderDisposedError,
   Registration as R,
   UnexpectedHookResultError,
   hook,
@@ -40,6 +41,18 @@ describe('Spec: errors and boundaries', () => {
     expect(() => container.resolve('Status')).toThrowError(ContainerDisposedError);
     expect(() => container.register('Other', Provider.fromValue('other'))).toThrowError(ContainerDisposedError);
     expect(() => container.createScope()).toThrowError(ContainerDisposedError);
+  });
+
+  it('rejects disposed provider usage', () => {
+    const provider = Provider.fromValue('ready');
+    const container = new Container();
+
+    provider.dispose();
+
+    expect(() => provider.resolve(container, {})).toThrowError(ProviderDisposedError);
+    expect(() => provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toThrowError(
+      ProviderDisposedError,
+    );
   });
 
   it('rejects unsupported token and hook operations', () => {

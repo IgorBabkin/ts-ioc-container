@@ -55,6 +55,7 @@ export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
+export { ProviderDisposedError } from './errors/ProviderDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 export { CannonSingletonApplyError } from './errors/CannonSingletonApplyError';
 

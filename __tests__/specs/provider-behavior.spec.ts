@@ -10,6 +10,7 @@ import {
   inject,
   lazy,
   Provider,
+  ProviderDisposedError,
   register,
   Registration as R,
   scopeAccess,
@@ -38,6 +39,23 @@ describe('Spec: provider behavior', () => {
     class Service {}
 
     expect(() => Provider.fromClass(Service).singleton().singleton()).toThrowError(CannonSingletonApplyError);
+  });
+
+  it('rejects resolving or checking access after provider disposal', () => {
+    const provider = Provider.fromValue('ready')
+      .singleton()
+      .addAccessRule(() => true);
+    const container = new Container();
+
+    expect(provider.resolve(container, {})).toBe('ready');
+    expect(provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toBe(true);
+
+    provider.dispose();
+
+    expect(() => provider.resolve(container, {})).toThrowError(ProviderDisposedError);
+    expect(() => provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toThrowError(
+      ProviderDisposedError,
+    );
   });
 
   it('caches singleton results by configured cache key', () => {
