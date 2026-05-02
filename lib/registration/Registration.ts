@@ -2,10 +2,8 @@ import { DependencyKey, IContainer, isDependencyKey } from '../container/IContai
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
-import type { IRegistration, ScopeMatchRule } from './IRegistration';
+import { IRegistration, isProviderPipe, ProviderPipe, ScopeMatchRule } from './IRegistration';
 import { getTransformers } from './IRegistration';
-import type { ProviderPipe } from '../provider/ProviderPipe';
-import { isProviderPipe } from '../provider/ProviderPipe';
 import { BindToken } from '../token/BindToken';
 import { SingleToken } from '../token/SingleToken';
 import { type MapFn, pipe } from '../utils/fp';
@@ -86,8 +84,8 @@ export class Registration<T = any> implements IRegistration<T> {
       throw new DependencyMissingKeyError('No key provided for registration');
     }
 
-    const provider = this.createProvider();
-    container.register(this.key, provider.pipe(...this.mappers), { aliases: [...this.aliases] });
+    const provider = this.mappers.reduce<IProvider<T>>((p, m) => m(p), this.createProvider());
+    container.register(this.key, provider, { aliases: [...this.aliases] });
   }
 
   getKeyOrFail(): DependencyKey {

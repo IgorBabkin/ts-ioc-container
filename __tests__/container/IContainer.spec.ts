@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import {
+  appendArgs,
   bindTo,
   Container,
   type IContainer,
   Provider,
-  ProviderDecorator,
   register,
   Registration as R,
   scope,
@@ -41,15 +41,11 @@ describe('IContainer', function () {
     expect(root.getInstances()).toEqual([logger1]);
   });
 
-  it('should support ProviderDecorator for custom provider wrapping', function () {
-    class MyProvider extends ProviderDecorator<string> {
-      constructor() {
-        super(new Provider((c, { args = [] }) => `hello ${args[0]}`));
-      }
-    }
-
-    const provider = new MyProvider().addArgs('world');
-    const root = new Container({ tags: ['root'] }).register('myProvider', provider, { aliases: ['greeting'] });
+  it('should support custom Provider with appended args', function () {
+    const greeting = appendArgs<string>('world').mapProvider(
+      new Provider<string>((_, { args = [] }) => `hello ${args[0]}`),
+    );
+    const root = new Container({ tags: ['root'] }).register('myProvider', greeting, { aliases: ['greeting'] });
 
     expect(root.resolve('myProvider')).toBe('hello world');
     expect(root.resolveByAlias('greeting')[0]).toBe('hello world');

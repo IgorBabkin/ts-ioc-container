@@ -681,7 +681,18 @@ The `lazy()` registerPipe can be used in two ways: with the `@register` decorato
 
 ```typescript
 import 'reflect-metadata';
-import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R, singleton } from 'ts-ioc-container';
+import {
+  appendArgs,
+  args,
+  bindTo,
+  Container,
+  inject,
+  lazy,
+  Provider,
+  register,
+  Registration as R,
+  singleton,
+} from 'ts-ioc-container';
 
 /**
  * Lazy Loading with registerPipe
@@ -853,7 +864,7 @@ describe('lazy registerPipe', () => {
     it('should allow selective lazy loading - email lazy, SMS eager', () => {
       const container = new Container()
         // EmailService is lazy - won't connect to SMTP until used
-        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), lazy()))
         // SmsService is eager - connects to gateway immediately
         .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
@@ -872,7 +883,7 @@ describe('lazy registerPipe', () => {
 
     it('should initialize lazy email service when first accessed', () => {
       const container = new Container()
-        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), lazy()))
         .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
 
@@ -888,8 +899,8 @@ describe('lazy registerPipe', () => {
     it('should work with multiple lazy providers', () => {
       const container = new Container()
         // Both services are lazy
-        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
-        .addRegistration(R.fromClass(SmsService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), lazy()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton(), lazy()))
         .addRegistration(R.fromClass(NotificationService));
 
       const notifications = container.resolve<NotificationService>(NotificationService);
@@ -940,7 +951,7 @@ describe('lazy registerPipe', () => {
 
     it('should use Provider.fromClass with lazy() helper', () => {
       // Create pure provider with lazy loading
-      const cacheProvider = Provider.fromClass(CacheService).pipe(lazy(), singleton());
+      const cacheProvider = Provider.fromClass(CacheService).lazy().singleton();
 
       const container = new Container();
       container.register('CacheService', cacheProvider);
@@ -958,7 +969,7 @@ describe('lazy registerPipe', () => {
 
     it('should allow importing lazy as named export', () => {
       // Demonstrate that lazy() is imported from the library
-      const cacheProvider = Provider.fromClass(CacheService).pipe(lazy());
+      const cacheProvider = Provider.fromClass(CacheService).lazy();
 
       const container = new Container();
       container.register('CacheService', cacheProvider);
@@ -990,12 +1001,7 @@ describe('lazy registerPipe', () => {
 
     it('should combine lazy with args and singleton', () => {
       const container = new Container().addRegistration(
-        R.fromClass(ConfigService)
-          .pipe(
-            (p) => p.addArgs('https://api.example.com', 5000),
-            (p) => p.lazy(),
-          )
-          .pipe(singleton()),
+        R.fromClass(ConfigService).pipe(appendArgs('https://api.example.com', 5000), lazy()).pipe(singleton()),
       );
 
       // Config not initialized yet
@@ -1288,20 +1294,7 @@ Provider is dependency factory which creates dependency.
 - `new Provider((container, options) => container.resolve(Logger, options))`
 
 ```typescript
-import {
-  args,
-  appendArgs,
-  appendArgsFn,
-  bindTo,
-  Container,
-  inject,
-  lazy,
-  Provider,
-  register,
-  Registration as R,
-  scopeAccess,
-  singleton,
-} from 'ts-ioc-container';
+import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R } from 'ts-ioc-container';
 
 /**
  * Data Processing Pipeline - Provider Patterns
@@ -1338,10 +1331,10 @@ describe('Provider', () => {
   });
 
   it('can be featured by fp method (Singleton Pattern)', () => {
-    // Pipe "singleton()" to cache the instance
+    // Use ".singleton()" to cache the instance
     const appContainer = new Container({ tags: ['application'] }).register(
       'SharedLogger',
-      Provider.fromClass(Logger).pipe(singleton()),
+      Provider.fromClass(Logger).singleton(),
     );
     expect(appContainer.resolve('SharedLogger')).toBe(appContainer.resolve('SharedLogger'));
   });
@@ -1373,7 +1366,7 @@ describe('Provider', () => {
 
     const container = new Container().register(
       'FileService',
-      Provider.fromClass(FileService).pipe(appendArgs('/var/data')),
+      Provider.fromClass(FileService).addArgsFn((_, { args = [] } = {}) => [...args, '/var/data']),
     );
 
     const service = container.resolve<FileService>('FileService');
@@ -1387,10 +1380,8 @@ describe('Provider', () => {
 
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(
       'Database',
-      Provider.fromClass(Database).pipe(
-        // Dynamically resolve connection string at creation time
-        appendArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
-      ),
+      // Dynamically resolve connection string at creation time
+      Provider.fromClass(Database).addArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
     );
 
     const db = container.resolve<Database>('Database');
@@ -1403,9 +1394,7 @@ describe('Provider', () => {
 
     const appContainer = new Container({ tags: ['application'] }).register(
       'AdminService',
-      Provider.fromClass(AdminService).pipe(
-        scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
-      ),
+      Provider.fromClass(AdminService).addAccessRule(({ invocationScope }) => invocationScope.hasTag('admin')),
     );
 
     const adminScope = appContainer.createScope({ tags: ['admin'] });
@@ -2025,7 +2014,7 @@ describe('alias', () => {
 
 ### Decorator
 
-Sometimes you want to decorate you class with some logic. This is what `DecoratorProvider` is for.
+Sometimes you want to decorate you class with some logic. Use the `decorate(...)` pipe — it appends a `DecorateFn` to the provider's mapper chain via `IProvider.map(...)`.
 
 - `provider(decorate((instance, container) => new LoggerDecorator(instance)))`
 

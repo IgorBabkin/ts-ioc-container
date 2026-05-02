@@ -1,9 +1,9 @@
 import type { IContainer } from '../container/IContainer';
 
-import { resolveArgs } from '../injector/inject';
 import { InjectionToken } from '../token/InjectionToken';
 import { type constructor } from '../utils/basic';
 import { getProxyTarget, isProxy } from '../utils/proxy';
+import { resolveArgs } from '../injector/MetadataInjector';
 
 export interface IHookContext {
   instance: object;

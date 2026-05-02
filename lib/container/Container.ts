@@ -53,7 +53,7 @@ export class Container implements IContainer {
     return this;
   }
 
-  resolve<T>(target: constructor<T> | DependencyKey, { args, child = this, lazy }: ResolveOneOptions = {}): T {
+  resolve<T>(target: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
     if (Is.constructor(target)) {
@@ -62,14 +62,14 @@ export class Container implements IContainer {
 
     const provider = this.providers.get(target) as IProvider<T> | undefined;
 
-    return provider?.hasAccess({ invocationScope: child, providerScope: this })
+    return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
       ? provider.resolve(this, { args, lazy })
       : this.parent.resolve<T>(target, { args, child, lazy });
   }
 
   resolveByAlias<T>(
     alias: DependencyKey,
-    { args, child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
+    { args = [], child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
@@ -77,7 +77,7 @@ export class Container implements IContainer {
     const deps: T[] = [];
     for (const key of this.aliases.getKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
       const provider = this.findProviderByKeyOrFail<T>(key);
-      if (!provider.hasAccess({ invocationScope: child, providerScope: this })) {
+      if (!provider.hasAccess({ invocationScope: child, providerScope: this, args })) {
         continue;
       }
       keys.push(key);
@@ -93,13 +93,13 @@ export class Container implements IContainer {
     return [...deps, ...parentDeps];
   }
 
-  resolveOneByAlias<T>(alias: DependencyKey, { args, child = this, lazy }: ResolveOneOptions = {}): T {
+  resolveOneByAlias<T>(alias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
     const [key, ..._] = this.aliases.getKeysByAlias(alias);
     const provider = key ? this.findProviderByKeyOrFail<T>(key) : undefined;
 
-    return provider?.hasAccess({ invocationScope: child, providerScope: this })
+    return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
       ? provider.resolve(this, { args, lazy })
       : this.parent.resolveOneByAlias<T>(alias, { args, child, lazy });
   }

@@ -14,9 +14,8 @@ export { Container } from './container/Container';
 export { EmptyContainer } from './container/EmptyContainer';
 
 // Injectors
-export { inject, resolveArgs, args, argsFn } from './injector/inject';
 export { type IInjector, type InjectOptions, type IInjectFnResolver, Injector } from './injector/IInjector';
-export { MetadataInjector } from './injector/MetadataInjector';
+export { MetadataInjector, inject, args, argsFn, resolveArgs } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 
@@ -24,28 +23,30 @@ export { ProxyInjector } from './injector/ProxyInjector';
 export {
   type ResolveDependency,
   type IProvider,
-  scopeAccess,
-  lazy,
-  appendArgs,
-  appendArgsFn,
+  type DecorateFn,
   type ArgsFn,
-  ProviderDecorator,
-  type IMapper,
   type ProviderOptions,
+  type GetCacheKey,
+  type ScopeAccessOptions,
+  type ScopeAccessRule,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
-export { singleton, SingletonProvider } from './provider/SingletonProvider';
-export { decorate, type DecorateFn } from './provider/DecoratorProvider';
-export { type ProviderPipe } from './provider/ProviderPipe';
 
 // Registrations
 export {
   type IRegistration,
   type ReturnTypeOfRegistration,
-  scope,
-  register,
   type ScopeMatchRule,
+  type ProviderPipe,
+  register,
   bindTo,
+  scope,
+  scopeAccess,
+  lazy,
+  singleton,
+  decorate,
+  appendArgs,
+  appendArgsFn,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
@@ -55,6 +56,7 @@ export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
+export { CannonSingletonApplyError } from './errors/CannonSingletonApplyError';
 
 // Hooks
 export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn, type HooksOfClass } from './hooks/hook';

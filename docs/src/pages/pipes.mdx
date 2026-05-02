@@ -78,12 +78,12 @@ Here's a complete reference of all available pipes in the container:
 
 | Pipe Name | ProviderPipe | RegisterPipe | Purpose | File |
 |-----------|:------------:|:------------:|---------|------|
-| `singleton()` | ✅ | ✅ | Caches single instance per scope | `SingletonProvider.ts` |
+| `singleton()` | ✅ | ✅ | Caches single instance per scope | `IProvider.ts` |
 | `args(...values)` | ✅ | ✅ | Injects static arguments into constructor | `IProvider.ts` |
 | `argsFn(fn)` | ✅ | ✅ | Injects dynamically resolved arguments | `IProvider.ts` |
 | `lazy()` | ✅ | ✅ | Defers instantiation until first access | `IProvider.ts` |
 | `scopeAccess(rule)` | ✅ | ✅ | Controls visibility based on scope rules | `IProvider.ts` |
-| `decorate(fn)` | ✅ | ✅ | Wraps instance with decorator function | `DecoratorProvider.ts` |
+| `decorate(fn)` | ✅ | ✅ | Wraps instance with decorator function | `IProvider.ts` |
 | `scope(...rules)` | ❌ | ✅ | Determines which scopes registration applies to | `IRegistration.ts` |
 | `bindTo(...tokens)` | ❌ | ✅ | Binds registration to dependency keys | `IRegistration.ts` |
 

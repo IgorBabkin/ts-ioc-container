@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { bindTo, Container, inject, register, Registration as R, singleton } from '../../lib';
+import { bindTo, Container, register, Registration as R, singleton } from '../../lib';
 
 /**
  * Web Framework Integration - Per-Request Scope

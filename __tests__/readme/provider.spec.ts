@@ -1,17 +1,4 @@
-import {
-  args,
-  appendArgs,
-  appendArgsFn,
-  bindTo,
-  Container,
-  inject,
-  lazy,
-  Provider,
-  register,
-  Registration as R,
-  scopeAccess,
-  singleton,
-} from '../../lib';
+import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R } from '../../lib';
 
 /**
  * Data Processing Pipeline - Provider Patterns
@@ -48,10 +35,10 @@ describe('Provider', () => {
   });
 
   it('can be featured by fp method (Singleton Pattern)', () => {
-    // Pipe "singleton()" to cache the instance
+    // Use ".singleton()" to cache the instance
     const appContainer = new Container({ tags: ['application'] }).register(
       'SharedLogger',
-      Provider.fromClass(Logger).pipe(singleton()),
+      Provider.fromClass(Logger).singleton(),
     );
     expect(appContainer.resolve('SharedLogger')).toBe(appContainer.resolve('SharedLogger'));
   });
@@ -83,7 +70,7 @@ describe('Provider', () => {
 
     const container = new Container().register(
       'FileService',
-      Provider.fromClass(FileService).pipe(appendArgs('/var/data')),
+      Provider.fromClass(FileService).addArgsFn((_, { args = [] } = {}) => [...args, '/var/data']),
     );
 
     const service = container.resolve<FileService>('FileService');
@@ -97,10 +84,8 @@ describe('Provider', () => {
 
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(
       'Database',
-      Provider.fromClass(Database).pipe(
-        // Dynamically resolve connection string at creation time
-        appendArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
-      ),
+      // Dynamically resolve connection string at creation time
+      Provider.fromClass(Database).addArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
     );
 
     const db = container.resolve<Database>('Database');
@@ -113,7 +98,7 @@ describe('Provider', () => {
 
     const appContainer = new Container({ tags: ['application'] }).register(
       'AdminService',
-      Provider.fromClass(AdminService).pipe(scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin'))),
+      Provider.fromClass(AdminService).addAccessRule(({ invocationScope }) => invocationScope.hasTag('admin')),
     );
 
     const adminScope = appContainer.createScope({ tags: ['admin'] });

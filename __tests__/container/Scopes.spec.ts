@@ -13,7 +13,6 @@ import {
 
 @register(bindTo('logger'))
 @register(scope((s) => s.hasTag('home')), singleton())
-@register(singleton())
 class Logger {}
 
 describe('Scopes', function () {

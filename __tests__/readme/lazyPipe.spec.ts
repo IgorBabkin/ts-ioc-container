@@ -1,5 +1,16 @@
 import 'reflect-metadata';
-import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R, singleton } from '../../lib';
+import {
+  appendArgs,
+  args,
+  bindTo,
+  Container,
+  inject,
+  lazy,
+  Provider,
+  register,
+  Registration as R,
+  singleton,
+} from '../../lib';
 
 /**
  * Lazy Loading with registerPipe
@@ -171,7 +182,7 @@ describe('lazy registerPipe', () => {
     it('should allow selective lazy loading - email lazy, SMS eager', () => {
       const container = new Container()
         // EmailService is lazy - won't connect to SMTP until used
-        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), lazy()))
         // SmsService is eager - connects to gateway immediately
         .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
@@ -190,7 +201,7 @@ describe('lazy registerPipe', () => {
 
     it('should initialize lazy email service when first accessed', () => {
       const container = new Container()
-        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), lazy()))
         .addRegistration(R.fromClass(SmsService).pipe(singleton()))
         .addRegistration(R.fromClass(NotificationService));
 
@@ -206,8 +217,8 @@ describe('lazy registerPipe', () => {
     it('should work with multiple lazy providers', () => {
       const container = new Container()
         // Both services are lazy
-        .addRegistration(R.fromClass(EmailService).pipe(singleton(), (p) => p.lazy()))
-        .addRegistration(R.fromClass(SmsService).pipe(singleton(), (p) => p.lazy()))
+        .addRegistration(R.fromClass(EmailService).pipe(singleton(), lazy()))
+        .addRegistration(R.fromClass(SmsService).pipe(singleton(), lazy()))
         .addRegistration(R.fromClass(NotificationService));
 
       const notifications = container.resolve<NotificationService>(NotificationService);
@@ -258,7 +269,7 @@ describe('lazy registerPipe', () => {
 
     it('should use Provider.fromClass with lazy() helper', () => {
       // Create pure provider with lazy loading
-      const cacheProvider = Provider.fromClass(CacheService).pipe(lazy(), singleton());
+      const cacheProvider = Provider.fromClass(CacheService).lazy().singleton();
 
       const container = new Container();
       container.register('CacheService', cacheProvider);
@@ -276,7 +287,7 @@ describe('lazy registerPipe', () => {
 
     it('should allow importing lazy as named export', () => {
       // Demonstrate that lazy() is imported from the library
-      const cacheProvider = Provider.fromClass(CacheService).pipe(lazy());
+      const cacheProvider = Provider.fromClass(CacheService).lazy();
 
       const container = new Container();
       container.register('CacheService', cacheProvider);
@@ -308,12 +319,7 @@ describe('lazy registerPipe', () => {
 
     it('should combine lazy with args and singleton', () => {
       const container = new Container().addRegistration(
-        R.fromClass(ConfigService)
-          .pipe(
-            (p) => p.addArgs('https://api.example.com', 5000),
-            (p) => p.lazy(),
-          )
-          .pipe(singleton()),
+        R.fromClass(ConfigService).pipe(appendArgs('https://api.example.com', 5000), lazy()).pipe(singleton()),
       );
 
       // Config not initialized yet
