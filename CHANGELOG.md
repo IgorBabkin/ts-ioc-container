@@ -1,3 +1,15 @@
+# [53.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v52.0.1...v53.0.0) (2026-05-02)
+
+
+* refactor(provider)!: rename CannonSingletonApplyError and guard double-dispose ([39716fa](https://github.com/IgorBabkin/ts-ioc-container/commit/39716fa47e3a1c7a90a771a1ea8906f22751c041))
+
+
+### BREAKING CHANGES
+
+* CannonSingletonApplyError is renamed to CannonSingletonApplyTwiceError.
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
+
 ## [52.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v52.0.0...v52.0.1) (2026-05-02)
 
 
