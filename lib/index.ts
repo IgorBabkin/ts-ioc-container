@@ -28,14 +28,17 @@ export {
   lazy,
   appendArgs,
   appendArgsFn,
+  decorate,
+  singleton,
+  type DecorateFn,
   type ArgsFn,
-  ProviderDecorator,
   type IMapper,
   type ProviderOptions,
+  type GetCacheKey,
+  type ScopeAccessOptions,
+  type ScopeAccessRule,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
-export { singleton, SingletonProvider } from './provider/SingletonProvider';
-export { decorate, type DecorateFn } from './provider/DecoratorProvider';
 export { type ProviderPipe } from './provider/ProviderPipe';
 
 // Registrations

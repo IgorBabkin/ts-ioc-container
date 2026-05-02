@@ -1,5 +1,7 @@
 import {
   ArgsFn,
+  DecorateFn,
+  GetCacheKey,
   IProvider,
   ProviderOptions,
   ResolveDependency,
@@ -7,9 +9,6 @@ import {
   ScopeAccessRule,
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { type MapFn, pipe } from '../utils/fp';
-import type { ProviderPipe } from './ProviderPipe';
-import { isProviderPipe } from './ProviderPipe';
 import { type constructor } from '../utils/basic';
 
 export class Provider<T = any> implements IProvider<T> {
@@ -25,22 +24,40 @@ export class Provider<T = any> implements IProvider<T> {
     return new Provider<T>((c) => c.resolve(key));
   }
 
-  private argsFn: ArgsFn = (s, { args = [] } = {}) => args;
+  private argsFnList: ArgsFn[] = [];
   private readonly accessRules: ScopeAccessRule[] = [];
+  private readonly mappers: DecorateFn<T>[] = [];
   private isLazy = false;
+  private cache = new Map<string | symbol, unknown>();
+  private getKey: GetCacheKey | undefined;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T> {
-    const fns = mappers.map((m): MapFn<IProvider<T>> => (isProviderPipe<T>(m) ? m.mapProvider.bind(m) : m));
-    return pipe(...fns)(this);
+  resolve(scope: IContainer, options: ProviderOptions): T {
+    if (!this.getKey) {
+      return this.resolveDep(scope, options);
+    }
+
+    const key = this.getKey(...(options.args ?? []));
+
+    if (!this.cache.has(key)) {
+      this.cache.set(key, this.resolveDep(scope, options));
+    }
+
+    return this.cache.get(key)! as T;
   }
 
-  resolve(container: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
-    return this.resolveDependency(container, {
-      args: this.argsFn(container, { args }),
+  private resolveDep(scope: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
+    const dependency = this.resolveDependency(scope, {
+      args: this.argsFnList.reduce((acc, current) => current(scope, { args: acc }), args),
       lazy: lazy ?? this.isLazy,
     });
+    return this.mappers.reduce((acc, current) => current(acc, scope), dependency);
+  }
+
+  map(...mappers: DecorateFn<T>[]): this {
+    this.mappers.push(...mappers);
+    return this;
   }
 
   addAccessRule(...rules: ScopeAccessRule[]): this {
@@ -53,19 +70,17 @@ export class Provider<T = any> implements IProvider<T> {
     return this;
   }
 
-  addArgs(...extraArgs: unknown[]): this {
-    const parentFn = this.argsFn;
-    this.argsFn = (container, options) => [...parentFn(container, options), ...extraArgs];
-    return this;
-  }
-
-  addArgsFn(argsFn: ArgsFn): this {
-    const parentFn = this.argsFn;
-    this.argsFn = (container, options) => [...parentFn(container, options), ...argsFn(container, options)];
+  addArgsFn(...fns: ArgsFn[]): this {
+    this.argsFnList.push(...fns);
     return this;
   }
 
   hasAccess(options: ScopeAccessOptions): boolean {
     return this.accessRules.reduce((acc, rule) => rule(options, acc), true);
+  }
+
+  singleton(getCacheKey: GetCacheKey = () => '1'): this {
+    this.getKey = getCacheKey;
+    return this;
   }
 }

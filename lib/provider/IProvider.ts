@@ -1,13 +1,11 @@
 import { IContainer, Tagged } from '../container/IContainer';
-import { isProviderPipe, ProviderPipe, registerPipe } from './ProviderPipe';
+import { registerPipe } from './ProviderPipe';
 import { InjectOptions } from '../injector/IInjector';
-
-import { MapFn } from '../utils/fp';
 
 export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
 export type ResolveDependency<T = unknown> = (container: IContainer, options: ProviderOptions) => T;
-export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged };
+export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagged; args: unknown[] };
 export type ScopeAccessRule = (options: ScopeAccessOptions, prev: boolean) => boolean;
 
 export type ArgsFn = (l: IContainer, options?: InjectOptions) => unknown[];
@@ -15,69 +13,36 @@ export interface IMapper {
   mapItem<T>(target: IProvider<T>): IProvider<T>;
 }
 
+export type GetCacheKey = (...args: unknown[]) => string | symbol;
+export type DecorateFn<Instance = any> = (dep: Instance, scope: IContainer) => Instance;
+
 export interface IProvider<T = any> {
   resolve(container: IContainer, options: ProviderOptions): T;
 
   hasAccess(options: ScopeAccessOptions): boolean;
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T>;
+  map(...mappers: DecorateFn<T>[]): this;
 
   addAccessRule(...rules: ScopeAccessRule[]): this;
-
-  addArgs(...extraArgs: unknown[]): this;
 
   addArgsFn(argsFn: ArgsFn): this;
 
   lazy(): this;
+
+  singleton(getCacheKey?: GetCacheKey): this;
 }
 
-export const appendArgs = <T>(...extraArgs: unknown[]) => registerPipe<T>((p) => p.addArgs(...extraArgs));
+export const appendArgs = <T>(...extraArgs: unknown[]) =>
+  registerPipe<T>((p) => p.addArgsFn((_, { args = [] } = {}) => [...args, ...extraArgs]));
 
-export const appendArgsFn = <T>(fn: ArgsFn) => registerPipe<T>((p) => p.addArgsFn(fn));
+export const appendArgsFn = <T>(fn: ArgsFn) =>
+  registerPipe<T>((p) => p.addArgsFn((scope, options) => [...(options?.args ?? []), ...fn(scope, options)]));
 
 export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.addAccessRule(rule));
 
 export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 
-export abstract class ProviderDecorator<T> implements IProvider<T> {
-  protected constructor(private decorated: IProvider<T>) {}
+export const decorate = (...fns: DecorateFn[]) => registerPipe((p) => p.map(...fns));
 
-  addAccessRule(...rules: ScopeAccessRule[]): this {
-    this.decorated.addAccessRule(...rules);
-    return this;
-  }
-
-  hasAccess(options: ScopeAccessOptions): boolean {
-    return this.decorated.hasAccess(options);
-  }
-
-  resolve(container: IContainer, options: ProviderOptions): T {
-    return this.decorated.resolve(container, options);
-  }
-
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): IProvider<T> {
-    const fns = mappers.map((m): MapFn<IProvider<T>> => {
-      if (isProviderPipe<T>(m)) {
-        return m.mapProvider.bind(m);
-      }
-      return m;
-    });
-    this.decorated = this.decorated.pipe(...fns);
-    return this;
-  }
-
-  addArgs(...extraArgs: unknown[]): this {
-    this.decorated.addArgs(...extraArgs);
-    return this;
-  }
-
-  addArgsFn(argsFn: ArgsFn): this {
-    this.decorated.addArgsFn(argsFn);
-    return this;
-  }
-
-  lazy(): this {
-    this.decorated.lazy();
-    return this;
-  }
-}
+export const singleton = <T = unknown>(getCacheKey: GetCacheKey = () => '1') =>
+  registerPipe<T>((p) => p.singleton(getCacheKey));

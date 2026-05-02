@@ -312,12 +312,13 @@ Providers are stored in a `Map` keyed by `DependencyKey`, providing O(1) lookup 
 
 <h2 id="custom-providers" class="toc-link">Custom Providers</h2>
 
-Implement `IProvider` or extend `ProviderDecorator` to create custom providers:
+Implement `IProvider` directly to create a fully custom provider, or compose existing behaviors on `Provider` via `.map()`, `.singleton()`, `.lazy()`, `.addArgsFn()`, and `.addAccessRule()`:
 <CodeBlock
-  code={`class CustomProvider extends ProviderDecorator {
+  code={`class CustomProvider implements IProvider<T> {
   resolve(container: IContainer, options: ProviderOptions): T {
     // Your custom resolution logic
   }
+  // ...other IProvider members
 }`}
   lang="typescript"
 />

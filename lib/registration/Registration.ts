@@ -86,8 +86,8 @@ export class Registration<T = any> implements IRegistration<T> {
       throw new DependencyMissingKeyError('No key provided for registration');
     }
 
-    const provider = this.createProvider();
-    container.register(this.key, provider.pipe(...this.mappers), { aliases: [...this.aliases] });
+    const provider = this.mappers.reduce<IProvider<T>>((p, m) => m(p), this.createProvider());
+    container.register(this.key, provider, { aliases: [...this.aliases] });
   }
 
   getKeyOrFail(): DependencyKey {

@@ -25,24 +25,21 @@ classDiagram
     class IProvider {
         +resolve(container, options) T
         +hasAccess(options) boolean
-        +pipe(mappers) IProvider
-        +setAccessRule(rule) this
-        +appendArgs(args) this
-        +appendArgsFn(fn) this
+        +map(...mappers) this
+        +addAccessRule(...rules) this
+        +addArgsFn(fn) this
         +lazy() this
+        +singleton(getCacheKey?) this
     }
 
     class Provider {
-        -factory: ResolveDependency
-        -argsFn: ArgsFn
-        -accessRule: ScopeAccessRule
+        -resolveDependency: ResolveDependency
+        -argsFnList: ArgsFn[]
+        -accessRules: ScopeAccessRule[]
+        -mappers: DecorateFn[]
         -isLazy: boolean
-        +resolve(container, options) T
-        +pipe(mappers) IProvider
-    }
-
-    class SingletonProvider {
-        -cache: Cache
+        -cache: Map
+        -getKey: GetCacheKey?
         +resolve(container, options) T
     }
 
@@ -88,7 +85,6 @@ classDiagram
     Container --> IInjector : uses
     Container --> IRegistration : manages
     IProvider <|.. Provider
-    IProvider <|.. SingletonProvider
     IInjector <|.. MetadataInjector
     IInjector <|.. SimpleInjector
     IInjector <|.. ProxyInjector
