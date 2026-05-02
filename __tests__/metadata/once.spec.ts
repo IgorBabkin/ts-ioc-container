@@ -6,7 +6,7 @@ describe('once', () => {
     const fn = vi.fn(() => 42);
 
     class Service {
-      @once
+      @once()
       getValue() {
         return fn();
       }
@@ -20,7 +20,7 @@ describe('once', () => {
     const fn = vi.fn(() => 42);
 
     class Service {
-      @once
+      @once()
       getValue() {
         return fn();
       }
@@ -37,7 +37,7 @@ describe('once', () => {
     const fn = vi.fn();
 
     class Service {
-      @once
+      @once()
       doWork() {
         fn();
       }
@@ -53,7 +53,7 @@ describe('once', () => {
     const fn = vi.fn(() => 0);
 
     class Service {
-      @once
+      @once()
       getValue() {
         return fn();
       }
@@ -69,7 +69,7 @@ describe('once', () => {
     const fn = vi.fn(() => 42);
 
     class Service {
-      @once
+      @once()
       getValue() {
         return fn();
       }
@@ -86,7 +86,7 @@ describe('once', () => {
     let received: unknown[] = [];
 
     class Service {
-      @once
+      @once()
       doWork(x: number, y: string) {
         received = [x, y];
       }
@@ -94,5 +94,41 @@ describe('once', () => {
 
     new Service().doWork(1, 'hello');
     expect(received).toEqual([1, 'hello']);
+  });
+
+  describe('onRepeat callback', () => {
+    it('does not fire on the first call', () => {
+      const onRepeat = vi.fn();
+
+      class Service {
+        @once({ onRepeat })
+        getValue() {
+          return 1;
+        }
+      }
+
+      new Service().getValue();
+      expect(onRepeat).not.toHaveBeenCalled();
+    });
+
+    it('fires on each repeat call with the args passed to that call', () => {
+      const onRepeat = vi.fn();
+
+      class Service {
+        @once({ onRepeat })
+        getValue(_label: string) {
+          return 1;
+        }
+      }
+
+      const s = new Service();
+      s.getValue('first');
+      s.getValue('second');
+      s.getValue('third');
+
+      expect(onRepeat).toHaveBeenCalledTimes(2);
+      expect(onRepeat).toHaveBeenNthCalledWith(1, { index: 1, args: ['second'] });
+      expect(onRepeat).toHaveBeenNthCalledWith(2, { index: 2, args: ['third'] });
+    });
   });
 });

@@ -66,7 +66,7 @@ describe('Spec: metadata utilities', () => {
       onceCount = 0;
       cacheCount = 0;
 
-      @once
+      @once()
       initialize(): number {
         this.onceCount += 1;
         return this.onceCount;

@@ -27,7 +27,7 @@ describe('@onConstruct + method decorators', () => {
       initialized = false;
 
       @onConstruct(execute)
-      @once
+      @once()
       init() {
         fn();
         this.initialized = true;
@@ -158,7 +158,7 @@ describe('combined method decorators', () => {
       });
 
       class Service {
-        @once
+        @once()
         @handleError(handler)
         fetch() {
           return fn();
@@ -185,7 +185,7 @@ describe('combined method decorators', () => {
 
       class Service {
         @handleError(handler)
-        @once
+        @once()
         fetch() {
           return fn();
         }
@@ -273,7 +273,7 @@ describe('combined method decorators', () => {
 
       class Service {
         @shallowCache((...args) => args[0])
-        @once
+        @once()
         compute(x: number) {
           return fn(x);
         }
