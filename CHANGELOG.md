@@ -1,3 +1,18 @@
+# [54.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v53.0.0...v54.0.0) (2026-05-02)
+
+
+* feat(metadata)!: convert [@once](https://github.com/once) to factory with onRepeat callback ([4402af6](https://github.com/IgorBabkin/ts-ioc-container/commit/4402af6051a18a0b8bffc859b04d5907095e8310))
+
+
+### BREAKING CHANGES
+
+* `@once` is now a decorator factory — call sites must
+use `@once()` instead of `@once`. The factory accepts an optional
+`{ onRepeat }` callback that fires on each repeat call with
+`{ index, args }`.
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
+
 # [53.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v52.0.1...v53.0.0) (2026-05-02)
 
 
