@@ -1,3 +1,10 @@
+## [52.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v52.0.0...v52.0.1) (2026-05-02)
+
+
+### Bug Fixes
+
+* **provider:** guard disposed provider checks ([ad4b189](https://github.com/IgorBabkin/ts-ioc-container/commit/ad4b1893d2c7c8ddf3589e3c3e6f655ed8ea8140))
+
 # [52.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v51.0.0...v52.0.0) (2026-05-02)
 
 
