@@ -10,6 +10,7 @@ import {
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
 import { type constructor } from '../utils/basic';
+import { CannonSingletonApplyError } from '../errors/CannonSingletonApplyError';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -80,6 +81,9 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   singleton(getCacheKey: GetCacheKey = () => '1'): this {
+    if (this.getKey) {
+      throw new CannonSingletonApplyError('Provider is already singleton');
+    }
     this.getKey = getCacheKey;
     return this;
   }

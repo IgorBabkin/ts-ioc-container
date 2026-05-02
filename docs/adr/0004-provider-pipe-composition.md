@@ -29,6 +29,12 @@ provider and a registration:
 registration use. Registration-only behavior, such as `scope()` and
 `bindTo()`, remains a plain `MapFn<IRegistration>`.
 
+Provider features themselves are implemented as direct mutator methods on the
+single `Provider` class — `singleton()`, `lazy()`, `map()`, `addArgsFn()`,
+`addAccessRule()`. Pipes are thin factories that call these methods. The
+provider package has no dependency on the registration package; pipes live in
+the registration layer because they bridge providers and registrations.
+
 `lazy()` is part of this pipe system, but it is designed only for class
 instances. It returns a JavaScript `Proxy` around a deferred class instance and
 creates the real instance on first property or method access. It must not be
@@ -50,11 +56,13 @@ are not class instances.
 
 - Features are composable and can be applied in decorators or fluent
   registrations with the same API shape.
-- Provider wrappers such as `SingletonProvider` and `DecoratorProvider` stay
-  small and focused.
+- A single `Provider` class owns caching, instance mappers, args pipeline, and
+  access rules — no decorator hierarchy to traverse during `resolve()`.
 - The model avoids a large inheritance hierarchy for feature combinations.
 - Lazy class instance creation can be enabled from decorators, fluent
   registrations, or direct provider composition with the same API.
+- The provider package has no dependency on the registration package; pipes
+  bridge the two layers from the registration side.
 
 **Negative / trade-offs**
 
@@ -65,12 +73,14 @@ are not class instances.
 - The `lazy()` pipe has a narrower domain than the generic `IProvider`
   interface: it assumes the resolved value is a class instance suitable for
   proxying.
+- `singleton()` mutates provider state; applying a different cache key on an
+  already-configured singleton throws `CannonSingletonApplyError` to prevent
+  silent overwrite.
 
 ## References
 
-- `lib/registration/IRegistration.ts`
-- `lib/provider/SingletonProvider.ts`
-- `lib/provider/DecoratorProvider.ts`
 - `lib/provider/IProvider.ts`
+- `lib/provider/Provider.ts`
 - `lib/registration/IRegistration.ts`
+- `lib/errors/CannonSingletonApplyError.ts`
 - `docs/src/pages/pipes.mdx`

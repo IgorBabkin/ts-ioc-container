@@ -77,5 +77,4 @@ export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 
 export const decorate = (...fns: DecorateFn[]) => registerPipe((p) => p.map(...fns));
 
-export const singleton = <T = unknown>(getCacheKey: GetCacheKey = () => '1') =>
-  registerPipe<T>((p) => p.singleton(getCacheKey));
+export const singleton = <T = unknown>(getCacheKey?: GetCacheKey) => registerPipe<T>((p) => p.singleton(getCacheKey));

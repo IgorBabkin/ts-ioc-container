@@ -25,7 +25,6 @@ export {
   type IProvider,
   type DecorateFn,
   type ArgsFn,
-  type IMapper,
   type ProviderOptions,
   type GetCacheKey,
   type ScopeAccessOptions,
@@ -57,6 +56,7 @@ export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
+export { CannonSingletonApplyError } from './errors/CannonSingletonApplyError';
 
 // Hooks
 export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn, type HooksOfClass } from './hooks/hook';

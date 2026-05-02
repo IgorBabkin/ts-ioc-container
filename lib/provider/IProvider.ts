@@ -8,9 +8,6 @@ export type ScopeAccessOptions = { invocationScope: Tagged; providerScope: Tagge
 export type ScopeAccessRule = (options: ScopeAccessOptions, prev: boolean) => boolean;
 
 export type ArgsFn = (l: IContainer, options?: InjectOptions) => unknown[];
-export interface IMapper {
-  mapItem<T>(target: IProvider<T>): IProvider<T>;
-}
 
 export type GetCacheKey = (...args: unknown[]) => string | symbol;
 export type DecorateFn<Instance = any> = (dep: Instance, scope: IContainer) => Instance;

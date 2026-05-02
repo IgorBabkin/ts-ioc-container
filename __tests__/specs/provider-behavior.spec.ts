@@ -3,11 +3,13 @@ import {
   args,
   appendArgs,
   appendArgsFn,
+  CannonSingletonApplyError,
   Container,
   decorate,
   DependencyNotFoundError,
   inject,
   lazy,
+  Provider,
   register,
   Registration as R,
   scopeAccess,
@@ -30,6 +32,12 @@ describe('Spec: provider behavior', () => {
     expect(container.resolve<Repository>('Repository')).toBeInstanceOf(Repository);
     expect(container.resolve('Environment')).toBe('test');
     expect(container.resolve('ServiceAlias')).toBe('test:service');
+  });
+
+  it('rejects re-applying singleton on a provider that already has one', () => {
+    class Service {}
+
+    expect(() => Provider.fromClass(Service).singleton().singleton()).toThrowError(CannonSingletonApplyError);
   });
 
   it('caches singleton results by configured cache key', () => {
@@ -94,7 +102,7 @@ describe('Spec: provider behavior', () => {
     expect(fixedEndpoint.fixedValue).toBe('fixed');
   });
 
-  it('appends provider arguments without replacing the existing argument function', () => {
+  it('chains appendArgsFn and appendArgs so both contribute to the final args list', () => {
     class TenantConfig {
       readonly tenant = 'tenant-a';
     }
