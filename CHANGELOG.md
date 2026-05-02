@@ -1,3 +1,64 @@
+# [52.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v51.0.0...v52.0.0) (2026-05-02)
+
+
+* refactor(provider)!: collapse SingletonProvider/DecoratorProvider into Provider ([#75](https://github.com/IgorBabkin/ts-ioc-container/issues/75)) ([9053f2a](https://github.com/IgorBabkin/ts-ioc-container/commit/9053f2af22edb8059db81de5284d1fcb902134ce))
+
+
+### BREAKING CHANGES
+
+* SingletonProvider, DecoratorProvider, and
+ProviderDecorator are removed. IProvider.pipe() is removed; use
+the dedicated mutator methods. IProvider.addArgs() is removed; use
+addArgsFn() or the appendArgs(...) pipe. ScopeAccessOptions now
+includes args.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+* refactor(provider): move ProviderPipe into registration module
+
+ProviderPipe only existed to bridge providers and registrations, and
+registerPipe was only called from Registration.pipe. Co-locating it
+with IRegistration makes the dependency flow one-directional and
+removes the dedicated bridge file in lib/provider/.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+* refactor(provider): relocate inject helpers and pipe helpers to their owning modules
+
+Fold inject/args/argsFn/resolveArgs into MetadataInjector — they exist
+solely to support metadata-based reflection injection, so the file
+that owns the strategy now owns the helpers.
+
+Move appendArgs, appendArgsFn, scopeAccess, lazy, decorate, singleton
+from IProvider into IRegistration, alongside bindTo and scope. Pipes
+are a registration-layer concern (see prior commit relocating
+ProviderPipe), so the helpers that produce them belong with the
+registration module too. IProvider.ts is now purely the provider
+type/interface.
+
+Re-group lib/index.ts so the new locations sit with their existing
+companions instead of as trailing one-liners.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+* feat(provider): throw CannonSingletonApplyError on duplicate singleton application
+
+Add a strict guard: Provider.singleton() throws CannonSingletonApplyError
+when called on a provider that already has a singleton configured. This
+catches the silent-overwrite foot-gun where stacked pipes would let the
+second call replace the first cache strategy with no observable error.
+
+Also:
+- Remove the unused IMapper interface (dead code).
+- Refresh ADR 0004 to reflect the collapsed Provider class, the
+  one-way provider→registration dependency, and the new error.
+- Drop the redundant @register(singleton()) decorator in Scopes.spec
+  exposed by the new guard.
+- Rename the appendArgsFn+appendArgs test to make the chain semantics
+  explicit (regression coverage for the appendArgsFn append fix).
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
 # [51.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v50.2.6...v51.0.0) (2026-05-01)
 
 
