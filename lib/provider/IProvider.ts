@@ -26,4 +26,6 @@ export interface IProvider<T = any> {
   lazy(): this;
 
   singleton(getCacheKey?: GetCacheKey): this;
+
+  dispose(): void;
 }

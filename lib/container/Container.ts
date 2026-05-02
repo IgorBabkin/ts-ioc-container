@@ -134,6 +134,9 @@ export class Container implements IContainer {
     this.parent = new EmptyContainer();
 
     // Reset the state
+    for (const [_, provider] of this.providers) {
+      provider.dispose();
+    }
     this.providers.clear();
     this.aliases.destroy();
     this.instances = [];

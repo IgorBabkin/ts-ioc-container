@@ -11,6 +11,7 @@ import {
 import type { DependencyKey, IContainer } from '../container/IContainer';
 import { type constructor } from '../utils/basic';
 import { CannonSingletonApplyError } from '../errors/CannonSingletonApplyError';
+import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -25,16 +26,19 @@ export class Provider<T = any> implements IProvider<T> {
     return new Provider<T>((c) => c.resolve(key));
   }
 
-  private argsFnList: ArgsFn[] = [];
+  private readonly argsFnList: ArgsFn[] = [];
   private readonly accessRules: ScopeAccessRule[] = [];
   private readonly mappers: DecorateFn<T>[] = [];
   private isLazy = false;
   private cache = new Map<string | symbol, unknown>();
   private getKey: GetCacheKey | undefined;
+  private isDisposed: boolean = false;
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
   resolve(scope: IContainer, options: ProviderOptions): T {
+    ProviderDisposedError.assert(this.isDisposed, 'Provider is already disposed');
+
     if (!this.getKey) {
       return this.resolveDep(scope, options);
     }
@@ -77,6 +81,8 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   hasAccess(options: ScopeAccessOptions): boolean {
+    ProviderDisposedError.assert(this.isDisposed, 'Provider is already disposed');
+
     return this.accessRules.reduce((acc, rule) => rule(options, acc), true);
   }
 
@@ -86,5 +92,14 @@ export class Provider<T = any> implements IProvider<T> {
     }
     this.getKey = getCacheKey;
     return this;
+  }
+
+  dispose(): void {
+    this.isDisposed = true;
+    this.getKey = undefined;
+    this.cache.clear();
+    this.accessRules.splice(0, this.accessRules.length);
+    this.mappers.splice(0, this.mappers.length);
+    this.argsFnList.splice(0, this.argsFnList.length);
   }
 }
