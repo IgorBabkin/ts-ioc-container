@@ -8,6 +8,7 @@ import {
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
+import { ContainerNotFoundError } from '../errors/ContainerNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { OnDisposeHook } from '../hooks/onDispose';
@@ -29,8 +30,16 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
+  getScopeByInstanceOrFail(instance: object): IContainer {
+    throw new ContainerNotFoundError('Cannot find scope for the given instance');
+  }
+
   getInstances() {
     return [];
+  }
+
+  hasInstance(instance: object): boolean {
+    return false;
   }
 
   createScope(): IContainer {

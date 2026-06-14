@@ -52,6 +52,7 @@ export { Registration } from './registration/Registration';
 
 // Errors
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
+export { ContainerNotFoundError } from './errors/ContainerNotFoundError';
 export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
