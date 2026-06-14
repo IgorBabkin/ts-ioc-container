@@ -38,6 +38,10 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
+  hasInstance(instance: object): boolean {
+    return false;
+  }
+
   createScope(): IContainer {
     throw new MethodNotImplementedError();
   }

@@ -184,10 +184,14 @@ export class Container implements IContainer {
     return [...this.scopes];
   }
 
+  hasInstance(instance: object): boolean {
+    return this.instances.includes(instance as Instance);
+  }
+
   getScopeByInstanceOrFail(instance: object): IContainer {
     this.validateContainer();
 
-    if (this.instances.includes(instance as Instance)) {
+    if (this.hasInstance(instance)) {
       return this;
     }
 
@@ -246,7 +250,7 @@ export class Container implements IContainer {
 }
 
 function findScopeByInstance(container: IContainer, instance: object): IContainer | undefined {
-  if (container.getInstances(false).includes(instance as Instance)) {
+  if (container.hasInstance(instance)) {
     return container;
   }
 

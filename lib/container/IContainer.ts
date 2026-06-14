@@ -65,6 +65,8 @@ export interface IContainer extends Tagged {
 
   getInstances(cascade?: boolean): Instance[];
 
+  hasInstance(instance: object): boolean;
+
   dispose(): void;
 
   addInstance(instance: Instance): void;
