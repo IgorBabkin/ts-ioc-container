@@ -191,15 +191,13 @@ export class Container implements IContainer {
   getScopeByInstanceOrFail(instance: object): IContainer {
     this.validateContainer();
 
-    if (this.hasInstance(instance)) {
-      return this;
-    }
-
-    for (const scope of this.scopes) {
-      const found = findScopeByInstance(scope, instance);
-      if (found) {
-        return found;
+    const queue: IContainer[] = [this];
+    while (queue.length > 0) {
+      const scope = queue.shift()!;
+      if (scope.hasInstance(instance)) {
+        return scope;
       }
+      queue.push(...scope.getScopes());
     }
 
     throw new ContainerNotFoundError('Cannot find scope for the given instance');
@@ -247,19 +245,4 @@ export class Container implements IContainer {
     }
     return this.providers.get(key)!;
   }
-}
-
-function findScopeByInstance(container: IContainer, instance: object): IContainer | undefined {
-  if (container.hasInstance(instance)) {
-    return container;
-  }
-
-  for (const scope of container.getScopes()) {
-    const found = findScopeByInstance(scope, instance);
-    if (found) {
-      return found;
-    }
-  }
-
-  return undefined;
 }
