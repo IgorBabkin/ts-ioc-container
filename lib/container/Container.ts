@@ -16,6 +16,7 @@ import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
+import { ContainerNotFoundError } from '../errors/ContainerNotFoundError';
 import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onDispose';
 import { constructor, Instance, Is } from '../utils/basic';
@@ -183,6 +184,23 @@ export class Container implements IContainer {
     return [...this.scopes];
   }
 
+  getScopeByInstanceOrFail(instance: object): IContainer {
+    this.validateContainer();
+
+    if (this.instances.includes(instance as Instance)) {
+      return this;
+    }
+
+    for (const scope of this.scopes) {
+      const found = findScopeByInstance(scope, instance);
+      if (found) {
+        return found;
+      }
+    }
+
+    throw new ContainerNotFoundError('Cannot find scope for the given instance');
+  }
+
   removeScope(child: IContainer): void {
     this.scopes = this.scopes.filter((s) => s !== child);
   }
@@ -225,4 +243,19 @@ export class Container implements IContainer {
     }
     return this.providers.get(key)!;
   }
+}
+
+function findScopeByInstance(container: IContainer, instance: object): IContainer | undefined {
+  if (container.getInstances(false).includes(instance as Instance)) {
+    return container;
+  }
+
+  for (const scope of container.getScopes()) {
+    const found = findScopeByInstance(scope, instance);
+    if (found) {
+      return found;
+    }
+  }
+
+  return undefined;
 }

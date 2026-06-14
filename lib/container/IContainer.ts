@@ -55,6 +55,8 @@ export interface IContainer extends Tagged {
 
   getScopes(): IContainer[];
 
+  getScopeByInstanceOrFail(instance: object): IContainer;
+
   removeScope(child: IContainer): void;
 
   useModule(module: IContainerModule): this;
