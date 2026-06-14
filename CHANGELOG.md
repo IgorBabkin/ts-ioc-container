@@ -1,3 +1,10 @@
+# [54.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v54.0.1...v54.1.0) (2026-06-14)
+
+
+### Features
+
+* **container:** add getScopeByInstanceOrFail to locate the owning scope ([#82](https://github.com/IgorBabkin/ts-ioc-container/issues/82)) ([9dfe45d](https://github.com/IgorBabkin/ts-ioc-container/commit/9dfe45d4c1b74c26c7f6ff5a7afd06add81c03ca))
+
 ## [54.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v54.0.0...v54.0.1) (2026-06-14)
 
 
