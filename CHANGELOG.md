@@ -1,3 +1,10 @@
+## [54.0.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v54.0.0...v54.0.1) (2026-06-14)
+
+
+### Bug Fixes
+
+* **hooks:** run hooks declared on parent classes ([#81](https://github.com/IgorBabkin/ts-ioc-container/issues/81)) ([8786e3a](https://github.com/IgorBabkin/ts-ioc-container/commit/8786e3afc21ae1f32f8864681fcde23b87349a39))
+
 # [54.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v53.0.0...v54.0.0) (2026-05-02)
 
 
