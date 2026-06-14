@@ -30,25 +30,45 @@ const getReflectionTarget = (target: object) => {
   return isProxy(target) ? getProxyTarget(target) : target;
 };
 
-// Get hooks metadata
+// Walk the constructor's prototype chain (most-derived first) collecting each class.
+const getConstructorChain = (ctor: unknown): object[] => {
+  const chain: object[] = [];
+  let current = ctor;
+  while (typeof current === 'function' && current !== Function.prototype) {
+    chain.push(current);
+    current = Object.getPrototypeOf(current);
+  }
+  return chain;
+};
+
+// Get hooks metadata, merging hooks declared on parent (extended-from) classes.
+// Hooks are collected from base to derived so a derived class's hooks for the same
+// method name take precedence over (replace) the parent's.
 export function getHooks(target: object, key: string | symbol): HooksOfClass {
   const reflectionTarget = getReflectionTarget(target);
-  return Reflect.hasMetadata(key, reflectionTarget.constructor)
-    ? Reflect.getMetadata(key, reflectionTarget.constructor)
-    : new Map();
+  const merged: HooksOfClass = new Map();
+  for (const ctor of getConstructorChain(reflectionTarget.constructor).reverse()) {
+    const ownHooks: HooksOfClass | undefined = Reflect.getOwnMetadata(key, ctor);
+    if (ownHooks) {
+      for (const [methodName, fns] of ownHooks) {
+        merged.set(methodName, fns);
+      }
+    }
+  }
+  return merged;
 }
 
 export function hasHooks(target: object, key: string | symbol): boolean {
   const reflectionTarget = getReflectionTarget(target);
-  return Reflect.hasMetadata(key, reflectionTarget.constructor);
+  return getConstructorChain(reflectionTarget.constructor).some((ctor) => Reflect.hasOwnMetadata(key, ctor));
 }
 
 // Hook decorator
 export const hook =
   (key: string | symbol, ...fns: (HookFn | constructor<HookClass>)[]) =>
   (target: object, propertyKey: string | symbol) => {
-    const hooks: HooksOfClass = Reflect.hasMetadata(key, target.constructor)
-      ? Reflect.getMetadata(key, target.constructor)
+    const hooks: HooksOfClass = Reflect.hasOwnMetadata(key, target.constructor)
+      ? Reflect.getOwnMetadata(key, target.constructor)
       : new Map();
     hooks.set(propertyKey as string, (hooks.get(propertyKey as string) ?? []).concat(fns));
     Reflect.defineMetadata(key, hooks, target.constructor);
