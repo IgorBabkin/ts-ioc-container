@@ -89,6 +89,91 @@ describe('hooks', () => {
     expect(hasHooks(instance, 'onStart')).toBe(true);
   });
 
+  it('should run hooks declared on a parent (extended-from) class', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class Base {
+      baseStarted = false;
+
+      @hook('onStart', execute)
+      startBase() {
+        this.baseStarted = true;
+      }
+    }
+
+    class Derived extends Base {
+      derivedStarted = false;
+
+      @hook('onStart', execute)
+      startDerived() {
+        this.derivedStarted = true;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(Derived);
+
+    onStartHooksRunner.execute(instance, { scope: root });
+
+    expect(instance.baseStarted).toBe(true);
+    expect(instance.derivedStarted).toBe(true);
+  });
+
+  it('should run parent hooks before child hooks', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class Base {
+      @hook('onStart', (ctx) => {
+        invoked.push('startBase');
+        ctx.invokeMethod();
+      })
+      startBase() {}
+    }
+
+    class Derived extends Base {
+      @hook('onStart', (ctx) => {
+        invoked.push('startDerived');
+        ctx.invokeMethod();
+      })
+      startDerived() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+
+    onStartHooksRunner.execute(root.resolve(Derived), { scope: root });
+
+    expect(invoked).toEqual(['startBase', 'startDerived']);
+  });
+
+  it('should not leak child hooks into parent instances', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class Base {
+      @hook('onStart', (ctx) => {
+        invoked.push('startBase');
+        ctx.invokeMethod();
+      })
+      startBase() {}
+    }
+
+    class Derived extends Base {
+      @hook('onStart', (ctx) => {
+        invoked.push('startDerived');
+        ctx.invokeMethod();
+      })
+      startDerived() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+
+    onStartHooksRunner.execute(root.resolve(Base), { scope: root });
+
+    expect(invoked).toEqual(['startBase']);
+    expect(Derived).toBeDefined();
+  });
+
   it('should execute plugin hooks for lazily injected plugins', () => {
     const onPluginStartHooksRunner = new HooksRunner('onPluginStart');
     const PluginToken = new GroupAliasToken<Plugin>('Plugin');
