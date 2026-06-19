@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0008 - Zero runtime dependencies](../../docs/adr/0008-zero-runtime-dependencies.md)
-- **Public API:** `classMeta`, `getClassMeta`, `classLabel`, `getClassLabels`, `classTag`, `getClassTags`, `paramMeta`, `getParamMeta`, `paramLabel`, `getParamLabels`, `paramTag`, `getParamTags`, `addMethodMeta`, `getMethodMeta`, `addMethodLabel`, `getMethodLabels`, `addMethodTag`, `getMethodTags`, `once`, `debounce`, `throttle`, `shallowCache`, `handleError`, `handleAsyncError`
+- **Public API:** `addClassMeta`, `getClassMeta`, `addClassLabel`, `getClassLabels`, `addClassTag`, `getClassTags`, `addParamMeta`, `getParamMeta`, `addParamLabel`, `getParamLabels`, `addParamTag`, `getParamTags`, `addMethodMeta`, `getMethodMeta`, `addMethodLabel`, `getMethodLabels`, `addMethodTag`, `getMethodTags`, `once`, `debounce`, `throttle`, `shallowCache`, `handleError`, `handleAsyncError`
 - **Executable spec:** `__tests__/specs/metadata-utilities.spec.ts`
 
 ## Intent

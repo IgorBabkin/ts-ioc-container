@@ -1,9 +1,9 @@
-import { paramLabel, getParamLabels, paramTag, getParamTags, getParamMeta, paramMeta } from '../../lib';
+import { addParamLabel, getParamLabels, addParamTag, getParamTags, getParamMeta, addParamMeta } from '../../lib';
 
 describe('getParamMeta', () => {
   it('should resolve metadata from a constructor', () => {
     class MyService {
-      constructor(@paramMeta('role', () => 'db') _db: unknown) {}
+      constructor(@addParamMeta('role', () => 'db') _db: unknown) {}
     }
 
     expect(getParamMeta('role', MyService)[0]).toBe('db');
@@ -11,7 +11,7 @@ describe('getParamMeta', () => {
 
   it('should resolve metadata from an instance', () => {
     class MyService {
-      constructor(@paramMeta('role', () => 'db') _db: unknown) {}
+      constructor(@addParamMeta('role', () => 'db') _db: unknown) {}
     }
 
     expect(getParamMeta('role', new MyService(null))[0]).toBe('db');
@@ -27,10 +27,10 @@ describe('getParamMeta', () => {
 });
 
 describe('parameter metadata', () => {
-  describe('paramLabel / getParamLabels', () => {
+  describe('addParamLabel / getParamLabels', () => {
     it('should add a label and retrieve it by constructor', () => {
       class MyService {
-        constructor(@paramLabel('env', 'production') _db: unknown) {}
+        constructor(@addParamLabel('env', 'production') _db: unknown) {}
       }
 
       expect(getParamLabels(MyService, 0).get('env')).toBe('production');
@@ -38,7 +38,7 @@ describe('parameter metadata', () => {
 
     it('should add a label and retrieve it by instance', () => {
       class MyService {
-        constructor(@paramLabel('env', 'production') _db: unknown) {}
+        constructor(@addParamLabel('env', 'production') _db: unknown) {}
       }
 
       expect(getParamLabels(new MyService(null), 0).get('env')).toBe('production');
@@ -47,8 +47,8 @@ describe('parameter metadata', () => {
     it('should support multiple labels on the same parameter', () => {
       class MyService {
         constructor(
-          @paramLabel('region', 'us-east')
-          @paramLabel('env', 'staging')
+          @addParamLabel('region', 'us-east')
+          @addParamLabel('env', 'staging')
           _db: unknown,
         ) {}
       }
@@ -68,7 +68,7 @@ describe('parameter metadata', () => {
 
     it('should not bleed across parameters', () => {
       class MyService {
-        constructor(@paramLabel('env', 'production') _db: unknown, _cache: unknown) {}
+        constructor(@addParamLabel('env', 'production') _db: unknown, _cache: unknown) {}
       }
 
       expect(getParamLabels(MyService, 1).size).toBe(0);
@@ -76,7 +76,10 @@ describe('parameter metadata', () => {
 
     it('should support labels on different parameters independently', () => {
       class MyService {
-        constructor(@paramLabel('env', 'production') _db: unknown, @paramLabel('env', 'staging') _cache: unknown) {}
+        constructor(
+          @addParamLabel('env', 'production') _db: unknown,
+          @addParamLabel('env', 'staging') _cache: unknown,
+        ) {}
       }
 
       expect(getParamLabels(MyService, 0).get('env')).toBe('production');
@@ -84,10 +87,10 @@ describe('parameter metadata', () => {
     });
   });
 
-  describe('paramTag / getParamTags', () => {
+  describe('addParamTag / getParamTags', () => {
     it('should add a tag and retrieve it by constructor', () => {
       class MyService {
-        constructor(@paramTag('inject') _db: unknown) {}
+        constructor(@addParamTag('inject') _db: unknown) {}
       }
 
       expect(getParamTags(MyService, 0).has('inject')).toBe(true);
@@ -95,7 +98,7 @@ describe('parameter metadata', () => {
 
     it('should add a tag and retrieve it by instance', () => {
       class MyService {
-        constructor(@paramTag('inject') _db: unknown) {}
+        constructor(@addParamTag('inject') _db: unknown) {}
       }
 
       expect(getParamTags(new MyService(null), 0).has('inject')).toBe(true);
@@ -104,8 +107,8 @@ describe('parameter metadata', () => {
     it('should support multiple tags on the same parameter', () => {
       class MyService {
         constructor(
-          @paramTag('inject')
-          @paramTag('optional')
+          @addParamTag('inject')
+          @addParamTag('optional')
           _db: unknown,
         ) {}
       }
@@ -126,8 +129,8 @@ describe('parameter metadata', () => {
     it('should not duplicate tags', () => {
       class MyService {
         constructor(
-          @paramTag('inject')
-          @paramTag('inject')
+          @addParamTag('inject')
+          @addParamTag('inject')
           _db: unknown,
         ) {}
       }
@@ -137,7 +140,7 @@ describe('parameter metadata', () => {
 
     it('should not bleed across parameters', () => {
       class MyService {
-        constructor(@paramTag('inject') _db: unknown, _cache: unknown) {}
+        constructor(@addParamTag('inject') _db: unknown, _cache: unknown) {}
       }
 
       expect(getParamTags(MyService, 1).size).toBe(0);

@@ -79,8 +79,15 @@ export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanceToken';
 
 // Metadata
-export { classMeta, getClassMeta, classLabel, getClassLabels, classTag, getClassTags } from './metadata/class';
-export { paramMeta, getParamMeta, paramLabel, getParamLabels, paramTag, getParamTags } from './metadata/parameter';
+export { addClassMeta, getClassMeta, addClassLabel, getClassLabels, addClassTag, getClassTags } from './metadata/class';
+export {
+  addParamMeta,
+  getParamMeta,
+  addParamLabel,
+  getParamLabels,
+  addParamTag,
+  getParamTags,
+} from './metadata/parameter';
 export {
   addMethodMeta,
   getMethodMeta,
