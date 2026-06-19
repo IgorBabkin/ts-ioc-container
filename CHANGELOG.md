@@ -1,3 +1,23 @@
+# [55.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v54.1.0...v55.0.0) (2026-06-19)
+
+
+* feat(metadata)!: rename metadata decorators with add prefix ([#84](https://github.com/IgorBabkin/ts-ioc-container/issues/84)) ([2a3cc1c](https://github.com/IgorBabkin/ts-ioc-container/commit/2a3cc1cd27adb16fd8a667e3e9c111a5e3b8c3c1)), closes [#83](https://github.com/IgorBabkin/ts-ioc-container/issues/83)
+
+
+### BREAKING CHANGES
+
+* the metadata decorators have been renamed and the old names
+are no longer exported. Update imports/usages: classMeta->addClassMeta,
+classLabel->addClassLabel, classTag->addClassTag, paramMeta->addParamMeta,
+paramLabel->addParamLabel, paramTag->addParamTag, methodMeta->addMethodMeta,
+methodLabel->addMethodLabel, methodTag->addMethodTag. The getter functions
+(getClassMeta, getParamMeta, getMethodMeta, etc.) are unchanged.
+
+
+Claude-Session: https://claude.ai/code/session_01Kyi5iFKp5KJav3JPqGqg7y
+
+Co-authored-by: Claude <noreply@anthropic.com>
+
 # [54.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v54.0.1...v54.1.0) (2026-06-14)
 
 
