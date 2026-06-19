@@ -131,6 +131,10 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 - Backend: `application`, `request`, `transaction`
 - Frontend: `application`, `page`, `widget`
 
+## Git Conventions
+
+- **The main branch is `main`, not `master`.** Target `main` as the base for pull requests.
+
 ## Commit Message Conventions
 
 ### Scopes that prevent package releases (use these when no API change)

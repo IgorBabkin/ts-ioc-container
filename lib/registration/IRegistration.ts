@@ -3,7 +3,7 @@ import type { ArgsFn, DecorateFn, GetCacheKey, IProvider, ScopeAccessRule } from
 import { SingleToken } from '../token/SingleToken';
 import { BindToken, isBindToken } from '../token/BindToken';
 import { MapFn } from '../utils/fp';
-import { classMeta, getClassMeta } from '../metadata/class';
+import { addClassMeta, getClassMeta } from '../metadata/class';
 import { type constructor } from '../utils/basic';
 
 export type ScopeMatchRule = (s: IContainer, prev: boolean) => boolean;
@@ -43,7 +43,7 @@ export const getTransformers = (Target: constructor<unknown>) =>
   getClassMeta<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
 export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>) =>
-  classMeta(METADATA_KEY, (acc: MapFn<IRegistration>[] | undefined) => {
+  addClassMeta(METADATA_KEY, (acc: MapFn<IRegistration>[] | undefined) => {
     const result = mappers.map((m) =>
       isProviderPipe(m) ? (r: IRegistration) => m.mapRegistration(r) : m,
     ) as MapFn<IRegistration>[];

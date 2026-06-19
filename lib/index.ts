@@ -79,9 +79,23 @@ export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanceToken';
 
 // Metadata
-export { classMeta, getClassMeta, classLabel, getClassLabels, classTag, getClassTags } from './metadata/class';
-export { paramMeta, getParamMeta, paramLabel, getParamLabels, paramTag, getParamTags } from './metadata/parameter';
-export { methodMeta, getMethodMeta, methodLabel, getMethodLabels, methodTag, getMethodTags } from './metadata/method';
+export { addClassMeta, getClassMeta, addClassLabel, getClassLabels, addClassTag, getClassTags } from './metadata/class';
+export {
+  addParamMeta,
+  getParamMeta,
+  addParamLabel,
+  getParamLabels,
+  addParamTag,
+  getParamTags,
+} from './metadata/parameter';
+export {
+  addMethodMeta,
+  getMethodMeta,
+  addMethodLabel,
+  getMethodLabels,
+  addMethodTag,
+  getMethodTags,
+} from './metadata/method';
 export { handleError, handleAsyncError, type HandleErrorParams } from './utils/errorHandler';
 export { throttle } from './utils/throttle';
 export { debounce } from './utils/debounce';

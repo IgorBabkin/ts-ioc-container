@@ -52,20 +52,20 @@ import 'reflect-metadata';
 
 The metadata module exports functions organized in pairs per target type:
 
-- **Class Metadata**: `classMeta`, `getClassMeta`, `classLabel`, `getClassLabels`, `classTag`, `getClassTags`
-- **Parameter Metadata**: `paramMeta`, `getParamMeta`, `paramLabel`, `getParamLabels`, `paramTag`, `getParamTags`
-- **Method Metadata**: `methodMeta`, `getMethodMeta`, `methodLabel`, `getMethodLabels`, `methodTag`, `getMethodTags`
+- **Class Metadata**: `addClassMeta`, `getClassMeta`, `addClassLabel`, `getClassLabels`, `addClassTag`, `getClassTags`
+- **Parameter Metadata**: `addParamMeta`, `getParamMeta`, `addParamLabel`, `getParamLabels`, `addParamTag`, `getParamTags`
+- **Method Metadata**: `addMethodMeta`, `getMethodMeta`, `addMethodLabel`, `getMethodLabels`, `addMethodTag`, `getMethodTags`
 
 <h2 id="class-metadata" class="toc-link">Class Metadata</h2>
 
 Class metadata is stored on the class constructor itself. Use this to attach configuration, tags, or registration information to classes.
 
-### classMeta
+### addClassMeta
 
 Creates a class decorator that stores metadata using a mapper function. The mapper receives the previous value (if any) and returns the new value.
 
 ```typescript
-classMeta<T>(
+addClassMeta<T>(
   key: string | symbol,
   mapFn: (prev: T | undefined) => T
 ): ClassDecorator
@@ -82,12 +82,12 @@ getClassMeta<T>(
 ): T | undefined
 ```
 
-### classLabel
+### addClassLabel
 
 Attaches a key/value label to a class. Labels are stored as a `Map<string, string>` and can be used to categorize or describe classes.
 
 ```typescript
-classLabel(key: string, label: string): ClassDecorator
+addClassLabel(key: string, label: string): ClassDecorator
 ```
 
 ### getClassLabels
@@ -98,12 +98,12 @@ Retrieves all labels attached to a class. Accepts either the constructor or an i
 getClassLabels(target: object): Map<string, string>
 ```
 
-### classTag
+### addClassTag
 
 Attaches a string tag to a class. Tags are stored as a `Set<string>`, so duplicates are ignored automatically.
 
 ```typescript
-classTag(tag: string): ClassDecorator
+addClassTag(tag: string): ClassDecorator
 ```
 
 ### getClassTags
@@ -119,8 +119,8 @@ getClassTags(target: object): Set<string>
 <CodeBlock
   code={`const TAGS_KEY = 'tags';
 
-@classMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
-@classMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
+@addClassMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
+@addClassMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
 class ApiService {}
 
 const tags = getClassMeta<string[]>(ApiService, TAGS_KEY);
@@ -129,10 +129,10 @@ console.log(tags); // ['api', 'service']`}
 />
 
 <CodeBlock
-  code={`@classTag('singleton')
-@classTag('service')
-@classLabel('env', 'production')
-@classLabel('region', 'us-east')
+  code={`@addClassTag('singleton')
+@addClassTag('service')
+@addClassLabel('env', 'production')
+@addClassLabel('region', 'us-east')
 class MyService {}
 
 const instance = new MyService();
@@ -149,12 +149,12 @@ console.log(getClassLabels(instance).get('region')); // 'us-east'`}
 
 Parameter metadata is stored as an array indexed by parameter position. This is crucial for constructor and method parameter injection.
 
-### paramMeta
+### addParamMeta
 
 Creates a parameter decorator that stores metadata for a specific parameter. The mapper receives the previous value for that parameter index.
 
 ```typescript
-paramMeta(
+addParamMeta(
   key: string | symbol,
   mapFn: (prev: unknown) => unknown
 ): ParameterDecorator
@@ -171,12 +171,12 @@ getParamMeta(
 ): unknown[]
 ```
 
-### paramLabel
+### addParamLabel
 
 Attaches a key/value label to a constructor parameter at the given position. Labels are stored per parameter as a `Map<string, string>`.
 
 ```typescript
-paramLabel(key: string, label: string): ParameterDecorator
+addParamLabel(key: string, label: string): ParameterDecorator
 ```
 
 ### getParamLabels
@@ -187,12 +187,12 @@ Retrieves all labels for a specific parameter by index. Accepts either the const
 getParamLabels(target: object, parameterIndex: number): Map<string, string>
 ```
 
-### paramTag
+### addParamTag
 
 Attaches a string tag to a constructor parameter. Tags are stored per parameter as a `Set<string>`.
 
 ```typescript
-paramTag(tag: string): ParameterDecorator
+addParamTag(tag: string): ParameterDecorator
 ```
 
 ### getParamTags
@@ -210,8 +210,8 @@ getParamTags(target: object, parameterIndex: number): Set<string>
 
 class DatabaseService {
   constructor(
-    @paramMeta(INJECT_KEY, () => 'config') config: any,
-    @paramMeta(INJECT_KEY, () => 'logger') logger: any,
+    @addParamMeta(INJECT_KEY, () => 'config') config: any,
+    @addParamMeta(INJECT_KEY, () => 'logger') logger: any,
   ) {}
 }
 
@@ -223,12 +223,12 @@ console.log(metadata); // ['config', 'logger']`}
 <CodeBlock
   code={`class MyService {
   constructor(
-    @paramTag('optional')
-    @paramLabel('source', 'env')
+    @addParamTag('optional')
+    @addParamLabel('source', 'env')
     _config: unknown,
 
-    @paramTag('required')
-    @paramLabel('source', 'di')
+    @addParamTag('required')
+    @addParamLabel('source', 'di')
     _db: unknown,
   ) {}
 }
@@ -244,12 +244,12 @@ console.log(getParamTags(new MyService(null, null), 1).has('required')); // true
 
 Method metadata is stored per method on the class. Use this for hooks, validators, middleware, or any method-level configuration.
 
-### methodMeta
+### addMethodMeta
 
 Creates a method decorator that stores metadata for a specific method. The mapper receives the previous value for that method.
 
 ```typescript
-methodMeta<T>(
+addMethodMeta<T>(
   key: string,
   mapFn: (prev: T | undefined) => T
 ): MethodDecorator
@@ -267,12 +267,12 @@ getMethodMeta(
 ): unknown
 ```
 
-### methodLabel
+### addMethodLabel
 
 Attaches a key/value label to a method. Labels are stored as a `Map<string, string>`.
 
 ```typescript
-methodLabel(key: string, label: string): MethodDecorator
+addMethodLabel(key: string, label: string): MethodDecorator
 ```
 
 ### getMethodLabels
@@ -283,12 +283,12 @@ Retrieves all labels attached to a method. Accepts either the constructor or an 
 getMethodLabels(target: object, propertyKey: string): Map<string, string>
 ```
 
-### methodTag
+### addMethodTag
 
 Attaches a string tag to a method. Tags are stored as a `Set<string>`, so duplicates are ignored automatically.
 
 ```typescript
-methodTag(tag: string): MethodDecorator
+addMethodTag(tag: string): MethodDecorator
 ```
 
 ### getMethodTags
@@ -305,8 +305,8 @@ getMethodTags(target: object, propertyKey: string): Set<string>
   code={`const MIDDLEWARE_KEY = 'middleware';
 
 class Controller {
-  @methodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
-  @methodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
+  @addMethodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
+  @addMethodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
   handleRequest() {}
 }
 
@@ -318,13 +318,13 @@ console.log(middleware); // ['validate', 'auth']`}
 
 <CodeBlock
   code={`class UserController {
-  @methodTag('public')
-  @methodTag('deprecated')
-  @methodLabel('version', 'v1')
+  @addMethodTag('public')
+  @addMethodTag('deprecated')
+  @addMethodLabel('version', 'v1')
   getUsers() {}
 
-  @methodTag('public')
-  @methodLabel('version', 'v2')
+  @addMethodTag('public')
+  @addMethodLabel('version', 'v2')
   getUsersV2() {}
 }
 
@@ -350,9 +350,9 @@ The metadata system is built on top of `reflect-metadata`:
 
 The metadata system powers the core decorators:
 
-- **@register** - Uses `classMeta` to store registration transformers
-- **@inject** - Uses `paramMeta` to specify constructor dependencies
-- **@onConstruct/@onDispose/@hook** - Use `methodMeta` for lifecycle hooks
+- **@register** - Uses `addClassMeta` to store registration transformers
+- **@inject** - Uses `addParamMeta` to specify constructor dependencies
+- **@onConstruct/@onDispose/@hook** - Use `addMethodMeta` for lifecycle hooks
 
 <h2 id="best-practices" class="toc-link">Best Practices</h2>
 
@@ -361,8 +361,8 @@ The metadata system powers the core decorators:
 - **Use mapper functions for accumulation** - When stacking decorators, use the `prev` parameter to accumulate values
 - **Type your metadata** - Use TypeScript generics to type your metadata values
 - **Handle undefined gracefully** - Always check if metadata exists before using it
-- **Prefer labels over raw metadata for key/value data** - `classLabel` / `methodLabel` / `paramLabel` provide a typed, structured alternative to raw metadata keys
-- **Prefer tags for boolean flags** - `classTag` / `methodTag` / `paramTag` avoid duplicates automatically via `Set`
+- **Prefer labels over raw metadata for key/value data** - `addClassLabel` / `addMethodLabel` / `addParamLabel` provide a typed, structured alternative to raw metadata keys
+- **Prefer tags for boolean flags** - `addClassTag` / `addMethodTag` / `addParamTag` avoid duplicates automatically via `Set`
 - **Don't overuse metadata** - Prefer explicit configuration over implicit metadata when possible
 
 <h2 id="limitations" class="toc-link">Limitations</h2>

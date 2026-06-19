@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { afterEach, beforeEach, vi } from 'vitest';
 import {
-  classLabel,
-  classTag,
+  addClassLabel,
+  addClassTag,
   debounce,
   getClassLabels,
   getClassTags,
@@ -12,11 +12,11 @@ import {
   getParamTags,
   handleAsyncError,
   handleError,
-  methodLabel,
-  methodTag,
+  addMethodLabel,
+  addMethodTag,
   once,
-  paramLabel,
-  paramTag,
+  addParamLabel,
+  addParamTag,
   shallowCache,
   throttle,
 } from '../../lib';
@@ -31,19 +31,19 @@ describe('Spec: metadata utilities', () => {
   });
 
   it('attaches class, parameter, and method labels and tags without bleeding between targets', () => {
-    @classLabel('role', 'service')
-    @classTag('domain')
+    @addClassLabel('role', 'service')
+    @addClassTag('domain')
     class ClassAnnotated {}
 
     class ParamAnnotated {
-      constructor(@paramLabel('source', 'request') @paramTag('tenant') tenantId: string) {}
+      constructor(@addParamLabel('source', 'request') @addParamTag('tenant') tenantId: string) {}
     }
 
     class MethodAnnotated {
       run(): void {}
 
-      @methodLabel('phase', 'startup')
-      @methodTag('lifecycle')
+      @addMethodLabel('phase', 'startup')
+      @addMethodTag('lifecycle')
       start(): void {}
 
       stop(): void {}

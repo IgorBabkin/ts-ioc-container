@@ -1,7 +1,7 @@
 import { IInjector, InjectOptions, Injector } from './IInjector';
 import type { IContainer } from '../container/IContainer';
 import { type constructor, Is } from '../utils/basic';
-import { getParamMeta, paramMeta } from '../metadata/parameter';
+import { getParamMeta, addParamMeta } from '../metadata/parameter';
 import { InjectionToken } from '../token/InjectionToken';
 import { ProviderOptions } from '../provider/IProvider';
 import { argToToken, toToken } from '../token/toToken';
@@ -19,7 +19,7 @@ const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
 export const inject =
   <T>(fn: InjectionToken<T> | InjectFn<T> | symbol | string | constructor<T>): ParameterDecorator =>
   (target, propertyKey, parameterIndex) => {
-    paramMeta(hookMetaKey(propertyKey as string), () => toToken(fn))(
+    addParamMeta(hookMetaKey(propertyKey as string), () => toToken(fn))(
       Is.instance(target) ? target.constructor : target,
       propertyKey,
       parameterIndex,
