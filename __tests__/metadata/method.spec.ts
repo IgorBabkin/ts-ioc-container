@@ -1,10 +1,10 @@
-import { methodLabel, getMethodLabels, methodTag, getMethodTags } from '../../lib';
+import { addMethodLabel, getMethodLabels, addMethodTag, getMethodTags } from '../../lib';
 
 describe('method metadata', () => {
-  describe('methodLabel / getMethodLabels', () => {
+  describe('addMethodLabel / getMethodLabels', () => {
     it('should add a label and retrieve it by constructor', () => {
       class MyService {
-        @methodLabel('env', 'production')
+        @addMethodLabel('env', 'production')
         start() {}
       }
 
@@ -13,7 +13,7 @@ describe('method metadata', () => {
 
     it('should add a label and retrieve it by instance', () => {
       class MyService {
-        @methodLabel('env', 'production')
+        @addMethodLabel('env', 'production')
         start() {}
       }
 
@@ -22,8 +22,8 @@ describe('method metadata', () => {
 
     it('should support multiple labels on the same method', () => {
       class MyService {
-        @methodLabel('region', 'us-east')
-        @methodLabel('env', 'staging')
+        @addMethodLabel('region', 'us-east')
+        @addMethodLabel('env', 'staging')
         start() {}
       }
 
@@ -42,7 +42,7 @@ describe('method metadata', () => {
 
     it('should not bleed across methods', () => {
       class MyService {
-        @methodLabel('env', 'production')
+        @addMethodLabel('env', 'production')
         start() {}
         stop() {}
       }
@@ -51,10 +51,10 @@ describe('method metadata', () => {
     });
   });
 
-  describe('methodTag / getMethodTags', () => {
+  describe('addMethodTag / getMethodTags', () => {
     it('should add a tag and retrieve it by constructor', () => {
       class MyService {
-        @methodTag('deprecated')
+        @addMethodTag('deprecated')
         start() {}
       }
 
@@ -63,7 +63,7 @@ describe('method metadata', () => {
 
     it('should add a tag and retrieve it by instance', () => {
       class MyService {
-        @methodTag('deprecated')
+        @addMethodTag('deprecated')
         start() {}
       }
 
@@ -72,8 +72,8 @@ describe('method metadata', () => {
 
     it('should support multiple tags', () => {
       class MyService {
-        @methodTag('deprecated')
-        @methodTag('public')
+        @addMethodTag('deprecated')
+        @addMethodTag('public')
         start() {}
       }
 
@@ -92,8 +92,8 @@ describe('method metadata', () => {
 
     it('should not duplicate tags', () => {
       class MyService {
-        @methodTag('deprecated')
-        @methodTag('deprecated')
+        @addMethodTag('deprecated')
+        @addMethodTag('deprecated')
         start() {}
       }
 
@@ -102,7 +102,7 @@ describe('method metadata', () => {
 
     it('should not bleed across methods', () => {
       class MyService {
-        @methodTag('deprecated')
+        @addMethodTag('deprecated')
         start() {}
         stop() {}
       }

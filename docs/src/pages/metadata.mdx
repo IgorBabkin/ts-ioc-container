@@ -54,7 +54,7 @@ The metadata module exports functions organized in pairs per target type:
 
 - **Class Metadata**: `classMeta`, `getClassMeta`, `classLabel`, `getClassLabels`, `classTag`, `getClassTags`
 - **Parameter Metadata**: `paramMeta`, `getParamMeta`, `paramLabel`, `getParamLabels`, `paramTag`, `getParamTags`
-- **Method Metadata**: `methodMeta`, `getMethodMeta`, `methodLabel`, `getMethodLabels`, `methodTag`, `getMethodTags`
+- **Method Metadata**: `addMethodMeta`, `getMethodMeta`, `addMethodLabel`, `getMethodLabels`, `addMethodTag`, `getMethodTags`
 
 <h2 id="class-metadata" class="toc-link">Class Metadata</h2>
 
@@ -244,12 +244,12 @@ console.log(getParamTags(new MyService(null, null), 1).has('required')); // true
 
 Method metadata is stored per method on the class. Use this for hooks, validators, middleware, or any method-level configuration.
 
-### methodMeta
+### addMethodMeta
 
 Creates a method decorator that stores metadata for a specific method. The mapper receives the previous value for that method.
 
 ```typescript
-methodMeta<T>(
+addMethodMeta<T>(
   key: string,
   mapFn: (prev: T | undefined) => T
 ): MethodDecorator
@@ -267,12 +267,12 @@ getMethodMeta(
 ): unknown
 ```
 
-### methodLabel
+### addMethodLabel
 
 Attaches a key/value label to a method. Labels are stored as a `Map<string, string>`.
 
 ```typescript
-methodLabel(key: string, label: string): MethodDecorator
+addMethodLabel(key: string, label: string): MethodDecorator
 ```
 
 ### getMethodLabels
@@ -283,12 +283,12 @@ Retrieves all labels attached to a method. Accepts either the constructor or an 
 getMethodLabels(target: object, propertyKey: string): Map<string, string>
 ```
 
-### methodTag
+### addMethodTag
 
 Attaches a string tag to a method. Tags are stored as a `Set<string>`, so duplicates are ignored automatically.
 
 ```typescript
-methodTag(tag: string): MethodDecorator
+addMethodTag(tag: string): MethodDecorator
 ```
 
 ### getMethodTags
@@ -305,8 +305,8 @@ getMethodTags(target: object, propertyKey: string): Set<string>
   code={`const MIDDLEWARE_KEY = 'middleware';
 
 class Controller {
-  @methodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
-  @methodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
+  @addMethodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
+  @addMethodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
   handleRequest() {}
 }
 
@@ -318,13 +318,13 @@ console.log(middleware); // ['validate', 'auth']`}
 
 <CodeBlock
   code={`class UserController {
-  @methodTag('public')
-  @methodTag('deprecated')
-  @methodLabel('version', 'v1')
+  @addMethodTag('public')
+  @addMethodTag('deprecated')
+  @addMethodLabel('version', 'v1')
   getUsers() {}
 
-  @methodTag('public')
-  @methodLabel('version', 'v2')
+  @addMethodTag('public')
+  @addMethodLabel('version', 'v2')
   getUsersV2() {}
 }
 
@@ -352,7 +352,7 @@ The metadata system powers the core decorators:
 
 - **@register** - Uses `classMeta` to store registration transformers
 - **@inject** - Uses `paramMeta` to specify constructor dependencies
-- **@onConstruct/@onDispose/@hook** - Use `methodMeta` for lifecycle hooks
+- **@onConstruct/@onDispose/@hook** - Use `addMethodMeta` for lifecycle hooks
 
 <h2 id="best-practices" class="toc-link">Best Practices</h2>
 
@@ -361,8 +361,8 @@ The metadata system powers the core decorators:
 - **Use mapper functions for accumulation** - When stacking decorators, use the `prev` parameter to accumulate values
 - **Type your metadata** - Use TypeScript generics to type your metadata values
 - **Handle undefined gracefully** - Always check if metadata exists before using it
-- **Prefer labels over raw metadata for key/value data** - `classLabel` / `methodLabel` / `paramLabel` provide a typed, structured alternative to raw metadata keys
-- **Prefer tags for boolean flags** - `classTag` / `methodTag` / `paramTag` avoid duplicates automatically via `Set`
+- **Prefer labels over raw metadata for key/value data** - `classLabel` / `addMethodLabel` / `paramLabel` provide a typed, structured alternative to raw metadata keys
+- **Prefer tags for boolean flags** - `classTag` / `addMethodTag` / `paramTag` avoid duplicates automatically via `Set`
 - **Don't overuse metadata** - Prefer explicit configuration over implicit metadata when possible
 
 <h2 id="limitations" class="toc-link">Limitations</h2>

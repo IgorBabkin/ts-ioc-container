@@ -12,8 +12,8 @@ import {
   getParamTags,
   handleAsyncError,
   handleError,
-  methodLabel,
-  methodTag,
+  addMethodLabel,
+  addMethodTag,
   once,
   paramLabel,
   paramTag,
@@ -42,8 +42,8 @@ describe('Spec: metadata utilities', () => {
     class MethodAnnotated {
       run(): void {}
 
-      @methodLabel('phase', 'startup')
-      @methodTag('lifecycle')
+      @addMethodLabel('phase', 'startup')
+      @addMethodTag('lifecycle')
       start(): void {}
 
       stop(): void {}

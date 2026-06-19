@@ -1,4 +1,4 @@
-import { classMeta, getClassMeta, paramMeta, getParamMeta, methodMeta, getMethodMeta } from '../../lib';
+import { classMeta, getClassMeta, paramMeta, getParamMeta, addMethodMeta, getMethodMeta } from '../../lib';
 
 describe('metadata', () => {
   describe('Class Metadata', () => {
@@ -71,10 +71,10 @@ describe('metadata', () => {
   describe('Method Metadata', () => {
     it('should store and retrieve method metadata', () => {
       class Logger {
-        @methodMeta('logLevel', () => 'info')
+        @addMethodMeta('logLevel', () => 'info')
         info(message: string) {}
 
-        @methodMeta('logLevel', () => 'error')
+        @addMethodMeta('logLevel', () => 'error')
         error(message: string) {}
       }
 
@@ -87,8 +87,8 @@ describe('metadata', () => {
       const MIDDLEWARE_KEY = 'middleware';
 
       class Controller {
-        @methodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
-        @methodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
+        @addMethodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'auth'])
+        @addMethodMeta(MIDDLEWARE_KEY, (prev: string[] = []) => [...prev, 'validate'])
         handleRequest() {}
       }
 
@@ -104,7 +104,7 @@ describe('metadata', () => {
       const VALIDATORS_KEY = 'validators';
 
       const validate = (validator: (value: any) => boolean): MethodDecorator =>
-        methodMeta(VALIDATORS_KEY, (prev: Array<(v: any) => boolean> = []) => [...prev, validator]);
+        addMethodMeta(VALIDATORS_KEY, (prev: Array<(v: any) => boolean> = []) => [...prev, validator]);
 
       const runValidators = (instance: any, methodName: string, value: any): boolean => {
         const validators = getMethodMeta(VALIDATORS_KEY, instance, methodName) as Array<(v: any) => boolean>;
