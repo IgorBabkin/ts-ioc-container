@@ -1,11 +1,11 @@
-import { classMeta, getClassMeta, paramMeta, getParamMeta, addMethodMeta, getMethodMeta } from '../../lib';
+import { addClassMeta, getClassMeta, addParamMeta, getParamMeta, addMethodMeta, getMethodMeta } from '../../lib';
 
 describe('metadata', () => {
   describe('Class Metadata', () => {
     it('should store and retrieve class metadata', () => {
       const FEATURE_KEY = 'feature:enabled';
 
-      @classMeta(FEATURE_KEY, () => true)
+      @addClassMeta(FEATURE_KEY, () => true)
       class FeatureService {
         getName() {
           return 'feature';
@@ -19,8 +19,8 @@ describe('metadata', () => {
     it('should accumulate class metadata with multiple decorators', () => {
       const TAGS_KEY = 'tags';
 
-      @classMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
-      @classMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
+      @addClassMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'service'])
+      @addClassMeta(TAGS_KEY, (prev: string[] = []) => [...prev, 'api'])
       class ApiService {
         getName() {
           return 'api';
@@ -39,8 +39,8 @@ describe('metadata', () => {
 
       class DatabaseService {
         constructor(
-          @paramMeta(INJECT_KEY, () => 'config') config: any,
-          @paramMeta(INJECT_KEY, () => 'logger') logger: any,
+          @addParamMeta(INJECT_KEY, () => 'config') config: any,
+          @addParamMeta(INJECT_KEY, () => 'logger') logger: any,
         ) {}
       }
 
@@ -54,9 +54,9 @@ describe('metadata', () => {
       class SparseService {
         constructor(
           first: any,
-          @paramMeta(INJECT_KEY, () => 'second') second: any,
+          @addParamMeta(INJECT_KEY, () => 'second') second: any,
           third: any,
-          @paramMeta(INJECT_KEY, () => 'fourth') fourth: any,
+          @addParamMeta(INJECT_KEY, () => 'fourth') fourth: any,
         ) {}
       }
 
