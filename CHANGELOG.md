@@ -1,3 +1,10 @@
+# [55.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.0.0...v55.1.0) (2026-06-20)
+
+
+### Features
+
+* **hooks:** add mapContext option to HooksRunner execute/executeAsync ([#85](https://github.com/IgorBabkin/ts-ioc-container/issues/85)) ([6951c9a](https://github.com/IgorBabkin/ts-ioc-container/commit/6951c9a79a34c4ee6fff6b417473286d3a4c3c20))
+
 # [55.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v54.1.0...v55.0.0) (2026-06-19)
 
 
