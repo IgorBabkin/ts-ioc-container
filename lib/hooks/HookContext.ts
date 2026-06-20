@@ -16,6 +16,8 @@ export interface IHookContext {
 
   setProperty(fn: InjectionToken): void;
 
+  getProperty(): unknown;
+
   setInitialArgs(...args: unknown[]): this;
 }
 
@@ -45,6 +47,11 @@ export class HookContext implements IHookContext {
   setProperty(fn: InjectionToken): void {
     // @ts-ignore
     this.instance[this.methodName] = fn.resolve(this.scope);
+  }
+
+  getProperty(): unknown {
+    // @ts-ignore
+    return this.instance[this.methodName];
   }
 
   setInitialArgs(...args: unknown[]): this {
