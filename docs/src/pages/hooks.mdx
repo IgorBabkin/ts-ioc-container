@@ -155,6 +155,17 @@ beforeHooksRunner.execute(instance, {
 
 In this example, `firstArg` receives `'initial'` and `suffix` is still resolved from the container.
 
+Alternatively, pass `mapContext` to transform the context the runner already created. This keeps the default `createContext` factory in place while letting you tweak the context per run — for example to preload arguments:
+
+```typescript
+beforeHooksRunner.execute(instance, {
+  scope: root,
+  mapContext: (context) => context.setInitialArgs('initial'),
+});
+```
+
+`mapContext` works the same way for both `execute` and `executeAsync`, and runs once per hooked method, after `createContext`.
+
 ## Best Practices
 
 <div class="callout callout-important">
