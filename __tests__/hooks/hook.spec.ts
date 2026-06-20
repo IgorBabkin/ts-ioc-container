@@ -58,6 +58,56 @@ describe('hooks', () => {
     expect(instance.receivedArgs).toEqual(['initial', 'injected', undefined]);
   });
 
+  it('should map the hook context with mapContext when running execute', () => {
+    const beforeHooksRunner = new HooksRunner('syncBefore');
+
+    class MyClass {
+      receivedArgs: unknown[] = [];
+
+      @hook('syncBefore', (ctx) => {
+        ctx.invokeMethod();
+      })
+      start(@inject(args(0)) firstArg: string, @inject('suffix') suffix: string) {
+        this.receivedArgs = [firstArg, suffix];
+      }
+    }
+
+    const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue('injected').bindTo('suffix'));
+    const instance = root.resolve(MyClass);
+
+    beforeHooksRunner.execute(instance, {
+      scope: root,
+      mapContext: (context) => context.setInitialArgs('mapped'),
+    });
+
+    expect(instance.receivedArgs).toEqual(['mapped', 'injected']);
+  });
+
+  it('should map the hook context with mapContext when running executeAsync', async () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class MyClass {
+      receivedArgs: unknown[] = [];
+
+      @hook('onStart', async (ctx) => {
+        await ctx.invokeMethod();
+      })
+      async start(@inject(args(0)) firstArg: string) {
+        this.receivedArgs = [firstArg];
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+
+    await onStartHooksRunner.executeAsync(instance, {
+      scope: root,
+      mapContext: (context) => context.setInitialArgs('mapped'),
+    });
+
+    expect(instance.receivedArgs).toEqual(['mapped']);
+  });
+
   it('should run executeAsync for async hooks', async () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 

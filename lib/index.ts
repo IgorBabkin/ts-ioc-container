@@ -66,7 +66,7 @@ export { HookContext, createHookContextFactory, createHookContext, type IHookCon
 export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct, AddOnConstructHookModule } from './hooks/onConstruct';
 export { onDisposeHooksRunner, onDispose, AddOnDisposeHookModule } from './hooks/onDispose';
-export { HooksRunner, type HooksRunnerContext } from './hooks/HooksRunner';
+export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens
 export { InjectionToken } from './token/InjectionToken';
