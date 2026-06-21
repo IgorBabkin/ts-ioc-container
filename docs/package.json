@@ -21,7 +21,7 @@
     "@spotlightjs/astro": "^3.2.6",
     "astro": "^4.5.6",
     "bootstrap": "^5.3.3",
-    "mermaid": "^10.9.5",
+    "mermaid": "^11.14.0",
     "remark-heading-id": "^1.0.1",
     "shiki": "^4.0.2"
   },
