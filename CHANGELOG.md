@@ -1,3 +1,10 @@
+# [55.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.1.0...v55.2.0) (2026-06-21)
+
+
+### Features
+
+* **hooks:** add onException handler to AddOnConstructHookModule ([#87](https://github.com/IgorBabkin/ts-ioc-container/issues/87)) ([6a9113a](https://github.com/IgorBabkin/ts-ioc-container/commit/6a9113ab9b626277436b52254be13fc92de1a454))
+
 # [55.1.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.0.0...v55.1.0) (2026-06-20)
 
 
