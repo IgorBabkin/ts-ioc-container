@@ -2462,7 +2462,16 @@ Sometimes you need to invoke methods after construct or dispose of class. This i
 
 ```typescript
 import 'reflect-metadata';
-import { AddOnConstructHookModule, Container, type HookFn, inject, onConstruct, Registration as R } from 'ts-ioc-container';
+import {
+  AddOnConstructHookModule,
+  Container,
+  type ExecutionContext,
+  type HookFn,
+  type IContainer,
+  inject,
+  onConstruct,
+  Registration as R,
+} from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
@@ -2489,6 +2498,64 @@ describe('onConstruct', function () {
 
     expect(db.isConnected).toBe(true);
     expect(db.connectionString).toBe('postgres://localhost:5432');
+  });
+
+  it('should forward hook exceptions to the onException handler with the execution context', function () {
+    const failure = new Error('boom');
+
+    class BrokenService {
+      @onConstruct(() => {
+        throw failure;
+      })
+      init() {}
+    }
+
+    let captured: { ex: unknown; context: ExecutionContext } | undefined;
+    const container = new Container().useModule(
+      new AddOnConstructHookModule((ex, context) => {
+        captured = { ex, context };
+      }),
+    );
+
+    expect(() => container.resolve(BrokenService)).not.toThrow();
+    expect(captured?.ex).toBe(failure);
+    expect(captured?.context.scope).toBe(container);
+  });
+
+  it('should rethrow hook exceptions when no onException handler is provided', function () {
+    const failure = new Error('boom');
+
+    class BrokenService {
+      @onConstruct(() => {
+        throw failure;
+      })
+      init() {}
+    }
+
+    const container = new Container().useModule(new AddOnConstructHookModule());
+
+    expect(() => container.resolve(BrokenService)).toThrow(failure);
+  });
+
+  it('should expose the resolving scope through the execution context', function () {
+    class BrokenService {
+      @onConstruct(() => {
+        throw new Error('boom');
+      })
+      init() {}
+    }
+
+    let scope: IContainer | undefined;
+    const container = new Container().useModule(
+      new AddOnConstructHookModule((_ex, context) => {
+        scope = context.scope;
+      }),
+    );
+    const child = container.createScope();
+
+    child.resolve(BrokenService);
+
+    expect(scope).toBe(child);
   });
 });
 

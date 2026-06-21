@@ -64,7 +64,12 @@ export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwi
 export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn, type HooksOfClass } from './hooks/hook';
 export { HookContext, createHookContextFactory, createHookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
-export { onConstructHooksRunner, onConstruct, AddOnConstructHookModule } from './hooks/onConstruct';
+export {
+  onConstructHooksRunner,
+  onConstruct,
+  AddOnConstructHookModule,
+  type OnExceptionHandler,
+} from './hooks/onConstruct';
 export { onDisposeHooksRunner, onDispose, AddOnDisposeHookModule } from './hooks/onDispose';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
@@ -101,6 +106,9 @@ export { throttle } from './utils/throttle';
 export { debounce } from './utils/debounce';
 export { shallowCache } from './utils/shallowCache';
 export { once } from './utils/once';
+
+// Execution
+export { type ExecutionContext } from './ExecutionContext';
 
 // Utils
 export { select } from './select';
