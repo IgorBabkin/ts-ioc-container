@@ -1,3 +1,10 @@
+# [55.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.2.0...v55.3.0) (2026-07-02)
+
+
+### Features
+
+* **hooks:** add getProperty() to IHookContext ([#86](https://github.com/IgorBabkin/ts-ioc-container/issues/86)) ([c71b6db](https://github.com/IgorBabkin/ts-ioc-container/commit/c71b6dbe2c0e01c22cab4afd187f27cb1cf94640))
+
 # [55.2.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.1.0...v55.2.0) (2026-06-21)
 
 
