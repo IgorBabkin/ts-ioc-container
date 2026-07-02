@@ -2668,6 +2668,26 @@ describe('inject property', () => {
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
   });
+
+  it('should read the applied instance property via getProperty', () => {
+    const onInitHookRunner = new HooksRunner('onInit');
+
+    let injectedValue: unknown;
+
+    class UserViewModel {
+      @hook('onInit', injectProp('GreetingService'), (context) => {
+        injectedValue = context.getProperty();
+      })
+      greetingService!: string;
+    }
+
+    const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
+
+    const viewModel = container.resolve(UserViewModel);
+    onInitHookRunner.execute(viewModel, { scope: container });
+
+    expect(injectedValue).toBe('Hello');
+  });
 });
 
 ```
