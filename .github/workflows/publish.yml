@@ -54,8 +54,11 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Ensure npm 11.5.1 or later for OIDC
+        # Pin to the npm 11 line: it satisfies the OIDC requirement (>= 11.5.1)
+        # while staying compatible with the Node version in .nvmrc. `npm@latest`
+        # now resolves to npm 12, which requires Node >= 24.15.0 and breaks here.
         run: |
-          npm install -g npm@latest
+          npm install -g npm@11
           npm --version
 
       - name: Install dependencies
