@@ -139,6 +139,37 @@ describe('hooks', () => {
     expect(hasHooks(instance, 'onStart')).toBe(true);
   });
 
+  it('should report whether a target has hooks for the runner key', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class WithHooks {
+      @hook('onStart', execute)
+      start() {}
+    }
+
+    class WithoutHooks {
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+
+    expect(onStartHooksRunner.hasHooks(root.resolve(WithHooks))).toBe(true);
+    expect(onStartHooksRunner.hasHooks(root.resolve(WithoutHooks))).toBe(false);
+  });
+
+  it('should report no hooks when the target has hooks under a different key only', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class MyClass {
+      @hook('onDispose', execute)
+      stop() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+
+    expect(onStartHooksRunner.hasHooks(root.resolve(MyClass))).toBe(false);
+  });
+
   it('should run hooks declared on a parent (extended-from) class', () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 

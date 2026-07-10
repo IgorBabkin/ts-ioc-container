@@ -1,6 +1,6 @@
 import { createHookContext, type CreateHookContext, type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
-import { getHooks, HookFn, toHookFn } from './hook';
+import { getHooks, hasHooks, HookFn, toHookFn } from './hook';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
 
 import { promisify } from '../utils/promise';
@@ -16,6 +16,10 @@ export type HooksRunnerContext = {
 
 export class HooksRunner {
   constructor(private readonly key: string | symbol) {}
+
+  hasHooks(target: object): boolean {
+    return hasHooks(target, this.key);
+  }
 
   execute(
     target: object,
