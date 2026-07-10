@@ -1,3 +1,10 @@
+# [55.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.3.0...v55.4.0) (2026-07-10)
+
+
+### Features
+
+* **hooks:** add hasHooks method to HooksRunner ([#88](https://github.com/IgorBabkin/ts-ioc-container/issues/88)) ([453dc6a](https://github.com/IgorBabkin/ts-ioc-container/commit/453dc6a18d5f13d59345ab3fcb03f256890f7f5b))
+
 # [55.3.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.2.0...v55.3.0) (2026-07-02)
 
 
