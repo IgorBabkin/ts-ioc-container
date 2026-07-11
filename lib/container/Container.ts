@@ -16,7 +16,6 @@ import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { ContainerNotFoundError } from '../errors/ContainerNotFoundError';
 import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onDispose';
 import { constructor, Instance, Is } from '../utils/basic';
@@ -191,16 +190,11 @@ export class Container implements IContainer {
   getScopeByInstanceOrFail(instance: object): IContainer {
     this.validateContainer();
 
-    const queue: IContainer[] = [this];
-    while (queue.length > 0) {
-      const scope = queue.shift()!;
-      if (scope.hasInstance(instance)) {
-        return scope;
-      }
-      queue.push(...scope.getScopes());
+    if (this.hasInstance(instance)) {
+      return this;
     }
 
-    throw new ContainerNotFoundError('Cannot find scope for the given instance');
+    return this.parent.getScopeByInstanceOrFail(instance);
   }
 
   removeScope(child: IContainer): void {
