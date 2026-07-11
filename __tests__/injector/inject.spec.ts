@@ -42,26 +42,52 @@ describe('inject helpers', () => {
       const container = createContainer().addRegistration(R.fromClass(Service));
       expect(container.resolve<Service>('Service').value).toBeUndefined();
     });
+
+    it('is a shortcut for argsFn matching on index', () => {
+      @register(appendArgs('a', 'b', 'c'))
+      class Service {
+        constructor(
+          @inject(args(1)) public viaArgs: unknown,
+          @inject(argsFn((value, index) => index === 1)) public viaArgsFn: unknown,
+        ) {}
+      }
+
+      const container = createContainer().addRegistration(R.fromClass(Service));
+      const service = container.resolve<Service>('Service');
+      expect(service.viaArgs).toBe('b');
+      expect(service.viaArgsFn).toBe('b');
+    });
   });
 
-  describe('argsFn', () => {
-    it('receives an empty array when no args are provided', () => {
+  describe('argsFn(predicate)', () => {
+    it('returns the first arg matching the predicate', () => {
+      @register(appendArgs(1, 'two', 3))
       class Service {
-        constructor(@inject(argsFn((...a) => a.length)) public count: number) {}
+        constructor(@inject(argsFn((value) => typeof value === 'string')) public value: unknown) {}
       }
 
       const container = createContainer().addRegistration(R.fromClass(Service));
-      expect(container.resolve<Service>('Service').count).toBe(0);
+      expect(container.resolve<Service>('Service').value).toBe('two');
     });
 
-    it('can transform args into a complex object', () => {
-      @register(appendArgsFn(() => ['x', 'y']))
+    it('passes the arg index as the second predicate argument', () => {
+      @register(appendArgsFn(() => ['x', 'y', 'z']))
       class Service {
-        constructor(@inject(argsFn((a, b) => ({ first: a, second: b }))) public data: unknown) {}
+        constructor(@inject(argsFn((value, index) => index === 2)) public value: unknown) {}
       }
 
       const container = createContainer().addRegistration(R.fromClass(Service));
-      expect(container.resolve<Service>('Service').data).toEqual({ first: 'x', second: 'y' });
+      expect(container.resolve<Service>('Service').value).toBe('z');
+    });
+
+    it('returns undefined when no arg matches the predicate', () => {
+      @register(appendArgs('a', 'b'))
+      class Service {
+        constructor(@inject(argsFn((value) => typeof value === 'number')) public value: unknown) {}
+      }
+
+      const container = createContainer().addRegistration(R.fromClass(Service));
+      expect(container.resolve<Service>('Service').value).toBeUndefined();
     });
   });
 });
