@@ -1,3 +1,10 @@
+## [55.4.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.4.0...v55.4.1) (2026-07-11)
+
+
+### Bug Fixes
+
+* **container:** search scope by instance from child to parent ([#90](https://github.com/IgorBabkin/ts-ioc-container/issues/90)) ([8942b3c](https://github.com/IgorBabkin/ts-ioc-container/commit/8942b3c3f3a7c947a9fd88a3f3b4bcfd98a90e8f))
+
 # [55.4.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.3.0...v55.4.0) (2026-07-10)
 
 
