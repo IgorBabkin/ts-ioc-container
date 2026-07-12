@@ -1,3 +1,10 @@
+# [55.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.4.1...v55.5.0) (2026-07-12)
+
+
+### Features
+
+* **injector:** make argsFn a predicate selector and args its index shortcut ([#92](https://github.com/IgorBabkin/ts-ioc-container/issues/92)) ([10732e0](https://github.com/IgorBabkin/ts-ioc-container/commit/10732e0f9db4c47679aa4b1ec1d99a4411cae5fb))
+
 ## [55.4.1](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.4.0...v55.4.1) (2026-07-11)
 
 
