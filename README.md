@@ -1542,7 +1542,7 @@ Constructor parameters that should pick up positional args from `ProviderOptions
 - `@inject(args(0))` — resolves the first element of the `args` array passed at resolution time
 - Works together with `token.args(...)` to pass typed dependencies through the args context
 
-`args(index)` and `argsFn(fn)` are thin shortcuts for an `InjectFn`. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array — so `args(0)` is just `(scope, { args = [] }) => args[0]`, and `argsFn(fn)` is `(scope, { args = [] }) => fn(...args)` (the runtime args are spread into your callback as positional parameters).
+`argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `args(index)` is just a shortcut for matching by position: `args(0)` is `argsFn((value, index) => index === 0)`. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array.
 
 ### Immutable token chaining
 

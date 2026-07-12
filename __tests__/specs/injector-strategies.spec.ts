@@ -24,18 +24,18 @@ describe('Spec: injector strategies', () => {
     class Controller {
       constructor(
         @inject('Logger') readonly logger: Logger,
-        @inject(args(0)) readonly tenant: string,
-        @inject(argsFn((tenant) => `${tenant}:audit`)) readonly auditKey: string,
+        @inject(args(0)) readonly id: number,
+        @inject(argsFn((value) => typeof value === 'string')) readonly tenant: string,
       ) {}
     }
 
     const container = new Container().addRegistration(R.fromClass(Logger)).addRegistration(R.fromClass(Controller));
 
-    const controller = container.resolve<Controller>('Controller', { args: ['tenant-a'] });
+    const controller = container.resolve<Controller>('Controller', { args: [100, 'tenant-a'] });
 
     expect(controller.logger).toBeInstanceOf(Logger);
+    expect(controller.id).toBe(100);
     expect(controller.tenant).toBe('tenant-a');
-    expect(controller.auditKey).toBe('tenant-a:audit');
   });
 
   it('leaves constructor parameters without @inject metadata as undefined', () => {

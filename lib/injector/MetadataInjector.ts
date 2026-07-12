@@ -26,16 +26,12 @@ export const inject =
     );
   };
 
-export const args =
-  (index: number): InjectFn =>
-  (c, { args = [] }): unknown => {
-    return args[index];
-  };
-
 export const argsFn =
-  <T>(fn: (...args: unknown[]) => T): InjectFn<T> =>
-  (c, options) =>
-    fn(...(options.args ?? []));
+  <T = unknown>(predicate: (value: unknown, index: number) => boolean): InjectFn<T> =>
+  (c, { args = [] }): T =>
+    args.find((value, index) => predicate(value, index)) as T;
+
+export const args = (index: number): InjectFn => argsFn((value, i) => i === index);
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const tokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
