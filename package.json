@@ -2,9 +2,6 @@
   "name": "ts-ioc-container",
   "version": "55.5.0",
   "description": "Fast, lightweight TypeScript dependency injection container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects.",
-  "workspaces": [
-    "docs"
-  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -16,6 +13,19 @@
   "main": "cjm/index.js",
   "types": "typings/index.d.ts",
   "module": "esm/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./typings/index.d.ts",
+        "default": "./esm/index.js"
+      },
+      "require": {
+        "types": "./typings/index.d.ts",
+        "default": "./cjm/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "dependency-injection",
     "inversion-of-control",
@@ -41,10 +51,6 @@
     "service-container",
     "inject"
   ],
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
   "files": [
     "cjm/**/*",
     "esm/**/*",
@@ -56,8 +62,8 @@
   },
   "scripts": {
     "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
-    "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm",
-    "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration",
+    "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm && node scripts/postbuild-extensions.mjs esm --esm",
+    "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration && node scripts/postbuild-extensions.mjs typings",
     "generate:docs": "scripts/generate-readme/generate-readme.ts && git add README.md",
     "build": "npm run build:cjm && npm run build:esm && npm run build:types",
     "test": "vitest run",
@@ -77,6 +83,14 @@
     "docs:serve": "pnpm --filter ts-ioc-container-docs run dev",
     "docs:build": "pnpm --filter ts-ioc-container-docs run build",
     "docs:preview": "pnpm --filter ts-ioc-container-docs run preview"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "reflect-metadata": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
@@ -132,6 +146,6 @@
   },
   "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
   "engines": {
-    "node": ">= 22.14.0"
+    "node": ">= 18"
   }
 }
