@@ -27,6 +27,7 @@ provider pipelines, aliases, and custom injector strategies.
 ## Content
 
 - [Setup](#setup)
+- [Environment support](#environment-support)
 - [Quickstart](#quickstart)
 - [Cheatsheet](#cheatsheet)
 - [Container](#container)
@@ -84,6 +85,28 @@ And `tsconfig.json` should have next options:
   }
 }
 ```
+
+## Environment support
+
+`ts-ioc-container` ships both CommonJS and ES module builds (selected
+automatically via the package `exports` map) plus TypeScript declarations, so it
+runs anywhere modern JavaScript does. The package is `sideEffects`-free, so
+bundlers tree-shake unused exports.
+
+| Environment | Supported | Module format | Notes |
+| --- | :---: | --- | --- |
+| Node.js (ESM, `import`) | ✅ | ESM | Node.js 18+; resolved via the `import` condition. |
+| Node.js (CommonJS, `require`) | ✅ | CJS | Node.js 18+; resolved via the `require` condition. |
+| Browser / Web (via bundlers) | ✅ | ESM | webpack, Vite, Rollup, esbuild, Parcel; tree-shakeable. |
+| TypeScript | ✅ | CJS + ESM | Types shipped for both; needs `experimentalDecorators` for the metadata injector. |
+| Deno | ✅ | ESM | Use the `npm:ts-ioc-container` specifier. |
+| Bun | ✅ | CJS + ESM | Runs the native ESM/CJS builds directly. |
+
+> [!NOTE]
+> The default `MetadataInjector` (and the `@inject` / `@onConstruct` /
+> `@onDispose` decorators) rely on `reflect-metadata`. It is declared as an
+> optional peer dependency — install it and import it once at your entrypoint.
+> `SimpleInjector` and `ProxyInjector` do not need it.
 
 ## Quickstart
 
