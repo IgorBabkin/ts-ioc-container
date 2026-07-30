@@ -197,7 +197,7 @@ export const pageHeadings: Record<string, Heading[]> = {
   "/ts-ioc-container/hooks": [
     { id: "what-are-hooks", text: "What are Hooks?", level: 2 },
     { id: "onconstruct", text: "OnConstruct Hooks", level: 2 },
-    { id: "ondispose", text: "OnDispose Hooks", level: 2 },
+    { id: "oncontainerdisposed", text: "OnContainerDisposed Hooks", level: 2 },
     { id: "property-injection", text: "Property Injection", level: 2 },
     { id: "custom-hooks", text: "Custom Hooks", level: 2 },
     {

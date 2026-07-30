@@ -17,7 +17,7 @@ import { MetadataInjector } from '../injector/MetadataInjector';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnConstructHook } from '../hooks/onConstruct';
-import { OnDisposeHook } from '../hooks/onDispose';
+import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
 

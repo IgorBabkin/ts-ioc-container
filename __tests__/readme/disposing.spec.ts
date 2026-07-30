@@ -11,7 +11,7 @@ import { bindTo, Container, ContainerDisposedError, register, Registration as R,
  * - Cache entries cleared
  *
  * The container.dispose() method:
- * 1. Executes all onDispose hooks
+ * 1. Executes all onContainerDisposed hooks
  * 2. Clears all instances and registrations
  * 3. Detaches from parent scope
  * 4. Prevents further resolution

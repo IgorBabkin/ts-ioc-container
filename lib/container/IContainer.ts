@@ -1,7 +1,7 @@
 import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { OnConstructHook } from '../hooks/onConstruct';
-import { OnDisposeHook } from '../hooks/onDispose';
+import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { type constructor, Instance } from '../utils/basic';
 
 export type DependencyKey = string | symbol;

@@ -19,7 +19,7 @@ provider pipelines, aliases, and custom injector strategies.
 - clean API for classes, keys, tokens, aliases, and scopes
 - no global container object; pass containers and scopes explicitly
 - supports tagged application, request, transaction, page, and widget scopes
-- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onDispose`
+- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onContainerDisposed`
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
@@ -53,7 +53,7 @@ provider pipelines, aliases, and custom injector strategies.
 - [Module](#module)
 - [Hook](#hook) `@hook`
   - [OnConstruct](#onconstruct) `@onConstruct`
-  - [OnDispose](#ondispose) `@onDispose`
+  - [OnContainerDisposed](#oncontainerdisposed) `@onContainerDisposed`
   - [Inject Property](#inject-property)
   - [Inject Method](#inject-method)
 - [Mock](#mock)
@@ -104,7 +104,7 @@ bundlers tree-shake unused exports.
 
 > [!NOTE]
 > The default `MetadataInjector` (and the `@inject` / `@onConstruct` /
-> `@onDispose` decorators) rely on `reflect-metadata`. It is declared as an
+> `@onContainerDisposed` decorators) rely on `reflect-metadata`. It is declared as an
 > optional peer dependency — install it and import it once at your entrypoint.
 > `SimpleInjector` and `ProxyInjector` do not need it.
 
@@ -449,7 +449,7 @@ describe('Instances', function () {
 Sometimes you want to dispose a container or scope. For example, when a request, page, widget, or other local lifecycle ends.
 
 - container can be disposed
-- when container is disposed then it runs its `onDispose` hooks, unregisters its providers, removes its local instances, and detaches from its parent
+- when container is disposed then it runs its `onContainerDisposed` hooks, unregisters its providers, removes its local instances, and detaches from its parent
 
 > [!IMPORTANT]
 > Dispose is local to the container being disposed. Child scopes are not disposed automatically; dispose them explicitly when their own lifecycle ends.
@@ -468,7 +468,7 @@ import { bindTo, Container, ContainerDisposedError, register, Registration as R,
  * - Cache entries cleared
  *
  * The container.dispose() method:
- * 1. Executes all onDispose hooks
+ * 1. Executes all onContainerDisposed hooks
  * 2. Clears all instances and registrations
  * 3. Detaches from parent scope
  * 4. Prevents further resolution
@@ -2584,7 +2584,7 @@ describe('onConstruct', function () {
 
 ```
 
-### OnDispose
+### OnContainerDisposed
 
 ```typescript
 import 'reflect-metadata';
@@ -2594,7 +2594,7 @@ import {
   Container,
   type HookFn,
   inject,
-  onDispose,
+  onContainerDisposed,
   register,
   Registration as R,
   singleton,
@@ -2623,13 +2623,13 @@ class Logger {
     this.messages.push(message);
   }
 
-  @onDispose(execute)
+  @onContainerDisposed(execute)
   save() {
     this.logsRepo.saveLogs(this.messages);
   }
 }
 
-describe('onDispose', function () {
+describe('onContainerDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
       .useModule(new AddOnDisposeHookModule())

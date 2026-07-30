@@ -117,7 +117,7 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 ### Hooks
 
-`@onConstruct` and `@onDispose` decorators trigger after construction / on disposal. Requires adding `AddOnConstructHookModule` / `AddOnDisposeHookModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.
+`@onConstruct` and `@onContainerDisposed` decorators trigger after construction / on disposal. Requires adding `AddOnConstructHookModule` / `AddOnDisposeHookModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.
 
 ## Important File Conventions
 

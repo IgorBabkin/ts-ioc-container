@@ -8,7 +8,7 @@ import CodeBlock from "../components/CodeBlock.astro";
 
 # Metadata
 
-The metadata module provides a low-level API for storing and retrieving metadata on classes, methods, and parameters using the `reflect-metadata` library. This system forms the foundation for decorators like `@register`, `@inject`, `@onConstruct`, and `@onDispose`.
+The metadata module provides a low-level API for storing and retrieving metadata on classes, methods, and parameters using the `reflect-metadata` library. This system forms the foundation for decorators like `@register`, `@inject`, `@onConstruct`, and `@onContainerDisposed`.
 
 <h2 id="what-is-metadata" class="toc-link">What is Metadata?</h2>
 
@@ -352,7 +352,7 @@ The metadata system powers the core decorators:
 
 - **@register** - Uses `addClassMeta` to store registration transformers
 - **@inject** - Uses `addParamMeta` to specify constructor dependencies
-- **@onConstruct/@onDispose/@hook** - Use `addMethodMeta` for lifecycle hooks
+- **@onConstruct/@onContainerDisposed/@hook** - Use `addMethodMeta` for lifecycle hooks
 
 <h2 id="best-practices" class="toc-link">Best Practices</h2>
 

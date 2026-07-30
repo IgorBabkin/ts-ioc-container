@@ -14,7 +14,7 @@ This is a TypeScript Inversion of Control (IoC) container library. The project p
 ## Code Style & Conventions
 - Use TypeScript with strict typing
 - Follow existing patterns in the codebase
-- Use decorators for metadata injection (`@inject`, `@onConstruct`, `@onDispose`)
+- Use decorators for metadata injection (`@inject`, `@onConstruct`, `@onContainerDisposed`)
 - Prefer explicit types over `any` (use `any` only when necessary, with warnings)
 - Use interfaces for contracts (e.g., `IContainer`, `IProvider`, `IInjector`)
 - Follow the existing error handling patterns with custom error classes
@@ -48,7 +48,7 @@ This is a TypeScript Inversion of Control (IoC) container library. The project p
 - **Provider**: Handles instance creation and caching strategies. It's like a function which creates/return instance of dependency.
 - **Injector**: Manages dependency injection (Metadata, Simple, Proxy). It describes how to inject dependencies into the target constructor.
 - **Scopes**: Tagged scopes for request-level or feature-level isolation. It's just a container inside of another container. So container can create a scope inside of it.
-- **Hooks**: Lifecycle hooks (`@hook`, `@onConstruct`, `@onDispose`)
+- **Hooks**: Lifecycle hooks (`@hook`, `@onConstruct`, `@onContainerDisposed`)
 - **Tokens**: Various token types for dependency identification
 
 ## When Making Changes

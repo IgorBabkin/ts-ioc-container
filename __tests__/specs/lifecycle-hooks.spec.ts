@@ -11,7 +11,7 @@ import {
   inject,
   injectProp,
   onConstruct,
-  onDispose,
+  onContainerDisposed,
   Registration as R,
   UnexpectedHookResultError,
 } from '../../lib';
@@ -31,7 +31,7 @@ describe('Spec: lifecycle hooks', () => {
         this.initialized = true;
       }
 
-      @onDispose(invoke)
+      @onContainerDisposed(invoke)
       destroy(): void {
         this.disposed = true;
       }

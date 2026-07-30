@@ -11,7 +11,7 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { ContainerNotFoundError } from '../errors/ContainerNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { OnDisposeHook } from '../hooks/onDispose';
+import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { OnConstructHook } from '../hooks/onConstruct';
 import { type constructor, type Instance } from '../utils/basic';
 
