@@ -1,3 +1,10 @@
+# [55.6.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.5.0...v55.6.0) (2026-08-01)
+
+
+### Features
+
+* **hooks:** rename onDispose decorator to onContainerDisposed ([#94](https://github.com/IgorBabkin/ts-ioc-container/issues/94)) ([e370f16](https://github.com/IgorBabkin/ts-ioc-container/commit/e370f1653230f6ce8056f1b9dffc168f4ae1aa8a))
+
 # [55.5.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.4.1...v55.5.0) (2026-07-12)
 
 
