@@ -5,7 +5,7 @@ import {
   Container,
   type HookFn,
   inject,
-  onDispose,
+  onContainerDisposed,
   register,
   Registration as R,
   singleton,
@@ -34,13 +34,13 @@ class Logger {
     this.messages.push(message);
   }
 
-  @onDispose(execute)
+  @onContainerDisposed(execute)
   save() {
     this.logsRepo.saveLogs(this.messages);
   }
 }
 
-describe('onDispose', function () {
+describe('onContainerDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
       .useModule(new AddOnDisposeHookModule())

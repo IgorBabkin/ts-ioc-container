@@ -18,7 +18,7 @@ not need it.
 Store hook declarations with `reflect-metadata`, but activate lifecycle
 execution through container modules.
 
-Decorators such as `onConstruct` and `onDispose` attach hook metadata to class
+Decorators such as `onConstruct` and `onContainerDisposed` attach hook metadata to class
 methods. `HooksRunner` reads that metadata and executes hook functions or
 hook classes. `AddOnConstructHookModule` and `AddOnDisposeHookModule` opt a
 container into running those hooks during instance construction and scope
@@ -65,6 +65,6 @@ execution path.
 - `lib/hooks/hook.ts`
 - `lib/hooks/HooksRunner.ts`
 - `lib/hooks/onConstruct.ts`
-- `lib/hooks/onDispose.ts`
+- `lib/hooks/onContainerDisposed.ts`
 - `lib/hooks/HookContext.ts`
 - `docs/src/pages/hooks.mdx`

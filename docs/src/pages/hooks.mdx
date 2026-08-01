@@ -7,7 +7,7 @@ description: Add TypeScript dependency injection lifecycle hooks for instance in
 import CodeBlock from "../components/CodeBlock.astro";
 import injectPropSpecCode from "../../../__tests__/readme/injectProp.spec.ts?raw";
 import onConstructSpecCode from "../../../__tests__/readme/onConstruct.spec.ts?raw";
-import onDisposeSpecCode from "../../../__tests__/readme/onDispose.spec.ts?raw";
+import onContainerDisposedSpecCode from "../../../__tests__/readme/onContainerDisposed.spec.ts?raw";
 import hookSpecCode from "../../../__tests__/hooks/hook.spec.ts?raw";
 import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?raw";
 
@@ -47,18 +47,18 @@ Register an onConstruct hook on your container, then decorate methods with `@onC
 - **CacheService** - Warm up cache with frequently accessed data
 - **EmailNotifier** - Validate SMTP configuration before first use
 
-## OnDispose Hooks
+## OnContainerDisposed Hooks
 
-OnDispose hooks execute before an instance is disposed, allowing you to clean up resources, save state, or perform other cleanup operations.
+OnContainerDisposed hooks execute before an instance is disposed, allowing you to clean up resources, save state, or perform other cleanup operations.
 
 ### Basic Usage
 
-Register an onDispose hook on your container, then decorate methods with `@onDispose`:
+Register an onContainerDisposed hook on your container, then decorate methods with `@onContainerDisposed`:
 
 <CodeBlock
-  code={onDisposeSpecCode}
+  code={onContainerDisposedSpecCode}
   lang="typescript"
-  filename="__tests__/readme/onDispose.spec.ts"
+  filename="__tests__/readme/onContainerDisposed.spec.ts"
 />
 
 ### Use Cases
@@ -179,9 +179,9 @@ beforeHooksRunner.execute(instance, {
 </div>
 
 - **Use OnConstruct for initialization** - Initialize dependencies, validate state, or set up connections after construction
-- **Use OnDispose for cleanup** - Close resources, save state, or unsubscribe from events before disposal
+- **Use OnContainerDisposed for cleanup** - Close resources, save state, or unsubscribe from events before disposal
 - **Keep hook logic simple** - Hooks should perform focused operations, not complex business logic
 - **Resolve dependencies in hooks** - Use `ctx.resolveArgs()` to inject dependencies that weren't available at construction time
 - **Handle async hooks properly** - Use `executeAsync` when hooks may be asynchronous
-- **Register hooks once** - Set up onConstruct and onDispose hooks when creating your root container
+- **Register hooks once** - Set up onConstruct and onContainerDisposed hooks when creating your root container
 - **Prefer constructor injection** - Use property injection with hooks only when constructor injection isn't possible

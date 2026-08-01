@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onDispose`, `injectProp`, `AddOnConstructHookModule`, `AddOnDisposeHookModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onContainerDisposed`, `injectProp`, `AddOnConstructHookModule`, `AddOnDisposeHookModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -33,7 +33,7 @@ so that local resources are released at the lifecycle boundary.
 
 Acceptance criteria:
 
-- `onDispose` stores hook metadata on a method.
+- `onContainerDisposed` stores hook metadata on a method.
 - `AddOnDisposeHookModule` opts a container into dispose hook execution.
 - Dispose hooks run for instances tracked by the disposed scope.
 - Disposing a scope does not implicitly run hooks for child scopes.
@@ -65,7 +65,7 @@ Acceptance criteria:
 
 As an application developer, I can attach disposal callbacks directly to a
 container so that cleanup logic runs when the container is disposed without
-needing a class decorated with `@onDispose`.
+needing a class decorated with `@onContainerDisposed`.
 
 Acceptance criteria:
 

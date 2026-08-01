@@ -70,7 +70,11 @@ export {
   AddOnConstructHookModule,
   type OnExceptionHandler,
 } from './hooks/onConstruct';
-export { onDisposeHooksRunner, onDispose, AddOnDisposeHookModule } from './hooks/onDispose';
+export {
+  onContainerDisposedHooksRunner,
+  onContainerDisposed,
+  AddOnDisposeHookModule,
+} from './hooks/onContainerDisposed';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens

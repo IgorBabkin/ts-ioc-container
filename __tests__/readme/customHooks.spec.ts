@@ -4,7 +4,7 @@ import { Container, hook, HooksRunner, type HookFn } from '../../lib';
  * User Management Domain - Custom Lifecycle Hooks
  *
  * Custom hooks extend the container's lifecycle management beyond
- * the built-in @onConstruct and @onDispose hooks.
+ * the built-in @onConstruct and @onContainerDisposed hooks.
  *
  * Use cases:
  * - @validateConfig: Validate service configuration after construction

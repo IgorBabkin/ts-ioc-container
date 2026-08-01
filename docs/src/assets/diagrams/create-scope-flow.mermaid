@@ -1,5 +1,5 @@
 flowchart TD
-    Create([Create new Container as Scope<br/>with parent reference]) --> CopyHooks[Copy hooks<br/>onConstruct, onDispose]
+    Create([Create new Container as Scope<br/>with parent reference]) --> CopyHooks[Copy hooks<br/>onConstruct, onContainerDisposed]
     CopyHooks --> GetRegs[Get all registrations<br/>parent + current scope]
     GetRegs --> Apply[Apply registration to new scope]
     Apply --> AddScope[Add scope to<br/>scopes list]
