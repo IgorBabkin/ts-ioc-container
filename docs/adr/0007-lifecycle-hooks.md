@@ -30,7 +30,11 @@ child-scope dispose hooks. The host application owns each child scope lifecycle
 and should dispose the child explicitly when that lifecycle ends.
 
 Synchronous hook execution rejects promises and points callers at the async
-execution path.
+execution path. Promise-returning initialization uses a separate hook key:
+`onConstructAsync` with `AddOnConstructAsyncHookModule`. Because instance
+creation is synchronous, async construct hooks are started when the instance is
+created and settle after resolution returns; the module reports rejections to an
+optional exception handler instead of failing `resolve`.
 
 > [!IMPORTANT]
 > Lifecycle hooks are opt-in. Register the construct/dispose modules, or add
@@ -59,12 +63,15 @@ execution path.
   the synchronous path.
 - Child scope cleanup is not implicit; applications must dispose child scopes
   explicitly to run their dispose hooks.
+- Async construct hooks cannot block resolution, so instances that must be
+  initialized before use have to expose readiness themselves.
 
 ## References
 
 - `lib/hooks/hook.ts`
 - `lib/hooks/HooksRunner.ts`
 - `lib/hooks/onConstruct.ts`
+- `lib/hooks/onConstructAsync.ts`
 - `lib/hooks/onContainerDisposed.ts`
 - `lib/hooks/HookContext.ts`
 - `docs/src/pages/hooks.mdx`
