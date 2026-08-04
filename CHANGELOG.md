@@ -1,3 +1,10 @@
+# [55.7.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.6.0...v55.7.0) (2026-08-04)
+
+
+### Features
+
+* **hooks:** add onConstructAsync decorator and AddOnConstructAsyncHookModule ([#96](https://github.com/IgorBabkin/ts-ioc-container/issues/96)) ([972cc0d](https://github.com/IgorBabkin/ts-ioc-container/commit/972cc0d7a27cc3b9d68bfa7fb537964250cc123f))
+
 # [55.6.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.5.0...v55.6.0) (2026-08-01)
 
 
