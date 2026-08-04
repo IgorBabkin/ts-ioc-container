@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onContainerDisposed`, `injectProp`, `AddOnConstructHookModule`, `AddOnDisposeHookModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `AddOnConstructHookModule`, `AddOnConstructAsyncHookModule`, `AddOnDisposeHookModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -25,6 +25,22 @@ Acceptance criteria:
 - `AddOnConstructHookModule` opts a container into construct hook execution.
 - Construct hooks run after the instance is created and tracked.
 - Hook classes are resolved through the container before execution.
+
+### Story: Run async construct hooks
+
+As an application developer, I can run promise-returning initialization after an
+instance is constructed so that async setup does not have to be forced into the
+synchronous construct path.
+
+Acceptance criteria:
+
+- `onConstructAsync` stores hook metadata on a method under its own hook key.
+- `AddOnConstructAsyncHookModule` opts a container into async construct hook
+  execution.
+- Async construct hooks start when the instance is created and settle after
+  resolution returns.
+- Rejected hooks are reported to the module `onException` handler when one is
+  provided.
 
 ### Story: Run dispose hooks
 

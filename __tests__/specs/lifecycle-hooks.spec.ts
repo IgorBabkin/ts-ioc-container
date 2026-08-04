@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  AddOnConstructAsyncHookModule,
   AddOnConstructHookModule,
   AddOnDisposeHookModule,
   Container,
@@ -11,6 +12,7 @@ import {
   inject,
   injectProp,
   onConstruct,
+  onConstructAsync,
   onContainerDisposed,
   Registration as R,
   UnexpectedHookResultError,
@@ -49,6 +51,48 @@ describe('Spec: lifecycle hooks', () => {
     container.dispose();
 
     expect(resource.disposed).toBe(true);
+  });
+
+  it('runs async construct hooks without blocking resolution', async () => {
+    class Resource {
+      initialized = false;
+
+      @onConstructAsync(async (context) => {
+        await context.invokeMethod();
+      })
+      async initialize(): Promise<void> {
+        await Promise.resolve();
+        this.initialized = true;
+      }
+    }
+
+    const container = new Container()
+      .useModule(new AddOnConstructAsyncHookModule())
+      .addRegistration(R.fromClass(Resource));
+
+    const resource = container.resolve<Resource>('Resource');
+
+    expect(resource.initialized).toBe(false);
+
+    await vi.waitFor(() => expect(resource.initialized).toBe(true));
+  });
+
+  it('reports rejected async construct hooks to the module exception handler', async () => {
+    const failure = new Error('boom');
+
+    class BrokenResource {
+      @onConstructAsync(() => Promise.reject(failure))
+      initialize(): void {}
+    }
+
+    let captured: unknown;
+    const container = new Container()
+      .useModule(new AddOnConstructAsyncHookModule((ex) => (captured = ex)))
+      .addRegistration(R.fromClass(BrokenResource));
+
+    container.resolve<BrokenResource>('BrokenResource');
+
+    await vi.waitFor(() => expect(captured).toBe(failure));
   });
 
   it('injects properties through hook context scope', () => {

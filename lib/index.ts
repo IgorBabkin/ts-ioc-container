@@ -70,6 +70,7 @@ export {
   AddOnConstructHookModule,
   type OnExceptionHandler,
 } from './hooks/onConstruct';
+export { onConstructAsyncHooksRunner, onConstructAsync, AddOnConstructAsyncHookModule } from './hooks/onConstructAsync';
 export {
   onContainerDisposedHooksRunner,
   onContainerDisposed,

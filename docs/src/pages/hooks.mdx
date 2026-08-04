@@ -7,6 +7,7 @@ description: Add TypeScript dependency injection lifecycle hooks for instance in
 import CodeBlock from "../components/CodeBlock.astro";
 import injectPropSpecCode from "../../../__tests__/readme/injectProp.spec.ts?raw";
 import onConstructSpecCode from "../../../__tests__/readme/onConstruct.spec.ts?raw";
+import onConstructAsyncSpecCode from "../../../__tests__/readme/onConstructAsync.spec.ts?raw";
 import onContainerDisposedSpecCode from "../../../__tests__/readme/onContainerDisposed.spec.ts?raw";
 import hookSpecCode from "../../../__tests__/hooks/hook.spec.ts?raw";
 import customHooksSpecCode from "../../../__tests__/readme/customHooks.spec.ts?raw";
@@ -46,6 +47,26 @@ Register an onConstruct hook on your container, then decorate methods with `@onC
 - **SessionManager** - Load user session from Redis after construction
 - **CacheService** - Warm up cache with frequently accessed data
 - **EmailNotifier** - Validate SMTP configuration before first use
+
+## OnConstructAsync Hooks
+
+OnConstructAsync hooks are the promise-aware counterpart of `@onConstruct`. Use them when initialization has to await something — opening a connection, loading remote configuration, warming a cache.
+
+Instance creation is synchronous, so async hooks cannot block it. `AddOnConstructAsyncHookModule` starts them when the instance is created and lets them settle afterwards: `resolve` returns before initialization completes. Instances that need to expose readiness should publish it themselves, for example by storing the pending promise on the instance.
+
+### Basic Usage
+
+Register `AddOnConstructAsyncHookModule` on your container, then decorate methods with `@onConstructAsync`:
+
+<CodeBlock
+  code={onConstructAsyncSpecCode}
+  lang="typescript"
+  filename="__tests__/readme/onConstructAsync.spec.ts"
+/>
+
+Both modules can be registered together: `@onConstruct` and `@onConstructAsync` use separate metadata keys, so synchronous hooks keep failing fast through `UnexpectedHookResultError` while async hooks run on the async path.
+
+Rejections are reported to the optional `onException` handler passed to the module. Without a handler the rejection is rethrown and surfaces as an unhandled rejection, since there is no caller left to catch it.
 
 ## OnContainerDisposed Hooks
 
