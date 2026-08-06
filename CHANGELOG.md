@@ -1,3 +1,10 @@
+# [55.8.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.7.0...v55.8.0) (2026-08-06)
+
+
+### Features
+
+* **injector:** support optional selectFn in [@inject](https://github.com/inject) decorator ([#97](https://github.com/IgorBabkin/ts-ioc-container/issues/97)) ([928c690](https://github.com/IgorBabkin/ts-ioc-container/commit/928c6905634ce939d6d792514efefbcd9c3f9c80))
+
 # [55.7.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.6.0...v55.7.0) (2026-08-04)
 
 
