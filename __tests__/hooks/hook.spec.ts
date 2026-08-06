@@ -32,6 +32,22 @@ describe('hooks', () => {
     expect(context.setInitialArgs('arg1')).toBe(context);
   });
 
+  it('should return the args passed to setInitialArgs from getInitialArgs', () => {
+    const root = new Container({ tags: ['root'] });
+    const context = new HookContext({}, root, 'constructor');
+
+    context.setInitialArgs('arg1', 'arg2');
+
+    expect(context.getInitialArgs()).toEqual(['arg1', 'arg2']);
+  });
+
+  it('should return an empty array from getInitialArgs when no initial args were set', () => {
+    const root = new Container({ tags: ['root'] });
+    const context = new HookContext({}, root, 'constructor');
+
+    expect(context.getInitialArgs()).toEqual([]);
+  });
+
   it('should prepend initial args when resolving hook method arguments', () => {
     const beforeHooksRunner = new HooksRunner('syncBefore');
 
