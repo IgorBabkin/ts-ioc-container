@@ -1,3 +1,10 @@
+# [55.9.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.8.0...v55.9.0) (2026-08-06)
+
+
+### Features
+
+* **hooks:** add getInitialArgs to IHookContext ([#98](https://github.com/IgorBabkin/ts-ioc-container/issues/98)) ([24861a3](https://github.com/IgorBabkin/ts-ioc-container/commit/24861a356bfefd400f5a13d429defa7aed04eb3f))
+
 # [55.8.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.7.0...v55.8.0) (2026-08-06)
 
 
