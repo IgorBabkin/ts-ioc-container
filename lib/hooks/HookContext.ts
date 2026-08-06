@@ -19,6 +19,8 @@ export interface IHookContext {
   getProperty(): unknown;
 
   setInitialArgs(...args: unknown[]): this;
+
+  getInitialArgs(): unknown[];
 }
 
 export class HookContext implements IHookContext {
@@ -57,6 +59,10 @@ export class HookContext implements IHookContext {
   setInitialArgs(...args: unknown[]): this {
     this.initialArgs = args;
     return this;
+  }
+
+  getInitialArgs(): unknown[] {
+    return this.initialArgs;
   }
 }
 
