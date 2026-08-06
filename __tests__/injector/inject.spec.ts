@@ -59,6 +59,70 @@ describe('inject helpers', () => {
     });
   });
 
+  describe('inject(token, selectFn)', () => {
+    it('injects the selected part of the resolved dependency', () => {
+      class Config {
+        constructor(readonly apiUrl: string = 'https://api.com') {}
+      }
+
+      const ConfigToken = new SingleToken<Config>('Config');
+
+      class Service {
+        constructor(@inject(ConfigToken, (config) => config.apiUrl) public apiUrl: string) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').apiUrl).toBe('https://api.com');
+    });
+
+    it('injects the whole dependency when selectFn is omitted', () => {
+      class Config {}
+
+      const ConfigToken = new SingleToken<Config>('Config');
+
+      class Service {
+        constructor(@inject(ConfigToken) public config: Config) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').config).toBeInstanceOf(Config);
+    });
+
+    it('forwards resolve args to the dependency before selecting', () => {
+      class Config {
+        constructor(@inject(args(0)) readonly apiUrl: string) {}
+      }
+
+      const ConfigToken = new SingleToken<Config>('Config');
+
+      class Service {
+        constructor(@inject(ConfigToken.args('https://other.com'), (c) => c.apiUrl) public apiUrl: string) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').apiUrl).toBe('https://other.com');
+    });
+
+    it('selects from a runtime arg', () => {
+      @register(appendArgs({ id: 42 }))
+      class Service {
+        constructor(@inject(args<{ id: number }>(0), (value) => value.id) public id: number) {}
+      }
+
+      const container = createContainer().addRegistration(R.fromClass(Service));
+      expect(container.resolve<Service>('Service').id).toBe(42);
+    });
+  });
+
   describe('argsFn(predicate)', () => {
     it('returns the first arg matching the predicate', () => {
       @register(appendArgs(1, 'two', 3))
