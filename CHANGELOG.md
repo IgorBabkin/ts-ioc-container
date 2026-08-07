@@ -1,3 +1,32 @@
+# [56.0.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.9.0...v56.0.0) (2026-08-07)
+
+
+### Features
+
+* **hooks:** take a map function in the hook decorator ([#99](https://github.com/IgorBabkin/ts-ioc-container/issues/99)) ([98b0d4d](https://github.com/IgorBabkin/ts-ioc-container/commit/98b0d4d22159d57d9e5f6dbc7d1e57b2a9eda184))
+
+
+### BREAKING CHANGES
+
+* **hooks:** `hook(key, ...fns)` is now `hook(key, mapFn)`, where
+`mapFn: (...prev: HookType[]) => HookType[]` receives the hooks already
+registered on the class for the decorated member and returns the resulting
+list. Wrap existing hooks in `append(...)` to keep the previous behavior:
+`@hook('actions', fn)` becomes `@hook('actions', append(fn))`.
+
+- add `appendHooks` / `prependHooks` helpers (exported as `append` /
+  `prepend` too) plus the `HookType` and `MapHooksFn` types
+- any map function works, so hooks can also be reordered or replaced
+- `@onConstruct`, `@onConstructAsync` and `@onContainerDisposed` keep their
+  variadic signature and now prepend internally, which compensates for the
+  bottom-up decorator application order so stacked decorators run in
+  declaration order: `@onConstruct(h1) @onConstruct(h2)` runs h1 then h2
+
+
+Claude-Session: https://claude.ai/code/session_01UstiyDFWBvjtHeQSZhDM2k
+
+Co-authored-by: Claude <noreply@anthropic.com>
+
 # [55.9.0](https://github.com/IgorBabkin/ts-ioc-container/compare/v55.8.0...v55.9.0) (2026-08-06)
 
 
