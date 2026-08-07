@@ -2482,6 +2482,30 @@ describe('Container Modules', function () {
 
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
+The generic `@hook` decorator takes a hook key and a map function
+`(...prev: HookType[]) => HookType[]`, where `prev` is the list of hooks already
+registered on the class for the decorated member. Use `appendHooks` /
+`prependHooks` (exported as `append` / `prepend` too) to place new hooks around
+the existing ones:
+
+```typescript
+class OrderService {
+  @hook('actions', append(validate, persist))
+  @hook('actions', prepend(authorize))
+  submit() {}
+}
+```
+
+Decorators are applied bottom-up, so `authorize` runs first, then `validate` and
+`persist`. Any other map function works as well — for example
+`(...prev) => [...prev].reverse()` to reorder, or `() => [onlyThisOne]` to
+replace the accumulated hooks.
+
+`@onConstruct`, `@onConstructAsync` and `@onContainerDisposed` keep their
+variadic signature and compensate for the bottom-up application order, so
+stacked decorators run in declaration order: `@onConstruct(h1) @onConstruct(h2)`
+runs `h1` before `h2`.
+
 ### OnConstruct
 
 ```typescript
@@ -2741,7 +2765,7 @@ describe('onContainerDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { Container, hook, HooksRunner, injectProp, Registration } from 'ts-ioc-container';
+import { append, Container, hook, HooksRunner, injectProp, Registration } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -2761,7 +2785,7 @@ describe('inject property', () => {
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
-      @hook('onInit', injectProp('GreetingService'))
+      @hook('onInit', append(injectProp('GreetingService')))
       greetingService!: string;
 
       display(): string {
@@ -2787,9 +2811,12 @@ describe('inject property', () => {
     let injectedValue: unknown;
 
     class UserViewModel {
-      @hook('onInit', injectProp('GreetingService'), (context) => {
-        injectedValue = context.getProperty();
-      })
+      @hook(
+        'onInit',
+        append(injectProp('GreetingService'), (context) => {
+          injectedValue = context.getProperty();
+        }),
+      )
       greetingService!: string;
     }
 

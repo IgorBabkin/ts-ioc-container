@@ -14,8 +14,28 @@ export interface HookClass<T extends IHookContext = IHookContext> {
   execute(context: Omit<T, 'scope'>): void | Promise<void>;
 }
 
+// HookType - anything that can be registered as a hook: a plain function or a hook class
+export type HookType<T extends IHookContext = IHookContext> = HookFn<T> | constructor<HookClass<T>>;
+
+// MapHooksFn - receives the hooks already registered for the decorated member and returns the new list
+export type MapHooksFn = (...prev: HookType[]) => HookType[];
+
 // HooksOfClass
-export type HooksOfClass = Map<string, (HookFn | constructor<HookClass>)[]>;
+export type HooksOfClass = Map<string, HookType[]>;
+
+// Adds hooks after the ones already registered for the decorated member.
+export const appendHooks =
+  (...fns: HookType[]): MapHooksFn =>
+  (...prev) => [...prev, ...fns];
+
+// Adds hooks before the ones already registered for the decorated member.
+export const prependHooks =
+  (...fns: HookType[]): MapHooksFn =>
+  (...prev) => [...fns, ...prev];
+
+// Short aliases
+export const append = appendHooks;
+export const prepend = prependHooks;
 
 const isHookClassConstructor = <C extends IHookContext>(
   execute: HookFn<C> | constructor<HookClass<C>>,
@@ -64,12 +84,12 @@ export function hasHooks(target: object, key: string | symbol): boolean {
 }
 
 // Hook decorator
-export const hook =
-  (key: string | symbol, ...fns: (HookFn | constructor<HookClass>)[]) =>
-  (target: object, propertyKey: string | symbol) => {
-    const hooks: HooksOfClass = Reflect.hasOwnMetadata(key, target.constructor)
-      ? Reflect.getOwnMetadata(key, target.constructor)
-      : new Map();
-    hooks.set(propertyKey as string, (hooks.get(propertyKey as string) ?? []).concat(fns));
-    Reflect.defineMetadata(key, hooks, target.constructor);
-  };
+// `mapFn` receives the hooks already registered on this class for the decorated member
+// and returns the resulting list, so `append(...)`/`prepend(...)` control ordering.
+export const hook = (key: string | symbol, mapFn: MapHooksFn) => (target: object, propertyKey: string | symbol) => {
+  const hooks: HooksOfClass = Reflect.hasOwnMetadata(key, target.constructor)
+    ? Reflect.getOwnMetadata(key, target.constructor)
+    : new Map();
+  hooks.set(propertyKey as string, mapFn(...(hooks.get(propertyKey as string) ?? [])));
+  Reflect.defineMetadata(key, hooks, target.constructor);
+};

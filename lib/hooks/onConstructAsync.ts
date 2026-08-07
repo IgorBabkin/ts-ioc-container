@@ -1,11 +1,12 @@
-import { hook, HookClass, HookFn } from './hook';
+import { hook, HookType, prependHooks } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
-import { constructor } from '../utils/basic';
 import { HooksRunner } from './HooksRunner';
 import type { OnExceptionHandler } from './onConstruct';
 
 export const onConstructAsyncHooksRunner = new HooksRunner('onConstructAsync');
-export const onConstructAsync = (...fns: (HookFn | constructor<HookClass>)[]) => hook('onConstructAsync', ...fns);
+// Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
+// `@onX(h1) @onX(h2) method()` runs h1 before h2.
+export const onConstructAsync = (...fns: HookType[]) => hook('onConstructAsync', prependHooks(...fns));
 
 // Resolution stays synchronous, so async construct hooks are started when the
 // instance is tracked and settle afterwards: `resolve` returns before they

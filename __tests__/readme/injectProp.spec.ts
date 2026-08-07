@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, hook, HooksRunner, injectProp, Registration } from '../../lib';
+import { append, Container, hook, HooksRunner, injectProp, Registration } from '../../lib';
 
 /**
  * UI Components - Property Injection
@@ -19,7 +19,7 @@ describe('inject property', () => {
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
-      @hook('onInit', injectProp('GreetingService'))
+      @hook('onInit', append(injectProp('GreetingService')))
       greetingService!: string;
 
       display(): string {
@@ -45,9 +45,12 @@ describe('inject property', () => {
     let injectedValue: unknown;
 
     class UserViewModel {
-      @hook('onInit', injectProp('GreetingService'), (context) => {
-        injectedValue = context.getProperty();
-      })
+      @hook(
+        'onInit',
+        append(injectProp('GreetingService'), (context) => {
+          injectedValue = context.getProperty();
+        }),
+      )
       greetingService!: string;
     }
 

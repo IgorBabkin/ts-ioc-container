@@ -1,11 +1,13 @@
-import { hook, HookClass, HookFn } from './hook';
+import { hook, HookType, prependHooks } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
-import { constructor, Instance } from '../utils/basic';
+import { Instance } from '../utils/basic';
 import { HooksRunner } from './HooksRunner';
 import type { ExecutionContext } from '../ExecutionContext';
 
 export const onConstructHooksRunner = new HooksRunner('onConstruct');
-export const onConstruct = (...fns: (HookFn | constructor<HookClass>)[]) => hook('onConstruct', ...fns);
+// Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
+// `@onX(h1) @onX(h2) method()` runs h1 before h2.
+export const onConstruct = (...fns: HookType[]) => hook('onConstruct', prependHooks(...fns));
 
 export type OnConstructHook = (instance: Instance, scope: IContainer) => void;
 

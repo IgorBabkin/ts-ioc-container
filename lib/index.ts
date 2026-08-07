@@ -61,7 +61,21 @@ export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwiceError';
 
 // Hooks
-export { getHooks, hook, hasHooks, type HookFn, type HookClass, type InjectFn, type HooksOfClass } from './hooks/hook';
+export {
+  getHooks,
+  hook,
+  hasHooks,
+  appendHooks,
+  prependHooks,
+  append,
+  prepend,
+  type HookFn,
+  type HookClass,
+  type HookType,
+  type MapHooksFn,
+  type InjectFn,
+  type HooksOfClass,
+} from './hooks/hook';
 export { HookContext, createHookContextFactory, createHookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
 export {

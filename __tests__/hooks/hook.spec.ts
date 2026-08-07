@@ -1,15 +1,20 @@
 import 'reflect-metadata';
 import {
+  append,
+  appendHooks,
   args,
   bindTo,
   Container,
   GroupAliasToken,
   hasHooks,
   hook,
+  type HookClass,
   HookContext,
   type HookFn,
   HooksRunner,
   inject,
+  prepend,
+  prependHooks,
   register,
   Registration as R,
 } from '../../lib';
@@ -54,9 +59,12 @@ describe('hooks', () => {
     class MyClass {
       receivedArgs: unknown[] = [];
 
-      @hook('syncBefore', (ctx) => {
-        ctx.invokeMethod();
-      })
+      @hook(
+        'syncBefore',
+        append((ctx) => {
+          ctx.invokeMethod();
+        }),
+      )
       start(@inject(args(0)) firstArg: string, @inject('suffix') suffix: string, runtimeArg: string) {
         this.receivedArgs = [firstArg, suffix, runtimeArg];
       }
@@ -80,9 +88,12 @@ describe('hooks', () => {
     class MyClass {
       receivedArgs: unknown[] = [];
 
-      @hook('syncBefore', (ctx) => {
-        ctx.invokeMethod();
-      })
+      @hook(
+        'syncBefore',
+        append((ctx) => {
+          ctx.invokeMethod();
+        }),
+      )
       start(@inject(args(0)) firstArg: string, @inject('suffix') suffix: string) {
         this.receivedArgs = [firstArg, suffix];
       }
@@ -105,9 +116,12 @@ describe('hooks', () => {
     class MyClass {
       receivedArgs: unknown[] = [];
 
-      @hook('onStart', async (ctx) => {
-        await ctx.invokeMethod();
-      })
+      @hook(
+        'onStart',
+        append(async (ctx) => {
+          await ctx.invokeMethod();
+        }),
+      )
       async start(@inject(args(0)) firstArg: string) {
         this.receivedArgs = [firstArg];
       }
@@ -130,13 +144,13 @@ describe('hooks', () => {
     class Logger {
       isStarted = false;
 
-      @hook('onStart', executeAsync)
+      @hook('onStart', append(executeAsync))
       async initialize(@inject('TimeToSleep') timeToSleep: number) {
         await sleep(timeToSleep);
         this.isStarted = true;
       }
 
-      @hook('onStart', executeAsync)
+      @hook('onStart', append(executeAsync))
       async dispose(@inject('TimeToSleep') timeToSleep: number) {
         await sleep(timeToSleep);
         this.isStarted = false;
@@ -159,7 +173,7 @@ describe('hooks', () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 
     class WithHooks {
-      @hook('onStart', execute)
+      @hook('onStart', append(execute))
       start() {}
     }
 
@@ -177,7 +191,7 @@ describe('hooks', () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 
     class MyClass {
-      @hook('onDispose', execute)
+      @hook('onDispose', append(execute))
       stop() {}
     }
 
@@ -192,7 +206,7 @@ describe('hooks', () => {
     class Base {
       baseStarted = false;
 
-      @hook('onStart', execute)
+      @hook('onStart', append(execute))
       startBase() {
         this.baseStarted = true;
       }
@@ -201,7 +215,7 @@ describe('hooks', () => {
     class Derived extends Base {
       derivedStarted = false;
 
-      @hook('onStart', execute)
+      @hook('onStart', append(execute))
       startDerived() {
         this.derivedStarted = true;
       }
@@ -221,18 +235,24 @@ describe('hooks', () => {
     const invoked: string[] = [];
 
     class Base {
-      @hook('onStart', (ctx) => {
-        invoked.push('startBase');
-        ctx.invokeMethod();
-      })
+      @hook(
+        'onStart',
+        append((ctx) => {
+          invoked.push('startBase');
+          ctx.invokeMethod();
+        }),
+      )
       startBase() {}
     }
 
     class Derived extends Base {
-      @hook('onStart', (ctx) => {
-        invoked.push('startDerived');
-        ctx.invokeMethod();
-      })
+      @hook(
+        'onStart',
+        append((ctx) => {
+          invoked.push('startDerived');
+          ctx.invokeMethod();
+        }),
+      )
       startDerived() {}
     }
 
@@ -248,18 +268,24 @@ describe('hooks', () => {
     const invoked: string[] = [];
 
     class Base {
-      @hook('onStart', (ctx) => {
-        invoked.push('startBase');
-        ctx.invokeMethod();
-      })
+      @hook(
+        'onStart',
+        append((ctx) => {
+          invoked.push('startBase');
+          ctx.invokeMethod();
+        }),
+      )
       startBase() {}
     }
 
     class Derived extends Base {
-      @hook('onStart', (ctx) => {
-        invoked.push('startDerived');
-        ctx.invokeMethod();
-      })
+      @hook(
+        'onStart',
+        append((ctx) => {
+          invoked.push('startDerived');
+          ctx.invokeMethod();
+        }),
+      )
       startDerived() {}
     }
 
@@ -283,7 +309,7 @@ describe('hooks', () => {
     class FirstPlugin implements Plugin {
       isStarted = false;
 
-      @hook('onPluginStart', execute)
+      @hook('onPluginStart', append(execute))
       start() {
         this.isStarted = true;
       }
@@ -293,7 +319,7 @@ describe('hooks', () => {
     class SecondPlugin implements Plugin {
       isStarted = false;
 
-      @hook('onPluginStart', execute)
+      @hook('onPluginStart', append(execute))
       start() {
         this.isStarted = true;
       }
@@ -320,5 +346,167 @@ describe('hooks', () => {
     app.runPlugins(container);
 
     expect(app.getPlugins().every((plugin) => plugin.isStarted)).toBe(true);
+  });
+
+  it('should run hooks passed to appendHooks in declaration order', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      @hook(
+        'onStart',
+        appendHooks(
+          () => {
+            invoked.push('first');
+          },
+          () => {
+            invoked.push('second');
+          },
+        ),
+      )
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+
+    expect(invoked).toEqual(['first', 'second']);
+  });
+
+  it('should add hooks after the already registered ones with appendHooks', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      // Decorators are applied bottom-up, so 'declared' is registered first
+      @hook(
+        'onStart',
+        appendHooks(() => {
+          invoked.push('appended');
+        }),
+      )
+      @hook(
+        'onStart',
+        appendHooks(() => {
+          invoked.push('declared');
+        }),
+      )
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+
+    expect(invoked).toEqual(['declared', 'appended']);
+  });
+
+  it('should add hooks before the already registered ones with prependHooks', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      @hook(
+        'onStart',
+        prependHooks(() => {
+          invoked.push('prepended');
+        }),
+      )
+      @hook(
+        'onStart',
+        appendHooks(() => {
+          invoked.push('declared');
+        }),
+      )
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+
+    expect(invoked).toEqual(['prepended', 'declared']);
+  });
+
+  it('should expose append and prepend as aliases of appendHooks and prependHooks', () => {
+    expect(append).toBe(appendHooks);
+    expect(prepend).toBe(prependHooks);
+  });
+
+  it('should let a custom mapFn reorder the already registered hooks', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      @hook('onStart', (...prev) => [...prev].reverse())
+      @hook(
+        'onStart',
+        appendHooks(
+          () => {
+            invoked.push('first');
+          },
+          () => {
+            invoked.push('second');
+          },
+        ),
+      )
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+
+    expect(invoked).toEqual(['second', 'first']);
+  });
+
+  it('should replace the already registered hooks when mapFn ignores them', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      @hook('onStart', () => [
+        () => {
+          invoked.push('replacement');
+        },
+      ])
+      @hook(
+        'onStart',
+        appendHooks(() => {
+          invoked.push('replaced');
+        }),
+      )
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+
+    expect(invoked).toEqual(['replacement']);
+  });
+
+  it('should accept hook classes in appendHooks and prependHooks', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class AppendedHook implements HookClass {
+      execute() {
+        invoked.push('appended');
+      }
+    }
+
+    class PrependedHook implements HookClass {
+      execute() {
+        invoked.push('prepended');
+      }
+    }
+
+    class MyClass {
+      @hook('onStart', prependHooks(PrependedHook))
+      @hook('onStart', appendHooks(AppendedHook))
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+
+    expect(invoked).toEqual(['prepended', 'appended']);
   });
 });

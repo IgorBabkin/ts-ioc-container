@@ -125,6 +125,56 @@ Create a custom hook by instantiating a `HooksRunner` with a unique hook name:
   filename="__tests__/readme/customHooks.spec.ts"
 />
 
+### Composing Hooks
+
+`@hook` takes the hook key and a map function:
+
+```typescript
+hook(key: string | symbol, mapFn: (...prev: HookType[]) => HookType[])
+```
+
+`mapFn` receives the hooks already registered on the class for the decorated member and returns the resulting list, so you decide where new hooks land. `appendHooks` and `prependHooks` (also exported as the shorter `append` and `prepend`) cover the common cases:
+
+```typescript
+import { append, appendHooks, hook, prepend, prependHooks } from 'ts-ioc-container';
+
+class OrderService {
+  @hook('actions', append(validate, persist)) // runs after hooks already registered
+  @hook('actions', prepend(authorize)) // runs before them
+  submit() {}
+}
+```
+
+Decorator expressions are evaluated top-to-bottom, but the decorators themselves are applied bottom-up — so the lowest `@hook` registers first and the ones above it map over the list it produced. In the example above the final order is `authorize`, `validate`, `persist`.
+
+Because `mapFn` is just a function, you can also reorder or replace the accumulated hooks:
+
+```typescript
+class Reversed {
+  @hook('actions', (...prev) => [...prev].reverse())
+  @hook('actions', appendHooks(first, second))
+  submit() {}
+}
+
+class Replaced {
+  @hook('actions', () => [onlyThisOne]) // ignores prev, dropping earlier hooks
+  @hook('actions', prependHooks(discarded))
+  submit() {}
+}
+```
+
+`prev` only contains hooks declared on the same class — hooks inherited from a parent class are merged separately when the runner collects them.
+
+The built-in decorators (`@onConstruct`, `@onConstructAsync`, `@onContainerDisposed`) keep their variadic signature. They prepend internally to compensate for the bottom-up application order, so stacked decorators run in declaration order:
+
+```typescript
+class Resource {
+  @onConstruct(h1)
+  @onConstruct(h2)
+  initialize() {} // runs h1, then h2
+}
+```
+
 ### Synchronous vs Asynchronous Hooks
 
 Hooks can be synchronous or asynchronous. Use the appropriate execution method:
@@ -159,9 +209,9 @@ Use `setInitialArgs()` when a hook should supply fixed positional arguments befo
 const beforeHooksRunner = new HooksRunner('syncBefore');
 
 class MyClass {
-  @hook('syncBefore', (ctx) => {
+  @hook('syncBefore', append((ctx) => {
     ctx.invokeMethod();
-  })
+  }))
   start(firstArg: string, @inject('suffix') suffix: string) {
     console.log(firstArg, suffix);
   }

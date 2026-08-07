@@ -1,10 +1,11 @@
-import { hook, HookClass, HookFn } from './hook';
+import { hook, HookType, prependHooks } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import { HooksRunner } from './HooksRunner';
-import { type constructor } from '../utils/basic';
 
 export const onContainerDisposedHooksRunner = new HooksRunner('onContainerDisposed');
-export const onContainerDisposed = (...fns: (HookFn | constructor<HookClass>)[]) => hook('onContainerDisposed', ...fns);
+// Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
+// `@onX(h1) @onX(h2) method()` runs h1 before h2.
+export const onContainerDisposed = (...fns: HookType[]) => hook('onContainerDisposed', prependHooks(...fns));
 
 export type OnDisposeHook = (scope: IContainer) => void;
 
