@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  append,
   ConstantToken,
   Container,
   ContainerDisposedError,
@@ -57,7 +58,7 @@ describe('Spec: errors and boundaries', () => {
 
   it('rejects unsupported token and hook operations', () => {
     class Worker {
-      @hook('asyncOnly', async () => {})
+      @hook('asyncOnly', append(async () => {}))
       start(): void {}
     }
 

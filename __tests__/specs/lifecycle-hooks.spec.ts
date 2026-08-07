@@ -3,6 +3,7 @@ import {
   AddOnConstructAsyncHookModule,
   AddOnConstructHookModule,
   AddOnDisposeHookModule,
+  append,
   Container,
   hasHooks,
   hook,
@@ -51,6 +52,114 @@ describe('Spec: lifecycle hooks', () => {
     container.dispose();
 
     expect(resource.disposed).toBe(true);
+  });
+
+  it('runs stacked @onConstruct decorators in declaration order', () => {
+    const invoked: string[] = [];
+    const h1: HookFn = () => {
+      invoked.push('h1');
+    };
+    const h2: HookFn = () => {
+      invoked.push('h2');
+    };
+
+    class Resource {
+      @onConstruct(h1)
+      @onConstruct(h2)
+      initialize(): void {}
+    }
+
+    const container = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(Resource));
+
+    container.resolve<Resource>('Resource');
+
+    expect(invoked).toEqual(['h1', 'h2']);
+  });
+
+  it('runs hooks of a single @onConstruct decorator in argument order', () => {
+    const invoked: string[] = [];
+
+    class Resource {
+      @onConstruct(
+        () => {
+          invoked.push('h1');
+        },
+        () => {
+          invoked.push('h2');
+        },
+      )
+      initialize(): void {}
+    }
+
+    const container = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(Resource));
+
+    container.resolve<Resource>('Resource');
+
+    expect(invoked).toEqual(['h1', 'h2']);
+  });
+
+  it('keeps declaration order when stacked @onConstruct decorators carry several hooks each', () => {
+    const invoked: string[] = [];
+    const push =
+      (label: string): HookFn =>
+      () => {
+        invoked.push(label);
+      };
+
+    class Resource {
+      @onConstruct(push('h1'), push('h2'))
+      @onConstruct(push('h3'), push('h4'))
+      initialize(): void {}
+    }
+
+    const container = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(Resource));
+
+    container.resolve<Resource>('Resource');
+
+    expect(invoked).toEqual(['h1', 'h2', 'h3', 'h4']);
+  });
+
+  it('runs stacked @onContainerDisposed decorators in declaration order', () => {
+    const invoked: string[] = [];
+
+    class Resource {
+      @onContainerDisposed(() => {
+        invoked.push('h1');
+      })
+      @onContainerDisposed(() => {
+        invoked.push('h2');
+      })
+      destroy(): void {}
+    }
+
+    const container = new Container().useModule(new AddOnDisposeHookModule()).addRegistration(R.fromClass(Resource));
+
+    container.resolve<Resource>('Resource');
+    container.dispose();
+
+    expect(invoked).toEqual(['h1', 'h2']);
+  });
+
+  it('runs stacked @onConstructAsync decorators in declaration order', async () => {
+    const invoked: string[] = [];
+
+    class Resource {
+      @onConstructAsync(async () => {
+        invoked.push('h1');
+      })
+      @onConstructAsync(async () => {
+        invoked.push('h2');
+      })
+      async initialize(): Promise<void> {}
+    }
+
+    const container = new Container()
+      .useModule(new AddOnConstructAsyncHookModule())
+      .addRegistration(R.fromClass(Resource));
+
+    container.resolve<Resource>('Resource');
+
+    await vi.waitFor(() => expect(invoked).toEqual(['h1', 'h2']));
   });
 
   it('runs async construct hooks without blocking resolution', async () => {
@@ -123,12 +232,12 @@ describe('Spec: lifecycle hooks', () => {
     class Worker {
       calls: string[] = [];
 
-      @hook('workflow', AuditHook)
+      @hook('workflow', append(AuditHook))
       start(): void {
         this.calls.push('start');
       }
 
-      @hook('workflow', invoke)
+      @hook('workflow', append(invoke))
       stop(): void {
         this.calls.push('stop');
       }
@@ -163,19 +272,22 @@ describe('Spec: lifecycle hooks', () => {
     class Worker {
       calls: string[] = [];
 
-      @hook('sync', invoke)
+      @hook('sync', append(invoke))
       start(@inject('prefix') prefix: string): void {
         this.calls.push(`${prefix}:sync`);
       }
 
-      @hook('async', async (context) => {
-        context.invokeMethod();
-      })
+      @hook(
+        'async',
+        append(async (context) => {
+          context.invokeMethod();
+        }),
+      )
       stop(@inject('prefix') prefix: string): void {
         this.calls.push(`${prefix}:async`);
       }
 
-      @hook('badAsync', async () => undefined)
+      @hook('badAsync', append(async () => undefined))
       bad(): void {}
     }
 

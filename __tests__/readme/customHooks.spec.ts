@@ -1,4 +1,4 @@
-import { Container, hook, HooksRunner, type HookFn } from '../../lib';
+import { append, Container, hook, HooksRunner, type HookFn } from '../../lib';
 
 /**
  * User Management Domain - Custom Lifecycle Hooks
@@ -14,7 +14,7 @@ import { Container, hook, HooksRunner, type HookFn } from '../../lib';
  *
  * How it works:
  * 1. Define a HooksRunner with a unique hook name
- * 2. Create methods decorated with @hook('hookName', executor)
+ * 2. Create methods decorated with @hook('hookName', append(executor))
  * 3. Register the hook runner via addOnConstructHook
  * 4. Methods are automatically called when instances are created
  */
@@ -33,7 +33,7 @@ describe('Custom Hooks', () => {
       isWarmedUp = false;
 
       // Custom hook - called automatically after construction
-      @hook('initialize', executeInitialize)
+      @hook('initialize', append(executeInitialize))
       warmCache() {
         this.isWarmedUp = true;
       }
