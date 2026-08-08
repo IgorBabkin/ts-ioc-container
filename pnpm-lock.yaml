@@ -109,22 +109,22 @@ importers:
     dependencies:
       '@astrojs/mdx':
         specifier: ^3.0.1
-        version: 3.1.9(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))
+        version: 3.1.9(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))
       '@astrojs/sitemap':
-        specifier: 3.2.1
-        version: 3.2.1
+        specifier: 3.7.3
+        version: 3.7.3
       '@popperjs/core':
         specifier: ^2.11.8
         version: 2.11.8
       '@sentry/astro':
         specifier: ^10.29.0
-        version: 10.48.0(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3)
+        version: 10.48.0(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3)
       '@spotlightjs/astro':
         specifier: ^3.2.6
-        version: 3.2.6(@sentry/astro@10.48.0(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3))(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))
+        version: 3.2.6(@sentry/astro@10.48.0(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3))(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))
       astro:
         specifier: ^4.5.6
-        version: 4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
+        version: 4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
       bootstrap:
         specifier: ^5.3.3
         version: 5.3.8(@popperjs/core@2.11.8)
@@ -184,8 +184,8 @@ packages:
     resolution: {integrity: sha512-Z9IYjuXSArkAUx3N6xj6+Bnvx8OdUSHA8YoOgyepp3+zJmtVYJIl/I18GozdJVW1p5u/CNpl3Km7/gwTJK85cw==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
 
-  '@astrojs/sitemap@3.2.1':
-    resolution: {integrity: sha512-uxMfO8f7pALq0ADL6Lk68UV6dNYjJ2xGUzyjjVj60JLBs5a6smtlkBYv3tQ0DzoqwS7c9n4FUx5lgv0yPo/fgA==}
+  '@astrojs/sitemap@3.7.3':
+    resolution: {integrity: sha512-f8euLVsyeAmAkSm/1M2Kb8sL8byQmfgbvBNaHFItCheTj/IpiJYSEWVcqDHZ/yEHxiS7+w87mQkzwZaPHmk5GA==}
 
   '@astrojs/telemetry@3.1.0':
     resolution: {integrity: sha512-/ca/+D8MIKEC8/A9cSaPUqQNZm+Es/ZinRv0ZAzvu2ios7POQSsVD+VOj7/hypWNsNM3T7RpfgNq7H2TU1KEHA==}
@@ -2254,14 +2254,14 @@ packages:
   '@types/nlcst@2.0.3':
     resolution: {integrity: sha512-vSYNSDe6Ix3q+6Z7ri9lyWqgGhJTmzRjZRqyq15N0Z/1/UnVsno9G/N40NBijoYx2seFDIl0+B2mgAb9mezUCA==}
 
-  '@types/node@17.0.45':
-    resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
+  '@types/node@24.13.3':
+    resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
   '@types/node@25.5.2':
     resolution: {integrity: sha512-tO4ZIRKNC+MDWV4qKVZe3Ql/woTnmHDr5JD8UI5hn2pwBrHEwOEMZK7WlNb5RKB6EoJ02gwmQS9OrjuFnZYdpg==}
 
-  '@types/node@25.6.0':
-    resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
+  '@types/node@26.2.0':
+    resolution: {integrity: sha512-5IviulTZeRNp2vAJ514cc/HUlY5nZ9fCbq9DMyC52BrhFZACo3nI0R7qBxhQmo/d27NFe96ur/b7Wwxklda+kg==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -2387,6 +2387,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vitest/coverage-v8@4.1.2':
     resolution: {integrity: sha512-sPK//PHO+kAkScb8XITeB1bf7fsk85Km7+rt4eeuRR3VS1/crD47cmV5wicisJmjNdfeokTZwjMk4Mj2d58Mgg==}
@@ -3640,6 +3641,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   github-slugger@2.0.0:
@@ -5344,8 +5346,8 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
-  sax@1.6.0:
-    resolution: {integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==}
+  sax@1.6.1:
+    resolution: {integrity: sha512-42tBVwLWnaQvW5zc4HbZrTuWccECCZfBi92FDuwtqxasH+JbPB3/FOKb1m222K42R4WxuxzzMsTswfzgtSu64Q==}
     engines: {node: '>=11.0.0'}
 
   section-matter@1.0.0:
@@ -5448,9 +5450,9 @@ packages:
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
 
-  sitemap@8.0.3:
-    resolution: {integrity: sha512-9Ew1tR2WYw8RGE2XLy7GjkusvYXy8Rg6y8TYuBuQMfIEdGcWoJpY2Wr5DzsEiL/TKCw56+YKTCCUHglorEYK+A==}
-    engines: {node: '>=14.0.0', npm: '>=6.0.0'}
+  sitemap@9.0.1:
+    resolution: {integrity: sha512-S6hzjGJSG3d6if0YoF5kTyeRJvia6FSTBroE5fQ0bu1QNxyJqhhinfUsXi9fH3MgtXODWvwo2BDyQSnhPQ88uQ==}
+    engines: {node: '>=20.19.5', npm: '>=10.8.2'}
     hasBin: true
 
   skin-tone@2.0.0:
@@ -5723,6 +5725,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -5790,8 +5793,8 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici-types@7.19.2:
-    resolution: {integrity: sha512-qYVnV5OEm2AW8cJMCpdV20CDyaN3g0AjDlOGf1OW4iaDEx8MwdtChUp4zu4H0VP3nDRF/8RKWH+IPp9uW0YGZg==}
+  undici-types@8.3.0:
+    resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
   undici@6.24.1:
     resolution: {integrity: sha512-sC+b0tB1whOCzbtlx20fx3WgCXwkW627p4EA9uM+/tNNPkSS+eSEld6pAs9nDv7WbY1UUljBMYPtu9BCOrCWKA==}
@@ -6179,6 +6182,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -6229,12 +6235,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@3.1.9(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))':
+  '@astrojs/mdx@3.1.9(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))':
     dependencies:
       '@astrojs/markdown-remark': 5.3.0
       '@mdx-js/mdx': 3.1.1
       acorn: 8.15.0
-      astro: 4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
+      astro: 4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
       gray-matter: 4.0.3
@@ -6253,11 +6259,11 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
-  '@astrojs/sitemap@3.2.1':
+  '@astrojs/sitemap@3.7.3':
     dependencies:
-      sitemap: 8.0.3
+      sitemap: 9.0.1
       stream-replace-string: 2.0.0
-      zod: 3.25.76
+      zod: 4.4.3
 
   '@astrojs/telemetry@3.1.0':
     dependencies:
@@ -7978,13 +7984,13 @@ snapshots:
       '@sentry-internal/browser-utils': 10.48.0
       '@sentry/core': 10.48.0
 
-  '@sentry/astro@10.48.0(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3)':
+  '@sentry/astro@10.48.0(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3)':
     dependencies:
       '@sentry/browser': 10.48.0
       '@sentry/core': 10.48.0
       '@sentry/node': 10.48.0
       '@sentry/vite-plugin': 5.2.0(rollup@4.53.3)
-      astro: 4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
+      astro: 4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
     transitivePeerDependencies:
       - '@opentelemetry/exporter-trace-otlp-http'
       - encoding
@@ -8279,11 +8285,11 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@spotlightjs/astro@3.2.6(@sentry/astro@10.48.0(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3))(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))':
+  '@spotlightjs/astro@3.2.6(@sentry/astro@10.48.0(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3))(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))':
     dependencies:
-      '@sentry/astro': 10.48.0(astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3)
+      '@sentry/astro': 10.48.0(astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3))(rollup@4.53.3)
       '@spotlightjs/spotlight': 3.0.2
-      astro: 4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
+      astro: 4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
@@ -8403,11 +8409,11 @@ snapshots:
 
   '@types/connect@3.4.36':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
 
   '@types/cookie@0.6.0': {}
 
@@ -8451,25 +8457,28 @@ snapshots:
 
   '@types/mysql@2.15.26':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
 
   '@types/mysql@2.15.27':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
 
   '@types/nlcst@2.0.3':
     dependencies:
       '@types/unist': 3.0.3
 
-  '@types/node@17.0.45': {}
+  '@types/node@24.13.3':
+    dependencies:
+      undici-types: 7.18.2
 
   '@types/node@25.5.2':
     dependencies:
       undici-types: 7.18.2
 
-  '@types/node@25.6.0':
+  '@types/node@26.2.0':
     dependencies:
-      undici-types: 7.19.2
+      undici-types: 8.3.0
+    optional: true
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -8483,25 +8492,25 @@ snapshots:
 
   '@types/pg@8.15.6':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
       pg-protocol: 1.13.0
       pg-types: 2.2.0
 
   '@types/pg@8.6.1':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
 
   '@types/shimmer@1.2.0': {}
 
   '@types/tedious@4.0.14':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.5.2
 
   '@types/trusted-types@2.0.7':
     optional: true
@@ -8824,7 +8833,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  astro@4.16.19(@types/node@25.6.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3):
+  astro@4.16.19(@types/node@26.2.0)(rollup@4.53.3)(sass@1.99.0)(typescript@5.8.3):
     dependencies:
       '@astrojs/compiler': 2.13.0
       '@astrojs/internal-helpers': 0.4.1
@@ -8880,8 +8889,8 @@ snapshots:
       tsconfck: 3.1.6(typescript@5.8.3)
       unist-util-visit: 5.0.0
       vfile: 6.0.3
-      vite: 5.4.21(@types/node@25.6.0)(sass@1.99.0)
-      vitefu: 1.1.1(vite@5.4.21(@types/node@25.6.0)(sass@1.99.0))
+      vite: 5.4.21(@types/node@26.2.0)(sass@1.99.0)
+      vitefu: 1.1.1(vite@5.4.21(@types/node@26.2.0)(sass@1.99.0))
       which-pm: 3.0.1
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -12271,7 +12280,7 @@ snapshots:
     optionalDependencies:
       '@parcel/watcher': 2.5.6
 
-  sax@1.6.0: {}
+  sax@1.6.1: {}
 
   section-matter@1.0.0:
     dependencies:
@@ -12453,12 +12462,12 @@ snapshots:
 
   sisteransi@1.0.5: {}
 
-  sitemap@8.0.3:
+  sitemap@9.0.1:
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 24.13.3
       '@types/sax': 1.2.7
       arg: 5.0.2
-      sax: 1.6.0
+      sax: 1.6.1
 
   skin-tone@2.0.0:
     dependencies:
@@ -12746,7 +12755,8 @@ snapshots:
 
   undici-types@7.18.2: {}
 
-  undici-types@7.19.2: {}
+  undici-types@8.3.0:
+    optional: true
 
   undici@6.24.1: {}
 
@@ -12907,13 +12917,13 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite@5.4.21(@types/node@25.6.0)(sass@1.99.0):
+  vite@5.4.21(@types/node@26.2.0)(sass@1.99.0):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.6
       rollup: 4.53.3
     optionalDependencies:
-      '@types/node': 25.6.0
+      '@types/node': 26.2.0
       fsevents: 2.3.3
       sass: 1.99.0
 
@@ -12933,9 +12943,9 @@ snapshots:
       tsx: 4.21.0
       yaml: 2.8.3
 
-  vitefu@1.1.1(vite@5.4.21(@types/node@25.6.0)(sass@1.99.0)):
+  vitefu@1.1.1(vite@5.4.21(@types/node@26.2.0)(sass@1.99.0)):
     optionalDependencies:
-      vite: 5.4.21(@types/node@25.6.0)(sass@1.99.0)
+      vite: 5.4.21(@types/node@26.2.0)(sass@1.99.0)
 
   vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.5.2)(vite@6.4.1(@types/node@25.5.2)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:
@@ -13084,5 +13094,7 @@ snapshots:
       zod: 3.25.76
 
   zod@3.25.76: {}
+
+  zod@4.4.3: {}
 
   zwitch@2.0.4: {}
