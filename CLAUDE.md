@@ -41,21 +41,18 @@ pnpm --filter ts-ioc-container-docs run build   # Build docs site
 
 ## Release
 
-Both packages are released by `release-monorepo-semantically`, driven by
-`scripts/release/run-pipeline.sh` in CI (see `.github/workflows/publish.yml`).
-It discovers packages via the `workspaces` field in the root `package.json`
-(not `pnpm-workspace.yaml`, which is only for `pnpm install`), and matches
-commit scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
+Both packages are released by `release-monorepo-semantically`, driven directly
+by a sequence of `pnpm exec monorepo-semantic-release <step> --context "$RELEASE_CONTEXT"`
+steps in `.github/workflows/publish.yml` — one workflow step per pipeline step,
+matching the tool's own README usage example (no wrapper script). It discovers
+packages via the `workspaces` field in the root `package.json` (not
+`pnpm-workspace.yaml`, which is only for `pnpm install`), and matches commit
+scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
 or `feat(ts-ioc-container): ...`.
 
-Preview a release locally without mutating anything:
-
-```bash
-pnpm run release:dry
-```
-
-`report` (the first step of the pipeline) always requires a clean working tree,
-dry-run or not.
+To preview a release locally without mutating anything, run the same steps by
+hand with `--dry-run` appended to each (see the tool's README "Usage" section);
+`report` always requires a clean working tree, dry-run or not.
 
 The root `.npmrc` sets `workspaces-update=false`. Without it, `pnpm version`
 (used by the package-manager release step) treats the root `workspaces` field
