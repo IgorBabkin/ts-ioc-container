@@ -27,7 +27,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Required for semantic-release to analyze commits
+          fetch-depth: 0  # Required so `report` can walk commit history back to each package's last release tag
           token: ${{ github.token }}  # Use the workflow token for authenticated fetch/push
 
       - name: Setup pnpm
@@ -73,8 +73,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./coverage/lcov.info
 
+      - name: Test @ts-ioc-container/react
+        run: pnpm run test:react
+
       - name: Build
-        run: pnpm run build
+        run: pnpm run build:all
 
       - name: Configure Git
         run: |
@@ -82,11 +85,30 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config core.hooksPath /dev/null  # Disable git hooks on CI
 
-      - name: Release
-        id: release
+      - name: Generate release context
+        run: |
+          RELEASE_CONTEXT=$(pnpm exec monorepo-semantic-release report)
+          echo "RELEASE_CONTEXT=$RELEASE_CONTEXT" >> "$GITHUB_ENV"
+
+      - name: Update internal dependency versions
+        run: pnpm exec monorepo-semantic-release package-json --context "$RELEASE_CONTEXT"
+
+      - name: Bump versions
+        run: pnpm exec monorepo-semantic-release package-manager --context "$RELEASE_CONTEXT"
+
+      - name: Generate changelogs
+        run: pnpm exec monorepo-semantic-release changelog --context "$RELEASE_CONTEXT"
+
+      - name: Commit, tag and push
+        run: pnpm exec monorepo-semantic-release vcs --context "$RELEASE_CONTEXT"
+
+      - name: Publish to npm
+        run: pnpm exec monorepo-semantic-release package-manager publish --context "$RELEASE_CONTEXT"
+
+      - name: Create GitHub releases
+        run: pnpm exec monorepo-semantic-release release-notes --context "$RELEASE_CONTEXT"
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: npx semantic-release
+          GH_TOKEN: ${{ github.token }}
 
       - name: Publish to GitHub Packages
         # Publish to GitHub Packages so it shows up in the Packages section

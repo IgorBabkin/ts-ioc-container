@@ -25,6 +25,14 @@ export default {
       2,
       'always',
       [
+        // Package scopes - required for feat/fix/perf commits.
+        // release-monorepo-semantically (see CLAUDE.md > Release) matches a
+        // commit to a package by comparing this scope against that package's
+        // package.json `name` field exactly, so a feat/fix/perf commit must
+        // use one of these two to trigger a release for that package.
+        'ts-ioc-container',
+        '@ts-ioc-container/react',
+
         // Core library scopes
         'container',
         'provider',

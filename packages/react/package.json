@@ -1,0 +1,82 @@
+{
+  "name": "@ts-ioc-container/react",
+  "version": "0.0.0",
+  "description": "React bindings for ts-ioc-container: a Scope component that maps container scopes onto the component tree, plus hooks to resolve from the surrounding scope.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "ibabkin <igba14@gmail.com>",
+  "homepage": "https://igorbabkin.github.io/ts-ioc-container",
+  "license": "ISC",
+  "sideEffects": false,
+  "main": "cjm/index.js",
+  "types": "typings/index.d.ts",
+  "module": "esm/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./typings/index.d.ts",
+        "default": "./esm/index.js"
+      },
+      "require": {
+        "types": "./typings/index.d.ts",
+        "default": "./cjm/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "react",
+    "dependency-injection",
+    "inversion-of-control",
+    "container",
+    "ioc",
+    "di",
+    "scope",
+    "scoped-dependencies",
+    "hooks",
+    "ts-ioc-container"
+  ],
+  "files": [
+    "cjm/**/*",
+    "esm/**/*",
+    "typings/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container",
+    "directory": "packages/react"
+  },
+  "scripts": {
+    "build:cjm": "rimraf cjm && tsc -p tsconfig.production.json --outDir cjm --module CommonJS",
+    "build:esm": "rimraf esm && tsc -p tsconfig.production.json --outDir esm && node ../../scripts/postbuild-extensions.mjs esm --esm",
+    "build:types": "rimraf typings && tsc -p tsconfig.production.json --outDir typings --emitDeclarationOnly --declaration && node ../../scripts/postbuild-extensions.mjs typings",
+    "build": "pnpm run build:cjm && pnpm run build:esm && pnpm run build:types",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.reporter=lcov",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint lib/**/*.tsx lib/**/*.ts __tests__/**/*.tsx"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "ts-ioc-container": ">=56"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "jsdom": "^27.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "reflect-metadata": "^0.2.2",
+    "rimraf": "6.1.3",
+    "ts-ioc-container": "56.0.0",
+    "typescript": "5.8.3",
+    "unplugin-swc": "^1.5.9",
+    "vitest": "^4.1.2"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./lib",
+    "target": "ES2022",
+    "lib": ["es2022", "dom"],
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "moduleResolution": "Node",
+    "noImplicitReturns": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "isolatedModules": true,
+    "removeComments": true,
+    "allowImportingTsExtensions": false
+  },
+  "include": ["./lib"]
+}
