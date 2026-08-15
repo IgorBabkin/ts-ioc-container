@@ -32,16 +32,8 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Get pnpm store directory
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
       - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+        uses: ./.github/actions/cache-pnpm-store
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -84,16 +76,8 @@ jobs:
         # 2. npm 11.5.1+ is installed (next step)
         # 3. Trusted Publishing is configured in npm account settings
 
-      - name: Get pnpm store directory
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
       - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+        uses: ./.github/actions/cache-pnpm-store
 
       - name: Ensure npm 11.5.1 or later for OIDC
         # Pin to the npm 11 line: it satisfies the OIDC requirement (>= 11.5.1)
@@ -143,6 +127,4 @@ jobs:
         uses: ./.github/actions/publish-to-github-packages
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          repository-owner: ${{ github.repository_owner }}
           package-name: ts-ioc-container

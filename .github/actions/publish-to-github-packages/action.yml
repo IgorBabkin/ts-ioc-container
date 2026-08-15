@@ -5,12 +5,6 @@ inputs:
   github-token:
     description: 'GitHub token for authentication'
     required: true
-  repository:
-    description: 'Repository name (owner/repo)'
-    required: true
-  repository-owner:
-    description: 'Repository owner (will be lowercased for npm scope)'
-    required: true
   package-name:
     description: 'Package name (without scope)'
     required: true
@@ -21,4 +15,4 @@ runs:
   steps:
     - name: Publish to GitHub Packages
       shell: bash
-      run: ${{ github.action_path }}/publish.sh "${{ inputs.repository-owner }}" "${{ inputs.repository }}" "${{ inputs.package-name }}" "${{ inputs.github-token }}"
+      run: ${{ github.action_path }}/publish.sh "${{ github.repository_owner }}" "${{ github.repository }}" "${{ inputs.package-name }}" "${{ inputs.github-token }}"

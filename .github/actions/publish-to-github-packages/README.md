@@ -16,8 +16,6 @@ Composite GitHub Action that publishes an npm package to GitHub Packages registr
   uses: ./.github/actions/publish-to-github-packages
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
-    repository: ${{ github.repository }}
-    repository-owner: ${{ github.repository_owner }}
     package-name: ts-ioc-container
 ```
 
@@ -26,9 +24,9 @@ Composite GitHub Action that publishes an npm package to GitHub Packages registr
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `github-token` | GitHub token for authentication | Yes | - |
-| `repository` | Repository name (owner/repo format) | Yes | - |
-| `repository-owner` | Repository owner (will be lowercased for npm scope) | Yes | - |
 | `package-name` | Package name without scope | Yes | `ts-ioc-container` |
+
+Repository name and owner are read from the `github.repository` / `github.repository_owner` context automatically — no need to pass them in.
 
 ## Local Testing
 
