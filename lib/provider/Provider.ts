@@ -36,6 +36,9 @@ export class Provider<T = any> implements IProvider<T> {
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
+  /**
+   * @throws {ProviderDisposedError} when the provider has already been disposed.
+   */
   resolve(scope: IContainer, options: ProviderOptions): T {
     ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
 
@@ -80,18 +83,27 @@ export class Provider<T = any> implements IProvider<T> {
     return this;
   }
 
+  /**
+   * @throws {ProviderDisposedError} when the provider has already been disposed.
+   */
   hasAccess(options: ScopeAccessOptions): boolean {
     ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
 
     return this.accessRules.reduce((acc, rule) => rule(options, acc), true);
   }
 
+  /**
+   * @throws {CannonSingletonApplyTwiceError} when the provider is already configured as a singleton.
+   */
   singleton(getCacheKey: GetCacheKey = () => '1'): this {
     CannonSingletonApplyTwiceError.assert(!this.getKey, 'Provider is already singleton');
     this.getKey = getCacheKey;
     return this;
   }
 
+  /**
+   * @throws {ProviderDisposedError} when the provider has already been disposed.
+   */
   dispose(): void {
     ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
     this.isDisposed = true;

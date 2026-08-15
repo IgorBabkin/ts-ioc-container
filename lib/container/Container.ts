@@ -46,6 +46,9 @@ export class Container implements IContainer {
     this.tags = new Set(options.tags ?? []);
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   */
   register(key: DependencyKey, provider: IProvider, { aliases = [] }: RegisterOptions = {}): this {
     this.validateContainer();
     this.providers.set(key, provider);
@@ -53,6 +56,10 @@ export class Container implements IContainer {
     return this;
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   * @throws {DependencyNotFoundError} when `target` cannot be resolved in this container or any parent scope.
+   */
   resolve<T>(target: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
@@ -67,6 +74,10 @@ export class Container implements IContainer {
       : this.parent.resolve<T>(target, { args, child, lazy });
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   * @throws {DependencyNotFoundError} when a key registered under `alias` has no matching provider.
+   */
   resolveByAlias<T>(
     alias: DependencyKey,
     { args = [], child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
@@ -93,6 +104,10 @@ export class Container implements IContainer {
     return [...deps, ...parentDeps];
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   * @throws {DependencyNotFoundError} when `alias` cannot be resolved in this container or any parent scope.
+   */
   resolveOneByAlias<T>(alias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
@@ -104,6 +119,9 @@ export class Container implements IContainer {
       : this.parent.resolveOneByAlias<T>(alias, { args, child, lazy });
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   */
   createScope({ tags }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
@@ -119,6 +137,9 @@ export class Container implements IContainer {
     return scope;
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   */
   dispose(): void {
     this.validateContainer();
     this.isDisposed = true;
@@ -187,6 +208,10 @@ export class Container implements IContainer {
     return this.instances.includes(instance as Instance);
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   * @throws {ContainerNotFoundError} when no container in this scope or any parent scope holds `instance`.
+   */
   getScopeByInstanceOrFail(instance: object): IContainer {
     this.validateContainer();
 
@@ -227,12 +252,18 @@ export class Container implements IContainer {
     }
   }
 
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   */
   private validateContainer(): void {
     if (this.isDisposed) {
       throw new ContainerDisposedError('Container is already disposed');
     }
   }
 
+  /**
+   * @throws {DependencyNotFoundError} when no provider is registered under `key` in this container.
+   */
   private findProviderByKeyOrFail<T>(key: DependencyKey): IProvider<T> {
     if (!this.providers.has(key)) {
       throw new DependencyNotFoundError(`Provider ${key.toString()} does not exist`);

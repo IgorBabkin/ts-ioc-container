@@ -75,6 +75,9 @@ export class Registration<T = any> implements IRegistration<T> {
     return this.scopeRules.reduce((prev, curr) => curr(container, prev), true);
   }
 
+  /**
+   * @throws {DependencyMissingKeyError} when the registration matches the scope but has no binding key.
+   */
   applyTo(container: IContainer): void {
     if (!this.matchScope(container)) {
       return;
@@ -88,6 +91,9 @@ export class Registration<T = any> implements IRegistration<T> {
     container.register(this.key, provider, { aliases: [...this.aliases] });
   }
 
+  /**
+   * @throws {DependencyMissingKeyError} when no binding key has been set for this registration.
+   */
   getKeyOrFail(): DependencyKey {
     if (!this.key) {
       throw new DependencyMissingKeyError('No key provided for registration');

@@ -119,6 +119,10 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 `@onConstruct` and `@onContainerDisposed` decorators trigger after construction / on disposal. Requires adding `AddOnConstructHookModule` / `AddOnDisposeHookModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.
 
+### `@throws` JSDoc Convention
+
+Every function/method that can `throw` — directly, or indirectly via a method it calls (e.g. `Container.resolve` cascading into `EmptyContainer.resolve`) — gets a JSDoc comment with one `@throws {ErrorClass} condition` tag per distinct error type. See `lib/container/Container.ts`, `lib/container/EmptyContainer.ts`, `lib/provider/Provider.ts`, `lib/registration/Registration.ts`, `lib/hooks/HooksRunner.ts`, `lib/token/*.ts` for examples.
+
 ## Important File Conventions
 
 - **Edit source only**: `lib/` — never `cjm/`, `esm/`, `typings/` (build outputs)
@@ -133,7 +137,7 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 ## Git Conventions
 
-- **The main branch is `main`, not `master`.** Target `main` as the base for pull requests.
+- **The main branch is `main`, not `master`.** Target `main` as the base for pull requests, and always create new branches from `main` (`git checkout -b my-branch origin/main`) — never from `master`, which is a stale, protected, long-diverged branch. Do not trust a local `origin/HEAD` symref or tool-reported "main branch" hint without verifying against `gh repo view --json defaultBranchRef` or `git ls-remote --symref origin HEAD` first, since a stale local checkout can point `origin/HEAD` at `master`.
 
 ## Commit Message Conventions
 
