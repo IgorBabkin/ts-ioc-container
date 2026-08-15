@@ -21,6 +21,9 @@ export class HooksRunner {
     return hasHooks(target, this.key);
   }
 
+  /**
+   * @throws {UnexpectedHookResultError} when a hook returns a `Promise` — use {@link executeAsync} for async hooks.
+   */
   execute(
     target: object,
     {

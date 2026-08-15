@@ -17,14 +17,23 @@ export class GroupInstanceToken extends InjectionToken<Instance[]> {
     return (s: IContainer) => this.resolve(s).map(fn);
   }
 
+  /**
+   * @throws {MethodNotImplementedError} always — a group instance token cannot receive static args.
+   */
   args(...deps: unknown[]): this {
     throw new MethodNotImplementedError('not implemented');
   }
 
+  /**
+   * @throws {MethodNotImplementedError} always — a group instance token cannot receive resolved args.
+   */
   argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<Instance[]> {
     throw new MethodNotImplementedError('not implemented');
   }
 
+  /**
+   * @throws {MethodNotImplementedError} always — a group instance token cannot be made lazy.
+   */
   lazy(): InjectionToken<Instance[]> {
     throw new MethodNotImplementedError('not implemented');
   }

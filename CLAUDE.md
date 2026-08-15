@@ -119,6 +119,10 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 `@onConstruct` and `@onContainerDisposed` decorators trigger after construction / on disposal. Requires adding `AddOnConstructHookModule` / `AddOnDisposeHookModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.
 
+### `@throws` JSDoc Convention
+
+Every function/method that can `throw` — directly, or indirectly via a method it calls (e.g. `Container.resolve` cascading into `EmptyContainer.resolve`) — gets a JSDoc comment with one `@throws {ErrorClass} condition` tag per distinct error type. See `lib/container/Container.ts`, `lib/container/EmptyContainer.ts`, `lib/provider/Provider.ts`, `lib/registration/Registration.ts`, `lib/hooks/HooksRunner.ts`, `lib/token/*.ts` for examples.
+
 ## Important File Conventions
 
 - **Edit source only**: `lib/` — never `cjm/`, `esm/`, `typings/` (build outputs)

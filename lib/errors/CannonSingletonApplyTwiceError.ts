@@ -9,6 +9,9 @@ export class CannonSingletonApplyTwiceError extends ContainerError {
     Object.setPrototypeOf(this, CannonSingletonApplyTwiceError.prototype);
   }
 
+  /**
+   * @throws {CannonSingletonApplyTwiceError} when `isTrue` is falsy.
+   */
   static assert(isTrue: boolean, failMessage: string) {
     if (!isTrue) {
       throw new CannonSingletonApplyTwiceError(failMessage);

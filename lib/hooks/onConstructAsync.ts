@@ -21,6 +21,10 @@ export class AddOnConstructAsyncHookModule implements IContainerModule {
         return;
       }
 
+      /**
+       * @throws {unknown} rethrows whatever the `onConstructAsync` hooks rejected with, as an unhandled promise
+       * rejection, when no `onException` handler was supplied.
+       */
       onConstructAsyncHooksRunner.executeAsync(instance, { scope }).catch((ex) => {
         if (!this.onException) {
           throw ex;

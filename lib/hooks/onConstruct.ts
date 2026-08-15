@@ -17,6 +17,9 @@ export class AddOnConstructHookModule implements IContainerModule {
   constructor(private readonly onException?: OnExceptionHandler) {}
 
   applyTo(container: IContainer) {
+    /**
+     * @throws {unknown} rethrows whatever the `onConstruct` hooks threw, when no `onException` handler was supplied.
+     */
     container.addOnConstructHook((instance, scope) => {
       try {
         onConstructHooksRunner.execute(instance, { scope });

@@ -8,6 +8,9 @@ import { InjectFn } from '../hooks/hook';
 import { type constructor, Is } from '../utils/basic';
 import { ConstantToken } from './ConstantToken';
 
+/**
+ * @throws {UnsupportedTokenTypeError} when `token` is not an `InjectionToken`, a `DependencyKey`, a constructor, or a function.
+ */
 export const toToken = <T = any>(
   token: InjectFn<T> | InjectionToken<T> | DependencyKey | constructor<T>,
 ): InjectionToken<T> => {

@@ -11,14 +11,23 @@ export class ConstantToken<T = any> extends InjectionToken<T> {
     return this.token;
   }
 
+  /**
+   * @throws {MethodNotImplementedError} always — a constant token cannot receive static args.
+   */
   args(...deps: unknown[]): InjectionToken<T> {
     throw new MethodNotImplementedError('not implemented');
   }
 
+  /**
+   * @throws {MethodNotImplementedError} always — a constant token cannot receive resolved args.
+   */
   argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
     throw new MethodNotImplementedError('not implemented');
   }
 
+  /**
+   * @throws {MethodNotImplementedError} always — a constant token cannot be made lazy.
+   */
   lazy(): InjectionToken<T> {
     throw new MethodNotImplementedError('not implemented');
   }
