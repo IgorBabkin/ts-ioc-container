@@ -9,6 +9,7 @@ TypeScript IoC container library providing dependency injection with type safety
 Uses **pnpm** workspaces:
 - Root: the library itself (`ts-ioc-container`)
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
+- `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `docs/`: Astro documentation site (separate, private workspace)
 
 Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
@@ -61,7 +62,7 @@ as an npm/yarn-workspaces marker and silently runs `npm install` to reconcile
 that setting without re-checking for that side effect.
 
 The release commit template lives at
-`scripts/release/templates/release-commit-msg.hbs` — it overrides the tool's
+`packages/scripts/release/templates/release-commit-msg.hbs` — it overrides the tool's
 default `[skip-ci]` marker (hyphenated, not recognized by GitHub Actions) with
 `[skip ci]`, so the release commit the pipeline pushes doesn't re-trigger
 `publish.yml`.

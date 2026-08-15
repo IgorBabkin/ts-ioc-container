@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "lib": ["es2022"],
+    "types": ["node"],
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "isolatedModules": true
+  },
+  "include": ["generate-readme"]
+}

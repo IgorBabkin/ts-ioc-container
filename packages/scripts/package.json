@@ -1,0 +1,15 @@
+{
+  "name": "@ts-ioc-container/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint generate-readme/**/*.ts build.mjs postbuild-extensions.mjs",
+    "format:check": "prettier --check \"generate-readme/**/*.ts\" \"build.mjs\" \"postbuild-extensions.mjs\""
+  },
+  "devDependencies": {
+    "handlebars": "^4.7.8",
+    "typescript": "5.8.3"
+  }
+}
