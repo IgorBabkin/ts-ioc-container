@@ -110,10 +110,7 @@ jobs:
         run: pnpm run build:all
 
       - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config core.hooksPath /dev/null  # Disable git hooks on CI
+        uses: ./.github/actions/configure-git
 
       - name: Generate release context
         run: |
