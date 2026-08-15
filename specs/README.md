@@ -1,10 +1,17 @@
 # Specifications
 
-This directory is the product-facing contract for `ts-ioc-container`.
+This directory is the product-facing contract for `ts-ioc-container`, the core
+library at the repo root.
 
 Specs describe what the library promises before the implementation describes
 how it works. They are written for maintainers, contributors, and reviewers who
 need to understand intended behavior without reading all of `lib/`.
+
+Epics scoped to a single other workspace package (for example
+`@ts-ioc-container/react`) live in that package's own `specs/` directory
+instead of here — see `packages/react/specs/README.md`. This directory covers
+the core library only. The workflow, style, and traceability conventions below
+apply the same way in both places.
 
 ## Artifact roles
 
