@@ -17,7 +17,49 @@ permissions:
   packages: write  # Required for publishing to GitHub Packages
 
 jobs:
-  calc-coverage-and-release:
+  generate-report:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test with coverage
+        run: pnpm run test:coverage --maxWorkers=2
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./coverage/lcov.info
+
+      - name: Test @ts-ioc-container/react
+        run: pnpm run test:react
+
+  release:
+    needs: generate-report
     environment:
       name: production
       url: https://www.npmjs.com/package/ts-ioc-container
@@ -63,18 +105,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Test with coverage
-        run: pnpm run test:coverage --maxWorkers=2
-
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./coverage/lcov.info
-
-      - name: Test @ts-ioc-container/react
-        run: pnpm run test:react
 
       - name: Build
         run: pnpm run build:all
