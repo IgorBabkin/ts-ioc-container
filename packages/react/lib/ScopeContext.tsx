@@ -5,6 +5,9 @@ import { OutOfScopeError } from './OutOfScopeError';
 
 export const ScopeContext = createContext<IContainer | null>(null);
 
+/**
+ * @throws {OutOfScopeError} when there is no `ScopeContext.Provider` above the caller.
+ */
 export function useScopeOrFail(): IContainer {
   const container = useContext(ScopeContext);
   if (!container) {
@@ -13,6 +16,9 @@ export function useScopeOrFail(): IContainer {
   return container;
 }
 
+/**
+ * @throws {OutOfScopeError} when there is no `ScopeContext.Provider` above the caller.
+ */
 export function useResolveOrFail<T>(key: InjectionToken<T> | constructor<T>): T {
   const container = useScopeOrFail();
   if (key instanceof InjectionToken) {
@@ -37,6 +43,8 @@ interface ScopeProps {
  * replacement — the subtree would be left on a disposed scope. Render the
  * app root outside `StrictMode`, or scope `StrictMode` to trees that don't
  * mount `Scope`.
+ *
+ * @throws {OutOfScopeError} when there is no `ScopeContext.Provider` above the caller.
  */
 export function Scope(props: ScopeProps) {
   const parent = useScopeOrFail();
