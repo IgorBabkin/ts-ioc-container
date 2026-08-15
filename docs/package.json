@@ -10,6 +10,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint . --ext .js,.ts,.astro",
+    "type-check": "astro check",
     "lint:fix": "eslint . --ext .js,.ts,.astro --fix",
     "format": "prettier --write \"**/*.{js,ts,astro,json,css,scss}\"",
     "format:check": "prettier --check \"**/*.{js,ts,astro,json,css,scss}\""
@@ -27,8 +28,10 @@
     "shiki": "^4.0.2"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "eslint-plugin-astro": "^1.5.0",
     "prettier-plugin-astro": "^0.14.1",
-    "sass": "^1.94.2"
+    "sass": "^1.94.2",
+    "typescript": "5.8.3"
   }
 }

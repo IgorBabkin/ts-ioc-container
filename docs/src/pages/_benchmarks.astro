@@ -1,16 +1,24 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const benchmarkModules = import.meta.glob("../../../__benchmarks__/specs/*.benchmark.ts");
+const benchmarkModules = import.meta.glob(
+  "../../../__benchmarks__/specs/*.benchmark.ts",
+);
 const availableSpecs = Object.keys(benchmarkModules)
-  .map((path) => path.split("/").pop()?.replace(/\.benchmark\.ts$/, ""))
+  .map((path) =>
+    path
+      .split("/")
+      .pop()
+      ?.replace(/\.benchmark\.ts$/, ""),
+  )
   .filter((prefix): prefix is string => Boolean(prefix))
   .sort();
 
 const implementationOrder = ["ts-ioc-container", "tsyringe"];
 const getBenchmarkKey = (prefix: string) =>
   prefix.replace(/\.(ts-ioc-container|tsyringe)$/, "");
-const getImplementation = (prefix: string) => prefix.replace(`${getBenchmarkKey(prefix)}.`, "");
+const getImplementation = (prefix: string) =>
+  prefix.replace(`${getBenchmarkKey(prefix)}.`, "");
 const formatBenchmarkLabel = (key: string) =>
   key
     .split("-")
@@ -22,8 +30,10 @@ const sortSpecs = (specs: string[]) =>
     const implementationB = getImplementation(b);
     const orderA = implementationOrder.indexOf(implementationA);
     const orderB = implementationOrder.indexOf(implementationB);
-    const normalizedOrderA = orderA === -1 ? implementationOrder.length : orderA;
-    const normalizedOrderB = orderB === -1 ? implementationOrder.length : orderB;
+    const normalizedOrderA =
+      orderA === -1 ? implementationOrder.length : orderA;
+    const normalizedOrderB =
+      orderB === -1 ? implementationOrder.length : orderB;
 
     return normalizedOrderA - normalizedOrderB || a.localeCompare(b);
   });
@@ -44,7 +54,9 @@ const benchmarkGroups = Array.from(
     label: `${formatBenchmarkLabel(group.key)} (${group.specs.map(getImplementation).join(", ")})`,
   }))
   .sort((a, b) => a.label.localeCompare(b.label));
-const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependency-resolution")
+const defaultBenchmark = benchmarkGroups.some(
+  (group) => group.key === "dependency-resolution",
+)
   ? "dependency-resolution"
   : benchmarkGroups[0]?.key;
 ---
@@ -64,7 +76,12 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
         <select class="form-select" id="benchmark-pair" name="benchmark">
           {
             benchmarkGroups.map((group) => (
-              <option value={group.key} selected={group.key === defaultBenchmark}>{group.label}</option>
+              <option
+                value={group.key}
+                selected={group.key === defaultBenchmark}
+              >
+                {group.label}
+              </option>
             ))
           }
         </select>
@@ -117,25 +134,34 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
   <script>
     import "reflect-metadata";
 
-    const modules = import.meta.glob("../../../__benchmarks__/specs/*.benchmark.ts");
+    const modules = import.meta.glob(
+      "../../../__benchmarks__/specs/*.benchmark.ts",
+    );
     const moduleByPrefix = new Map(
       Object.entries(modules).map(([path, loader]) => [
-        path.split("/").pop().replace(/\.benchmark\.ts$/, ""),
+        path
+          .split("/")
+          .pop()
+          .replace(/\.benchmark\.ts$/, ""),
         loader,
       ]),
     );
     const availableSpecs = Array.from(moduleByPrefix.keys()).sort();
     const implementationOrder = ["ts-ioc-container", "tsyringe"];
-    const getBenchmarkKey = (prefix) => prefix.replace(/\.(ts-ioc-container|tsyringe)$/, "");
-    const getImplementation = (prefix) => prefix.replace(`${getBenchmarkKey(prefix)}.`, "");
+    const getBenchmarkKey = (prefix) =>
+      prefix.replace(/\.(ts-ioc-container|tsyringe)$/, "");
+    const getImplementation = (prefix) =>
+      prefix.replace(`${getBenchmarkKey(prefix)}.`, "");
     const sortSpecs = (specs) =>
       specs.toSorted((a, b) => {
         const implementationA = getImplementation(a);
         const implementationB = getImplementation(b);
         const orderA = implementationOrder.indexOf(implementationA);
         const orderB = implementationOrder.indexOf(implementationB);
-        const normalizedOrderA = orderA === -1 ? implementationOrder.length : orderA;
-        const normalizedOrderB = orderB === -1 ? implementationOrder.length : orderB;
+        const normalizedOrderA =
+          orderA === -1 ? implementationOrder.length : orderA;
+        const normalizedOrderB =
+          orderB === -1 ? implementationOrder.length : orderB;
 
         return normalizedOrderA - normalizedOrderB || a.localeCompare(b);
       });
@@ -150,7 +176,9 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
         specs: sortSpecs(specs),
       }),
     );
-    const benchmarkByKey = new Map(benchmarkGroups.map((group) => [group.key, group]));
+    const benchmarkByKey = new Map(
+      benchmarkGroups.map((group) => [group.key, group]),
+    );
     const defaultBenchmark = benchmarkByKey.has("dependency-resolution")
       ? "dependency-resolution"
       : benchmarkGroups[0]?.key;
@@ -162,7 +190,9 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
     const resultsBody = document.querySelector("#benchmark-results-body");
 
     const formatHz = (value) =>
-      new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value);
+      new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(
+        value,
+      );
     const formatMean = (value) =>
       `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(value)} ms`;
 
@@ -188,7 +218,10 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
         benchmarkInput.value = defaultBenchmark;
       }
 
-      if (duration && durationInput.querySelector(`option[value="${duration}"]`)) {
+      if (
+        duration &&
+        durationInput.querySelector(`option[value="${duration}"]`)
+      ) {
         durationInput.value = duration;
       }
     };
@@ -198,7 +231,11 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
         benchmark: benchmarkInput.value,
         duration: durationInput.value,
       });
-      window.history.replaceState(null, "", `${window.location.pathname}?${params}`);
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}?${params}`,
+      );
     };
 
     const loadSpec = async (prefix) => {
@@ -272,7 +309,10 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
 
     const renderBenchmarkRows = (rows) => {
       const doneRows = rows.filter((row) => row.result);
-      const fastest = doneRows.length > 0 ? Math.max(...doneRows.map((row) => row.result.hz)) : 0;
+      const fastest =
+        doneRows.length > 0
+          ? Math.max(...doneRows.map((row) => row.result.hz))
+          : 0;
       const sortedRows = [
         ...doneRows.toSorted((a, b) => b.result.hz - a.result.hz),
         ...rows.filter((row) => !row.result),
@@ -314,7 +354,8 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
         })) || [];
 
       runButton.disabled = true;
-      resultsBody.innerHTML = '<tr><td colspan="7">Preparing benchmark files...</td></tr>';
+      resultsBody.innerHTML =
+        '<tr><td colspan="7">Preparing benchmark files...</td></tr>';
       writeQuery();
 
       try {
@@ -335,7 +376,9 @@ const defaultBenchmark = benchmarkGroups.some((group) => group.key === "dependen
           renderBenchmarkRows(benchmarkRows);
         }
       } catch (error) {
-        const runningRow = benchmarkRows.find((item) => item.state === "running");
+        const runningRow = benchmarkRows.find(
+          (item) => item.state === "running",
+        );
         if (runningRow) {
           runningRow.state = "failed";
           runningRow.error = error.message;

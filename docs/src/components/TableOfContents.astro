@@ -16,17 +16,21 @@ const { headings = [] } = Astro.props;
   <div class="toc-header">
     <h5 class="mb-0">On this page</h5>
   </div>
-  {headings && headings.length > 0 ? (
-    <ul class="toc-list">
-      {headings.map((heading) => (
-        <li class={`toc-h${heading.level}`}>
-          <a href={`#${heading.id}`} class="toc-link">{heading.text}</a>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p class="toc-empty text-muted small">No sections available</p>
-  )}
+  {
+    headings && headings.length > 0 ? (
+      <ul class="toc-list">
+        {headings.map((heading) => (
+          <li class={`toc-h${heading.level}`}>
+            <a href={`#${heading.id}`} class="toc-link">
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="toc-empty text-muted small">No sections available</p>
+    )
+  }
 </nav>
 
 <style>
@@ -92,5 +96,3 @@ const { headings = [] } = Astro.props;
     font-size: 0.8rem;
   }
 </style>
-
-

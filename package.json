@@ -80,6 +80,7 @@
     "type-check:watch": "tsc --noEmit --watch",
     "commit": "cz",
     "format": "prettier --write \"**/*.ts\"",
+    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\" \"__benchmarks__/**/*.ts\"",
     "lint": "eslint lib/**/*.ts __tests__/**/*.ts __benchmarks__/**/*.ts",
     "lint:fix": "npm run lint --fix",
     "audit": "npm audit",
