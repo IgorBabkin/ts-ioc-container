@@ -1,88 +1,28 @@
 {
-  "name": "ts-ioc-container",
-  "version": "56.0.0",
-  "description": "Fast, lightweight TypeScript dependency injection container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects.",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://igorbabkin.github.io/ts-ioc-container",
-  "license": "ISC",
-  "sideEffects": false,
-  "main": "cjm/index.js",
-  "types": "typings/index.d.ts",
-  "module": "esm/index.js",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./typings/index.d.ts",
-        "default": "./esm/index.js"
-      },
-      "require": {
-        "types": "./typings/index.d.ts",
-        "default": "./cjm/index.js"
-      }
-    },
-    "./package.json": "./package.json"
-  },
-  "keywords": [
-    "dependency-injection",
-    "inversion-of-control",
-    "container",
-    "typescript",
-    "typescript-di",
-    "typescript-ioc",
-    "dependency-injection-container",
-    "ioc",
-    "di",
-    "ioc-container",
-    "tsyringe-alternative",
-    "inversify-alternative",
-    "awilix-alternative",
-    "clean-api",
-    "no-global-container",
-    "scope",
-    "scoped-dependencies",
-    "hook",
-    "lifecycle-hooks",
-    "decorators",
-    "lazy-injection",
-    "service-container",
-    "inject"
-  ],
-  "files": [
-    "cjm/**/*",
-    "esm/**/*",
-    "typings/**/*"
-  ],
-  "//workspaces": "Read by release-monorepo-semantically to discover releasable packages. pnpm itself uses pnpm-workspace.yaml; '.' is this root package, and private packages (docs) are never released.",
+  "name": "root",
+  "private": true,
+  "//workspaces": "Read by release-monorepo-semantically to discover releasable packages. pnpm itself uses pnpm-workspace.yaml. Private packages (docs, scripts) are never released.",
   "workspaces": [
-    ".",
     "packages/*"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/IgorBabkin/ts-ioc-container"
-  },
   "scripts": {
     "ci": "pnpm install --frozen-lockfile",
-    "build:cjm": "node packages/scripts/build.mjs cjm",
-    "build:esm": "node packages/scripts/build.mjs esm",
-    "build:types": "node packages/scripts/build.mjs types",
-    "generate:docs": "packages/scripts/generate-readme/generate-readme.ts && git add README.md",
-    "build": "npm run build:cjm && npm run build:esm && npm run build:types",
-    "test": "vitest run",
-    "test:spec": "vitest run __tests__/specs",
-    "bench:spec": "vitest bench __benchmarks__/specs/*.bench.ts",
-    "test:coverage": "vitest run --coverage --coverage.reporter=lcov --maxWorkers=2",
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch",
+    "build:cjm": "pnpm --filter ts-ioc-container run build:cjm",
+    "build:esm": "pnpm --filter ts-ioc-container run build:esm",
+    "build:types": "pnpm --filter ts-ioc-container run build:types",
+    "generate:docs": "pnpm --filter ts-ioc-container run generate:docs",
+    "build": "pnpm --filter ts-ioc-container run build",
+    "test": "pnpm --filter ts-ioc-container run test",
+    "test:spec": "pnpm --filter ts-ioc-container run test:spec",
+    "bench:spec": "pnpm --filter ts-ioc-container run bench:spec",
+    "test:coverage": "pnpm --filter ts-ioc-container run test:coverage",
+    "type-check": "pnpm --filter ts-ioc-container run type-check",
+    "type-check:watch": "pnpm --filter ts-ioc-container run type-check:watch",
     "commit": "cz",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\" \"__benchmarks__/**/*.ts\"",
-    "lint": "eslint lib/**/*.ts __tests__/**/*.ts __benchmarks__/**/*.ts",
-    "lint:fix": "npm run lint --fix",
+    "format": "pnpm --filter ts-ioc-container run format",
+    "format:check": "pnpm --filter ts-ioc-container run format:check",
+    "lint": "pnpm --filter ts-ioc-container run lint",
+    "lint:fix": "pnpm --filter ts-ioc-container run lint:fix",
     "audit": "npm audit",
     "prepare": "husky",
     "test:react": "pnpm --filter @ts-ioc-container/react run test",
@@ -96,41 +36,25 @@
     "docs:build": "pnpm --filter ts-ioc-container-docs run build",
     "docs:preview": "pnpm --filter ts-ioc-container-docs run preview"
   },
-  "peerDependencies": {
-    "reflect-metadata": "^0.2.0"
-  },
-  "peerDependenciesMeta": {
-    "reflect-metadata": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.24.0",
-    "@swc/core": "^1.15.24",
     "@types/node": "^25.5.2",
     "@typescript-eslint/eslint-plugin": "8.32.1",
     "@typescript-eslint/parser": "8.59.1",
-    "@vitest/coverage-v8": "^4.1.2",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "9.24.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.6",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "moq.ts": "^10.0.8",
     "prettier": "3.5.3",
     "prettier-plugin-astro": "^0.14.1",
-    "reflect-metadata": "^0.2.2",
     "release-monorepo-semantically": "1.9.0",
     "tsx": "^4.21.0",
-    "tsyringe": "^4.10.0",
-    "typescript": "5.8.3",
-    "unplugin-swc": "^1.5.9",
-    "vite": "^6.4.1",
-    "vitest": "^4.1.2"
+    "typescript": "5.8.3"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
@@ -144,7 +68,6 @@
       "eslint --fix"
     ]
   },
-  "gitHead": "ae10f302c7e0f55196b42669040735112479a854",
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"

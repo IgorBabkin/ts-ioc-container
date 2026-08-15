@@ -45,7 +45,7 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./coverage/lcov.info
+          file: ./packages/ts-ioc-container/coverage/lcov.info
 
       - name: Test @ts-ioc-container/react
         run: pnpm run test:react
@@ -54,17 +54,7 @@ jobs:
         run: pnpm run build:all
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          retention-days: 1
-          path: |
-            cjm
-            esm
-            typings
-            packages/react/cjm
-            packages/react/esm
-            packages/react/typings
+        uses: ./.github/actions/upload-build-artifacts
 
   release:
     needs: build
@@ -107,9 +97,7 @@ jobs:
         run: pnpm run ci
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
+        uses: ./.github/actions/download-build-artifacts
 
       - name: Configure Git
         uses: ./.github/actions/configure-git
