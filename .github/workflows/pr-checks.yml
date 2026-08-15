@@ -54,3 +54,12 @@ jobs:
 
       - name: Test
         run: pnpm test --maxWorkers=2
+
+      - name: Lint @ts-ioc-container/react
+        run: pnpm run lint:react
+
+      - name: Type check @ts-ioc-container/react
+        run: pnpm run type-check:react
+
+      - name: Test @ts-ioc-container/react
+        run: pnpm run test:react

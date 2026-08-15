@@ -56,6 +56,11 @@
     "esm/**/*",
     "typings/**/*"
   ],
+  "//workspaces": "Read by release-monorepo-semantically to discover releasable packages. pnpm itself uses pnpm-workspace.yaml; '.' is this root package, and private packages (docs) are never released.",
+  "workspaces": [
+    ".",
+    "packages/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IgorBabkin/ts-ioc-container"
@@ -78,7 +83,13 @@
     "lint:fix": "npm run lint --fix",
     "audit": "npm audit",
     "prepare": "husky",
-    "release": "npm run build && npm test && npm publish",
+    "release:dry": "scripts/release/run-pipeline.sh --dry-run",
+    "test:react": "pnpm --filter @ts-ioc-container/react run test",
+    "type-check:react": "pnpm --filter @ts-ioc-container/react run type-check",
+    "lint:react": "pnpm --filter @ts-ioc-container/react run lint",
+    "build:react": "pnpm --filter @ts-ioc-container/react run build",
+    "test:all": "pnpm test && pnpm run test:react",
+    "build:all": "pnpm run build && pnpm run build:react",
     "docs:dev": "pnpm --filter ts-ioc-container-docs run dev",
     "docs:serve": "pnpm --filter ts-ioc-container-docs run dev",
     "docs:build": "pnpm --filter ts-ioc-container-docs run build",
@@ -97,10 +108,6 @@
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.24.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.2",
-    "@semantic-release/npm": "^13.1.2",
     "@swc/core": "^1.15.24",
     "@types/node": "^25.5.2",
     "@typescript-eslint/eslint-plugin": "8.32.1",
@@ -117,8 +124,8 @@
     "prettier": "3.5.3",
     "prettier-plugin-astro": "^0.14.1",
     "reflect-metadata": "^0.2.2",
+    "release-monorepo-semantically": "1.9.0",
     "rimraf": "6.1.3",
-    "semantic-release": "^25.0.2",
     "tsx": "^4.21.0",
     "tsyringe": "^4.10.0",
     "typescript": "5.8.3",

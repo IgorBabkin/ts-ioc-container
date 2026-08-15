@@ -7,24 +7,67 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 TypeScript IoC container library providing dependency injection with type safety, scoping, lifecycle hooks, and multiple injection strategies. Zero runtime dependencies (except `reflect-metadata`).
 
 Uses **pnpm** workspaces:
-- Root: the library itself
-- `docs/`: Astro documentation site (separate workspace)
+- Root: the library itself (`ts-ioc-container`)
+- `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
+- `docs/`: Astro documentation site (separate, private workspace)
+
+Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
+[`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
+— see [Release](#release) below. `docs` is `private: true` and never released.
 
 ## Common Commands
 
 ```bash
-pnpm test                        # Run all tests
-pnpm run test:coverage           # Run tests with coverage
-pnpm run type-check              # TypeScript type checking (no emit)
-pnpm run lint:fix                # Auto-fix linting issues
-pnpm run build                   # Build all formats (CJS, ESM, types)
+pnpm test                        # Run all tests (core package)
+pnpm run test:coverage           # Run tests with coverage (core package)
+pnpm run type-check              # TypeScript type checking (no emit, core package)
+pnpm run lint:fix                # Auto-fix linting issues (core package)
+pnpm run build                   # Build all formats (CJS, ESM, types) for the core package
 pnpm run generate:docs           # Regenerate README.md from .readme.hbs.md
 
-pnpm exec jest __tests__/path/to/test.spec.ts   # Run a single test file
-pnpm exec jest -t "test name pattern"            # Run tests matching pattern
+pnpm run test:react              # Run @ts-ioc-container/react tests
+pnpm run type-check:react        # Type check @ts-ioc-container/react
+pnpm run lint:react              # Lint @ts-ioc-container/react
+pnpm run build:react             # Build @ts-ioc-container/react
+
+pnpm run test:all                # Run tests for every released package
+pnpm run build:all               # Build every released package
+
+pnpm exec vitest run __tests__/path/to/test.spec.ts   # Run a single test file (from the package's own directory)
+pnpm exec vitest -t "test name pattern"                # Run tests matching pattern
 
 pnpm --filter ts-ioc-container-docs run build   # Build docs site
 ```
+
+## Release
+
+Both packages are released by `release-monorepo-semantically`, driven by
+`scripts/release/run-pipeline.sh` in CI (see `.github/workflows/publish.yml`).
+It discovers packages via the `workspaces` field in the root `package.json`
+(not `pnpm-workspace.yaml`, which is only for `pnpm install`), and matches
+commit scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
+or `feat(ts-ioc-container): ...`.
+
+Preview a release locally without mutating anything:
+
+```bash
+pnpm run release:dry
+```
+
+`report` (the first step of the pipeline) always requires a clean working tree,
+dry-run or not.
+
+The root `.npmrc` sets `workspaces-update=false`. Without it, `pnpm version`
+(used by the package-manager release step) treats the root `workspaces` field
+as an npm/yarn-workspaces marker and silently runs `npm install` to reconcile
+`package-lock.json` — undesirable and slow in this pnpm-only repo. Don't remove
+that setting without re-checking for that side effect.
+
+The release commit template lives at
+`scripts/release/templates/release-commit-msg.hbs` — it overrides the tool's
+default `[skip-ci]` marker (hyphenated, not recognized by GitHub Actions) with
+`[skip ci]`, so the release commit the pipeline pushes doesn't re-trigger
+`publish.yml`.
 
 ## Architecture
 
@@ -141,14 +184,35 @@ Every function/method that can `throw` — directly, or indirectly via a method 
 
 ## Commit Message Conventions
 
-### Scopes that prevent package releases (use these when no API change)
+### Types that prevent package releases (use these when no API change)
 `docs`, `test`, `ci`, `chore`, `refactor`, `style`
 
-### Scopes that trigger releases (semantic-release)
-`feat` → minor bump, `fix` / `perf` → patch bump, `BREAKING CHANGE` → major bump
+### Types that trigger releases
+`feat` → minor bump, `fix` / `perf` → patch bump, `BREAKING CHANGE` (or `!` after
+the type/scope) → major bump
+
+### Scope must be the exact package name
+
+`release-monorepo-semantically` (see [Release](#release)) matches a commit to a
+package by comparing the commit's parenthetical **scope** against that
+package's `name` field **exactly** — not a substring, not a free-form label.
+A release-triggering commit must scope to `ts-ioc-container` or
+`@ts-ioc-container/react`:
+
+```
+feat(ts-ioc-container): add X
+fix(@ts-ioc-container/react): correct Y
+```
+
+A commit scoped to anything else (`feat(hooks): ...`, `fix(docs): ...`) —
+including the free-form, feature-area scopes this repo used historically —
+**will not trigger a release for either package.** Non-release types
+(`docs`, `test`, `ci`, `chore`, `refactor`, `style`) can still use a free-form
+scope, or none, since they never trigger a release regardless of scope.
 
 ### Special rules
 - Documentation site changes (`docs/src/pages/`): **always** `docs(pages):` — never `fix(docs):` or `feat(docs):`
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)
 
-**Before committing**: ask "should this trigger a package release?" If not, use a non-release type.
+**Before committing**: ask "should this trigger a package release?" If so, scope
+it to the exact package name. If not, use a non-release type.
