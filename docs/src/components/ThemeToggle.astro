@@ -3,8 +3,14 @@ import sunIcon from "@assets/theme-icons/sun.svg?raw";
 import moonIcon from "@assets/theme-icons/moon.svg?raw";
 
 // Add IDs and display style to imported SVGs
-const sunIconWithId = sunIcon.replace('<svg', '<svg id="theme-icon-light" style="display: none;"');
-const moonIconWithId = moonIcon.replace('<svg', '<svg id="theme-icon-dark" style="display: none;"');
+const sunIconWithId = sunIcon.replace(
+  "<svg",
+  '<svg id="theme-icon-light" style="display: none;"',
+);
+const moonIconWithId = moonIcon.replace(
+  "<svg",
+  '<svg id="theme-icon-dark" style="display: none;"',
+);
 ---
 
 <button
@@ -18,14 +24,12 @@ const moonIconWithId = moonIcon.replace('<svg', '<svg id="theme-icon-dark" style
   <Fragment set:html={moonIconWithId} />
 </button>
 
-
 <style>
   #theme-toggle {
     transition: color 0.2s ease;
   }
-  
+
   #theme-toggle:hover {
     opacity: 0.8;
   }
 </style>
-

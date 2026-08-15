@@ -7,5 +7,6 @@
       "@assets/*": ["./src/assets/*"]
     },
     "target": "ES2022"
-  }
+  },
+  "exclude": ["dist"]
 }
