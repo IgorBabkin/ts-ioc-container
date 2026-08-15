@@ -50,6 +50,6 @@ generated outputs directly.
 
 - `.readme.hbs.md`
 - `README.md`
-- `scripts/generate-readme/`
+- `packages/scripts/generate-readme/`
 - `package.json`
 - `AGENTS.md`

@@ -17,7 +17,7 @@ permissions:
   packages: write  # Required for publishing to GitHub Packages
 
 jobs:
-  generate-report:
+  build:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
@@ -36,10 +36,10 @@ jobs:
         uses: ./.github/actions/cache-pnpm-store
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm run ci
 
       - name: Test with coverage
-        run: pnpm run test:coverage --maxWorkers=2
+        run: pnpm run test:coverage
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
@@ -50,8 +50,24 @@ jobs:
       - name: Test @ts-ioc-container/react
         run: pnpm run test:react
 
+      - name: Build
+        run: pnpm run build:all
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          retention-days: 1
+          path: |
+            cjm
+            esm
+            typings
+            packages/react/cjm
+            packages/react/esm
+            packages/react/typings
+
   release:
-    needs: generate-report
+    needs: build
     environment:
       name: production
       url: https://www.npmjs.com/package/ts-ioc-container
@@ -88,10 +104,12 @@ jobs:
           npm --version
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm run ci
 
-      - name: Build
-        run: pnpm run build:all
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
 
       - name: Configure Git
         uses: ./.github/actions/configure-git

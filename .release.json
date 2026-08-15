@@ -1,6 +1,6 @@
 {
   "vcs": {
-    "template": "scripts/release/templates/release-commit-msg.hbs"
+    "template": "packages/scripts/release/templates/release-commit-msg.hbs"
   },
   "package-manager": {
     "kind": "pnpm"
