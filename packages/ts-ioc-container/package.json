@@ -1,0 +1,104 @@
+{
+  "name": "ts-ioc-container",
+  "version": "56.0.0",
+  "description": "Fast, lightweight TypeScript dependency injection container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "ibabkin <igba14@gmail.com>",
+  "homepage": "https://igorbabkin.github.io/ts-ioc-container",
+  "license": "ISC",
+  "sideEffects": false,
+  "main": "cjm/index.js",
+  "types": "typings/index.d.ts",
+  "module": "esm/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./typings/index.d.ts",
+        "default": "./esm/index.js"
+      },
+      "require": {
+        "types": "./typings/index.d.ts",
+        "default": "./cjm/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "dependency-injection",
+    "inversion-of-control",
+    "container",
+    "typescript",
+    "typescript-di",
+    "typescript-ioc",
+    "dependency-injection-container",
+    "ioc",
+    "di",
+    "ioc-container",
+    "tsyringe-alternative",
+    "inversify-alternative",
+    "awilix-alternative",
+    "clean-api",
+    "no-global-container",
+    "scope",
+    "scoped-dependencies",
+    "hook",
+    "lifecycle-hooks",
+    "decorators",
+    "lazy-injection",
+    "service-container",
+    "inject"
+  ],
+  "files": [
+    "cjm/**/*",
+    "esm/**/*",
+    "typings/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container",
+    "directory": "packages/ts-ioc-container"
+  },
+  "scripts": {
+    "build:cjm": "node ../scripts/build.mjs cjm",
+    "build:esm": "node ../scripts/build.mjs esm",
+    "build:types": "node ../scripts/build.mjs types",
+    "generate:docs": "../scripts/generate-readme/generate-readme.ts && git add README.md",
+    "build": "pnpm run build:cjm && pnpm run build:esm && pnpm run build:types",
+    "test": "vitest run",
+    "test:spec": "vitest run __tests__/specs",
+    "bench:spec": "vitest bench __benchmarks__/specs/*.bench.ts",
+    "test:coverage": "vitest run --coverage --coverage.reporter=lcov --maxWorkers=2",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\" \"__benchmarks__/**/*.ts\"",
+    "lint": "eslint lib/**/*.ts __tests__/**/*.ts __benchmarks__/**/*.ts",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "reflect-metadata": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.24",
+    "@types/node": "^25.5.2",
+    "@vitest/coverage-v8": "^4.1.2",
+    "moq.ts": "^10.0.8",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0",
+    "typescript": "5.8.3",
+    "unplugin-swc": "^1.5.9",
+    "vite": "^6.4.1",
+    "vitest": "^4.1.2"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
+}

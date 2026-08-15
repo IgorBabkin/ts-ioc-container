@@ -6,15 +6,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TypeScript IoC container library providing dependency injection with type safety, scoping, lifecycle hooks, and multiple injection strategies. Zero runtime dependencies (except `reflect-metadata`).
 
+The repo root is a pnpm workspace shell only — it has no `lib/` of its own and
+is never published (`private: true`, no `name` collision with the library).
 Uses **pnpm** workspaces:
-- Root: the library itself (`ts-ioc-container`)
+- `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `docs/`: Astro documentation site (separate, private workspace)
 
 Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
-— see [Release](#release) below. `docs` is `private: true` and never released.
+— see [Release](#release) below. `docs` and `packages/scripts` are `private: true`
+and never released.
+
+Root `package.json` scripts with no package suffix (`pnpm test`, `pnpm run
+lint`, `pnpm run build`, etc.) are thin proxies to `packages/ts-ioc-container`'s
+own scripts (`pnpm --filter ts-ioc-container run <script>`) — kept so the
+core library's commands don't require a package suffix, matching how it
+behaved before the extraction. Only add new root proxies for the core
+package this way; for every other package, call
+`pnpm --filter <package-name> run <script>` directly at the call site
+instead of growing root's script list further.
 
 ## Common Commands
 
@@ -68,6 +80,9 @@ default `[skip-ci]` marker (hyphenated, not recognized by GitHub Actions) with
 `publish.yml`.
 
 ## Architecture
+
+All `lib/`, `__tests__/`, and `__benchmarks__/` paths below are relative to
+`packages/ts-ioc-container/`, the core library's own directory.
 
 ### Container as Linked List
 
@@ -165,6 +180,8 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 Every function/method that can `throw` — directly, or indirectly via a method it calls (e.g. `Container.resolve` cascading into `EmptyContainer.resolve`) — gets a JSDoc comment with one `@throws {ErrorClass} condition` tag per distinct error type. See `lib/container/Container.ts`, `lib/container/EmptyContainer.ts`, `lib/provider/Provider.ts`, `lib/registration/Registration.ts`, `lib/hooks/HooksRunner.ts`, `lib/token/*.ts` for examples.
 
 ## Important File Conventions
+
+Paths below are relative to `packages/ts-ioc-container/` unless stated otherwise.
 
 - **Edit source only**: `lib/` — never `cjm/`, `esm/`, `typings/` (build outputs)
 - **README.md is generated**: edit `.readme.hbs.md`, then run `pnpm run generate:docs`
