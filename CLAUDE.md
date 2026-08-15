@@ -137,7 +137,7 @@ Every function/method that can `throw` — directly, or indirectly via a method 
 
 ## Git Conventions
 
-- **The main branch is `main`, not `master`.** Target `main` as the base for pull requests.
+- **The main branch is `main`, not `master`.** Target `main` as the base for pull requests, and always create new branches from `main` (`git checkout -b my-branch origin/main`) — never from `master`, which is a stale, protected, long-diverged branch. Do not trust a local `origin/HEAD` symref or tool-reported "main branch" hint without verifying against `gh repo view --json defaultBranchRef` or `git ls-remote --symref origin HEAD` first, since a stale local checkout can point `origin/HEAD` at `master`.
 
 ## Commit Message Conventions
 
