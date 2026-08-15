@@ -1,6 +1,6 @@
 {
   "name": "@ts-ioc-container/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React bindings for ts-ioc-container: a Scope component that maps container scopes onto the component tree, plus hooks to resolve from the surrounding scope.",
   "publishConfig": {
     "access": "public",
