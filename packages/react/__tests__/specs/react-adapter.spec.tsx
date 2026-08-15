@@ -13,7 +13,7 @@ import {
   SingleToken,
 } from 'ts-ioc-container';
 
-import { OutOfScopeError, Scope, ScopeContext, useResolveOrFail, useScopeOrFail } from '../../lib';
+import { OutOfScopeError, Scope, ScopeContext, useResolveOrFail, useScope, useScopeOrFail } from '../../lib';
 
 interface IGreeter {
   greet(): string;
@@ -248,6 +248,38 @@ describe('Spec: React adapter', () => {
           ),
         ),
       ).toThrowError(DependencyNotFoundError);
+    });
+  });
+
+  describe('Story: read the surrounding scope without throwing', () => {
+    it('returns the container put into ScopeContext from a component below it', () => {
+      const app = createApp();
+      let seen: IContainer | null = null;
+      const Probe = () => {
+        seen = useScope();
+        return null;
+      };
+
+      captureRender(
+        <Root container={app}>
+          <Probe />
+        </Root>,
+        () => seen,
+      );
+
+      expect(seen).toBe(app);
+    });
+
+    it('returns null when there is no surrounding scope', () => {
+      let seen: IContainer | null | undefined;
+      const Probe = () => {
+        seen = useScope();
+        return null;
+      };
+
+      captureRender(<Probe />, () => seen);
+
+      expect(seen).toBeNull();
     });
   });
 

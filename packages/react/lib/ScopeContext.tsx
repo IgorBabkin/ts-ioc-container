@@ -6,10 +6,17 @@ import { OutOfScopeError } from './OutOfScopeError';
 export const ScopeContext = createContext<IContainer | null>(null);
 
 /**
+ * Reads the surrounding scope, or `null` when there is no `ScopeContext.Provider` above the caller.
+ */
+export function useScope(): IContainer | null {
+  return useContext(ScopeContext);
+}
+
+/**
  * @throws {OutOfScopeError} when there is no `ScopeContext.Provider` above the caller.
  */
 export function useScopeOrFail(): IContainer {
-  const container = useContext(ScopeContext);
+  const container = useScope();
   if (!container) {
     throw new OutOfScopeError('useScopeOrFail must be called inside ScopeContext.Provider');
   }
