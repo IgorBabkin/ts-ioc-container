@@ -13,10 +13,11 @@ import {
   ProviderDisposedError,
   Registration as R,
   UnexpectedHookResultError,
+  UnsupportedTokenTypeError,
+  ContainerError,
   hook,
   HooksRunner,
 } from '../../lib';
-import { UnsupportedTokenTypeError } from '../../lib/errors/UnsupportedTokenTypeError';
 import { toToken } from '../../lib/token/toToken';
 
 describe('Spec: errors and boundaries', () => {
@@ -71,6 +72,14 @@ describe('Spec: errors and boundaries', () => {
     expect(() => new HooksRunner('asyncOnly').execute(worker, { scope: container })).toThrowError(
       UnexpectedHookResultError,
     );
+  });
+
+  it('lets a single catch block handle every container error', () => {
+    const container = new Container();
+
+    expect(() => container.resolve('MissingService')).toThrowError(ContainerError);
+    expect(() => toToken({} as never)).toThrowError(ContainerError);
+    expect(() => new ConstantToken('value').args('ignored')).toThrowError(ContainerError);
   });
 
   it('terminates parent lookup at the empty container boundary', () => {
