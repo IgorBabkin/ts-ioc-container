@@ -10,11 +10,11 @@ The repo root is a pnpm workspace shell only — it has no `lib/` of its own and
 is never published (`private: true`, no `name` collision with the library).
 Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
-- `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
+- `packages/react`: `ts-ioc-container-react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `docs/`: Astro documentation site (separate, private workspace)
 
-Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
+Both `ts-ioc-container` and `ts-ioc-container-react` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `docs` and `packages/scripts` are `private: true`
 and never released.
@@ -38,10 +38,10 @@ pnpm run lint:fix                # Auto-fix linting issues (core package)
 pnpm run build                   # Build all formats (CJS, ESM, types) for the core package
 pnpm run generate:docs           # Regenerate README.md from .readme.hbs.md
 
-pnpm run test:react              # Run @ts-ioc-container/react tests
-pnpm run type-check:react        # Type check @ts-ioc-container/react
-pnpm run lint:react              # Lint @ts-ioc-container/react
-pnpm run build:react             # Build @ts-ioc-container/react
+pnpm run test:react              # Run ts-ioc-container-react tests
+pnpm run type-check:react        # Type check ts-ioc-container-react
+pnpm run lint:react              # Lint ts-ioc-container-react
+pnpm run build:react             # Build ts-ioc-container-react
 
 pnpm run test:all                # Run tests for every released package
 pnpm run build:all               # Build every released package
@@ -60,7 +60,7 @@ steps in `.github/workflows/publish.yml` — one workflow step per pipeline step
 matching the tool's own README usage example (no wrapper script). It discovers
 packages via the `workspaces` field in the root `package.json` (not
 `pnpm-workspace.yaml`, which is only for `pnpm install`), and matches commit
-scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
+scopes to package `name`s exactly — e.g. `feat(ts-ioc-container-react): ...`
 or `feat(ts-ioc-container): ...`.
 
 To preview a release locally without mutating anything, run the same steps by
@@ -212,11 +212,11 @@ the type/scope) → major bump
 package by comparing the commit's parenthetical **scope** against that
 package's `name` field **exactly** — not a substring, not a free-form label.
 A release-triggering commit must scope to `ts-ioc-container` or
-`@ts-ioc-container/react`:
+`ts-ioc-container-react`:
 
 ```
 feat(ts-ioc-container): add X
-fix(@ts-ioc-container/react): correct Y
+fix(ts-ioc-container-react): correct Y
 ```
 
 A commit scoped to anything else (`feat(hooks): ...`, `fix(docs): ...`) —
