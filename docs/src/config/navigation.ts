@@ -9,7 +9,7 @@ export { isNavigationGroup };
 
 export const navigation: NavigationItem[] = [
   { title: "Overview", href: "/ts-ioc-container/" },
-{ title: "Dependency & Scope", href: "/ts-ioc-container/container" },
+  { title: "Dependency & Scope", href: "/ts-ioc-container/container" },
   { title: "Dependency Registration", href: "/ts-ioc-container/registration" },
   { title: "Provider Behavior", href: "/ts-ioc-container/provider" },
   { title: "Pipes", href: "/ts-ioc-container/pipes" },

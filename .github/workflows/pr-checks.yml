@@ -44,13 +44,16 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm run ci
 
       - name: Lint
         run: pnpm run lint
 
       - name: Type check
         run: pnpm run type-check
+
+      - name: Format check
+        run: pnpm run format:check
 
       - name: Test
         run: pnpm test --maxWorkers=2
@@ -61,5 +64,14 @@ jobs:
       - name: Type check @ts-ioc-container/react
         run: pnpm run type-check:react
 
+      - name: Format check @ts-ioc-container/react
+        run: pnpm --filter @ts-ioc-container/react run format:check
+
       - name: Test @ts-ioc-container/react
         run: pnpm run test:react
+
+      - name: Lint docs
+        run: pnpm --filter ts-ioc-container-docs run lint
+
+      - name: Format check docs
+        run: pnpm --filter ts-ioc-container-docs run format:check

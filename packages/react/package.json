@@ -56,7 +56,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage --coverage.reporter=lcov",
     "type-check": "tsc --noEmit",
-    "lint": "eslint lib/**/*.tsx lib/**/*.ts __tests__/**/*.tsx"
+    "lint": "eslint lib/**/*.tsx lib/**/*.ts __tests__/**/*.tsx",
+    "format:check": "prettier --check \"lib/**/*.ts\" \"lib/**/*.tsx\" \"__tests__/**/*.tsx\""
   },
   "peerDependencies": {
     "react": ">=18",
