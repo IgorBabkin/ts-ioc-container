@@ -51,6 +51,7 @@ export {
 export { Registration } from './registration/Registration';
 
 // Errors
+export { ContainerError } from './errors/ContainerError';
 export { DependencyNotFoundError } from './errors/DependencyNotFoundError';
 export { ContainerNotFoundError } from './errors/ContainerNotFoundError';
 export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
@@ -59,6 +60,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { ProviderDisposedError } from './errors/ProviderDisposedError';
 export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwiceError';
+export { UnsupportedTokenTypeError } from './errors/UnsupportedTokenTypeError';
 
 // Hooks
 export {
