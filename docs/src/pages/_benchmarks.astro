@@ -2,7 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const benchmarkModules = import.meta.glob(
-  "../../../__benchmarks__/specs/*.benchmark.ts",
+  "../../../packages/ts-ioc-container/__benchmarks__/specs/*.benchmark.ts",
 );
 const availableSpecs = Object.keys(benchmarkModules)
   .map((path) =>
@@ -135,7 +135,7 @@ const defaultBenchmark = benchmarkGroups.some(
     import "reflect-metadata";
 
     const modules = import.meta.glob(
-      "../../../__benchmarks__/specs/*.benchmark.ts",
+      "../../../packages/ts-ioc-container/__benchmarks__/specs/*.benchmark.ts",
     );
     const moduleByPrefix = new Map(
       Object.entries(modules).map(([path, loader]) => [
