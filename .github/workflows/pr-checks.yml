@@ -69,9 +69,3 @@ jobs:
 
       - name: Test ts-ioc-container-react
         run: pnpm run test:react
-
-      - name: Lint docs
-        run: pnpm --filter ts-ioc-container-docs run lint
-
-      - name: Format check docs
-        run: pnpm --filter ts-ioc-container-docs run format:check

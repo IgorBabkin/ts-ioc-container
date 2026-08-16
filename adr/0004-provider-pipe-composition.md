@@ -83,4 +83,3 @@ are not class instances.
 - `lib/provider/Provider.ts`
 - `lib/registration/IRegistration.ts`
 - `lib/errors/CannonSingletonApplyError.ts`
-- `docs/src/pages/pipes.mdx`

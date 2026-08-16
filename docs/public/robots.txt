@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://igorbabkin.github.io/ts-ioc-container/sitemap-index.xml

@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Core library code lives in `lib/`, organized by concern: `container/`, `provider/`, `injector/`, `registration/`, `token/`, `hooks/`, and `errors/`. Product-facing behavior specs live in `specs/`; architectural decisions live in `docs/adr/`. Tests live in `__tests__/`: `__tests__/specs/` contains executable acceptance specs, `__tests__/readme/` contains executable documentation examples, and the remaining folders generally mirror the source layout (for example `lib/injector/` maps to `__tests__/injector/`). Supporting scripts are in `scripts/`, and the Astro documentation site is the `docs/` workspace. Treat `cjm/`, `esm/`, and `typings/` as build outputs, not source files.
+Core library code lives in `lib/`, organized by concern: `container/`, `provider/`, `injector/`, `registration/`, `token/`, `hooks/`, and `errors/`. Product-facing behavior specs live in `specs/`; architectural decisions live in `adr/`. Tests live in `__tests__/`: `__tests__/specs/` contains executable acceptance specs, `__tests__/readme/` contains executable documentation examples, and the remaining folders generally mirror the source layout (for example `lib/injector/` maps to `__tests__/injector/`). Supporting scripts are in `scripts/`. Treat `cjm/`, `esm/`, and `typings/` as build outputs, not source files.
 
 ## Build, Test, and Development Commands
 
@@ -14,7 +14,6 @@ Core library code lives in `lib/`, organized by concern: `container/`, `provider
 - `pnpm run type-check`: run strict TypeScript checks without emitting files.
 - `pnpm run lint`: lint `lib/`, `__tests__/`, and `scripts/`.
 - `pnpm run format`: format TypeScript files with Prettier.
-- `pnpm run docs:dev`: start the docs workspace locally.
 - `pnpm exec vitest run __tests__/container/IocContainer.spec.ts`: run a single test file.
 
 ## Coding Style & Naming Conventions
@@ -27,7 +26,7 @@ Vitest is the test runner. Add public behavior coverage in `__tests__/specs/` wh
 
 ## Commit & Pull Request Guidelines
 
-Commits follow conventional commits with a required lowercase scope, for example `feat(container): add hasRegistration` or `test(token): cover alias resolution`. Valid scopes include `container`, `provider`, `registration`, `injector`, `hooks`, `token`, `errors`, `config`, `github`, and `release`. Keep subjects under 100 characters. PRs should include a clear summary, linked issue if applicable, and notes on tests run. Include screenshots only for `docs/` UI changes.
+Commits follow conventional commits with a required lowercase scope, for example `feat(container): add hasRegistration` or `test(token): cover alias resolution`. Valid scopes include `container`, `provider`, `registration`, `injector`, `hooks`, `token`, `errors`, `config`, `github`, and `release`. Keep subjects under 100 characters. PRs should include a clear summary, linked issue if applicable, and notes on tests run.
 
 ## Documentation & Generated Files
 

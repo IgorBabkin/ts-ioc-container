@@ -9,7 +9,7 @@ This is a TypeScript Inversion of Control (IoC) container library. The project p
 - `cjm/` - Compiled CommonJS output
 - `esm/` - Compiled ES Module output
 - `typings/` - TypeScript declaration files
-- `docs/` - Astro-based documentation site (separate project with its own configs)
+- `adr/` - Architecture decision records (plain markdown)
 
 ## Code Style & Conventions
 - Use TypeScript with strict typing
@@ -38,9 +38,8 @@ This is a TypeScript Inversion of Control (IoC) container library. The project p
 ## Documentation
 - **Original README file**: `.readme.hbs.md` - This is the source file that should be edited
 - **Generated README**: `README.md` - This is auto-generated from `.readme.hbs.md` (do not edit directly)
-- Documentation site is in `docs/` (Astro project)
-- Docs have separate ESLint/Prettier configs (Astro-specific)
-- Root ESLint ignores `docs/**` directory
+- Architecture decision records live in `adr/` (plain markdown, not built or published)
+- There is no documentation site in this repo
 
 ## Key Concepts
 - **Container**: Main IoC container managing registrations and resolutions. Container contains scopes, registrations, providers and instances. It's a linked list with reference to parent scope. Like linked list with "previous" reference.
