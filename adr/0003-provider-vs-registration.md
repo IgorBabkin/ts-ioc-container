@@ -76,5 +76,3 @@ have been applied.
 - `lib/provider/Provider.ts`
 - `lib/registration/IRegistration.ts`
 - `lib/registration/Registration.ts`
-- `docs/src/pages/provider.mdx`
-- `docs/src/pages/registration.mdx`

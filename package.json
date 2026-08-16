@@ -1,7 +1,7 @@
 {
   "name": "root",
   "private": true,
-  "//workspaces": "Read by release-monorepo-semantically to discover releasable packages. pnpm itself uses pnpm-workspace.yaml. Private packages (docs, scripts) are never released.",
+  "//workspaces": "Read by release-monorepo-semantically to discover releasable packages. pnpm itself uses pnpm-workspace.yaml. Private packages (scripts) are never released.",
   "workspaces": [
     "packages/*"
   ],
@@ -30,11 +30,7 @@
     "lint:react": "pnpm --filter ts-ioc-container-react run lint",
     "build:react": "pnpm --filter ts-ioc-container-react run build",
     "test:all": "pnpm test && pnpm run test:react",
-    "build:all": "pnpm run build && pnpm run build:react",
-    "docs:dev": "pnpm --filter ts-ioc-container-docs run dev",
-    "docs:serve": "pnpm --filter ts-ioc-container-docs run dev",
-    "docs:build": "pnpm --filter ts-ioc-container-docs run build",
-    "docs:preview": "pnpm --filter ts-ioc-container-docs run preview"
+    "build:all": "pnpm run build && pnpm run build:react"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
@@ -51,7 +47,6 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "3.5.3",
-    "prettier-plugin-astro": "^0.14.1",
     "release-monorepo-semantically": "1.9.2",
     "tsx": "^4.21.0",
     "typescript": "5.8.3"
@@ -60,12 +55,6 @@
     "*.{js,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
-    ],
-    "docs/**/*.{js,ts,tsx,mjs,astro}": [
-      "prettier --write"
-    ],
-    "docs/**/*.astro": [
-      "eslint --fix"
     ]
   },
   "config": {

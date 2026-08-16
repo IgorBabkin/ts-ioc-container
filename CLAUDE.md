@@ -12,12 +12,16 @@ Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
 - `packages/react`: `ts-ioc-container-react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
-- `docs/`: Astro documentation site (separate, private workspace)
+- `adr/`: architecture decision records (plain markdown, not built or published)
 
 Both `ts-ioc-container` and `ts-ioc-container-react` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
-— see [Release](#release) below. `docs` and `packages/scripts` are `private: true`
+— see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
+
+There is no documentation site in this repo. The Astro site that used to live
+in `docs/` was removed; the only generated doc is the core package's
+`README.md` (see `pnpm run generate:docs` below).
 
 Root `package.json` scripts with no package suffix (`pnpm test`, `pnpm run
 lint`, `pnpm run build`, etc.) are thin proxies to `packages/ts-ioc-container`'s
@@ -48,8 +52,6 @@ pnpm run build:all               # Build every released package
 
 pnpm exec vitest run __tests__/path/to/test.spec.ts   # Run a single test file (from the package's own directory)
 pnpm exec vitest -t "test name pattern"                # Run tests matching pattern
-
-pnpm --filter ts-ioc-container-docs run build   # Build docs site
 ```
 
 ## Release
@@ -226,7 +228,6 @@ including the free-form, feature-area scopes this repo used historically —
 scope, or none, since they never trigger a release regardless of scope.
 
 ### Special rules
-- Documentation site changes (`docs/src/pages/`): **always** `docs(pages):` — never `fix(docs):` or `feat(docs):`
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)
 
 **Before committing**: ask "should this trigger a package release?" If so, scope

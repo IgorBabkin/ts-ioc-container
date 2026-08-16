@@ -43,9 +43,6 @@ export default {
         'errors',
         'metadata',
 
-        // Documentation scopes
-        'pages', // Documentation site pages (in docs/src/pages/)
-
         // CI/CD scopes
         'github', // GitHub workflows
         'perf', // CI performance improvements (use with ci: type)

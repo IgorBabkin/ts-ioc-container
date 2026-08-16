@@ -64,4 +64,3 @@ behavior test first, implement, then refactor.
 - `__tests__/specs/`
 - `__tests__/readme/`
 - `.readme.hbs.md`
-- `docs/src/pages/spec-driven.mdx`

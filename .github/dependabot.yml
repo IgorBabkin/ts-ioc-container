@@ -4,9 +4,3 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    ignore:
-      # @astrojs/sitemap >= 3.6.1 requires Astro 5 (see docs/package.json).
-      # Dependabot bumped it to 3.7.x and broke the docs deploy; hold it back
-      # until the docs site moves to Astro 5.
-      - dependency-name: "@astrojs/sitemap"
-        versions: [">=3.6.1"]

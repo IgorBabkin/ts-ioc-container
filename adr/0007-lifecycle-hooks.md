@@ -74,4 +74,3 @@ optional exception handler instead of failing `resolve`.
 - `lib/hooks/onConstructAsync.ts`
 - `lib/hooks/onContainerDisposed.ts`
 - `lib/hooks/HookContext.ts`
-- `docs/src/pages/hooks.mdx`

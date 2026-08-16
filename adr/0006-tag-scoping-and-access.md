@@ -65,6 +65,3 @@ the provider is stored.
 - `lib/container/Container.ts`
 - `lib/registration/IRegistration.ts`
 - `lib/provider/IProvider.ts`
-- `docs/src/assets/diagrams/cross-scope-dependency-injection.mermaid`
-- `docs/src/pages/container.mdx`
-- `docs/src/pages/pipes.mdx`
