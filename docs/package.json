@@ -3,6 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
+  "//@astrojs/sitemap": "Pinned to the last Astro 4 compatible release. From 3.6.1 on the integration collects routes via the `astro:routes:resolved` hook, which only exists in Astro 5 — under Astro 4 its route list stays undefined and `astro build` dies in `astro:build:done` with `Cannot read properties of undefined (reading 'reduce')`. Unpin only together with the Astro 5 upgrade.",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -17,7 +18,7 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^3.0.1",
-    "@astrojs/sitemap": "3.7.3",
+    "@astrojs/sitemap": "3.6.0",
     "@popperjs/core": "^2.11.8",
     "@sentry/astro": "^10.29.0",
     "@spotlightjs/astro": "^3.2.6",
