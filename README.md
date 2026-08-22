@@ -2166,6 +2166,8 @@ Registration is provider factory which registers provider in container.
 
 Use `bindTo(key)` to register a provider under a specific key. By default the key is the class name. Multiple registrations can share the same key.
 
+A plain `DependencyKey` (`string` / `symbol`) or an `InjectionToken` that implements `BindToken` (`SingleToken`, `SingleAliasToken`, `GroupAliasToken`) can also be passed directly to `@register(...)` — it binds under the hood exactly like `bindTo(...)`, so `@register('ILogger')` / `@register(LoggerToken)` and `@register(bindTo('ILogger'))` / `@register(bindTo(LoggerToken))` are equivalent.
+
 > [!TIP]
 > Prefer `SingleToken<T>` over plain string literals as registration keys. Tokens are type-safe, rename-friendly, and prevent typos that only surface at runtime.
 
@@ -2178,6 +2180,7 @@ import {
   Registration as R,
   scope,
   select as s,
+  SingleToken,
   singleton,
 } from 'ts-ioc-container';
 
@@ -2237,6 +2240,28 @@ describe('Registration module', function () {
     const appContainer = createAppContainer().addRegistration(R.fromClass(FileLogger));
 
     expect(appContainer.resolve('FileLogger')).toBeInstanceOf(FileLogger);
+  });
+
+  it('should register directly from a token passed to @register, without wrapping it in bindTo()', function () {
+    // Passing an InjectionToken straight to @register binds to it under the hood
+    const LoggerToken = new SingleToken<FileLogger>('ILogger');
+
+    @register(LoggerToken, singleton())
+    class FileLogger {}
+
+    const appContainer = createAppContainer().addRegistration(R.fromClass(FileLogger));
+
+    expect(LoggerToken.resolve(appContainer)).toBeInstanceOf(FileLogger);
+  });
+
+  it('should register directly from a plain key passed to @register, without wrapping it in bindTo()', function () {
+    // A plain DependencyKey straight in @register binds to it under the hood
+    @register('PlainLogger')
+    class Logger {}
+
+    const appContainer = createAppContainer().addRegistration(R.fromClass(Logger));
+
+    expect(appContainer.resolve('PlainLogger')).toBeInstanceOf(Logger);
   });
 
   it('should register with multiple keys using aliases', function () {

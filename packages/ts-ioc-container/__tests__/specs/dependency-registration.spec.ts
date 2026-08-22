@@ -6,6 +6,7 @@ import {
   register,
   Registration as R,
   scope,
+  SingleToken,
   toGroupAlias,
   toSingleAlias,
 } from '../../lib';
@@ -56,6 +57,34 @@ describe('Spec: dependency registration', () => {
     expect(container.resolve<Notifier>('EmailNotifier').channel).toBe('email');
     expect(SingleNotifier.resolve(container).channel).toBe('email');
     expect(NotifierGroup.resolve(container).map((notifier) => notifier.channel)).toEqual(['email', 'sms']);
+  });
+
+  it('binds directly to an injection token passed to @register, without wrapping it in bindTo()', () => {
+    const LoggerToken = new SingleToken<Logger>('ILogger');
+
+    interface Logger {
+      log(msg: string): void;
+    }
+
+    @register(LoggerToken)
+    class ConsoleLogger implements Logger {
+      log(msg: string) {
+        return msg;
+      }
+    }
+
+    const container = new Container().addRegistration(R.fromClass(ConsoleLogger));
+
+    expect(LoggerToken.resolve(container)).toBeInstanceOf(ConsoleLogger);
+  });
+
+  it('binds directly to a plain DependencyKey passed to @register, without wrapping it in bindTo()', () => {
+    @register('PlainKeyLogger')
+    class ConsoleLogger {}
+
+    const container = new Container().addRegistration(R.fromClass(ConsoleLogger));
+
+    expect(container.resolve('PlainKeyLogger')).toBeInstanceOf(ConsoleLogger);
   });
 
   it('applies decorator mappers and default class-name keys', () => {
