@@ -6,6 +6,7 @@ import {
   Registration as R,
   scope,
   select as s,
+  SingleToken,
   singleton,
 } from '../../lib';
 
@@ -65,6 +66,18 @@ describe('Registration module', function () {
     const appContainer = createAppContainer().addRegistration(R.fromClass(FileLogger));
 
     expect(appContainer.resolve('FileLogger')).toBeInstanceOf(FileLogger);
+  });
+
+  it('should register directly from a token passed to @register, without wrapping it in bindTo()', function () {
+    // Passing an InjectionToken straight to @register binds to it under the hood
+    const LoggerToken = new SingleToken<FileLogger>('ILogger');
+
+    @register(LoggerToken, singleton())
+    class FileLogger {}
+
+    const appContainer = createAppContainer().addRegistration(R.fromClass(FileLogger));
+
+    expect(LoggerToken.resolve(appContainer)).toBeInstanceOf(FileLogger);
   });
 
   it('should register with multiple keys using aliases', function () {

@@ -42,11 +42,13 @@ const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getClassMeta<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>) =>
+export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe | BindToken>) =>
   addClassMeta(METADATA_KEY, (acc: MapFn<IRegistration>[] | undefined) => {
-    const result = mappers.map((m) =>
-      isProviderPipe(m) ? (r: IRegistration) => m.mapRegistration(r) : m,
-    ) as MapFn<IRegistration>[];
+    const result = mappers.map((m) => {
+      if (isProviderPipe(m)) return (r: IRegistration) => m.mapRegistration(r);
+      if (isBindToken(m)) return bindTo(m);
+      return m;
+    }) as MapFn<IRegistration>[];
     return acc ? [...result, ...acc] : result;
   });
 
