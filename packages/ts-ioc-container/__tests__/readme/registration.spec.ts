@@ -80,6 +80,16 @@ describe('Registration module', function () {
     expect(LoggerToken.resolve(appContainer)).toBeInstanceOf(FileLogger);
   });
 
+  it('should register directly from a plain key passed to @register, without wrapping it in bindTo()', function () {
+    // A plain DependencyKey straight in @register binds to it under the hood
+    @register('PlainLogger')
+    class Logger {}
+
+    const appContainer = createAppContainer().addRegistration(R.fromClass(Logger));
+
+    expect(appContainer.resolve('PlainLogger')).toBeInstanceOf(Logger);
+  });
+
   it('should register with multiple keys using aliases', function () {
     // Same service accessible via direct key and alias
     @register(bindTo('ILogger'), bindTo(s.alias('Logger')), singleton())

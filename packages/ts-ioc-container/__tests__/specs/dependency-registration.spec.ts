@@ -78,6 +78,15 @@ describe('Spec: dependency registration', () => {
     expect(LoggerToken.resolve(container)).toBeInstanceOf(ConsoleLogger);
   });
 
+  it('binds directly to a plain DependencyKey passed to @register, without wrapping it in bindTo()', () => {
+    @register('PlainKeyLogger')
+    class ConsoleLogger {}
+
+    const container = new Container().addRegistration(R.fromClass(ConsoleLogger));
+
+    expect(container.resolve('PlainKeyLogger')).toBeInstanceOf(ConsoleLogger);
+  });
+
   it('applies decorator mappers and default class-name keys', () => {
     @register()
     class DefaultPlugin {
