@@ -10,14 +10,20 @@ The repo root is a pnpm workspace shell only — it has no `lib/` of its own and
 is never published (`private: true`, no `name` collision with the library).
 Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
-- `packages/react`: `ts-ioc-container-react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
+- `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `adr/`: architecture decision records (plain markdown, not built or published)
 
-Both `ts-ioc-container` and `ts-ioc-container-react` are released independently by
+Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
+
+`@ts-ioc-container/react` is **scoped**, so publishing it requires ownership of
+the `ts-ioc-container` npm org and `publishConfig.access: "public"` (scoped
+packages default to restricted). Publishing under a scope you do not own fails
+with a **404** — npm masks unauthorized scope access as not-found, so a 404 on
+publish means "check org ownership", not "bad version".
 
 There is no documentation site in this repo. The Astro site that used to live
 in `docs/` was removed; the only generated doc is the core package's
@@ -42,10 +48,10 @@ pnpm run lint:fix                # Auto-fix linting issues (core package)
 pnpm run build                   # Build all formats (CJS, ESM, types) for the core package
 pnpm run generate:docs           # Regenerate README.md from .readme.hbs.md
 
-pnpm run test:react              # Run ts-ioc-container-react tests
-pnpm run type-check:react        # Type check ts-ioc-container-react
-pnpm run lint:react              # Lint ts-ioc-container-react
-pnpm run build:react             # Build ts-ioc-container-react
+pnpm run test:react              # Run @ts-ioc-container/react tests
+pnpm run type-check:react        # Type check @ts-ioc-container/react
+pnpm run lint:react              # Lint @ts-ioc-container/react
+pnpm run build:react             # Build @ts-ioc-container/react
 
 pnpm run test:all                # Run tests for every released package
 pnpm run build:all               # Build every released package
@@ -62,7 +68,7 @@ steps in `.github/workflows/publish.yml` — one workflow step per pipeline step
 matching the tool's own README usage example (no wrapper script). It discovers
 packages via the `workspaces` field in the root `package.json` (not
 `pnpm-workspace.yaml`, which is only for `pnpm install`), and matches commit
-scopes to package `name`s exactly — e.g. `feat(ts-ioc-container-react): ...`
+scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
 or `feat(ts-ioc-container): ...`.
 
 To preview a release locally without mutating anything, run the same steps by
@@ -74,6 +80,37 @@ The root `.npmrc` sets `workspaces-update=false`. Without it, `pnpm version`
 as an npm/yarn-workspaces marker and silently runs `npm install` to reconcile
 `package-lock.json` — undesirable and slow in this pnpm-only repo. Don't remove
 that setting without re-checking for that side effect.
+
+### npm authentication (Trusted Publishing / OIDC)
+
+Publishing uses **Trusted Publishing (OIDC)** — there is no npm token in CI.
+The trusted publisher is configured **per npm package**, not per repository, so
+each released package needs its own entry pointing at
+`IgorBabkin/ts-ioc-container` → `publish.yml` → the `production` environment.
+
+**OIDC cannot create a package that does not yet exist on npm.** npm's UI only
+lets you configure a trusted publisher on an existing package, so the *first*
+publish of any new package must be done manually (or with a token); every
+release after that can go through OIDC. See
+<https://github.com/npm/cli/issues/8544>.
+
+This is what a mid-pipeline `ENEEDAUTH` means: the packages ahead of it in
+`publishAllPackages` published fine, and the one that failed simply has no
+trusted publisher yet — check the npm publish timestamps against the CI failure
+time before assuming the auth setup is broken.
+
+### Known `release-monorepo-semantically` defects
+
+The `package-json` step writes internal dependency versions into a
+**`dependencies`** block, even when the package already declares that
+dependency as a `peerDependency`. For `@ts-ioc-container/react` that produced a
+`dependencies` entry pinning `ts-ioc-container` exactly, alongside the
+`peerDependencies` range and a *different* `devDependencies` pin — which would
+ship consumers a second copy of the container and break instance identity.
+It also does not refresh `pnpm-lock.yaml` after rewriting those versions, so
+the next `pnpm install --frozen-lockfile` on `main` fails with
+`ERR_PNPM_OUTDATED_LOCKFILE`. Check `packages/react/package.json` after a
+release until this is fixed upstream.
 
 The release commit template lives at
 `packages/scripts/release/templates/release-commit-msg.hbs` — it overrides the tool's
@@ -214,11 +251,11 @@ the type/scope) → major bump
 package by comparing the commit's parenthetical **scope** against that
 package's `name` field **exactly** — not a substring, not a free-form label.
 A release-triggering commit must scope to `ts-ioc-container` or
-`ts-ioc-container-react`:
+`@ts-ioc-container/react`:
 
 ```
 feat(ts-ioc-container): add X
-fix(ts-ioc-container-react): correct Y
+fix(@ts-ioc-container/react): correct Y
 ```
 
 A commit scoped to anything else (`feat(hooks): ...`, `fix(docs): ...`) —

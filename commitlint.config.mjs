@@ -31,7 +31,7 @@ export default {
         // package.json `name` field exactly, so a feat/fix/perf commit must
         // use one of these two to trigger a release for that package.
         'ts-ioc-container',
-        'ts-ioc-container-react',
+        '@ts-ioc-container/react',
 
         // Core library scopes
         'container',
