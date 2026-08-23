@@ -1,5 +1,5 @@
 {
-  "name": "ts-ioc-container-react",
+  "name": "@ts-ioc-container/react",
   "version": "0.3.0",
   "description": "React bindings for ts-ioc-container: a Scope component that maps container scopes onto the component tree, plus hooks to resolve from the surrounding scope.",
   "publishConfig": {
@@ -78,8 +78,5 @@
   },
   "engines": {
     "node": ">= 18"
-  },
-  "dependencies": {
-    "ts-ioc-container": "56.1.0"
   }
 }
