@@ -84,8 +84,8 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2
       ts-ioc-container:
-        specifier: 56.0.0
-        version: 56.0.0(reflect-metadata@0.2.2)
+        specifier: 56.1.1
+        version: 56.1.1(reflect-metadata@0.2.2)
       typescript:
         specifier: 5.8.3
         version: 5.8.3
@@ -2508,6 +2508,15 @@ packages:
 
   ts-ioc-container@56.0.0:
     resolution: {integrity: sha512-yti2q7u22mSpTTp3AEaoBVHhO1WVNmoYThKpgIf5FrsNLTfoNyrx0d8EMdCcIPEIHYheNcnRNJm6BAliZGF8MQ==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      reflect-metadata: ^0.2.0
+    peerDependenciesMeta:
+      reflect-metadata:
+        optional: true
+
+  ts-ioc-container@56.1.1:
+    resolution: {integrity: sha512-Z6mpBf7Ps0I30tzvkG5Sl5S2woyPSF4Od5d2F4kyo0xq41NWyAl/eYB4q7L13EXF0xs6eHSWGZ7aEPKSyMVJLQ==}
     engines: {node: '>= 18'}
     peerDependencies:
       reflect-metadata: ^0.2.0
@@ -4999,6 +5008,10 @@ snapshots:
       typescript: 5.8.3
 
   ts-ioc-container@56.0.0(reflect-metadata@0.2.2):
+    optionalDependencies:
+      reflect-metadata: 0.2.2
+
+  ts-ioc-container@56.1.1(reflect-metadata@0.2.2):
     optionalDependencies:
       reflect-metadata: 0.2.2
 
