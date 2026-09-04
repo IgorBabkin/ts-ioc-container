@@ -99,6 +99,9 @@ jobs:
       - name: Download build artifacts
         uses: ./.github/actions/download-build-artifacts
 
+      - name: Verify package contents
+        run: pnpm run verify:package-contents
+
       - name: Configure Git
         uses: ./.github/actions/configure-git
 

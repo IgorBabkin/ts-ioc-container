@@ -8,3 +8,12 @@ runs:
       uses: actions/download-artifact@v4
       with:
         name: build-output
+
+    # Paths inside the tarball are repo-root relative, so this puts every
+    # package's cjm/esm/typings back exactly where its `files` globs expect it.
+    - name: Extract build output
+      shell: bash
+      run: |
+        set -euo pipefail
+        tar -xzf build-output.tar.gz
+        rm build-output.tar.gz
