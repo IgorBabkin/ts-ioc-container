@@ -16,42 +16,12 @@ inputs:
 runs:
   using: composite
   steps:
-    # A typo'd mode would otherwise match no step and pass silently.
-    - name: Validate mode
+    # Everything, mode validation included, lives in the Makefile next to this
+    # file so it can be run and debugged locally — see this action's README.
+    - name: Archive
       shell: bash
       env:
         MODE: ${{ inputs.mode }}
-      run: |
-        set -euo pipefail
-        case "$MODE" in
-          archive | unarchive) ;;
-          *)
-            echo "::error::archive: unknown mode '$MODE' (expected 'archive' or 'unarchive')" >&2
-            exit 1
-            ;;
-        esac
-
-    - name: Archive
-      if: inputs.mode == 'archive'
-      shell: bash
-      env:
         FILE: ${{ inputs.file }}
         PATHS: ${{ inputs.paths }}
-      run: |
-        set -euo pipefail
-        mapfile -t entries < <(printf '%s\n' "$PATHS" | sed '/^[[:space:]]*$/d')
-        if [ "${#entries[@]}" -eq 0 ]; then
-          echo "::error::archive: mode 'archive' requires at least one path" >&2
-          exit 1
-        fi
-        tar -czf "$FILE" -- "${entries[@]}"
-
-    - name: Unarchive
-      if: inputs.mode == 'unarchive'
-      shell: bash
-      env:
-        FILE: ${{ inputs.file }}
-      run: |
-        set -euo pipefail
-        tar -xzf "$FILE"
-        rm "$FILE"
+      run: make --no-print-directory -f "${{ github.action_path }}/Makefile" run
