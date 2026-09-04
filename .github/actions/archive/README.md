@@ -8,8 +8,9 @@ Used by [`build-artifacts`](../build-artifacts/action.yml) so that
 no least-common-ancestor to compute, and the paths stored inside the tarball
 are the only thing deciding where the output lands on download.
 
-The logic lives in the repository's root [`Makefile`](../../../Makefile); this
-action is a thin wrapper that passes its inputs to `make run` as arguments.
+The work lives in the repository's root [`Makefile`](../../../Makefile) as an
+`archive` and an `unarchive` target. This action validates `mode`, then calls
+the matching target with its inputs as arguments.
 
 ## Usage in Workflow
 
@@ -53,13 +54,7 @@ make archive FILE=build-output.tar.gz \
 make unarchive FILE=build-output.tar.gz
 ```
 
-`run` is the entry point the action uses; it validates `MODE` and dispatches:
-
-```bash
-make run MODE=archive FILE=out.tar.gz PATHS=lib
-```
-
-Or get help (also the default target):
+Get help (also the default target):
 
 ```bash
 make help
@@ -68,5 +63,5 @@ make help
 ## Files
 
 - `action.yml` - GitHub Action definition
-- [`../../../Makefile`](../../../Makefile) - archive/unarchive logic and mode validation
+- [`../../../Makefile`](../../../Makefile) - the `archive` and `unarchive` scripts
 - `README.md` - This file

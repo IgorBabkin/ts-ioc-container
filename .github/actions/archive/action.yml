@@ -16,8 +16,9 @@ inputs:
 runs:
   using: composite
   steps:
-    # Everything, mode validation included, lives in the repository's root
-    # Makefile, so the same command runs by hand — see this action's README.
+    # `mode` selects one of the repository root Makefile's targets, which hold
+    # the actual work. Validating it here keeps the error legible: an unchecked
+    # typo would surface as make's own "no rule to make target" instead.
     #
     # The inputs reach the shell as environment variables and are handed to
     # make as explicit arguments: every make target is a function of what it
@@ -30,5 +31,12 @@ runs:
         FILE: ${{ inputs.file }}
         PATHS: ${{ inputs.paths }}
       run: |
-        make -C "$GITHUB_WORKSPACE" --no-print-directory run \
-          MODE="$MODE" FILE="$FILE" PATHS="$PATHS"
+        case "$MODE" in
+          archive | unarchive) ;;
+          *)
+            echo "::error::archive: unknown mode '$MODE' (expected 'archive' or 'unarchive')" >&2
+            exit 1
+            ;;
+        esac
+        make -C "$GITHUB_WORKSPACE" --no-print-directory "$MODE" \
+          FILE="$FILE" PATHS="$PATHS"
