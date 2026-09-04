@@ -86,7 +86,7 @@ for (const dir of packageDirs) {
 if (failures.length > 0) {
   console.error('\nRefusing to publish — build output is missing from the package tarball:');
   for (const failure of failures) console.error(`  - ${failure}`);
-  console.error('\nThe build runs in a separate job: check that upload/download-build-artifacts');
+  console.error('\nThe build runs in a separate job: check that the build-artifacts action');
   console.error('restored packages/<pkg>/{cjm,esm,typings} before this step.');
   process.exit(1);
 }

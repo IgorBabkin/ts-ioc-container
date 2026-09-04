@@ -1,0 +1,75 @@
+name: Build artifacts
+description: Uploads or restores the built cjm/esm/typings output for every released package
+
+inputs:
+  mode:
+    description: '`upload` to publish the build output as an artifact, `download` to restore it'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # A typo'd mode would otherwise match no step and pass silently — the exact
+    # shape of failure that let an empty package reach npm in the first place.
+    - name: Validate mode
+      shell: bash
+      env:
+        MODE: ${{ inputs.mode }}
+      run: |
+        set -euo pipefail
+        case "$MODE" in
+          upload | download) ;;
+          *)
+            echo "::error::build-artifacts: unknown mode '$MODE' (expected 'upload' or 'download')" >&2
+            exit 1
+            ;;
+        esac
+
+    # The output is packed into one tarball first, and that tarball — not the
+    # directories — is what actions/upload-artifact sees.
+    #
+    # upload-artifact roots an artifact at the least common ancestor of the
+    # paths it is given, and download-artifact unpacks that artifact relative
+    # to the workspace. Handing it the six package directories directly made
+    # that root `packages/`, so the download restored them to `ts-ioc-container/cjm`
+    # and `react/cjm` at the repo root instead of `packages/<pkg>/cjm` — leaving
+    # every `files` glob in the packages unmatched and publishing tarballs that
+    # held nothing but package.json, README.md and LICENSE. A single-file path
+    # has no ancestor to compute, so the paths inside the tarball are the only
+    # thing that decides where the output lands.
+    - name: Archive build output
+      if: inputs.mode == 'upload'
+      uses: ./.github/actions/archive
+      with:
+        mode: archive
+        file: build-output.tar.gz
+        paths: |
+          packages/ts-ioc-container/cjm
+          packages/ts-ioc-container/esm
+          packages/ts-ioc-container/typings
+          packages/react/cjm
+          packages/react/esm
+          packages/react/typings
+
+    - name: Upload build output
+      if: inputs.mode == 'upload'
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        retention-days: 1
+        path: build-output.tar.gz
+
+    - name: Download build output
+      if: inputs.mode == 'download'
+      uses: actions/download-artifact@v4
+      with:
+        name: build-output
+
+    # Paths inside the tarball are repo-root relative, so this puts every
+    # package's cjm/esm/typings back exactly where its `files` globs expect it.
+    - name: Unarchive build output
+      if: inputs.mode == 'download'
+      uses: ./.github/actions/archive
+      with:
+        mode: unarchive
+        file: build-output.tar.gz

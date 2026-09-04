@@ -54,7 +54,9 @@ jobs:
         run: pnpm run build:all
 
       - name: Upload build artifacts
-        uses: ./.github/actions/upload-build-artifacts
+        uses: ./.github/actions/build-artifacts
+        with:
+          mode: upload
 
   release:
     needs: build
@@ -97,7 +99,9 @@ jobs:
         run: pnpm run ci
 
       - name: Download build artifacts
-        uses: ./.github/actions/download-build-artifacts
+        uses: ./.github/actions/build-artifacts
+        with:
+          mode: download
 
       - name: Verify package contents
         run: pnpm run verify:package-contents
