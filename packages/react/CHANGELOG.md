@@ -1,3 +1,13 @@
+# 0.5.0 (2026-09-04)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    56.1.1
+
+
 # 0.4.0 (2026-08-23)
 
   ### ✨ Features
@@ -42,6 +52,7 @@
     - **@ts-ioc-container/react:**
     add React adapter package (#106)
     (51f46c324437fc4416e99c80b6d61735ecef162a)
+
 
 
 
