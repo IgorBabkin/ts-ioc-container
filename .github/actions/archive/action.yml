@@ -16,12 +16,19 @@ inputs:
 runs:
   using: composite
   steps:
-    # Everything, mode validation included, lives in the Makefile next to this
-    # file so it can be run and debugged locally — see this action's README.
+    # Everything, mode validation included, lives in the repository's root
+    # Makefile, so the same command runs by hand — see this action's README.
+    #
+    # The inputs reach the shell as environment variables and are handed to
+    # make as explicit arguments: every make target is a function of what it
+    # is passed, and interpolating inputs into the script text would make this
+    # step injectable.
     - name: Archive
       shell: bash
       env:
         MODE: ${{ inputs.mode }}
         FILE: ${{ inputs.file }}
         PATHS: ${{ inputs.paths }}
-      run: make --no-print-directory -f "${{ github.action_path }}/Makefile" run
+      run: |
+        make -C "$GITHUB_WORKSPACE" --no-print-directory run \
+          MODE="$MODE" FILE="$FILE" PATHS="$PATHS"

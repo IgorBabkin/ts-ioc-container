@@ -8,6 +8,9 @@ Used by [`build-artifacts`](../build-artifacts/action.yml) so that
 no least-common-ancestor to compute, and the paths stored inside the tarball
 are the only thing deciding where the output lands on download.
 
+The logic lives in the repository's root [`Makefile`](../../../Makefile); this
+action is a thin wrapper that passes its inputs to `make run` as arguments.
+
 ## Usage in Workflow
 
 ```yaml
@@ -29,41 +32,41 @@ are the only thing deciding where the output lands on download.
 
 ## Inputs
 
-| Input   | Description                                                                | Required | Default |
-| ------- | -------------------------------------------------------------------------- | -------- | ------- |
+| Input   | Description                                                                   | Required | Default |
+| ------- | ----------------------------------------------------------------------------- | -------- | ------- |
 | `mode`  | `archive` to pack `paths` into `file`, `unarchive` to extract it and delete it | Yes      | -       |
-| `file`  | Tarball to write or read                                                   | Yes      | -       |
-| `paths` | Newline-separated workspace-relative paths to pack (mode `archive` only)   | No       | `''`    |
+| `file`  | Tarball to write or read                                                      | Yes      | -       |
+| `paths` | Newline-separated workspace-relative paths to pack (mode `archive` only)       | No       | `''`    |
 
 An unknown `mode` fails the step with a `::error::` annotation rather than
-silently matching nothing.
+silently matching nothing. Paths must not contain spaces or glob characters.
 
 ## Local Testing
 
-The action is a thin wrapper around the Makefile, so the same logic runs
+The action is a thin wrapper around the root Makefile, so the same logic runs
 locally. Paths are workspace-relative — run from the repository root:
 
 ```bash
-make -f .github/actions/archive/Makefile archive FILE=build-output.tar.gz \
+make archive FILE=build-output.tar.gz \
   PATHS=$'packages/ts-ioc-container/cjm\npackages/react/cjm'
 
-make -f .github/actions/archive/Makefile unarchive FILE=build-output.tar.gz
+make unarchive FILE=build-output.tar.gz
 ```
 
 `run` is the entry point the action uses; it validates `MODE` and dispatches:
 
 ```bash
-make -f .github/actions/archive/Makefile run MODE=archive FILE=out.tar.gz PATHS=lib
+make run MODE=archive FILE=out.tar.gz PATHS=lib
 ```
 
-Or get help:
+Or get help (also the default target):
 
 ```bash
-make -f .github/actions/archive/Makefile help
+make help
 ```
 
 ## Files
 
 - `action.yml` - GitHub Action definition
-- `Makefile` - archive/unarchive logic and mode validation
+- [`../../../Makefile`](../../../Makefile) - archive/unarchive logic and mode validation
 - `README.md` - This file
