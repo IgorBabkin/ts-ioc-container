@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "type-check": "tsc --noEmit",
-    "lint": "eslint generate-readme/**/*.ts build.mjs postbuild-extensions.mjs",
-    "format:check": "prettier --check \"generate-readme/**/*.ts\" \"build.mjs\" \"postbuild-extensions.mjs\""
+    "lint": "eslint generate-readme/**/*.ts build.mjs postbuild-extensions.mjs verify-package-contents.mjs",
+    "format:check": "prettier --check \"generate-readme/**/*.ts\" \"build.mjs\" \"postbuild-extensions.mjs\" \"verify-package-contents.mjs\""
   },
   "devDependencies": {
     "handlebars": "^4.7.8",

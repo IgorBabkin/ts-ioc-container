@@ -1,0 +1,57 @@
+name: Archive
+description: Packs paths into a tarball, or unpacks one back over the workspace
+
+inputs:
+  mode:
+    description: '`archive` to pack `paths` into `file`, `unarchive` to extract `file` and delete it'
+    required: true
+  file:
+    description: Tarball to write or read
+    required: true
+  paths:
+    description: Newline-separated paths to pack, relative to the workspace (mode `archive` only)
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    # A typo'd mode would otherwise match no step and pass silently.
+    - name: Validate mode
+      shell: bash
+      env:
+        MODE: ${{ inputs.mode }}
+      run: |
+        set -euo pipefail
+        case "$MODE" in
+          archive | unarchive) ;;
+          *)
+            echo "::error::archive: unknown mode '$MODE' (expected 'archive' or 'unarchive')" >&2
+            exit 1
+            ;;
+        esac
+
+    - name: Archive
+      if: inputs.mode == 'archive'
+      shell: bash
+      env:
+        FILE: ${{ inputs.file }}
+        PATHS: ${{ inputs.paths }}
+      run: |
+        set -euo pipefail
+        mapfile -t entries < <(printf '%s\n' "$PATHS" | sed '/^[[:space:]]*$/d')
+        if [ "${#entries[@]}" -eq 0 ]; then
+          echo "::error::archive: mode 'archive' requires at least one path" >&2
+          exit 1
+        fi
+        tar -czf "$FILE" -- "${entries[@]}"
+
+    - name: Unarchive
+      if: inputs.mode == 'unarchive'
+      shell: bash
+      env:
+        FILE: ${{ inputs.file }}
+      run: |
+        set -euo pipefail
+        tar -xzf "$FILE"
+        rm "$FILE"

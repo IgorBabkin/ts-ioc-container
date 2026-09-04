@@ -24,6 +24,7 @@
     "lint": "pnpm --filter ts-ioc-container run lint",
     "lint:fix": "pnpm --filter ts-ioc-container run lint:fix",
     "audit": "npm audit",
+    "verify:package-contents": "node packages/scripts/verify-package-contents.mjs",
     "prepare": "husky",
     "test:react": "pnpm --filter @ts-ioc-container/react run test",
     "type-check:react": "pnpm --filter @ts-ioc-container/react run type-check",
