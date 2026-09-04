@@ -16,13 +16,21 @@ inputs:
 runs:
   using: composite
   steps:
-    # A typo'd mode would otherwise match no step and pass silently.
-    - name: Validate mode
+    # `mode` selects one of the repository root Makefile's targets, which hold
+    # the actual work. Validating it here keeps the error legible: an unchecked
+    # typo would surface as make's own "no rule to make target" instead.
+    #
+    # The inputs reach the shell as environment variables and are handed to
+    # make as explicit arguments: every make target is a function of what it
+    # is passed, and interpolating inputs into the script text would make this
+    # step injectable.
+    - name: Archive
       shell: bash
       env:
         MODE: ${{ inputs.mode }}
+        FILE: ${{ inputs.file }}
+        PATHS: ${{ inputs.paths }}
       run: |
-        set -euo pipefail
         case "$MODE" in
           archive | unarchive) ;;
           *)
@@ -30,28 +38,5 @@ runs:
             exit 1
             ;;
         esac
-
-    - name: Archive
-      if: inputs.mode == 'archive'
-      shell: bash
-      env:
-        FILE: ${{ inputs.file }}
-        PATHS: ${{ inputs.paths }}
-      run: |
-        set -euo pipefail
-        mapfile -t entries < <(printf '%s\n' "$PATHS" | sed '/^[[:space:]]*$/d')
-        if [ "${#entries[@]}" -eq 0 ]; then
-          echo "::error::archive: mode 'archive' requires at least one path" >&2
-          exit 1
-        fi
-        tar -czf "$FILE" -- "${entries[@]}"
-
-    - name: Unarchive
-      if: inputs.mode == 'unarchive'
-      shell: bash
-      env:
-        FILE: ${{ inputs.file }}
-      run: |
-        set -euo pipefail
-        tar -xzf "$FILE"
-        rm "$FILE"
+        make -C "$GITHUB_WORKSPACE" --no-print-directory "$MODE" \
+          FILE="$FILE" PATHS="$PATHS"

@@ -78,8 +78,5 @@
   },
   "engines": {
     "node": ">= 18"
-  },
-  "dependencies": {
-    "ts-ioc-container": "56.1.1"
   }
 }
