@@ -3,7 +3,7 @@
 - **Status:** Proposed
 - **ADR:** [ADR 0001 - Container as a linked list of scopes](../../../../docs/adr/0001-container-as-linked-list.md)
 - **Public API:** `ScopeContext`, `Scope`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`
-- **Package:** `ts-ioc-container-react`
+- **Package:** `@ts-ioc-container/react`
 - **Executable spec:** `packages/react/__tests__/specs/react-adapter.spec.tsx`
 
 ## Intent

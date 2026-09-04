@@ -47,7 +47,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./packages/ts-ioc-container/coverage/lcov.info
 
-      - name: Test ts-ioc-container-react
+      - name: Test @ts-ioc-container/react
         run: pnpm run test:react
 
       - name: Build

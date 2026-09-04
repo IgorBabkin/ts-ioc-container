@@ -1,4 +1,4 @@
-import type { DependencyKey, IContainer, IContainerModule } from '../container/IContainer';
+import { type DependencyKey, type IContainer, type IContainerModule, isDependencyKey } from '../container/IContainer';
 import type { ArgsFn, DecorateFn, GetCacheKey, IProvider, ScopeAccessRule } from '../provider/IProvider';
 import { SingleToken } from '../token/SingleToken';
 import { BindToken, isBindToken } from '../token/BindToken';
@@ -42,11 +42,13 @@ const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getClassMeta<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe>) =>
+export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe | BindToken | DependencyKey>) =>
   addClassMeta(METADATA_KEY, (acc: MapFn<IRegistration>[] | undefined) => {
-    const result = mappers.map((m) =>
-      isProviderPipe(m) ? (r: IRegistration) => m.mapRegistration(r) : m,
-    ) as MapFn<IRegistration>[];
+    const result = mappers.map((m) => {
+      if (isProviderPipe(m)) return (r: IRegistration) => m.mapRegistration(r);
+      if (isBindToken(m) || isDependencyKey(m)) return bindTo(m);
+      return m;
+    }) as MapFn<IRegistration>[];
     return acc ? [...result, ...acc] : result;
   });
 
