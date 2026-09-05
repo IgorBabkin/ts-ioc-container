@@ -99,6 +99,21 @@ This is what a mid-pipeline `ENEEDAUTH` means: the packages ahead of it in
 trusted publisher yet — check the npm publish timestamps against the CI failure
 time before assuming the auth setup is broken.
 
+**Status: verified end to end.** Run
+[238](https://github.com/IgorBabkin/ts-ioc-container/actions/runs/33983268562)
+published `ts-ioc-container@56.2.0` and `@ts-ioc-container/react@0.6.0` through
+OIDC with no token in CI. Both packages already existed on npm (react's `0.5.0`
+predates the trusted publisher), so both had a publisher configured and neither
+hit the first-publish restriction above. That restriction still applies to any
+*new* package added to this workspace.
+
+The chain that makes OIDC work here is not obvious, so don't "simplify" it:
+`package-manager publish` runs `pnpm publish`, and **pnpm has no OIDC support of
+its own** — it shells out to the `npm` binary on `PATH`, which is what performs
+the token exchange. That is why the `npm install -g npm@11` step exists and why
+it must stay ahead of the publish step; without it the runner's older npm would
+publish without OIDC.
+
 ### Internal dependencies use the workspace protocol
 
 `@ts-ioc-container/react` declares `ts-ioc-container` as
