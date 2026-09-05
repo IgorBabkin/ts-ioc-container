@@ -111,7 +111,7 @@ export class Container implements IContainer {
   resolveOneByAlias<T>(alias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    const [key, ..._] = this.aliases.getKeysByAlias(alias);
+    const [key] = this.aliases.getKeysByAlias(alias);
     const provider = key ? this.findProviderByKeyOrFail<T>(key) : undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
@@ -129,7 +129,7 @@ export class Container implements IContainer {
       .addOnConstructHook(...this.onConstructHookList)
       .addOnDisposeHook(...this.onDisposeHookList);
 
-    for (const registration of [...this.parent.getRegistrations(), ...this.registrations]) {
+    for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
     }
     this.scopes.push(scope);
@@ -155,7 +155,7 @@ export class Container implements IContainer {
     this.parent = new EmptyContainer();
 
     // Reset the state
-    for (const [_, provider] of this.providers) {
+    for (const provider of this.providers.values()) {
       provider.dispose();
     }
     this.providers.clear();
@@ -164,7 +164,7 @@ export class Container implements IContainer {
     this.registrations = [];
 
     // Clear hooks
-    this.onConstructHookList.splice(0, this.onConstructHookList.length);
+    this.onConstructHookList.length = 0;
   }
 
   addRegistration(registration: IRegistration): this {
@@ -192,7 +192,7 @@ export class Container implements IContainer {
   }
 
   addInstance(instance: Instance) {
-    this.instances.push(instance as Instance);
+    this.instances.push(instance);
 
     // Execute onConstruct hooks
     for (const onConstruct of this.onConstructHookList) {
