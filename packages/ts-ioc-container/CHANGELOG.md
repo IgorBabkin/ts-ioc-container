@@ -1,3 +1,12 @@
+# 56.3.0 (2026-09-05)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    support mapper pipes in @inject and injectProp (#133)
+    (eb125d97873428e4c49a6b78b4d24b241e430110)
+
+
 # 56.2.0 (2026-09-05)
 
   ### ✨ Features
@@ -23,6 +32,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
