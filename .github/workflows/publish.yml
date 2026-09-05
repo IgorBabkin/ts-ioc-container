@@ -47,11 +47,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./packages/ts-ioc-container/coverage/lcov.info
 
-      - name: Test @ts-ioc-container/react
-        run: pnpm run test:react
-
+      # Must precede the react tests: @ts-ioc-container/react resolves
+      # ts-ioc-container through the workspace link, so it imports that
+      # package's build output rather than a tarball from the registry.
       - name: Build
         run: pnpm run build:all
+
+      - name: Test @ts-ioc-container/react
+        run: pnpm run test:react
 
       - name: Upload build artifacts
         uses: ./.github/actions/build-artifacts

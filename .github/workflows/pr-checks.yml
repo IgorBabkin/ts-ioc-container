@@ -58,6 +58,11 @@ jobs:
       - name: Test
         run: pnpm test --maxWorkers=2
 
+      # @ts-ioc-container/react resolves ts-ioc-container through the
+      # workspace link, so the checks below need its build output on disk.
+      - name: Build ts-ioc-container
+        run: pnpm run build
+
       - name: Lint @ts-ioc-container/react
         run: pnpm run lint:react
 

@@ -99,18 +99,44 @@ This is what a mid-pipeline `ENEEDAUTH` means: the packages ahead of it in
 trusted publisher yet — check the npm publish timestamps against the CI failure
 time before assuming the auth setup is broken.
 
+### Internal dependencies use the workspace protocol
+
+`@ts-ioc-container/react` declares `ts-ioc-container` as
+`"workspace:*"`, not as an exact registry version. This is load-bearing, not
+cosmetic:
+
+- An exact pin made the release **deadlock**. `package-json` rewrote the pin to
+  the version being released, then refreshed the lockfile with
+  `pnpm install --lockfile-only`, which resolves from the registry — but that
+  version is only published four steps later, by `package-manager publish`.
+  Every release died with `ERR_PNPM_NO_MATCHING_VERSION` before reaching `vcs`.
+  Fixed upstream in `release-monorepo-semantically@1.9.4`, which never rewrites
+  a `workspace:` specifier
+  ([#8](https://github.com/IgorBabkin/release-monorepo-semantically/issues/8)).
+  Do not pin it back, and do not downgrade below 1.9.4.
+- It also keeps the react tests honest. With a registry pin they ran against a
+  *published* copy of the container, so they never exercised the change in the
+  same commit — and the pin silently drifted behind.
+
+`pnpm publish` substitutes the real version into the published tarball, so
+consumers still receive an exact version. `peerDependencies` stays a range
+(`>=56`) and is never rewritten.
+
+**Consequence for CI ordering:** react resolves the container through the
+workspace link, so it imports that package's *build output*. `pnpm run build`
+must therefore run before any react lint / type-check / test step — see the
+build steps in `pr-checks.yml` and `publish.yml`. Without it those steps fail
+to resolve `ts-ioc-container` at all.
+
 ### Known `release-monorepo-semantically` defects
 
-The `package-json` step writes internal dependency versions into a
-**`dependencies`** block, even when the package already declares that
-dependency as a `peerDependency`. For `@ts-ioc-container/react` that produced a
-`dependencies` entry pinning `ts-ioc-container` exactly, alongside the
-`peerDependencies` range and a *different* `devDependencies` pin — which would
-ship consumers a second copy of the container and break instance identity.
-It also does not refresh `pnpm-lock.yaml` after rewriting those versions, so
-the next `pnpm install --frozen-lockfile` on `main` fails with
-`ERR_PNPM_OUTDATED_LOCKFILE`. Check `packages/react/package.json` after a
-release until this is fixed upstream.
+The `package-json` step used to write internal dependency versions into a
+**`dependencies`** block even when the package already declared that dependency
+as a `peerDependency`, and did not refresh `pnpm-lock.yaml` afterwards. Both
+were fixed in 1.9.3; the workspace-protocol deadlock above was fixed in 1.9.4.
+No known outstanding defects — but the `package-json` step rewrites manifests,
+so it is still worth a glance at `packages/react/package.json` and
+`pnpm-lock.yaml` after a release.
 
 The release commit template lives at
 `packages/scripts/release/templates/release-commit-msg.hbs` — it overrides the tool's
