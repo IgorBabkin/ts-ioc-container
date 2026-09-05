@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0002 - Pluggable injector strategies](../../docs/adr/0002-pluggable-injectors.md)
-- **Public API:** `IInjector`, `Injector`, `MetadataInjector`, `SimpleInjector`, `ProxyInjector`, `inject`, `resolveArgs`, `args`, `argsFn`
+- **Public API:** `IInjector`, `Injector`, `MetadataInjector`, `SimpleInjector`, `ProxyInjector`, `inject`, `resolveArgs`, `arg`, `args`, `argsFn`
 - **Executable spec:** `__tests__/specs/injector-strategies.spec.ts`
 
 ## Intent
@@ -17,7 +17,7 @@ proxy-style access, or a custom construction strategy.
 
 As a decorator-friendly TypeScript user, I want injection to be explicit, so
 that only constructor parameters annotated with `@inject` (or its derivatives
-like `args` / `argsFn`) are resolved by the container.
+like `arg` / `args` / `argsFn`) are resolved by the container.
 
 Acceptance criteria:
 
@@ -33,7 +33,8 @@ that a dependency can be configured at resolution time.
 
 Acceptance criteria:
 
-- `args(index)` selects a runtime argument by position.
+- `arg(index)` selects a runtime argument by position.
+- `args` injects the full runtime argument list.
 - `argsFn` maps the full runtime argument list to one injected value.
 - Missing positional runtime arguments resolve as `undefined`.
 

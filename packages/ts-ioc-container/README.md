@@ -708,7 +708,7 @@ The `lazy()` registerPipe can be used in two ways: with the `@register` decorato
 import 'reflect-metadata';
 import {
   appendArgs,
-  args,
+  arg,
   bindTo,
   Container,
   inject,
@@ -1017,8 +1017,8 @@ describe('lazy registerPipe', () => {
     @register(bindTo('Config'))
     class ConfigService {
       constructor(
-        @inject(args(0)) public apiUrl: string,
-        @inject(args(1)) public timeout: number,
+        @inject(arg(0)) public apiUrl: string,
+        @inject(arg(1)) public timeout: number,
       ) {
         initLog.push(`ConfigService initialized with ${apiUrl}`);
       }
@@ -1391,7 +1391,7 @@ Provider is dependency factory which creates dependency.
 - `new Provider((container, options) => container.resolve(Logger, options))`
 
 ```typescript
-import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R } from 'ts-ioc-container';
+import { arg, bindTo, Container, inject, lazy, Provider, register, Registration as R } from 'ts-ioc-container';
 
 /**
  * Data Processing Pipeline - Provider Patterns
@@ -1458,7 +1458,7 @@ describe('Provider', () => {
 
   it('supports args decorator for providing extra arguments', () => {
     class FileService {
-      constructor(@inject(args(0)) readonly basePath: string) {}
+      constructor(@inject(arg(0)) readonly basePath: string) {}
     }
 
     const container = new Container().register(
@@ -1472,7 +1472,7 @@ describe('Provider', () => {
 
   it('supports argsFn decorator for dynamic arguments', () => {
     class Database {
-      constructor(@inject(args(0)) readonly connectionString: string) {}
+      constructor(@inject(arg(0)) readonly connectionString: string) {}
     }
 
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(
@@ -1632,14 +1632,15 @@ When you pass an `InjectionToken` via `token.args(...)`, the container resolves 
 - `ServiceToken.args(new ClassToken(SomeService))` — `SomeService` is constructed by the container
 - `ServiceToken.args('literal')` — literal value passed directly
 
-### Positional arg injection with `args(index)` and `argsFn`
+### Positional arg injection with `arg(index)`, `args`, and `argsFn`
 
-Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(args(index))`. Parameters without `@inject` resolve to `undefined`.
+Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(arg(index))`. Parameters without `@inject` resolve to `undefined`.
 
-- `@inject(args(0))` — resolves the first element of the `args` array passed at resolution time
+- `@inject(arg(0))` — resolves the first element of the `args` array passed at resolution time
+- `@inject(args)` — resolves the whole runtime `args` array
 - Works together with `token.args(...)` to pass typed dependencies through the args context
 
-`argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `args(index)` is just a shortcut for matching by position: `args(0)` is `argsFn((value, index) => index === 0)`. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array.
+`argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `arg(index)` is just a shortcut for matching by position: `arg(0)` is `argsFn((value, index) => index === 0)`. `args` is `(scope, options) => options.args`, i.e. it returns the runtime args array as-is. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array.
 
 ### Immutable token chaining
 
@@ -1654,7 +1655,7 @@ const userToken = ApiToken.args('https://users.api.com', 1000);
 
 ```typescript
 import {
-  args,
+  arg,
   appendArgs,
   appendArgsFn,
   bindTo,
@@ -1686,7 +1687,7 @@ describe('IProvider', function () {
       // Pre-configure the logger with a filename
       @register(appendArgs('/var/log/app.log'))
       class FileLogger {
-        constructor(@inject(args(0)) public filename: string) {}
+        constructor(@inject(arg(0)) public filename: string) {}
       }
 
       const root = createContainer().addRegistration(R.fromClass(FileLogger));
@@ -1700,8 +1701,8 @@ describe('IProvider', function () {
       @register(appendArgs('ConfiguredContext'))
       class Logger {
         constructor(
-          @inject(args(0)) public runtimeContext: string,
-          @inject(args(1)) public configuredContext: string,
+          @inject(arg(0)) public runtimeContext: string,
+          @inject(arg(1)) public configuredContext: string,
         ) {}
       }
 
@@ -1723,7 +1724,7 @@ describe('IProvider', function () {
       // Extract 'env' from Config service dynamically
       @register(appendArgsFn((scope) => [scope.resolve<Config>('Config').env]))
       class Service {
-        constructor(@inject(args(0)) public env: string) {}
+        constructor(@inject(arg(0)) public env: string) {}
       }
 
       const root = createContainer()
@@ -1740,8 +1741,8 @@ describe('IProvider', function () {
       @register(appendArgs('configured'))
       class Service {
         constructor(
-          @inject(args(0)) public runtime: string,
-          @inject(args(1)) public configured: string,
+          @inject(arg(0)) public runtime: string,
+          @inject(arg(1)) public configured: string,
         ) {}
       }
 
@@ -1760,9 +1761,9 @@ describe('IProvider', function () {
       @register(appendArgs('fixed'), appendArgsFn((scope) => [scope.resolve<Config>('Config').tenant]))
       class Service {
         constructor(
-          @inject(args(0)) public runtime: string,
-          @inject(args(1)) public fixed: string,
-          @inject(args(2)) public tenant: string,
+          @inject(arg(0)) public runtime: string,
+          @inject(arg(1)) public fixed: string,
+          @inject(arg(2)) public tenant: string,
         ) {}
       }
 
@@ -1799,7 +1800,7 @@ describe('IProvider', function () {
 
     // EntityManager is generic - it works with ANY repository.
     // The repository is the first arg passed via `EntityManagerToken.args(...)`.
-    // `@inject(args(0))` reads it; the container auto-resolves InjectionToken args
+    // `@inject(arg(0))` reads it; the container auto-resolves InjectionToken args
     // before they reach the constructor.
     const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
 
@@ -1808,7 +1809,7 @@ describe('IProvider', function () {
       singleton((arg1) => (arg1 as SingleToken).token), // Cache unique instance per repository type
     )
     class EntityManager {
-      constructor(@inject(args(0)) public repository: IRepository) {}
+      constructor(@inject(arg(0)) public repository: IRepository) {}
     }
 
     class App {
@@ -2117,7 +2118,7 @@ Sometimes you want to decorate you class with some logic. Use the `decorate(...)
 
 ```typescript
 import {
-  args,
+  arg,
   bindTo,
   Container,
   decorate,
@@ -2171,7 +2172,7 @@ describe('Decorator Pattern', () => {
   // Decorator: Wraps any IRepository with logging behavior
   class LoggingRepository implements IRepository {
     constructor(
-      @inject(args(0)) private repository: IRepository,
+      @inject(arg(0)) private repository: IRepository,
       @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 

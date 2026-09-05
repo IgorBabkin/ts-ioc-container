@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-  args,
+  arg,
   appendArgs,
   appendArgsFn,
   CannonSingletonApplyTwiceError,
@@ -61,7 +61,7 @@ describe('Spec: provider behavior', () => {
   it('caches singleton results by configured cache key', () => {
     @register(singleton((tenant) => tenant as string))
     class TenantRepository {
-      constructor(@inject(args(0)) readonly tenant: string) {}
+      constructor(@inject(arg(0)) readonly tenant: string) {}
     }
 
     const container = new Container().addRegistration(R.fromClass(TenantRepository));
@@ -84,13 +84,13 @@ describe('Spec: provider behavior', () => {
     @register(appendArgsFn((scope) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing']))
     class Endpoint {
       constructor(
-        @inject(args(0)) readonly region: string,
-        @inject(args(1)) readonly service: string,
+        @inject(arg(0)) readonly region: string,
+        @inject(arg(1)) readonly service: string,
       ) {}
     }
 
     class UsesTokenArg {
-      constructor(@inject(args(0)) readonly config: RegionConfig) {}
+      constructor(@inject(arg(0)) readonly config: RegionConfig) {}
     }
 
     const ConfigToken = new SingleToken<RegionConfig>('RegionConfig');
@@ -109,8 +109,8 @@ describe('Spec: provider behavior', () => {
     @register(appendArgs('fixed'))
     class FixedEndpoint {
       constructor(
-        @inject(args(0)) readonly runtimeValue: string,
-        @inject(args(1)) readonly fixedValue: string,
+        @inject(arg(0)) readonly runtimeValue: string,
+        @inject(arg(1)) readonly fixedValue: string,
       ) {}
     }
 
@@ -128,9 +128,9 @@ describe('Spec: provider behavior', () => {
     @register(appendArgsFn((scope) => [scope.resolve<TenantConfig>('TenantConfig').tenant]), appendArgs('tail'))
     class Endpoint {
       constructor(
-        @inject(args(0)) readonly runtime: string,
-        @inject(args(1)) readonly tenant: string,
-        @inject(args(2)) readonly tail: string,
+        @inject(arg(0)) readonly runtime: string,
+        @inject(arg(1)) readonly tenant: string,
+        @inject(arg(2)) readonly tail: string,
       ) {}
     }
 

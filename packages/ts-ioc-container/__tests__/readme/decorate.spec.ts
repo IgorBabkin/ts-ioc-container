@@ -1,5 +1,5 @@
 import {
-  args,
+  arg,
   bindTo,
   Container,
   decorate,
@@ -53,7 +53,7 @@ describe('Decorator Pattern', () => {
   // Decorator: Wraps any IRepository with logging behavior
   class LoggingRepository implements IRepository {
     constructor(
-      @inject(args(0)) private repository: IRepository,
+      @inject(arg(0)) private repository: IRepository,
       @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 

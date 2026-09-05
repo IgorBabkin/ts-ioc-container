@@ -120,7 +120,9 @@ export const argsFn =
   (c, { args = [] }): T =>
     args.find((value, index) => predicate(value, index)) as T;
 
-export const args = <T = unknown>(index: number): InjectFn<T> => argsFn<T>((value, i) => i === index);
+export const arg = <T = unknown>(index: number): InjectFn<T> => argsFn<T>((value, i) => i === index);
+
+export const args: InjectFn<unknown[]> = (c, { args = [] }) => args;
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const tokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];

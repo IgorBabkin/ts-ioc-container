@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  arg,
   args,
   appendArgs,
   appendArgsFn,
@@ -16,12 +17,12 @@ describe('inject helpers', () => {
     return new Container();
   }
 
-  describe('args(index)', () => {
-    it('resolves InjectionToken args before reaching @inject(args(...))', () => {
+  describe('arg(index)', () => {
+    it('resolves InjectionToken args before reaching @inject(arg(...))', () => {
       const ValueToken = new SingleToken<string>('value');
 
       class Service {
-        constructor(@inject(args(0)) public value: string) {}
+        constructor(@inject(arg(0)) public value: string) {}
       }
 
       const ServiceToken = new SingleToken<Service>('Service');
@@ -36,7 +37,7 @@ describe('inject helpers', () => {
     it('returns undefined for out-of-bounds index', () => {
       @register(appendArgs('only'))
       class Service {
-        constructor(@inject(args(5)) public value: unknown) {}
+        constructor(@inject(arg(5)) public value: unknown) {}
       }
 
       const container = createContainer().addRegistration(R.fromClass(Service));
@@ -47,7 +48,7 @@ describe('inject helpers', () => {
       @register(appendArgs('a', 'b', 'c'))
       class Service {
         constructor(
-          @inject(args(1)) public viaArgs: unknown,
+          @inject(arg(1)) public viaArgs: unknown,
           @inject(argsFn((value, index) => index === 1)) public viaArgsFn: unknown,
         ) {}
       }
@@ -56,6 +57,27 @@ describe('inject helpers', () => {
       const service = container.resolve<Service>('Service');
       expect(service.viaArgs).toBe('b');
       expect(service.viaArgsFn).toBe('b');
+    });
+  });
+
+  describe('args', () => {
+    it('resolves the whole runtime args array', () => {
+      @register(appendArgs('a', 'b', 'c'))
+      class Service {
+        constructor(@inject(args) public all: unknown[]) {}
+      }
+
+      const container = createContainer().addRegistration(R.fromClass(Service));
+      expect(container.resolve<Service>('Service').all).toEqual(['a', 'b', 'c']);
+    });
+
+    it('resolves an empty array when no args were passed', () => {
+      class Service {
+        constructor(@inject(args) public all: unknown[]) {}
+      }
+
+      const container = createContainer().addRegistration(R.fromClass(Service));
+      expect(container.resolve<Service>('Service').all).toEqual([]);
     });
   });
 
@@ -96,7 +118,7 @@ describe('inject helpers', () => {
 
     it('forwards resolve args to the dependency before selecting', () => {
       class Config {
-        constructor(@inject(args(0)) readonly apiUrl: string) {}
+        constructor(@inject(arg(0)) readonly apiUrl: string) {}
       }
 
       const ConfigToken = new SingleToken<Config>('Config');
@@ -115,7 +137,7 @@ describe('inject helpers', () => {
     it('selects from a runtime arg', () => {
       @register(appendArgs({ id: 42 }))
       class Service {
-        constructor(@inject(args<{ id: number }>(0), (value) => value.id) public id: number) {}
+        constructor(@inject(arg<{ id: number }>(0), (value) => value.id) public id: number) {}
       }
 
       const container = createContainer().addRegistration(R.fromClass(Service));

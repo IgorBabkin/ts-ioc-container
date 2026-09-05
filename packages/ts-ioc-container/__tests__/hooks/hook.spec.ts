@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import {
   append,
   appendHooks,
-  args,
+  arg,
   bindTo,
   Container,
   GroupAliasToken,
@@ -65,7 +65,7 @@ describe('hooks', () => {
           ctx.invokeMethod();
         }),
       )
-      start(@inject(args(0)) firstArg: string, @inject('suffix') suffix: string, runtimeArg: string) {
+      start(@inject(arg(0)) firstArg: string, @inject('suffix') suffix: string, runtimeArg: string) {
         this.receivedArgs = [firstArg, suffix, runtimeArg];
       }
     }
@@ -94,7 +94,7 @@ describe('hooks', () => {
           ctx.invokeMethod();
         }),
       )
-      start(@inject(args(0)) firstArg: string, @inject('suffix') suffix: string) {
+      start(@inject(arg(0)) firstArg: string, @inject('suffix') suffix: string) {
         this.receivedArgs = [firstArg, suffix];
       }
     }
@@ -122,7 +122,7 @@ describe('hooks', () => {
           await ctx.invokeMethod();
         }),
       )
-      async start(@inject(args(0)) firstArg: string) {
+      async start(@inject(arg(0)) firstArg: string) {
         this.receivedArgs = [firstArg];
       }
     }

@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  arg,
   args,
   argsFn,
   bindTo,
@@ -24,8 +25,9 @@ describe('Spec: injector strategies', () => {
     class Controller {
       constructor(
         @inject('Logger') readonly logger: Logger,
-        @inject(args(0)) readonly id: number,
+        @inject(arg(0)) readonly id: number,
         @inject(argsFn((value) => typeof value === 'string')) readonly tenant: string,
+        @inject(args) readonly allArgs: unknown[],
       ) {}
     }
 
@@ -36,6 +38,7 @@ describe('Spec: injector strategies', () => {
     expect(controller.logger).toBeInstanceOf(Logger);
     expect(controller.id).toBe(100);
     expect(controller.tenant).toBe('tenant-a');
+    expect(controller.allArgs).toEqual([100, 'tenant-a']);
   });
 
   it('leaves constructor parameters without @inject metadata as undefined', () => {
