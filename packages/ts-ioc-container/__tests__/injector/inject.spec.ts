@@ -152,6 +152,23 @@ describe('inject helpers', () => {
       expect(container.resolve<Service>('Service').greeting).toBe('hello-a-b');
     });
 
+    it('keeps the chain typed across ten mappers', () => {
+      const step = (n: number) => (value: string) => `${value}-${n}`;
+
+      class Service {
+        constructor(
+          @inject('Greeting', step(1), step(2), step(3), step(4), step(5), step(6), step(7), step(8), step(9), step(10))
+          public greeting: string,
+        ) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromValue('hello').bindToKey('Greeting'))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').greeting).toBe('hello-1-2-3-4-5-6-7-8-9-10');
+    });
+
     it('runs the mappers on every resolution', () => {
       let calls = 0;
       const count = () => (value: string) => {

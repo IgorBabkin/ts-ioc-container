@@ -24,7 +24,6 @@ const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
  * `@inject('key', sanitize(), validate())` passes the resolved instance through `sanitize()`,
  * then through `validate()`, and injects the result.
  */
-export function inject<T>(fn: Injectable<T>): ParameterDecorator;
 export function inject<T, B>(fn: Injectable<T>, fn1: MapFn<T, B>): ParameterDecorator;
 export function inject<T, B, C>(fn: Injectable<T>, fn1: MapFn<T, B>, fn2: MapFn<B, C>): ParameterDecorator;
 export function inject<T, B, C, D>(
@@ -47,6 +46,61 @@ export function inject<T, B, C, D, E, F>(
   fn3: MapFn<C, D>,
   fn4: MapFn<D, E>,
   fn5: MapFn<E, F>,
+): ParameterDecorator;
+export function inject<T, B, C, D, E, F, G>(
+  fn: Injectable<T>,
+  fn1: MapFn<T, B>,
+  fn2: MapFn<B, C>,
+  fn3: MapFn<C, D>,
+  fn4: MapFn<D, E>,
+  fn5: MapFn<E, F>,
+  fn6: MapFn<F, G>,
+): ParameterDecorator;
+export function inject<T, B, C, D, E, F, G, H>(
+  fn: Injectable<T>,
+  fn1: MapFn<T, B>,
+  fn2: MapFn<B, C>,
+  fn3: MapFn<C, D>,
+  fn4: MapFn<D, E>,
+  fn5: MapFn<E, F>,
+  fn6: MapFn<F, G>,
+  fn7: MapFn<G, H>,
+): ParameterDecorator;
+export function inject<T, B, C, D, E, F, G, H, I>(
+  fn: Injectable<T>,
+  fn1: MapFn<T, B>,
+  fn2: MapFn<B, C>,
+  fn3: MapFn<C, D>,
+  fn4: MapFn<D, E>,
+  fn5: MapFn<E, F>,
+  fn6: MapFn<F, G>,
+  fn7: MapFn<G, H>,
+  fn8: MapFn<H, I>,
+): ParameterDecorator;
+export function inject<T, B, C, D, E, F, G, H, I, J>(
+  fn: Injectable<T>,
+  fn1: MapFn<T, B>,
+  fn2: MapFn<B, C>,
+  fn3: MapFn<C, D>,
+  fn4: MapFn<D, E>,
+  fn5: MapFn<E, F>,
+  fn6: MapFn<F, G>,
+  fn7: MapFn<G, H>,
+  fn8: MapFn<H, I>,
+  fn9: MapFn<I, J>,
+): ParameterDecorator;
+export function inject<T, B, C, D, E, F, G, H, I, J, K>(
+  fn: Injectable<T>,
+  fn1: MapFn<T, B>,
+  fn2: MapFn<B, C>,
+  fn3: MapFn<C, D>,
+  fn4: MapFn<D, E>,
+  fn5: MapFn<E, F>,
+  fn6: MapFn<F, G>,
+  fn7: MapFn<G, H>,
+  fn8: MapFn<H, I>,
+  fn9: MapFn<I, J>,
+  fn10: MapFn<J, K>,
 ): ParameterDecorator;
 // Fallback for spreads or variable length chains (same type)
 export function inject<T>(fn: Injectable<T>, ...mappers: MapFn<T>[]): ParameterDecorator;
