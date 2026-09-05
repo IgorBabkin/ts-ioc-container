@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  arg,
   autoResolve,
   AutoResolveModule,
   bindTo,
@@ -7,6 +8,7 @@ import {
   ContainerDisposedError,
   EmptyContainer,
   type IContainer,
+  inject,
   MethodNotImplementedError,
   register,
   Registration as R,
@@ -175,5 +177,82 @@ describe('autoResolve', function () {
   it('should not be supported by an empty container', function () {
     expect(() => new EmptyContainer().autoResolve()).toThrowError(MethodNotImplementedError);
     expect(() => new EmptyContainer().addOnScopeCreatedHook(() => {})).toThrowError(MethodNotImplementedError);
+  });
+
+  describe('args', function () {
+    @register(bindTo('IReporter'), autoResolve(), singleton())
+    class Reporter {
+      constructor(@inject(arg(0)) readonly requestId: string = 'none') {
+        constructed.push(`Reporter:${requestId}`);
+      }
+    }
+
+    it('should forward args to eagerly resolved providers', function () {
+      const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Reporter));
+
+      app.autoResolve({ args: ['request-1'] });
+
+      expect(constructed).toEqual(['Reporter:request-1']);
+      expect(app.resolve<Reporter>('IReporter').requestId).toBe('request-1');
+    });
+
+    it('should forward module args to every created scope', function () {
+      const app = new Container({ tags: ['application'] })
+        .useModule(new AutoResolveModule({ args: ['request-1'] }))
+        .addRegistration(R.fromClass(Reporter));
+
+      const requestScope = app.createScope({ tags: ['request'] });
+
+      expect(constructed).toEqual(['Reporter:request-1']);
+      expect(requestScope.resolve<Reporter>('IReporter').requestId).toBe('request-1');
+    });
+
+    it('should treat args as optional', function () {
+      const app = new Container({ tags: ['application'] })
+        .useModule(new AutoResolveModule({}))
+        .addRegistration(R.fromClass(Reporter));
+
+      app.autoResolve();
+      app.createScope({ tags: ['request'] });
+
+      expect(constructed).toEqual(['Reporter:none', 'Reporter:none']);
+    });
+
+    it('should pass args to the scope access rule', function () {
+      const seenArgs: unknown[][] = [];
+
+      @register(
+        bindTo('IAuditedReporter'),
+        autoResolve(),
+        scopeAccess(({ args: accessArgs }) => {
+          seenArgs.push(accessArgs);
+          return true;
+        }),
+      )
+      class AuditedReporter {}
+
+      new Container({ tags: ['application'] })
+        .addRegistration(R.fromClass(AuditedReporter))
+        .autoResolve({ args: ['request-1'] });
+
+      expect(seenArgs).toEqual([['request-1']]);
+    });
+
+    it('should pass args to the singleton cache key', function () {
+      @register(bindTo('ITenantCache'), autoResolve(), singleton((tenant) => tenant as string))
+      class TenantCache {
+        constructor(@inject(arg(0)) readonly tenant: string) {
+          constructed.push(`TenantCache:${tenant}`);
+        }
+      }
+
+      const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(TenantCache));
+
+      app.autoResolve({ args: ['acme'] });
+      app.autoResolve({ args: ['acme'] });
+      app.autoResolve({ args: ['globex'] });
+
+      expect(constructed).toEqual(['TenantCache:acme', 'TenantCache:globex']);
+    });
   });
 });

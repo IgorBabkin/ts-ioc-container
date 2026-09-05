@@ -1,4 +1,5 @@
 import {
+  type AutoResolveOptions,
   type CreateScopeOptions,
   type DependencyKey,
   type IContainer,
@@ -148,14 +149,16 @@ export class Container implements IContainer {
   /**
    * Eagerly resolves every provider of this scope which was marked with `autoResolve()`.
    *
+   * `args` are forwarded to each of those providers, exactly as `resolve` forwards them.
+   *
    * @throws {ContainerDisposedError} when the container has already been disposed.
    */
-  autoResolve(): this {
+  autoResolve({ args = [] }: AutoResolveOptions = {}): this {
     this.validateContainer();
 
     for (const provider of this.providers.values()) {
-      if (provider.isAutoResolvable() && provider.hasAccess({ invocationScope: this, providerScope: this, args: [] })) {
-        provider.resolve(this, { args: [] });
+      if (provider.isAutoResolvable() && provider.hasAccess({ invocationScope: this, providerScope: this, args })) {
+        provider.resolve(this, { args });
       }
     }
 

@@ -81,6 +81,8 @@ Acceptance criteria:
 - Without that module, marking a provider as auto-resolvable changes nothing.
 - Eager creation reuses the provider's own caching, so a singleton provider
   returns the eagerly created instance for later resolution.
+- Eager creation forwards optional `args` to the provider the same way ordinary
+  resolution does.
 
 ### Story: Restrict provider visibility
 

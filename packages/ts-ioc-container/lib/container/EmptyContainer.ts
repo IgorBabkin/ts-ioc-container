@@ -1,4 +1,5 @@
 import {
+  type AutoResolveOptions,
   type DependencyKey,
   type IContainer,
   type IContainerModule,
@@ -59,7 +60,7 @@ export class EmptyContainer implements IContainer {
   /**
    * @throws {MethodNotImplementedError} always — the empty container holds no providers to resolve.
    */
-  autoResolve(): this {
+  autoResolve(options?: AutoResolveOptions): this {
     throw new MethodNotImplementedError();
   }
 

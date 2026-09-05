@@ -1629,6 +1629,13 @@ never create them, because nothing asks for them.
   every scope created afterwards
 - `container.autoResolve()` resolves the eager providers of one container on demand
 
+Both accept an optional `AutoResolveOptions` (`{ args?: unknown[] }`) whose `args`
+are forwarded to every eagerly resolved provider, exactly as `resolve` forwards
+them - so they reach `@inject(arg(0))` parameters, `scopeAccess` rules and the
+`singleton()` cache key. `new AutoResolveModule({ args })` applies the same args
+to every created scope; call `scope.autoResolve({ args })` yourself when the
+value differs per scope.
+
 > [!IMPORTANT]
 > `autoResolve()` on its own does nothing - the container has to opt in with
 > `AutoResolveModule`. The container the module is applied to is not a created
@@ -1643,11 +1650,13 @@ registered in the created scope (`scope(...)`) or deny access to it
 ```typescript
 import 'reflect-metadata';
 import {
+  arg,
   autoResolve,
   AutoResolveModule,
   bindTo,
   Container,
   type IContainer,
+  inject,
   register,
   Registration as R,
   scope,
@@ -1666,12 +1675,21 @@ import {
  */
 
 const auditTrail: string[] = [];
+const openedLogs: string[] = [];
 
 // Started for every request, even though no other class injects it
 @register(bindTo('IRequestAuditor'), scope((s) => s.hasTag('request')), autoResolve(), singleton())
 class RequestAuditor {
   constructor() {
     auditTrail.push('request started');
+  }
+}
+
+// Eager too, but parameterized - the args come from whoever triggers eager resolution
+@register(bindTo('IRequestLog'), scope((s) => s.hasTag('request')), autoResolve())
+class RequestLog {
+  constructor(@inject(arg(0)) readonly requestId: string = 'anonymous') {
+    openedLogs.push(requestId);
   }
 }
 
@@ -1684,15 +1702,17 @@ class UserRepository {
 }
 
 describe('Auto resolve', function () {
-  function createAppContainer(): IContainer {
+  function createAppContainer(options: { args?: unknown[] } = {}): IContainer {
     return new Container({ tags: ['application'] })
-      .useModule(new AutoResolveModule())
+      .useModule(new AutoResolveModule(options))
       .addRegistration(R.fromClass(RequestAuditor))
+      .addRegistration(R.fromClass(RequestLog))
       .addRegistration(R.fromClass(UserRepository));
   }
 
   beforeEach(() => {
     auditTrail.length = 0;
+    openedLogs.length = 0;
   });
 
   it('should create eager services as soon as a scope is created', function () {
@@ -1715,6 +1735,25 @@ describe('Auto resolve', function () {
 
     expect(auditTrail).toEqual(['request started']);
     expect(requestScope.resolve<RequestAuditor>('IRequestAuditor')).toBe(auditor);
+  });
+
+  it('should treat resolve options as optional', function () {
+    createAppContainer().createScope({ tags: ['request'] });
+
+    expect(openedLogs).toEqual(['anonymous']);
+  });
+
+  it('should forward args to every eagerly resolved provider', function () {
+    // The same args reach every scope the module creates...
+    createAppContainer({ args: ['req-42'] }).createScope({ tags: ['request'] });
+
+    expect(openedLogs).toEqual(['req-42']);
+
+    // ...or pass a per-scope value by calling autoResolve yourself
+    const requestScope = createAppContainer().createScope({ tags: ['request'] });
+    requestScope.autoResolve({ args: ['req-43'] });
+
+    expect(openedLogs).toEqual(['req-42', 'anonymous', 'req-43']);
   });
 
   it('should leave other providers lazy', function () {

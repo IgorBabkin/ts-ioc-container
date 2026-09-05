@@ -2,6 +2,7 @@ import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
+import { type WithArgs } from '../injector/IInjector';
 import { type constructor, Instance } from '../utils/basic';
 
 export type DependencyKey = string | symbol;
@@ -28,6 +29,7 @@ export interface IContainerModule {
   applyTo(container: IContainer): void;
 }
 export type CreateScopeOptions = Partial<WithTags>;
+export type AutoResolveOptions = Partial<WithArgs>;
 export type OnScopeCreatedHook = (scope: IContainer) => void;
 export type RegisterOptions = { aliases?: DependencyKey[] };
 
@@ -56,7 +58,7 @@ export interface IContainer extends Tagged {
 
   createScope(options?: CreateScopeOptions): IContainer;
 
-  autoResolve(): this;
+  autoResolve(options?: AutoResolveOptions): this;
 
   getScopes(): IContainer[];
 

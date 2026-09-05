@@ -65,6 +65,8 @@ Acceptance criteria:
   it, are skipped instead of failing scope creation.
 - The container the module is applied to is not itself a created scope; its own
   providers are resolved eagerly only by calling `autoResolve()` on it.
+- Eager resolution options are optional; when `args` are supplied they are
+  forwarded to every eagerly resolved provider of every created scope.
 
 ## Notes
 

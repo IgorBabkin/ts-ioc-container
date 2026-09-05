@@ -9,6 +9,7 @@ export {
   type ResolveOneOptions,
   type ResolveManyOptions,
   type OnScopeCreatedHook,
+  type AutoResolveOptions,
   isDependencyKey,
 } from './container/IContainer';
 export { Container } from './container/Container';

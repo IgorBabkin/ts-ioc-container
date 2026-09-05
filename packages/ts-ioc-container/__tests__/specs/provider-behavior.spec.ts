@@ -190,6 +190,26 @@ describe('Spec: provider behavior', () => {
     expect(Scheduler.constructed).toBe(1);
   });
 
+  it('forwards optional args to eagerly resolved providers', () => {
+    @register(autoResolve(), singleton())
+    class RequestTracer {
+      constructor(@inject(arg(0)) readonly requestId: string = 'none') {}
+    }
+
+    const app = new Container().addRegistration(R.fromClass(RequestTracer));
+
+    app.autoResolve();
+
+    expect(app.resolve<RequestTracer>('RequestTracer').requestId).toBe('none');
+
+    const traced = new Container()
+      .useModule(new AutoResolveModule({ args: ['request-1'] }))
+      .addRegistration(R.fromClass(RequestTracer))
+      .createScope({ tags: ['request'] });
+
+    expect(traced.resolve<RequestTracer>('RequestTracer').requestId).toBe('request-1');
+  });
+
   it('restricts visibility and decorates provider results through pipes', () => {
     @register(
       scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
