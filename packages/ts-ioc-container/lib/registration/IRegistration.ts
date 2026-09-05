@@ -77,6 +77,8 @@ export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => 
 
 export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 
+export const autoResolve = <T>() => registerPipe<T>((p) => p.autoResolve());
+
 export const decorate = (...fns: DecorateFn[]) => registerPipe((p) => p.map(...fns));
 
 export const singleton = <T = unknown>(getCacheKey?: GetCacheKey) => registerPipe<T>((p) => p.singleton(getCacheKey));

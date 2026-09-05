@@ -1,7 +1,9 @@
 import {
+  type AutoResolveOptions,
   type DependencyKey,
   type IContainer,
   type IContainerModule,
+  type OnScopeCreatedHook,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
@@ -52,6 +54,13 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot create scopes.
    */
   createScope(): IContainer {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container holds no providers to resolve.
+   */
+  autoResolve(options?: AutoResolveOptions): this {
     throw new MethodNotImplementedError();
   }
 
@@ -136,6 +145,13 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
   addOnConstructHook(...hooks: OnConstructHook[]): this {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
+   */
+  addOnScopeCreatedHook(...hooks: OnScopeCreatedHook[]): this {
     throw new MethodNotImplementedError();
   }
 }

@@ -3,6 +3,8 @@ import {
   arg,
   appendArgs,
   appendArgsFn,
+  autoResolve,
+  AutoResolveModule,
   CannonSingletonApplyTwiceError,
   Container,
   decorate,
@@ -163,6 +165,49 @@ describe('Spec: provider behavior', () => {
     expect(HeavyService.constructed).toBe(0);
     expect(service.value).toBe('ready');
     expect(HeavyService.constructed).toBe(1);
+  });
+
+  it('eagerly creates auto-resolvable providers when their scope is created', () => {
+    @register(autoResolve(), singleton())
+    class Scheduler {
+      static constructed = 0;
+
+      constructor() {
+        Scheduler.constructed += 1;
+      }
+    }
+
+    const lazyApp = new Container().addRegistration(R.fromClass(Scheduler));
+    lazyApp.createScope({ tags: ['request'] });
+
+    expect(Scheduler.constructed).toBe(0);
+
+    const eagerApp = new Container().useModule(new AutoResolveModule()).addRegistration(R.fromClass(Scheduler));
+    const request = eagerApp.createScope({ tags: ['request'] });
+
+    expect(Scheduler.constructed).toBe(1);
+    expect(request.resolve<Scheduler>('Scheduler')).toBe(request.resolve<Scheduler>('Scheduler'));
+    expect(Scheduler.constructed).toBe(1);
+  });
+
+  it('forwards optional args to eagerly resolved providers', () => {
+    @register(autoResolve(), singleton())
+    class RequestTracer {
+      constructor(@inject(arg(0)) readonly requestId: string = 'none') {}
+    }
+
+    const app = new Container().addRegistration(R.fromClass(RequestTracer));
+
+    app.autoResolve();
+
+    expect(app.resolve<RequestTracer>('RequestTracer').requestId).toBe('none');
+
+    const traced = new Container()
+      .useModule(new AutoResolveModule({ args: ['request-1'] }))
+      .addRegistration(R.fromClass(RequestTracer))
+      .createScope({ tags: ['request'] });
+
+    expect(traced.resolve<RequestTracer>('RequestTracer').requestId).toBe('request-1');
   });
 
   it('restricts visibility and decorates provider results through pipes', () => {

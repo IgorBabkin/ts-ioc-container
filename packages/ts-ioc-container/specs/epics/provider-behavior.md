@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0004 - Pipe-based composition via ProviderPipe](../../docs/adr/0004-provider-pipe-composition.md), [ADR 0011 - Specs-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
-- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `scopeAccess`, `decorate`, `ProviderPipe`
+- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `autoResolve`, `scopeAccess`, `decorate`, `ProviderPipe`
 - **Executable spec:** `__tests__/specs/provider-behavior.spec.ts`
 
 ## Intent
@@ -67,6 +67,22 @@ Acceptance criteria:
   accessed.
 - The underlying instance is constructed on first property or method access.
 - Repeated access uses the same constructed instance for that lazy proxy.
+
+### Story: Eagerly create a provider instance
+
+As an application developer, I can mark a provider as auto-resolvable so that
+services which work on their own — schedulers, subscribers, warm caches — exist
+without anyone injecting them first.
+
+Acceptance criteria:
+
+- An auto-resolvable provider is created when its scope is created, provided the
+  container opted into `AutoResolveModule`.
+- Without that module, marking a provider as auto-resolvable changes nothing.
+- Eager creation reuses the provider's own caching, so a singleton provider
+  returns the eagerly created instance for later resolution.
+- Eager creation forwards optional `args` to the provider the same way ordinary
+  resolution does.
 
 ### Story: Restrict provider visibility
 
