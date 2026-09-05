@@ -82,18 +82,14 @@ describe('Spec: container modules', () => {
   it('eagerly instantiates scope services through a module', () => {
     const started: string[] = [];
 
-    @register(bindTo('IHeartbeat'), autoResolve(), singleton())
+    @register(autoResolve(), singleton())
     class Heartbeat {
       constructor() {
         started.push('heartbeat');
       }
     }
 
-    @register(
-      bindTo('IAdminConsole'),
-      autoResolve(),
-      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
-    )
+    @register(autoResolve(), scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
     class AdminConsole {
       constructor() {
         started.push('admin-console');

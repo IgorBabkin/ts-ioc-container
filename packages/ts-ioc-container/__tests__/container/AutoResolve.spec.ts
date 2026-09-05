@@ -3,7 +3,6 @@ import {
   arg,
   autoResolve,
   AutoResolveModule,
-  bindTo,
   Container,
   ContainerDisposedError,
   EmptyContainer,
@@ -24,14 +23,14 @@ describe('autoResolve', function () {
     constructed = [];
   });
 
-  @register(bindTo('IWorker'), autoResolve(), singleton())
+  @register(autoResolve(), singleton())
   class Worker {
     constructor() {
       constructed.push('Worker');
     }
   }
 
-  @register(bindTo('ILogger'), singleton())
+  @register(singleton())
   class Logger {
     constructor() {
       constructed.push('Logger');
@@ -64,7 +63,7 @@ describe('autoResolve', function () {
 
     expect(constructed).toEqual(['Worker']);
 
-    requestScope.resolve('ILogger');
+    requestScope.resolve('Logger');
 
     expect(constructed).toEqual(['Worker', 'Logger']);
   });
@@ -72,10 +71,10 @@ describe('autoResolve', function () {
   it('should reuse the eagerly created instance for later resolution', function () {
     const requestScope = createApp().createScope({ tags: ['request'] });
 
-    const worker = requestScope.resolve<Worker>('IWorker');
+    const worker = requestScope.resolve<Worker>('Worker');
 
     expect(constructed).toEqual(['Worker']);
-    expect(requestScope.resolve<Worker>('IWorker')).toBe(worker);
+    expect(requestScope.resolve<Worker>('Worker')).toBe(worker);
   });
 
   it('should resolve one instance per created scope', function () {
@@ -85,7 +84,7 @@ describe('autoResolve', function () {
     const request2 = app.createScope({ tags: ['request'] });
 
     expect(constructed).toEqual(['Worker', 'Worker']);
-    expect(request1.resolve('IWorker')).not.toBe(request2.resolve('IWorker'));
+    expect(request1.resolve('Worker')).not.toBe(request2.resolve('Worker'));
   });
 
   it('should be inherited by nested scopes', function () {
@@ -97,7 +96,7 @@ describe('autoResolve', function () {
   });
 
   it('should skip providers which are not registered in the created scope', function () {
-    @register(bindTo('ITransactionLog'), autoResolve(), scope((s) => s.hasTag('transaction')))
+    @register(autoResolve(), scope((s) => s.hasTag('transaction')))
     class TransactionLog {
       constructor() {
         constructed.push('TransactionLog');
@@ -118,11 +117,7 @@ describe('autoResolve', function () {
   });
 
   it('should skip providers which deny access to the created scope', function () {
-    @register(
-      bindTo('IAdminPanel'),
-      autoResolve(),
-      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
-    )
+    @register(autoResolve(), scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
     class AdminPanel {
       constructor() {
         constructed.push('AdminPanel');
@@ -180,7 +175,7 @@ describe('autoResolve', function () {
   });
 
   describe('args', function () {
-    @register(bindTo('IReporter'), autoResolve(), singleton())
+    @register(autoResolve(), singleton())
     class Reporter {
       constructor(@inject(arg(0)) readonly requestId: string = 'none') {
         constructed.push(`Reporter:${requestId}`);
@@ -193,7 +188,7 @@ describe('autoResolve', function () {
       app.autoResolve({ args: ['request-1'] });
 
       expect(constructed).toEqual(['Reporter:request-1']);
-      expect(app.resolve<Reporter>('IReporter').requestId).toBe('request-1');
+      expect(app.resolve<Reporter>('Reporter').requestId).toBe('request-1');
     });
 
     it('should forward module args to every created scope', function () {
@@ -204,7 +199,7 @@ describe('autoResolve', function () {
       const requestScope = app.createScope({ tags: ['request'] });
 
       expect(constructed).toEqual(['Reporter:request-1']);
-      expect(requestScope.resolve<Reporter>('IReporter').requestId).toBe('request-1');
+      expect(requestScope.resolve<Reporter>('Reporter').requestId).toBe('request-1');
     });
 
     it('should treat args as optional', function () {
@@ -222,7 +217,6 @@ describe('autoResolve', function () {
       const seenArgs: unknown[][] = [];
 
       @register(
-        bindTo('IAuditedReporter'),
         autoResolve(),
         scopeAccess(({ args: accessArgs }) => {
           seenArgs.push(accessArgs);
@@ -239,7 +233,7 @@ describe('autoResolve', function () {
     });
 
     it('should pass args to the singleton cache key', function () {
-      @register(bindTo('ITenantCache'), autoResolve(), singleton((tenant) => tenant as string))
+      @register(autoResolve(), singleton((tenant) => tenant as string))
       class TenantCache {
         constructor(@inject(arg(0)) readonly tenant: string) {
           constructed.push(`TenantCache:${tenant}`);
