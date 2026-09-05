@@ -1,3 +1,12 @@
+# 57.1.0 (2026-09-05)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add autoResolve provider pipe and AutoResolveModule (#136)
+    (5708c63d5616c10882f6ffe5993563cb8e5f00a1)
+
+
 # 57.0.0 (2026-09-05)
 
   ### 💥 BREAKING CHANGES
@@ -56,6 +65,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
