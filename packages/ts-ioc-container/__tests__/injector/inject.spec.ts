@@ -59,7 +59,7 @@ describe('inject helpers', () => {
     });
   });
 
-  describe('inject(token, selectFn)', () => {
+  describe('inject(token, ...mappers)', () => {
     it('injects the selected part of the resolved dependency', () => {
       class Config {
         constructor(readonly apiUrl: string = 'https://api.com') {}
@@ -120,6 +120,72 @@ describe('inject helpers', () => {
 
       const container = createContainer().addRegistration(R.fromClass(Service));
       expect(container.resolve<Service>('Service').id).toBe(42);
+    });
+
+    it('pipes the resolved dependency through every mapper, left to right', () => {
+      const trim = () => (value: string) => value.trim();
+      const upper = () => (value: string) => value.toUpperCase();
+      const exclaim = () => (value: string) => `${value}!`;
+
+      class Service {
+        constructor(@inject('Greeting', trim(), upper(), exclaim()) public greeting: string) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromValue('  hello  ').bindToKey('Greeting'))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').greeting).toBe('HELLO!');
+    });
+
+    it('accepts a spread list of mappers', () => {
+      const mappers = [(value: string) => `${value}-a`, (value: string) => `${value}-b`];
+
+      class Service {
+        constructor(@inject('Greeting', ...mappers) public greeting: string) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromValue('hello').bindToKey('Greeting'))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').greeting).toBe('hello-a-b');
+    });
+
+    it('keeps the chain typed across ten mappers', () => {
+      const step = (n: number) => (value: string) => `${value}-${n}`;
+
+      class Service {
+        constructor(
+          @inject('Greeting', step(1), step(2), step(3), step(4), step(5), step(6), step(7), step(8), step(9), step(10))
+          public greeting: string,
+        ) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromValue('hello').bindToKey('Greeting'))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').greeting).toBe('hello-1-2-3-4-5-6-7-8-9-10');
+    });
+
+    it('runs the mappers on every resolution', () => {
+      let calls = 0;
+      const count = () => (value: string) => {
+        calls += 1;
+        return `${value}-${calls}`;
+      };
+
+      class Service {
+        constructor(@inject('Greeting', count()) public greeting: string) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromValue('hello').bindToKey('Greeting'))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').greeting).toBe('hello-1');
+      expect(container.resolve<Service>('Service').greeting).toBe('hello-2');
     });
   });
 

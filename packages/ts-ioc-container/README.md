@@ -38,6 +38,7 @@ provider pipelines, aliases, and custom injector strategies.
   - [Lazy with registerPipe](#lazy-with-registerpipe) `lazy()`
 - [Injector](#injector)
   - [Metadata](#metadata) `@inject`
+  - [Mapping injected values](#mapping-injected-values)
   - [Simple](#simple)
   - [Proxy](#proxy)
 - [Provider](#provider) `provider`
@@ -157,7 +158,8 @@ describe('Quickstart', function () {
 - Current scope token: `select.scope.current`
 - Lazy token: `select.token('Service').lazy()`
 - Inject decorator: `@inject('Key')`
-- Property inject: `injectProp(target, 'propName', select.token('Key'))`
+- Map an injected value: `@inject('Key', sanitize(), validate())`
+- Property inject: `@hook('onInit', append(injectProp('Key')))`
 
 > [!TIP]
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
@@ -1182,6 +1184,78 @@ describe('Metadata Injector', function () {
     const app = container.resolve(App);
 
     expect(app.getLoggerName()).toBe('Logger');
+  });
+});
+
+```
+
+### Mapping injected values
+
+Every argument after the first one is a **mapper** applied to the resolved
+instance, left to right — the value the last mapper returns is what reaches the
+constructor parameter:
+
+```typescript
+@inject('Config', takeApiUrl(), stripTrailingSlash(), requireHttps())
+```
+
+A mapper is a plain `(value) => value` function, so mappers compose into named,
+reusable steps (selecting a member, sanitizing, validating) and each step's
+parameter type is inferred from the previous one. With no mapper the resolved
+instance is injected untouched.
+
+`injectProp` takes the same rest parameters: `injectProp('Config', takeApiUrl())`.
+
+```typescript
+import 'reflect-metadata';
+import { Container, inject, Registration as R } from 'ts-ioc-container';
+
+/**
+ * Mapping injected values
+ *
+ * Every argument after the first one passed to `@inject` (or `injectProp`) is a
+ * mapper applied to the resolved instance, left to right. Mappers are plain
+ * functions, so they compose into reusable, named steps.
+ */
+
+interface Config {
+  apiUrl: string;
+  retries: number;
+}
+
+// Reusable mappers, each returning a `(value) => value` function
+const takeApiUrl = () => (config: Config) => config.apiUrl;
+const stripTrailingSlash = () => (url: string) => url.replace(/\/$/, '');
+const requireHttps = () => (url: string) => {
+  if (!url.startsWith('https://')) {
+    throw new Error(`Insecure api url: ${url}`);
+  }
+  return url;
+};
+
+describe('inject mappers', () => {
+  it('should pipe the resolved dependency through every mapper', () => {
+    class ApiClient {
+      constructor(@inject('Config', takeApiUrl(), stripTrailingSlash(), requireHttps()) readonly apiUrl: string) {}
+    }
+
+    const container = new Container().addRegistration(
+      R.fromValue<Config>({ apiUrl: 'https://api.com/', retries: 3 }).bindToKey('Config'),
+    );
+
+    expect(container.resolve(ApiClient).apiUrl).toBe('https://api.com');
+  });
+
+  it('should throw from a mapper when the resolved value is not acceptable', () => {
+    class ApiClient {
+      constructor(@inject('Config', takeApiUrl(), requireHttps()) readonly apiUrl: string) {}
+    }
+
+    const container = new Container().addRegistration(
+      R.fromValue<Config>({ apiUrl: 'http://api.com', retries: 3 }).bindToKey('Config'),
+    );
+
+    expect(() => container.resolve(ApiClient)).toThrow('Insecure api url: http://api.com');
   });
 });
 
