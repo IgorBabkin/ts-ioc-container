@@ -1,3 +1,18 @@
+# 57.0.0 (2026-09-05)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    rename args(index) to arg(index), add args for full runtime args array (#135)
+    (7b70c750adc5c17163828beb1533cfcf98f32c21)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    rename args(index) to arg(index), add args for full runtime args array (#135)
+    (7b70c750adc5c17163828beb1533cfcf98f32c21)
+
+
 # 56.4.0 (2026-09-05)
 
   ### ✨ Features
@@ -41,6 +56,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
