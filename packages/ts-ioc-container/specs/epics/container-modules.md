@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `IContainerModule`, `Container.useModule`, `AddOnConstructHookModule`, `AddOnDisposeHookModule`
+- **Public API:** `IContainerModule`, `Container.useModule`, `AddOnConstructHookModule`, `AddOnDisposeHookModule`, `AutoResolveModule`, `Container.autoResolve`
 - **Executable spec:** `__tests__/specs/container-modules.spec.ts`
 
 ## Intent
@@ -50,6 +50,21 @@ Acceptance criteria:
   by the disposed scope.
 - Child scopes created after module setup inherit the lifecycle hooks configured
   on the parent.
+
+### Story: Eagerly instantiate scope services through a module
+
+As an application architect, I can opt into eager resolution through a module so
+that services marked with `autoResolve()` are created as soon as a scope exists.
+
+Acceptance criteria:
+
+- `AutoResolveModule` resolves auto-resolvable providers of every scope created
+  after the module was applied.
+- Child scopes inherit eager resolution from the scope they were created in.
+- Providers that are not registered in a created scope, or that deny access to
+  it, are skipped instead of failing scope creation.
+- The container the module is applied to is not itself a created scope; its own
+  providers are resolved eagerly only by calling `autoResolve()` on it.
 
 ## Notes
 

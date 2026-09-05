@@ -30,6 +30,7 @@ export class Provider<T = any> implements IProvider<T> {
   private readonly accessRules: ScopeAccessRule[] = [];
   private readonly mappers: DecorateFn<T>[] = [];
   private isLazy = false;
+  private isAutoResolve = false;
   private cache = new Map<string | symbol, unknown>();
   private getKey: GetCacheKey | undefined;
   private isDisposed: boolean = false;
@@ -78,6 +79,20 @@ export class Provider<T = any> implements IProvider<T> {
     return this;
   }
 
+  autoResolve(): this {
+    this.isAutoResolve = true;
+    return this;
+  }
+
+  /**
+   * @throws {ProviderDisposedError} when the provider has already been disposed.
+   */
+  isAutoResolvable(): boolean {
+    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
+
+    return this.isAutoResolve;
+  }
+
   addArgsFn(...fns: ArgsFn[]): this {
     this.argsFnList.push(...fns);
     return this;
@@ -107,6 +122,7 @@ export class Provider<T = any> implements IProvider<T> {
   dispose(): void {
     ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
     this.isDisposed = true;
+    this.isAutoResolve = false;
     this.getKey = undefined;
     this.cache.clear();
     this.accessRules.splice(0, this.accessRules.length);

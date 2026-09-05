@@ -25,6 +25,10 @@ export interface IProvider<T = any> {
 
   lazy(): this;
 
+  autoResolve(): this;
+
+  isAutoResolvable(): boolean;
+
   singleton(getCacheKey?: GetCacheKey): this;
 
   dispose(): void;

@@ -28,6 +28,7 @@ export interface IContainerModule {
   applyTo(container: IContainer): void;
 }
 export type CreateScopeOptions = Partial<WithTags>;
+export type OnScopeCreatedHook = (scope: IContainer) => void;
 export type RegisterOptions = { aliases?: DependencyKey[] };
 
 export interface IContainer extends Tagged {
@@ -36,6 +37,8 @@ export interface IContainer extends Tagged {
   addOnConstructHook(...hooks: OnConstructHook[]): this;
 
   addOnDisposeHook(...hooks: OnDisposeHook[]): this;
+
+  addOnScopeCreatedHook(...hooks: OnScopeCreatedHook[]): this;
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 
@@ -52,6 +55,8 @@ export interface IContainer extends Tagged {
   resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T;
 
   createScope(options?: CreateScopeOptions): IContainer;
+
+  autoResolve(): this;
 
   getScopes(): IContainer[];
 

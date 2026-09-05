@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import {
   AddOnConstructHookModule,
+  autoResolve,
+  AutoResolveModule,
   bindTo,
   Container,
   type IContainer,
@@ -8,6 +10,7 @@ import {
   onConstruct,
   register,
   Registration as R,
+  scopeAccess,
   singleton,
 } from '../../lib';
 
@@ -74,5 +77,46 @@ describe('Spec: container modules', () => {
     const request = app.createScope({ tags: ['request'] });
 
     expect(request.resolve<FeatureService>('FeatureService').started).toBe(true);
+  });
+
+  it('eagerly instantiates scope services through a module', () => {
+    const started: string[] = [];
+
+    @register(bindTo('IHeartbeat'), autoResolve(), singleton())
+    class Heartbeat {
+      constructor() {
+        started.push('heartbeat');
+      }
+    }
+
+    @register(
+      bindTo('IAdminConsole'),
+      autoResolve(),
+      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
+    )
+    class AdminConsole {
+      constructor() {
+        started.push('admin-console');
+      }
+    }
+
+    const app = new Container({ tags: ['application'] })
+      .useModule(new AutoResolveModule())
+      .addRegistration(R.fromClass(Heartbeat))
+      .addRegistration(R.fromClass(AdminConsole));
+
+    expect(started).toEqual([]);
+
+    const request = app.createScope({ tags: ['request'] });
+
+    expect(started).toEqual(['heartbeat']);
+
+    request.createScope({ tags: ['transaction'] });
+
+    expect(started).toEqual(['heartbeat', 'heartbeat']);
+
+    app.createScope({ tags: ['request', 'admin'] });
+
+    expect(started).toEqual(['heartbeat', 'heartbeat', 'heartbeat', 'admin-console']);
   });
 });

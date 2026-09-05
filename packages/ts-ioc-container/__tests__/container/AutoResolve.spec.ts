@@ -1,0 +1,179 @@
+import 'reflect-metadata';
+import {
+  autoResolve,
+  AutoResolveModule,
+  bindTo,
+  Container,
+  ContainerDisposedError,
+  EmptyContainer,
+  type IContainer,
+  MethodNotImplementedError,
+  register,
+  Registration as R,
+  scope,
+  scopeAccess,
+  singleton,
+} from '../../lib';
+
+describe('autoResolve', function () {
+  let constructed: string[] = [];
+
+  beforeEach(() => {
+    constructed = [];
+  });
+
+  @register(bindTo('IWorker'), autoResolve(), singleton())
+  class Worker {
+    constructor() {
+      constructed.push('Worker');
+    }
+  }
+
+  @register(bindTo('ILogger'), singleton())
+  class Logger {
+    constructor() {
+      constructed.push('Logger');
+    }
+  }
+
+  function createApp(): IContainer {
+    return new Container({ tags: ['application'] })
+      .useModule(new AutoResolveModule())
+      .addRegistration(R.fromClass(Worker))
+      .addRegistration(R.fromClass(Logger));
+  }
+
+  it('should not resolve auto-resolvable providers without the module', function () {
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Worker));
+
+    app.createScope({ tags: ['request'] });
+
+    expect(constructed).toEqual([]);
+  });
+
+  it('should resolve auto-resolvable providers when a scope is created', function () {
+    createApp().createScope({ tags: ['request'] });
+
+    expect(constructed).toEqual(['Worker']);
+  });
+
+  it('should leave providers without the pipe untouched', function () {
+    const requestScope = createApp().createScope({ tags: ['request'] });
+
+    expect(constructed).toEqual(['Worker']);
+
+    requestScope.resolve('ILogger');
+
+    expect(constructed).toEqual(['Worker', 'Logger']);
+  });
+
+  it('should reuse the eagerly created instance for later resolution', function () {
+    const requestScope = createApp().createScope({ tags: ['request'] });
+
+    const worker = requestScope.resolve<Worker>('IWorker');
+
+    expect(constructed).toEqual(['Worker']);
+    expect(requestScope.resolve<Worker>('IWorker')).toBe(worker);
+  });
+
+  it('should resolve one instance per created scope', function () {
+    const app = createApp();
+
+    const request1 = app.createScope({ tags: ['request'] });
+    const request2 = app.createScope({ tags: ['request'] });
+
+    expect(constructed).toEqual(['Worker', 'Worker']);
+    expect(request1.resolve('IWorker')).not.toBe(request2.resolve('IWorker'));
+  });
+
+  it('should be inherited by nested scopes', function () {
+    const requestScope = createApp().createScope({ tags: ['request'] });
+
+    requestScope.createScope({ tags: ['transaction'] });
+
+    expect(constructed).toEqual(['Worker', 'Worker']);
+  });
+
+  it('should skip providers which are not registered in the created scope', function () {
+    @register(bindTo('ITransactionLog'), autoResolve(), scope((s) => s.hasTag('transaction')))
+    class TransactionLog {
+      constructor() {
+        constructed.push('TransactionLog');
+      }
+    }
+
+    const app = new Container({ tags: ['application'] })
+      .useModule(new AutoResolveModule())
+      .addRegistration(R.fromClass(TransactionLog));
+
+    const requestScope = app.createScope({ tags: ['request'] });
+
+    expect(constructed).toEqual([]);
+
+    requestScope.createScope({ tags: ['transaction'] });
+
+    expect(constructed).toEqual(['TransactionLog']);
+  });
+
+  it('should skip providers which deny access to the created scope', function () {
+    @register(
+      bindTo('IAdminPanel'),
+      autoResolve(),
+      scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')),
+    )
+    class AdminPanel {
+      constructor() {
+        constructed.push('AdminPanel');
+      }
+    }
+
+    const app = new Container({ tags: ['application'] })
+      .useModule(new AutoResolveModule())
+      .addRegistration(R.fromClass(AdminPanel));
+
+    app.createScope({ tags: ['request'] });
+
+    expect(constructed).toEqual([]);
+
+    app.createScope({ tags: ['request', 'admin'] });
+
+    expect(constructed).toEqual(['AdminPanel']);
+  });
+
+  it('should not auto resolve the container the module is applied to', function () {
+    const app = createApp();
+
+    expect(constructed).toEqual([]);
+
+    expect(app.autoResolve()).toBe(app);
+    expect(constructed).toEqual(['Worker']);
+  });
+
+  it('should not resolve auto-resolvable providers twice on the same scope', function () {
+    const requestScope = createApp().createScope({ tags: ['request'] });
+
+    requestScope.autoResolve();
+
+    expect(constructed).toEqual(['Worker']);
+  });
+
+  it('should throw when the container is disposed', function () {
+    const app = createApp();
+    app.dispose();
+
+    expect(() => app.autoResolve()).toThrowError(ContainerDisposedError);
+  });
+
+  it('should stop auto resolving scopes of a disposed parent', function () {
+    const app = createApp();
+    const requestScope = app.createScope({ tags: ['request'] });
+    requestScope.dispose();
+
+    expect(() => requestScope.createScope({ tags: ['transaction'] })).toThrowError(ContainerDisposedError);
+  });
+
+  it('should not be supported by an empty container', function () {
+    expect(() => new EmptyContainer().autoResolve()).toThrowError(MethodNotImplementedError);
+    expect(() => new EmptyContainer().addOnScopeCreatedHook(() => {})).toThrowError(MethodNotImplementedError);
+  });
+});

@@ -3,6 +3,7 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
+  type OnScopeCreatedHook,
   type RegisterOptions,
   ResolveManyOptions,
   type ResolveOneOptions,
@@ -33,6 +34,7 @@ export class Container implements IContainer {
   private readonly injector: IInjector;
   private readonly onConstructHookList: OnConstructHook[] = [];
   private readonly onDisposeHookList: OnDisposeHook[] = [];
+  private readonly onScopeCreatedHookList: OnScopeCreatedHook[] = [];
 
   constructor(
     options: {
@@ -127,14 +129,37 @@ export class Container implements IContainer {
 
     const scope = new Container({ injector: this.injector, parent: this, tags })
       .addOnConstructHook(...this.onConstructHookList)
-      .addOnDisposeHook(...this.onDisposeHookList);
+      .addOnDisposeHook(...this.onDisposeHookList)
+      .addOnScopeCreatedHook(...this.onScopeCreatedHookList);
 
     for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
     }
     this.scopes.push(scope);
 
+    // Hooks run once the scope is fully registered and attached, so they observe a usable scope.
+    for (const onScopeCreated of this.onScopeCreatedHookList) {
+      onScopeCreated(scope);
+    }
+
     return scope;
+  }
+
+  /**
+   * Eagerly resolves every provider of this scope which was marked with `autoResolve()`.
+   *
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   */
+  autoResolve(): this {
+    this.validateContainer();
+
+    for (const provider of this.providers.values()) {
+      if (provider.isAutoResolvable() && provider.hasAccess({ invocationScope: this, providerScope: this, args: [] })) {
+        provider.resolve(this, { args: [] });
+      }
+    }
+
+    return this;
   }
 
   /**
@@ -165,6 +190,7 @@ export class Container implements IContainer {
 
     // Clear hooks
     this.onConstructHookList.length = 0;
+    this.onScopeCreatedHookList.length = 0;
   }
 
   addRegistration(registration: IRegistration): this {
@@ -188,6 +214,11 @@ export class Container implements IContainer {
 
   addOnDisposeHook(...hooks: OnDisposeHook[]): this {
     this.onDisposeHookList.push(...hooks);
+    return this;
+  }
+
+  addOnScopeCreatedHook(...hooks: OnScopeCreatedHook[]): this {
+    this.onScopeCreatedHookList.push(...hooks);
     return this;
   }
 
