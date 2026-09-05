@@ -135,7 +135,9 @@ jobs:
       - name: Create GitHub releases
         run: pnpm exec monorepo-semantic-release release-notes --context "$RELEASE_CONTEXT"
         env:
-          GH_TOKEN: ${{ github.token }}
+          # The step reads GITHUB_TOKEN, not GH_TOKEN — it sets GH_TOKEN itself
+          # when it shells out to `gh`. GITHUB_REPOSITORY is provided by Actions.
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Publish to GitHub Packages
         # Publish to GitHub Packages so it shows up in the Packages section
