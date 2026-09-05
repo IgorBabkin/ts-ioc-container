@@ -1,5 +1,5 @@
 import {
-  args,
+  arg,
   appendArgs,
   appendArgsFn,
   bindTo,
@@ -31,7 +31,7 @@ describe('IProvider', function () {
       // Pre-configure the logger with a filename
       @register(appendArgs('/var/log/app.log'))
       class FileLogger {
-        constructor(@inject(args(0)) public filename: string) {}
+        constructor(@inject(arg(0)) public filename: string) {}
       }
 
       const root = createContainer().addRegistration(R.fromClass(FileLogger));
@@ -45,8 +45,8 @@ describe('IProvider', function () {
       @register(appendArgs('ConfiguredContext'))
       class Logger {
         constructor(
-          @inject(args(0)) public runtimeContext: string,
-          @inject(args(1)) public configuredContext: string,
+          @inject(arg(0)) public runtimeContext: string,
+          @inject(arg(1)) public configuredContext: string,
         ) {}
       }
 
@@ -68,7 +68,7 @@ describe('IProvider', function () {
       // Extract 'env' from Config service dynamically
       @register(appendArgsFn((scope) => [scope.resolve<Config>('Config').env]))
       class Service {
-        constructor(@inject(args(0)) public env: string) {}
+        constructor(@inject(arg(0)) public env: string) {}
       }
 
       const root = createContainer()
@@ -85,8 +85,8 @@ describe('IProvider', function () {
       @register(appendArgs('configured'))
       class Service {
         constructor(
-          @inject(args(0)) public runtime: string,
-          @inject(args(1)) public configured: string,
+          @inject(arg(0)) public runtime: string,
+          @inject(arg(1)) public configured: string,
         ) {}
       }
 
@@ -105,9 +105,9 @@ describe('IProvider', function () {
       @register(appendArgs('fixed'), appendArgsFn((scope) => [scope.resolve<Config>('Config').tenant]))
       class Service {
         constructor(
-          @inject(args(0)) public runtime: string,
-          @inject(args(1)) public fixed: string,
-          @inject(args(2)) public tenant: string,
+          @inject(arg(0)) public runtime: string,
+          @inject(arg(1)) public fixed: string,
+          @inject(arg(2)) public tenant: string,
         ) {}
       }
 
@@ -144,7 +144,7 @@ describe('IProvider', function () {
 
     // EntityManager is generic - it works with ANY repository.
     // The repository is the first arg passed via `EntityManagerToken.args(...)`.
-    // `@inject(args(0))` reads it; the container auto-resolves InjectionToken args
+    // `@inject(arg(0))` reads it; the container auto-resolves InjectionToken args
     // before they reach the constructor.
     const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
 
@@ -153,7 +153,7 @@ describe('IProvider', function () {
       singleton((arg1) => (arg1 as SingleToken).token), // Cache unique instance per repository type
     )
     class EntityManager {
-      constructor(@inject(args(0)) public repository: IRepository) {}
+      constructor(@inject(arg(0)) public repository: IRepository) {}
     }
 
     class App {

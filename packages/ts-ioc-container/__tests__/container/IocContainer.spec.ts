@@ -1,8 +1,8 @@
-import { args, appendArgs, bindTo, Container, inject, register, Registration as R, scope } from '../../lib';
+import { arg, appendArgs, bindTo, Container, inject, register, Registration as R, scope } from '../../lib';
 
 @register(bindTo('logger'))
 class Logger {
-  constructor(@inject(args(0)) public topic: string) {}
+  constructor(@inject(arg(0)) public topic: string) {}
 }
 
 describe('IocContainer', function () {

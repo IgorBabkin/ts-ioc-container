@@ -15,7 +15,7 @@ export { EmptyContainer } from './container/EmptyContainer';
 
 // Injectors
 export { type IInjector, type InjectOptions, type IInjectFnResolver, Injector } from './injector/IInjector';
-export { MetadataInjector, inject, args, argsFn, resolveArgs } from './injector/MetadataInjector';
+export { MetadataInjector, inject, arg, args, argsFn, resolveArgs } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {
   appendArgs,
-  args,
+  arg,
   bindTo,
   Container,
   inject,
@@ -310,8 +310,8 @@ describe('lazy registerPipe', () => {
     @register(bindTo('Config'))
     class ConfigService {
       constructor(
-        @inject(args(0)) public apiUrl: string,
-        @inject(args(1)) public timeout: number,
+        @inject(arg(0)) public apiUrl: string,
+        @inject(arg(1)) public timeout: number,
       ) {
         initLog.push(`ConfigService initialized with ${apiUrl}`);
       }
