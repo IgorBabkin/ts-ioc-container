@@ -96,6 +96,7 @@ export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hoo
 
 // Tokens
 export { InjectionToken } from './token/InjectionToken';
+export { type Injectable, toToken, toMappedToken, argToToken } from './token/toToken';
 export { GroupAliasToken, toGroupAlias } from './token/GroupAliasToken';
 export { SingleAliasToken, toSingleAlias } from './token/SingleAliasToken';
 export { ClassToken } from './token/ClassToken';
