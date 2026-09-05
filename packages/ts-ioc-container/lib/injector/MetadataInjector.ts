@@ -120,7 +120,19 @@ export const argsFn =
   (c, { args = [] }): T =>
     args.find((value, index) => predicate(value, index)) as T;
 
-export const args = <T = unknown>(index: number): InjectFn<T> => argsFn<T>((value, i) => i === index);
+/**
+ * Injects the whole positional args list passed at resolution time.
+ *
+ * `@inject(args)` — note there are no parentheses: `args` is the inject function itself,
+ * not a factory. Resolves to `[]` when nothing was passed.
+ */
+export const args: InjectFn<unknown[]> = (_, options) => options.args ?? [];
+
+/**
+ * Injects a single positional arg by index — a shortcut for `argsFn((_, i) => i === index)`.
+ * Resolves to `undefined` when the index is out of bounds.
+ */
+export const arg = <T = unknown>(index: number): InjectFn<T> => argsFn<T>((value, i) => i === index);
 
 export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
   const tokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];

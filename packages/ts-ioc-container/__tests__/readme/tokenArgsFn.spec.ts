@@ -1,4 +1,4 @@
-import { args, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
+import { arg, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
 
 interface IConfig {
   apiUrl: string;
@@ -8,8 +8,8 @@ interface IConfig {
 @register(bindTo('IConfig'))
 class ConfigService implements IConfig {
   constructor(
-    @inject(args(0)) public apiUrl: string,
-    @inject(args(1)) public timeout: number,
+    @inject(arg(0)) public apiUrl: string,
+    @inject(arg(1)) public timeout: number,
   ) {}
 }
 

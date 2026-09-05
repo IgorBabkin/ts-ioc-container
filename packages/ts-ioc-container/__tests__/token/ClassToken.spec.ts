@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { args, ClassToken, Container, inject } from '../../lib';
+import { arg, ClassToken, Container, inject } from '../../lib';
 
 describe('ClassToken', () => {
   class TestClass {
-    constructor(@inject(args(0)) public value: string = 'default') {}
+    constructor(@inject(arg(0)) public value: string = 'default') {}
   }
 
   it('should resolve class with default value when no args supplied', () => {

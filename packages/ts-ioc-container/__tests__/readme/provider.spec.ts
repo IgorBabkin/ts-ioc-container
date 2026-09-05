@@ -1,4 +1,4 @@
-import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R } from '../../lib';
+import { arg, bindTo, Container, inject, lazy, Provider, register, Registration as R } from '../../lib';
 
 /**
  * Data Processing Pipeline - Provider Patterns
@@ -65,7 +65,7 @@ describe('Provider', () => {
 
   it('supports args decorator for providing extra arguments', () => {
     class FileService {
-      constructor(@inject(args(0)) readonly basePath: string) {}
+      constructor(@inject(arg(0)) readonly basePath: string) {}
     }
 
     const container = new Container().register(
@@ -79,7 +79,7 @@ describe('Provider', () => {
 
   it('supports argsFn decorator for dynamic arguments', () => {
     class Database {
-      constructor(@inject(args(0)) readonly connectionString: string) {}
+      constructor(@inject(arg(0)) readonly connectionString: string) {}
     }
 
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(

@@ -1,4 +1,4 @@
-import { args, appendArgs, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
+import { arg, appendArgs, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
 
 interface IConfig {
   apiUrl: string;
@@ -6,7 +6,7 @@ interface IConfig {
 
 @register(bindTo('IConfig'), appendArgs('https://api.example.com'))
 class ConfigService implements IConfig {
-  constructor(@inject(args(0)) public apiUrl: string) {}
+  constructor(@inject(arg(0)) public apiUrl: string) {}
 }
 
 const IConfigToken = new SingleToken<IConfig>('IConfig');

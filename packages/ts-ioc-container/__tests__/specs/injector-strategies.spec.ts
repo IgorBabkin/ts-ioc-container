@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-  args,
+  arg,
   argsFn,
   bindTo,
   Container,
@@ -24,7 +24,7 @@ describe('Spec: injector strategies', () => {
     class Controller {
       constructor(
         @inject('Logger') readonly logger: Logger,
-        @inject(args(0)) readonly id: number,
+        @inject(arg(0)) readonly id: number,
         @inject(argsFn((value) => typeof value === 'string')) readonly tenant: string,
       ) {}
     }

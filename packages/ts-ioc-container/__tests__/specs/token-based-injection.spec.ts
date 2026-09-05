@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-  args,
+  arg,
   bindTo,
   ClassToken,
   ConstantToken,
@@ -54,8 +54,8 @@ describe('Spec: token-based injection', () => {
   it('composes token arguments immutably', () => {
     class Report {
       constructor(
-        @inject(args(0)) readonly format: string,
-        @inject(args(1)) readonly tenant: string,
+        @inject(arg(0)) readonly format: string,
+        @inject(arg(1)) readonly tenant: string,
       ) {}
     }
 

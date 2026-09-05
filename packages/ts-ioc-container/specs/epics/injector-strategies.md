@@ -33,7 +33,8 @@ that a dependency can be configured at resolution time.
 
 Acceptance criteria:
 
-- `args(index)` selects a runtime argument by position.
+- `arg(index)` selects a runtime argument by position.
+- `args` injects the whole runtime argument list.
 - `argsFn` maps the full runtime argument list to one injected value.
 - Missing positional runtime arguments resolve as `undefined`.
 

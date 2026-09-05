@@ -245,9 +245,9 @@ resolution.
 ```typescript
 @register(bindTo(EntityManagerToken), singleton(MultiCache.fromFirstArg))
 class EntityManager {
-  constructor(@inject(args(0)) public repo: IRepository) {}
+  constructor(@inject(arg(0)) public repo: IRepository) {}
 }
-// UserRepositoryToken is an InjectionToken — auto-resolved before reaching @inject(args(0))
+// UserRepositoryToken is an InjectionToken — auto-resolved before reaching @inject(arg(0))
 EntityManagerToken.args(UserRepositoryToken).resolve(container);
 ```
 
