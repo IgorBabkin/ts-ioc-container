@@ -138,11 +138,3 @@ jobs:
           # The step reads GITHUB_TOKEN, not GH_TOKEN — it sets GH_TOKEN itself
           # when it shells out to `gh`. GITHUB_REPOSITORY is provided by Actions.
           GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Publish to GitHub Packages
-        # Publish to GitHub Packages so it shows up in the Packages section
-        continue-on-error: true
-        uses: ./.github/actions/publish-to-github-packages
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          package-name: ts-ioc-container
