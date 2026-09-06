@@ -1,3 +1,12 @@
+# 57.3.0 (2026-09-06)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    strip stray encoding artifacts from .gitignore (#137)
+    (444a165bbaa83982a66795b0b82ca0c09680710f)
+
+
 # 57.2.0 (2026-09-06)
 
   ### ✨ Features
@@ -74,6 +83,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
