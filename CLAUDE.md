@@ -187,8 +187,13 @@ All `lib/`, `__tests__/`, and `__benchmarks__/` paths below are relative to
 
 **`ProviderPipe`** is an interface with two methods: `mapProvider` (transforms `IProvider`) and `mapRegistration` (transforms `IRegistration`). All exported pipe functions (`singleton()`, `lazy()`, `args()`, etc.) are `ProviderPipe` objects created via `registerPipe()`.
 
-- **`IProvider.pipe()`** — accepts raw functions or `ProviderPipe` objects (extracts `mapProvider`)
-- **`IRegistration.pipe()` and `@register()`** — accepts `ProviderPipe` objects (calls `mapRegistration`) plus registration-only pipes (`bindTo()`, `scope()`)
+- **`IRegistration.pipe()`** — accepts `ProviderMapper<T>` = a raw `MapFn<IProvider<T>>` or a `ProviderPipe` object (normalized by `toProviderFn`, which extracts `mapProvider`)
+- **`@register()`** — accepts `RegistrationMapper<T>` = a `MapFn<IRegistration<T>>` (`bindTo()`, `scope()`), a `ProviderPipe` object (calls `mapRegistration`), or a `Bindable` (`DependencyKey | BindToken`) as sugar for `bindTo(...)` (normalized by `toRegistrationFn`)
+
+`Bindable`, `ProviderMapper` and `RegistrationMapper` are the named unions for
+these argument lists — use them instead of respelling the union inline, and put
+any new normalization in `toBindToken` / `toProviderFn` / `toRegistrationFn`
+(all in `lib/registration/IRegistration.ts`) so the branching lives in one place.
 
 `scope()` and `bindTo()` are **not** `ProviderPipe` — they only work at registration level.
 

@@ -1,11 +1,16 @@
-import { DependencyKey, IContainer, isDependencyKey } from '../container/IContainer';
+import { DependencyKey, IContainer } from '../container/IContainer';
 import { Provider } from '../provider/Provider';
 import type { IProvider, ResolveDependency } from '../provider/IProvider';
 import { DependencyMissingKeyError } from '../errors/DependencyMissingKeyError';
-import { IRegistration, isProviderPipe, ProviderPipe, ScopeMatchRule } from './IRegistration';
-import { getTransformers } from './IRegistration';
-import { BindToken } from '../token/BindToken';
-import { SingleToken } from '../token/SingleToken';
+import {
+  type Bindable,
+  type IRegistration,
+  type ProviderMapper,
+  type ScopeMatchRule,
+  getTransformers,
+  toBindToken,
+  toProviderFn,
+} from './IRegistration';
 import { type MapFn, pipe } from '../utils/fp';
 import { type constructor, Is } from '../utils/basic';
 
@@ -50,9 +55,8 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): this {
-    const fns = mappers.map((m): MapFn<IProvider<T>> => (isProviderPipe<T>(m) ? m.mapProvider.bind(m) : m));
-    this.mappers.push(...fns);
+  pipe(...mappers: ProviderMapper<T>[]): this {
+    this.mappers.push(...mappers.map(toProviderFn));
     return this;
   }
 
@@ -61,13 +65,8 @@ export class Registration<T = any> implements IRegistration<T> {
     return this;
   }
 
-  bindTo(key: DependencyKey | BindToken): this {
-    if (isDependencyKey(key)) {
-      new SingleToken(key).bindTo(this);
-      return this;
-    }
-
-    key.bindTo(this);
+  bindTo(key: Bindable): this {
+    toBindToken(key).bindTo(this);
     return this;
   }
 

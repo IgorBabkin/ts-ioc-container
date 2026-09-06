@@ -1,7 +1,7 @@
 import { type DependencyKey, type IContainer, type IContainerModule, isDependencyKey } from '../container/IContainer';
 import type { ArgsFn, DecorateFn, GetCacheKey, IProvider, ScopeAccessRule } from '../provider/IProvider';
 import { SingleToken } from '../token/SingleToken';
-import { BindToken, isBindToken } from '../token/BindToken';
+import { BindToken } from '../token/BindToken';
 import { MapFn } from '../utils/fp';
 import { addClassMeta, getClassMeta } from '../metadata/class';
 import { type constructor } from '../utils/basic';
@@ -22,6 +22,33 @@ export const registerPipe = <T>(mapProvider: (p: IProvider<T>) => IProvider<T>):
   mapRegistration: (r) => r.pipe(mapProvider),
 });
 
+/**
+ * Anything that can name a binding key: a raw key, or a token that knows how to bind itself.
+ */
+export type Bindable<T = any> = DependencyKey | BindToken<T>;
+
+export const toBindToken = <T>(target: Bindable<T>): BindToken<T> =>
+  isDependencyKey(target) ? new SingleToken<T>(target) : target;
+
+/**
+ * Everything accepted at provider level - by `IRegistration.pipe(...)`.
+ */
+export type ProviderMapper<T = any> = MapFn<IProvider<T>> | ProviderPipe<T>;
+
+export const toProviderFn = <T>(mapper: ProviderMapper<T>): MapFn<IProvider<T>> =>
+  isProviderPipe<T>(mapper) ? mapper.mapProvider.bind(mapper) : mapper;
+
+/**
+ * Everything accepted at registration level - by `@register(...)`.
+ */
+export type RegistrationMapper<T = any> = MapFn<IRegistration<T>> | ProviderPipe<T> | Bindable<T>;
+
+export const toRegistrationFn = <T>(mapper: RegistrationMapper<T>): MapFn<IRegistration<T>> => {
+  if (typeof mapper === 'function') return mapper;
+  if (isProviderPipe<T>(mapper)) return (r) => mapper.mapRegistration(r);
+  return bindTo(mapper);
+};
+
 export interface IRegistration<T = any> extends IContainerModule {
   getKeyOrFail(): DependencyKey;
 
@@ -29,9 +56,9 @@ export interface IRegistration<T = any> extends IContainerModule {
 
   bindToKey(key: DependencyKey): this;
 
-  bindTo(key: DependencyKey | BindToken): this;
+  bindTo(key: Bindable): this;
 
-  pipe(...mappers: (MapFn<IProvider<T>> | ProviderPipe<T>)[]): this;
+  pipe(...mappers: ProviderMapper<T>[]): this;
 
   bindToAlias(alias: DependencyKey): this;
 }
@@ -42,22 +69,17 @@ const METADATA_KEY = 'registration';
 export const getTransformers = (Target: constructor<unknown>) =>
   getClassMeta<MapFn<IRegistration>[]>(Target, METADATA_KEY) ?? [];
 
-export const register = (...mappers: Array<MapFn<IRegistration> | ProviderPipe | BindToken | DependencyKey>) =>
+export const register = (...mappers: RegistrationMapper[]) =>
   addClassMeta(METADATA_KEY, (acc: MapFn<IRegistration>[] | undefined) => {
-    const result = mappers.map((m) => {
-      if (isProviderPipe(m)) return (r: IRegistration) => m.mapRegistration(r);
-      if (isBindToken(m) || isDependencyKey(m)) return bindTo(m);
-      return m;
-    }) as MapFn<IRegistration>[];
+    const result = mappers.map((m) => toRegistrationFn(m));
     return acc ? [...result, ...acc] : result;
   });
 
 export const bindTo =
-  (...tokens: (DependencyKey | BindToken)[]): MapFn<IRegistration> =>
+  (...tokens: Bindable[]): MapFn<IRegistration> =>
   (r) => {
     for (const token of tokens) {
-      const targetToken = isBindToken(token) ? token : new SingleToken(token);
-      targetToken.bindTo(r);
+      toBindToken(token).bindTo(r);
     }
     return r;
   };
