@@ -1,3 +1,12 @@
+# 57.2.0 (2026-09-06)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    export registration pipe helpers and mapper types
+    (04ca5d1f2023c7332e9cae0b47c36f46a17d2044)
+
+
 # 57.1.0 (2026-09-05)
 
   ### ✨ Features
@@ -65,6 +74,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
