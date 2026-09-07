@@ -38,6 +38,17 @@ describe('resolveArgs', () => {
     expect(resolveArgs(ProxiedService)(scope, {})).toEqual(['hello']);
   });
 
+  it('accepts an instance proxy whose handler does not forward `constructor`', () => {
+    const scope = createContainer();
+    // Reading `constructor` through a proxy only works if the handler forwards it,
+    // which a custom one need not do - so the instance is unwrapped, not read through.
+    const opaque = ProxyRegistry.getInstance().createProxy(scope.resolve(Service), {
+      get: (target, prop) => (prop === 'constructor' ? undefined : Reflect.get(target, prop)),
+    });
+
+    expect(resolveArgs(opaque)(scope, {})).toEqual(['hello']);
+  });
+
   it('accepts a proxy of an instance', () => {
     const scope = createContainer();
     const proxy = ProxyRegistry.getInstance().createProxy(scope.resolve(Service), {});
