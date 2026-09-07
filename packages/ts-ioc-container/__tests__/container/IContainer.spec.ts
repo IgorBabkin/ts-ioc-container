@@ -13,6 +13,7 @@ import {
   SingleToken,
   GroupAliasToken,
   singleton,
+  unwrapProxyTarget,
 } from '../../lib';
 
 describe('IContainer', function () {
@@ -96,13 +97,14 @@ describe('IContainer', function () {
       expect(root.hasInstance(new FileLogger())).toBe(false);
     });
 
-    it('should return true for an instance wrapped in a mediator proxy', () => {
+    it('should not match a proxy directly, only its unwrapped target', () => {
       const root = new Container({ tags: ['root'] });
 
       const logger = root.resolve(FileLogger);
       const proxy = createProxy(logger, {});
 
-      expect(root.hasInstance(proxy)).toBe(true);
+      expect(root.hasInstance(proxy)).toBe(false);
+      expect(root.hasInstance(unwrapProxyTarget(proxy))).toBe(true);
     });
   });
 

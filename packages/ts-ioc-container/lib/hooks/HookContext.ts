@@ -1,12 +1,12 @@
 import type { IContainer } from '../container/IContainer';
 
 import { InjectionToken } from '../token/InjectionToken';
-import { type constructor } from '../utils/basic';
+import { type constructor, type Instance } from '../utils/basic';
 import { getProxyTarget, isProxy } from '../utils/proxy';
 import { resolveArgs } from '../injector/MetadataInjector';
 
 export interface IHookContext {
-  instance: object;
+  instance: Instance;
   scope: IContainer;
   methodName?: string;
 
@@ -24,11 +24,11 @@ export interface IHookContext {
 }
 
 export class HookContext implements IHookContext {
-  readonly instance: object;
+  readonly instance: Instance;
   private initialArgs: unknown[] = [];
 
   constructor(
-    instance: object,
+    instance: Instance,
     public scope: IContainer,
     public methodName?: string,
   ) {
@@ -66,7 +66,7 @@ export class HookContext implements IHookContext {
   }
 }
 
-export type CreateHookContext = (Target: object, scope: IContainer, methodName?: string) => IHookContext;
+export type CreateHookContext = (Target: Instance, scope: IContainer, methodName?: string) => IHookContext;
 export const createHookContext: CreateHookContext = (Target, scope, methodName = 'constructor') =>
   new HookContext(Target, scope, methodName);
 

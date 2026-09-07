@@ -4,6 +4,7 @@ import { getHooks, hasHooks, HookFn, toHookFn } from './hook';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
 
 import { promisify } from '../utils/promise';
+import { type Instance } from '../utils/basic';
 
 export type MapHookContext = (context: IHookContext) => IHookContext;
 
@@ -17,7 +18,7 @@ export type HooksRunnerContext = {
 export class HooksRunner {
   constructor(private readonly key: string | symbol) {}
 
-  hasHooks(target: object): boolean {
+  hasHooks(target: Instance): boolean {
     return hasHooks(target, this.key);
   }
 
@@ -25,7 +26,7 @@ export class HooksRunner {
    * @throws {UnexpectedHookResultError} when a hook returns a `Promise` — use {@link executeAsync} for async hooks.
    */
   execute(
-    target: object,
+    target: Instance,
     {
       scope,
       createContext = createHookContext,
@@ -51,7 +52,7 @@ export class HooksRunner {
   }
 
   async executeAsync(
-    target: object,
+    target: Instance,
     {
       scope,
       createContext = createHookContext,

@@ -5,6 +5,7 @@ import {
   arg,
   bindTo,
   Container,
+  createProxy,
   GroupAliasToken,
   hasHooks,
   hook,
@@ -17,6 +18,7 @@ import {
   prependHooks,
   register,
   Registration as R,
+  unwrapProxyTarget,
 } from '../../lib';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -198,6 +200,33 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
 
     expect(onStartHooksRunner.hasHooks(root.resolve(MyClass))).toBe(false);
+  });
+
+  // A proxy forwards `constructor` to its target, so hook metadata is found through it
+  // without unwrapping. Callers only need unwrapProxyTarget where identity matters
+  // (see Container.hasInstance).
+  it('should find and run hooks through a proxy, wrapped or unwrapped', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class MyClass {
+      isStarted = false;
+
+      @hook('onStart', append(execute))
+      start() {
+        this.isStarted = true;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+    const proxy = createProxy(instance, {});
+
+    expect(hasHooks(proxy, 'onStart')).toBe(true);
+    expect(hasHooks(unwrapProxyTarget(proxy), 'onStart')).toBe(true);
+
+    onStartHooksRunner.execute(unwrapProxyTarget(proxy), { scope: root });
+
+    expect(instance.isStarted).toBe(true);
   });
 
   it('should run hooks declared on a parent (extended-from) class', () => {

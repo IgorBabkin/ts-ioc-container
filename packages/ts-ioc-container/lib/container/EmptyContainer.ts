@@ -38,7 +38,7 @@ export class EmptyContainer implements IContainer {
   /**
    * @throws {ContainerNotFoundError} always — reaching the empty container means `instance` was not found in any scope.
    */
-  getScopeByInstanceOrFail(instance: object): IContainer {
+  getScopeByInstanceOrFail(instance: Instance): IContainer {
     throw new ContainerNotFoundError('Cannot find scope for the given instance');
   }
 
@@ -46,7 +46,7 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
-  hasInstance(instance: object): boolean {
+  hasInstance(instance: Instance): boolean {
     return false;
   }
 

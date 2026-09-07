@@ -62,7 +62,7 @@ export interface IContainer extends Tagged {
 
   getScopes(): IContainer[];
 
-  getScopeByInstanceOrFail(instance: object): IContainer;
+  getScopeByInstanceOrFail(instance: Instance): IContainer;
 
   removeScope(child: IContainer): void;
 
@@ -72,7 +72,7 @@ export interface IContainer extends Tagged {
 
   getInstances(cascade?: boolean): Instance[];
 
-  hasInstance(instance: object): boolean;
+  hasInstance(instance: Instance): boolean;
 
   dispose(): void;
 

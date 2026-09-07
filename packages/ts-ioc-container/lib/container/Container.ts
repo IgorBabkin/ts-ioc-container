@@ -22,7 +22,6 @@ import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
-import { unwrapProxyTarget } from '../utils/proxy';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -239,15 +238,15 @@ export class Container implements IContainer {
     return [...this.scopes];
   }
 
-  hasInstance(instance: object): boolean {
-    return this.instances.has(unwrapProxyTarget(instance) as Instance);
+  hasInstance(instance: Instance): boolean {
+    return this.instances.has(instance);
   }
 
   /**
    * @throws {ContainerDisposedError} when the container has already been disposed.
    * @throws {ContainerNotFoundError} when no container in this scope or any parent scope holds `instance`.
    */
-  getScopeByInstanceOrFail(instance: object): IContainer {
+  getScopeByInstanceOrFail(instance: Instance): IContainer {
     this.validateContainer();
 
     if (this.hasInstance(instance)) {
