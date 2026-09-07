@@ -4,7 +4,7 @@ import {
   bindTo,
   Container,
   ContainerNotFoundError,
-  createProxy,
+  ProxyRegistry,
   type IContainer,
   Provider,
   register,
@@ -13,7 +13,6 @@ import {
   SingleToken,
   GroupAliasToken,
   singleton,
-  unwrapProxyTarget,
 } from '../../lib';
 
 describe('IContainer', function () {
@@ -101,10 +100,10 @@ describe('IContainer', function () {
       const root = new Container({ tags: ['root'] });
 
       const logger = root.resolve(FileLogger);
-      const proxy = createProxy(logger, {});
+      const proxy = ProxyRegistry.getInstance().createProxy(logger, {});
 
       expect(root.hasInstance(proxy)).toBe(false);
-      expect(root.hasInstance(unwrapProxyTarget(proxy))).toBe(true);
+      expect(root.hasInstance(ProxyRegistry.getInstance().unwrap(proxy))).toBe(true);
     });
   });
 

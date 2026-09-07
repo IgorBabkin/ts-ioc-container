@@ -5,7 +5,7 @@ import {
   arg,
   bindTo,
   Container,
-  createProxy,
+  ProxyRegistry,
   GroupAliasToken,
   hasHooks,
   hook,
@@ -18,7 +18,6 @@ import {
   prependHooks,
   register,
   Registration as R,
-  unwrapProxyTarget,
 } from '../../lib';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -203,7 +202,7 @@ describe('hooks', () => {
   });
 
   // A proxy forwards `constructor` to its target, so hook metadata is found through it
-  // without unwrapping. Callers only need unwrapProxyTarget where identity matters
+  // without unwrapping. Callers only need ProxyRegistry.unwrap where identity matters
   // (see Container.hasInstance).
   it('should find and run hooks through a proxy, wrapped or unwrapped', () => {
     const onStartHooksRunner = new HooksRunner('onStart');
@@ -219,12 +218,12 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
-    const proxy = createProxy(instance, {});
+    const proxy = ProxyRegistry.getInstance().createProxy(instance, {});
 
     expect(hasHooks(proxy, 'onStart')).toBe(true);
-    expect(hasHooks(unwrapProxyTarget(proxy), 'onStart')).toBe(true);
+    expect(hasHooks(ProxyRegistry.getInstance().unwrap(proxy), 'onStart')).toBe(true);
 
-    onStartHooksRunner.execute(unwrapProxyTarget(proxy), { scope: root });
+    onStartHooksRunner.execute(ProxyRegistry.getInstance().unwrap(proxy), { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });

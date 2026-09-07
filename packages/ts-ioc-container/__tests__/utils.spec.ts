@@ -1,5 +1,5 @@
 import { pipe } from '../lib';
-import { createProxy, getProxyTarget, isProxy, toLazyIf } from '../lib/utils/proxy';
+import { ProxyRegistry } from '../lib/utils/ProxyRegistry';
 
 describe('fp', () => {
   it('should work with single transformation (same type)', () => {
@@ -94,38 +94,63 @@ describe('fp', () => {
 });
 
 describe('proxy', () => {
+  const proxies = ProxyRegistry.getInstance();
+
   it('should prevent repeated lazy wrapping', () => {
     const target = { value: 1 };
-    const lazyTarget = toLazyIf(() => target, true);
-    const doubleLazyTarget = toLazyIf(() => lazyTarget, true);
-    const tripleLazyTarget = toLazyIf(() => doubleLazyTarget, true);
-    const quadrupleLazyTarget = toLazyIf(() => tripleLazyTarget, true);
+    const lazyTarget = proxies.toLazyIf(() => target, true);
+    const doubleLazyTarget = proxies.toLazyIf(() => lazyTarget, true);
+    const tripleLazyTarget = proxies.toLazyIf(() => doubleLazyTarget, true);
+    const quadrupleLazyTarget = proxies.toLazyIf(() => tripleLazyTarget, true);
 
-    expect(isProxy(lazyTarget)).toBe(true);
-    expect(isProxy(doubleLazyTarget)).toBe(true);
-    expect(isProxy(tripleLazyTarget)).toBe(true);
-    expect(isProxy(quadrupleLazyTarget)).toBe(true);
-    expect(isProxy(getProxyTarget(doubleLazyTarget))).toBe(false);
-    expect(isProxy(getProxyTarget(tripleLazyTarget))).toBe(false);
-    expect(isProxy(getProxyTarget(quadrupleLazyTarget))).toBe(false);
-    expect(getProxyTarget(doubleLazyTarget)).toBe(target);
-    expect(getProxyTarget(tripleLazyTarget)).toBe(target);
-    expect(getProxyTarget(quadrupleLazyTarget)).toBe(target);
+    expect(lazyTarget).not.toBe(target);
+    expect(doubleLazyTarget).not.toBe(lazyTarget);
+    expect(tripleLazyTarget).not.toBe(doubleLazyTarget);
+    expect(quadrupleLazyTarget).not.toBe(tripleLazyTarget);
+
+    expect(proxies.unwrap(lazyTarget)).toBe(target);
+    expect(proxies.unwrap(doubleLazyTarget)).toBe(target);
+    expect(proxies.unwrap(tripleLazyTarget)).toBe(target);
+    expect(proxies.unwrap(quadrupleLazyTarget)).toBe(target);
+
+    // unwrapping is idempotent - the result is never itself a proxy
+    expect(proxies.unwrap(proxies.unwrap(quadrupleLazyTarget))).toBe(target);
   });
 
   it('should return the original target for each level of triple wrapping', () => {
     const target = { value: 1 };
-    const firstWrap = toLazyIf(() => target, true);
-    const secondWrap = toLazyIf(() => firstWrap, true);
-    const thirdWrap = toLazyIf(() => secondWrap, true);
+    const firstWrap = proxies.toLazyIf(() => target, true);
+    const secondWrap = proxies.toLazyIf(() => firstWrap, true);
+    const thirdWrap = proxies.toLazyIf(() => secondWrap, true);
 
-    expect(isProxy(firstWrap)).toBe(true);
-    expect(isProxy(secondWrap)).toBe(true);
-    expect(isProxy(thirdWrap)).toBe(true);
+    expect(firstWrap).not.toBe(target);
+    expect(secondWrap).not.toBe(firstWrap);
+    expect(thirdWrap).not.toBe(secondWrap);
 
-    expect(getProxyTarget(firstWrap)).toBe(target);
-    expect(getProxyTarget(secondWrap)).toBe(target);
-    expect(getProxyTarget(thirdWrap)).toBe(target);
+    expect(proxies.unwrap(firstWrap)).toBe(target);
+    expect(proxies.unwrap(secondWrap)).toBe(target);
+    expect(proxies.unwrap(thirdWrap)).toBe(target);
+  });
+
+  it('should forward writes made through a lazy proxy to the real target', () => {
+    class Counter {
+      value = 0;
+
+      increment() {
+        this.value += 1;
+      }
+    }
+
+    const target = new Counter();
+    const lazyTarget = proxies.toLazyIf(() => target, true);
+
+    // `this` inside `increment` is the proxy, so the write only lands if the proxy forwards it
+    lazyTarget.increment();
+    expect(target.value).toBe(1);
+    expect(lazyTarget.value).toBe(1);
+
+    lazyTarget.value = 42;
+    expect(target.value).toBe(42);
   });
 
   describe('createProxy', () => {
@@ -139,7 +164,7 @@ describe('proxy', () => {
     }
 
     const mediator = <T extends object>(target: T, log: string[]): T =>
-      createProxy(target, {
+      proxies.createProxy(target, {
         get(obj, prop, receiver) {
           const value = Reflect.get(obj, prop, receiver);
           if (typeof value !== 'function') {
@@ -152,7 +177,7 @@ describe('proxy', () => {
         },
       });
 
-    it('should mediate calls to the target class and expose it via getProxyTarget', () => {
+    it('should mediate calls to the target class and expose it via unwrap', () => {
       const target = new Sender();
       const log: string[] = [];
 
@@ -161,8 +186,8 @@ describe('proxy', () => {
       expect(proxy.send('hello')).toBe('sent: hello');
       expect(log).toEqual(['send']);
       expect(target.sent).toEqual(['hello']);
-      expect(isProxy(proxy)).toBe(true);
-      expect(getProxyTarget(proxy)).toBe(target);
+      expect(proxy).not.toBe(target);
+      expect(proxies.unwrap(proxy)).toBe(target);
     });
 
     it('should unwrap the deeply nested target of stacked mediators', () => {
@@ -173,7 +198,7 @@ describe('proxy', () => {
 
       expect(proxy.send('hello')).toBe('sent: hello');
       expect(log).toEqual(['send', 'send', 'send']);
-      expect(getProxyTarget(proxy)).toBe(target);
+      expect(proxies.unwrap(proxy)).toBe(target);
     });
 
     it('should unwrap the target of a mediator wrapping a lazy proxy', () => {
@@ -181,11 +206,11 @@ describe('proxy', () => {
       const log: string[] = [];
 
       const proxy = mediator(
-        toLazyIf(() => target, true),
+        proxies.toLazyIf(() => target, true),
         log,
       );
 
-      expect(getProxyTarget(proxy)).toBe(target);
+      expect(proxies.unwrap(proxy)).toBe(target);
     });
   });
 });
