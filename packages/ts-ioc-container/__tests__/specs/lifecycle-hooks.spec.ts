@@ -3,6 +3,7 @@ import {
   OnConstructAsyncModule,
   OnConstructModule,
   OnDisposeModule,
+  OnFirstResolvedModule,
   append,
   Container,
   hasHooks,
@@ -15,6 +16,7 @@ import {
   onConstruct,
   onConstructAsync,
   onContainerDisposed,
+  onFirstResolved,
   Registration as R,
   UnexpectedHookResultError,
 } from '../../lib';
@@ -52,6 +54,28 @@ describe('Spec: lifecycle hooks', () => {
     container.dispose();
 
     expect(resource.disposed).toBe(true);
+  });
+
+  it('runs first-resolution hooks once per resolved object', () => {
+    class Connection {
+      openedTimes = 0;
+
+      @onFirstResolved(invoke)
+      open(): void {
+        this.openedTimes += 1;
+      }
+    }
+
+    const connection = new Connection();
+    const container = new Container()
+      .useModule(new OnFirstResolvedModule())
+      .addRegistration(R.fromValue(connection).bindToKey('Connection'))
+      .addRegistration(R.fromValue(connection).bindToKey('ReadOnlyConnection'));
+
+    container.resolve('Connection');
+    container.createScope().resolve('ReadOnlyConnection');
+
+    expect(connection.openedTimes).toBe(1);
   });
 
   it('runs stacked @onConstruct decorators in declaration order', () => {

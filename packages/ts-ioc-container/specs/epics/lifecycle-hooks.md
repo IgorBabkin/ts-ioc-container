@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onFirstResolved`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnFirstResolvedModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -41,6 +41,23 @@ Acceptance criteria:
   resolution returns.
 - Rejected hooks are reported to the module `onException` handler when one is
   provided.
+
+### Story: Run first-resolution hooks
+
+As an application developer, I can run behavior the first time a dependency is
+resolved so that objects the container does not construct — constants, factory
+results, instances shared across keys and scopes — still get a one-time
+initialization point.
+
+Acceptance criteria:
+
+- `onFirstResolved` stores hook metadata on a method under its own hook key.
+- `OnFirstResolvedModule` opts a container into first-resolution hook
+  execution.
+- Hooks run once per resolved object, however many keys, scopes, or resolve
+  calls return it.
+- Distinct objects of the same class each get their own hook run.
+- Providers registered before the module was applied are not covered.
 
 ### Story: Run dispose hooks
 

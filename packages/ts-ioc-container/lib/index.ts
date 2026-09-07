@@ -99,6 +99,7 @@ export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct, OnConstructModule, type OnExceptionHandler } from './hooks/onConstruct';
 export { onConstructAsyncHooksRunner, onConstructAsync, OnConstructAsyncModule } from './hooks/onConstructAsync';
 export { onContainerDisposedHooksRunner, onContainerDisposed, OnDisposeModule } from './hooks/onContainerDisposed';
+export { onFirstResolvedHooksRunner, onFirstResolved, OnFirstResolvedModule } from './hooks/onFirstResolved';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens
