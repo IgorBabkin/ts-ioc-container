@@ -1,4 +1,4 @@
-import { resolveConstructor } from '../utils/basic';
+import { resolveConstructor } from './target';
 
 export const addClassMeta =
   <T>(key: string | symbol, mapFn: (prev: T | undefined) => T): ClassDecorator =>

@@ -1,5 +1,5 @@
 import { pipe } from '../lib';
-import { ProxyRegistry } from '../lib/utils/ProxyRegistry';
+import { ProxyRegistry, unwrapProxy } from '../lib/utils/ProxyRegistry';
 
 describe('fp', () => {
   it('should work with single transformation (same type)', () => {
@@ -115,6 +115,17 @@ describe('proxy', () => {
 
     // unwrapping is idempotent - the result is never itself a proxy
     expect(proxies.unwrap(proxies.unwrap(quadrupleLazyTarget))).toBe(target);
+  });
+
+  it('should expose unwrapProxy as a shortcut for the singleton', () => {
+    const target = { value: 1 };
+    const proxy = proxies.createProxy(target, {});
+    const lazyProxy = proxies.createLazyProxy(() => proxy);
+
+    expect(unwrapProxy(proxy)).toBe(target);
+    expect(unwrapProxy(lazyProxy)).toBe(target);
+    // a plain value passes through untouched
+    expect(unwrapProxy(target)).toBe(target);
   });
 
   it('should return the original target for each level of triple wrapping', () => {

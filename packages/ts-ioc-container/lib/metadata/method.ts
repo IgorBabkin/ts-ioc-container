@@ -1,4 +1,4 @@
-import { resolveConstructor } from '../utils/basic';
+import { resolveConstructor } from './target';
 
 export const addMethodMeta =
   <T>(key: string, mapFn: (prev: T | undefined) => T): MethodDecorator =>

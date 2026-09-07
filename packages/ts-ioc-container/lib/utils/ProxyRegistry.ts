@@ -12,6 +12,13 @@ export interface IProxyRegistry {
   /**
    * Returns the real object behind `value`, unwrapping proxies stacked to any
    * depth. A value that is not a proxy is returned as is.
+   *
+   * The library calls this itself wherever a proxy would give the wrong answer -
+   * every read of class metadata (see `resolveConstructor`, `getHooks`,
+   * `resolveArgs`) and every identity check against a tracked instance (see
+   * `IContainer.hasInstance`). Pass the container's own values to those APIs as
+   * they come; unwrapping by hand is for code that needs the real object for its
+   * own reasons.
    */
   unwrap<T extends object>(value: T): T;
 
@@ -124,3 +131,19 @@ export class ProxyRegistry implements IProxyRegistry {
     return proxy;
   }
 }
+
+/**
+ * The real object behind `value`, unwrapping proxies stacked to any depth. A
+ * value that is not a proxy is returned as is.
+ *
+ * A shortcut for `ProxyRegistry.getInstance().unwrap(value)` - the registry is a
+ * process-wide singleton, so unwrapping never needs an instance of its own. The
+ * library already unwraps wherever a proxy would give the wrong answer (reading
+ * class metadata, and `IContainer.hasInstance`), so reach for this only when
+ * your own code needs the real object - an identity check of your own, or
+ * bypassing a lazy proxy on purpose.
+ *
+ * Note that unwrapping a lazy proxy resolves its target, which is the point:
+ * there is no real object to hand back until it does.
+ */
+export const unwrapProxy = <T extends object>(value: T): T => ProxyRegistry.getInstance().unwrap(value);

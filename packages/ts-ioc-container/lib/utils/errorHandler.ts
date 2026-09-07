@@ -1,3 +1,5 @@
+import { resolveConstructor } from '../metadata/target';
+
 export type HandleErrorParams = (error: unknown, context: { target: string; method: string }) => void;
 
 export const handleAsyncError =
@@ -8,7 +10,7 @@ export const handleAsyncError =
       try {
         return await originalMethod.apply(this, args);
       } catch (e) {
-        errorHandler(e, { target: (target as any).constructor.name, method: propertyKey as string });
+        errorHandler(e, { target: resolveConstructor(target).name, method: propertyKey as string });
       }
     };
     return descriptor;
@@ -22,7 +24,7 @@ export const handleError =
       try {
         return originalMethod.apply(this, args);
       } catch (e) {
-        errorHandler(e, { target: (target as any).constructor.name, method: propertyKey as string });
+        errorHandler(e, { target: resolveConstructor(target).name, method: propertyKey as string });
       }
     };
     return descriptor;

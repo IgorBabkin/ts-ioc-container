@@ -15,7 +15,3 @@ export const Is = {
   instance: (target: unknown): target is Instance => Object.prototype.hasOwnProperty.call(target, 'constructor'),
   constructor: (target: unknown): target is constructor<unknown> => typeof target === 'function' && !!target.prototype,
 };
-
-export function resolveConstructor(target: object): object {
-  return Is.constructor(target) ? target : (target as { constructor: object }).constructor;
-}

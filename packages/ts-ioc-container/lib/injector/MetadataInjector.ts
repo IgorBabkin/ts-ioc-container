@@ -1,6 +1,7 @@
 import { IInjector, InjectOptions, Injector } from './IInjector';
 import type { IContainer } from '../container/IContainer';
-import { type constructor, Is } from '../utils/basic';
+import { type constructor, type Instance } from '../utils/basic';
+import { resolveConstructor } from '../metadata/target';
 import { getParamMeta, addParamMeta } from '../metadata/parameter';
 import { InjectionToken } from '../token/InjectionToken';
 import { ProviderOptions } from '../provider/IProvider';
@@ -108,7 +109,7 @@ export function inject<T>(fn: Injectable<T>, ...mappers: MapFn<T>[]): ParameterD
 export function inject<T>(fn: Injectable<T>, ...mappers: MapFn<any, any>[]): ParameterDecorator {
   return (target, propertyKey, parameterIndex) => {
     addParamMeta(hookMetaKey(propertyKey as string), () => toMappedToken(fn, mappers))(
-      Is.instance(target) ? target.constructor : target,
+      resolveConstructor(target),
       propertyKey,
       parameterIndex,
     );
@@ -124,8 +125,15 @@ export const arg = <T = unknown>(index: number): InjectFn<T> => argsFn<T>((value
 
 export const args: InjectFn<unknown[]> = (c, { args = [] }) => args;
 
-export const resolveArgs = (Target: constructor<unknown>, methodName?: string) => {
-  const tokens = getParamMeta(hookMetaKey(methodName), Target) as InjectionToken[];
+/**
+ * Resolves the arguments annotated with `@inject` on `target`'s constructor, or on
+ * its `methodName` method.
+ *
+ * `target` is the class or any instance of it - a proxy included, since it is
+ * unwrapped on the way to the metadata (see {@link resolveConstructor}).
+ */
+export const resolveArgs = (target: constructor<unknown> | Instance, methodName?: string) => {
+  const tokens = getParamMeta(hookMetaKey(methodName), target) as InjectionToken[];
   return (scope: IContainer, { args = [], lazy }: ProviderOptions): unknown[] =>
     tokens.map((fn) => fn.resolve(scope, { args: args.map(argToToken).map((t) => t.resolve(scope)), lazy }));
 };

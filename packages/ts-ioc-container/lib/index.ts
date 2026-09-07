@@ -112,6 +112,7 @@ export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanceToken';
 
 // Metadata
+export { resolveConstructor } from './metadata/target';
 export { addClassMeta, getClassMeta, addClassLabel, getClassLabels, addClassTag, getClassTags } from './metadata/class';
 export {
   addParamMeta,
@@ -141,5 +142,5 @@ export { type ExecutionContext } from './ExecutionContext';
 // Utils
 export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
-export { ProxyRegistry, type IProxyRegistry } from './utils/ProxyRegistry';
-export { type Branded, type constructor, type Instance, Is, resolveConstructor } from './utils/basic';
+export { ProxyRegistry, unwrapProxy, type IProxyRegistry } from './utils/ProxyRegistry';
+export { type Branded, type constructor, type Instance, Is } from './utils/basic';
