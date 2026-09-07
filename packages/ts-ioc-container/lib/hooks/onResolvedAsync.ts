@@ -1,25 +1,29 @@
-import { hook, HookType, prependHooks } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import { HooksRunner } from './HooksRunner';
 import { registerPipe } from '../registration/IRegistration';
-import { executeHooksAsync, forEachResolvedObject, type OnResolvedOptions, toResolvedHooks } from './resolveHooks';
+import { executeHooksAsync, forEachResolvedObject, onceResolvedHook, resolvedHook } from './resolveHooks';
 import type { OnExceptionHandler } from './onConstruct';
 
 export const onResolvedAsyncHooksRunner = new HooksRunner('onResolvedAsync');
 
 /**
- * Async counterpart of `onResolved`, taking the same `{ once: true }` option and
- * the same "no hook means invoke the decorated method" shorthand.
+ * Async counterpart of `onResolved`, taking the same rest-parameter hook list
+ * and the same "no hook means invoke the decorated method" shorthand.
  *
  * ```typescript
  * class Connection {
- *   @onResolvedAsync({ once: true })
- *   async open(): Promise<void> {}
+ *   @onResolvedAsync()
+ *   async ping(): Promise<void> {}
  * }
  * ```
  */
-export const onResolvedAsync = (first: OnResolvedOptions | HookType = {}, ...rest: HookType[]) =>
-  hook('onResolvedAsync', prependHooks(...toResolvedHooks(first, rest)));
+export const onResolvedAsync = resolvedHook('onResolvedAsync');
+
+/**
+ * Async counterpart of `onceResolved`: the hooks run on the first resolve of
+ * each instance only.
+ */
+export const onceResolvedAsync = onceResolvedHook('onResolvedAsync');
 
 const runHooks = (onException?: OnExceptionHandler) =>
   forEachResolvedObject(executeHooksAsync(onResolvedAsyncHooksRunner, onException));

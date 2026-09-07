@@ -1,8 +1,7 @@
-import { hook, HookType, prependHooks } from './hook';
 import type { DependencyHook, IContainer, IContainerModule } from '../container/IContainer';
 import { HooksRunner } from './HooksRunner';
 import { registerPipe } from '../registration/IRegistration';
-import { executeHooks, forEachResolvedObject, type OnResolvedOptions, toResolvedHooks } from './resolveHooks';
+import { executeHooks, forEachResolvedObject, onceResolvedHook, resolvedHook } from './resolveHooks';
 
 export const onResolvedHooksRunner = new HooksRunner('onResolved');
 
@@ -11,23 +10,29 @@ export const onResolvedHooksRunner = new HooksRunner('onResolved');
  *
  * ```typescript
  * class Connection {
- *   @onResolved()               // on every resolve
+ *   @onResolved()                 // invoke this method on every resolve
  *   log(): void {}
  *
- *   @onResolved({ once: true }) // on the first resolve of each instance
- *   open(): void {}
- *
- *   @onResolved({ once: true }, injectProp('Config')) // with explicit hooks
+ *   @onResolved(injectProp('Config')) // with explicit hooks
  *   config!: Config;
  * }
  * ```
+ *
+ * Hooks are a rest parameter, so a prepared list spreads: `@onResolved(...hooks)`.
+ * Use `@onceResolved` to run them on the first resolve of each instance only.
  *
  * Naming no hook means "invoke the decorated method". Decorators are applied
  * bottom-up, so hooks are prepended to keep them in declaration order:
  * `@onX(h1) @onX(h2) method()` runs h1 before h2.
  */
-export const onResolved = (first: OnResolvedOptions | HookType = {}, ...rest: HookType[]) =>
-  hook('onResolved', prependHooks(...toResolvedHooks(first, rest)));
+export const onResolved = resolvedHook('onResolved');
+
+/**
+ * `@onResolved`, narrowed to the first resolve of each instance: the hooks run
+ * once for an instance and stay silent on every later resolve of it, however
+ * many keys or scopes hand it out.
+ */
+export const onceResolved = onceResolvedHook('onResolved');
 
 const runHooks: DependencyHook = forEachResolvedObject(executeHooks(onResolvedHooksRunner));
 
@@ -37,9 +42,9 @@ const runHooks: DependencyHook = forEachResolvedObject(executeHooks(onResolvedHo
  * Where `OnConstructModule` observes construction, this module observes
  * resolution — including the resolves of a value the container never
  * constructs, and the repeat resolves of one it did. A singleton caches its
- * dependency, so its hooks run on the resolve that filled the cache; a hook
- * declared with `{ once: true }` runs on the first resolve of its instance
- * however the dependency is registered.
+ * dependency, so its hooks run on the resolve that filled the cache; an
+ * `@onceResolved` hook runs on the first resolve of its instance however the
+ * dependency is registered.
  *
  * Providers are hooked through `onProviderRegistered`, so apply the module
  * before the registrations it should cover; scopes created afterwards inherit

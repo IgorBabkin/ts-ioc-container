@@ -1,14 +1,8 @@
 import type { DependencyHook, IContainer } from '../container/IContainer';
 import type { HooksRunner } from './HooksRunner';
-import { type HookFn, type HookType, toHookFn } from './hook';
+import { hook, type HookFn, type HookType, prependHooks, toHookFn } from './hook';
 import type { OnExceptionHandler } from './onConstruct';
 import { Is } from '../utils/basic';
-
-/**
- * `once` runs the hooks on the first resolve of each instance and stays silent
- * on every later one - the first-resolution rule, opted into per hook.
- */
-export type OnResolvedOptions = { once?: boolean };
 
 /**
  * A resolve hook narrowed to the dependencies that can carry hook metadata.
@@ -18,6 +12,9 @@ export type ResolvedDependencyHook = (dependency: object, scope: IContainer) => 
 const invokeMethod: HookFn = (context) => {
   context.invokeMethod();
 };
+
+// Decorating a method without naming a hook means "run this method".
+const toHooks = (hooks: HookType[]): HookType[] => (hooks.length > 0 ? hooks : [invokeMethod]);
 
 /**
  * Wraps a hook so it runs at most once per instance.
@@ -41,17 +38,26 @@ const onceForEachInstance = (execute: HookType): HookFn => {
 };
 
 /**
- * Reads the optional leading options object of an `@onResolved` decorator, so
- * `@onResolved(hook)` and `@onResolved({ once: true }, hook)` both work.
+ * Builds a resolve-hook decorator over `hook(key, ...)` - the same metadata
+ * mechanism as `@onConstruct` and friends, with the "no hook means invoke the
+ * decorated method" shorthand on top.
+ *
+ * Decorators are applied bottom-up, so hooks are prepended to keep them in
+ * declaration order: `@onX(h1) @onX(h2) method()` runs h1 before h2.
  */
-export const toResolvedHooks = (first: OnResolvedOptions | HookType, rest: HookType[]): HookType[] => {
-  const [{ once = false }, fns] =
-    typeof first === 'function' ? [{} as OnResolvedOptions, [first, ...rest]] : [first, rest];
-  // Decorating a method without naming a hook means "run this method".
-  const hooks = fns.length > 0 ? fns : [invokeMethod];
+export const resolvedHook =
+  (key: string) =>
+  (...hooks: HookType[]) =>
+    hook(key, prependHooks(...toHooks(hooks)));
 
-  return once ? hooks.map(onceForEachInstance) : hooks;
-};
+/**
+ * `resolvedHook(key)` with every hook wrapped so it runs on the first resolve of
+ * each instance only - what the `onceResolved` decorators are built from.
+ */
+export const onceResolvedHook =
+  (key: string) =>
+  (...hooks: HookType[]) =>
+    hook(key, prependHooks(...toHooks(hooks).map(onceForEachInstance)));
 
 /**
  * Lifts a hook to `DependencyHook`, skipping dependencies which are not objects:

@@ -17,6 +17,7 @@ import {
   onConstructAsync,
   onContainerDisposed,
   onResolved,
+  onceResolved,
   Registration as R,
   UnexpectedHookResultError,
 } from '../../lib';
@@ -56,7 +57,7 @@ describe('Spec: lifecycle hooks', () => {
     expect(resource.disposed).toBe(true);
   });
 
-  it('runs resolve hooks on every resolve, and `once` hooks a single time per object', () => {
+  it('runs resolve hooks on every resolve, and once-resolve hooks a single time per object', () => {
     class Connection {
       usedTimes = 0;
       openedTimes = 0;
@@ -66,7 +67,7 @@ describe('Spec: lifecycle hooks', () => {
         this.usedTimes += 1;
       }
 
-      @onResolved({ once: true })
+      @onceResolved()
       open(): void {
         this.openedTimes += 1;
       }

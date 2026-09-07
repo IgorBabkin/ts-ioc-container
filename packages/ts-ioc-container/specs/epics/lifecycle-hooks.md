@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onResolved`, `onResolvedAsync`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onResolved`, `onceResolved`, `onResolvedAsync`, `onceResolvedAsync`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -51,13 +51,15 @@ instances shared across keys and scopes — still get an initialization point.
 Acceptance criteria:
 
 - `onResolved` and `onResolvedAsync` store hook metadata on a method under their
-  own hook keys, and invoke the decorated method when no hook is named.
+  own hook keys, take hooks as a rest parameter, and invoke the decorated method
+  when no hook is named.
 - `OnResolvedModule` and `OnResolvedAsyncModule` opt a container into resolve
   hook execution; the `resolved()` and `resolvedAsync()` pipes opt in a single
   registration instead.
-- Hooks run on every resolve, and `{ once: true }` hooks run a single time per
-  instance however many keys, scopes, or resolve calls return it.
-- Distinct objects of the same class each get their own `once` hook run.
+- `onResolved` hooks run on every resolve; `onceResolved` and `onceResolvedAsync`
+  hooks run a single time per instance however many keys, scopes, or resolve
+  calls return it.
+- Distinct objects of the same class each get their own once-resolve hook run.
 - Providers registered before the module was applied are not covered.
 - Rejected async hooks are reported to the module `onException` handler when one
   is provided.

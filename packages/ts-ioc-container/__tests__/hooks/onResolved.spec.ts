@@ -2,10 +2,12 @@ import 'reflect-metadata';
 import {
   Container,
   type HookFn,
+  type HookType,
   OnResolvedModule,
   Provider,
   Registration as R,
   onResolved,
+  onceResolved,
   resolved,
   singleton,
 } from '../../lib';
@@ -19,7 +21,7 @@ class Service {
     this.resolvedTimes += 1;
   }
 
-  @onResolved({ once: true })
+  @onceResolved()
   open(): void {
     this.openedTimes += 1;
   }
@@ -55,7 +57,7 @@ describe('OnResolvedModule', () => {
     expect(service.resolvedTimes).toBe(2);
   });
 
-  it('should run `once` hooks a single time however often the object is resolved', () => {
+  it('should run `onceResolved` hooks a single time however often the object is resolved', () => {
     const service = new Service();
 
     const container = new Container()
@@ -68,7 +70,7 @@ describe('OnResolvedModule', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `once` hooks a single time for an object resolved through several keys', () => {
+  it('should run `onceResolved` hooks a single time for an object resolved through several keys', () => {
     const service = new Service();
 
     const container = new Container()
@@ -82,7 +84,7 @@ describe('OnResolvedModule', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `once` hooks a single time for an object resolved from several scopes', () => {
+  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] })
@@ -95,7 +97,7 @@ describe('OnResolvedModule', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `once` hooks for every distinct object of the same class', () => {
+  it('should run `onceResolved` hooks for every distinct object of the same class', () => {
     const container = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(Service));
 
     const first = container.resolve<Service>('Service');
@@ -116,7 +118,7 @@ describe('OnResolvedModule', () => {
     expect([service.resolvedTimes, service.openedTimes]).toEqual([1, 1]);
   });
 
-  it('should accept explicit hooks alongside the options', () => {
+  it('should accept several explicit hooks', () => {
     const invoked: string[] = [];
     const record =
       (name: string): HookFn =>
@@ -125,7 +127,7 @@ describe('OnResolvedModule', () => {
       };
 
     class Documented {
-      @onResolved({ once: true }, record('first'), record('second'))
+      @onceResolved(record('first'), record('second'))
       initialize(): void {
         invoked.push('method');
       }
@@ -139,7 +141,7 @@ describe('OnResolvedModule', () => {
     expect(invoked).toEqual(['first', 'second', 'first', 'second']);
   });
 
-  it('should accept hooks without any options', () => {
+  it('should accept a single hook', () => {
     const invoked: string[] = [];
 
     class Documented {
@@ -152,6 +154,59 @@ describe('OnResolvedModule', () => {
     new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(Documented)).resolve('Documented');
 
     expect(invoked).toEqual(['initialize']);
+  });
+
+  it('should accept a spread list of hooks', () => {
+    const invoked: string[] = [];
+    const record =
+      (name: string): HookFn =>
+      (context) => {
+        invoked.push(`${name}:${context.methodName}`);
+      };
+    const hooks: HookType[] = [record('first'), record('second')];
+
+    class Documented {
+      @onResolved(...hooks)
+      track(): void {}
+
+      @onceResolved(...hooks)
+      open(): void {}
+    }
+
+    const documented = new Documented();
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromValue(documented).bindToKey('Documented'));
+
+    container.resolve('Documented');
+    container.resolve('Documented');
+
+    const callsOf = (method: string) => invoked.filter((call) => call.endsWith(`:${method}`));
+
+    // Both hooks of each decorator ran: `track` on both resolves, `open` only on the first.
+    expect(callsOf('track')).toEqual(['first:track', 'second:track', 'first:track', 'second:track']);
+    expect(callsOf('open')).toEqual(['first:open', 'second:open']);
+  });
+
+  it('should run `onceResolved` hooks a single time per instance', () => {
+    const invoked: string[] = [];
+
+    class Documented {
+      @onceResolved()
+      open(): void {
+        invoked.push('open');
+      }
+    }
+
+    const service = new Documented();
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromValue(service).bindToKey('Documented'));
+
+    container.resolve('Documented');
+    container.resolve('Documented');
+
+    expect(invoked).toEqual(['open']);
   });
 
   it('should pass the resolving scope to the hooks', () => {
@@ -207,7 +262,7 @@ describe('OnResolvedModule', () => {
     expect(() => container.resolve('Broken')).toThrowError('hook failed');
   });
 
-  it('should keep `once` hooks deduplicated across containers', () => {
+  it('should keep `onceResolved` hooks deduplicated across containers', () => {
     const service = new Service();
 
     const first = new Container().useModule(new OnResolvedModule());
@@ -231,7 +286,7 @@ describe('resolved()', () => {
     expect([service.resolvedTimes, service.openedTimes]).toEqual([1, 1]);
   });
 
-  it('should run `once` hooks a single time however often the object is resolved', () => {
+  it('should run `onceResolved` hooks a single time however often the object is resolved', () => {
     const service = new Service();
 
     const container = new Container().addRegistration(R.fromValue(service).bindToKey('Service').pipe(resolved()));
@@ -242,7 +297,7 @@ describe('resolved()', () => {
     expect([service.openedTimes, service.resolvedTimes]).toEqual([1, 2]);
   });
 
-  it('should run `once` hooks a single time for an object resolved from several scopes', () => {
+  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] }).addRegistration(

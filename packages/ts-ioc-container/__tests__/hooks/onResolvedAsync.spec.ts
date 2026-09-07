@@ -1,5 +1,14 @@
 import 'reflect-metadata';
-import { Container, OnResolvedAsyncModule, Registration as R, onResolvedAsync, resolvedAsync } from '../../lib';
+import {
+  Container,
+  type HookFn,
+  type HookType,
+  OnResolvedAsyncModule,
+  Registration as R,
+  onResolvedAsync,
+  onceResolvedAsync,
+  resolvedAsync,
+} from '../../lib';
 
 class Service {
   resolvedTimes = 0;
@@ -11,7 +20,7 @@ class Service {
     this.resolvedTimes += 1;
   }
 
-  @onResolvedAsync({ once: true })
+  @onceResolvedAsync()
   async open(): Promise<void> {
     await Promise.resolve();
     this.openedTimes += 1;
@@ -47,7 +56,7 @@ describe('OnResolvedAsyncModule', () => {
     expect(service.resolvedTimes).toBe(2);
   });
 
-  it('should run `once` hooks a single time however often the object is resolved', async () => {
+  it('should run `onceResolvedAsync` hooks a single time however often the object is resolved', async () => {
     const service = new Service();
 
     const container = new Container()
@@ -61,7 +70,7 @@ describe('OnResolvedAsyncModule', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `once` hooks a single time for an object resolved from several scopes', async () => {
+  it('should run `onceResolvedAsync` hooks a single time for an object resolved from several scopes', async () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] })
@@ -73,6 +82,63 @@ describe('OnResolvedAsyncModule', () => {
     await settle();
 
     expect(service.openedTimes).toBe(1);
+  });
+
+  it('should accept a spread list of hooks', async () => {
+    const invoked: string[] = [];
+    const record =
+      (name: string): HookFn =>
+      async (context) => {
+        invoked.push(`${name}:${context.methodName}`);
+      };
+    const hooks: HookType[] = [record('first'), record('second')];
+
+    class Documented {
+      @onResolvedAsync(...hooks)
+      track(): void {}
+
+      @onceResolvedAsync(...hooks)
+      open(): void {}
+    }
+
+    const documented = new Documented();
+    const container = new Container()
+      .useModule(new OnResolvedAsyncModule())
+      .addRegistration(R.fromValue(documented).bindToKey('Documented'));
+
+    container.resolve('Documented');
+    container.resolve('Documented');
+    await settle();
+
+    const callsOf = (method: string) => invoked.filter((call) => call.endsWith(`:${method}`));
+
+    // Both hooks of each decorator ran: `track` on both resolves, `open` only on the first.
+    // Overlapping resolves interleave their awaits, so only the tally is deterministic.
+    expect(callsOf('track').sort()).toEqual(['first:track', 'first:track', 'second:track', 'second:track']);
+    expect(callsOf('open').sort()).toEqual(['first:open', 'second:open']);
+  });
+
+  it('should run `onceResolvedAsync` hooks a single time per instance', async () => {
+    const invoked: string[] = [];
+
+    class Documented {
+      @onceResolvedAsync()
+      async open(): Promise<void> {
+        await Promise.resolve();
+        invoked.push('open');
+      }
+    }
+
+    const service = new Documented();
+    const container = new Container()
+      .useModule(new OnResolvedAsyncModule())
+      .addRegistration(R.fromValue(service).bindToKey('Documented'));
+
+    container.resolve('Documented');
+    container.resolve('Documented');
+    await settle();
+
+    expect(invoked).toEqual(['open']);
   });
 
   it('should report a rejected hook to the onException handler', async () => {
@@ -117,7 +183,7 @@ describe('resolvedAsync()', () => {
     expect([service.resolvedTimes, service.openedTimes]).toEqual([1, 1]);
   });
 
-  it('should run `once` hooks a single time for an object resolved from several scopes', async () => {
+  it('should run `onceResolvedAsync` hooks a single time for an object resolved from several scopes', async () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] }).addRegistration(
