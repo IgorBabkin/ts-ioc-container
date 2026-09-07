@@ -5,7 +5,6 @@ import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
 
 import { promisify } from '../utils/promise';
 import { type Instance } from '../utils/basic';
-import { ProxyRegistry } from '../utils/ProxyRegistry';
 
 export type MapHookContext = (context: IHookContext) => IHookContext;
 
@@ -20,9 +19,10 @@ export type HooksRunnerContext = {
  * Runs the hooks a class declares under one metadata key.
  *
  * Every method takes the instance the container produced, which may be a proxy
- * (a `lazy()` provider hands one out). Hook metadata lives on the real class and
- * hooks act on the real instance, so the target is unwrapped here - callers pass
- * whatever they hold and never unwrap it themselves.
+ * (a `lazy()` provider hands one out). Nothing is unwrapped here: the metadata
+ * lookup normalizes the target on its own (see `resolveConstructor`), and the
+ * hook context reaches the real object through the proxy. Callers pass whatever
+ * they hold.
  */
 export class HooksRunner {
   constructor(private readonly key: string | symbol) {}
@@ -43,11 +43,10 @@ export class HooksRunner {
       predicate = () => true,
     }: HooksRunnerContext,
   ) {
-    const instance = ProxyRegistry.getInstance().unwrap(target);
-    const hooks = Array.from(getHooks(instance, this.key).entries()).filter(([methodName]) => predicate(methodName));
+    const hooks = Array.from(getHooks(target, this.key).entries()).filter(([methodName]) => predicate(methodName));
 
     const runMethodHooks = (methodName: string, executions: HookFn[]) => {
-      const context = mapContext(createContext(instance, scope, methodName));
+      const context = mapContext(createContext(target, scope, methodName));
       for (const execute of executions) {
         const result = execute(context);
         if (result instanceof Promise) {
@@ -70,11 +69,10 @@ export class HooksRunner {
       predicate = () => true,
     }: HooksRunnerContext,
   ) {
-    const instance = ProxyRegistry.getInstance().unwrap(target);
-    const hooks = Array.from(getHooks(instance, this.key).entries()).filter(([methodName]) => predicate(methodName));
+    const hooks = Array.from(getHooks(target, this.key).entries()).filter(([methodName]) => predicate(methodName));
 
     const runMethodHooks = async (methodName: string, executions: HookFn[]) => {
-      const context = mapContext(createContext(instance, scope, methodName));
+      const context = mapContext(createContext(target, scope, methodName));
       for (const execute of executions) {
         await promisify(execute(context));
       }

@@ -245,14 +245,9 @@ describe('hooks', () => {
 
     expect(onStartHooksRunner.hasHooks(lazy)).toBe(true);
 
-    onStartHooksRunner.execute(lazy, {
-      scope: root,
-      // The context is built from the unwrapped instance, so hooks act on the real object.
-      mapContext: (context) => {
-        expect(context.instance).toBe(instance);
-        return context;
-      },
-    });
+    // The runner does not unwrap: the metadata lookup normalizes the target itself,
+    // and the hook reaches the real object through the proxy.
+    onStartHooksRunner.execute(lazy, { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
@@ -274,13 +269,7 @@ describe('hooks', () => {
     const instance = root.resolve(MyClass);
     const lazy = ProxyRegistry.getInstance().createLazyProxy(() => instance);
 
-    await onStartHooksRunner.executeAsync(lazy, {
-      scope: root,
-      mapContext: (context) => {
-        expect(context.instance).toBe(instance);
-        return context;
-      },
-    });
+    await onStartHooksRunner.executeAsync(lazy, { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
