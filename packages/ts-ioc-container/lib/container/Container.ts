@@ -4,10 +4,11 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type OnScopeCreatedHook,
+  type InstanceHook,
   type RegisterOptions,
   ResolveManyOptions,
   type ResolveOneOptions,
+  type ScopeHook,
   type Tag,
 } from './IContainer';
 import { type IInjector } from '../injector/IInjector';
@@ -18,7 +19,6 @@ import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
 import { AliasMap } from './AliasMap';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
@@ -33,9 +33,10 @@ export class Container implements IContainer {
   private readonly providers = new Map<DependencyKey, IProvider>();
   private readonly aliases = new AliasMap();
   private readonly injector: IInjector;
-  private readonly onConstructHookList: OnConstructHook[] = [];
+
+  private readonly onConstructHookList: InstanceHook[] = [];
   private readonly onDisposeHookList: OnDisposeHook[] = [];
-  private readonly onScopeCreatedHookList: OnScopeCreatedHook[] = [];
+  private readonly onScopeCreatedHookList: ScopeHook[] = [];
 
   constructor(
     options: {
@@ -129,9 +130,9 @@ export class Container implements IContainer {
     this.validateContainer();
 
     const scope = new Container({ injector: this.injector, parent: this, tags })
-      .addOnConstructHook(...this.onConstructHookList)
-      .addOnDisposeHook(...this.onDisposeHookList)
-      .addOnScopeCreatedHook(...this.onScopeCreatedHookList);
+      .onConstruct(...this.onConstructHookList)
+      .onInstanceDisposed(...this.onDisposeHookList)
+      .onScopeCreated(...this.onScopeCreatedHookList);
 
     for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
@@ -173,9 +174,8 @@ export class Container implements IContainer {
     this.isDisposed = true;
 
     // Execute onDispose hooks
-    while (this.onDisposeHookList.length) {
-      const onDispose = this.onDisposeHookList.shift()!;
-      onDispose(this);
+    for (const hook of this.onDisposeHookList) {
+      hook(this);
     }
 
     // Detach from parent
@@ -193,6 +193,7 @@ export class Container implements IContainer {
 
     // Clear hooks
     this.onConstructHookList.length = 0;
+    this.onDisposeHookList.length = 0;
     this.onScopeCreatedHookList.length = 0;
   }
 
@@ -210,17 +211,17 @@ export class Container implements IContainer {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
   }
 
-  addOnConstructHook(...hooks: OnConstructHook[]): this {
+  onConstruct(...hooks: InstanceHook[]): this {
     this.onConstructHookList.push(...hooks);
     return this;
   }
 
-  addOnDisposeHook(...hooks: OnDisposeHook[]): this {
+  onInstanceDisposed(...hooks: OnDisposeHook[]): this {
     this.onDisposeHookList.push(...hooks);
     return this;
   }
 
-  addOnScopeCreatedHook(...hooks: OnScopeCreatedHook[]): this {
+  onScopeCreated(...hooks: ScopeHook[]): this {
     this.onScopeCreatedHookList.push(...hooks);
     return this;
   }
@@ -240,20 +241,6 @@ export class Container implements IContainer {
 
   hasInstance(instance: Instance): boolean {
     return this.instances.has(instance);
-  }
-
-  /**
-   * @throws {ContainerDisposedError} when the container has already been disposed.
-   * @throws {ContainerNotFoundError} when no container in this scope or any parent scope holds `instance`.
-   */
-  getScopeByInstanceOrFail(instance: Instance): IContainer {
-    this.validateContainer();
-
-    if (this.hasInstance(instance)) {
-      return this;
-    }
-
-    return this.parent.getScopeByInstanceOrFail(instance);
   }
 
   removeScope(child: IContainer): void {

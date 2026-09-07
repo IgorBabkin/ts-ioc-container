@@ -78,6 +78,14 @@ Acceptance criteria:
   all child scopes (cascade).
 - Instances created in a child scope do not appear in the parent scope's own
   tracked collection.
+- `hasInstance` answers only for the current scope, without cascading, and
+  matches an unwrapped proxy target rather than the proxy itself.
+
+> **!Important** — The container deliberately exposes no "find the scope that
+> owns this instance" helper. `hasInstance` plus `getParent` are the primitives;
+> a consumer that needs that lookup walks the parent chain itself and decides
+> what happens when the walk reaches the root. `ContainerNotFoundError` stays
+> exported for consumers that want the library's error type for that case.
 
 ## Notes
 

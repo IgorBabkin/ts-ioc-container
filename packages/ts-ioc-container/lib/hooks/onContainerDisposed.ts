@@ -9,9 +9,9 @@ export const onContainerDisposed = (...fns: HookType[]) => hook('onContainerDisp
 
 export type OnDisposeHook = (scope: IContainer) => void;
 
-export class AddOnDisposeHookModule implements IContainerModule {
+export class OnDisposeModule implements IContainerModule {
   applyTo(container: IContainer) {
-    container.addOnDisposeHook((scope) => {
+    container.onInstanceDisposed((scope) => {
       for (const instance of scope.getInstances()) {
         onContainerDisposedHooksRunner.execute(instance, { scope });
       }

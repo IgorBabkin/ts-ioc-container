@@ -10,7 +10,9 @@ import {
   decorate,
   DependencyNotFoundError,
   inject,
+  IContainer,
   lazy,
+  onResolve,
   Provider,
   ProviderDisposedError,
   register,
@@ -226,5 +228,71 @@ describe('Spec: provider behavior', () => {
 
     expect(adminRequest.resolve<AdminService & { audited: boolean }>('AdminService').audited).toBe(true);
     expect(() => publicRequest.resolve('AdminService')).toThrowError(DependencyNotFoundError);
+  });
+
+  it('observes resolved dependencies through onResolve hooks without replacing them', () => {
+    const seen: Array<{ dependency: unknown; scope: IContainer }> = [];
+
+    @register(
+      onResolve((dependency, scope) => seen.push({ dependency, scope })),
+      decorate((service: Tracker) => Object.assign(service, { decorated: true })),
+      onResolve((dependency, scope) => {
+        seen.push({ dependency, scope });
+        return 'ignored' as unknown as void;
+      }),
+    )
+    class Tracker {
+      readonly name = 'tracker';
+    }
+
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Tracker));
+    const request = app.createScope({ tags: ['request'] });
+
+    const tracker = request.resolve<Tracker & { decorated: boolean }>('Tracker');
+
+    // The hook cannot swap the dependency out - the decorated instance still reaches the caller.
+    expect(tracker).toBeInstanceOf(Tracker);
+    expect(tracker.decorated).toBe(true);
+
+    // Hooks run after every decorate mapper, whatever their position in the chain.
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).toEqual({ dependency: tracker, scope: request });
+    expect(seen[1]).toEqual({ dependency: tracker, scope: request });
+  });
+
+  it('runs onResolve hooks per resolution, once for a singleton', () => {
+    const transient: unknown[] = [];
+    const cached: unknown[] = [];
+
+    const container = new Container()
+      .addRegistration(R.fromClass(class Transient {}).pipe(onResolve((d) => transient.push(d))))
+      .addRegistration(
+        R.fromClass(class Cached {}).pipe(
+          singleton(),
+          onResolve((d) => cached.push(d)),
+        ),
+      );
+
+    container.resolve('Transient');
+    container.resolve('Transient');
+    container.resolve('Cached');
+    container.resolve('Cached');
+
+    expect(transient).toHaveLength(2);
+    expect(cached).toHaveLength(1);
+  });
+
+  it('propagates an error thrown by an onResolve hook out of resolve', () => {
+    const failure = new Error('hook failed');
+
+    const container = new Container().addRegistration(
+      R.fromClass(class Fragile {}).pipe(
+        onResolve(() => {
+          throw failure;
+        }),
+      ),
+    );
+
+    expect(() => container.resolve('Fragile')).toThrow(failure);
   });
 });

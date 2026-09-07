@@ -3,7 +3,6 @@ import {
   appendArgs,
   bindTo,
   Container,
-  ContainerNotFoundError,
   ProxyRegistry,
   type IContainer,
   Provider,
@@ -16,7 +15,7 @@ import {
 } from '../../lib';
 
 describe('IContainer', function () {
-  it('should run addOnDisposeHook callback when disposing', function () {
+  it('should run onDispose callback when disposing', function () {
     let isRootDisposed = false;
     const onDispose = (c: IContainer) => {
       if (c.hasTag('root')) {
@@ -24,7 +23,7 @@ describe('IContainer', function () {
       }
     };
 
-    const container = new Container({ tags: ['root'] }).addOnDisposeHook(onDispose);
+    const container = new Container({ tags: ['root'] }).onInstanceDisposed(onDispose);
 
     container.dispose();
 
@@ -104,52 +103,6 @@ describe('IContainer', function () {
 
       expect(root.hasInstance(proxy)).toBe(false);
       expect(root.hasInstance(ProxyRegistry.getInstance().unwrap(proxy))).toBe(true);
-    });
-  });
-
-  describe('getScopeByInstanceOrFail', () => {
-    class FileLogger {}
-
-    it('should return the scope that owns the instance', () => {
-      const root = new Container({ tags: ['root'] });
-      const child = root.createScope({ tags: ['child'] });
-
-      const logger = child.resolve(FileLogger);
-
-      expect(child.getScopeByInstanceOrFail(logger)).toBe(child);
-    });
-
-    it('should return itself when it owns the instance', () => {
-      const root = new Container({ tags: ['root'] });
-
-      const logger = root.resolve(FileLogger);
-
-      expect(root.getScopeByInstanceOrFail(logger)).toBe(root);
-    });
-
-    it('should find the instance in a parent scope when searching from a child', () => {
-      const root = new Container({ tags: ['root'] });
-      const child = root.createScope({ tags: ['child'] });
-
-      const logger = root.resolve(FileLogger);
-
-      expect(child.getScopeByInstanceOrFail(logger)).toBe(root);
-    });
-
-    it('should find the instance in an ancestor scope from a deeply nested scope', () => {
-      const root = new Container({ tags: ['root'] });
-      const child = root.createScope({ tags: ['child'] });
-      const grandChild = child.createScope({ tags: ['grandChild'] });
-
-      const logger = root.resolve(FileLogger);
-
-      expect(grandChild.getScopeByInstanceOrFail(logger)).toBe(root);
-    });
-
-    it('should throw ContainerNotFoundError when no scope owns the instance', () => {
-      const root = new Container({ tags: ['root'] });
-
-      expect(() => root.getScopeByInstanceOrFail(new FileLogger())).toThrow(ContainerNotFoundError);
     });
   });
 });

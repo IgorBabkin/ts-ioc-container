@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0004 - Pipe-based composition via ProviderPipe](../../docs/adr/0004-provider-pipe-composition.md), [ADR 0011 - Specs-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
-- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `autoResolve`, `scopeAccess`, `decorate`, `ProviderPipe`
+- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `autoResolve`, `scopeAccess`, `decorate`, `onResolve`, `ProviderPipe`
 - **Executable spec:** `__tests__/specs/provider-behavior.spec.ts`
 
 ## Intent
@@ -110,6 +110,25 @@ Acceptance criteria:
 - `decorate` receives the resolved dependency and resolving scope.
 - The decorated value is returned to the caller.
 - Decoration composes with other provider pipes in declared order.
+
+### Story: Observe resolved dependencies
+
+As an application architect, I can attach `onResolve` hooks to a provider so
+that cross-cutting concerns such as tracking, logging, or registering the
+dependency elsewhere run on resolution without changing the resolved value.
+
+Acceptance criteria:
+
+- `onResolve` receives the resolved dependency and the resolving scope.
+- Unlike `decorate`, an `onResolve` hook cannot replace the dependency — its
+  return value is ignored and the caller receives the value the pipes produced.
+- Hooks run after every `decorate` mapper, so they observe the fully decorated
+  dependency regardless of where `onResolve` appears in the pipe chain.
+- Multiple hooks run in the order they were declared.
+- A hook that throws propagates out of `resolve`.
+- Hooks run per resolution, so a non-singleton provider fires them on every
+  resolve, while a singleton provider fires them only on the resolve that fills
+  the cache.
 
 ## Notes
 

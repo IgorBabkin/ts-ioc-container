@@ -1,4 +1,10 @@
-import { type DependencyKey, type IContainer, type IContainerModule, isDependencyKey } from '../container/IContainer';
+import {
+  type DependencyHook,
+  type DependencyKey,
+  type IContainer,
+  type IContainerModule,
+  isDependencyKey,
+} from '../container/IContainer';
 import type { ArgsFn, DecorateFn, GetCacheKey, IProvider, ScopeAccessRule } from '../provider/IProvider';
 import { SingleToken } from '../token/SingleToken';
 import { BindToken } from '../token/BindToken';
@@ -104,3 +110,5 @@ export const autoResolve = <T>() => registerPipe<T>((p) => p.autoResolve());
 export const decorate = (...fns: DecorateFn[]) => registerPipe((p) => p.map(...fns));
 
 export const singleton = <T = unknown>(getCacheKey?: GetCacheKey) => registerPipe<T>((p) => p.singleton(getCacheKey));
+
+export const onResolve = <T = unknown>(...hooks: DependencyHook[]) => registerPipe<T>((p) => p.onResolve(...hooks));

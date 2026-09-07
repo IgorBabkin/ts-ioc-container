@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-  AddOnConstructAsyncHookModule,
+  OnConstructAsyncModule,
   Container,
   type ExecutionContext,
   type HookFn,
@@ -38,7 +38,7 @@ describe('onConstructAsync', function () {
     }
 
     const container = new Container()
-      .useModule(new AddOnConstructAsyncHookModule())
+      .useModule(new OnConstructAsyncModule())
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -62,7 +62,7 @@ describe('onConstructAsync', function () {
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container().useModule(
-      new AddOnConstructAsyncHookModule((ex, context) => {
+      new OnConstructAsyncModule((ex, context) => {
         captured = { ex, context };
       }),
     );

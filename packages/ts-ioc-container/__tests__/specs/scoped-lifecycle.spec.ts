@@ -4,6 +4,8 @@ import {
   Container,
   ContainerDisposedError,
   DependencyNotFoundError,
+  type IContainer,
+  type Instance,
   register,
   Registration as R,
   scope,
@@ -107,5 +109,30 @@ describe('Spec: scoped lifecycle', () => {
     expect(request.getInstances()).toEqual([]);
     expect(() => request.resolve('RequestConfiguration')).toThrowError(ContainerDisposedError);
     expect(app.resolve<RequestConfiguration>('RequestConfiguration').baseUrl).toBe('/api');
+  });
+
+  it('lets a consumer locate the scope owning an instance with hasInstance and getParent', () => {
+    // The container exposes no scope-by-instance lookup on purpose: `hasInstance`
+    // answers for one scope, `getParent` walks up, and the consumer owns the policy
+    // for what happens when the walk runs out of scopes.
+    const findOwningScope = (scope: IContainer, instance: Instance): IContainer | undefined => {
+      for (let current: IContainer | undefined = scope; current; current = current.getParent()) {
+        if (current.hasInstance(instance)) {
+          return current;
+        }
+      }
+      return undefined;
+    };
+
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(RequestConfiguration));
+    const request = app.createScope({ tags: ['request'] });
+
+    const appConfiguration = app.resolve<RequestConfiguration>('RequestConfiguration');
+    const requestConfiguration = request.resolve<RequestConfiguration>('RequestConfiguration');
+
+    expect(findOwningScope(request, requestConfiguration)).toBe(request);
+    expect(findOwningScope(request, appConfiguration)).toBe(app);
+    expect(findOwningScope(app, requestConfiguration)).toBeUndefined();
+    expect(findOwningScope(request, new RequestConfiguration())).toBeUndefined();
   });
 });

@@ -15,7 +15,7 @@ import { append, Container, hook, HooksRunner, type HookFn } from '../../lib';
  * How it works:
  * 1. Define a HooksRunner with a unique hook name
  * 2. Create methods decorated with @hook('hookName', append(executor))
- * 3. Register the hook runner via addOnConstructHook
+ * 3. Register the hook runner via onConstruct
  * 4. Methods are automatically called when instances are created
  */
 
@@ -39,7 +39,7 @@ describe('Custom Hooks', () => {
       }
     }
 
-    const container = new Container({ tags: ['application'] }).addOnConstructHook((instance, scope) => {
+    const container = new Container({ tags: ['application'] }).onConstruct((instance, scope) => {
       // Run all 'initialize' hooks on newly created instances
       initializeHookRunner.execute(instance, { scope });
     });

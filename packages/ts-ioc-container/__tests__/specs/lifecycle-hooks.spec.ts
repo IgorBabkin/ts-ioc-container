@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import {
-  AddOnConstructAsyncHookModule,
-  AddOnConstructHookModule,
-  AddOnDisposeHookModule,
+  OnConstructAsyncModule,
+  OnConstructModule,
+  OnDisposeModule,
   append,
   Container,
   hasHooks,
@@ -41,8 +41,8 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new AddOnConstructHookModule())
-      .useModule(new AddOnDisposeHookModule())
+      .useModule(new OnConstructModule())
+      .useModule(new OnDisposeModule())
       .addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
@@ -69,7 +69,7 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -91,7 +91,7 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -112,7 +112,7 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -132,7 +132,7 @@ describe('Spec: lifecycle hooks', () => {
       destroy(): void {}
     }
 
-    const container = new Container().useModule(new AddOnDisposeHookModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnDisposeModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
     container.dispose();
@@ -153,9 +153,7 @@ describe('Spec: lifecycle hooks', () => {
       async initialize(): Promise<void> {}
     }
 
-    const container = new Container()
-      .useModule(new AddOnConstructAsyncHookModule())
-      .addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnConstructAsyncModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -175,9 +173,7 @@ describe('Spec: lifecycle hooks', () => {
       }
     }
 
-    const container = new Container()
-      .useModule(new AddOnConstructAsyncHookModule())
-      .addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnConstructAsyncModule()).addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
 
@@ -196,7 +192,7 @@ describe('Spec: lifecycle hooks', () => {
 
     let captured: unknown;
     const container = new Container()
-      .useModule(new AddOnConstructAsyncHookModule((ex) => (captured = ex)))
+      .useModule(new OnConstructAsyncModule((ex) => (captured = ex)))
       .addRegistration(R.fromClass(BrokenResource));
 
     container.resolve<BrokenResource>('BrokenResource');
@@ -215,7 +211,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new AddOnConstructHookModule())
+      .useModule(new OnConstructModule())
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(Service));
 
@@ -256,10 +252,10 @@ describe('Spec: lifecycle hooks', () => {
     expect(worker.calls).toEqual(['start']);
   });
 
-  it('runs direct disposal callbacks registered with addOnDisposeHook', () => {
+  it('runs direct disposal callbacks registered with onDispose', () => {
     const disposed: string[] = [];
 
-    const container = new Container({ tags: ['app'] }).addOnDisposeHook((c) => {
+    const container = new Container({ tags: ['app'] }).onInstanceDisposed((c) => {
       if (c.hasTag('app')) disposed.push('app');
     });
 

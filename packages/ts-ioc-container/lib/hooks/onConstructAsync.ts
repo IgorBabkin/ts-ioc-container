@@ -12,11 +12,11 @@ export const onConstructAsync = (...fns: HookType[]) => hook('onConstructAsync',
 // instance is tracked and settle afterwards: `resolve` returns before they
 // finish. Instances that must expose readiness should publish it themselves,
 // for example by storing the pending promise on the instance.
-export class AddOnConstructAsyncHookModule implements IContainerModule {
+export class OnConstructAsyncModule implements IContainerModule {
   constructor(private readonly onException?: OnExceptionHandler) {}
 
   applyTo(container: IContainer) {
-    container.addOnConstructHook((instance, scope) => {
+    container.onConstruct((instance, scope) => {
       if (!onConstructAsyncHooksRunner.hasHooks(instance)) {
         return;
       }

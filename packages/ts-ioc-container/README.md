@@ -48,6 +48,7 @@ provider pipelines, aliases, and custom injector strategies.
   - [Visibility](#visibility) `visible`
   - [Alias](#alias) `asAlias`
   - [Decorator](#decorator) `decorate`
+  - [On resolve](#on-resolve) `onResolve`
 - [Registration](#registration) `@register`
   - [Token](#token) `bindTo`
   - [Scope](#scope) `scope`
@@ -2376,6 +2377,84 @@ describe('Decorator Pattern', () => {
 
 ```
 
+### On resolve
+
+Sometimes you don't want to change the dependency, only to react to it. Use the `onResolve(...)` pipe — it appends a `DependencyHook` that receives the resolved dependency and the resolving scope.
+
+- `provider(onResolve((instance, scope) => tracker.track(instance)))`
+
+Hooks run after the whole `decorate(...)` chain, so they always observe the fully decorated dependency, and their return value is ignored — `onResolve` can never swap the dependency out. They fire per resolution, which means a `singleton()` provider runs them only on the resolve that fills the cache.
+
+```typescript
+import 'reflect-metadata';
+import { Container, type IContainer, onResolve, register, Registration as R, singleton } from 'ts-ioc-container';
+
+/**
+ * Observability Domain - onResolve hooks
+ *
+ * `onResolve(...)` attaches side effects to a provider. Every time the provider
+ * hands a dependency back, each hook is called with that dependency and the
+ * resolving scope.
+ *
+ * Unlike `decorate(...)`, a hook cannot replace the dependency - its return
+ * value is ignored. Use `decorate` to change what the caller gets, and
+ * `onResolve` to react to what the caller got: tracking, metrics, registering
+ * the instance with an external bus.
+ *
+ * Hooks always run after the whole `decorate` chain, so they observe the fully
+ * decorated dependency no matter where `onResolve` sits in the pipe list.
+ */
+describe('onResolve', () => {
+  it('should observe every resolved dependency without changing it', () => {
+    const resolved: Array<{ name: string; fromRequest: boolean }> = [];
+
+    const track = (dependency: unknown, scope: IContainer) => {
+      resolved.push({ name: (dependency as Connection).name, fromRequest: scope.hasTag('request') });
+    };
+
+    @register(onResolve(track))
+    class Connection {
+      readonly name = 'Connection';
+    }
+
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Connection));
+    const request = app.createScope({ tags: ['request'] });
+
+    const connection = request.resolve<Connection>('Connection');
+
+    // The caller still receives the untouched instance
+    expect(connection).toBeInstanceOf(Connection);
+    // ...and the hook saw it, together with the scope it was resolved from
+    expect(resolved).toEqual([{ name: 'Connection', fromRequest: true }]);
+  });
+
+  it('should run once for a singleton and on every resolve otherwise', () => {
+    let poolCount = 0;
+    let sessionCount = 0;
+
+    @register(singleton(), onResolve(() => poolCount++))
+    class ConnectionPool {}
+
+    @register(onResolve(() => sessionCount++))
+    class Session {}
+
+    const app = new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(ConnectionPool))
+      .addRegistration(R.fromClass(Session));
+
+    app.resolve('ConnectionPool');
+    app.resolve('ConnectionPool');
+    app.resolve('Session');
+    app.resolve('Session');
+
+    // A singleton caches the dependency, so hooks fire on the resolve that filled the cache
+    expect(poolCount).toBe(1);
+    expect(sessionCount).toBe(2);
+  });
+});
+
+```
+
 ## Registration
 
 Registration is provider factory which registers provider in container.
@@ -2759,7 +2838,7 @@ runs `h1` before `h2`.
 ```typescript
 import 'reflect-metadata';
 import {
-  AddOnConstructHookModule,
+  OnConstructModule,
   Container,
   type ExecutionContext,
   type HookFn,
@@ -2787,7 +2866,7 @@ describe('onConstruct', function () {
     }
 
     const container = new Container()
-      .useModule(new AddOnConstructHookModule())
+      .useModule(new OnConstructModule())
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -2808,7 +2887,7 @@ describe('onConstruct', function () {
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container().useModule(
-      new AddOnConstructHookModule((ex, context) => {
+      new OnConstructModule((ex, context) => {
         captured = { ex, context };
       }),
     );
@@ -2828,7 +2907,7 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    const container = new Container().useModule(new AddOnConstructHookModule());
+    const container = new Container().useModule(new OnConstructModule());
 
     expect(() => container.resolve(BrokenService)).toThrow(failure);
   });
@@ -2843,7 +2922,7 @@ describe('onConstruct', function () {
 
     let scope: IContainer | undefined;
     const container = new Container().useModule(
-      new AddOnConstructHookModule((_ex, context) => {
+      new OnConstructModule((_ex, context) => {
         scope = context.scope;
       }),
     );
@@ -2860,13 +2939,13 @@ describe('onConstruct', function () {
 ### OnConstructAsync
 
 `@onConstructAsync` runs promise-returning initialization. Resolution stays
-synchronous: `AddOnConstructAsyncHookModule` starts the hooks when the instance
+synchronous: `OnConstructAsyncModule` starts the hooks when the instance
 is created and they settle afterwards, so `resolve` returns before they finish.
 
 ```typescript
 import 'reflect-metadata';
 import {
-  AddOnConstructAsyncHookModule,
+  OnConstructAsyncModule,
   Container,
   type ExecutionContext,
   type HookFn,
@@ -2904,7 +2983,7 @@ describe('onConstructAsync', function () {
     }
 
     const container = new Container()
-      .useModule(new AddOnConstructAsyncHookModule())
+      .useModule(new OnConstructAsyncModule())
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -2928,7 +3007,7 @@ describe('onConstructAsync', function () {
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container().useModule(
-      new AddOnConstructAsyncHookModule((ex, context) => {
+      new OnConstructAsyncModule((ex, context) => {
         captured = { ex, context };
       }),
     );
@@ -2950,7 +3029,7 @@ describe('onConstructAsync', function () {
 ```typescript
 import 'reflect-metadata';
 import {
-  AddOnDisposeHookModule,
+  OnDisposeModule,
   bindTo,
   Container,
   type HookFn,
@@ -2993,7 +3072,7 @@ class Logger {
 describe('onContainerDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new AddOnDisposeHookModule())
+      .useModule(new OnDisposeModule())
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-  AddOnConstructHookModule,
+  OnConstructModule,
   Container,
   type ExecutionContext,
   type HookFn,
@@ -28,7 +28,7 @@ describe('onConstruct', function () {
     }
 
     const container = new Container()
-      .useModule(new AddOnConstructHookModule())
+      .useModule(new OnConstructModule())
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -49,7 +49,7 @@ describe('onConstruct', function () {
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container().useModule(
-      new AddOnConstructHookModule((ex, context) => {
+      new OnConstructModule((ex, context) => {
         captured = { ex, context };
       }),
     );
@@ -69,7 +69,7 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    const container = new Container().useModule(new AddOnConstructHookModule());
+    const container = new Container().useModule(new OnConstructModule());
 
     expect(() => container.resolve(BrokenService)).toThrow(failure);
   });
@@ -84,7 +84,7 @@ describe('onConstruct', function () {
 
     let scope: IContainer | undefined;
     const container = new Container().useModule(
-      new AddOnConstructHookModule((_ex, context) => {
+      new OnConstructModule((_ex, context) => {
         scope = context.scope;
       }),
     );

@@ -1,4 +1,4 @@
-import { IContainer, Tagged } from '../container/IContainer';
+import { type DependencyHook, IContainer, Tagged } from '../container/IContainer';
 import { InjectOptions } from '../injector/IInjector';
 
 export type WithLazy = { lazy: boolean };
@@ -32,4 +32,6 @@ export interface IProvider<T = any> {
   singleton(getCacheKey?: GetCacheKey): this;
 
   dispose(): void;
+
+  onResolve(...hooks: DependencyHook[]): this;
 }
