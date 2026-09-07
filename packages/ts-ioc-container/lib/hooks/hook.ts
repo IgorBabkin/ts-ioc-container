@@ -1,7 +1,7 @@
 import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
 import { type constructor, Is } from '../utils/basic';
-import { unwrapProxyTarget } from '../utils/proxy';
+import { getProxyTarget, isProxy } from '../utils/proxy';
 import { ProviderOptions } from '../provider/IProvider';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
@@ -46,6 +46,10 @@ const isHookClassConstructor = <C extends IHookContext>(
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
   isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
 
+const getReflectionTarget = (target: object): object => {
+  return isProxy(target) ? getProxyTarget(target) : target;
+};
+
 // Walk the constructor's prototype chain (most-derived first) collecting each class.
 const getConstructorChain = (ctor: unknown): object[] => {
   const chain: object[] = [];
@@ -61,7 +65,7 @@ const getConstructorChain = (ctor: unknown): object[] => {
 // Hooks are collected from base to derived so a derived class's hooks for the same
 // method name take precedence over (replace) the parent's.
 export function getHooks(target: object, key: string | symbol): HooksOfClass {
-  const reflectionTarget = unwrapProxyTarget(target);
+  const reflectionTarget = getReflectionTarget(target);
   const merged: HooksOfClass = new Map();
   for (const ctor of getConstructorChain(reflectionTarget.constructor).reverse()) {
     const ownHooks: HooksOfClass | undefined = Reflect.getOwnMetadata(key, ctor);
@@ -75,7 +79,7 @@ export function getHooks(target: object, key: string | symbol): HooksOfClass {
 }
 
 export function hasHooks(target: object, key: string | symbol): boolean {
-  const reflectionTarget = unwrapProxyTarget(target);
+  const reflectionTarget = getReflectionTarget(target);
   return getConstructorChain(reflectionTarget.constructor).some((ctor) => Reflect.hasOwnMetadata(key, ctor));
 }
 

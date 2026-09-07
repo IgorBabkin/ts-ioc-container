@@ -22,7 +22,7 @@ import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
-import { unwrapProxyTarget } from '../utils/proxy';
+import { getProxyTarget, isProxy } from '../utils/proxy';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -240,7 +240,8 @@ export class Container implements IContainer {
   }
 
   hasInstance(instance: object): boolean {
-    return this.instances.has(unwrapProxyTarget(instance) as Instance);
+    const target = isProxy(instance) ? getProxyTarget(instance) : instance;
+    return this.instances.has(target as Instance);
   }
 
   /**
