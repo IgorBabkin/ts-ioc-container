@@ -25,21 +25,25 @@ export function createProxy<T extends object>(target: T, handler: ProxyHandler<T
 
 export function lazyProxy<T extends object>(resolveInstance: () => T): T {
   let instance: T | undefined;
-  const getTarget = (): T => {
-    instance = instance ?? resolveInstance();
-    return instance;
+  const state: ProxyState<T> = {
+    getTarget: () => {
+      instance = instance ?? unwrapProxyTarget(resolveInstance());
+      return instance;
+    },
   };
 
-  const proxy = createProxy({} as T, {
-    get: (_, prop) => {
-      const target = getTarget();
-      // @ts-ignore
-      return target[prop];
+  const proxy = new Proxy(
+    {},
+    {
+      get: (_, prop) => {
+        const target = state.getTarget();
+        // @ts-ignore
+        return target[prop];
+      },
     },
-  });
-  // the {} passed to createProxy is a placeholder; override its registration so
-  // getProxyTarget resolves the real (lazily-computed) instance instead of {}
-  proxyStateMap.set(proxy, { getTarget } as ProxyState<object>);
+  ) as T;
+
+  proxyStateMap.set(proxy, state as ProxyState<object>);
 
   return proxy;
 }
