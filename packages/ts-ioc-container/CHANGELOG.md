@@ -1,3 +1,18 @@
+# 59.0.0 (2026-09-07)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    replace proxy helpers with a ProxyRegistry singleton (#141)
+    (ba3faf32946775db3ce590ace00ba06380306ade)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    replace proxy helpers with a ProxyRegistry singleton (#141)
+    (ba3faf32946775db3ce590ace00ba06380306ade)
+
+
 # 58.0.0 (2026-09-07)
 
   ### 💥 BREAKING CHANGES
@@ -107,6 +122,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
