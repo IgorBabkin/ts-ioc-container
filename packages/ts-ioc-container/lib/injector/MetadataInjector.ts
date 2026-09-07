@@ -1,6 +1,6 @@
 import { IInjector, InjectOptions, Injector } from './IInjector';
 import type { IContainer } from '../container/IContainer';
-import { type constructor, type Instance, Is } from '../utils/basic';
+import { type constructor, type Instance, resolveConstructor } from '../utils/basic';
 import { getParamMeta, addParamMeta } from '../metadata/parameter';
 import { InjectionToken } from '../token/InjectionToken';
 import { ProviderOptions } from '../provider/IProvider';
@@ -108,7 +108,7 @@ export function inject<T>(fn: Injectable<T>, ...mappers: MapFn<T>[]): ParameterD
 export function inject<T>(fn: Injectable<T>, ...mappers: MapFn<any, any>[]): ParameterDecorator {
   return (target, propertyKey, parameterIndex) => {
     addParamMeta(hookMetaKey(propertyKey as string), () => toMappedToken(fn, mappers))(
-      Is.instance(target) ? target.constructor : target,
+      resolveConstructor(target),
       propertyKey,
       parameterIndex,
     );
