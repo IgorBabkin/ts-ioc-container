@@ -246,10 +246,10 @@ export class Container implements IContainer {
    * @throws {ContainerDisposedError} when the container has already been disposed.
    * @throws {ContainerNotFoundError} when no container in this scope or any parent scope holds `instance`.
    */
-  getScopeByInstanceOrFail(instance: object): IContainer {
+  getScopeByInstanceOrFail(instance: Instance): IContainer {
     this.validateContainer();
 
-    if (this.hasInstance(instance as Instance)) {
+    if (this.hasInstance(instance)) {
       return this;
     }
 

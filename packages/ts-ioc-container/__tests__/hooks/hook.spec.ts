@@ -183,8 +183,8 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    expect(onStartHooksRunner.hasHooks(root.resolve(WithHooks))).toBe(true);
-    expect(onStartHooksRunner.hasHooks(root.resolve(WithoutHooks))).toBe(false);
+    expect(onStartHooksRunner.hasHooks(root.resolve(WithHooks) as never)).toBe(true);
+    expect(onStartHooksRunner.hasHooks(root.resolve(WithoutHooks) as never)).toBe(false);
   });
 
   it('should report no hooks when the target has hooks under a different key only', () => {
@@ -197,7 +197,7 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    expect(onStartHooksRunner.hasHooks(root.resolve(MyClass))).toBe(false);
+    expect(onStartHooksRunner.hasHooks(root.resolve(MyClass) as never)).toBe(false);
   });
 
   it('should run hooks declared on a parent (extended-from) class', () => {

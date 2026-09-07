@@ -18,8 +18,8 @@ export type HooksRunnerContext = {
 export class HooksRunner {
   constructor(private readonly key: string | symbol) {}
 
-  hasHooks(target: object): boolean {
-    return hasHooks(target as Instance, this.key);
+  hasHooks(target: Instance): boolean {
+    return hasHooks(target, this.key);
   }
 
   /**
