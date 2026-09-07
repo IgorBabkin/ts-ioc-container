@@ -22,7 +22,6 @@ import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
-import { getProxyTarget, isProxy } from '../utils/proxy';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -240,7 +239,7 @@ export class Container implements IContainer {
   }
 
   hasInstance(instance: object): boolean {
-    return this.instances.has((isProxy(instance) ? getProxyTarget(instance) : instance) as Instance);
+    return this.instances.has(instance as Instance);
   }
 
   /**
