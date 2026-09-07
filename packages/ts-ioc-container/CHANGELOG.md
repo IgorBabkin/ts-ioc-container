@@ -1,3 +1,18 @@
+# 58.0.0 (2026-09-07)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    stop exposing isProxy/getProxyTarget, expose unwrapProxyTarget only (#140)
+    (cb12f4a2cd99e9d00f9ced175e538e619a250486)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    stop exposing isProxy/getProxyTarget, expose unwrapProxyTarget only (#140)
+    (cb12f4a2cd99e9d00f9ced175e538e619a250486)
+
+
 # 57.4.0 (2026-09-07)
 
   ### ✨ Features
@@ -92,6 +107,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
