@@ -4,6 +4,7 @@ import {
   type IContainer,
   type IContainerModule,
   type ScopeHook,
+  type ProviderHook,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
@@ -144,6 +145,13 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
   onScopeCreated(...hooks: ScopeHook[]): this {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
+   */
+  onProviderRegistered(...hooks: ProviderHook[]): this {
     throw new MethodNotImplementedError();
   }
 }

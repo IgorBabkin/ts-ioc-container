@@ -34,6 +34,7 @@ export type RegisterOptions = { aliases?: DependencyKey[] };
 export type ScopeHook = (scope: IContainer) => void;
 export type InstanceHook = (instance: Instance, scope: IContainer) => void;
 export type DependencyHook = (dependency: unknown, scope: IContainer) => void;
+export type ProviderHook = (provider: IProvider, key: DependencyKey, scope: IContainer) => void;
 
 export interface IContainer extends Tagged {
   readonly isDisposed: boolean;
@@ -43,6 +44,8 @@ export interface IContainer extends Tagged {
   onInstanceDisposed(...hooks: OnDisposeHook[]): this;
 
   onScopeCreated(...hooks: ScopeHook[]): this;
+
+  onProviderRegistered(...hooks: ProviderHook[]): this;
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 
