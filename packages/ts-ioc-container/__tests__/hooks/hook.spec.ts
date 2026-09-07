@@ -166,7 +166,7 @@ describe('hooks', () => {
     });
 
     expect(instance.isStarted).toBe(true);
-    expect(hasHooks(instance, 'onStart')).toBe(true);
+    expect(hasHooks(instance as never, 'onStart')).toBe(true);
   });
 
   it('should report whether a target has hooks for the runner key', () => {

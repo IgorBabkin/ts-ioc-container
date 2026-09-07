@@ -252,7 +252,7 @@ describe('Spec: lifecycle hooks', () => {
       predicate: (methodName) => methodName === 'start',
     });
 
-    expect(hasHooks(worker, 'workflow')).toBe(true);
+    expect(hasHooks(worker as never, 'workflow')).toBe(true);
     expect(worker.calls).toEqual(['start']);
   });
 

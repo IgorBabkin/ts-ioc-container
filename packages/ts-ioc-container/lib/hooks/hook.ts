@@ -1,6 +1,6 @@
 import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
-import { type constructor, Is } from '../utils/basic';
+import { type constructor, Is, type Instance } from '../utils/basic';
 import { ProviderOptions } from '../provider/IProvider';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
@@ -59,7 +59,7 @@ const getConstructorChain = (ctor: unknown): object[] => {
 // Get hooks metadata, merging hooks declared on parent (extended-from) classes.
 // Hooks are collected from base to derived so a derived class's hooks for the same
 // method name take precedence over (replace) the parent's.
-export function getHooks(target: object, key: string | symbol): HooksOfClass {
+export function getHooks(target: Instance, key: string | symbol): HooksOfClass {
   const merged: HooksOfClass = new Map();
   for (const ctor of getConstructorChain(target.constructor).reverse()) {
     const ownHooks: HooksOfClass | undefined = Reflect.getOwnMetadata(key, ctor);
@@ -72,7 +72,7 @@ export function getHooks(target: object, key: string | symbol): HooksOfClass {
   return merged;
 }
 
-export function hasHooks(target: object, key: string | symbol): boolean {
+export function hasHooks(target: Instance, key: string | symbol): boolean {
   return getConstructorChain(target.constructor).some((ctor) => Reflect.hasOwnMetadata(key, ctor));
 }
 

@@ -4,6 +4,7 @@ import { getHooks, hasHooks, HookFn, toHookFn } from './hook';
 import { UnexpectedHookResultError } from '../errors/UnexpectedHookResultError';
 
 import { promisify } from '../utils/promise';
+import { type Instance } from '../utils/basic';
 
 export type MapHookContext = (context: IHookContext) => IHookContext;
 
@@ -18,7 +19,7 @@ export class HooksRunner {
   constructor(private readonly key: string | symbol) {}
 
   hasHooks(target: object): boolean {
-    return hasHooks(target, this.key);
+    return hasHooks(target as Instance, this.key);
   }
 
   /**
@@ -33,7 +34,9 @@ export class HooksRunner {
       predicate = () => true,
     }: HooksRunnerContext,
   ) {
-    const hooks = Array.from(getHooks(target, this.key).entries()).filter(([methodName]) => predicate(methodName));
+    const hooks = Array.from(getHooks(target as Instance, this.key).entries()).filter(([methodName]) =>
+      predicate(methodName),
+    );
 
     const runMethodHooks = (methodName: string, executions: HookFn[]) => {
       const context = mapContext(createContext(target, scope, methodName));
@@ -59,7 +62,9 @@ export class HooksRunner {
       predicate = () => true,
     }: HooksRunnerContext,
   ) {
-    const hooks = Array.from(getHooks(target, this.key).entries()).filter(([methodName]) => predicate(methodName));
+    const hooks = Array.from(getHooks(target as Instance, this.key).entries()).filter(([methodName]) =>
+      predicate(methodName),
+    );
 
     const runMethodHooks = async (methodName: string, executions: HookFn[]) => {
       const context = mapContext(createContext(target, scope, methodName));
