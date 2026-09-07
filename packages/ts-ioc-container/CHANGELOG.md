@@ -1,3 +1,18 @@
+# 60.0.0 (2026-09-07)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    shorten hook API and add the onResolve provider pipe (#142)
+    (b515e43170260dc0cbcae871fd50d9fc2570c696)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    shorten hook API and add the onResolve provider pipe (#142)
+    (b515e43170260dc0cbcae871fd50d9fc2570c696)
+
+
 # 59.0.0 (2026-09-07)
 
   ### 💥 BREAKING CHANGES
@@ -122,6 +137,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
