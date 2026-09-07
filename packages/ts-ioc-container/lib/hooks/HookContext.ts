@@ -1,7 +1,7 @@
 import type { IContainer } from '../container/IContainer';
 
 import { InjectionToken } from '../token/InjectionToken';
-import { type constructor, type Instance } from '../utils/basic';
+import { type Instance } from '../utils/basic';
 import { resolveArgs } from '../injector/MetadataInjector';
 
 export interface IHookContext {
@@ -32,7 +32,7 @@ export class HookContext implements IHookContext {
   ) {}
 
   resolveArgs(...args: unknown[]): unknown[] {
-    return resolveArgs(this.instance.constructor as constructor<unknown>, this.methodName)(this.scope, {
+    return resolveArgs(this.instance, this.methodName)(this.scope, {
       args: [...this.initialArgs, ...args],
     });
   }

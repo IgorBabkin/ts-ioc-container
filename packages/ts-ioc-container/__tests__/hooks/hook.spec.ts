@@ -201,9 +201,8 @@ describe('hooks', () => {
     expect(onStartHooksRunner.hasHooks(root.resolve(MyClass))).toBe(false);
   });
 
-  // A proxy forwards `constructor` to its target, so hook metadata is found through it
-  // without unwrapping. Callers only need ProxyRegistry.unwrap where identity matters
-  // (see Container.hasInstance).
+  // Hook metadata lives on the real class, so the hook API unwraps proxies itself -
+  // a caller passes whatever the container handed it, wrapped or not.
   it('should find and run hooks through a proxy, wrapped or unwrapped', () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 
@@ -223,7 +222,65 @@ describe('hooks', () => {
     expect(hasHooks(proxy, 'onStart')).toBe(true);
     expect(hasHooks(ProxyRegistry.getInstance().unwrap(proxy), 'onStart')).toBe(true);
 
-    onStartHooksRunner.execute(ProxyRegistry.getInstance().unwrap(proxy), { scope: root });
+    onStartHooksRunner.execute(proxy, { scope: root });
+
+    expect(instance.isStarted).toBe(true);
+  });
+
+  it('should run hooks on the real instance behind a lazy proxy', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class MyClass {
+      isStarted = false;
+
+      @hook('onStart', append(execute))
+      start() {
+        this.isStarted = true;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+    const lazy = ProxyRegistry.getInstance().createLazyProxy(() => instance);
+
+    expect(onStartHooksRunner.hasHooks(lazy)).toBe(true);
+
+    onStartHooksRunner.execute(lazy, {
+      scope: root,
+      // The context is built from the unwrapped instance, so hooks act on the real object.
+      mapContext: (context) => {
+        expect(context.instance).toBe(instance);
+        return context;
+      },
+    });
+
+    expect(instance.isStarted).toBe(true);
+  });
+
+  it('should run async hooks on the real instance behind a lazy proxy', async () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class MyClass {
+      isStarted = false;
+
+      @hook('onStart', append(executeAsync))
+      async start() {
+        await sleep(1);
+        this.isStarted = true;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+    const lazy = ProxyRegistry.getInstance().createLazyProxy(() => instance);
+
+    await onStartHooksRunner.executeAsync(lazy, {
+      scope: root,
+      mapContext: (context) => {
+        expect(context.instance).toBe(instance);
+        return context;
+      },
+    });
 
     expect(instance.isStarted).toBe(true);
   });

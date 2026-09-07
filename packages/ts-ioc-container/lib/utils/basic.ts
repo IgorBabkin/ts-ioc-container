@@ -1,3 +1,5 @@
+import { ProxyRegistry } from './ProxyRegistry';
+
 export type constructor<T> = new (...args: any[]) => T;
 
 // Tags a structural type with a name, so `Instance` reads as its own type in signatures
@@ -16,6 +18,16 @@ export const Is = {
   constructor: (target: unknown): target is constructor<unknown> => typeof target === 'function' && !!target.prototype,
 };
 
-export function resolveConstructor(target: object): object {
-  return Is.constructor(target) ? target : (target as { constructor: object }).constructor;
+/**
+ * The class behind `target`: `target` itself when it is already a constructor,
+ * otherwise the constructor of the instance.
+ *
+ * `target` may be a proxy (a `lazy()` provider hands one out) - it is unwrapped
+ * first, because decorator metadata is defined on the real class and a proxy is
+ * never that class. Every metadata read goes through here, so callers pass
+ * whatever they hold - a class, an instance, or a proxy of one.
+ */
+export function resolveConstructor(target: object): constructor<unknown> {
+  const value = ProxyRegistry.getInstance().unwrap(target);
+  return Is.constructor(value) ? value : (value.constructor as constructor<unknown>);
 }

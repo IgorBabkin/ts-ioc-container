@@ -1,6 +1,6 @@
 import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
-import { type constructor, Is, type Instance } from '../utils/basic';
+import { type constructor, Is, type Instance, resolveConstructor } from '../utils/basic';
 import { ProviderOptions } from '../provider/IProvider';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
@@ -59,9 +59,12 @@ const getConstructorChain = (ctor: unknown): object[] => {
 // Get hooks metadata, merging hooks declared on parent (extended-from) classes.
 // Hooks are collected from base to derived so a derived class's hooks for the same
 // method name take precedence over (replace) the parent's.
-export function getHooks(target: Instance, key: string | symbol): HooksOfClass {
+//
+// `target` is an instance or its class, a proxy of either included - it is normalized
+// by `resolveConstructor`, so callers never have to unwrap it themselves.
+export function getHooks(target: Instance | constructor<unknown>, key: string | symbol): HooksOfClass {
   const merged: HooksOfClass = new Map();
-  for (const ctor of getConstructorChain(target.constructor).reverse()) {
+  for (const ctor of getConstructorChain(resolveConstructor(target)).reverse()) {
     const ownHooks: HooksOfClass | undefined = Reflect.getOwnMetadata(key, ctor);
     if (ownHooks) {
       for (const [methodName, fns] of ownHooks) {
@@ -72,8 +75,9 @@ export function getHooks(target: Instance, key: string | symbol): HooksOfClass {
   return merged;
 }
 
-export function hasHooks(target: Instance, key: string | symbol): boolean {
-  return getConstructorChain(target.constructor).some((ctor) => Reflect.hasOwnMetadata(key, ctor));
+// `target` is an instance or its class, a proxy of either included, see {@link getHooks}.
+export function hasHooks(target: Instance | constructor<unknown>, key: string | symbol): boolean {
+  return getConstructorChain(resolveConstructor(target)).some((ctor) => Reflect.hasOwnMetadata(key, ctor));
 }
 
 // Hook decorator
