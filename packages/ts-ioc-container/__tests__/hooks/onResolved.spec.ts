@@ -6,6 +6,7 @@ import {
   OnResolvedModule,
   Provider,
   Registration as R,
+  invokeMethod,
   onResolved,
   onceResolved,
   resolved,
@@ -139,6 +140,34 @@ describe('OnResolvedModule', () => {
     container.resolve('Documented');
 
     expect(invoked).toEqual(['first', 'second', 'first', 'second']);
+  });
+
+  it('should treat an explicit invokeMethod hook as the no-hook shorthand', () => {
+    const invoked: string[] = [];
+
+    class Documented {
+      @onResolved(invokeMethod)
+      track(): void {
+        invoked.push('track');
+      }
+
+      @onceResolved(invokeMethod)
+      open(): void {
+        invoked.push('open');
+      }
+    }
+
+    const documented = new Documented();
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromValue(documented).bindToKey('Documented'));
+
+    container.resolve('Documented');
+    container.resolve('Documented');
+
+    const timesOf = (method: string) => invoked.filter((call) => call === method).length;
+
+    expect([timesOf('track'), timesOf('open')]).toEqual([2, 1]);
   });
 
   it('should accept a single hook', () => {

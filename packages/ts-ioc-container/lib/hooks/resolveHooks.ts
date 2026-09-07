@@ -9,7 +9,12 @@ import { Is } from '../utils/basic';
  */
 export type ResolvedDependencyHook = (dependency: object, scope: IContainer) => void;
 
-const invokeMethod: HookFn = (context) => {
+/**
+ * Invokes the decorated method with its resolved arguments - what every resolve
+ * decorator falls back to when no hook is named, so `@onResolved()` and
+ * `@onResolved(invokeMethod)` are the same declaration.
+ */
+export const invokeMethod: HookFn = (context) => {
   context.invokeMethod();
 };
 

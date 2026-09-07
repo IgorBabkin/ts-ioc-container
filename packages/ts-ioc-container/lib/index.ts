@@ -107,7 +107,7 @@ export {
   OnResolvedAsyncModule,
   resolvedAsync,
 } from './hooks/onResolvedAsync';
-export { type ResolvedDependencyHook } from './hooks/resolveHooks';
+export { invokeMethod, type ResolvedDependencyHook } from './hooks/resolveHooks';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens

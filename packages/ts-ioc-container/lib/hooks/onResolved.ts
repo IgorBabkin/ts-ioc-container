@@ -10,8 +10,11 @@ export const onResolvedHooksRunner = new HooksRunner('onResolved');
  *
  * ```typescript
  * class Connection {
- *   @onResolved()                 // invoke this method on every resolve
+ *   @onResolved()             // invoke this method on every resolve
  *   log(): void {}
+ *
+ *   @onResolved(invokeMethod) // the same declaration, spelled out
+ *   ping(): void {}
  *
  *   @onResolved(injectProp('Config')) // with explicit hooks
  *   config!: Config;
