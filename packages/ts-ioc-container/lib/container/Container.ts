@@ -18,7 +18,7 @@ import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
 import { AliasMap } from './AliasMap';
-import { ProxyRegistry } from '../utils/ProxyRegistry';
+import { unwrapProxy } from '../utils/ProxyRegistry';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
@@ -250,7 +250,7 @@ export class Container implements IContainer {
    * here.
    */
   hasInstance(instance: Instance): boolean {
-    return this.instances.has(ProxyRegistry.getInstance().unwrap(instance));
+    return this.instances.has(unwrapProxy(instance));
   }
 
   removeScope(child: IContainer): void {

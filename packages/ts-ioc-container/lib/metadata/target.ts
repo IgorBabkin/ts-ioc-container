@@ -1,5 +1,5 @@
 import { type constructor, Is } from '../utils/basic';
-import { ProxyRegistry } from '../utils/ProxyRegistry';
+import { unwrapProxy } from '../utils/ProxyRegistry';
 
 /**
  * The class behind `target`: `target` itself when it is already a constructor,
@@ -16,7 +16,5 @@ import { ProxyRegistry } from '../utils/ProxyRegistry';
  * class, an instance, or a proxy of either - and never unwrap by hand.
  */
 export function resolveConstructor(target: object): constructor<unknown> {
-  return Is.constructor(target)
-    ? ProxyRegistry.getInstance().unwrap(target)
-    : (target.constructor as constructor<unknown>);
+  return Is.constructor(target) ? unwrapProxy(target) : (target.constructor as constructor<unknown>);
 }
