@@ -1,6 +1,7 @@
 import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
-import { type constructor, Is, type Instance, resolveConstructor } from '../utils/basic';
+import { type constructor, Is, type Instance } from '../utils/basic';
+import { resolveConstructor } from '../metadata/target';
 import { ProviderOptions } from '../provider/IProvider';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;

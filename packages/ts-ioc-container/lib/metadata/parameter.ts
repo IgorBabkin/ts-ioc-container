@@ -1,4 +1,4 @@
-import { resolveConstructor } from '../utils/basic';
+import { resolveConstructor } from './target';
 
 export const addParamMeta =
   (key: string | symbol, mapFn: (prev: unknown) => unknown): ParameterDecorator =>

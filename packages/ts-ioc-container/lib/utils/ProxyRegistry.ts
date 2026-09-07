@@ -12,6 +12,13 @@ export interface IProxyRegistry {
   /**
    * Returns the real object behind `value`, unwrapping proxies stacked to any
    * depth. A value that is not a proxy is returned as is.
+   *
+   * The library calls this itself wherever a proxy would give the wrong answer -
+   * every read of class metadata (see `resolveConstructor`, `getHooks`,
+   * `resolveArgs`) and every identity check against a tracked instance (see
+   * `IContainer.hasInstance`). Pass the container's own values to those APIs as
+   * they come; unwrapping by hand is for code that needs the real object for its
+   * own reasons.
    */
   unwrap<T extends object>(value: T): T;
 

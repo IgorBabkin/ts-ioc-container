@@ -1,4 +1,4 @@
-import { resolveConstructor } from './basic';
+import { resolveConstructor } from '../metadata/target';
 
 export type HandleErrorParams = (error: unknown, context: { target: string; method: string }) => void;
 

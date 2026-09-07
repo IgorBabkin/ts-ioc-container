@@ -1,6 +1,7 @@
 import { IInjector, InjectOptions, Injector } from './IInjector';
 import type { IContainer } from '../container/IContainer';
-import { type constructor, type Instance, resolveConstructor } from '../utils/basic';
+import { type constructor, type Instance } from '../utils/basic';
+import { resolveConstructor } from '../metadata/target';
 import { getParamMeta, addParamMeta } from '../metadata/parameter';
 import { InjectionToken } from '../token/InjectionToken';
 import { ProviderOptions } from '../provider/IProvider';

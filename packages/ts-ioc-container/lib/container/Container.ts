@@ -18,6 +18,7 @@ import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
 import { MetadataInjector } from '../injector/MetadataInjector';
 import { AliasMap } from './AliasMap';
+import { ProxyRegistry } from '../utils/ProxyRegistry';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
@@ -239,8 +240,17 @@ export class Container implements IContainer {
     return [...this.scopes];
   }
 
+  /**
+   * Whether this scope created `instance`.
+   *
+   * A proxy stands for the object behind it, so it is unwrapped before the
+   * lookup - the container tracks real instances, and a caller asking about a
+   * proxy is asking about its target. Resolving a lazy proxy's target is what
+   * makes that answer possible, so a still-unresolved lazy proxy is resolved
+   * here.
+   */
   hasInstance(instance: Instance): boolean {
-    return this.instances.has(instance);
+    return this.instances.has(ProxyRegistry.getInstance().unwrap(instance));
   }
 
   removeScope(child: IContainer): void {

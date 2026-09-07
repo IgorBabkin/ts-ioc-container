@@ -95,14 +95,22 @@ describe('IContainer', function () {
       expect(root.hasInstance(new FileLogger())).toBe(false);
     });
 
-    it('should not match a proxy directly, only its unwrapped target', () => {
+    it('should match a proxy of a tracked instance - it stands for its target', () => {
       const root = new Container({ tags: ['root'] });
 
       const logger = root.resolve(FileLogger);
       const proxy = ProxyRegistry.getInstance().createProxy(logger, {});
 
-      expect(root.hasInstance(proxy)).toBe(false);
+      expect(root.hasInstance(proxy)).toBe(true);
       expect(root.hasInstance(ProxyRegistry.getInstance().unwrap(proxy))).toBe(true);
+    });
+
+    it('should match a lazy proxy once it stands for a tracked instance', () => {
+      const root = new Container({ tags: ['root'] });
+
+      const lazy = ProxyRegistry.getInstance().createLazyProxy(() => root.resolve(FileLogger));
+
+      expect(root.hasInstance(lazy)).toBe(true);
     });
   });
 });
