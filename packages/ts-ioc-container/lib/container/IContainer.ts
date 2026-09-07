@@ -72,7 +72,7 @@ export interface IContainer extends Tagged {
 
   getInstances(cascade?: boolean): Instance[];
 
-  hasInstance(instance: object): boolean;
+  hasInstance(instance: Instance): boolean;
 
   dispose(): void;
 

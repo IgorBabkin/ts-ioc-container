@@ -76,7 +76,7 @@ describe('IContainer', function () {
 
       const logger = root.resolve(FileLogger);
 
-      expect(root.hasInstance(logger)).toBe(true);
+      expect(root.hasInstance(logger as never)).toBe(true);
     });
 
     it('should return false for an instance owned by another scope', () => {
@@ -85,14 +85,14 @@ describe('IContainer', function () {
 
       const logger = child.resolve(FileLogger);
 
-      expect(root.hasInstance(logger)).toBe(false);
-      expect(child.hasInstance(logger)).toBe(true);
+      expect(root.hasInstance(logger as never)).toBe(false);
+      expect(child.hasInstance(logger as never)).toBe(true);
     });
 
     it('should return false for an unknown instance', () => {
       const root = new Container({ tags: ['root'] });
 
-      expect(root.hasInstance(new FileLogger())).toBe(false);
+      expect(root.hasInstance(new FileLogger() as never)).toBe(false);
     });
   });
 

@@ -238,8 +238,8 @@ export class Container implements IContainer {
     return [...this.scopes];
   }
 
-  hasInstance(instance: object): boolean {
-    return this.instances.has(instance as Instance);
+  hasInstance(instance: Instance): boolean {
+    return this.instances.has(instance);
   }
 
   /**
@@ -249,7 +249,7 @@ export class Container implements IContainer {
   getScopeByInstanceOrFail(instance: object): IContainer {
     this.validateContainer();
 
-    if (this.hasInstance(instance)) {
+    if (this.hasInstance(instance as Instance)) {
       return this;
     }
 

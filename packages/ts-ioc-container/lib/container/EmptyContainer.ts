@@ -46,7 +46,7 @@ export class EmptyContainer implements IContainer {
     return [];
   }
 
-  hasInstance(instance: object): boolean {
+  hasInstance(instance: Instance): boolean {
     return false;
   }
 
