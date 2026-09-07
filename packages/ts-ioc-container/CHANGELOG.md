@@ -1,3 +1,12 @@
+# 60.1.0 (2026-09-07)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    unwrap proxies inside the library, not in consumer code (#143)
+    (2462a1700a0f3513bef778ec55605710029ad788)
+
+
 # 60.0.0 (2026-09-07)
 
   ### 💥 BREAKING CHANGES
@@ -137,6 +146,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
