@@ -4,7 +4,7 @@ type ProxyState<T extends object> = {
 
 const proxyStateMap = new WeakMap<object, ProxyState<object>>();
 
-const unwrapProxyTarget = <T extends object>(value: T): T => {
+export const unwrapProxyTarget = <T extends object>(value: T): T => {
   return isProxy(value) ? getProxyTarget(value) : value;
 };
 
@@ -13,7 +13,14 @@ export function isProxy(value: object): boolean {
 }
 
 export function getProxyTarget<T extends object>(value: T): T {
-  return proxyStateMap.get(value)!.getTarget() as T;
+  const target = proxyStateMap.get(value)!.getTarget() as T;
+  return unwrapProxyTarget(target);
+}
+
+export function createProxy<T extends object>(target: T, handler: ProxyHandler<T> = {}): T {
+  const proxy = new Proxy(target, handler);
+  proxyStateMap.set(proxy, { getTarget: () => target } as ProxyState<object>);
+  return proxy;
 }
 
 export function lazyProxy<T extends object>(resolveInstance: () => T): T {

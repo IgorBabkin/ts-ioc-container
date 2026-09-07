@@ -4,6 +4,7 @@ import {
   bindTo,
   Container,
   ContainerNotFoundError,
+  createProxy,
   type IContainer,
   Provider,
   register,
@@ -93,6 +94,15 @@ describe('IContainer', function () {
       const root = new Container({ tags: ['root'] });
 
       expect(root.hasInstance(new FileLogger())).toBe(false);
+    });
+
+    it('should return true for an instance wrapped in a mediator proxy', () => {
+      const root = new Container({ tags: ['root'] });
+
+      const logger = root.resolve(FileLogger);
+      const proxy = createProxy(logger, {});
+
+      expect(root.hasInstance(proxy)).toBe(true);
     });
   });
 
