@@ -78,7 +78,7 @@ describe('IContainer', function () {
 
       const logger = root.resolve(FileLogger);
 
-      expect(root.hasInstance(logger as never)).toBe(true);
+      expect(root.hasInstance(logger)).toBe(true);
     });
 
     it('should return false for an instance owned by another scope', () => {
@@ -87,14 +87,14 @@ describe('IContainer', function () {
 
       const logger = child.resolve(FileLogger);
 
-      expect(root.hasInstance(logger as never)).toBe(false);
-      expect(child.hasInstance(logger as never)).toBe(true);
+      expect(root.hasInstance(logger)).toBe(false);
+      expect(child.hasInstance(logger)).toBe(true);
     });
 
     it('should return false for an unknown instance', () => {
       const root = new Container({ tags: ['root'] });
 
-      expect(root.hasInstance(new FileLogger() as never)).toBe(false);
+      expect(root.hasInstance(new FileLogger())).toBe(false);
     });
 
     it('should not match a proxy directly, only its unwrapped target', () => {
@@ -103,8 +103,8 @@ describe('IContainer', function () {
       const logger = root.resolve(FileLogger);
       const proxy = createProxy(logger, {});
 
-      expect(root.hasInstance(proxy as never)).toBe(false);
-      expect(root.hasInstance(unwrapProxyTarget(proxy) as never)).toBe(true);
+      expect(root.hasInstance(proxy)).toBe(false);
+      expect(root.hasInstance(unwrapProxyTarget(proxy))).toBe(true);
     });
   });
 
@@ -117,7 +117,7 @@ describe('IContainer', function () {
 
       const logger = child.resolve(FileLogger);
 
-      expect(child.getScopeByInstanceOrFail(logger as never)).toBe(child);
+      expect(child.getScopeByInstanceOrFail(logger)).toBe(child);
     });
 
     it('should return itself when it owns the instance', () => {
@@ -125,7 +125,7 @@ describe('IContainer', function () {
 
       const logger = root.resolve(FileLogger);
 
-      expect(root.getScopeByInstanceOrFail(logger as never)).toBe(root);
+      expect(root.getScopeByInstanceOrFail(logger)).toBe(root);
     });
 
     it('should find the instance in a parent scope when searching from a child', () => {
@@ -134,7 +134,7 @@ describe('IContainer', function () {
 
       const logger = root.resolve(FileLogger);
 
-      expect(child.getScopeByInstanceOrFail(logger as never)).toBe(root);
+      expect(child.getScopeByInstanceOrFail(logger)).toBe(root);
     });
 
     it('should find the instance in an ancestor scope from a deeply nested scope', () => {
@@ -144,13 +144,13 @@ describe('IContainer', function () {
 
       const logger = root.resolve(FileLogger);
 
-      expect(grandChild.getScopeByInstanceOrFail(logger as never)).toBe(root);
+      expect(grandChild.getScopeByInstanceOrFail(logger)).toBe(root);
     });
 
     it('should throw ContainerNotFoundError when no scope owns the instance', () => {
       const root = new Container({ tags: ['root'] });
 
-      expect(() => root.getScopeByInstanceOrFail(new FileLogger() as never)).toThrow(ContainerNotFoundError);
+      expect(() => root.getScopeByInstanceOrFail(new FileLogger())).toThrow(ContainerNotFoundError);
     });
   });
 });

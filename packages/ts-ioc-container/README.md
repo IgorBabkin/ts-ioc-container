@@ -3047,7 +3047,7 @@ describe('inject property', () => {
     const viewModel = container.resolve(UserViewModel);
 
     // 2. Run lifecycle hooks to inject properties
-    onInitHookRunner.execute(viewModel as never, { scope: container });
+    onInitHookRunner.execute(viewModel, { scope: container });
 
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
@@ -3071,7 +3071,7 @@ describe('inject property', () => {
     const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     const viewModel = container.resolve(UserViewModel);
-    onInitHookRunner.execute(viewModel as never, { scope: container });
+    onInitHookRunner.execute(viewModel, { scope: container });
 
     expect(injectedValue).toBe('Hello');
   });

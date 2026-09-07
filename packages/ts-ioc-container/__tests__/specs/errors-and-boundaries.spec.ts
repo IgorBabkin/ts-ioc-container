@@ -69,7 +69,7 @@ describe('Spec: errors and boundaries', () => {
     expect(() => toToken({} as never)).toThrowError(UnsupportedTokenTypeError);
     expect(() => new ConstantToken('value').args('ignored')).toThrowError(MethodNotImplementedError);
     expect(() => new GroupInstanceToken(() => true).lazy()).toThrowError(MethodNotImplementedError);
-    expect(() => new HooksRunner('asyncOnly').execute(worker as never, { scope: container })).toThrowError(
+    expect(() => new HooksRunner('asyncOnly').execute(worker, { scope: container })).toThrowError(
       UnexpectedHookResultError,
     );
   });

@@ -34,14 +34,14 @@ const executeAsync: HookFn = async (ctx) => {
 describe('hooks', () => {
   it('should return the same context from setInitialArgs', () => {
     const root = new Container({ tags: ['root'] });
-    const context = new HookContext({} as never, root, 'constructor');
+    const context = new HookContext({}, root, 'constructor');
 
     expect(context.setInitialArgs('arg1')).toBe(context);
   });
 
   it('should return the args passed to setInitialArgs from getInitialArgs', () => {
     const root = new Container({ tags: ['root'] });
-    const context = new HookContext({} as never, root, 'constructor');
+    const context = new HookContext({}, root, 'constructor');
 
     context.setInitialArgs('arg1', 'arg2');
 
@@ -50,7 +50,7 @@ describe('hooks', () => {
 
   it('should return an empty array from getInitialArgs when no initial args were set', () => {
     const root = new Container({ tags: ['root'] });
-    const context = new HookContext({} as never, root, 'constructor');
+    const context = new HookContext({}, root, 'constructor');
 
     expect(context.getInitialArgs()).toEqual([]);
   });
@@ -75,7 +75,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue('injected').bindTo('suffix'));
     const instance = root.resolve(MyClass);
 
-    beforeHooksRunner.execute(instance as never, {
+    beforeHooksRunner.execute(instance, {
       scope: root,
       createContext: (Target, scope, methodName) =>
         new HookContext(Target, scope, methodName).setInitialArgs('initial'),
@@ -104,7 +104,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue('injected').bindTo('suffix'));
     const instance = root.resolve(MyClass);
 
-    beforeHooksRunner.execute(instance as never, {
+    beforeHooksRunner.execute(instance, {
       scope: root,
       mapContext: (context) => context.setInitialArgs('mapped'),
     });
@@ -132,7 +132,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    await onStartHooksRunner.executeAsync(instance as never, {
+    await onStartHooksRunner.executeAsync(instance, {
       scope: root,
       mapContext: (context) => context.setInitialArgs('mapped'),
     });
@@ -162,13 +162,13 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue(100).bindTo('TimeToSleep'));
     const instance = root.resolve(Logger);
 
-    await onStartHooksRunner.executeAsync(instance as never, {
+    await onStartHooksRunner.executeAsync(instance, {
       scope: root,
       predicate: (methodName) => methodName === 'initialize',
     });
 
     expect(instance.isStarted).toBe(true);
-    expect(hasHooks(instance as never, 'onStart')).toBe(true);
+    expect(hasHooks(instance, 'onStart')).toBe(true);
   });
 
   it('should report whether a target has hooks for the runner key', () => {
@@ -185,8 +185,8 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    expect(onStartHooksRunner.hasHooks(root.resolve(WithHooks) as never)).toBe(true);
-    expect(onStartHooksRunner.hasHooks(root.resolve(WithoutHooks) as never)).toBe(false);
+    expect(onStartHooksRunner.hasHooks(root.resolve(WithHooks))).toBe(true);
+    expect(onStartHooksRunner.hasHooks(root.resolve(WithoutHooks))).toBe(false);
   });
 
   it('should report no hooks when the target has hooks under a different key only', () => {
@@ -199,7 +199,7 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    expect(onStartHooksRunner.hasHooks(root.resolve(MyClass) as never)).toBe(false);
+    expect(onStartHooksRunner.hasHooks(root.resolve(MyClass))).toBe(false);
   });
 
   // A proxy forwards `constructor` to its target, so hook metadata is found through it
@@ -221,10 +221,10 @@ describe('hooks', () => {
     const instance = root.resolve(MyClass);
     const proxy = createProxy(instance, {});
 
-    expect(hasHooks(proxy as never, 'onStart')).toBe(true);
-    expect(hasHooks(unwrapProxyTarget(proxy) as never, 'onStart')).toBe(true);
+    expect(hasHooks(proxy, 'onStart')).toBe(true);
+    expect(hasHooks(unwrapProxyTarget(proxy), 'onStart')).toBe(true);
 
-    onStartHooksRunner.execute(unwrapProxyTarget(proxy) as never, { scope: root });
+    onStartHooksRunner.execute(unwrapProxyTarget(proxy), { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
@@ -253,7 +253,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(Derived);
 
-    onStartHooksRunner.execute(instance as never, { scope: root });
+    onStartHooksRunner.execute(instance, { scope: root });
 
     expect(instance.baseStarted).toBe(true);
     expect(instance.derivedStarted).toBe(true);
@@ -287,7 +287,7 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    onStartHooksRunner.execute(root.resolve(Derived) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(Derived), { scope: root });
 
     expect(invoked).toEqual(['startBase', 'startDerived']);
   });
@@ -320,7 +320,7 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    onStartHooksRunner.execute(root.resolve(Base) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(Base), { scope: root });
 
     expect(invoked).toEqual(['startBase']);
     expect(Derived).toBeDefined();
@@ -358,7 +358,7 @@ describe('hooks', () => {
       constructor(@inject(PluginToken.lazy()) private readonly plugins: Plugin[]) {}
 
       runPlugins(scope: Container) {
-        this.plugins.forEach((plugin) => onPluginStartHooksRunner.execute(plugin as never, { scope }));
+        this.plugins.forEach((plugin) => onPluginStartHooksRunner.execute(plugin, { scope }));
       }
 
       getPlugins() {
@@ -397,7 +397,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['first', 'second']);
   });
@@ -424,7 +424,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['declared', 'appended']);
   });
@@ -450,7 +450,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['prepended', 'declared']);
   });
@@ -481,7 +481,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['second', 'first']);
   });
@@ -506,7 +506,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['replacement']);
   });
@@ -534,7 +534,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass) as never, { scope: root });
+    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['prepended', 'appended']);
   });

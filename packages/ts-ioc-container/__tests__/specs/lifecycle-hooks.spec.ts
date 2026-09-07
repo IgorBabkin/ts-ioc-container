@@ -247,12 +247,12 @@ describe('Spec: lifecycle hooks', () => {
     const container = new Container().addRegistration(R.fromClass(AuditHook)).addRegistration(R.fromClass(Worker));
     const worker = container.resolve<Worker>('Worker');
 
-    runner.execute(worker as never, {
+    runner.execute(worker, {
       scope: container,
       predicate: (methodName) => methodName === 'start',
     });
 
-    expect(hasHooks(worker as never, 'workflow')).toBe(true);
+    expect(hasHooks(worker, 'workflow')).toBe(true);
     expect(worker.calls).toEqual(['start']);
   });
 
@@ -296,12 +296,12 @@ describe('Spec: lifecycle hooks', () => {
       .addRegistration(R.fromClass(Worker));
     const worker = container.resolve<Worker>('Worker');
 
-    new HooksRunner('sync').execute(worker as never, { scope: container });
-    expect(() => new HooksRunner('badAsync').execute(worker as never, { scope: container })).toThrowError(
+    new HooksRunner('sync').execute(worker, { scope: container });
+    expect(() => new HooksRunner('badAsync').execute(worker, { scope: container })).toThrowError(
       UnexpectedHookResultError,
     );
 
-    await new HooksRunner('async').executeAsync(worker as never, { scope: container });
+    await new HooksRunner('async').executeAsync(worker, { scope: container });
 
     expect(worker.calls).toEqual(['job:sync', 'job:async']);
   });
