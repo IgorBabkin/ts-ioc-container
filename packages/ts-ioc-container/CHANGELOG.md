@@ -1,3 +1,12 @@
+# 57.4.0 (2026-09-07)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add createProxy helper with recursive target unwrapping (#139)
+    (f700defd4aa3966a51a18bb7be17e6640e16fbe0)
+
+
 # 57.3.0 (2026-09-06)
 
   ### ✨ Features
@@ -83,6 +92,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
