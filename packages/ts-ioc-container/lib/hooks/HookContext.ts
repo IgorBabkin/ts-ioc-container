@@ -2,7 +2,7 @@ import type { IContainer } from '../container/IContainer';
 
 import { InjectionToken } from '../token/InjectionToken';
 import { type constructor } from '../utils/basic';
-import { getProxyTarget, isProxy } from '../utils/proxy';
+import { unwrapProxyTarget } from '../utils/proxy';
 import { resolveArgs } from '../injector/MetadataInjector';
 
 export interface IHookContext {
@@ -32,7 +32,7 @@ export class HookContext implements IHookContext {
     public scope: IContainer,
     public methodName?: string,
   ) {
-    this.instance = isProxy(instance) ? getProxyTarget(instance) : instance;
+    this.instance = unwrapProxyTarget(instance);
   }
 
   resolveArgs(...args: unknown[]): unknown[] {
