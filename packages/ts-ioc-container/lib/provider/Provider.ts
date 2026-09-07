@@ -10,6 +10,7 @@ import {
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
 import { type constructor, Instance } from '../utils/basic';
+import { isProxy } from '../utils/proxy';
 import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
@@ -64,7 +65,13 @@ export class Provider<T = any> implements IProvider<T> {
         lazy: lazy ?? this.isLazy,
       }),
     );
-    scope.addInstance(dependency as Instance);
+    // A lazy proxy must not be registered: `addInstance` runs `onConstruct` hooks
+    // against it, and touching the proxy would resolve the target eagerly. The
+    // injector registers the real instance from inside the proxy's resolve
+    // callback, so it lands in the scope on first access instead.
+    if (!isProxy(dependency as object)) {
+      scope.addInstance(dependency as Instance);
+    }
     return dependency;
   }
 
