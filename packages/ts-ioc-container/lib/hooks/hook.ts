@@ -1,7 +1,6 @@
 import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
 import { type constructor, Is } from '../utils/basic';
-import { unwrapProxyTarget } from '../utils/proxy';
 import { ProviderOptions } from '../provider/IProvider';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
@@ -61,9 +60,8 @@ const getConstructorChain = (ctor: unknown): object[] => {
 // Hooks are collected from base to derived so a derived class's hooks for the same
 // method name take precedence over (replace) the parent's.
 export function getHooks(target: object, key: string | symbol): HooksOfClass {
-  const reflectionTarget = unwrapProxyTarget(target);
   const merged: HooksOfClass = new Map();
-  for (const ctor of getConstructorChain(reflectionTarget.constructor).reverse()) {
+  for (const ctor of getConstructorChain(target.constructor).reverse()) {
     const ownHooks: HooksOfClass | undefined = Reflect.getOwnMetadata(key, ctor);
     if (ownHooks) {
       for (const [methodName, fns] of ownHooks) {
@@ -75,8 +73,7 @@ export function getHooks(target: object, key: string | symbol): HooksOfClass {
 }
 
 export function hasHooks(target: object, key: string | symbol): boolean {
-  const reflectionTarget = unwrapProxyTarget(target);
-  return getConstructorChain(reflectionTarget.constructor).some((ctor) => Reflect.hasOwnMetadata(key, ctor));
+  return getConstructorChain(target.constructor).some((ctor) => Reflect.hasOwnMetadata(key, ctor));
 }
 
 // Hook decorator
