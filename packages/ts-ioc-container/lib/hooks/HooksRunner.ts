@@ -15,15 +15,6 @@ export type HooksRunnerContext = {
   predicate?: (methodName: string) => boolean;
 };
 
-/**
- * Runs the hooks a class declares under one metadata key.
- *
- * Every method takes the instance the container produced, which may be a proxy
- * (a `lazy()` provider hands one out). Nothing is unwrapped here: the metadata
- * lookup normalizes the target on its own (see `resolveConstructor`), and the
- * hook context reaches the real object through the proxy. Callers pass whatever
- * they hold.
- */
 export class HooksRunner {
   constructor(private readonly key: string | symbol) {}
 
