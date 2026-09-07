@@ -1,3 +1,12 @@
+# 60.2.0 (2026-09-07)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add the onProviderRegistered container hook (#144)
+    (8beb3b5a87780d1e7d7ebb7012f98091162c30b0)
+
+
 # 60.1.0 (2026-09-07)
 
   ### ✨ Features
@@ -146,6 +155,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
