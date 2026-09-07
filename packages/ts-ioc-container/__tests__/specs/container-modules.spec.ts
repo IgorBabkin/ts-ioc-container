@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-  AddOnConstructHookModule,
+  OnConstructModule,
   autoResolve,
   AutoResolveModule,
   bindTo,
@@ -73,7 +73,7 @@ describe('Spec: container modules', () => {
       }
     }
 
-    const app = new Container().useModule(new AddOnConstructHookModule()).addRegistration(R.fromClass(FeatureService));
+    const app = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(FeatureService));
     const request = app.createScope({ tags: ['request'] });
 
     expect(request.resolve<FeatureService>('FeatureService').started).toBe(true);

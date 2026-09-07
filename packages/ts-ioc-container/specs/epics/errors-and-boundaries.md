@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0001 - Container as a linked list of scopes](../../docs/adr/0001-container-as-linked-list.md)
-- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnexpectedHookResultError`, `UnsupportedTokenTypeError`, `EmptyContainer`
+- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnexpectedHookResultError`, `UnsupportedTokenTypeError`, `ContainerNotFoundError`, `EmptyContainer`
 - **Executable spec:** `__tests__/specs/errors-and-boundaries.spec.ts`
 
 ## Intent
@@ -73,6 +73,10 @@ Acceptance criteria:
 - `EmptyContainer` throws `DependencyNotFoundError` when asked to resolve.
 - Unsupported mutations on `EmptyContainer` fail with
   `MethodNotImplementedError`.
+
+> **!Important** — `ContainerNotFoundError` is exported but never thrown by the
+> library. It exists for consumers that walk the scope chain themselves (see
+> [Scoped lifecycle](./scoped-lifecycle.md)) and want the library's error type.
 
 ## Notes
 

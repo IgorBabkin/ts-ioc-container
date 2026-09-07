@@ -20,7 +20,7 @@ execution through container modules.
 
 Decorators such as `onConstruct` and `onContainerDisposed` attach hook metadata to class
 methods. `HooksRunner` reads that metadata and executes hook functions or
-hook classes. `AddOnConstructHookModule` and `AddOnDisposeHookModule` opt a
+hook classes. `OnConstructModule` and `OnDisposeModule` opt a
 container into running those hooks during instance construction and scope
 disposal.
 
@@ -31,7 +31,7 @@ and should dispose the child explicitly when that lifecycle ends.
 
 Synchronous hook execution rejects promises and points callers at the async
 execution path. Promise-returning initialization uses a separate hook key:
-`onConstructAsync` with `AddOnConstructAsyncHookModule`. Because instance
+`onConstructAsync` with `OnConstructAsyncModule`. Because instance
 creation is synchronous, async construct hooks are started when the instance is
 created and settle after resolution returns; the module reports rejections to an
 optional exception handler instead of failing `resolve`.

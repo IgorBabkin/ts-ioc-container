@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `AddOnConstructHookModule`, `AddOnConstructAsyncHookModule`, `AddOnDisposeHookModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -22,7 +22,7 @@ used.
 Acceptance criteria:
 
 - `onConstruct` stores hook metadata on a method.
-- `AddOnConstructHookModule` opts a container into construct hook execution.
+- `OnConstructModule` opts a container into construct hook execution.
 - Construct hooks run after the instance is created and tracked.
 - Hook classes are resolved through the container before execution.
 
@@ -35,7 +35,7 @@ synchronous construct path.
 Acceptance criteria:
 
 - `onConstructAsync` stores hook metadata on a method under its own hook key.
-- `AddOnConstructAsyncHookModule` opts a container into async construct hook
+- `OnConstructAsyncModule` opts a container into async construct hook
   execution.
 - Async construct hooks start when the instance is created and settle after
   resolution returns.
@@ -50,7 +50,7 @@ so that local resources are released at the lifecycle boundary.
 Acceptance criteria:
 
 - `onContainerDisposed` stores hook metadata on a method.
-- `AddOnDisposeHookModule` opts a container into dispose hook execution.
+- `OnDisposeModule` opts a container into dispose hook execution.
 - Dispose hooks run for instances tracked by the disposed scope.
 - Disposing a scope does not implicitly run hooks for child scopes.
 
@@ -85,9 +85,13 @@ needing a class decorated with `@onContainerDisposed`.
 
 Acceptance criteria:
 
-- `addOnDisposeHook` registers a callback that receives the disposing container.
+- `onDispose` registers a callback that receives the disposing container.
 - The callback is invoked when the container is disposed.
-- `addOnDisposeHook` returns the container for fluent chaining.
+- `onDispose` returns the container for fluent chaining.
+- `onConstruct` and `onScopeCreated` are the matching container-level hooks, for
+  newly created instances and newly created scopes, and chain the same way.
+- A child scope inherits the hooks its parent held at `createScope` time.
+- `EmptyContainer` rejects all three with `MethodNotImplementedError`.
 
 ### Story: Handle sync and async hook execution
 

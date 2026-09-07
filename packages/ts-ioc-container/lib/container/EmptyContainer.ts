@@ -3,18 +3,17 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type OnScopeCreatedHook,
+  type ScopeHook,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
+  type InstanceHook,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { ContainerNotFoundError } from '../errors/ContainerNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
-import { OnConstructHook } from '../hooks/onConstruct';
 import { type constructor, type Instance } from '../utils/basic';
 
 export class EmptyContainer implements IContainer {
@@ -33,13 +32,6 @@ export class EmptyContainer implements IContainer {
 
   getScopes() {
     return [];
-  }
-
-  /**
-   * @throws {ContainerNotFoundError} always — reaching the empty container means `instance` was not found in any scope.
-   */
-  getScopeByInstanceOrFail(instance: Instance): IContainer {
-    throw new ContainerNotFoundError('Cannot find scope for the given instance');
   }
 
   getInstances() {
@@ -137,21 +129,21 @@ export class EmptyContainer implements IContainer {
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  addOnDisposeHook(...hooks: OnDisposeHook[]): this {
+  onInstanceDisposed(...hooks: OnDisposeHook[]): this {
     throw new MethodNotImplementedError();
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  addOnConstructHook(...hooks: OnConstructHook[]): this {
+  onConstruct(...hooks: InstanceHook[]): this {
     throw new MethodNotImplementedError();
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  addOnScopeCreatedHook(...hooks: OnScopeCreatedHook[]): this {
+  onScopeCreated(...hooks: ScopeHook[]): this {
     throw new MethodNotImplementedError();
   }
 }

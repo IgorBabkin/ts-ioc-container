@@ -1,6 +1,5 @@
 import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { type WithArgs } from '../injector/IInjector';
 import { type constructor, Instance } from '../utils/basic';
@@ -30,17 +29,20 @@ export interface IContainerModule {
 }
 export type CreateScopeOptions = Partial<WithTags>;
 export type AutoResolveOptions = Partial<WithArgs>;
-export type OnScopeCreatedHook = (scope: IContainer) => void;
 export type RegisterOptions = { aliases?: DependencyKey[] };
+
+export type ScopeHook = (scope: IContainer) => void;
+export type InstanceHook = (instance: Instance, scope: IContainer) => void;
+export type DependencyHook = (dependency: unknown, scope: IContainer) => void;
 
 export interface IContainer extends Tagged {
   readonly isDisposed: boolean;
 
-  addOnConstructHook(...hooks: OnConstructHook[]): this;
+  onConstruct(...hooks: InstanceHook[]): this;
 
-  addOnDisposeHook(...hooks: OnDisposeHook[]): this;
+  onInstanceDisposed(...hooks: OnDisposeHook[]): this;
 
-  addOnScopeCreatedHook(...hooks: OnScopeCreatedHook[]): this;
+  onScopeCreated(...hooks: ScopeHook[]): this;
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 
@@ -61,8 +63,6 @@ export interface IContainer extends Tagged {
   autoResolve(options?: AutoResolveOptions): this;
 
   getScopes(): IContainer[];
-
-  getScopeByInstanceOrFail(instance: Instance): IContainer;
 
   removeScope(child: IContainer): void;
 

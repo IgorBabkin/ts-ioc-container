@@ -8,7 +8,7 @@ import {
   type ScopeAccessOptions,
   type ScopeAccessRule,
 } from './IProvider';
-import type { DependencyKey, IContainer } from '../container/IContainer';
+import type { DependencyHook, DependencyKey, IContainer } from '../container/IContainer';
 import { type constructor } from '../utils/basic';
 import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
@@ -34,11 +34,13 @@ export class Provider<T = any> implements IProvider<T> {
   private cache = new Map<string | symbol, unknown>();
   private getKey: GetCacheKey | undefined;
   private isDisposed: boolean = false;
+  private readonly onResolveHookList: DependencyHook[] = [];
 
   constructor(private readonly resolveDependency: ResolveDependency<T>) {}
 
   /**
    * @throws {ProviderDisposedError} when the provider has already been disposed.
+   * @throws {unknown} rethrows whatever an `onResolve` hook threw.
    */
   resolve(scope: IContainer, options: ProviderOptions): T {
     ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
@@ -56,12 +58,19 @@ export class Provider<T = any> implements IProvider<T> {
     return this.cache.get(key)! as T;
   }
 
+  /**
+   * @throws {unknown} rethrows whatever an `onResolve` hook threw.
+   */
   private resolveDep(scope: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
-    const dependency = this.resolveDependency(scope, {
+    let dependency = this.resolveDependency(scope, {
       args: this.argsFnList.reduce((acc, current) => current(scope, { args: acc }), args),
       lazy: lazy ?? this.isLazy,
     });
-    return this.mappers.reduce((acc, current) => current(acc, scope), dependency);
+    dependency = this.mappers.reduce((acc, current) => current(acc, scope), dependency);
+    for (const onResolve of this.onResolveHookList) {
+      onResolve(dependency, scope);
+    }
+    return dependency;
   }
 
   map(...mappers: DecorateFn<T>[]): this {
@@ -117,6 +126,15 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   /**
+   * Hooks run after every mapper, on each resolved dependency. A singleton provider
+   * caches the dependency, so its hooks run once — on the resolve that filled the cache.
+   */
+  onResolve(...hooks: DependencyHook[]): this {
+    this.onResolveHookList.push(...hooks);
+    return this;
+  }
+
+  /**
    * @throws {ProviderDisposedError} when the provider has already been disposed.
    */
   dispose(): void {
@@ -128,5 +146,6 @@ export class Provider<T = any> implements IProvider<T> {
     this.accessRules.splice(0, this.accessRules.length);
     this.mappers.splice(0, this.mappers.length);
     this.argsFnList.splice(0, this.argsFnList.length);
+    this.onResolveHookList.splice(0, this.onResolveHookList.length);
   }
 }

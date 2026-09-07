@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {
-  AddOnDisposeHookModule,
+  OnDisposeModule,
   bindTo,
   Container,
   type HookFn,
@@ -43,7 +43,7 @@ class Logger {
 describe('onContainerDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new AddOnDisposeHookModule())
+      .useModule(new OnDisposeModule())
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 

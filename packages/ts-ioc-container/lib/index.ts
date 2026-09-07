@@ -8,7 +8,9 @@ export {
   type Tagged,
   type ResolveOneOptions,
   type ResolveManyOptions,
-  type OnScopeCreatedHook,
+  type ScopeHook,
+  type InstanceHook,
+  type DependencyHook,
   type AutoResolveOptions,
   isDependencyKey,
 } from './container/IContainer';
@@ -59,6 +61,7 @@ export {
   decorate,
   appendArgs,
   appendArgsFn,
+  onResolve,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
@@ -92,18 +95,9 @@ export {
 } from './hooks/hook';
 export { HookContext, createHookContextFactory, createHookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
-export {
-  onConstructHooksRunner,
-  onConstruct,
-  AddOnConstructHookModule,
-  type OnExceptionHandler,
-} from './hooks/onConstruct';
-export { onConstructAsyncHooksRunner, onConstructAsync, AddOnConstructAsyncHookModule } from './hooks/onConstructAsync';
-export {
-  onContainerDisposedHooksRunner,
-  onContainerDisposed,
-  AddOnDisposeHookModule,
-} from './hooks/onContainerDisposed';
+export { onConstructHooksRunner, onConstruct, OnConstructModule, type OnExceptionHandler } from './hooks/onConstruct';
+export { onConstructAsyncHooksRunner, onConstructAsync, OnConstructAsyncModule } from './hooks/onConstructAsync';
+export { onContainerDisposedHooksRunner, onContainerDisposed, OnDisposeModule } from './hooks/onContainerDisposed';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens
