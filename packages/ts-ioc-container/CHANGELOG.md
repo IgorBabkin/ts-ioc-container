@@ -1,3 +1,12 @@
+# 60.3.0 (2026-09-07)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add @onResolved and @onResolvedAsync hooks (#145)
+    (6e1bb9b48649761ed076bd99ad85e9d6e84df294)
+
+
 # 60.2.0 (2026-09-07)
 
   ### ✨ Features
@@ -155,6 +164,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
