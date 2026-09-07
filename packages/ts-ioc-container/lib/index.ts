@@ -99,6 +99,15 @@ export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct, OnConstructModule, type OnExceptionHandler } from './hooks/onConstruct';
 export { onConstructAsyncHooksRunner, onConstructAsync, OnConstructAsyncModule } from './hooks/onConstructAsync';
 export { onContainerDisposedHooksRunner, onContainerDisposed, OnDisposeModule } from './hooks/onContainerDisposed';
+export { onResolvedHooksRunner, onResolved, onceResolved, OnResolvedModule, resolved } from './hooks/onResolved';
+export {
+  onResolvedAsyncHooksRunner,
+  onResolvedAsync,
+  onceResolvedAsync,
+  OnResolvedAsyncModule,
+  resolvedAsync,
+} from './hooks/onResolvedAsync';
+export { invokeMethod, type ResolvedDependencyHook } from './hooks/resolveHooks';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens
