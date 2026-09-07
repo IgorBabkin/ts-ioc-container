@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onFirstResolved`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnFirstResolvedModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onResolved`, `onResolvedAsync`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -42,22 +42,25 @@ Acceptance criteria:
 - Rejected hooks are reported to the module `onException` handler when one is
   provided.
 
-### Story: Run first-resolution hooks
+### Story: Run resolve hooks
 
-As an application developer, I can run behavior the first time a dependency is
-resolved so that objects the container does not construct — constants, factory
-results, instances shared across keys and scopes — still get a one-time
-initialization point.
+As an application developer, I can run behavior when a dependency is resolved so
+that objects the container does not construct — constants, factory results,
+instances shared across keys and scopes — still get an initialization point.
 
 Acceptance criteria:
 
-- `onFirstResolved` stores hook metadata on a method under its own hook key.
-- `OnFirstResolvedModule` opts a container into first-resolution hook
-  execution.
-- Hooks run once per resolved object, however many keys, scopes, or resolve
-  calls return it.
-- Distinct objects of the same class each get their own hook run.
+- `onResolved` and `onResolvedAsync` store hook metadata on a method under their
+  own hook keys, and invoke the decorated method when no hook is named.
+- `OnResolvedModule` and `OnResolvedAsyncModule` opt a container into resolve
+  hook execution; the `resolved()` and `resolvedAsync()` pipes opt in a single
+  registration instead.
+- Hooks run on every resolve, and `{ once: true }` hooks run a single time per
+  instance however many keys, scopes, or resolve calls return it.
+- Distinct objects of the same class each get their own `once` hook run.
 - Providers registered before the module was applied are not covered.
+- Rejected async hooks are reported to the module `onException` handler when one
+  is provided.
 
 ### Story: Run dispose hooks
 

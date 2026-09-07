@@ -3,7 +3,7 @@ import {
   OnConstructAsyncModule,
   OnConstructModule,
   OnDisposeModule,
-  OnFirstResolvedModule,
+  OnResolvedModule,
   append,
   Container,
   hasHooks,
@@ -16,7 +16,7 @@ import {
   onConstruct,
   onConstructAsync,
   onContainerDisposed,
-  onFirstResolved,
+  onResolved,
   Registration as R,
   UnexpectedHookResultError,
 } from '../../lib';
@@ -56,11 +56,17 @@ describe('Spec: lifecycle hooks', () => {
     expect(resource.disposed).toBe(true);
   });
 
-  it('runs first-resolution hooks once per resolved object', () => {
+  it('runs resolve hooks on every resolve, and `once` hooks a single time per object', () => {
     class Connection {
+      usedTimes = 0;
       openedTimes = 0;
 
-      @onFirstResolved(invoke)
+      @onResolved()
+      use(): void {
+        this.usedTimes += 1;
+      }
+
+      @onResolved({ once: true })
       open(): void {
         this.openedTimes += 1;
       }
@@ -68,14 +74,14 @@ describe('Spec: lifecycle hooks', () => {
 
     const connection = new Connection();
     const container = new Container()
-      .useModule(new OnFirstResolvedModule())
+      .useModule(new OnResolvedModule())
       .addRegistration(R.fromValue(connection).bindToKey('Connection'))
       .addRegistration(R.fromValue(connection).bindToKey('ReadOnlyConnection'));
 
     container.resolve('Connection');
     container.createScope().resolve('ReadOnlyConnection');
 
-    expect(connection.openedTimes).toBe(1);
+    expect([connection.usedTimes, connection.openedTimes]).toEqual([2, 1]);
   });
 
   it('runs stacked @onConstruct decorators in declaration order', () => {
