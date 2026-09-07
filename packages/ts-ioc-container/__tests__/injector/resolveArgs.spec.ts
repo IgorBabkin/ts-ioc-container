@@ -29,6 +29,15 @@ describe('resolveArgs', () => {
     expect(resolveArgs(instance)(scope, {})).toEqual(['hello']);
   });
 
+  it('accepts a proxy of the constructor, unwrapping it to reach the metadata', () => {
+    const scope = createContainer();
+    // A proxied class stands in for the class itself, which is the key metadata is
+    // read from - the one case that has to be unwrapped rather than read through.
+    const ProxiedService = ProxyRegistry.getInstance().createProxy(Service, {});
+
+    expect(resolveArgs(ProxiedService)(scope, {})).toEqual(['hello']);
+  });
+
   it('accepts a proxy of an instance', () => {
     const scope = createContainer();
     const proxy = ProxyRegistry.getInstance().createProxy(scope.resolve(Service), {});
