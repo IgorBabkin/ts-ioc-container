@@ -4,6 +4,7 @@ import {
   bindTo,
   Container,
   ContainerNotFoundError,
+  createProxy,
   type IContainer,
   Provider,
   register,
@@ -12,6 +13,7 @@ import {
   SingleToken,
   GroupAliasToken,
   singleton,
+  unwrapProxyTarget,
 } from '../../lib';
 
 describe('IContainer', function () {
@@ -93,6 +95,16 @@ describe('IContainer', function () {
       const root = new Container({ tags: ['root'] });
 
       expect(root.hasInstance(new FileLogger() as never)).toBe(false);
+    });
+
+    it('should not match a proxy directly, only its unwrapped target', () => {
+      const root = new Container({ tags: ['root'] });
+
+      const logger = root.resolve(FileLogger);
+      const proxy = createProxy(logger, {});
+
+      expect(root.hasInstance(proxy as never)).toBe(false);
+      expect(root.hasInstance(unwrapProxyTarget(proxy) as never)).toBe(true);
     });
   });
 

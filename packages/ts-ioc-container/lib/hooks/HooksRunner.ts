@@ -26,7 +26,7 @@ export class HooksRunner {
    * @throws {UnexpectedHookResultError} when a hook returns a `Promise` — use {@link executeAsync} for async hooks.
    */
   execute(
-    target: object,
+    target: Instance,
     {
       scope,
       createContext = createHookContext,
@@ -34,9 +34,7 @@ export class HooksRunner {
       predicate = () => true,
     }: HooksRunnerContext,
   ) {
-    const hooks = Array.from(getHooks(target as Instance, this.key).entries()).filter(([methodName]) =>
-      predicate(methodName),
-    );
+    const hooks = Array.from(getHooks(target, this.key).entries()).filter(([methodName]) => predicate(methodName));
 
     const runMethodHooks = (methodName: string, executions: HookFn[]) => {
       const context = mapContext(createContext(target, scope, methodName));
@@ -54,7 +52,7 @@ export class HooksRunner {
   }
 
   async executeAsync(
-    target: object,
+    target: Instance,
     {
       scope,
       createContext = createHookContext,
@@ -62,9 +60,7 @@ export class HooksRunner {
       predicate = () => true,
     }: HooksRunnerContext,
   ) {
-    const hooks = Array.from(getHooks(target as Instance, this.key).entries()).filter(([methodName]) =>
-      predicate(methodName),
-    );
+    const hooks = Array.from(getHooks(target, this.key).entries()).filter(([methodName]) => predicate(methodName));
 
     const runMethodHooks = async (methodName: string, executions: HookFn[]) => {
       const context = mapContext(createContext(target, scope, methodName));

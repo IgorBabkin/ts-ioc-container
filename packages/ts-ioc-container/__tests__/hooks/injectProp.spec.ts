@@ -5,7 +5,7 @@ describe('injectProp(token, ...mappers)', () => {
   function createViewModel<T extends object>(Target: new () => T, container: Container) {
     const runner = new HooksRunner('onInit');
     const instance = container.resolve(Target);
-    runner.execute(instance, { scope: container });
+    runner.execute(instance as never, { scope: container });
     return instance;
   }
 
