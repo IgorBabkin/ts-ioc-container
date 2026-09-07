@@ -9,7 +9,7 @@ import {
   type ScopeAccessRule,
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { type constructor } from '../utils/basic';
+import { type constructor, Instance } from '../utils/basic';
 import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
@@ -57,11 +57,15 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   private resolveDep(scope: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
-    const dependency = this.resolveDependency(scope, {
-      args: this.argsFnList.reduce((acc, current) => current(scope, { args: acc }), args),
-      lazy: lazy ?? this.isLazy,
-    });
-    return this.mappers.reduce((acc, current) => current(acc, scope), dependency);
+    const dependency = this.mappers.reduce(
+      (acc, current) => current(acc, scope),
+      this.resolveDependency(scope, {
+        args: this.argsFnList.reduce((acc, current) => current(scope, { args: acc }), args),
+        lazy: lazy ?? this.isLazy,
+      }),
+    );
+    scope.addInstance(dependency as Instance);
+    return dependency;
   }
 
   map(...mappers: DecorateFn<T>[]): this {

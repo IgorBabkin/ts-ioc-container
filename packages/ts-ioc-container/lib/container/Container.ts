@@ -226,6 +226,9 @@ export class Container implements IContainer {
   }
 
   addInstance(instance: Instance) {
+    if (this.instances.includes(instance)) {
+      return;
+    }
     this.instances.push(instance);
 
     // Execute onConstruct hooks
