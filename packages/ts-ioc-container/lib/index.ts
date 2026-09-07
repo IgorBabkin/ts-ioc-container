@@ -11,6 +11,7 @@ export {
   type ScopeHook,
   type InstanceHook,
   type DependencyHook,
+  type ProviderHook,
   type AutoResolveOptions,
   isDependencyKey,
 } from './container/IContainer';

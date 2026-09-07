@@ -5,6 +5,7 @@ import {
   type IContainer,
   type IContainerModule,
   type InstanceHook,
+  type ProviderHook,
   type RegisterOptions,
   ResolveManyOptions,
   type ResolveOneOptions,
@@ -38,6 +39,7 @@ export class Container implements IContainer {
   private readonly onConstructHookList: InstanceHook[] = [];
   private readonly onDisposeHookList: OnDisposeHook[] = [];
   private readonly onScopeCreatedHookList: ScopeHook[] = [];
+  private readonly onProviderRegisteredHookList: ProviderHook[] = [];
 
   constructor(
     options: {
@@ -58,6 +60,12 @@ export class Container implements IContainer {
     this.validateContainer();
     this.providers.set(key, provider);
     this.aliases.setAliasesByKey(key, aliases);
+
+    // Hooks run once the provider and its aliases are in place, so they observe a resolvable key.
+    for (const onProviderRegistered of this.onProviderRegisteredHookList) {
+      onProviderRegistered(provider, key, this);
+    }
+
     return this;
   }
 
@@ -133,7 +141,8 @@ export class Container implements IContainer {
     const scope = new Container({ injector: this.injector, parent: this, tags })
       .onConstruct(...this.onConstructHookList)
       .onInstanceDisposed(...this.onDisposeHookList)
-      .onScopeCreated(...this.onScopeCreatedHookList);
+      .onScopeCreated(...this.onScopeCreatedHookList)
+      .onProviderRegistered(...this.onProviderRegisteredHookList);
 
     for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
@@ -196,6 +205,7 @@ export class Container implements IContainer {
     this.onConstructHookList.length = 0;
     this.onDisposeHookList.length = 0;
     this.onScopeCreatedHookList.length = 0;
+    this.onProviderRegisteredHookList.length = 0;
   }
 
   addRegistration(registration: IRegistration): this {
@@ -224,6 +234,11 @@ export class Container implements IContainer {
 
   onScopeCreated(...hooks: ScopeHook[]): this {
     this.onScopeCreatedHookList.push(...hooks);
+    return this;
+  }
+
+  onProviderRegistered(...hooks: ProviderHook[]): this {
+    this.onProviderRegisteredHookList.push(...hooks);
     return this;
   }
 
