@@ -240,8 +240,7 @@ export class Container implements IContainer {
   }
 
   hasInstance(instance: object): boolean {
-    const target = isProxy(instance) ? getProxyTarget(instance) : instance;
-    return this.instances.has(target as Instance);
+    return this.instances.has((isProxy(instance) ? getProxyTarget(instance) : instance) as Instance);
   }
 
   /**
