@@ -1,5 +1,5 @@
 import { pipe } from '../lib';
-import { getProxyTarget, isProxy, toLazyIf } from '../lib/utils/proxy';
+import { createProxy, getProxyTarget, isProxy, toLazyIf } from '../lib/utils/proxy';
 
 describe('fp', () => {
   it('should work with single transformation (same type)', () => {
@@ -126,5 +126,66 @@ describe('proxy', () => {
     expect(getProxyTarget(firstWrap)).toBe(target);
     expect(getProxyTarget(secondWrap)).toBe(target);
     expect(getProxyTarget(thirdWrap)).toBe(target);
+  });
+
+  describe('createProxy', () => {
+    class Sender {
+      readonly sent: string[] = [];
+
+      send(message: string): string {
+        this.sent.push(message);
+        return `sent: ${message}`;
+      }
+    }
+
+    const mediator = <T extends object>(target: T, log: string[]): T =>
+      createProxy(target, {
+        get(obj, prop, receiver) {
+          const value = Reflect.get(obj, prop, receiver);
+          if (typeof value !== 'function') {
+            return value;
+          }
+          return (...args: unknown[]) => {
+            log.push(String(prop));
+            return value.apply(obj, args);
+          };
+        },
+      });
+
+    it('should mediate calls to the target class and expose it via getProxyTarget', () => {
+      const target = new Sender();
+      const log: string[] = [];
+
+      const proxy = mediator(target, log);
+
+      expect(proxy.send('hello')).toBe('sent: hello');
+      expect(log).toEqual(['send']);
+      expect(target.sent).toEqual(['hello']);
+      expect(isProxy(proxy)).toBe(true);
+      expect(getProxyTarget(proxy)).toBe(target);
+    });
+
+    it('should unwrap the deeply nested target of stacked mediators', () => {
+      const target = new Sender();
+      const log: string[] = [];
+
+      const proxy = mediator(mediator(mediator(target, log), log), log);
+
+      expect(proxy.send('hello')).toBe('sent: hello');
+      expect(log).toEqual(['send', 'send', 'send']);
+      expect(getProxyTarget(proxy)).toBe(target);
+    });
+
+    it('should unwrap the target of a mediator wrapping a lazy proxy', () => {
+      const target = new Sender();
+      const log: string[] = [];
+
+      const proxy = mediator(
+        toLazyIf(() => target, true),
+        log,
+      );
+
+      expect(getProxyTarget(proxy)).toBe(target);
+    });
   });
 });

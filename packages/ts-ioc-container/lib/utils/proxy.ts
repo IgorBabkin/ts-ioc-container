@@ -4,7 +4,7 @@ type ProxyState<T extends object> = {
 
 const proxyStateMap = new WeakMap<object, ProxyState<object>>();
 
-const unwrapProxyTarget = <T extends object>(value: T): T => {
+export const unwrapProxyTarget = <T extends object>(value: T): T => {
   return isProxy(value) ? getProxyTarget(value) : value;
 };
 
@@ -13,30 +13,33 @@ export function isProxy(value: object): boolean {
 }
 
 export function getProxyTarget<T extends object>(value: T): T {
-  return proxyStateMap.get(value)!.getTarget() as T;
+  const target = proxyStateMap.get(value)!.getTarget() as T;
+  return unwrapProxyTarget(target);
+}
+
+export function createProxy<T extends object>(target: T, handler: ProxyHandler<T> = {}): T {
+  const proxy = new Proxy(target, handler);
+  proxyStateMap.set(proxy, { getTarget: () => target } as ProxyState<object>);
+  return proxy;
 }
 
 export function lazyProxy<T extends object>(resolveInstance: () => T): T {
   let instance: T | undefined;
-  const state: ProxyState<T> = {
-    getTarget: () => {
-      instance = instance ?? unwrapProxyTarget(resolveInstance());
-      return instance;
-    },
+  const getTarget = (): T => {
+    instance = instance ?? resolveInstance();
+    return instance;
   };
 
-  const proxy = new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        const target = state.getTarget();
-        // @ts-ignore
-        return target[prop];
-      },
+  const proxy = createProxy({} as T, {
+    get: (_, prop) => {
+      const target = getTarget();
+      // @ts-ignore
+      return target[prop];
     },
-  ) as T;
-
-  proxyStateMap.set(proxy, state as ProxyState<object>);
+  });
+  // the {} passed to createProxy is a placeholder; override its registration so
+  // getProxyTarget resolves the real (lazily-computed) instance instead of {}
+  proxyStateMap.set(proxy, { getTarget } as ProxyState<object>);
 
   return proxy;
 }

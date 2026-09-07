@@ -22,12 +22,13 @@ import { OnConstructHook } from '../hooks/onConstruct';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
+import { unwrapProxyTarget } from '../utils/proxy';
 
 export class Container implements IContainer {
   isDisposed = false;
   private parent: IContainer;
   private scopes: IContainer[] = [];
-  private instances: Instance[] = [];
+  private readonly instances = new Set<Instance>();
   private registrations: IRegistration[] = [];
   private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
@@ -188,7 +189,7 @@ export class Container implements IContainer {
     }
     this.providers.clear();
     this.aliases.destroy();
-    this.instances = [];
+    this.instances.clear();
     this.registrations = [];
 
     // Clear hooks
@@ -226,7 +227,7 @@ export class Container implements IContainer {
   }
 
   addInstance(instance: Instance) {
-    this.instances.push(instance);
+    this.instances.add(instance);
 
     // Execute onConstruct hooks
     for (const onConstruct of this.onConstructHookList) {
@@ -239,7 +240,7 @@ export class Container implements IContainer {
   }
 
   hasInstance(instance: object): boolean {
-    return this.instances.includes(instance as Instance);
+    return this.instances.has(unwrapProxyTarget(instance) as Instance);
   }
 
   /**
