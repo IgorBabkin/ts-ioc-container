@@ -147,5 +147,5 @@ export { type ExecutionContext } from './ExecutionContext';
 // Utils
 export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
-export { createProxy, unwrapProxyTarget } from './utils/proxy';
+export { ProxyRegistry, type IProxyRegistry } from './utils/ProxyRegistry';
 export { type Branded, type constructor, type Instance, Is, resolveConstructor } from './utils/basic';

@@ -2,7 +2,6 @@ import type { IContainer } from '../container/IContainer';
 
 import { InjectionToken } from '../token/InjectionToken';
 import { type constructor, type Instance } from '../utils/basic';
-import { getProxyTarget, isProxy } from '../utils/proxy';
 import { resolveArgs } from '../injector/MetadataInjector';
 
 export interface IHookContext {
@@ -24,16 +23,13 @@ export interface IHookContext {
 }
 
 export class HookContext implements IHookContext {
-  readonly instance: Instance;
   private initialArgs: unknown[] = [];
 
   constructor(
-    instance: Instance,
-    public scope: IContainer,
-    public methodName?: string,
-  ) {
-    this.instance = isProxy(instance) ? getProxyTarget(instance) : instance;
-  }
+    readonly instance: Instance,
+    readonly scope: IContainer,
+    readonly methodName?: string,
+  ) {}
 
   resolveArgs(...args: unknown[]): unknown[] {
     return resolveArgs(this.instance.constructor as constructor<unknown>, this.methodName)(this.scope, {
