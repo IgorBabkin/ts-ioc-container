@@ -258,7 +258,17 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 ### Hooks
 
-`@onConstruct` and `@onContainerDisposed` decorators trigger after construction / on disposal. Requires adding `OnConstructModule` / `OnDisposeModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.
+`@onResolved` and `@onContainerDisposed` decorators trigger on resolve / on disposal. Requires adding `OnResolvedModule` / `OnDisposeModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.
+
+**Resolution is the only construction-time hook point** (ADR 0012). There is no
+`@onConstruct` — a one-shot initializer is `@onceResolved()`, which is
+`@onResolved(onceForEachInstance(invokeMethod))` spelled out. Because hooks are
+attached to providers via `onProviderRegistered`, `Container.resolve(SomeClass)`
+makes up a transient provider for the class (kept per class per scope, keyed by
+the constructor) so hooks reach unregistered classes too. `IContainer.construct`
+is the raw injector step that path ends in; `Provider.fromClass` builds through
+it rather than calling back into `resolve`, which is what keeps a registered
+class from being hooked twice.
 
 ### `@throws` JSDoc Convention
 

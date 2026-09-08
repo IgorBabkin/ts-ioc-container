@@ -1,7 +1,8 @@
-import type { DependencyHook, IContainer, IContainerModule } from '../container/IContainer';
+import type { IContainer, IContainerModule } from '../container/IContainer';
 import { HooksRunner } from './HooksRunner';
 import { registerPipe } from '../registration/IRegistration';
 import { executeHooks, forEachResolvedObject, onceResolvedHook, resolvedHook } from './resolveHooks';
+import type { OnExceptionHandler } from '../ExecutionContext';
 
 export const onResolvedHooksRunner = new HooksRunner('onResolved');
 
@@ -37,27 +38,38 @@ export const onResolved = resolvedHook('onResolved');
  */
 export const onceResolved = onceResolvedHook('onResolved');
 
-const runHooks: DependencyHook = forEachResolvedObject(executeHooks(onResolvedHooksRunner));
+const runHooks = (onException?: OnExceptionHandler) =>
+  forEachResolvedObject(executeHooks(onResolvedHooksRunner, onException));
 
 /**
  * Runs `onResolved` hooks every time a dependency object leaves a provider.
  *
- * Where `OnConstructModule` observes construction, this module observes
- * resolution — including the resolves of a value the container never
- * constructs, and the repeat resolves of one it did. A singleton caches its
- * dependency, so its hooks run on the resolve that filled the cache; an
- * `@onceResolved` hook runs on the first resolve of its instance however the
- * dependency is registered.
+ * This is the container's one construction-time hook point: it observes
+ * resolution rather than construction, which covers the resolves of a value the
+ * container never constructed and the repeat resolves of one it did. A singleton
+ * caches its dependency, so its hooks run on the resolve that filled the cache;
+ * an `@onceResolved` hook runs on the first resolve of its instance however the
+ * dependency is registered. Resolving a bare class is covered too — the
+ * container makes up a provider for it.
  *
  * Providers are hooked through `onProviderRegistered`, so apply the module
  * before the registrations it should cover; scopes created afterwards inherit
  * it. To opt in one registration instead of the whole container, use the
  * {@link resolved} pipe.
+ *
+ * Exceptions are reported to `onException` when one is supplied, and rethrown
+ * out of `resolve` otherwise.
  */
 export class OnResolvedModule implements IContainerModule {
+  private readonly runHooks;
+
+  constructor(onException?: OnExceptionHandler) {
+    this.runHooks = runHooks(onException);
+  }
+
   applyTo(container: IContainer) {
     container.onProviderRegistered((provider) => {
-      provider.onResolve(runHooks);
+      provider.onResolve(this.runHooks);
     });
   }
 }
@@ -67,4 +79,5 @@ export class OnResolvedModule implements IContainerModule {
  * its `onResolved` hooks on resolve, without the container opting every other
  * registration in.
  */
-export const resolved = <T = unknown>() => registerPipe<T>((p) => p.onResolve(runHooks));
+export const resolved = <T = unknown>(onException?: OnExceptionHandler) =>
+  registerPipe<T>((p) => p.onResolve(runHooks(onException)));

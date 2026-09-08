@@ -1,10 +1,10 @@
-import { append, Container, hook, HooksRunner, type HookFn } from '../../lib';
+import { append, Container, hook, HooksRunner, type HookFn, Is } from '../../lib';
 
 /**
  * User Management Domain - Custom Lifecycle Hooks
  *
  * Custom hooks extend the container's lifecycle management beyond
- * the built-in @onConstruct and @onContainerDisposed hooks.
+ * the built-in @onResolved and @onContainerDisposed hooks.
  *
  * Use cases:
  * - @validateConfig: Validate service configuration after construction
@@ -15,8 +15,8 @@ import { append, Container, hook, HooksRunner, type HookFn } from '../../lib';
  * How it works:
  * 1. Define a HooksRunner with a unique hook name
  * 2. Create methods decorated with @hook('hookName', append(executor))
- * 3. Register the hook runner via onConstruct
- * 4. Methods are automatically called when instances are created
+ * 3. Register the hook runner via onProviderRegistered + provider.onResolve
+ * 4. Methods are automatically called when dependencies are resolved
  */
 
 // Create a custom hook runner for initialization
@@ -28,20 +28,24 @@ const executeInitialize: HookFn = (ctx) => {
 };
 
 describe('Custom Hooks', () => {
-  it('should execute custom initialization hook after construction', () => {
+  it('should execute custom initialization hook after resolution', () => {
     class CacheService {
       isWarmedUp = false;
 
-      // Custom hook - called automatically after construction
+      // Custom hook - called automatically after resolution
       @hook('initialize', append(executeInitialize))
       warmCache() {
         this.isWarmedUp = true;
       }
     }
 
-    const container = new Container({ tags: ['application'] }).onConstruct((instance, scope) => {
-      // Run all 'initialize' hooks on newly created instances
-      initializeHookRunner.execute(instance, { scope });
+    const container = new Container({ tags: ['application'] }).onProviderRegistered((provider) => {
+      // Run all 'initialize' hooks on every resolved dependency
+      provider.onResolve((dependency, scope) => {
+        if (Is.object(dependency)) {
+          initializeHookRunner.execute(dependency, { scope });
+        }
+      });
     });
 
     const cacheService = container.resolve(CacheService);

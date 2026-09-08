@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 import {
-  OnConstructModule,
+  OnResolvedModule,
   autoResolve,
   AutoResolveModule,
   bindTo,
   Container,
   type IContainer,
   type IContainerModule,
-  onConstruct,
+  onceResolved,
   register,
   Registration as R,
   scopeAccess,
@@ -65,7 +65,7 @@ describe('Spec: container modules', () => {
     class FeatureService {
       started = false;
 
-      @onConstruct((context) => {
+      @onceResolved((context) => {
         context.invokeMethod();
       })
       start(): void {
@@ -73,7 +73,7 @@ describe('Spec: container modules', () => {
       }
     }
 
-    const app = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(FeatureService));
+    const app = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(FeatureService));
     const request = app.createScope({ tags: ['request'] });
 
     expect(request.resolve<FeatureService>('FeatureService').started).toBe(true);

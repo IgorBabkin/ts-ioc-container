@@ -2,7 +2,7 @@ import type { IContainer, IContainerModule } from '../container/IContainer';
 import { HooksRunner } from './HooksRunner';
 import { registerPipe } from '../registration/IRegistration';
 import { executeHooksAsync, forEachResolvedObject, onceResolvedHook, resolvedHook } from './resolveHooks';
-import type { OnExceptionHandler } from './onConstruct';
+import type { OnExceptionHandler } from '../ExecutionContext';
 
 export const onResolvedAsyncHooksRunner = new HooksRunner('onResolvedAsync');
 

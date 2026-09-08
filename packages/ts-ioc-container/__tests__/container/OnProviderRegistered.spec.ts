@@ -6,20 +6,19 @@ import {
   MethodNotImplementedError,
   Provider,
   Registration,
-  type DependencyKey,
 } from '../../lib';
 
 describe('onProviderRegistered', () => {
-  const record = (log: [DependencyKey, unknown][]) => (provider: IProvider, key: DependencyKey) => {
-    log.push([key, provider.resolve(new Container(), {})]);
+  const record = (log: unknown[]) => (provider: IProvider) => {
+    log.push(provider.resolve(new Container(), {}));
   };
 
   it('should run the hook when a provider is registered', () => {
-    const log: [DependencyKey, unknown][] = [];
+    const log: unknown[] = [];
 
     new Container().onProviderRegistered(record(log)).register('key', Provider.fromValue(1));
 
-    expect(log).toEqual([['key', 1]]);
+    expect(log).toEqual([1]);
   });
 
   it('should run every hook in the order it was added', () => {
@@ -39,7 +38,7 @@ describe('onProviderRegistered', () => {
   it('should pass the registering scope to the hook', () => {
     let hookScope: IContainer | undefined;
 
-    const root = new Container({ tags: ['root'] }).onProviderRegistered((_p, _k, s) => {
+    const root = new Container({ tags: ['root'] }).onProviderRegistered((_p, s) => {
       hookScope = s;
     });
     root.register('key', Provider.fromValue(1));
@@ -48,15 +47,15 @@ describe('onProviderRegistered', () => {
   });
 
   it('should run the hook when a registration is added', () => {
-    const log: [DependencyKey, unknown][] = [];
+    const log: unknown[] = [];
 
     new Container().onProviderRegistered(record(log)).addRegistration(Registration.fromValue(1).bindTo('key'));
 
-    expect(log).toEqual([['key', 1]]);
+    expect(log).toEqual([1]);
   });
 
   it('should run inherited hooks for providers cloned into a child scope', () => {
-    const log: [DependencyKey, unknown][] = [];
+    const log: unknown[] = [];
 
     const root = new Container({ tags: ['root'] })
       .onProviderRegistered(record(log))
@@ -65,12 +64,12 @@ describe('onProviderRegistered', () => {
 
     const child = root.createScope({ tags: ['child'] });
 
-    expect(log).toEqual([['key', 1]]);
+    expect(log).toEqual([1]);
     expect(child.resolve('key')).toBe(1);
   });
 
   it('should not run the hook for registrations which do not match the child scope', () => {
-    const log: [DependencyKey, unknown][] = [];
+    const log: unknown[] = [];
 
     const root = new Container({ tags: ['root'] }).onProviderRegistered(record(log)).addRegistration(
       Registration.fromValue(1)
@@ -85,7 +84,7 @@ describe('onProviderRegistered', () => {
   });
 
   it('should not run hooks added to a child scope when its parent registers a provider', () => {
-    const log: [DependencyKey, unknown][] = [];
+    const log: unknown[] = [];
 
     const root = new Container({ tags: ['root'] });
     root.createScope({ tags: ['child'] }).onProviderRegistered(record(log));
@@ -93,6 +92,43 @@ describe('onProviderRegistered', () => {
     root.register('key', Provider.fromValue(1));
 
     expect(log).toEqual([]);
+  });
+
+  it('should run the hook for the provider made up for a class resolved by its constructor', () => {
+    class Service {}
+
+    const providers: IProvider[] = [];
+    const container = new Container().onProviderRegistered((provider) => providers.push(provider));
+
+    container.resolve(Service);
+
+    expect(providers).toHaveLength(1);
+    expect(providers[0].resolve(container, {})).toBeInstanceOf(Service);
+  });
+
+  it('should run the hook once per class, however often it is resolved by its constructor', () => {
+    class Service {}
+
+    let calls = 0;
+    const container = new Container().onProviderRegistered(() => (calls += 1));
+
+    container.resolve(Service);
+    container.resolve(Service);
+
+    expect(calls).toBe(1);
+  });
+
+  it('should make up a separate provider per scope for the same class', () => {
+    class Service {}
+
+    const scopes: IContainer[] = [];
+    const root = new Container({ tags: ['root'] }).onProviderRegistered((_p, s) => scopes.push(s));
+    const child = root.createScope({ tags: ['child'] });
+
+    root.resolve(Service);
+    child.resolve(Service);
+
+    expect(scopes).toEqual([root, child]);
   });
 
   it('should raise an error when registering the hook on an empty container', () => {

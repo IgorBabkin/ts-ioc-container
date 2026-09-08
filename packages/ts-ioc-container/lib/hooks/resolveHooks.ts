@@ -1,7 +1,7 @@
 import type { DependencyHook, IContainer } from '../container/IContainer';
 import type { HooksRunner } from './HooksRunner';
 import { hook, type HookFn, type HookType, prependHooks, toHookFn } from './hook';
-import type { OnExceptionHandler } from './onConstruct';
+import type { OnExceptionHandler } from '../ExecutionContext';
 import { Is } from '../utils/basic';
 
 /**
@@ -28,8 +28,12 @@ const toHooks = (hooks: HookType[]): HookType[] => (hooks.length > 0 ? hooks : [
  * an instance is collectable once nothing else keeps it alive. The set belongs
  * to the decorated member, so every container and scope handing out the same
  * instance shares one memory of what has already run.
+ *
+ * This is what turns a per-resolve hook into a per-instance one, and so what
+ * `@onceResolved()` is made of: `@onResolved(onceForEachInstance(invokeMethod))`.
+ * Wrap your own hooks with it to get the same narrowing.
  */
-const onceForEachInstance = (execute: HookType): HookFn => {
+export const onceForEachInstance = (execute: HookType): HookFn => {
   const invokedInstances = new WeakSet<object>();
 
   return (context) => {
@@ -44,8 +48,8 @@ const onceForEachInstance = (execute: HookType): HookFn => {
 
 /**
  * Builds a resolve-hook decorator over `hook(key, ...)` - the same metadata
- * mechanism as `@onConstruct` and friends, with the "no hook means invoke the
- * decorated method" shorthand on top.
+ * mechanism as `@onContainerDisposed` and friends, with the "no hook means
+ * invoke the decorated method" shorthand on top.
  *
  * Decorators are applied bottom-up, so hooks are prepended to keep them in
  * declaration order: `@onX(h1) @onX(h2) method()` runs h1 before h2.
@@ -77,12 +81,20 @@ export const forEachResolvedObject =
   };
 
 /**
- * @throws {unknown} rethrows whatever the hooks threw.
+ * @throws {unknown} rethrows whatever the hooks threw, when no `onException` handler was supplied.
  */
 export const executeHooks =
-  (runner: HooksRunner): ResolvedDependencyHook =>
-  (dependency, scope) =>
-    runner.execute(dependency, { scope });
+  (runner: HooksRunner, onException?: OnExceptionHandler): ResolvedDependencyHook =>
+  (dependency, scope) => {
+    try {
+      runner.execute(dependency, { scope });
+    } catch (ex) {
+      if (!onException) {
+        throw ex;
+      }
+      onException(ex, { scope });
+    }
+  };
 
 /**
  * Resolution stays synchronous, so async hooks are started on resolve and settle

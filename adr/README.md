@@ -17,11 +17,12 @@ is left intact so the historical reasoning remains discoverable.
 | 0004 | [Pipe-based composition via ProviderPipe](0004-provider-pipe-composition.md)                    | Accepted |
 | 0005 | [Token immutability — chained tokens are new instances](0005-token-immutability.md)             | Accepted |
 | 0006 | [Tag-based scoping with separate match and access rules](0006-tag-scoping-and-access.md)        | Accepted |
-| 0007 | [Lifecycle hooks via reflect-metadata and opt-in modules](0007-lifecycle-hooks.md)              | Accepted |
+| 0007 | [Lifecycle hooks via reflect-metadata and opt-in modules](0007-lifecycle-hooks.md)              | Amended by 0012 |
 | 0008 | [Zero runtime dependencies](0008-zero-runtime-dependencies.md)                                  | Accepted |
 | 0009 | [Token taxonomy — Single / Group / Alias / Class / Function / Constant](0009-token-taxonomy.md) | Accepted |
 | 0010 | [Generated README from Handlebars source](0010-generated-readme.md)                             | Accepted |
 | 0011 | [Specs-driven development workflow](0011-spec-driven-development.md)                            | Accepted |
+| 0012 | [Resolution is the only construction-time hook point](0012-resolution-as-the-only-construction-hook.md) | Accepted |
 
 ## Adding a new ADR
 

@@ -1,9 +1,16 @@
 # ADR 0007 — Lifecycle hooks via reflect-metadata and opt-in modules
 
-- **Status:** Accepted
+- **Status:** Accepted, amended by [ADR 0012](0012-resolution-as-the-only-construction-hook.md)
 - **Date:** 2026-04-26
 - **Deciders:** core maintainers
 - **Tags:** hooks, lifecycle, metadata
+
+> [!NOTE]
+> The construct hook point described below — `onConstruct`, `onConstructAsync`,
+> `OnConstructModule`, `OnConstructAsyncModule` — was removed by
+> [ADR 0012](0012-resolution-as-the-only-construction-hook.md). Resolution is
+> now the container's only construction-time hook point. Everything else in this
+> record still holds.
 
 ## Context
 

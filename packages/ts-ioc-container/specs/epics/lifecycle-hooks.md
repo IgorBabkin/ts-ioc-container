@@ -1,8 +1,9 @@
 # Epic: Lifecycle hooks
 
 - **Status:** Accepted
-- **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onResolved`, `onceResolved`, `onResolvedAsync`, `onceResolvedAsync`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`
+- **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../../../adr/0007-lifecycle-hooks.md),
+  [ADR 0012 - Resolution is the only construction-time hook point](../../../../adr/0012-resolution-as-the-only-construction-hook.md)
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onContainerDisposed`, `injectProp`, `onResolved`, `onceResolved`, `onResolvedAsync`, `onceResolvedAsync`, `onceForEachInstance`, `invokeMethod`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -13,40 +14,12 @@ manage resources around container-owned lifecycles.
 
 ## Stories
 
-### Story: Run construct hooks
-
-As an application developer, I can run initialization behavior after an
-instance is constructed so that dependencies are ready before the service is
-used.
-
-Acceptance criteria:
-
-- `onConstruct` stores hook metadata on a method.
-- `OnConstructModule` opts a container into construct hook execution.
-- Construct hooks run after the instance is created and tracked.
-- Hook classes are resolved through the container before execution.
-
-### Story: Run async construct hooks
-
-As an application developer, I can run promise-returning initialization after an
-instance is constructed so that async setup does not have to be forced into the
-synchronous construct path.
-
-Acceptance criteria:
-
-- `onConstructAsync` stores hook metadata on a method under its own hook key.
-- `OnConstructAsyncModule` opts a container into async construct hook
-  execution.
-- Async construct hooks start when the instance is created and settle after
-  resolution returns.
-- Rejected hooks are reported to the module `onException` handler when one is
-  provided.
-
 ### Story: Run resolve hooks
 
-As an application developer, I can run behavior when a dependency is resolved so
+As an application developer, I can run initialization behavior when a dependency
+is resolved so that dependencies are ready before the service is used — and so
 that objects the container does not construct — constants, factory results,
-instances shared across keys and scopes — still get an initialization point.
+instances shared across keys and scopes — get the same initialization point.
 
 Acceptance criteria:
 
@@ -59,10 +32,19 @@ Acceptance criteria:
 - `onResolved` hooks run on every resolve; `onceResolved` and `onceResolvedAsync`
   hooks run a single time per instance however many keys, scopes, or resolve
   calls return it.
+- `onceForEachInstance` narrows any hook the same way, so a one-shot initializer
+  can be composed by hand: `onResolved(onceForEachInstance(invokeMethod))` is
+  what `onceResolved()` is.
+- Resolving a bare constructor is covered: the container makes up a provider for
+  the class, so hooks reach classes which were never registered.
 - Distinct objects of the same class each get their own once-resolve hook run.
 - Providers registered before the module was applied are not covered.
-- Rejected async hooks are reported to the module `onException` handler when one
-  is provided.
+- Hook classes are resolved through the container before execution.
+- Async hooks start when the dependency is resolved and settle after resolution
+  returns.
+- Exceptions are reported to the module `onException` handler when one is
+  provided, and rethrown (sync) or surfaced as unhandled rejections (async)
+  otherwise.
 
 ### Story: Run dispose hooks
 
@@ -110,8 +92,9 @@ Acceptance criteria:
 - `onDispose` registers a callback that receives the disposing container.
 - The callback is invoked when the container is disposed.
 - `onDispose` returns the container for fluent chaining.
-- `onConstruct` and `onScopeCreated` are the matching container-level hooks, for
-  newly created instances and newly created scopes, and chain the same way.
+- `onProviderRegistered` and `onScopeCreated` are the matching container-level
+  hooks, for newly registered providers and newly created scopes, and chain the
+  same way.
 - A child scope inherits the hooks its parent held at `createScope` time.
 - `EmptyContainer` rejects all three with `MethodNotImplementedError`.
 

@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import {
-  OnConstructAsyncModule,
+  OnResolvedAsyncModule,
   Container,
   type ExecutionContext,
   type HookFn,
   inject,
-  onConstructAsync,
+  onResolvedAsync,
   Registration as R,
 } from '../../lib';
 
@@ -13,8 +13,8 @@ const execute: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-describe('onConstructAsync', function () {
-  it('should run an async initialization method after the instance is created', async function () {
+describe('onResolvedAsync', function () {
+  it('should run an async initialization method after the dependency is resolved', async function () {
     class DatabaseConnection {
       isConnected = false;
       connectionString = '';
@@ -28,7 +28,7 @@ describe('onConstructAsync', function () {
         });
       }
 
-      @onConstructAsync(execute)
+      @onResolvedAsync(execute)
       async connect(@inject('ConnectionString') connectionString: string) {
         await Promise.resolve();
         this.connectionString = connectionString;
@@ -38,7 +38,7 @@ describe('onConstructAsync', function () {
     }
 
     const container = new Container()
-      .useModule(new OnConstructAsyncModule())
+      .useModule(new OnResolvedAsyncModule())
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -56,13 +56,13 @@ describe('onConstructAsync', function () {
     const failure = new Error('boom');
 
     class BrokenService {
-      @onConstructAsync(() => Promise.reject(failure))
+      @onResolvedAsync(() => Promise.reject(failure))
       init() {}
     }
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container().useModule(
-      new OnConstructAsyncModule((ex, context) => {
+      new OnResolvedAsyncModule((ex, context) => {
         captured = { ex, context };
       }),
     );

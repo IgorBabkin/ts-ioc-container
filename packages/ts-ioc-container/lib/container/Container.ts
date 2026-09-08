@@ -4,7 +4,6 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type InstanceHook,
   type ProviderHook,
   type RegisterOptions,
   ResolveManyOptions,
@@ -13,7 +12,7 @@ import {
   type Tag,
 } from './IContainer';
 import { type IInjector } from '../injector/IInjector';
-import { type IProvider } from '../provider/IProvider';
+import { type IProvider, type ProviderOptions } from '../provider/IProvider';
 import { EmptyContainer } from './EmptyContainer';
 import { type IRegistration } from '../registration/IRegistration';
 import { ContainerDisposedError } from '../errors/ContainerDisposedError';
@@ -24,6 +23,7 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
+import { Provider } from '../provider/Provider';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -33,10 +33,10 @@ export class Container implements IContainer {
   private registrations: IRegistration[] = [];
   private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
+  private readonly constructorProviders = new Map<constructor<unknown>, IProvider>();
   private readonly aliases = new AliasMap();
   private readonly injector: IInjector;
 
-  private readonly onConstructHookList: InstanceHook[] = [];
   private readonly onDisposeHookList: OnDisposeHook[] = [];
   private readonly onScopeCreatedHookList: ScopeHook[] = [];
   private readonly onProviderRegisteredHookList: ProviderHook[] = [];
@@ -62,9 +62,7 @@ export class Container implements IContainer {
     this.aliases.setAliasesByKey(key, aliases);
 
     // Hooks run once the provider and its aliases are in place, so they observe a resolvable key.
-    for (const onProviderRegistered of this.onProviderRegisteredHookList) {
-      onProviderRegistered(provider, key, this);
-    }
+    this.notifyProviderRegistered(provider);
 
     return this;
   }
@@ -76,15 +74,22 @@ export class Container implements IContainer {
   resolve<T>(target: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
-    if (Is.constructor(target)) {
-      return this.injector.resolve(this, target, { args, lazy });
-    }
-
-    const provider = this.providers.get(target) as IProvider<T> | undefined;
+    const provider = Is.constructor(target)
+      ? this.getConstructorProvider(target)
+      : (this.providers.get(target) as IProvider<T> | undefined);
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
       ? provider.resolve(this, { args, lazy })
       : this.parent.resolve<T>(target, { args, child, lazy });
+  }
+
+  /**
+   * @throws {ContainerDisposedError} when the container has already been disposed.
+   */
+  construct<T>(Target: constructor<T>, options: ProviderOptions = {}): T {
+    this.validateContainer();
+
+    return this.injector.resolve(this, Target, options);
   }
 
   /**
@@ -139,7 +144,6 @@ export class Container implements IContainer {
     this.validateContainer();
 
     const scope = new Container({ injector: this.injector, parent: this, tags })
-      .onConstruct(...this.onConstructHookList)
       .onInstanceDisposed(...this.onDisposeHookList)
       .onScopeCreated(...this.onScopeCreatedHookList)
       .onProviderRegistered(...this.onProviderRegisteredHookList);
@@ -193,16 +197,16 @@ export class Container implements IContainer {
     this.parent = new EmptyContainer();
 
     // Reset the state
-    for (const provider of this.providers.values()) {
+    for (const provider of [...this.providers.values(), ...this.constructorProviders.values()]) {
       provider.dispose();
     }
     this.providers.clear();
+    this.constructorProviders.clear();
     this.aliases.destroy();
     this.instances.clear();
     this.registrations = [];
 
     // Clear hooks
-    this.onConstructHookList.length = 0;
     this.onDisposeHookList.length = 0;
     this.onScopeCreatedHookList.length = 0;
     this.onProviderRegisteredHookList.length = 0;
@@ -222,11 +226,6 @@ export class Container implements IContainer {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
   }
 
-  onConstruct(...hooks: InstanceHook[]): this {
-    this.onConstructHookList.push(...hooks);
-    return this;
-  }
-
   onInstanceDisposed(...hooks: OnDisposeHook[]): this {
     this.onDisposeHookList.push(...hooks);
     return this;
@@ -244,11 +243,6 @@ export class Container implements IContainer {
 
   addInstance(instance: Instance) {
     this.instances.add(instance);
-
-    // Execute onConstruct hooks
-    for (const onConstruct of this.onConstructHookList) {
-      onConstruct(instance, this);
-    }
   }
 
   getScopes() {
@@ -315,5 +309,36 @@ export class Container implements IContainer {
       throw new DependencyNotFoundError(`Provider ${key.toString()} does not exist`);
     }
     return this.providers.get(key)!;
+  }
+
+  /**
+   * The provider standing in for a class resolved by its constructor.
+   *
+   * Resolving a bare constructor has no registration behind it, so the
+   * container makes one up: a transient provider over `construct`, created on
+   * first use and kept per class, and announced to `onProviderRegistered` like
+   * any registered provider. That is what lets provider-level behavior —
+   * `onResolved` hooks above all — reach classes which were never registered.
+   *
+   * These providers stay out of the keyed provider map: a class is not a
+   * `DependencyKey`, and keying them by name would collide with registrations.
+   */
+  private getConstructorProvider<T>(Target: constructor<T>): IProvider<T> {
+    const existing = this.constructorProviders.get(Target) as IProvider<T> | undefined;
+    if (existing) {
+      return existing;
+    }
+
+    const provider = Provider.fromClass(Target);
+    this.constructorProviders.set(Target, provider);
+    this.notifyProviderRegistered(provider);
+
+    return provider;
+  }
+
+  private notifyProviderRegistered(provider: IProvider): void {
+    for (const onProviderRegistered of this.onProviderRegisteredHookList) {
+      onProviderRegistered(provider, this);
+    }
   }
 }

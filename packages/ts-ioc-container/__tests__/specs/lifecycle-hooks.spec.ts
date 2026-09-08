@@ -1,8 +1,7 @@
 import 'reflect-metadata';
 import {
-  OnConstructAsyncModule,
-  OnConstructModule,
   OnDisposeModule,
+  OnResolvedAsyncModule,
   OnResolvedModule,
   append,
   Container,
@@ -13,10 +12,9 @@ import {
   HooksRunner,
   inject,
   injectProp,
-  onConstruct,
-  onConstructAsync,
   onContainerDisposed,
   onResolved,
+  onResolvedAsync,
   onceResolved,
   Registration as R,
   UnexpectedHookResultError,
@@ -27,12 +25,12 @@ const invoke: HookFn = (context) => {
 };
 
 describe('Spec: lifecycle hooks', () => {
-  it('runs construct and dispose hooks through opt-in modules', () => {
+  it('runs resolve and dispose hooks through opt-in modules', () => {
     class Resource {
       initialized = false;
       disposed = false;
 
-      @onConstruct(invoke)
+      @onResolved(invoke)
       initialize(): void {
         this.initialized = true;
       }
@@ -44,7 +42,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule())
+      .useModule(new OnResolvedModule())
       .useModule(new OnDisposeModule())
       .addRegistration(R.fromClass(Resource));
 
@@ -85,7 +83,7 @@ describe('Spec: lifecycle hooks', () => {
     expect([connection.usedTimes, connection.openedTimes]).toEqual([2, 1]);
   });
 
-  it('runs stacked @onConstruct decorators in declaration order', () => {
+  it('runs stacked @onResolved decorators in declaration order', () => {
     const invoked: string[] = [];
     const h1: HookFn = () => {
       invoked.push('h1');
@@ -95,23 +93,23 @@ describe('Spec: lifecycle hooks', () => {
     };
 
     class Resource {
-      @onConstruct(h1)
-      @onConstruct(h2)
+      @onResolved(h1)
+      @onResolved(h2)
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
     expect(invoked).toEqual(['h1', 'h2']);
   });
 
-  it('runs hooks of a single @onConstruct decorator in argument order', () => {
+  it('runs hooks of a single @onResolved decorator in argument order', () => {
     const invoked: string[] = [];
 
     class Resource {
-      @onConstruct(
+      @onResolved(
         () => {
           invoked.push('h1');
         },
@@ -122,14 +120,14 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
     expect(invoked).toEqual(['h1', 'h2']);
   });
 
-  it('keeps declaration order when stacked @onConstruct decorators carry several hooks each', () => {
+  it('keeps declaration order when stacked @onResolved decorators carry several hooks each', () => {
     const invoked: string[] = [];
     const push =
       (label: string): HookFn =>
@@ -138,12 +136,12 @@ describe('Spec: lifecycle hooks', () => {
       };
 
     class Resource {
-      @onConstruct(push('h1'), push('h2'))
-      @onConstruct(push('h3'), push('h4'))
+      @onResolved(push('h1'), push('h2'))
+      @onResolved(push('h3'), push('h4'))
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -171,31 +169,31 @@ describe('Spec: lifecycle hooks', () => {
     expect(invoked).toEqual(['h1', 'h2']);
   });
 
-  it('runs stacked @onConstructAsync decorators in declaration order', async () => {
+  it('runs stacked @onResolvedAsync decorators in declaration order', async () => {
     const invoked: string[] = [];
 
     class Resource {
-      @onConstructAsync(async () => {
+      @onResolvedAsync(async () => {
         invoked.push('h1');
       })
-      @onConstructAsync(async () => {
+      @onResolvedAsync(async () => {
         invoked.push('h2');
       })
       async initialize(): Promise<void> {}
     }
 
-    const container = new Container().useModule(new OnConstructAsyncModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnResolvedAsyncModule()).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
     await vi.waitFor(() => expect(invoked).toEqual(['h1', 'h2']));
   });
 
-  it('runs async construct hooks without blocking resolution', async () => {
+  it('runs async resolve hooks without blocking resolution', async () => {
     class Resource {
       initialized = false;
 
-      @onConstructAsync(async (context) => {
+      @onResolvedAsync(async (context) => {
         await context.invokeMethod();
       })
       async initialize(): Promise<void> {
@@ -204,7 +202,7 @@ describe('Spec: lifecycle hooks', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructAsyncModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container().useModule(new OnResolvedAsyncModule()).addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
 
@@ -213,17 +211,17 @@ describe('Spec: lifecycle hooks', () => {
     await vi.waitFor(() => expect(resource.initialized).toBe(true));
   });
 
-  it('reports rejected async construct hooks to the module exception handler', async () => {
+  it('reports rejected async resolve hooks to the module exception handler', async () => {
     const failure = new Error('boom');
 
     class BrokenResource {
-      @onConstructAsync(() => Promise.reject(failure))
+      @onResolvedAsync(() => Promise.reject(failure))
       initialize(): void {}
     }
 
     let captured: unknown;
     const container = new Container()
-      .useModule(new OnConstructAsyncModule((ex) => (captured = ex)))
+      .useModule(new OnResolvedAsyncModule((ex) => (captured = ex)))
       .addRegistration(R.fromClass(BrokenResource));
 
     container.resolve<BrokenResource>('BrokenResource');
@@ -237,12 +235,12 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     class Service {
-      @onConstruct(injectProp('Logger'))
+      @onResolved(injectProp('Logger'))
       logger!: Logger;
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule())
+      .useModule(new OnResolvedModule())
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(Service));
 

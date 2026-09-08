@@ -18,7 +18,7 @@ provider pipelines, aliases, and custom injector strategies.
 - clean API for classes, keys, tokens, aliases, and scopes
 - no global container object; pass containers and scopes explicitly
 - supports tagged application, request, transaction, page, and widget scopes
-- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onContainerDisposed`
+- decorator support with `@register`, `@inject`, `@onResolved`, and `@onContainerDisposed`
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
@@ -54,8 +54,8 @@ provider pipelines, aliases, and custom injector strategies.
   - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
-  - [OnConstruct](#onconstruct) `@onConstruct`
-  - [OnConstructAsync](#onconstructasync) `@onConstructAsync`
+  - [OnResolved](#onresolved) `@onResolved` `@onceResolved`
+  - [OnResolvedAsync](#onresolvedasync) `@onResolvedAsync` `@onceResolvedAsync`
   - [OnContainerDisposed](#oncontainerdisposed) `@onContainerDisposed`
   - [Inject Property](#inject-property)
   - [Inject Method](#inject-method)
@@ -106,7 +106,7 @@ bundlers tree-shake unused exports.
 | Bun | ✅ | CJS + ESM | Runs the native ESM/CJS builds directly. |
 
 > [!NOTE]
-> The default `MetadataInjector` (and the `@inject` / `@onConstruct` /
+> The default `MetadataInjector` (and the `@inject` / `@onResolved` /
 > `@onContainerDisposed` decorators) rely on `reflect-metadata`. It is declared as an
 > optional peer dependency — install it and import it once at your entrypoint.
 > `SimpleInjector` and `ProxyInjector` do not need it.
@@ -163,6 +163,8 @@ describe('Quickstart', function () {
 - Inject decorator: `@inject('Key')`
 - Map an injected value: `@inject('Key', sanitize(), validate())`
 - Property inject: `@hook('onInit', append(injectProp('Key')))`
+- Run a method on resolve: `@onResolved()` + `container.useModule(new OnResolvedModule())`
+- Run a method once per instance: `@onceResolved()`
 
 > [!TIP]
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
@@ -2828,37 +2830,58 @@ Decorators are applied bottom-up, so `authorize` runs first, then `validate` and
 `(...prev) => [...prev].reverse()` to reorder, or `() => [onlyThisOne]` to
 replace the accumulated hooks.
 
-`@onConstruct`, `@onConstructAsync` and `@onContainerDisposed` keep their
+`@onResolved`, `@onResolvedAsync` and `@onContainerDisposed` keep their
 variadic signature and compensate for the bottom-up application order, so
-stacked decorators run in declaration order: `@onConstruct(h1) @onConstruct(h2)`
+stacked decorators run in declaration order: `@onResolved(h1) @onResolved(h2)`
 runs `h1` before `h2`.
 
-### OnConstruct
+### OnResolved
+
+`@onResolved` runs the decorated member every time the dependency leaves a
+provider, and `@onceResolved` narrows that to the first resolve of each
+instance. `OnResolvedModule` opts the whole container in; the
+[`resolved()`](#on-resolve) pipe opts in a single registration.
+
+Resolution is the container's only construction-time hook point, and it covers
+more than construction does: a value the container never built (`R.fromValue`)
+is hooked just like a class it did, and resolving a bare class works too — the
+container makes up a provider for it, so `container.resolve(Service)` runs the
+hooks even with no registration behind it.
+
+> [!NOTE]
+> There is no `@onConstruct`. A one-shot initializer is
+> `@onceResolved()`, which is `@onResolved(onceForEachInstance(invokeMethod))`
+> spelled out — wrap your own hooks in `onceForEachInstance` to narrow them the
+> same way.
 
 ```typescript
 import 'reflect-metadata';
 import {
-  OnConstructModule,
+  OnResolvedModule,
   Container,
   type ExecutionContext,
   type HookFn,
   type IContainer,
   inject,
-  onConstruct,
+  invokeMethod,
+  onResolved,
+  onceForEachInstance,
+  onceResolved,
   Registration as R,
+  singleton,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-describe('onConstruct', function () {
+describe('onResolved', function () {
   it('should run initialization method after dependencies are resolved', function () {
     class DatabaseConnection {
       isConnected = false;
       connectionString = '';
 
-      @onConstruct(execute)
+      @onceResolved(execute)
       connect(@inject('ConnectionString') connectionString: string) {
         this.connectionString = connectionString;
         this.isConnected = true;
@@ -2866,7 +2889,7 @@ describe('onConstruct', function () {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule())
+      .useModule(new OnResolvedModule())
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -2875,11 +2898,56 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
+  it('should run once per instance when the hook is wrapped in onceForEachInstance', function () {
+    class Migration {
+      appliedTimes = 0;
+
+      // @onceResolved() spelled out — this is what it is made of.
+      @onResolved(onceForEachInstance(invokeMethod))
+      apply(): void {
+        this.appliedTimes += 1;
+      }
+    }
+
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromClass(Migration).pipe(singleton()));
+
+    container.resolve<Migration>('Migration');
+    const migration = container.resolve<Migration>('Migration');
+
+    expect(migration.appliedTimes).toBe(1);
+  });
+
+  it('should run on every resolve, and once per instance with @onceResolved', function () {
+    class Connection {
+      usedTimes = 0;
+      openedTimes = 0;
+
+      @onResolved()
+      use(): void {
+        this.usedTimes += 1;
+      }
+
+      @onceResolved()
+      open(): void {
+        this.openedTimes += 1;
+      }
+    }
+
+    const container = new Container().useModule(new OnResolvedModule());
+
+    const connection = container.resolve(Connection);
+    container.resolve(Connection);
+
+    expect([connection.usedTimes, connection.openedTimes]).toEqual([1, 1]);
+  });
+
   it('should forward hook exceptions to the onException handler with the execution context', function () {
     const failure = new Error('boom');
 
     class BrokenService {
-      @onConstruct(() => {
+      @onResolved(() => {
         throw failure;
       })
       init() {}
@@ -2887,7 +2955,7 @@ describe('onConstruct', function () {
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container().useModule(
-      new OnConstructModule((ex, context) => {
+      new OnResolvedModule((ex, context) => {
         captured = { ex, context };
       }),
     );
@@ -2901,20 +2969,20 @@ describe('onConstruct', function () {
     const failure = new Error('boom');
 
     class BrokenService {
-      @onConstruct(() => {
+      @onResolved(() => {
         throw failure;
       })
       init() {}
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container().useModule(new OnResolvedModule());
 
     expect(() => container.resolve(BrokenService)).toThrow(failure);
   });
 
   it('should expose the resolving scope through the execution context', function () {
     class BrokenService {
-      @onConstruct(() => {
+      @onResolved(() => {
         throw new Error('boom');
       })
       init() {}
@@ -2922,7 +2990,7 @@ describe('onConstruct', function () {
 
     let scope: IContainer | undefined;
     const container = new Container().useModule(
-      new OnConstructModule((_ex, context) => {
+      new OnResolvedModule((_ex, context) => {
         scope = context.scope;
       }),
     );
@@ -2936,21 +3004,23 @@ describe('onConstruct', function () {
 
 ```
 
-### OnConstructAsync
+### OnResolvedAsync
 
-`@onConstructAsync` runs promise-returning initialization. Resolution stays
-synchronous: `OnConstructAsyncModule` starts the hooks when the instance
-is created and they settle afterwards, so `resolve` returns before they finish.
+`@onResolvedAsync` runs promise-returning initialization. Resolution stays
+synchronous: `OnResolvedAsyncModule` starts the hooks when the dependency is
+resolved and they settle afterwards, so `resolve` returns before they finish.
+Rejections go to the module's `onException` handler when one is supplied, and
+surface as unhandled rejections otherwise.
 
 ```typescript
 import 'reflect-metadata';
 import {
-  OnConstructAsyncModule,
+  OnResolvedAsyncModule,
   Container,
   type ExecutionContext,
   type HookFn,
   inject,
-  onConstructAsync,
+  onResolvedAsync,
   Registration as R,
 } from 'ts-ioc-container';
 
@@ -2958,8 +3028,8 @@ const execute: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-describe('onConstructAsync', function () {
-  it('should run an async initialization method after the instance is created', async function () {
+describe('onResolvedAsync', function () {
+  it('should run an async initialization method after the dependency is resolved', async function () {
     class DatabaseConnection {
       isConnected = false;
       connectionString = '';
@@ -2973,7 +3043,7 @@ describe('onConstructAsync', function () {
         });
       }
 
-      @onConstructAsync(execute)
+      @onResolvedAsync(execute)
       async connect(@inject('ConnectionString') connectionString: string) {
         await Promise.resolve();
         this.connectionString = connectionString;
@@ -2983,7 +3053,7 @@ describe('onConstructAsync', function () {
     }
 
     const container = new Container()
-      .useModule(new OnConstructAsyncModule())
+      .useModule(new OnResolvedAsyncModule())
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3001,13 +3071,13 @@ describe('onConstructAsync', function () {
     const failure = new Error('boom');
 
     class BrokenService {
-      @onConstructAsync(() => Promise.reject(failure))
+      @onResolvedAsync(() => Promise.reject(failure))
       init() {}
     }
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container().useModule(
-      new OnConstructAsyncModule((ex, context) => {
+      new OnResolvedAsyncModule((ex, context) => {
         captured = { ex, context };
       }),
     );

@@ -32,14 +32,11 @@ export type AutoResolveOptions = Partial<WithArgs>;
 export type RegisterOptions = { aliases?: DependencyKey[] };
 
 export type ScopeHook = (scope: IContainer) => void;
-export type InstanceHook = (instance: Instance, scope: IContainer) => void;
 export type DependencyHook = (dependency: unknown, scope: IContainer) => void;
-export type ProviderHook = (provider: IProvider, key: DependencyKey, scope: IContainer) => void;
+export type ProviderHook = (provider: IProvider, scope: IContainer) => void;
 
 export interface IContainer extends Tagged {
   readonly isDisposed: boolean;
-
-  onConstruct(...hooks: InstanceHook[]): this;
 
   onInstanceDisposed(...hooks: OnDisposeHook[]): this;
 
@@ -56,6 +53,14 @@ export interface IContainer extends Tagged {
   hasRegistration(key: DependencyKey): boolean;
 
   resolve<T>(target: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
+
+  /**
+   * Builds `Target` through this scope's injector, bypassing the provider map.
+   *
+   * This is the raw construction step `resolve` ends in, exposed so a provider
+   * can create instances of a class without recursing back into `resolve`.
+   */
+  construct<T>(Target: constructor<T>, options?: ProviderOptions): T;
 
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 

@@ -6,8 +6,8 @@ import {
   debounce,
   handleError,
   HandleErrorParams,
-  onConstruct,
-  OnConstructModule,
+  onResolved,
+  OnResolvedModule,
   Container,
   IHookContext,
   HookFn,
@@ -17,16 +17,16 @@ const execute: HookFn = (ctx: IHookContext) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-// ─── @onConstruct compatibility ───────────────────────────────────────────────
+// ─── @onResolved compatibility ────────────────────────────────────────────────
 
-describe('@onConstruct + method decorators', () => {
-  it('@onConstruct + @once: hook fires once; manual calls are no-ops', () => {
+describe('@onResolved + method decorators', () => {
+  it('@onResolved + @once: hook fires once; manual calls are no-ops', () => {
     const fn = vi.fn();
 
     class Service {
       initialized = false;
 
-      @onConstruct(execute)
+      @onResolved(execute)
       @once()
       init() {
         fn();
@@ -34,7 +34,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container().useModule(new OnResolvedModule());
     const s = container.resolve(Service);
 
     expect(s.initialized).toBe(true);
@@ -46,20 +46,20 @@ describe('@onConstruct + method decorators', () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
-  it('@onConstruct + @throttle: hook fires on construction; subsequent calls within window are blocked', () => {
+  it('@onResolved + @throttle: hook fires on construction; subsequent calls within window are blocked', () => {
     vi.useFakeTimers();
 
     const calls: string[] = [];
 
     class Service {
-      @onConstruct(execute)
+      @onResolved(execute)
       @throttle(100)
       init() {
         calls.push('ran');
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container().useModule(new OnResolvedModule());
     container.resolve(Service);
 
     expect(calls).toEqual(['ran']); // hook fired, throttle allowed it
@@ -74,19 +74,19 @@ describe('@onConstruct + method decorators', () => {
     vi.useRealTimers();
   });
 
-  it('@onConstruct + @shallowCache: hook fires and result is cached; same-args manual calls return cache', () => {
+  it('@onResolved + @shallowCache: hook fires and result is cached; same-args manual calls return cache', () => {
     const fn = vi.fn((x: number) => x * 10);
 
     class Service {
-      @onConstruct(execute)
+      @onResolved(execute)
       @shallowCache((...args) => args[0])
       compute(x: number) {
         return fn(x);
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
-    // onConstruct calls compute() with no args (x = undefined)
+    const container = new Container().useModule(new OnResolvedModule());
+    // onResolved calls compute() with no args (x = undefined)
     const s = container.resolve(Service);
 
     expect(fn).toHaveBeenCalledTimes(1);
@@ -100,19 +100,19 @@ describe('@onConstruct + method decorators', () => {
     expect(fn).toHaveBeenCalledTimes(2);
   });
 
-  it('@onConstruct + @handleError: errors thrown in init method are caught; constructor does not throw', () => {
+  it('@onResolved + @handleError: errors thrown in init method are caught; constructor does not throw', () => {
     const errors: unknown[] = [];
     const handler: HandleErrorParams = (e) => errors.push(e);
 
     class Service {
-      @onConstruct(execute)
+      @onResolved(execute)
       @handleError(handler)
       init() {
         throw new Error('init failed');
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container().useModule(new OnResolvedModule());
 
     // Resolving should not propagate the error because @handleError catches it
     expect(() => container.resolve(Service)).not.toThrow();
@@ -120,20 +120,20 @@ describe('@onConstruct + method decorators', () => {
     expect((errors[0] as Error).message).toBe('init failed');
   });
 
-  it('@onConstruct + @debounce: hook fires and schedules deferred execution', () => {
+  it('@onResolved + @debounce: hook fires and schedules deferred execution', () => {
     vi.useFakeTimers();
 
     const fn = vi.fn();
 
     class Service {
-      @onConstruct(execute)
+      @onResolved(execute)
       @debounce(100)
       init() {
         fn();
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container().useModule(new OnResolvedModule());
     container.resolve(Service);
 
     expect(fn).not.toHaveBeenCalled(); // debounce deferred it

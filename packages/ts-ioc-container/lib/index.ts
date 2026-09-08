@@ -9,7 +9,6 @@ export {
   type ResolveOneOptions,
   type ResolveManyOptions,
   type ScopeHook,
-  type InstanceHook,
   type DependencyHook,
   type ProviderHook,
   type AutoResolveOptions,
@@ -96,8 +95,6 @@ export {
 } from './hooks/hook';
 export { HookContext, createHookContextFactory, createHookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
-export { onConstructHooksRunner, onConstruct, OnConstructModule, type OnExceptionHandler } from './hooks/onConstruct';
-export { onConstructAsyncHooksRunner, onConstructAsync, OnConstructAsyncModule } from './hooks/onConstructAsync';
 export { onContainerDisposedHooksRunner, onContainerDisposed, OnDisposeModule } from './hooks/onContainerDisposed';
 export { onResolvedHooksRunner, onResolved, onceResolved, OnResolvedModule, resolved } from './hooks/onResolved';
 export {
@@ -107,7 +104,7 @@ export {
   OnResolvedAsyncModule,
   resolvedAsync,
 } from './hooks/onResolvedAsync';
-export { invokeMethod, type ResolvedDependencyHook } from './hooks/resolveHooks';
+export { invokeMethod, onceForEachInstance, type ResolvedDependencyHook } from './hooks/resolveHooks';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens
@@ -147,7 +144,7 @@ export { shallowCache } from './utils/shallowCache';
 export { once } from './utils/once';
 
 // Execution
-export { type ExecutionContext } from './ExecutionContext';
+export { type ExecutionContext, type OnExceptionHandler } from './ExecutionContext';
 
 // Utils
 export { select } from './select';

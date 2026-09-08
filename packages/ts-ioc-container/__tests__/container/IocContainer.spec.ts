@@ -1,4 +1,15 @@
-import { arg, appendArgs, bindTo, Container, inject, register, Registration as R, scope } from '../../lib';
+import {
+  arg,
+  appendArgs,
+  bindTo,
+  Container,
+  ContainerDisposedError,
+  inject,
+  register,
+  Registration as R,
+  scope,
+  singleton,
+} from '../../lib';
 
 @register(bindTo('logger'))
 class Logger {
@@ -10,6 +21,75 @@ describe('IocContainer', function () {
     const container = new Container().addRegistration(R.fromClass(Logger).pipe(appendArgs('main')));
 
     expect(container.resolve<Logger>('logger').topic).toBe('main');
+  });
+
+  describe('resolving a bare constructor', () => {
+    it('should build a new instance on every resolve', () => {
+      class Service {}
+
+      const container = new Container();
+
+      expect(container.resolve(Service)).not.toBe(container.resolve(Service));
+    });
+
+    it('should forward args to the constructor', () => {
+      class Service {
+        constructor(@inject(arg(0)) public topic: string) {}
+      }
+
+      const container = new Container();
+
+      expect(container.resolve(Service, { args: ['main'] }).topic).toBe('main');
+    });
+
+    it('should ignore the registration bound to the same class name', () => {
+      @register(singleton())
+      class Service {}
+
+      const container = new Container().addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service')).toBe(container.resolve<Service>('Service'));
+      expect(container.resolve(Service)).not.toBe(container.resolve<Service>('Service'));
+    });
+
+    it('should raise an error once the container is disposed', () => {
+      class Service {}
+
+      const container = new Container();
+      container.resolve(Service);
+      container.dispose();
+
+      expect(() => container.resolve(Service)).toThrowError(ContainerDisposedError);
+    });
+  });
+
+  describe('construct', () => {
+    it('should build a class through the injector, bypassing the provider map', () => {
+      @register(bindTo('Service'), singleton())
+      class Service {}
+
+      const container = new Container().addRegistration(R.fromClass(Service));
+
+      expect(container.construct(Service)).toBeInstanceOf(Service);
+      expect(container.construct(Service)).not.toBe(container.resolve('Service'));
+    });
+
+    it('should track the instance in the constructing scope', () => {
+      class Service {}
+
+      const container = new Container();
+
+      expect(container.hasInstance(container.construct(Service))).toBe(true);
+    });
+
+    it('should raise an error once the container is disposed', () => {
+      class Service {}
+
+      const container = new Container();
+      container.dispose();
+
+      expect(() => container.construct(Service)).toThrowError(ContainerDisposedError);
+    });
   });
 
   describe('addTags', () => {

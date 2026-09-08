@@ -8,11 +8,10 @@ import {
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
-  type InstanceHook,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { type IProvider } from '../provider/IProvider';
+import { type IProvider, type ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { type constructor, type Instance } from '../utils/basic';
@@ -116,6 +115,13 @@ export class EmptyContainer implements IContainer {
     throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
   }
 
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container has no injector to build with.
+   */
+  construct<T>(Target: constructor<T>, options?: ProviderOptions): T {
+    throw new MethodNotImplementedError();
+  }
+
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
     return [];
   }
@@ -131,13 +137,6 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
   onInstanceDisposed(...hooks: OnDisposeHook[]): this {
-    throw new MethodNotImplementedError();
-  }
-
-  /**
-   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
-   */
-  onConstruct(...hooks: InstanceHook[]): this {
     throw new MethodNotImplementedError();
   }
 

@@ -37,6 +37,12 @@ describe('EmptyContainer', () => {
     expect(() => new EmptyContainer().hasTag('tag')).toThrowError(MethodNotImplementedError);
   });
 
+  it('should raise an error when constructing a class', () => {
+    class Service {}
+
+    expect(() => new EmptyContainer().construct(Service)).toThrowError(MethodNotImplementedError);
+  });
+
   it('should raise an error when adding a registration', () => {
     expect(() => new EmptyContainer().addRegistration(Registration.fromValue(1))).toThrowError(
       MethodNotImplementedError,
