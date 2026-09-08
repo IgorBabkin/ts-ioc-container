@@ -1,4 +1,5 @@
-import type { DependencyHook, IContainer, IContainerModule } from '../container/IContainer';
+import type { IContainer, IContainerModule } from '../container/IContainer';
+import type { ProviderHook } from '../provider/IProvider';
 import { HooksRunner } from './HooksRunner';
 import { registerPipe } from '../registration/IRegistration';
 import { executeHooks, forEachResolvedObject, onceResolvedHook, resolvedHook } from './resolveHooks';
@@ -37,7 +38,7 @@ export const onResolved = resolvedHook('onResolved');
  */
 export const onceResolved = onceResolvedHook('onResolved');
 
-const runHooks: DependencyHook = forEachResolvedObject(executeHooks(onResolvedHooksRunner));
+const runHooks: ProviderHook = forEachResolvedObject(executeHooks(onResolvedHooksRunner));
 
 /**
  * Runs `onResolved` hooks every time a dependency object leaves a provider.
@@ -49,15 +50,15 @@ const runHooks: DependencyHook = forEachResolvedObject(executeHooks(onResolvedHo
  * `@onceResolved` hook runs on the first resolve of its instance however the
  * dependency is registered.
  *
- * Providers are hooked through `onProviderRegistered`, so apply the module
+ * Providers are hooked through `onRegistered`, so apply the module
  * before the registrations it should cover; scopes created afterwards inherit
  * it. To opt in one registration instead of the whole container, use the
  * {@link resolved} pipe.
  */
 export class OnResolvedModule implements IContainerModule {
   applyTo(container: IContainer) {
-    container.onProviderRegistered((provider) => {
-      provider.onResolve(runHooks);
+    container.onRegistered((provider) => {
+      provider.onResolved(runHooks);
     });
   }
 }
@@ -67,4 +68,4 @@ export class OnResolvedModule implements IContainerModule {
  * its `onResolved` hooks on resolve, without the container opting every other
  * registration in.
  */
-export const resolved = <T = unknown>() => registerPipe<T>((p) => p.onResolve(runHooks));
+export const resolved = <T = unknown>() => registerPipe<T>((p) => p.onResolved(runHooks));

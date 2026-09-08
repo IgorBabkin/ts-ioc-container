@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0002 - Pluggable injector strategies](../../docs/adr/0002-pluggable-injectors.md)
-- **Public API:** `IInjector`, `Injector`, `MetadataInjector`, `SimpleInjector`, `ProxyInjector`, `inject`, `resolveArgs`, `arg`, `args`, `argsFn`
+- **Public API:** `IInjector`, `IInjectorModule`, `InjectorHook`, `Injector`, `MetadataInjector`, `SimpleInjector`, `ProxyInjector`, `inject`, `resolveArgs`, `arg`, `args`, `argsFn`
 - **Executable spec:** `__tests__/specs/injector-strategies.spec.ts`
 
 ## Intent
@@ -10,6 +10,12 @@
 As a developer in different TypeScript environments, I want multiple injection
 strategies so that I can use decorator metadata, direct container access,
 proxy-style access, or a custom construction strategy.
+
+The injector also owns the construct hook domain: `onConstructed(...hooks:
+InjectorHook[])` and `IInjectorModule` are registered on the injector, which is
+configured before being passed to `new Container({ injector })`. An injector
+written from scratch against `IInjector` supplies `onConstructed` itself, or
+returns `this` to decline the domain.
 
 ## Stories
 

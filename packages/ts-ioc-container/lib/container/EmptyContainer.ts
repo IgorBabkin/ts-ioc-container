@@ -4,17 +4,15 @@ import {
   type IContainer,
   type IContainerModule,
   type ScopeHook,
-  type ProviderHook,
+  type RegisteredHook,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
-  type InstanceHook,
 } from './IContainer';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { type constructor, type Instance } from '../utils/basic';
 
 export class EmptyContainer implements IContainer {
@@ -130,20 +128,6 @@ export class EmptyContainer implements IContainer {
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  onInstanceDisposed(...hooks: OnDisposeHook[]): this {
-    throw new MethodNotImplementedError();
-  }
-
-  /**
-   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
-   */
-  onConstruct(...hooks: InstanceHook[]): this {
-    throw new MethodNotImplementedError();
-  }
-
-  /**
-   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
-   */
   onScopeCreated(...hooks: ScopeHook[]): this {
     throw new MethodNotImplementedError();
   }
@@ -151,7 +135,14 @@ export class EmptyContainer implements IContainer {
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  onProviderRegistered(...hooks: ProviderHook[]): this {
+  onScopeDisposed(...hooks: ScopeHook[]): this {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
+   */
+  onRegistered(...hooks: RegisteredHook[]): this {
     throw new MethodNotImplementedError();
   }
 }

@@ -258,7 +258,17 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 ### Hooks
 
-`@onConstruct` and `@onContainerDisposed` decorators trigger after construction / on disposal. Requires adding `OnConstructModule` / `OnDisposeModule` to the container. `@hook` is the generic base. `injectProp` enables property injection within hooks.
+`@onConstruct` and `@onContainerDisposed` decorators trigger after construction / on disposal. `@hook` is the generic base. `injectProp` enables property injection within hooks.
+
+Hooks are split by the domain that raises the event (ADR 0012) — where a hook is registered says which subsystem raises it:
+
+- **Scope** (`IContainer`): `onScopeCreated`, `onScopeDisposed` (`ScopeHook`), `onRegistered` (`RegisteredHook`)
+- **Injector** (`IInjector`): `onConstructed` (`InjectorHook`)
+- **Provider** (`IProvider`): `onResolved` (`ProviderHook`), or the `onResolve(...)` registration pipe
+
+`IContainer` has no `getInjector()` — an injector is configured and then passed in:
+`new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) })`.
+`OnConstructModule` / `OnConstructAsyncModule` are `IInjectorModule`s; `OnDisposeModule`, `OnResolvedModule` and `OnResolvedAsyncModule` are `IContainerModule`s.
 
 ### `@throws` JSDoc Convention
 

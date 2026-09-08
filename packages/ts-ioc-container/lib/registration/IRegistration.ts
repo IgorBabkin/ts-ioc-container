@@ -1,11 +1,5 @@
-import {
-  type DependencyHook,
-  type DependencyKey,
-  type IContainer,
-  type IContainerModule,
-  isDependencyKey,
-} from '../container/IContainer';
-import type { ArgsFn, DecorateFn, GetCacheKey, IProvider, ScopeAccessRule } from '../provider/IProvider';
+import { type DependencyKey, type IContainer, type IContainerModule, isDependencyKey } from '../container/IContainer';
+import type { ArgsFn, DecorateFn, GetCacheKey, IProvider, ProviderHook, ScopeAccessRule } from '../provider/IProvider';
 import { SingleToken } from '../token/SingleToken';
 import { BindToken } from '../token/BindToken';
 import { MapFn } from '../utils/fp';
@@ -111,4 +105,8 @@ export const decorate = (...fns: DecorateFn[]) => registerPipe((p) => p.map(...f
 
 export const singleton = <T = unknown>(getCacheKey?: GetCacheKey) => registerPipe<T>((p) => p.singleton(getCacheKey));
 
-export const onResolve = <T = unknown>(...hooks: DependencyHook[]) => registerPipe<T>((p) => p.onResolve(...hooks));
+/**
+ * Registration-level form of `IProvider.onResolved`: attaches provider hooks to
+ * the piped registration's provider.
+ */
+export const onResolve = <T = unknown>(...hooks: ProviderHook[]) => registerPipe<T>((p) => p.onResolved(...hooks));

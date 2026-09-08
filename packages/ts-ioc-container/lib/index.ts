@@ -9,9 +9,7 @@ export {
   type ResolveOneOptions,
   type ResolveManyOptions,
   type ScopeHook,
-  type InstanceHook,
-  type DependencyHook,
-  type ProviderHook,
+  type RegisteredHook,
   type AutoResolveOptions,
   isDependencyKey,
 } from './container/IContainer';
@@ -20,7 +18,14 @@ export { AutoResolveModule } from './container/AutoResolveModule';
 export { EmptyContainer } from './container/EmptyContainer';
 
 // Injectors
-export { type IInjector, type InjectOptions, type IInjectFnResolver, Injector } from './injector/IInjector';
+export {
+  type IInjector,
+  type InjectOptions,
+  type IInjectFnResolver,
+  type IInjectorModule,
+  type InjectorHook,
+  Injector,
+} from './injector/IInjector';
 export { MetadataInjector, inject, arg, args, argsFn, resolveArgs } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
@@ -35,6 +40,7 @@ export {
   type GetCacheKey,
   type ScopeAccessOptions,
   type ScopeAccessRule,
+  type ProviderHook,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 
@@ -107,7 +113,7 @@ export {
   OnResolvedAsyncModule,
   resolvedAsync,
 } from './hooks/onResolvedAsync';
-export { invokeMethod, type ResolvedDependencyHook } from './hooks/resolveHooks';
+export { invokeMethod, type ResolvedObjectHook } from './hooks/resolveHooks';
 export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
 
 // Tokens

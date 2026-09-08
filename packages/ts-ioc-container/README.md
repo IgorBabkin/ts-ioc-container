@@ -54,6 +54,7 @@ provider pipelines, aliases, and custom injector strategies.
   - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
+  - [Hook domains](#hook-domains) `ScopeHook` `InjectorHook` `ProviderHook`
   - [OnConstruct](#onconstruct) `@onConstruct`
   - [OnConstructAsync](#onconstructasync) `@onConstructAsync`
   - [OnContainerDisposed](#oncontainerdisposed) `@onContainerDisposed`
@@ -2379,7 +2380,7 @@ describe('Decorator Pattern', () => {
 
 ### On resolve
 
-Sometimes you don't want to change the dependency, only to react to it. Use the `onResolve(...)` pipe — it appends a `DependencyHook` that receives the resolved dependency and the resolving scope.
+Sometimes you don't want to change the dependency, only to react to it. Use the `onResolve(...)` pipe — it appends a `ProviderHook` that receives the resolved dependency and the resolving scope.
 
 - `provider(onResolve((instance, scope) => tracker.track(instance)))`
 
@@ -2833,11 +2834,57 @@ variadic signature and compensate for the bottom-up application order, so
 stacked decorators run in declaration order: `@onConstruct(h1) @onConstruct(h2)`
 runs `h1` before `h2`.
 
+### Hook domains
+
+The decorators above declare hook *metadata* on a class. The imperative side —
+the callbacks the container machinery runs — is registered on whichever
+abstraction raises the event, one hook type per domain:
+
+| Domain       | Registered on | Type            | Methods                                                  |
+| ------------ | ------------- | --------------- | -------------------------------------------------------- |
+| **Scope**    | `IContainer`  | `ScopeHook`     | `onScopeCreated(...)`, `onScopeDisposed(...)`            |
+| **Scope**    | `IContainer`  | `RegisteredHook`| `onRegistered(...)`                                      |
+| **Injector** | `IInjector`   | `InjectorHook`  | `onConstructed(...)`                                     |
+| **Provider** | `IProvider`   | `ProviderHook`  | `onResolved(...)`, or the [`onResolve`](#on-resolve) pipe |
+
+A container never hands its injector out — the injector is configured first and
+passed in at construction:
+
+```typescript
+// Construction is the injector's event, not a scope's
+const injector = new MetadataInjector().onConstructed((instance, scope) => metrics.built(instance, scope));
+
+const container = new Container({ injector, tags: ['application'] })
+  .onScopeCreated((scope) => audit.scopeOpened(scope))
+  .onScopeDisposed((scope) => audit.scopeClosed(scope))
+  .onRegistered((provider, key) => audit.registered(key));
+```
+
+A container passes its injector to every scope it creates, so **one injector**
+backs the whole scope tree and an `onConstructed` hook covers all of it, whenever
+it was added. Scope hooks, by contrast, are copied into a child at `createScope`
+time, so a child inherits what its parent held then and later additions to either
+stay local.
+
+The built-in modules follow the same split. `OnConstructModule` and
+`OnConstructAsyncModule` are **injector** modules (`IInjectorModule`), applied
+with `injector.useModule(...)`:
+
+```typescript
+const injector = new MetadataInjector().useModule(new OnConstructModule());
+const container = new Container({ injector });
+```
+
+`OnDisposeModule` is a container module hooking `onScopeDisposed`, and
+`OnResolvedModule` / `OnResolvedAsyncModule` are container modules reaching every
+provider through `onRegistered`.
+
 ### OnConstruct
 
 ```typescript
 import 'reflect-metadata';
 import {
+  MetadataInjector,
   OnConstructModule,
   Container,
   type ExecutionContext,
@@ -2865,9 +2912,9 @@ describe('onConstruct', function () {
       }
     }
 
-    const container = new Container()
-      .useModule(new OnConstructModule())
-      .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
+    }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
 
@@ -2886,11 +2933,13 @@ describe('onConstruct', function () {
     }
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
-    const container = new Container().useModule(
-      new OnConstructModule((ex, context) => {
-        captured = { ex, context };
-      }),
-    );
+    const container = new Container({
+      injector: new MetadataInjector().useModule(
+        new OnConstructModule((ex, context) => {
+          captured = { ex, context };
+        }),
+      ),
+    });
 
     expect(() => container.resolve(BrokenService)).not.toThrow();
     expect(captured?.ex).toBe(failure);
@@ -2907,7 +2956,7 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
 
     expect(() => container.resolve(BrokenService)).toThrow(failure);
   });
@@ -2921,11 +2970,13 @@ describe('onConstruct', function () {
     }
 
     let scope: IContainer | undefined;
-    const container = new Container().useModule(
-      new OnConstructModule((_ex, context) => {
-        scope = context.scope;
-      }),
-    );
+    const container = new Container({
+      injector: new MetadataInjector().useModule(
+        new OnConstructModule((_ex, context) => {
+          scope = context.scope;
+        }),
+      ),
+    });
     const child = container.createScope();
 
     child.resolve(BrokenService);
@@ -2945,6 +2996,7 @@ is created and they settle afterwards, so `resolve` returns before they finish.
 ```typescript
 import 'reflect-metadata';
 import {
+  MetadataInjector,
   OnConstructAsyncModule,
   Container,
   type ExecutionContext,
@@ -2982,9 +3034,9 @@ describe('onConstructAsync', function () {
       }
     }
 
-    const container = new Container()
-      .useModule(new OnConstructAsyncModule())
-      .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructAsyncModule()),
+    }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
 
@@ -3006,11 +3058,13 @@ describe('onConstructAsync', function () {
     }
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
-    const container = new Container().useModule(
-      new OnConstructAsyncModule((ex, context) => {
-        captured = { ex, context };
-      }),
-    );
+    const container = new Container({
+      injector: new MetadataInjector().useModule(
+        new OnConstructAsyncModule((ex, context) => {
+          captured = { ex, context };
+        }),
+      ),
+    });
 
     const child = container.createScope();
     child.resolve(BrokenService);

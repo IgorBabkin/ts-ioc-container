@@ -22,6 +22,7 @@ is left intact so the historical reasoning remains discoverable.
 | 0009 | [Token taxonomy — Single / Group / Alias / Class / Function / Constant](0009-token-taxonomy.md) | Accepted |
 | 0010 | [Generated README from Handlebars source](0010-generated-readme.md)                             | Accepted |
 | 0011 | [Specs-driven development workflow](0011-spec-driven-development.md)                            | Accepted |
+| 0012 | [Hook registration lives with the domain which raises the event](0012-hook-domains.md)          | Accepted |
 
 ## Adding a new ADR
 
