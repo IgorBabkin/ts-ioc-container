@@ -1,3 +1,18 @@
+# 61.0.0 (2026-09-08)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    split lifecycle hooks by the domain that raises them (#147)
+    (93eed873b5d5f659572c9f85dbdd501477d6e352)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    split lifecycle hooks by the domain that raises them (#147)
+    (93eed873b5d5f659572c9f85dbdd501477d6e352)
+
+
 # 60.3.0 (2026-09-07)
 
   ### ✨ Features
@@ -164,6 +179,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
