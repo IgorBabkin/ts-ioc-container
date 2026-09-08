@@ -103,8 +103,8 @@ export { HookContext, createHookContextFactory, createHookContext, type IHookCon
 export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct, OnConstructModule } from './hooks/onConstruct';
 export { onScopeDisposedHooksRunner, onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
-export { onResolvedHooksRunner, onResolved, onceResolved, OnResolvedModule, resolved } from './hooks/onResolved';
-export { invokeMethod, type ResolvedObjectHook } from './hooks/resolveHooks';
+export { onResolvedHooksRunner, onResolved, OnResolvedModule, resolved } from './hooks/onResolved';
+export { invokeMethod, onceForEachInstance, type ResolvedObjectHook } from './hooks/resolveHooks';
 export {
   HooksRunner,
   runHooks,
