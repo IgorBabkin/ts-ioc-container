@@ -23,15 +23,15 @@ const toHooks = (hooks: HookType[]): HookType[] => (hooks.length > 0 ? hooks : [
 
 /**
  * Wraps a hook so it runs at most once per instance - compose it with
- * `@onResolved`/`@onResolvedAsync` (e.g. `@onResolved(onceForEachInstance(invokeMethod))`)
- * to run on the first resolve of each instance only.
+ * `@onResolved` (e.g. `@onResolved(oncePerInstance(invokeMethod))`) to run on
+ * the first resolve of each instance only.
  *
  * Instances are remembered in a `WeakSet`, which holds no strong reference, so
  * an instance is collectable once nothing else keeps it alive. The set belongs
  * to the wrapped hook, so every container and scope handing out the same
  * instance shares one memory of what has already run.
  */
-export const onceForEachInstance = (execute: HookType): HookFn => {
+export const oncePerInstance = (execute: HookType): HookFn => {
   const invokedInstances = new WeakSet<object>();
 
   return (context) => {

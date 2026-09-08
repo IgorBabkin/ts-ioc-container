@@ -4,7 +4,7 @@
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../../adr/0007-lifecycle-hooks.md),
   [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md),
   [ADR 0013 - One async-capable hook path, no `Async` variants](../../../adr/0013-one-async-capable-hook-path.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `runHooks`, `OnExceptionHandler`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `onceForEachInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `runHooks`, `OnExceptionHandler`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -56,8 +56,8 @@ Acceptance criteria:
   rest parameter, and invokes the decorated method when no hook is named.
 - `OnResolvedModule` opts a container into resolve hook execution; the
   `resolved()` pipe opts in a single registration instead.
-- `onResolved` hooks run on every resolve; a hook wrapped in `onceForEachInstance`
-  (e.g. `onResolved(onceForEachInstance(invokeMethod))`) runs a single time per
+- `onResolved` hooks run on every resolve; a hook wrapped in `oncePerInstance`
+  (e.g. `onResolved(oncePerInstance(invokeMethod))`) runs a single time per
   instance however many keys, scopes, or resolve calls return it.
 - Distinct objects of the same class each get their own once-resolve hook run.
 - Providers registered before the module was applied are not covered.

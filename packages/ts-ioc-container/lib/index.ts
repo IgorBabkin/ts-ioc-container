@@ -104,7 +104,7 @@ export { injectProp } from './hooks/injectProp';
 export { onConstructHooksRunner, onConstruct, OnConstructModule } from './hooks/onConstruct';
 export { onScopeDisposedHooksRunner, onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
 export { onResolvedHooksRunner, onResolved, OnResolvedModule, resolved } from './hooks/onResolved';
-export { invokeMethod, onceForEachInstance, type ResolvedObjectHook } from './hooks/resolveHooks';
+export { invokeMethod, oncePerInstance, type ResolvedObjectHook } from './hooks/resolveHooks';
 export {
   HooksRunner,
   runHooks,

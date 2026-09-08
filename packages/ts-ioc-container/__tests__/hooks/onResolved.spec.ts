@@ -8,7 +8,7 @@ import {
   Registration as R,
   invokeMethod,
   onResolved,
-  onceForEachInstance,
+  oncePerInstance,
   resolved,
   singleton,
 } from '../../lib';
@@ -22,7 +22,7 @@ class Service {
     this.resolvedTimes += 1;
   }
 
-  @onResolved(onceForEachInstance(invokeMethod))
+  @onResolved(oncePerInstance(invokeMethod))
   open(): void {
     this.openedTimes += 1;
   }
@@ -38,7 +38,7 @@ class AsyncService {
     this.resolvedTimes += 1;
   }
 
-  @onResolved(onceForEachInstance(invokeMethod))
+  @onResolved(oncePerInstance(invokeMethod))
   async open(): Promise<void> {
     await Promise.resolve();
     this.openedTimes += 1;
@@ -147,7 +147,7 @@ describe('OnResolvedModule', () => {
       };
 
     class Documented {
-      @onResolved(onceForEachInstance(record('first')), onceForEachInstance(record('second')))
+      @onResolved(oncePerInstance(record('first')), oncePerInstance(record('second')))
       initialize(): void {
         invoked.push('method');
       }
@@ -170,7 +170,7 @@ describe('OnResolvedModule', () => {
         invoked.push('track');
       }
 
-      @onResolved(onceForEachInstance(invokeMethod))
+      @onResolved(oncePerInstance(invokeMethod))
       open(): void {
         invoked.push('open');
       }
@@ -217,7 +217,7 @@ describe('OnResolvedModule', () => {
       @onResolved(...hooks)
       track(): void {}
 
-      @onResolved(...hooks.map(onceForEachInstance))
+      @onResolved(...hooks.map(oncePerInstance))
       open(): void {}
     }
 
@@ -240,7 +240,7 @@ describe('OnResolvedModule', () => {
     const invoked: string[] = [];
 
     class Documented {
-      @onResolved(onceForEachInstance(invokeMethod))
+      @onResolved(oncePerInstance(invokeMethod))
       open(): void {
         invoked.push('open');
       }
@@ -441,7 +441,7 @@ describe('OnResolvedModule with async hooks', () => {
       @onResolved(...hooks)
       track(): void {}
 
-      @onResolved(...hooks.map(onceForEachInstance))
+      @onResolved(...hooks.map(oncePerInstance))
       open(): void {}
     }
 

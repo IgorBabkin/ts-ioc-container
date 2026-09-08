@@ -26,8 +26,8 @@ export const onResolvedHooksRunner = new HooksRunner('onResolved');
  * ```
  *
  * Hooks are a rest parameter, so a prepared list spreads: `@onResolved(...hooks)`.
- * Wrap a hook with `onceForEachInstance` to run it on the first resolve of each
- * instance only, e.g. `@onResolved(onceForEachInstance(invokeMethod))`.
+ * Wrap a hook with `oncePerInstance` to run it on the first resolve of each
+ * instance only, e.g. `@onResolved(oncePerInstance(invokeMethod))`.
  *
  * Naming no hook means "invoke the decorated method". Decorators are applied
  * bottom-up, so hooks are prepended to keep them in declaration order:
@@ -45,7 +45,7 @@ const runHooks = (onException?: OnExceptionHandler): ProviderHook =>
  * resolution — including the resolves of a value the container never
  * constructs, and the repeat resolves of one it did. A singleton caches its
  * dependency, so its hooks run on the resolve that filled the cache; a hook
- * wrapped in `onceForEachInstance` runs on the first resolve of its instance
+ * wrapped in `oncePerInstance` runs on the first resolve of its instance
  * however the dependency is registered.
  *
  * Providers are hooked through `onRegistered`, so apply the module

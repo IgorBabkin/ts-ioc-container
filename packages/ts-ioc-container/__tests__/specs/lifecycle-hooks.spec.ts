@@ -16,7 +16,7 @@ import {
   onConstruct,
   onScopeDisposed,
   onResolved,
-  onceForEachInstance,
+  oncePerInstance,
   onResolve,
   Registration as R,
 } from '../../lib';
@@ -65,7 +65,7 @@ describe('Spec: lifecycle hooks', () => {
         this.usedTimes += 1;
       }
 
-      @onResolved(onceForEachInstance(invoke))
+      @onResolved(oncePerInstance(invoke))
       open(): void {
         this.openedTimes += 1;
       }

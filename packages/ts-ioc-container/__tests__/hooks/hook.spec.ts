@@ -15,7 +15,7 @@ import {
   HooksRunner,
   inject,
   invokeMethod,
-  onceForEachInstance,
+  oncePerInstance,
   prepend,
   prependHooks,
   register,
@@ -644,12 +644,12 @@ describe('hooks', () => {
     expect(invoked).toEqual(['replacement']);
   });
 
-  it('should run a hook wrapped in onceForEachInstance a single time per instance under any hook key', () => {
+  it('should run a hook wrapped in oncePerInstance a single time per instance under any hook key', () => {
     const onStartHooksRunner = new HooksRunner('onStart');
     const invoked: string[] = [];
 
     class MyClass {
-      @hook('onStart', append(onceForEachInstance(invokeMethod)))
+      @hook('onStart', append(oncePerInstance(invokeMethod)))
       start() {
         invoked.push('start');
       }
@@ -664,13 +664,13 @@ describe('hooks', () => {
     expect(invoked).toEqual(['start']);
   });
 
-  it('should run onceForEachInstance hooks independently for each instance', () => {
+  it('should run oncePerInstance hooks independently for each instance', () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 
     class MyClass {
       startedTimes = 0;
 
-      @hook('onStart', append(onceForEachInstance(invokeMethod)))
+      @hook('onStart', append(oncePerInstance(invokeMethod)))
       start() {
         this.startedTimes += 1;
       }
