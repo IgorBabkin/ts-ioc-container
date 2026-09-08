@@ -22,14 +22,16 @@ export const invokeMethod: HookFn = (context) => {
 const toHooks = (hooks: HookType[]): HookType[] => (hooks.length > 0 ? hooks : [invokeMethod]);
 
 /**
- * Wraps a hook so it runs at most once per instance.
+ * Wraps a hook so it runs at most once per instance - compose it with
+ * `@onResolved` (e.g. `@onResolved(oncePerInstance(invokeMethod))`) to run on
+ * the first resolve of each instance only.
  *
  * Instances are remembered in a `WeakSet`, which holds no strong reference, so
  * an instance is collectable once nothing else keeps it alive. The set belongs
- * to the decorated member, so every container and scope handing out the same
+ * to the wrapped hook, so every container and scope handing out the same
  * instance shares one memory of what has already run.
  */
-const onceForEachInstance = (execute: HookType): HookFn => {
+export const oncePerInstance = (execute: HookType): HookFn => {
   const invokedInstances = new WeakSet<object>();
 
   return (context) => {
@@ -54,15 +56,6 @@ export const resolvedHook =
   (key: string) =>
   (...hooks: HookType[]) =>
     hook(key, prependHooks(...toHooks(hooks)));
-
-/**
- * `resolvedHook(key)` with every hook wrapped so it runs on the first resolve of
- * each instance only - what the `onceResolved` decorators are built from.
- */
-export const onceResolvedHook =
-  (key: string) =>
-  (...hooks: HookType[]) =>
-    hook(key, prependHooks(...toHooks(hooks).map(onceForEachInstance)));
 
 /**
  * Lifts a hook to `ProviderHook`, skipping dependencies which are not objects:

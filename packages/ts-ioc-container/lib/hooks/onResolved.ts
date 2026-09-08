@@ -2,7 +2,7 @@ import type { IContainer, IContainerModule } from '../container/IContainer';
 import type { ProviderHook } from '../provider/IProvider';
 import { HooksRunner, type OnExceptionHandler } from './HooksRunner';
 import { registerPipe } from '../registration/IRegistration';
-import { executeHooks, forEachResolvedObject, onceResolvedHook, resolvedHook } from './resolveHooks';
+import { executeHooks, forEachResolvedObject, resolvedHook } from './resolveHooks';
 
 export const onResolvedHooksRunner = new HooksRunner('onResolved');
 
@@ -26,20 +26,14 @@ export const onResolvedHooksRunner = new HooksRunner('onResolved');
  * ```
  *
  * Hooks are a rest parameter, so a prepared list spreads: `@onResolved(...hooks)`.
- * Use `@onceResolved` to run them on the first resolve of each instance only.
+ * Wrap a hook with `oncePerInstance` to run it on the first resolve of each
+ * instance only, e.g. `@onResolved(oncePerInstance(invokeMethod))`.
  *
  * Naming no hook means "invoke the decorated method". Decorators are applied
  * bottom-up, so hooks are prepended to keep them in declaration order:
  * `@onX(h1) @onX(h2) method()` runs h1 before h2.
  */
 export const onResolved = resolvedHook('onResolved');
-
-/**
- * `@onResolved`, narrowed to the first resolve of each instance: the hooks run
- * once for an instance and stay silent on every later resolve of it, however
- * many keys or scopes hand it out.
- */
-export const onceResolved = onceResolvedHook('onResolved');
 
 const runHooks = (onException?: OnExceptionHandler): ProviderHook =>
   forEachResolvedObject(executeHooks(onResolvedHooksRunner, onException));
@@ -50,9 +44,9 @@ const runHooks = (onException?: OnExceptionHandler): ProviderHook =>
  * Where `OnConstructModule` observes construction, this module observes
  * resolution — including the resolves of a value the container never
  * constructs, and the repeat resolves of one it did. A singleton caches its
- * dependency, so its hooks run on the resolve that filled the cache; an
- * `@onceResolved` hook runs on the first resolve of its instance however the
- * dependency is registered.
+ * dependency, so its hooks run on the resolve that filled the cache; a hook
+ * wrapped in `oncePerInstance` runs on the first resolve of its instance
+ * however the dependency is registered.
  *
  * Providers are hooked through `onRegistered`, so apply the module
  * before the registrations it should cover; scopes created afterwards inherit

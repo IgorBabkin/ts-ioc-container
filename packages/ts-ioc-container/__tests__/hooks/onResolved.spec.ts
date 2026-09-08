@@ -8,7 +8,7 @@ import {
   Registration as R,
   invokeMethod,
   onResolved,
-  onceResolved,
+  oncePerInstance,
   resolved,
   singleton,
 } from '../../lib';
@@ -22,7 +22,7 @@ class Service {
     this.resolvedTimes += 1;
   }
 
-  @onceResolved()
+  @onResolved(oncePerInstance(invokeMethod))
   open(): void {
     this.openedTimes += 1;
   }
@@ -38,7 +38,7 @@ class AsyncService {
     this.resolvedTimes += 1;
   }
 
-  @onceResolved()
+  @onResolved(oncePerInstance(invokeMethod))
   async open(): Promise<void> {
     await Promise.resolve();
     this.openedTimes += 1;
@@ -77,7 +77,7 @@ describe('OnResolvedModule', () => {
     expect(service.resolvedTimes).toBe(2);
   });
 
-  it('should run `onceResolved` hooks a single time however often the object is resolved', () => {
+  it('should run once-per-instance hooks a single time however often the object is resolved', () => {
     const service = new Service();
 
     const container = new Container()
@@ -90,7 +90,7 @@ describe('OnResolvedModule', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `onceResolved` hooks a single time for an object resolved through several keys', () => {
+  it('should run once-per-instance hooks a single time for an object resolved through several keys', () => {
     const service = new Service();
 
     const container = new Container()
@@ -104,7 +104,7 @@ describe('OnResolvedModule', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', () => {
+  it('should run once-per-instance hooks a single time for an object resolved from several scopes', () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] })
@@ -117,7 +117,7 @@ describe('OnResolvedModule', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `onceResolved` hooks for every distinct object of the same class', () => {
+  it('should run once-per-instance hooks for every distinct object of the same class', () => {
     const container = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(Service));
 
     const first = container.resolve<Service>('Service');
@@ -147,7 +147,7 @@ describe('OnResolvedModule', () => {
       };
 
     class Documented {
-      @onceResolved(record('first'), record('second'))
+      @onResolved(oncePerInstance(record('first')), oncePerInstance(record('second')))
       initialize(): void {
         invoked.push('method');
       }
@@ -170,7 +170,7 @@ describe('OnResolvedModule', () => {
         invoked.push('track');
       }
 
-      @onceResolved(invokeMethod)
+      @onResolved(oncePerInstance(invokeMethod))
       open(): void {
         invoked.push('open');
       }
@@ -217,7 +217,7 @@ describe('OnResolvedModule', () => {
       @onResolved(...hooks)
       track(): void {}
 
-      @onceResolved(...hooks)
+      @onResolved(...hooks.map(oncePerInstance))
       open(): void {}
     }
 
@@ -236,11 +236,11 @@ describe('OnResolvedModule', () => {
     expect(callsOf('open')).toEqual(['first:open', 'second:open']);
   });
 
-  it('should run `onceResolved` hooks a single time per instance', () => {
+  it('should run once-per-instance hooks a single time per instance', () => {
     const invoked: string[] = [];
 
     class Documented {
-      @onceResolved()
+      @onResolved(oncePerInstance(invokeMethod))
       open(): void {
         invoked.push('open');
       }
@@ -310,7 +310,7 @@ describe('OnResolvedModule', () => {
     expect(() => container.resolve('Broken')).toThrowError('hook failed');
   });
 
-  it('should keep `onceResolved` hooks deduplicated across containers', () => {
+  it('should keep once-per-instance hooks deduplicated across containers', () => {
     const service = new Service();
 
     const first = new Container().useModule(new OnResolvedModule());
@@ -334,7 +334,7 @@ describe('resolved()', () => {
     expect([service.resolvedTimes, service.openedTimes]).toEqual([1, 1]);
   });
 
-  it('should run `onceResolved` hooks a single time however often the object is resolved', () => {
+  it('should run once-per-instance hooks a single time however often the object is resolved', () => {
     const service = new Service();
 
     const container = new Container().addRegistration(R.fromValue(service).bindToKey('Service').pipe(resolved()));
@@ -345,7 +345,7 @@ describe('resolved()', () => {
     expect([service.openedTimes, service.resolvedTimes]).toEqual([1, 2]);
   });
 
-  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', () => {
+  it('should run once-per-instance hooks a single time for an object resolved from several scopes', () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] }).addRegistration(
@@ -400,7 +400,7 @@ describe('OnResolvedModule with async hooks', () => {
     expect(service.resolvedTimes).toBe(2);
   });
 
-  it('should run `onceResolved` hooks a single time however often the object is resolved', async () => {
+  it('should run once-per-instance hooks a single time however often the object is resolved', async () => {
     const service = new AsyncService();
 
     const container = new Container()
@@ -414,7 +414,7 @@ describe('OnResolvedModule with async hooks', () => {
     expect(service.openedTimes).toBe(1);
   });
 
-  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', async () => {
+  it('should run once-per-instance hooks a single time for an object resolved from several scopes', async () => {
     const service = new AsyncService();
 
     const root = new Container({ tags: ['root'] })
@@ -441,7 +441,7 @@ describe('OnResolvedModule with async hooks', () => {
       @onResolved(...hooks)
       track(): void {}
 
-      @onceResolved(...hooks)
+      @onResolved(...hooks.map(oncePerInstance))
       open(): void {}
     }
 
@@ -521,7 +521,7 @@ describe('resolved() with async hooks', () => {
     expect([service.resolvedTimes, service.openedTimes]).toEqual([1, 1]);
   });
 
-  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', async () => {
+  it('should run once-per-instance hooks a single time for an object resolved from several scopes', async () => {
     const service = new AsyncService();
 
     const root = new Container({ tags: ['root'] }).addRegistration(
