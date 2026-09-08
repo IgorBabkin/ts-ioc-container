@@ -9,6 +9,8 @@ import {
   Registration as R,
   scope,
   singleton,
+  TransientProvider,
+  unwrapProxy,
 } from '../../lib';
 
 @register(bindTo('logger'))
@@ -30,6 +32,44 @@ describe('IocContainer', function () {
       const container = new Container();
 
       expect(container.resolve(Service)).not.toBe(container.resolve(Service));
+    });
+
+    it('should hand out the pure injector value', () => {
+      class Service {}
+
+      const container = new Container();
+      const service = container.resolve(Service);
+
+      expect(service).toBeInstanceOf(Service);
+      expect(unwrapProxy(service)).toBe(service);
+    });
+
+    it('should hand out a lazy proxy when the resolve asks for one', () => {
+      const built: string[] = [];
+
+      class Service {
+        constructor() {
+          built.push('built');
+        }
+      }
+
+      const container = new Container();
+      const service = container.resolve(Service, { lazy: true });
+
+      expect(built).toEqual([]);
+      expect(unwrapProxy(service)).toBeInstanceOf(Service);
+      expect(built).toEqual(['built']);
+    });
+
+    it('should stand the class up behind a TransientProvider', () => {
+      class Service {}
+
+      const providers: unknown[] = [];
+      const container = new Container().onProviderRegistered((provider) => providers.push(provider));
+
+      container.resolve(Service);
+
+      expect(providers).toEqual([expect.any(TransientProvider)]);
     });
 
     it('should forward args to the constructor', () => {

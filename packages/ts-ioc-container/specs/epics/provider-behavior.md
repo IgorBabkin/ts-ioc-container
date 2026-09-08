@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0004 - Pipe-based composition via ProviderPipe](../../docs/adr/0004-provider-pipe-composition.md), [ADR 0011 - Specs-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
-- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `autoResolve`, `scopeAccess`, `decorate`, `onResolve`, `ProviderPipe`
+- **Public API:** `Provider`, `TransientProvider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `autoResolve`, `scopeAccess`, `decorate`, `onResolve`, `ProviderPipe`
 - **Executable spec:** `__tests__/specs/provider-behavior.spec.ts`
 
 ## Intent
@@ -130,7 +130,33 @@ Acceptance criteria:
   resolve, while a singleton provider fires them only on the resolve that fills
   the cache.
 
+### Story: Reach the injector for an unregistered class
+
+As an application developer, I can resolve a class by its constructor and still
+get provider-level behavior so that a class I never registered is not a hole in
+the container's lifecycle.
+
+Acceptance criteria:
+
+- `container.resolve(SomeClass)` stands the class up behind a
+  `TransientProvider` over `IContainer.construct`, created on first use.
+- The provider hands out the pure injector value, or a lazy proxy of it when the
+  resolve asked for one.
+- It carries nothing else — no cache, decorators, access rules, or args
+  functions — so a new instance leaves it on every resolve and a
+  `@register(singleton())` on the class does not apply.
+- The container announces it to `onProviderRegistered`, so `onResolved` hooks
+  reach classes which were never registered.
+- One is kept per class per scope, identified by the constructor rather than its
+  name, and disposed with the scope that made it.
+- `provider instanceof TransientProvider` distinguishes a made-up provider from
+  a declared one.
+
 ## Notes
 
 Provider pipes are a public extension point. Specs should describe observable
 composition and ordering, not the internal wrapper classes.
+
+`TransientProvider` is the exception: it is named in the public API on purpose,
+so the provider a container makes up for a bare-constructor resolve can be
+talked about and recognized.

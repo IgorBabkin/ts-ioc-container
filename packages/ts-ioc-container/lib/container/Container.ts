@@ -23,7 +23,7 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
-import { Provider } from '../provider/Provider';
+import { TransientProvider } from '../provider/TransientProvider';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -33,7 +33,7 @@ export class Container implements IContainer {
   private registrations: IRegistration[] = [];
   private readonly tags: Set<Tag>;
   private readonly providers = new Map<DependencyKey, IProvider>();
-  private readonly constructorProviders = new Map<constructor<unknown>, IProvider>();
+  private readonly transientProviders = new Map<constructor<unknown>, IProvider>();
   private readonly aliases = new AliasMap();
   private readonly injector: IInjector;
 
@@ -75,7 +75,7 @@ export class Container implements IContainer {
     this.validateContainer();
 
     const provider = Is.constructor(target)
-      ? this.getConstructorProvider(target)
+      ? this.getTransientProvider(target)
       : (this.providers.get(target) as IProvider<T> | undefined);
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
@@ -197,11 +197,11 @@ export class Container implements IContainer {
     this.parent = new EmptyContainer();
 
     // Reset the state
-    for (const provider of [...this.providers.values(), ...this.constructorProviders.values()]) {
+    for (const provider of [...this.providers.values(), ...this.transientProviders.values()]) {
       provider.dispose();
     }
     this.providers.clear();
-    this.constructorProviders.clear();
+    this.transientProviders.clear();
     this.aliases.destroy();
     this.instances.clear();
     this.registrations = [];
@@ -312,25 +312,22 @@ export class Container implements IContainer {
   }
 
   /**
-   * The provider standing in for a class resolved by its constructor.
-   *
-   * Resolving a bare constructor has no registration behind it, so the
-   * container makes one up: a transient provider over `construct`, created on
-   * first use and kept per class, and announced to `onProviderRegistered` like
-   * any registered provider. That is what lets provider-level behavior —
-   * `onResolved` hooks above all — reach classes which were never registered.
+   * The {@link TransientProvider} standing in for a class resolved by its
+   * constructor, created on first use and kept for the life of this scope. It
+   * hands out the pure injector value, or a lazy proxy of it when the resolve
+   * asked for one.
    *
    * These providers stay out of the keyed provider map: a class is not a
    * `DependencyKey`, and keying them by name would collide with registrations.
    */
-  private getConstructorProvider<T>(Target: constructor<T>): IProvider<T> {
-    const existing = this.constructorProviders.get(Target) as IProvider<T> | undefined;
+  private getTransientProvider<T>(Target: constructor<T>): IProvider<T> {
+    const existing = this.transientProviders.get(Target) as IProvider<T> | undefined;
     if (existing) {
       return existing;
     }
 
-    const provider = Provider.fromClass(Target);
-    this.constructorProviders.set(Target, provider);
+    const provider = new TransientProvider(Target);
+    this.transientProviders.set(Target, provider);
     this.notifyProviderRegistered(provider);
 
     return provider;

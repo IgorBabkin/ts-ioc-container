@@ -35,8 +35,9 @@ Acceptance criteria:
 - `onceForEachInstance` narrows any hook the same way, so a one-shot initializer
   can be composed by hand: `onResolved(onceForEachInstance(invokeMethod))` is
   what `onceResolved()` is.
-- Resolving a bare constructor is covered: the container makes up a provider for
-  the class, so hooks reach classes which were never registered.
+- Resolving a bare constructor is covered: the container makes up a
+  `TransientProvider` for the class, so hooks reach classes which were never
+  registered.
 - Distinct objects of the same class each get their own once-resolve hook run.
 - Providers registered before the module was applied are not covered.
 - Hook classes are resolved through the container before execution.

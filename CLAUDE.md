@@ -264,11 +264,26 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 `@onConstruct` — a one-shot initializer is `@onceResolved()`, which is
 `@onResolved(onceForEachInstance(invokeMethod))` spelled out. Because hooks are
 attached to providers via `onProviderRegistered`, `Container.resolve(SomeClass)`
-makes up a transient provider for the class (kept per class per scope, keyed by
-the constructor) so hooks reach unregistered classes too. `IContainer.construct`
-is the raw injector step that path ends in; `Provider.fromClass` builds through
-it rather than calling back into `resolve`, which is what keeps a registered
-class from being hooked twice.
+makes up a `TransientProvider` for the class so hooks reach unregistered classes
+too — see below. `IContainer.construct` is the raw injector step that path ends
+in; `Provider.fromClass` builds through it rather than calling back into
+`resolve`, which is what keeps a registered class from being hooked twice.
+
+### TransientProvider
+
+The provider a container makes up to reach the injector, for a class resolved by
+its constructor (`resolve(SomeClass)`) rather than by a key. It hands out the
+**pure injector value, or a lazy proxy of it** when the resolve asked for one —
+no decorators, no cache, no access rules, no args functions, because there is no
+registration to declare any. Hence transient: a new instance per resolve, and
+nothing can configure it otherwise.
+
+Kept one per class per scope in `Container.transientProviders`, **keyed by the
+constructor itself, not `Target.name`** — two classes can share a name (and
+minifiers make that likely), and a name would collide with a registration bound
+to the same string. Disposed with the scope. Because it is its own type, a hook
+can tell a made-up provider from a declared one with
+`provider instanceof TransientProvider`.
 
 ### `@throws` JSDoc Convention
 

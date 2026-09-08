@@ -36,17 +36,30 @@ Keep resolution as the container's only construction-time hook point. Remove
 `OnConstructAsyncModule`, the `onConstruct` container hook and the `InstanceHook`
 type. `Container.addInstance` now only tracks the instance.
 
-To close the gap that justified them, **the container makes up a provider for a
-class resolved by its constructor**. On the first `resolve(SomeClass)` in a
-scope, the container creates a transient provider over `construct(SomeClass)`,
-keeps it per class for that scope, and announces it to `onProviderRegistered`
-like any registered provider. Provider-level behavior — `onResolved` hooks above
-all — therefore reaches classes which were never registered.
+To close the gap that justified them, **the container makes up a
+`TransientProvider` for a class resolved by its constructor**. On the first
+`resolve(SomeClass)` in a scope, the container creates one over
+`construct(SomeClass)`, keeps it per class for that scope, and announces it to
+`onProviderRegistered` like any registered provider. Provider-level behavior —
+`onResolved` hooks above all — therefore reaches classes which were never
+registered.
 
-These made-up providers are keyed by the constructor in a map of their own, not
-by `Target.name` in the keyed provider map: a class is not a `DependencyKey`,
-and keying by name would collide with a registration bound to the same name (and
-break under minification). They are disposed with the scope that made them.
+`TransientProvider` is named as its own type rather than left an anonymous
+`Provider`, because it is a distinct kind of thing and worth being able to talk
+about and recognize. What it hands out is the pure injector value, or a lazy
+proxy of it when the resolve asked for one. Nothing else: no decorators, no
+cache, no access rules, no args functions, because there is no registration to
+declare any. Hence *transient* — a new instance leaves it on every resolve, and
+nothing can configure it otherwise; a class that needs a singleton or pipes
+needs a registration, and is then resolved by its key. Being its own type also
+lets a hook tell a made-up provider from a declared one
+(`provider instanceof TransientProvider`).
+
+These providers are keyed by the constructor in a map of their own, not by
+`Target.name` in the keyed provider map: a class is not a `DependencyKey`, two
+classes can share a name (and minifiers make that likely), and a name would
+collide with a registration bound to the same string. They are disposed with the
+scope that made them.
 
 `IContainer` gains `construct(Target, options)`: the raw injector step that
 `resolve` used to end in, now public. `Provider.fromClass` builds through it
@@ -97,15 +110,16 @@ that must run once per instance is `@onceResolved()`, which is
 - `@onResolved` runs per resolve, so a naive migration from `@onConstruct`
   changes how often an initializer runs; `onceForEachInstance` has to be opted
   into.
-- Resolving a bare constructor now allocates a provider per class per scope,
-  where it previously allocated nothing.
-- A made-up provider is transient by construction, so a `@register(singleton())`
-  on the class does not apply to `resolve(SomeClass)` — only to the registered
-  key. That was already true, and stays true.
+- Resolving a bare constructor now allocates a `TransientProvider` per class per
+  scope, where it previously allocated nothing.
+- A `TransientProvider` is transient by construction, so a
+  `@register(singleton())` on the class does not apply to `resolve(SomeClass)` —
+  only to the registered key. That was already true, and stays true.
 
 ## References
 
-- `lib/container/Container.ts` — `getConstructorProvider`, `construct`
+- `lib/provider/TransientProvider.ts`
+- `lib/container/Container.ts` — `getTransientProvider`, `construct`
 - `lib/container/IContainer.ts` — `ProviderHook`, `construct`
 - `lib/hooks/onResolved.ts`
 - `lib/hooks/onResolvedAsync.ts`
