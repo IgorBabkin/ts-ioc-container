@@ -1,6 +1,6 @@
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import type { ProviderHook } from '../provider/IProvider';
-import { HooksRunner } from './HooksRunner';
+import { HooksRunner, type OnExceptionHandler } from './HooksRunner';
 import { registerPipe } from '../registration/IRegistration';
 import { executeHooks, forEachResolvedObject, onceResolvedHook, resolvedHook } from './resolveHooks';
 
@@ -16,6 +16,9 @@ export const onResolvedHooksRunner = new HooksRunner('onResolved');
  *
  *   @onResolved(invokeMethod) // the same declaration, spelled out
  *   ping(): void {}
+ *
+ *   @onResolved()             // async members work the same way
+ *   async warmUp(): Promise<void> {}
  *
  *   @onResolved(injectProp('Config')) // with explicit hooks
  *   config!: Config;
@@ -38,7 +41,8 @@ export const onResolved = resolvedHook('onResolved');
  */
 export const onceResolved = onceResolvedHook('onResolved');
 
-const runHooks: ProviderHook = forEachResolvedObject(executeHooks(onResolvedHooksRunner));
+const runHooks = (onException?: OnExceptionHandler): ProviderHook =>
+  forEachResolvedObject(executeHooks(onResolvedHooksRunner, onException));
 
 /**
  * Runs `onResolved` hooks every time a dependency object leaves a provider.
@@ -54,11 +58,23 @@ const runHooks: ProviderHook = forEachResolvedObject(executeHooks(onResolvedHook
  * before the registrations it should cover; scopes created afterwards inherit
  * it. To opt in one registration instead of the whole container, use the
  * {@link resolved} pipe.
+ *
+ * Resolution stays synchronous: sync hooks finish before `resolve` returns,
+ * async ones are started there and settle afterwards. A failure of either kind
+ * is reported to `onException` when one is supplied; otherwise a sync hook
+ * throws out of `resolve` and an async one surfaces as an unhandled promise
+ * rejection.
  */
 export class OnResolvedModule implements IContainerModule {
+  private readonly runHooks: ProviderHook;
+
+  constructor(onException?: OnExceptionHandler) {
+    this.runHooks = runHooks(onException);
+  }
+
   applyTo(container: IContainer) {
     container.onRegistered((provider) => {
-      provider.onResolved(runHooks);
+      provider.onResolved(this.runHooks);
     });
   }
 }
@@ -68,4 +84,5 @@ export class OnResolvedModule implements IContainerModule {
  * its `onResolved` hooks on resolve, without the container opting every other
  * registration in.
  */
-export const resolved = <T = unknown>() => registerPipe<T>((p) => p.onResolved(runHooks));
+export const resolved = <T = unknown>(onException?: OnExceptionHandler) =>
+  registerPipe<T>((p) => p.onResolved(runHooks(onException)));

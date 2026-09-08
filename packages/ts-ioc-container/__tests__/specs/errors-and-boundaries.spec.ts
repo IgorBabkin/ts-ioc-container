@@ -12,7 +12,6 @@ import {
   Provider,
   ProviderDisposedError,
   Registration as R,
-  UnexpectedHookResultError,
   UnsupportedTokenTypeError,
   ContainerError,
   hook,
@@ -57,21 +56,29 @@ describe('Spec: errors and boundaries', () => {
     );
   });
 
-  it('rejects unsupported token and hook operations', () => {
+  it('rejects unsupported token operations', () => {
+    expect(() => toToken({} as never)).toThrowError(UnsupportedTokenTypeError);
+    expect(() => new ConstantToken('value').args('ignored')).toThrowError(MethodNotImplementedError);
+    expect(() => new GroupInstanceToken(() => true).lazy()).toThrowError(MethodNotImplementedError);
+  });
+
+  it('surfaces what a hook threw out of the runner', () => {
+    const failure = new Error('hook failed');
+
     class Worker {
-      @hook('asyncOnly', append(async () => {}))
+      @hook(
+        'start',
+        append(() => {
+          throw failure;
+        }),
+      )
       start(): void {}
     }
 
     const container = new Container();
     const worker = container.resolve(Worker);
 
-    expect(() => toToken({} as never)).toThrowError(UnsupportedTokenTypeError);
-    expect(() => new ConstantToken('value').args('ignored')).toThrowError(MethodNotImplementedError);
-    expect(() => new GroupInstanceToken(() => true).lazy()).toThrowError(MethodNotImplementedError);
-    expect(() => new HooksRunner('asyncOnly').execute(worker, { scope: container })).toThrowError(
-      UnexpectedHookResultError,
-    );
+    expect(() => new HooksRunner('start').execute(worker, { scope: container })).toThrowError(failure);
   });
 
   it('lets a single catch block handle every container error', () => {

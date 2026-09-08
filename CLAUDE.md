@@ -258,7 +258,9 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 ### Hooks
 
-`@onConstruct` and `@onContainerDisposed` decorators trigger after construction / on disposal. `@hook` is the generic base. `injectProp` enables property injection within hooks.
+`@onConstruct` and `@onScopeDisposed` decorators trigger after construction / on scope disposal. `@hook` is the generic base. `injectProp` enables property injection within hooks.
+
+Hooks are async-capable by default, so there is no `Async`-postfixed decorator, module or runner method (ADR 0013). `HooksRunner.execute` runs a member's hook chain eagerly and stays synchronous until a hook returns a promise, then awaits the rest of that chain — so it returns `undefined` when nothing went async and a `Promise<void>` otherwise. Sync hooks still finish before `resolve`/`dispose` returns; async ones settle after it. Every module takes an optional `OnExceptionHandler`, which catches both a sync throw and an async rejection; use the shared `runHooks(runner, target, scope, onException?)` helper rather than wiring that per module.
 
 Hooks are split by the domain that raises the event (ADR 0012) — where a hook is registered says which subsystem raises it:
 
@@ -268,7 +270,7 @@ Hooks are split by the domain that raises the event (ADR 0012) — where a hook 
 
 `IContainer` has no `getInjector()` — an injector is configured and then passed in:
 `new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) })`.
-`OnConstructModule` / `OnConstructAsyncModule` are `IInjectorModule`s; `OnDisposeModule`, `OnResolvedModule` and `OnResolvedAsyncModule` are `IContainerModule`s.
+`OnConstructModule` is an `IInjectorModule`; `OnDisposeModule` and `OnResolvedModule` are `IContainerModule`s.
 
 ### `@throws` JSDoc Convention
 

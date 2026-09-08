@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0001 - Container as a linked list of scopes](../../docs/adr/0001-container-as-linked-list.md)
-- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnexpectedHookResultError`, `UnsupportedTokenTypeError`, `ContainerNotFoundError`, `EmptyContainer`
+- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnsupportedTokenTypeError`, `ContainerNotFoundError`, `EmptyContainer`
 - **Executable spec:** `__tests__/specs/errors-and-boundaries.spec.ts`
 
 ## Intent
@@ -49,18 +49,17 @@ Acceptance criteria:
 - Creating a scope from a disposed container fails with
   `ContainerDisposedError`.
 
-### Story: Reject unsupported token and hook operations
+### Story: Reject unsupported token operations
 
 As a library user, I get specific failures when I ask for behavior that a token
-or hook execution path does not support.
+does not support.
 
 Acceptance criteria:
 
 - `toToken` fails with `UnsupportedTokenTypeError` for unsupported token input.
 - Constant and instance-list tokens reject unsupported modifiers with
   `MethodNotImplementedError`.
-- Synchronous hook execution fails with `UnexpectedHookResultError` when a hook
-  returns a promise.
+- What a hook threw surfaces out of the runner that executed it.
 
 ### Story: Terminate parent lookup at the empty container
 

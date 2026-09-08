@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import {
   MetadataInjector,
-  OnConstructAsyncModule,
   OnConstructModule,
   OnDisposeModule,
   OnResolvedModule,
@@ -15,13 +14,11 @@ import {
   inject,
   injectProp,
   onConstruct,
-  onConstructAsync,
-  onContainerDisposed,
+  onScopeDisposed,
   onResolved,
   onceResolved,
   onResolve,
   Registration as R,
-  UnexpectedHookResultError,
 } from '../../lib';
 
 const invoke: HookFn = (context) => {
@@ -39,7 +36,7 @@ describe('Spec: lifecycle hooks', () => {
         this.initialized = true;
       }
 
-      @onContainerDisposed(invoke)
+      @onScopeDisposed(invoke)
       destroy(): void {
         this.disposed = true;
       }
@@ -157,14 +154,14 @@ describe('Spec: lifecycle hooks', () => {
     expect(invoked).toEqual(['h1', 'h2', 'h3', 'h4']);
   });
 
-  it('runs stacked @onContainerDisposed decorators in declaration order', () => {
+  it('runs stacked @onScopeDisposed decorators in declaration order', () => {
     const invoked: string[] = [];
 
     class Resource {
-      @onContainerDisposed(() => {
+      @onScopeDisposed(() => {
         invoked.push('h1');
       })
-      @onContainerDisposed(() => {
+      @onScopeDisposed(() => {
         invoked.push('h2');
       })
       destroy(): void {}
@@ -178,21 +175,21 @@ describe('Spec: lifecycle hooks', () => {
     expect(invoked).toEqual(['h1', 'h2']);
   });
 
-  it('runs stacked @onConstructAsync decorators in declaration order', async () => {
+  it('runs stacked async @onConstruct decorators in declaration order', async () => {
     const invoked: string[] = [];
 
     class Resource {
-      @onConstructAsync(async () => {
+      @onConstruct(async () => {
         invoked.push('h1');
       })
-      @onConstructAsync(async () => {
+      @onConstruct(async () => {
         invoked.push('h2');
       })
       async initialize(): Promise<void> {}
     }
 
     const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructAsyncModule()),
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
     }).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
@@ -204,7 +201,7 @@ describe('Spec: lifecycle hooks', () => {
     class Resource {
       initialized = false;
 
-      @onConstructAsync(async (context) => {
+      @onConstruct(async (context) => {
         await context.invokeMethod();
       })
       async initialize(): Promise<void> {
@@ -214,7 +211,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructAsyncModule()),
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
     }).addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
@@ -228,13 +225,13 @@ describe('Spec: lifecycle hooks', () => {
     const failure = new Error('boom');
 
     class BrokenResource {
-      @onConstructAsync(() => Promise.reject(failure))
+      @onConstruct(() => Promise.reject(failure))
       initialize(): void {}
     }
 
     let captured: unknown;
     const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructAsyncModule((ex) => (captured = ex))),
+      injector: new MetadataInjector().useModule(new OnConstructModule((ex) => (captured = ex))),
     }).addRegistration(R.fromClass(BrokenResource));
 
     container.resolve<BrokenResource>('BrokenResource');
@@ -361,7 +358,7 @@ describe('Spec: lifecycle hooks', () => {
     expect(constructed).toEqual(['app', 'request']);
   });
 
-  it('resolves hook method arguments and separates sync from async execution', async () => {
+  it('resolves hook method arguments and takes sync and async hooks through one runner', async () => {
     class Worker {
       calls: string[] = [];
 
@@ -379,9 +376,6 @@ describe('Spec: lifecycle hooks', () => {
       stop(@inject('prefix') prefix: string): void {
         this.calls.push(`${prefix}:async`);
       }
-
-      @hook('badAsync', append(async () => undefined))
-      bad(): void {}
     }
 
     const container = new Container()
@@ -389,12 +383,11 @@ describe('Spec: lifecycle hooks', () => {
       .addRegistration(R.fromClass(Worker));
     const worker = container.resolve<Worker>('Worker');
 
-    new HooksRunner('sync').execute(worker, { scope: container });
-    expect(() => new HooksRunner('badAsync').execute(worker, { scope: container })).toThrowError(
-      UnexpectedHookResultError,
-    );
+    // Sync hooks finish before `execute` returns, so it hands back no promise to await.
+    expect(new HooksRunner('sync').execute(worker, { scope: container })).toBeUndefined();
+    expect(worker.calls).toEqual(['job:sync']);
 
-    await new HooksRunner('async').executeAsync(worker, { scope: container });
+    await new HooksRunner('async').execute(worker, { scope: container });
 
     expect(worker.calls).toEqual(['job:sync', 'job:async']);
   });

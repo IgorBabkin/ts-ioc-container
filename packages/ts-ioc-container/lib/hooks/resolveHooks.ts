@@ -1,8 +1,7 @@
 import type { IContainer } from '../container/IContainer';
 import type { ProviderHook } from '../provider/IProvider';
-import type { HooksRunner } from './HooksRunner';
+import { type HooksRunner, type OnExceptionHandler, runHooks } from './HooksRunner';
 import { hook, type HookFn, type HookType, prependHooks, toHookFn } from './hook';
-import type { OnExceptionHandler } from './onConstruct';
 import { Is } from '../utils/basic';
 
 /**
@@ -78,32 +77,16 @@ export const forEachResolvedObject =
   };
 
 /**
- * @throws {unknown} rethrows whatever the hooks threw.
+ * Runs the resolved dependency's hooks, reporting a sync throw and a rejected
+ * async hook alike to `onException` when one is supplied.
+ *
+ * Resolution stays synchronous: sync hooks finish before `resolve` returns,
+ * async ones are started there and settle afterwards.
+ *
+ * @throws {unknown} rethrows whatever the hooks threw or rejected with, when no `onException` handler was
+ * supplied — synchronously for a sync hook, as an unhandled promise rejection for an async one.
  */
 export const executeHooks =
-  (runner: HooksRunner): ResolvedObjectHook =>
-  (dependency, scope) =>
-    runner.execute(dependency, { scope });
-
-/**
- * Resolution stays synchronous, so async hooks are started on resolve and settle
- * afterwards: `resolve` returns before they finish.
- */
-export const executeHooksAsync =
   (runner: HooksRunner, onException?: OnExceptionHandler): ResolvedObjectHook =>
-  (dependency, scope) => {
-    if (!runner.hasHooks(dependency)) {
-      return;
-    }
-
-    /**
-     * @throws {unknown} rethrows whatever the hooks rejected with, as an unhandled promise rejection, when no
-     * `onException` handler was supplied.
-     */
-    runner.executeAsync(dependency, { scope }).catch((ex) => {
-      if (!onException) {
-        throw ex;
-      }
-      onException(ex, { scope });
-    });
-  };
+  (dependency, scope) =>
+    runHooks(runner, dependency, scope, onException);

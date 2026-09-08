@@ -71,9 +71,17 @@ optional exception handler instead of failing `resolve`.
 > the renames that moved them — is
 > [ADR 0012](0012-hook-domains.md).
 
+> [!NOTE]
+> The separate async execution path this record argued for — the `Async`-postfixed
+> decorators and modules — was later folded into a single async-capable one by
+> [ADR 0013](0013-one-async-capable-hook-path.md), which also renamed
+> `@onContainerDisposed` to `@onScopeDisposed`. The trade-off that async hooks
+> cannot block resolution still stands.
+
 ## References
 
 - [ADR 0012 — Hook registration lives with the domain which raises the event](0012-hook-domains.md)
+- [ADR 0013 — One async-capable hook path, no `Async` variants](0013-one-async-capable-hook-path.md)
 - `lib/hooks/hook.ts`
 - `lib/hooks/HooksRunner.ts`
 - `lib/hooks/onConstruct.ts`

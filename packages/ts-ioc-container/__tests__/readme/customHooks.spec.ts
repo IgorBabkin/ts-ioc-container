@@ -4,7 +4,7 @@ import { append, Container, hook, HooksRunner, MetadataInjector, type HookFn } f
  * User Management Domain - Custom Lifecycle Hooks
  *
  * Custom hooks extend the container's lifecycle management beyond
- * the built-in @onConstruct and @onContainerDisposed hooks.
+ * the built-in @onConstruct and @onScopeDisposed hooks.
  *
  * Use cases:
  * - @validateConfig: Validate service configuration after construction

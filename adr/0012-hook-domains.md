@@ -145,8 +145,14 @@ registration.
 - `IInjector` is no longer a single-method interface, so a from-scratch injector
   has one more member to implement.
 
+> [!NOTE]
+> The `Async`-postfixed decorators and modules named throughout this record were
+> later removed, and `@onContainerDisposed` renamed to `@onScopeDisposed`, by
+> [ADR 0013](0013-one-async-capable-hook-path.md).
+
 ## References
 
+- [ADR 0013 — One async-capable hook path, no `Async` variants](0013-one-async-capable-hook-path.md)
 - `lib/container/IContainer.ts` — `ScopeHook`, `RegisteredHook`
 - `lib/injector/IInjector.ts` — `InjectorHook`, `IInjectorModule`, `Injector.onConstructed`
 - `lib/provider/IProvider.ts` — `ProviderHook`, `IProvider.onResolved`

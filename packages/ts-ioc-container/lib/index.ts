@@ -80,7 +80,6 @@ export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { ProviderDisposedError } from './errors/ProviderDisposedError';
-export { UnexpectedHookResultError } from './errors/UnexpectedHookResultError';
 export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwiceError';
 export { UnsupportedTokenTypeError } from './errors/UnsupportedTokenTypeError';
 
@@ -102,19 +101,17 @@ export {
 } from './hooks/hook';
 export { HookContext, createHookContextFactory, createHookContext, type IHookContext } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
-export { onConstructHooksRunner, onConstruct, OnConstructModule, type OnExceptionHandler } from './hooks/onConstruct';
-export { onConstructAsyncHooksRunner, onConstructAsync, OnConstructAsyncModule } from './hooks/onConstructAsync';
-export { onContainerDisposedHooksRunner, onContainerDisposed, OnDisposeModule } from './hooks/onContainerDisposed';
+export { onConstructHooksRunner, onConstruct, OnConstructModule } from './hooks/onConstruct';
+export { onScopeDisposedHooksRunner, onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
 export { onResolvedHooksRunner, onResolved, onceResolved, OnResolvedModule, resolved } from './hooks/onResolved';
-export {
-  onResolvedAsyncHooksRunner,
-  onResolvedAsync,
-  onceResolvedAsync,
-  OnResolvedAsyncModule,
-  resolvedAsync,
-} from './hooks/onResolvedAsync';
 export { invokeMethod, type ResolvedObjectHook } from './hooks/resolveHooks';
-export { HooksRunner, type HooksRunnerContext, type MapHookContext } from './hooks/HooksRunner';
+export {
+  HooksRunner,
+  runHooks,
+  type HooksRunnerContext,
+  type MapHookContext,
+  type OnExceptionHandler,
+} from './hooks/HooksRunner';
 
 // Tokens
 export { InjectionToken } from './token/InjectionToken';
