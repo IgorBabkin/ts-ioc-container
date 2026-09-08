@@ -50,9 +50,9 @@ Acceptance criteria:
   registered after it is applied.
 - Child scopes created after module setup inherit the lifecycle hooks configured
   on the parent.
-- Construct hooks are not a container concern: `OnConstructModule` and
-  `OnConstructAsyncModule` are `IInjectorModule`s, applied to the injector
-  before it reaches the container. See the lifecycle-hooks epic.
+- Construct hooks are not a container concern: `OnConstructModule` is an
+  `IInjectorModule`, applied to the injector before it reaches the container.
+  See the lifecycle-hooks epic.
 
 ### Story: Eagerly instantiate scope services through a module
 

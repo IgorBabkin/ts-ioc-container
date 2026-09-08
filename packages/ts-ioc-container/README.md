@@ -18,7 +18,7 @@ provider pipelines, aliases, and custom injector strategies.
 - clean API for classes, keys, tokens, aliases, and scopes
 - no global container object; pass containers and scopes explicitly
 - supports tagged application, request, transaction, page, and widget scopes
-- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onContainerDisposed`
+- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onScopeDisposed`
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
@@ -56,8 +56,7 @@ provider pipelines, aliases, and custom injector strategies.
 - [Hook](#hook) `@hook`
   - [Hook domains](#hook-domains) `ScopeHook` `InjectorHook` `ProviderHook`
   - [OnConstruct](#onconstruct) `@onConstruct`
-  - [OnConstructAsync](#onconstructasync) `@onConstructAsync`
-  - [OnContainerDisposed](#oncontainerdisposed) `@onContainerDisposed`
+  - [OnScopeDisposed](#onscopedisposed) `@onScopeDisposed`
   - [Inject Property](#inject-property)
   - [Inject Method](#inject-method)
 - [Mock](#mock)
@@ -108,7 +107,7 @@ bundlers tree-shake unused exports.
 
 > [!NOTE]
 > The default `MetadataInjector` (and the `@inject` / `@onConstruct` /
-> `@onContainerDisposed` decorators) rely on `reflect-metadata`. It is declared as an
+> `@onScopeDisposed` decorators) rely on `reflect-metadata`. It is declared as an
 > optional peer dependency — install it and import it once at your entrypoint.
 > `SimpleInjector` and `ProxyInjector` do not need it.
 
@@ -455,7 +454,7 @@ describe('Instances', function () {
 Sometimes you want to dispose a container or scope. For example, when a request, page, widget, or other local lifecycle ends.
 
 - container can be disposed
-- when container is disposed then it runs its `onContainerDisposed` hooks, unregisters its providers, removes its local instances, and detaches from its parent
+- when container is disposed then it runs its `onScopeDisposed` hooks, unregisters its providers, removes its local instances, and detaches from its parent
 
 > [!IMPORTANT]
 > Dispose is local to the container being disposed. Child scopes are not disposed automatically; dispose them explicitly when their own lifecycle ends.
@@ -474,7 +473,7 @@ import { bindTo, Container, ContainerDisposedError, register, Registration as R,
  * - Cache entries cleared
  *
  * The container.dispose() method:
- * 1. Executes all onContainerDisposed hooks
+ * 1. Executes all onScopeDisposed hooks
  * 2. Clears all instances and registrations
  * 3. Detaches from parent scope
  * 4. Prevents further resolution
@@ -2829,10 +2828,27 @@ Decorators are applied bottom-up, so `authorize` runs first, then `validate` and
 `(...prev) => [...prev].reverse()` to reorder, or `() => [onlyThisOne]` to
 replace the accumulated hooks.
 
-`@onConstruct`, `@onConstructAsync` and `@onContainerDisposed` keep their
-variadic signature and compensate for the bottom-up application order, so
-stacked decorators run in declaration order: `@onConstruct(h1) @onConstruct(h2)`
-runs `h1` before `h2`.
+`@onConstruct` and `@onScopeDisposed` keep their variadic signature and
+compensate for the bottom-up application order, so stacked decorators run in
+declaration order: `@onConstruct(h1) @onConstruct(h2)` runs `h1` before `h2`.
+
+Every hook may be sync or async — one decorator and one module take both, so
+there is no separate async form to reach for. A `HooksRunner` runs a hook chain
+eagerly and stays synchronous until a hook returns a promise, then awaits the
+rest of that chain. Sync hooks therefore finish before `resolve` (or `dispose`)
+returns, exactly as before; async ones are started there and settle afterwards,
+so `resolve` returns before they finish. Instances that must expose readiness
+should publish it themselves, for example by storing the pending promise on the
+instance.
+
+`HooksRunner.execute` mirrors that: it returns `undefined` when nothing went
+async and a promise otherwise, so a caller running its own hooks can `await` the
+result either way.
+
+Every module takes an optional `onException` handler, and it catches both kinds
+of failure — what a sync hook threw and what an async hook rejected with.
+Without one, a sync hook throws out of the call and an async hook surfaces as an
+unhandled promise rejection.
 
 ### Hook domains
 
@@ -2866,9 +2882,8 @@ it was added. Scope hooks, by contrast, are copied into a child at `createScope`
 time, so a child inherits what its parent held then and later additions to either
 stay local.
 
-The built-in modules follow the same split. `OnConstructModule` and
-`OnConstructAsyncModule` are **injector** modules (`IInjectorModule`), applied
-with `injector.useModule(...)`:
+The built-in modules follow the same split. `OnConstructModule` is an
+**injector** module (`IInjectorModule`), applied with `injector.useModule(...)`:
 
 ```typescript
 const injector = new MetadataInjector().useModule(new OnConstructModule());
@@ -2876,8 +2891,8 @@ const container = new Container({ injector });
 ```
 
 `OnDisposeModule` is a container module hooking `onScopeDisposed`, and
-`OnResolvedModule` / `OnResolvedAsyncModule` are container modules reaching every
-provider through `onRegistered`.
+`OnResolvedModule` is a container module reaching every provider through
+`onRegistered`.
 
 ### OnConstruct
 
@@ -2897,6 +2912,10 @@ import {
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
+};
+
+const executeAsync: HookFn = async (ctx) => {
+  await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
 describe('onConstruct', function () {
@@ -2983,34 +3002,7 @@ describe('onConstruct', function () {
 
     expect(scope).toBe(child);
   });
-});
 
-```
-
-### OnConstructAsync
-
-`@onConstructAsync` runs promise-returning initialization. Resolution stays
-synchronous: `OnConstructAsyncModule` starts the hooks when the instance
-is created and they settle afterwards, so `resolve` returns before they finish.
-
-```typescript
-import 'reflect-metadata';
-import {
-  MetadataInjector,
-  OnConstructAsyncModule,
-  Container,
-  type ExecutionContext,
-  type HookFn,
-  inject,
-  onConstructAsync,
-  Registration as R,
-} from 'ts-ioc-container';
-
-const execute: HookFn = async (ctx) => {
-  await ctx.invokeMethod({ args: ctx.resolveArgs() });
-};
-
-describe('onConstructAsync', function () {
   it('should run an async initialization method after the instance is created', async function () {
     class DatabaseConnection {
       isConnected = false;
@@ -3025,7 +3017,7 @@ describe('onConstructAsync', function () {
         });
       }
 
-      @onConstructAsync(execute)
+      @onConstruct(executeAsync)
       async connect(@inject('ConnectionString') connectionString: string) {
         await Promise.resolve();
         this.connectionString = connectionString;
@@ -3035,7 +3027,7 @@ describe('onConstructAsync', function () {
     }
 
     const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructAsyncModule()),
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
     }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3053,14 +3045,14 @@ describe('onConstructAsync', function () {
     const failure = new Error('boom');
 
     class BrokenService {
-      @onConstructAsync(() => Promise.reject(failure))
+      @onConstruct(() => Promise.reject(failure))
       init() {}
     }
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
     const container = new Container({
       injector: new MetadataInjector().useModule(
-        new OnConstructAsyncModule((ex, context) => {
+        new OnConstructModule((ex, context) => {
           captured = { ex, context };
         }),
       ),
@@ -3078,7 +3070,7 @@ describe('onConstructAsync', function () {
 
 ```
 
-### OnContainerDisposed
+### OnScopeDisposed
 
 ```typescript
 import 'reflect-metadata';
@@ -3088,7 +3080,7 @@ import {
   Container,
   type HookFn,
   inject,
-  onContainerDisposed,
+  onScopeDisposed,
   register,
   Registration as R,
   singleton,
@@ -3117,13 +3109,13 @@ class Logger {
     this.messages.push(message);
   }
 
-  @onContainerDisposed(execute)
+  @onScopeDisposed(execute)
   save() {
     this.logsRepo.saveLogs(this.messages);
   }
 }
 
-describe('onContainerDisposed', function () {
+describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
       .useModule(new OnDisposeModule())

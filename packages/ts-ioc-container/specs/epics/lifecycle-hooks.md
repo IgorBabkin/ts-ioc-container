@@ -2,8 +2,9 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../../adr/0007-lifecycle-hooks.md),
-  [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onResolved`, `onceResolved`, `onResolvedAsync`, `onceResolvedAsync`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+  [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md),
+  [ADR 0013 - One async-capable hook path, no `Async` variants](../../../adr/0013-one-async-capable-hook-path.md)
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `runHooks`, `OnExceptionHandler`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `onceResolved`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -31,14 +32,13 @@ Acceptance criteria:
 ### Story: Run async construct hooks
 
 As an application developer, I can run promise-returning initialization after an
-instance is constructed so that async setup does not have to be forced into the
-synchronous construct path.
+instance is constructed without reaching for a separate decorator or module, so
+that async setup does not have to be forced into the synchronous construct path.
 
 Acceptance criteria:
 
-- `onConstructAsync` stores hook metadata on a method under its own hook key.
-- `OnConstructAsyncModule` is an injector module opting an injector into async
-  construct hook execution.
+- `onConstruct` takes async hooks under the same hook key as sync ones.
+- `OnConstructModule` runs both kinds.
 - Async construct hooks start when the instance is created and settle after
   resolution returns.
 - Rejected hooks are reported to the module `onException` handler when one is
@@ -52,15 +52,12 @@ instances shared across keys and scopes — still get an initialization point.
 
 Acceptance criteria:
 
-- `onResolved` and `onResolvedAsync` store hook metadata on a method under their
-  own hook keys, take hooks as a rest parameter, and invoke the decorated method
-  when no hook is named.
-- `OnResolvedModule` and `OnResolvedAsyncModule` opt a container into resolve
-  hook execution; the `resolved()` and `resolvedAsync()` pipes opt in a single
-  registration instead.
-- `onResolved` hooks run on every resolve; `onceResolved` and `onceResolvedAsync`
-  hooks run a single time per instance however many keys, scopes, or resolve
-  calls return it.
+- `onResolved` stores hook metadata on a method, takes sync and async hooks as a
+  rest parameter, and invokes the decorated method when no hook is named.
+- `OnResolvedModule` opts a container into resolve hook execution; the
+  `resolved()` pipe opts in a single registration instead.
+- `onResolved` hooks run on every resolve; `onceResolved` hooks run a single time
+  per instance however many keys, scopes, or resolve calls return it.
 - Distinct objects of the same class each get their own once-resolve hook run.
 - Providers registered before the module was applied are not covered.
 - Rejected async hooks are reported to the module `onException` handler when one
@@ -73,7 +70,7 @@ so that local resources are released at the lifecycle boundary.
 
 Acceptance criteria:
 
-- `onContainerDisposed` stores hook metadata on a method.
+- `onScopeDisposed` stores hook metadata on a method.
 - `OnDisposeModule` opts a container into dispose hook execution.
 - Dispose hooks run for instances tracked by the disposed scope.
 - Disposing a scope does not implicitly run hooks for child scopes.
@@ -132,16 +129,20 @@ Acceptance criteria:
 - `EmptyContainer` rejects every scope hook method with
   `MethodNotImplementedError`.
 
-### Story: Handle sync and async hook execution
+### Story: Run sync and async hooks through one runner
 
-As a maintainer, I can choose synchronous or asynchronous hook execution so
-that promise-returning hooks are handled deliberately.
+As a maintainer, I have a single execution path for hooks so that a hook's being
+sync or async is the hook's business, not the caller's.
 
 Acceptance criteria:
 
-- Synchronous hook execution rejects promise results with
-  `UnexpectedHookResultError`.
-- Asynchronous hook execution awaits promise and non-promise hook results.
+- A hook chain runs eagerly and stays synchronous until a hook returns a
+  promise; the remaining hooks of that member are then awaited.
+- `HooksRunner.execute` returns `undefined` when nothing went async and a promise
+  settling after the async hooks otherwise, so a caller can `await` it either
+  way.
+- `runHooks` reports both a sync throw and a rejected async hook to an
+  `OnExceptionHandler`, and lets both surface when none is supplied.
 - Hook context can resolve method arguments and invoke the target method.
 
 ## Notes

@@ -1,14 +1,11 @@
 import { hook, HookType, prependHooks } from './hook';
 import type { IInjector, IInjectorModule } from '../injector/IInjector';
-import { HooksRunner } from './HooksRunner';
-import type { ExecutionContext } from '../ExecutionContext';
+import { HooksRunner, type OnExceptionHandler, runHooks } from './HooksRunner';
 
 export const onConstructHooksRunner = new HooksRunner('onConstruct');
 // Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
 // `@onX(h1) @onX(h2) method()` runs h1 before h2.
 export const onConstruct = (...fns: HookType[]) => hook('onConstruct', prependHooks(...fns));
-
-export type OnExceptionHandler = (ex: unknown, context: ExecutionContext) => void;
 
 /**
  * Runs `onConstruct` hooks when an instance is constructed.
@@ -23,23 +20,23 @@ export type OnExceptionHandler = (ex: unknown, context: ExecutionContext) => voi
  *
  * A container passes its injector to every scope it creates, so one injector
  * covers a whole scope tree.
+ *
+ * Hooks may be sync or async. Sync hooks finish before `resolve` returns;
+ * resolution itself stays synchronous, so async hooks are started when the
+ * instance is created and settle afterwards — `resolve` returns before they
+ * finish. Instances that must expose readiness should publish it themselves,
+ * for example by storing the pending promise on the instance.
  */
 export class OnConstructModule implements IInjectorModule {
   constructor(private readonly onException?: OnExceptionHandler) {}
 
   applyTo(injector: IInjector) {
     /**
-     * @throws {unknown} rethrows whatever the `onConstruct` hooks threw, when no `onException` handler was supplied.
+     * @throws {unknown} rethrows whatever the `onConstruct` hooks threw or rejected with, when no `onException`
+     * handler was supplied — synchronously for a sync hook, as an unhandled promise rejection for an async one.
      */
     injector.onConstructed((instance, scope) => {
-      try {
-        onConstructHooksRunner.execute(instance, { scope });
-      } catch (ex) {
-        if (!this.onException) {
-          throw ex;
-        }
-        this.onException(ex, { scope });
-      }
+      runHooks(onConstructHooksRunner, instance, scope, this.onException);
     });
   }
 }

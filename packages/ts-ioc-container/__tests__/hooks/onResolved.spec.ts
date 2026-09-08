@@ -28,6 +28,25 @@ class Service {
   }
 }
 
+class AsyncService {
+  resolvedTimes = 0;
+  openedTimes = 0;
+
+  @onResolved()
+  async track(): Promise<void> {
+    await Promise.resolve();
+    this.resolvedTimes += 1;
+  }
+
+  @onceResolved()
+  async open(): Promise<void> {
+    await Promise.resolve();
+    this.openedTimes += 1;
+  }
+}
+
+const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
 describe('OnResolvedModule', () => {
   it('should run the hooks when a dependency is resolved', () => {
     const container = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(Service));
@@ -351,5 +370,196 @@ describe('resolved()', () => {
     const container = new Container().addRegistration(R.fromValue(1).bindToKey('One').pipe(resolved()));
 
     expect(container.resolve('One')).toBe(1);
+  });
+});
+
+describe('OnResolvedModule with async hooks', () => {
+  it('should start the hooks on resolve and settle after it returns', async () => {
+    const container = new Container().useModule(new OnResolvedModule()).addRegistration(R.fromClass(AsyncService));
+
+    const service = container.resolve<AsyncService>('AsyncService');
+
+    expect(service.resolvedTimes).toBe(0);
+
+    await settle();
+
+    expect([service.resolvedTimes, service.openedTimes]).toEqual([1, 1]);
+  });
+
+  it('should run plain hooks on every resolve of the same object', async () => {
+    const service = new AsyncService();
+
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromValue(service).bindToKey('Service'));
+
+    container.resolve('Service');
+    container.resolve('Service');
+    await settle();
+
+    expect(service.resolvedTimes).toBe(2);
+  });
+
+  it('should run `onceResolved` hooks a single time however often the object is resolved', async () => {
+    const service = new AsyncService();
+
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromValue(service).bindToKey('Service'));
+
+    container.resolve('Service');
+    container.resolve('Service');
+    await settle();
+
+    expect(service.openedTimes).toBe(1);
+  });
+
+  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', async () => {
+    const service = new AsyncService();
+
+    const root = new Container({ tags: ['root'] })
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromValue(service).bindToKey('Service'));
+
+    root.createScope({ tags: ['child'] }).resolve('Service');
+    root.createScope({ tags: ['child'] }).resolve('Service');
+    await settle();
+
+    expect(service.openedTimes).toBe(1);
+  });
+
+  it('should accept a spread list of async hooks', async () => {
+    const invoked: string[] = [];
+    const record =
+      (name: string): HookFn =>
+      async (context) => {
+        invoked.push(`${name}:${context.methodName}`);
+      };
+    const hooks: HookType[] = [record('first'), record('second')];
+
+    class Documented {
+      @onResolved(...hooks)
+      track(): void {}
+
+      @onceResolved(...hooks)
+      open(): void {}
+    }
+
+    const documented = new Documented();
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromValue(documented).bindToKey('Documented'));
+
+    container.resolve('Documented');
+    container.resolve('Documented');
+    await settle();
+
+    const callsOf = (method: string) => invoked.filter((call) => call.endsWith(`:${method}`));
+
+    // Both hooks of each decorator ran: `track` on both resolves, `open` only on the first.
+    // Overlapping resolves interleave their awaits, so only the tally is deterministic.
+    expect(callsOf('track').sort()).toEqual(['first:track', 'first:track', 'second:track', 'second:track']);
+    expect(callsOf('open').sort()).toEqual(['first:open', 'second:open']);
+  });
+
+  it('should report a rejected hook to the onException handler', async () => {
+    class Broken {
+      @onResolved(async () => {
+        throw new Error('hook failed');
+      })
+      initialize(): void {}
+    }
+
+    const exceptions: unknown[] = [];
+    const container = new Container()
+      .useModule(new OnResolvedModule((ex) => exceptions.push(ex)))
+      .addRegistration(R.fromClass(Broken));
+
+    container.resolve('Broken');
+    await settle();
+
+    expect(exceptions).toEqual([new Error('hook failed')]);
+  });
+
+  it('should report what a sync hook threw to the onException handler', () => {
+    class Broken {
+      @onResolved(() => {
+        throw new Error('hook failed');
+      })
+      initialize(): void {}
+    }
+
+    const exceptions: unknown[] = [];
+    const container = new Container()
+      .useModule(new OnResolvedModule((ex) => exceptions.push(ex)))
+      .addRegistration(R.fromClass(Broken));
+
+    expect(() => container.resolve('Broken')).not.toThrow();
+    expect(exceptions).toEqual([new Error('hook failed')]);
+  });
+
+  it('should skip dependencies which carry no hooks', () => {
+    class Plain {}
+
+    const container = new Container()
+      .useModule(new OnResolvedModule())
+      .addRegistration(R.fromClass(Plain))
+      .addRegistration(R.fromValue(1).bindToKey('One'));
+
+    expect(container.resolve('One')).toBe(1);
+    expect(container.resolve('Plain')).toBeInstanceOf(Plain);
+  });
+});
+
+describe('resolved() with async hooks', () => {
+  it('should run the hooks when the piped dependency is resolved', async () => {
+    const container = new Container().addRegistration(R.fromClass(AsyncService).pipe(resolved()));
+
+    const service = container.resolve<AsyncService>('AsyncService');
+    await settle();
+
+    expect([service.resolvedTimes, service.openedTimes]).toEqual([1, 1]);
+  });
+
+  it('should run `onceResolved` hooks a single time for an object resolved from several scopes', async () => {
+    const service = new AsyncService();
+
+    const root = new Container({ tags: ['root'] }).addRegistration(
+      R.fromValue(service).bindToKey('Service').pipe(resolved()),
+    );
+
+    root.createScope({ tags: ['child'] }).resolve('Service');
+    root.createScope({ tags: ['child'] }).resolve('Service');
+    await settle();
+
+    expect([service.openedTimes, service.resolvedTimes]).toEqual([1, 2]);
+  });
+
+  it('should leave registrations it was not piped into alone', async () => {
+    const container = new Container()
+      .addRegistration(R.fromClass(AsyncService).pipe(resolved()))
+      .addRegistration(R.fromClass(AsyncService).bindToKey('OtherService'));
+
+    const service = container.resolve<AsyncService>('OtherService');
+    await settle();
+
+    expect(service.resolvedTimes).toBe(0);
+  });
+
+  it('should report a rejected hook to the onException handler', async () => {
+    class Broken {
+      @onResolved(async () => {
+        throw new Error('hook failed');
+      })
+      initialize(): void {}
+    }
+
+    const exceptions: unknown[] = [];
+    const container = new Container().addRegistration(R.fromClass(Broken).pipe(resolved((ex) => exceptions.push(ex))));
+
+    container.resolve('Broken');
+    await settle();
+
+    expect(exceptions).toEqual([new Error('hook failed')]);
   });
 });

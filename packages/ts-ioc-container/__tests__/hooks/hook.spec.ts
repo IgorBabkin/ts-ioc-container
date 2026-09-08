@@ -111,7 +111,7 @@ describe('hooks', () => {
     expect(instance.receivedArgs).toEqual(['mapped', 'injected']);
   });
 
-  it('should map the hook context with mapContext when running executeAsync', async () => {
+  it('should map the hook context with mapContext when running async hooks', async () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 
     class MyClass {
@@ -131,7 +131,7 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    await onStartHooksRunner.executeAsync(instance, {
+    await onStartHooksRunner.execute(instance, {
       scope: root,
       mapContext: (context) => context.setInitialArgs('mapped'),
     });
@@ -139,7 +139,7 @@ describe('hooks', () => {
     expect(instance.receivedArgs).toEqual(['mapped']);
   });
 
-  it('should run executeAsync for async hooks', async () => {
+  it('should await async hooks', async () => {
     const onStartHooksRunner = new HooksRunner('onStart');
 
     class Logger {
@@ -161,13 +161,99 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue(100).bindTo('TimeToSleep'));
     const instance = root.resolve(Logger);
 
-    await onStartHooksRunner.executeAsync(instance, {
+    await onStartHooksRunner.execute(instance, {
       scope: root,
       predicate: (methodName) => methodName === 'initialize',
     });
 
     expect(instance.isStarted).toBe(true);
     expect(hasHooks(instance, 'onStart')).toBe(true);
+  });
+
+  it('should finish sync hooks before returning and hand back no promise', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class MyClass {
+      isStarted = false;
+
+      @hook('onStart', append(execute))
+      start() {
+        this.isStarted = true;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+
+    expect(onStartHooksRunner.execute(instance, { scope: root })).toBeUndefined();
+    expect(instance.isStarted).toBe(true);
+  });
+
+  it('should keep a chain sync up to its first async hook and await the rest', async () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      @hook(
+        'onStart',
+        append(
+          () => {
+            invoked.push('first');
+          },
+          async () => {
+            await sleep(1);
+            invoked.push('second');
+          },
+          () => {
+            invoked.push('third');
+          },
+        ),
+      )
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+
+    const pending = onStartHooksRunner.execute(instance, { scope: root });
+
+    // the hooks ahead of the first async one have already run
+    expect(invoked).toEqual(['first']);
+
+    await pending;
+
+    expect(invoked).toEqual(['first', 'second', 'third']);
+  });
+
+  it('should run a mix of sync and async members through one call', async () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      @hook(
+        'onStart',
+        append(() => {
+          invoked.push('sync');
+        }),
+      )
+      start() {}
+
+      @hook(
+        'onStart',
+        append(async () => {
+          await sleep(1);
+          invoked.push('async');
+        }),
+      )
+      warmUp() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+
+    await onStartHooksRunner.execute(instance, { scope: root });
+
+    expect(invoked.sort()).toEqual(['async', 'sync']);
   });
 
   it('should report whether a target has hooks for the runner key', () => {
@@ -269,7 +355,7 @@ describe('hooks', () => {
     const instance = root.resolve(MyClass);
     const lazy = ProxyRegistry.getInstance().createLazyProxy(() => instance);
 
-    await onStartHooksRunner.executeAsync(lazy, { scope: root });
+    await onStartHooksRunner.execute(lazy, { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
