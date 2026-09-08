@@ -1,3 +1,18 @@
+# 62.0.0 (2026-09-08)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    run sync and async hooks through one path (#148)
+    (205606314151cea52b5458b499a51993f9649cd8)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    run sync and async hooks through one path (#148)
+    (205606314151cea52b5458b499a51993f9649cd8)
+
+
 # 61.0.0 (2026-09-08)
 
   ### 💥 BREAKING CHANGES
@@ -179,6 +194,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
