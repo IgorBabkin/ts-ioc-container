@@ -14,6 +14,8 @@ import {
   type HookFn,
   HooksRunner,
   inject,
+  invokeMethod,
+  onceForEachInstance,
   prepend,
   prependHooks,
   register,
@@ -640,6 +642,49 @@ describe('hooks', () => {
     onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['replacement']);
+  });
+
+  it('should run a hook wrapped in onceForEachInstance a single time per instance under any hook key', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+    const invoked: string[] = [];
+
+    class MyClass {
+      @hook('onStart', append(onceForEachInstance(invokeMethod)))
+      start() {
+        invoked.push('start');
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+
+    onStartHooksRunner.execute(instance, { scope: root });
+    onStartHooksRunner.execute(instance, { scope: root });
+
+    expect(invoked).toEqual(['start']);
+  });
+
+  it('should run onceForEachInstance hooks independently for each instance', () => {
+    const onStartHooksRunner = new HooksRunner('onStart');
+
+    class MyClass {
+      startedTimes = 0;
+
+      @hook('onStart', append(onceForEachInstance(invokeMethod)))
+      start() {
+        this.startedTimes += 1;
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const first = root.resolve(MyClass);
+    const second = root.resolve(MyClass);
+
+    onStartHooksRunner.execute(first, { scope: root });
+    onStartHooksRunner.execute(first, { scope: root });
+    onStartHooksRunner.execute(second, { scope: root });
+
+    expect([first.startedTimes, second.startedTimes]).toEqual([1, 1]);
   });
 
   it('should accept hook classes in appendHooks and prependHooks', () => {
