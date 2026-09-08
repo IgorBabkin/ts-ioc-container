@@ -1,3 +1,18 @@
+# 63.0.0 (2026-09-08)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    drop onceResolved/onceResolvedAsync in favor of oncePerInstance (#149)
+    (98927ac5b5783bba080daba1a1648c5532717229)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    drop onceResolved/onceResolvedAsync in favor of oncePerInstance (#149)
+    (98927ac5b5783bba080daba1a1648c5532717229)
+
+
 # 62.0.0 (2026-09-08)
 
   ### 💥 BREAKING CHANGES
@@ -194,6 +209,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
