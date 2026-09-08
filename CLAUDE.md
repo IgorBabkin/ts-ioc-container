@@ -271,19 +271,24 @@ in; `Provider.fromClass` builds through it rather than calling back into
 
 ### TransientProvider
 
-The provider a container makes up to reach the injector, for a class resolved by
-its constructor (`resolve(SomeClass)`) rather than by a key. It hands out the
-**pure injector value, or a lazy proxy of it** when the resolve asked for one —
-no decorators, no cache, no access rules, no args functions, because there is no
-registration to declare any. Hence transient: a new instance per resolve, and
-nothing can configure it otherwise.
+**Internal — deliberately not exported from `lib/index.ts`.** Its job is to
+unify the two resolution paths: `resolve` takes a `DependencyKey` or a
+constructor, a key arrives with a provider behind it, and a constructor would
+otherwise have to be special-cased straight into the injector. Standing the
+class up behind a provider removes the special case, and the `onResolved` reach
+for unregistered classes falls out of that.
+
+It hands out the **pure injector value, or a lazy proxy of it** when the resolve
+asked for one — no decorators, no cache, no access rules, no args functions,
+because there is no registration to declare any. Hence transient: a new instance
+per resolve, and nothing can configure it otherwise.
 
 Kept one per class per scope in `Container.transientProviders`, **keyed by the
 constructor itself, not `Target.name`** — two classes can share a name (and
 minifiers make that likely), and a name would collide with a registration bound
-to the same string. Disposed with the scope. Because it is its own type, a hook
-can tell a made-up provider from a declared one with
-`provider instanceof TransientProvider`.
+to the same string. Disposed with the scope. Consumers observe it only as the
+provider handed to an `onProviderRegistered` hook, so don't add an
+`instanceof`-based public contract around it.
 
 ### `@throws` JSDoc Convention
 

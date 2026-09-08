@@ -75,7 +75,7 @@ export class Container implements IContainer {
     this.validateContainer();
 
     const provider = Is.constructor(target)
-      ? this.getTransientProvider(target)
+      ? this.findTransientProviderOrCreate(target)
       : (this.providers.get(target) as IProvider<T> | undefined);
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
@@ -313,14 +313,16 @@ export class Container implements IContainer {
 
   /**
    * The {@link TransientProvider} standing in for a class resolved by its
-   * constructor, created on first use and kept for the life of this scope. It
-   * hands out the pure injector value, or a lazy proxy of it when the resolve
-   * asked for one.
+   * constructor, created on first use and kept for the life of this scope.
+   *
+   * Its whole job is to give `resolve` one path: a constructor arrives with no
+   * provider behind it, and without this it would have to be special-cased
+   * straight into the injector.
    *
    * These providers stay out of the keyed provider map: a class is not a
    * `DependencyKey`, and keying them by name would collide with registrations.
    */
-  private getTransientProvider<T>(Target: constructor<T>): IProvider<T> {
+  private findTransientProviderOrCreate<T>(Target: constructor<T>): IProvider<T> {
     const existing = this.transientProviders.get(Target) as IProvider<T> | undefined;
     if (existing) {
       return existing;

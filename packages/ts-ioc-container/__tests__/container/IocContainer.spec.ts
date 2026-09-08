@@ -9,7 +9,6 @@ import {
   Registration as R,
   scope,
   singleton,
-  TransientProvider,
   unwrapProxy,
 } from '../../lib';
 
@@ -61,15 +60,17 @@ describe('IocContainer', function () {
       expect(built).toEqual(['built']);
     });
 
-    it('should stand the class up behind a TransientProvider', () => {
+    it('should stand the class up behind a provider, like a key-based resolve', () => {
       class Service {}
 
-      const providers: unknown[] = [];
-      const container = new Container().onProviderRegistered((provider) => providers.push(provider));
+      const resolved: unknown[] = [];
+      const container = new Container().onProviderRegistered((provider) =>
+        provider.onResolve((dependency) => resolved.push(dependency)),
+      );
 
-      container.resolve(Service);
+      const service = container.resolve(Service);
 
-      expect(providers).toEqual([expect.any(TransientProvider)]);
+      expect(resolved).toEqual([service]);
     });
 
     it('should forward args to the constructor', () => {

@@ -36,7 +36,6 @@ export {
   type ScopeAccessRule,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
-export { TransientProvider } from './provider/TransientProvider';
 
 // Registrations
 export {

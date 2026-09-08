@@ -6,7 +6,6 @@ import {
   MethodNotImplementedError,
   Provider,
   Registration,
-  TransientProvider,
 } from '../../lib';
 
 describe('onProviderRegistered', () => {
@@ -95,7 +94,7 @@ describe('onProviderRegistered', () => {
     expect(log).toEqual([]);
   });
 
-  it('should run the hook for the TransientProvider made up for a class resolved by its constructor', () => {
+  it('should run the hook for the provider made up for a class resolved by its constructor', () => {
     class Service {}
 
     const providers: IProvider[] = [];
@@ -104,26 +103,7 @@ describe('onProviderRegistered', () => {
     container.resolve(Service);
 
     expect(providers).toHaveLength(1);
-    expect(providers[0]).toBeInstanceOf(TransientProvider);
     expect(providers[0].resolve(container, {})).toBeInstanceOf(Service);
-  });
-
-  it('should let a hook tell a made-up provider from a declared one', () => {
-    class Service {}
-
-    const declared: IProvider[] = [];
-    const container = new Container().onProviderRegistered((provider) => {
-      if (provider instanceof TransientProvider) {
-        return;
-      }
-      declared.push(provider);
-    });
-
-    container.register('key', Provider.fromValue(1));
-    container.resolve(Service);
-
-    expect(declared).toHaveLength(1);
-    expect(declared[0].resolve(container, {})).toBe(1);
   });
 
   it('should run the hook once per class, however often it is resolved by its constructor', () => {
@@ -138,7 +118,7 @@ describe('onProviderRegistered', () => {
     expect(calls).toBe(1);
   });
 
-  it('should make up a separate TransientProvider per scope for the same class', () => {
+  it('should make up a separate provider per scope for the same class', () => {
     class Service {}
 
     const scopes: IContainer[] = [];

@@ -42,7 +42,7 @@ provider pipelines, aliases, and custom injector strategies.
   - [Simple](#simple)
   - [Proxy](#proxy)
 - [Provider](#provider) `provider`
-  - [TransientProvider](#transientprovider) `TransientProvider`
+  - [TransientProvider](#transientprovider) (internal)
   - [Singleton](#singleton) `singleton`
   - [Auto resolve](#auto-resolve) `autoResolve`
   - [Arguments](#arguments) `appendArgs` `appendArgsFn`
@@ -1531,25 +1531,39 @@ describe('Provider', () => {
 
 ### TransientProvider
 
-`container.resolve(SomeClass)` — resolving a class by its constructor rather
-than by a key — has no registration behind it, and so no provider of its own.
-The container makes one up: a `TransientProvider` over
-[`construct`](#container), the raw injector step.
+> [!NOTE]
+> `TransientProvider` is an internal mechanism, not part of the public API. It
+> is described here because it explains what you observe when you resolve a
+> class by its constructor. You never construct or import one.
 
-What it hands out is the pure injector value, or a lazy proxy of it when the
-resolve asked for one (`resolve(SomeClass, { lazy: true })`). Nothing else: no
-decorators, no cache, no access rules. Hence *transient* — a new instance leaves
-it on every resolve, and nothing can configure it otherwise. A class that needs
-a singleton, pipes, or visibility rules needs a registration, and is then
-resolved by its key.
+`resolve` takes either a `DependencyKey` or a constructor. A key arrives with a
+provider behind it. A constructor arrives with nothing — and rather than
+special-case it into the injector as a second resolution path, the container
+makes up a provider for the class: a `TransientProvider` over
+[`construct`](#container), the raw injector step. Both kinds of target then
+follow the same path: find a provider, check access, resolve it.
 
-It exists so provider-level behavior reaches those classes anyway: the container
-announces it to `onProviderRegistered` like a registered provider, which is what
+What that provider hands out is the pure injector value, or a lazy proxy of it
+when the resolve asked for one (`resolve(SomeClass, { lazy: true })`). Nothing
+else: no decorators, no cache, no access rules, because there is no registration
+to declare any. Hence *transient* — a new instance on every resolve. A class
+that needs a singleton, pipes, or visibility rules needs a registration, and is
+then resolved by its key:
+
+```typescript
+class Service {}
+
+container.resolve(Service) !== container.resolve(Service); // transient, always
+
+container.addRegistration(R.fromClass(Service).pipe(singleton()));
+container.resolve('Service') === container.resolve('Service'); // the registration
+container.resolve(Service) !== container.resolve('Service'); // still transient
+```
+
+The one thing this changes for you is reach: because the class now has a
+provider, the container announces it to `onProviderRegistered`, which is what
 lets [`@onResolved`](#onresolved) hooks run for a class nobody registered. One
-is kept per class per scope, keyed by the constructor itself — two classes can
-share a name, and minifiers make that likely. Because it is its own type, a hook
-can tell a made-up provider from a declared one with
-`provider instanceof TransientProvider`.
+provider is kept per class per scope and disposed with it.
 
 ### Singleton
 
@@ -2868,9 +2882,9 @@ instance. `OnResolvedModule` opts the whole container in; the
 Resolution is the container's only construction-time hook point, and it covers
 more than construction does: a value the container never built (`R.fromValue`)
 is hooked just like a class it did, and resolving a bare class works too — the
-container makes up a [`TransientProvider`](#transientprovider) for it, so
-`container.resolve(Service)` runs the hooks even with no registration behind
-it.
+container makes up a provider for it (see
+[TransientProvider](#transientprovider)), so `container.resolve(Service)` runs
+the hooks even with no registration behind it.
 
 > [!NOTE]
 > There is no `@onConstruct`. A one-shot initializer is

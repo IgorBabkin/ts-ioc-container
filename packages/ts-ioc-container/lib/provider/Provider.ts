@@ -15,11 +15,9 @@ import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
 export class Provider<T = any> implements IProvider<T> {
   /**
-   * Builds `Target` through the resolving container's injector.
-   *
-   * This is the same construction {@link TransientProvider} performs; the
-   * difference is that a provider made here belongs to a registration, so it
-   * can be piped into a singleton, given access rules, and so on.
+   * Builds `Target` through the resolving container's injector, via
+   * `IContainer.construct` — the raw construction step, so a class-backed
+   * provider never recurses through `resolve`.
    */
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     return new Provider((container, options) => container.construct(Target, options));

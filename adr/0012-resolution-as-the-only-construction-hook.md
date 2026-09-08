@@ -45,15 +45,22 @@ To close the gap that justified them, **the container makes up a
 registered.
 
 `TransientProvider` is named as its own type rather than left an anonymous
-`Provider`, because it is a distinct kind of thing and worth being able to talk
-about and recognize. What it hands out is the pure injector value, or a lazy
-proxy of it when the resolve asked for one. Nothing else: no decorators, no
-cache, no access rules, no args functions, because there is no registration to
-declare any. Hence *transient* — a new instance leaves it on every resolve, and
-nothing can configure it otherwise; a class that needs a singleton or pipes
-needs a registration, and is then resolved by its key. Being its own type also
-lets a hook tell a made-up provider from a declared one
-(`provider instanceof TransientProvider`).
+`Provider` because it earns a name: it **unifies the two resolution paths**.
+`resolve` takes a `DependencyKey` or a constructor; a key arrives with a
+provider behind it, and a constructor used to be special-cased straight into the
+injector, skipping everything providers do. Standing the class up behind a
+provider removes the special case — both kinds of target now find a provider,
+check access, and resolve it — and closing the hook gap falls out of that rather
+than being bolted on.
+
+It stays **internal**: not exported from the package, never constructed by a
+consumer, observable only as the provider handed to an `onProviderRegistered`
+hook. What it hands out is the pure injector value, or a lazy proxy of it when
+the resolve asked for one. Nothing else: no decorators, no cache, no access
+rules, no args functions, because there is no registration to declare any. Hence
+*transient* — a new instance leaves it on every resolve, and nothing can
+configure it otherwise; a class that needs a singleton or pipes needs a
+registration, and is then resolved by its key.
 
 These providers are keyed by the constructor in a map of their own, not by
 `Target.name` in the keyed provider map: a class is not a `DependencyKey`, two
@@ -119,7 +126,7 @@ that must run once per instance is `@onceResolved()`, which is
 ## References
 
 - `lib/provider/TransientProvider.ts`
-- `lib/container/Container.ts` — `getTransientProvider`, `construct`
+- `lib/container/Container.ts` — `findTransientProviderOrCreate`, `construct`
 - `lib/container/IContainer.ts` — `ProviderHook`, `construct`
 - `lib/hooks/onResolved.ts`
 - `lib/hooks/onResolvedAsync.ts`
