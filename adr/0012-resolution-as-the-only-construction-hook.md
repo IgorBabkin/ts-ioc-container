@@ -63,10 +63,12 @@ configure it otherwise; a class that needs a singleton or pipes needs a
 registration, and is then resolved by its key.
 
 These providers are keyed by the constructor in a map of their own, not by
-`Target.name` in the keyed provider map: a class is not a `DependencyKey`, two
-classes can share a name (and minifiers make that likely), and a name would
-collide with a registration bound to the same string. They are disposed with the
-scope that made them.
+`Target.name` in the keyed provider map. `Target.name` is not a unique
+identifier: two classes in different modules can share a name, a minifier
+renames both to something short and collision-prone, and a name would collide
+with a registration bound to the same string (`R.fromClass(Logger)` registers
+under `'Logger'`, so `resolve(Logger)` could hand back an unrelated provider).
+They are disposed with the scope that made them.
 
 `IContainer` gains `construct(Target, options)`: the raw injector step that
 `resolve` used to end in, now public. `Provider.fromClass` builds through it
@@ -110,6 +112,18 @@ that must run once per instance is `@onceResolved()`, which is
   give per-registration opt-in, which the construct modules never had.
 - `construct` names the injector step explicitly, so a provider can build a
   class without recursing through `resolve`.
+
+**Positive, and worth stating separately**
+
+- Because the constructor is the identity, `resolve(SomeClass)` cannot be
+  confused by two same-named classes or by minification. The string-keyed side
+  of the container has no such protection: `R.fromClass(X)` derives its key from
+  `X.name`, and a second class producing the same string silently overwrites the
+  first. That asymmetry is now documented in the README
+  ("Name collisions and symbol tokens"), with the recommendation that follows
+  from it: **prefer `Symbol` over a plain string for a token you control**, since
+  every `Symbol('IReport')` is distinct even when two share that description, and
+  a minifier cannot change what the token is.
 
 **Negative / trade-offs**
 

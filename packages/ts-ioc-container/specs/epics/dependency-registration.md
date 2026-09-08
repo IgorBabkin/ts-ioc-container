@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0003 - Separate Provider and Registration abstractions](../../docs/adr/0003-provider-vs-registration.md)
-- **Public API:** `Registration`, `register`, `bindTo`, `scope`, `IRegistration`
+- **Public API:** `Registration`, `register`, `bindTo`, `scope`, `IRegistration`, `SingleToken`
 - **Executable spec:** `__tests__/specs/dependency-registration.spec.ts`
 
 ## Intent
@@ -64,8 +64,31 @@ Acceptance criteria:
 - A scoped registration is skipped for containers that do not match its rules.
 - Multiple scope rules receive the previous rule result.
 
+### Story: Keep registration keys from colliding
+
+As an application developer, I want to know when two registrations can claim the
+same key so that I can pick a key that survives same-named classes and
+minification.
+
+Acceptance criteria:
+
+- Registration keys share one flat namespace per container, and `R.fromClass(X)`
+  defaults its key to `X.name`.
+- Two classes deriving the same string key both register under it, and the later
+  registration wins; nothing throws.
+- Resolving by constructor is unaffected, being identified by the class itself
+  rather than by its name.
+- Binding each class to its own `Symbol`-backed token keeps them apart, even when
+  the two symbols share a description and the class names are identical.
+
 ## Notes
 
 This epic describes where dependencies become available. Provider behavior such
 as caching, arguments, lazy construction, decoration, and access control belongs
 to the provider behavior epic.
+
+A plain string key is fine for an application that owns every registration. A
+`Symbol` is the recommendation for anything a library exports, anything shipped
+through a bundler, or any key more than one feature registers against — a symbol
+is unique by identity rather than by spelling, so minification and same-named
+classes cannot make two keys one.

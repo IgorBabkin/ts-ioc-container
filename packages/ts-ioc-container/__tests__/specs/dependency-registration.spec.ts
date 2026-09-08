@@ -121,6 +121,50 @@ describe('Spec: dependency registration', () => {
     expect(request.resolve<RequestContext>('RequestContext').id).toBe('request');
   });
 
+  it('lets a later registration silently win when two classes derive the same string key', () => {
+    class Report {
+      readonly kind = 'first';
+    }
+
+    class Summary {
+      readonly kind = 'second';
+    }
+    // What a minifier does routinely, and what two same-named classes in
+    // different modules do by hand.
+    Object.defineProperty(Summary, 'name', { value: 'Report' });
+
+    const container = new Container().addRegistration(R.fromClass(Report)).addRegistration(R.fromClass(Summary));
+
+    // Both registered under 'Report'; the second overwrote the first.
+    expect(container.resolve<Report>('Report').kind).toBe('second');
+
+    // Resolving by constructor is unaffected — that path is keyed by the class itself.
+    expect(container.resolve(Report).kind).toBe('first');
+    expect(container.resolve(Summary).kind).toBe('second');
+  });
+
+  it('keeps two same-named classes apart when each binds to a symbol token', () => {
+    const ReportToken = new SingleToken<{ kind: string }>(Symbol('Report'));
+    const SummaryToken = new SingleToken<{ kind: string }>(Symbol('Report'));
+
+    @register(bindTo(ReportToken))
+    class Report {
+      readonly kind = 'first';
+    }
+
+    @register(bindTo(SummaryToken))
+    class Summary {
+      readonly kind = 'second';
+    }
+    Object.defineProperty(Summary, 'name', { value: 'Report' });
+
+    const container = new Container().addRegistration(R.fromClass(Report)).addRegistration(R.fromClass(Summary));
+
+    // Same description, distinct symbols — no collision.
+    expect(ReportToken.resolve(container).kind).toBe('first');
+    expect(SummaryToken.resolve(container).kind).toBe('second');
+  });
+
   it('fails clearly when a registration has no key', () => {
     expect(() => new Container().addRegistration(R.fromValue('missing-key'))).toThrowError(DependencyMissingKeyError);
   });

@@ -290,6 +290,15 @@ to the same string. Disposed with the scope. Consumers observe it only as the
 provider handed to an `onProviderRegistered` hook, so don't add an
 `instanceof`-based public contract around it.
 
+Consequence worth knowing when advising users: the constructor path is immune to
+name collisions, but the **key path is not**. `R.fromClass(X)` derives its key
+from `X.name`, so two same-named classes (or minified ones) collide and the later
+registration silently overwrites the earlier — nothing throws. Hence the
+documented recommendation to **bind to a `Symbol` rather than a plain string**
+(`new SingleToken<T>(Symbol('IService'))`): distinct symbols never collide even
+with the same description, and minification cannot touch them. Covered by
+`__tests__/specs/dependency-registration.spec.ts`.
+
 ### `@throws` JSDoc Convention
 
 Every function/method that can `throw` — directly, or indirectly via a method it calls (e.g. `Container.resolve` cascading into `EmptyContainer.resolve`) — gets a JSDoc comment with one `@throws {ErrorClass} condition` tag per distinct error type. See `lib/container/Container.ts`, `lib/container/EmptyContainer.ts`, `lib/provider/Provider.ts`, `lib/registration/Registration.ts`, `lib/hooks/HooksRunner.ts`, `lib/token/*.ts` for examples.
