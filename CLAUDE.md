@@ -271,27 +271,29 @@ in; `Provider.fromClass` builds through it rather than calling back into
 
 ### TransientProvider
 
-**Internal — deliberately not exported from `lib/index.ts`.** Its job is to
-unify the two resolution paths: `resolve` takes a `DependencyKey` or a
-constructor, a key arrives with a provider behind it, and a constructor would
-otherwise have to be special-cased straight into the injector. Standing the
-class up behind a provider removes the special case, and the `onResolved` reach
-for unregistered classes falls out of that.
+**Internal — deliberately not exported from `lib/index.ts`.** An ad-hoc provider
+the container creates to adapt an injector value to the provider interface, so
+`resolve` has one path for a `DependencyKey` and for a constructor instead of a
+special-case branch into the injector. The `onResolved` reach for unregistered
+classes falls out of that.
 
-It hands out the **pure injector value, or a lazy proxy of it** when the resolve
-asked for one — no decorators, no cache, no access rules, no args functions,
-because there is no registration to declare any. Hence transient: a new instance
-per resolve, and nothing can configure it otherwise.
+Being an adapter and not a registration it carries nothing — no decorators,
+cache, access rules, or args functions — and hands over the **pure injector
+value, or a lazy proxy of it** when the resolve asked for one. Hence transient:
+a new instance per resolve.
 
-Kept one per class per scope in `Container.transientProviders`, **keyed by the
-constructor itself, not `Target.name`** — two classes can share a name (and
-minifiers make that likely), and a name would collide with a registration bound
-to the same string. Disposed with the scope. Consumers observe it only as the
-provider handed to an `onProviderRegistered` hook, so don't add an
-`instanceof`-based public contract around it.
+Held per class per scope in `Container.transientProviders` and disposed with the
+scope. Two details, don't conflate them: the map being **separate from
+`providers`** is what keeps `resolve(Logger)` and `resolve('Logger')`
+independent; the key being **the constructor, not `Target.name`** is what gives
+two same-named classes one adapter each.
+
+Consumers observe it only as the provider handed to an `onProviderRegistered`
+hook, so don't add an `instanceof`-based public contract around it.
 
 Consequence worth knowing when advising users: the constructor path is immune to
-name collisions, but the **key path is not**. `R.fromClass(X)` derives its key
+name collisions, but the **string-keyed registration namespace is not** (a
+pre-existing property, not something the transient providers introduced). `R.fromClass(X)` derives its key
 from `X.name`, so two same-named classes (or minified ones) collide and the later
 registration silently overwrites the earlier — nothing throws. Hence the
 documented recommendation to **bind to a `Symbol` rather than a plain string**

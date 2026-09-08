@@ -312,15 +312,13 @@ export class Container implements IContainer {
   }
 
   /**
-   * The {@link TransientProvider} standing in for a class resolved by its
-   * constructor, created on first use and kept for the life of this scope.
+   * The ad-hoc {@link TransientProvider} adapting a class to the provider
+   * interface, so `resolve` has one path for a key and for a constructor.
+   * Created on first use and kept for the life of this scope.
    *
-   * Its whole job is to give `resolve` one path: a constructor arrives with no
-   * provider behind it, and without this it would have to be special-cased
-   * straight into the injector.
-   *
-   * These providers stay out of the keyed provider map: a class is not a
-   * `DependencyKey`, and keying them by name would collide with registrations.
+   * The map is separate from `providers`, which keeps `resolve(Logger)` and
+   * `resolve('Logger')` independent, and keyed by the constructor rather than
+   * `Target.name`, so two same-named classes get a provider each.
    */
   private findTransientProviderOrCreate<T>(Target: constructor<T>): IProvider<T> {
     const existing = this.transientProviders.get(Target) as IProvider<T> | undefined;

@@ -44,31 +44,22 @@ To close the gap that justified them, **the container makes up a
 `onResolved` hooks above all — therefore reaches classes which were never
 registered.
 
-`TransientProvider` is named as its own type rather than left an anonymous
-`Provider` because it earns a name: it **unifies the two resolution paths**.
-`resolve` takes a `DependencyKey` or a constructor; a key arrives with a
-provider behind it, and a constructor used to be special-cased straight into the
-injector, skipping everything providers do. Standing the class up behind a
-provider removes the special case — both kinds of target now find a provider,
-check access, and resolve it — and closing the hook gap falls out of that rather
-than being bolted on.
+`TransientProvider` is a modest thing: an ad-hoc provider the container creates
+to adapt an injector value to the provider interface. It gets a name because it
+**unifies the two resolution paths** — a constructor no longer needs a
+special-case branch — and closing the hook gap falls out of that rather than
+being bolted on.
 
-It stays **internal**: not exported from the package, never constructed by a
-consumer, observable only as the provider handed to an `onProviderRegistered`
-hook. What it hands out is the pure injector value, or a lazy proxy of it when
-the resolve asked for one. Nothing else: no decorators, no cache, no access
-rules, no args functions, because there is no registration to declare any. Hence
-*transient* — a new instance leaves it on every resolve, and nothing can
-configure it otherwise; a class that needs a singleton or pipes needs a
-registration, and is then resolved by its key.
+It stays **internal**: not exported, never constructed by a consumer, observable
+only as the provider handed to an `onProviderRegistered` hook. Being an adapter
+rather than a registration, it carries nothing — no decorators, cache, access
+rules, or args functions — and hands over the pure injector value, or a lazy
+proxy of it when the resolve asked for one. Hence *transient*.
 
-These providers are keyed by the constructor in a map of their own, not by
-`Target.name` in the keyed provider map. `Target.name` is not a unique
-identifier: two classes in different modules can share a name, a minifier
-renames both to something short and collision-prone, and a name would collide
-with a registration bound to the same string (`R.fromClass(Logger)` registers
-under `'Logger'`, so `resolve(Logger)` could hand back an unrelated provider).
-They are disposed with the scope that made them.
+It is held per class per scope in a map of its own, which is what keeps
+`resolve(Logger)` and `resolve('Logger')` independent, and keyed there by the
+constructor rather than `Target.name`, so two same-named classes get one each.
+Disposed with the scope that made them.
 
 `IContainer` gains `construct(Target, options)`: the raw injector step that
 `resolve` used to end in, now public. `Provider.fromClass` builds through it
@@ -117,10 +108,12 @@ that must run once per instance is `@onceResolved()`, which is
 
 - Because the constructor is the identity, `resolve(SomeClass)` cannot be
   confused by two same-named classes or by minification. The string-keyed side
-  of the container has no such protection: `R.fromClass(X)` derives its key from
-  `X.name`, and a second class producing the same string silently overwrites the
-  first. That asymmetry is now documented in the README
-  ("Name collisions and symbol tokens"), with the recommendation that follows
+  of the container has no such protection — and that is a property of the
+  registration namespace, not something this change introduced:
+  `R.fromClass(X)` derives its key from `X.name`, and a second class producing
+  the same string silently overwrites the first. Naming the transient path's
+  identity made the asymmetry visible, so it is now documented in the README
+  ("Name collisions and symbol tokens") with the recommendation that follows
   from it: **prefer `Symbol` over a plain string for a token you control**, since
   every `Symbol('IReport')` is distinct even when two share that description, and
   a minifier cannot change what the token is.

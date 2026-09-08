@@ -155,7 +155,7 @@ Acceptance criteria:
 Provider pipes are a public extension point. Specs should describe observable
 composition and ordering, not the internal wrapper classes.
 
-The provider a container makes up for a bare-constructor resolve
-(`TransientProvider`) is one of those internal classes: it unifies resolution by
-key and by constructor, is not exported, and should be specified through what a
-`resolve` and an `onProviderRegistered` hook observe.
+The ad-hoc provider a container creates to adapt a class to the provider
+interface (`TransientProvider`) is one of those internal classes: it is not
+exported, and should be specified through what a `resolve` and an
+`onProviderRegistered` hook observe.
