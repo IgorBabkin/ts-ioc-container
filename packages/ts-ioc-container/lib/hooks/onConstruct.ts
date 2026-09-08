@@ -1,5 +1,5 @@
 import { hook, HookType, prependHooks } from './hook';
-import type { IContainer, IContainerModule } from '../container/IContainer';
+import type { IInjector, IInjectorModule } from '../injector/IInjector';
 import { HooksRunner } from './HooksRunner';
 import type { ExecutionContext } from '../ExecutionContext';
 
@@ -10,14 +10,28 @@ export const onConstruct = (...fns: HookType[]) => hook('onConstruct', prependHo
 
 export type OnExceptionHandler = (ex: unknown, context: ExecutionContext) => void;
 
-export class OnConstructModule implements IContainerModule {
+/**
+ * Runs `onConstruct` hooks when an instance is constructed.
+ *
+ * Construction is the injector's event, so this is an injector module: apply it
+ * to the injector, then pass that injector to the container.
+ *
+ * ```typescript
+ * const injector = new MetadataInjector().useModule(new OnConstructModule());
+ * const container = new Container({ injector });
+ * ```
+ *
+ * A container passes its injector to every scope it creates, so one injector
+ * covers a whole scope tree.
+ */
+export class OnConstructModule implements IInjectorModule {
   constructor(private readonly onException?: OnExceptionHandler) {}
 
-  applyTo(container: IContainer) {
+  applyTo(injector: IInjector) {
     /**
      * @throws {unknown} rethrows whatever the `onConstruct` hooks threw, when no `onException` handler was supplied.
      */
-    container.onConstruct((instance, scope) => {
+    injector.onConstructed((instance, scope) => {
       try {
         onConstructHooksRunner.execute(instance, { scope });
       } catch (ex) {

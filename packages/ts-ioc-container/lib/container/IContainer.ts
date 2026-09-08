@@ -1,6 +1,5 @@
 import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { type WithArgs } from '../injector/IInjector';
 import { type constructor, Instance } from '../utils/basic';
 
@@ -31,21 +30,33 @@ export type CreateScopeOptions = Partial<WithTags>;
 export type AutoResolveOptions = Partial<WithArgs>;
 export type RegisterOptions = { aliases?: DependencyKey[] };
 
+/**
+ * Scope event hooks - the container's own domain: a scope was created, a scope
+ * was disposed.
+ *
+ * The other two hook domains live with the abstraction which raises them:
+ * injector hooks on `IInjector` (`InjectorHook`), provider hooks on
+ * {@link IProvider} (`ProviderHook`). An injector is configured before it is
+ * passed to a container's constructor, so a container never hands its injector
+ * out.
+ */
 export type ScopeHook = (scope: IContainer) => void;
-export type InstanceHook = (instance: Instance, scope: IContainer) => void;
-export type DependencyHook = (dependency: unknown, scope: IContainer) => void;
-export type ProviderHook = (provider: IProvider, key: DependencyKey, scope: IContainer) => void;
+
+/**
+ * Scope event hook for a registration landing in a scope: a provider entered
+ * the provider map under `key`. Registration is always of a provider, so the
+ * name says only what varies.
+ */
+export type RegisteredHook = (provider: IProvider, key: DependencyKey, scope: IContainer) => void;
 
 export interface IContainer extends Tagged {
   readonly isDisposed: boolean;
 
-  onConstruct(...hooks: InstanceHook[]): this;
-
-  onInstanceDisposed(...hooks: OnDisposeHook[]): this;
-
   onScopeCreated(...hooks: ScopeHook[]): this;
 
-  onProviderRegistered(...hooks: ProviderHook[]): this;
+  onScopeDisposed(...hooks: ScopeHook[]): this;
+
+  onRegistered(...hooks: RegisteredHook[]): this;
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 

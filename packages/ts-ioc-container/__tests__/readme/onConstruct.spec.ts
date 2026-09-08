@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  MetadataInjector,
   OnConstructModule,
   Container,
   type ExecutionContext,
@@ -27,9 +28,9 @@ describe('onConstruct', function () {
       }
     }
 
-    const container = new Container()
-      .useModule(new OnConstructModule())
-      .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
+    }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
 
@@ -48,11 +49,13 @@ describe('onConstruct', function () {
     }
 
     let captured: { ex: unknown; context: ExecutionContext } | undefined;
-    const container = new Container().useModule(
-      new OnConstructModule((ex, context) => {
-        captured = { ex, context };
-      }),
-    );
+    const container = new Container({
+      injector: new MetadataInjector().useModule(
+        new OnConstructModule((ex, context) => {
+          captured = { ex, context };
+        }),
+      ),
+    });
 
     expect(() => container.resolve(BrokenService)).not.toThrow();
     expect(captured?.ex).toBe(failure);
@@ -69,7 +72,7 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
 
     expect(() => container.resolve(BrokenService)).toThrow(failure);
   });
@@ -83,11 +86,13 @@ describe('onConstruct', function () {
     }
 
     let scope: IContainer | undefined;
-    const container = new Container().useModule(
-      new OnConstructModule((_ex, context) => {
-        scope = context.scope;
-      }),
-    );
+    const container = new Container({
+      injector: new MetadataInjector().useModule(
+        new OnConstructModule((_ex, context) => {
+          scope = context.scope;
+        }),
+      ),
+    });
     const child = container.createScope();
 
     child.resolve(BrokenService);

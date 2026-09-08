@@ -1,5 +1,6 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import {
+  MetadataInjector,
   once,
   throttle,
   shallowCache,
@@ -34,7 +35,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
     const s = container.resolve(Service);
 
     expect(s.initialized).toBe(true);
@@ -59,7 +60,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
     container.resolve(Service);
 
     expect(calls).toEqual(['ran']); // hook fired, throttle allowed it
@@ -85,7 +86,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
     // onConstruct calls compute() with no args (x = undefined)
     const s = container.resolve(Service);
 
@@ -112,7 +113,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
 
     // Resolving should not propagate the error because @handleError catches it
     expect(() => container.resolve(Service)).not.toThrow();
@@ -133,7 +134,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule());
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
     container.resolve(Service);
 
     expect(fn).not.toHaveBeenCalled(); // debounce deferred it

@@ -1,13 +1,14 @@
-import type { DependencyHook, IContainer } from '../container/IContainer';
+import type { IContainer } from '../container/IContainer';
+import type { ProviderHook } from '../provider/IProvider';
 import type { HooksRunner } from './HooksRunner';
 import { hook, type HookFn, type HookType, prependHooks, toHookFn } from './hook';
 import type { OnExceptionHandler } from './onConstruct';
 import { Is } from '../utils/basic';
 
 /**
- * A resolve hook narrowed to the dependencies that can carry hook metadata.
+ * A {@link ProviderHook} narrowed to the dependencies that can carry hook metadata.
  */
-export type ResolvedDependencyHook = (dependency: object, scope: IContainer) => void;
+export type ResolvedObjectHook = (dependency: object, scope: IContainer) => void;
 
 /**
  * Invokes the decorated method with its resolved arguments - what every resolve
@@ -65,11 +66,11 @@ export const onceResolvedHook =
     hook(key, prependHooks(...toHooks(hooks).map(onceForEachInstance)));
 
 /**
- * Lifts a hook to `DependencyHook`, skipping dependencies which are not objects:
+ * Lifts a hook to `ProviderHook`, skipping dependencies which are not objects:
  * hook metadata lives on classes, and a primitive can carry none.
  */
 export const forEachResolvedObject =
-  (run: ResolvedDependencyHook): DependencyHook =>
+  (run: ResolvedObjectHook): ProviderHook =>
   (dependency, scope) => {
     if (Is.object(dependency)) {
       run(dependency, scope);
@@ -80,7 +81,7 @@ export const forEachResolvedObject =
  * @throws {unknown} rethrows whatever the hooks threw.
  */
 export const executeHooks =
-  (runner: HooksRunner): ResolvedDependencyHook =>
+  (runner: HooksRunner): ResolvedObjectHook =>
   (dependency, scope) =>
     runner.execute(dependency, { scope });
 
@@ -89,7 +90,7 @@ export const executeHooks =
  * afterwards: `resolve` returns before they finish.
  */
 export const executeHooksAsync =
-  (runner: HooksRunner, onException?: OnExceptionHandler): ResolvedDependencyHook =>
+  (runner: HooksRunner, onException?: OnExceptionHandler): ResolvedObjectHook =>
   (dependency, scope) => {
     if (!runner.hasHooks(dependency)) {
       return;

@@ -4,8 +4,7 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type InstanceHook,
-  type ProviderHook,
+  type RegisteredHook,
   type RegisterOptions,
   ResolveManyOptions,
   type ResolveOneOptions,
@@ -21,7 +20,6 @@ import { MetadataInjector } from '../injector/MetadataInjector';
 import { AliasMap } from './AliasMap';
 import { unwrapProxy } from '../utils/ProxyRegistry';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
-import { OnDisposeHook } from '../hooks/onContainerDisposed';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
 
@@ -36,10 +34,9 @@ export class Container implements IContainer {
   private readonly aliases = new AliasMap();
   private readonly injector: IInjector;
 
-  private readonly onConstructHookList: InstanceHook[] = [];
-  private readonly onDisposeHookList: OnDisposeHook[] = [];
   private readonly onScopeCreatedHookList: ScopeHook[] = [];
-  private readonly onProviderRegisteredHookList: ProviderHook[] = [];
+  private readonly onScopeDisposedHookList: ScopeHook[] = [];
+  private readonly onRegisteredHookList: RegisteredHook[] = [];
 
   constructor(
     options: {
@@ -62,8 +59,8 @@ export class Container implements IContainer {
     this.aliases.setAliasesByKey(key, aliases);
 
     // Hooks run once the provider and its aliases are in place, so they observe a resolvable key.
-    for (const onProviderRegistered of this.onProviderRegisteredHookList) {
-      onProviderRegistered(provider, key, this);
+    for (const onRegistered of this.onRegisteredHookList) {
+      onRegistered(provider, key, this);
     }
 
     return this;
@@ -138,11 +135,11 @@ export class Container implements IContainer {
   createScope({ tags }: CreateScopeOptions = {}): IContainer {
     this.validateContainer();
 
+    // Injector hooks need no copying - the child shares this scope's injector, so it shares its hooks.
     const scope = new Container({ injector: this.injector, parent: this, tags })
-      .onConstruct(...this.onConstructHookList)
-      .onInstanceDisposed(...this.onDisposeHookList)
       .onScopeCreated(...this.onScopeCreatedHookList)
-      .onProviderRegistered(...this.onProviderRegisteredHookList);
+      .onScopeDisposed(...this.onScopeDisposedHookList)
+      .onRegistered(...this.onRegisteredHookList);
 
     for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
@@ -183,9 +180,9 @@ export class Container implements IContainer {
     this.validateContainer();
     this.isDisposed = true;
 
-    // Execute onDispose hooks
-    for (const hook of this.onDisposeHookList) {
-      hook(this);
+    // Execute onScopeDisposed hooks
+    for (const onScopeDisposed of this.onScopeDisposedHookList) {
+      onScopeDisposed(this);
     }
 
     // Detach from parent
@@ -201,11 +198,10 @@ export class Container implements IContainer {
     this.instances.clear();
     this.registrations = [];
 
-    // Clear hooks
-    this.onConstructHookList.length = 0;
-    this.onDisposeHookList.length = 0;
+    // Clear hooks. Injector hooks are not this scope's to clear - the injector outlives it.
     this.onScopeCreatedHookList.length = 0;
-    this.onProviderRegisteredHookList.length = 0;
+    this.onScopeDisposedHookList.length = 0;
+    this.onRegisteredHookList.length = 0;
   }
 
   addRegistration(registration: IRegistration): this {
@@ -222,33 +218,23 @@ export class Container implements IContainer {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
   }
 
-  onConstruct(...hooks: InstanceHook[]): this {
-    this.onConstructHookList.push(...hooks);
-    return this;
-  }
-
-  onInstanceDisposed(...hooks: OnDisposeHook[]): this {
-    this.onDisposeHookList.push(...hooks);
-    return this;
-  }
-
   onScopeCreated(...hooks: ScopeHook[]): this {
     this.onScopeCreatedHookList.push(...hooks);
     return this;
   }
 
-  onProviderRegistered(...hooks: ProviderHook[]): this {
-    this.onProviderRegisteredHookList.push(...hooks);
+  onScopeDisposed(...hooks: ScopeHook[]): this {
+    this.onScopeDisposedHookList.push(...hooks);
+    return this;
+  }
+
+  onRegistered(...hooks: RegisteredHook[]): this {
+    this.onRegisteredHookList.push(...hooks);
     return this;
   }
 
   addInstance(instance: Instance) {
     this.instances.add(instance);
-
-    // Execute onConstruct hooks
-    for (const onConstruct of this.onConstructHookList) {
-      onConstruct(instance, this);
-    }
   }
 
   getScopes() {

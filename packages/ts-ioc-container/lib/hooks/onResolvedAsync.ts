@@ -48,8 +48,8 @@ export class OnResolvedAsyncModule implements IContainerModule {
   }
 
   applyTo(container: IContainer) {
-    container.onProviderRegistered((provider) => {
-      provider.onResolve(this.runHooks);
+    container.onRegistered((provider) => {
+      provider.onResolved(this.runHooks);
     });
   }
 }
@@ -58,4 +58,4 @@ export class OnResolvedAsyncModule implements IContainerModule {
  * Per-registration form of {@link OnResolvedAsyncModule}, mirroring `resolved()`.
  */
 export const resolvedAsync = <T = unknown>(onException?: OnExceptionHandler) =>
-  registerPipe<T>((p) => p.onResolve(runHooks(onException)));
+  registerPipe<T>((p) => p.onResolved(runHooks(onException)));

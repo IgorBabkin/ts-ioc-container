@@ -135,6 +135,12 @@ describe('Spec: injector strategies', () => {
         container.addInstance(instance as never);
         return instance;
       }
+
+      // Construct hooks are the injector's domain, so a from-scratch injector
+      // either keeps its own list or, as here, declines to raise them.
+      onConstructed(): this {
+        return this;
+      }
     }
 
     const container = new Container({ injector: new StaticFactoryInjector() }).addRegistration(R.fromClass(Service));

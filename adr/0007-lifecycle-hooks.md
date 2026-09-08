@@ -66,8 +66,14 @@ optional exception handler instead of failing `resolve`.
 - Async construct hooks cannot block resolution, so instances that must be
   initialized before use have to expose readiness themselves.
 
+> [!NOTE]
+> This ADR covers hook *declaration*. Where the imperative hook lists live — and
+> the renames that moved them — is
+> [ADR 0012](0012-hook-domains.md).
+
 ## References
 
+- [ADR 0012 — Hook registration lives with the domain which raises the event](0012-hook-domains.md)
 - `lib/hooks/hook.ts`
 - `lib/hooks/HooksRunner.ts`
 - `lib/hooks/onConstruct.ts`

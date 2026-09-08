@@ -1,8 +1,9 @@
 # Epic: Lifecycle hooks
 
 - **Status:** Accepted
-- **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onResolved`, `onceResolved`, `onResolvedAsync`, `onceResolvedAsync`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`
+- **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../../adr/0007-lifecycle-hooks.md),
+  [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md)
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `onConstruct`, `onConstructAsync`, `onContainerDisposed`, `injectProp`, `onResolved`, `onceResolved`, `onResolvedAsync`, `onceResolvedAsync`, `OnConstructModule`, `OnConstructAsyncModule`, `OnDisposeModule`, `OnResolvedModule`, `OnResolvedAsyncModule`, `resolved`, `resolvedAsync`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -22,7 +23,8 @@ used.
 Acceptance criteria:
 
 - `onConstruct` stores hook metadata on a method.
-- `OnConstructModule` opts a container into construct hook execution.
+- `OnConstructModule` is an injector module: it opts an injector into construct
+  hook execution, and that injector is then passed to the container.
 - Construct hooks run after the instance is created and tracked.
 - Hook classes are resolved through the container before execution.
 
@@ -35,8 +37,8 @@ synchronous construct path.
 Acceptance criteria:
 
 - `onConstructAsync` stores hook metadata on a method under its own hook key.
-- `OnConstructAsyncModule` opts a container into async construct hook
-  execution.
+- `OnConstructAsyncModule` is an injector module opting an injector into async
+  construct hook execution.
 - Async construct hooks start when the instance is created and settle after
   resolution returns.
 - Rejected hooks are reported to the module `onException` handler when one is
@@ -99,21 +101,36 @@ Acceptance criteria:
 - `hasHooks` identifies whether hook metadata exists.
 - `HooksRunner` can execute only methods accepted by a predicate.
 
-### Story: Register direct disposal callbacks on a container
+### Story: Register imperative hooks with the domain which raises them
 
-As an application developer, I can attach disposal callbacks directly to a
-container so that cleanup logic runs when the container is disposed without
-needing a class decorated with `@onContainerDisposed`.
+As an application developer, I can attach callbacks directly to the abstraction
+which raises an event — scope, injector, or provider — so that cleanup, metrics,
+and custom extension points do not need a decorated class, and so the place a
+hook is registered says which domain owns it.
 
 Acceptance criteria:
 
-- `onDispose` registers a callback that receives the disposing container.
-- The callback is invoked when the container is disposed.
-- `onDispose` returns the container for fluent chaining.
-- `onConstruct` and `onScopeCreated` are the matching container-level hooks, for
-  newly created instances and newly created scopes, and chain the same way.
-- A child scope inherits the hooks its parent held at `createScope` time.
-- `EmptyContainer` rejects all three with `MethodNotImplementedError`.
+- Scope events are registered on `IContainer`: `onScopeCreated(...hooks:
+  ScopeHook[])`, `onScopeDisposed(...hooks: ScopeHook[])` and
+  `onRegistered(...hooks: RegisteredHook[])`, each returning the
+  container for fluent chaining.
+- Construction is registered on `IInjector`: `onConstructed(...hooks:
+  InjectorHook[])`. The injector is configured before it is passed to
+  `new Container({ injector })`; a container never hands its injector out.
+- `IInjectorModule` bundles injector hooks, applied with `injector.useModule(...)`
+  or `module.applyTo(injector)`.
+- Resolution is registered on `IProvider`: `onResolved(...hooks:
+  ProviderHook[])`, or on a registration through the `onResolve(...)` pipe.
+- `onScopeDisposed` callbacks receive the disposing scope.
+- A child scope inherits the scope hooks its parent held at `createScope` time;
+  later additions to either stay local to it.
+- A container passes its injector to every scope it creates, so an
+  `onConstructed` hook observes construction anywhere in that scope tree,
+  whenever it was added.
+- Disposing a scope clears its own scope hooks and leaves the shared injector's
+  hooks intact.
+- `EmptyContainer` rejects every scope hook method with
+  `MethodNotImplementedError`.
 
 ### Story: Handle sync and async hook execution
 

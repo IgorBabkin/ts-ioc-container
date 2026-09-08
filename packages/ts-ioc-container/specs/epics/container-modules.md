@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `IContainerModule`, `Container.useModule`, `OnConstructModule`, `OnDisposeModule`, `AutoResolveModule`, `Container.autoResolve`
+- **Public API:** `IContainerModule`, `Container.useModule`, `OnDisposeModule`, `OnResolvedModule`, `AutoResolveModule`, `Container.autoResolve`
 - **Executable spec:** `__tests__/specs/container-modules.spec.ts`
 
 ## Intent
@@ -44,12 +44,15 @@ that projects that need hooks can enable them explicitly.
 
 Acceptance criteria:
 
-- `OnConstructModule` enables construct hook execution for future
-  instances in the container.
 - `OnDisposeModule` enables dispose hook execution for instances tracked
   by the disposed scope.
+- `OnResolvedModule` enables resolve hook execution for every provider
+  registered after it is applied.
 - Child scopes created after module setup inherit the lifecycle hooks configured
   on the parent.
+- Construct hooks are not a container concern: `OnConstructModule` and
+  `OnConstructAsyncModule` are `IInjectorModule`s, applied to the injector
+  before it reaches the container. See the lifecycle-hooks epic.
 
 ### Story: Eagerly instantiate scope services through a module
 

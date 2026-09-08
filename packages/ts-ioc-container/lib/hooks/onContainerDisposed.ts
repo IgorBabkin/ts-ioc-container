@@ -7,11 +7,16 @@ export const onContainerDisposedHooksRunner = new HooksRunner('onContainerDispos
 // `@onX(h1) @onX(h2) method()` runs h1 before h2.
 export const onContainerDisposed = (...fns: HookType[]) => hook('onContainerDisposed', prependHooks(...fns));
 
-export type OnDisposeHook = (scope: IContainer) => void;
-
+/**
+ * Runs `onContainerDisposed` hooks on every instance of a scope being disposed.
+ *
+ * A scope's disposal is a scope event, so the module hangs off
+ * `onScopeDisposed`. Disposal is local: disposing a parent runs no child-scope
+ * hooks.
+ */
 export class OnDisposeModule implements IContainerModule {
   applyTo(container: IContainer) {
-    container.onInstanceDisposed((scope) => {
+    container.onScopeDisposed((scope) => {
       for (const instance of scope.getInstances()) {
         onContainerDisposedHooksRunner.execute(instance, { scope });
       }

@@ -119,7 +119,7 @@ dependency elsewhere run on resolution without changing the resolved value.
 
 Acceptance criteria:
 
-- `onResolve` receives the resolved dependency and the resolving scope.
+- `IProvider.onResolved` takes `ProviderHook`s, which receive the resolved dependency and the resolving scope; the `onResolve(...)` pipe is its registration-level form.
 - Unlike `decorate`, an `onResolve` hook cannot replace the dependency — its
   return value is ignored and the caller receives the value the pipes produced.
 - Hooks run after every `decorate` mapper, so they observe the fully decorated

@@ -1,4 +1,4 @@
-import { append, Container, hook, HooksRunner, type HookFn } from '../../lib';
+import { append, Container, hook, HooksRunner, MetadataInjector, type HookFn } from '../../lib';
 
 /**
  * User Management Domain - Custom Lifecycle Hooks
@@ -15,7 +15,7 @@ import { append, Container, hook, HooksRunner, type HookFn } from '../../lib';
  * How it works:
  * 1. Define a HooksRunner with a unique hook name
  * 2. Create methods decorated with @hook('hookName', append(executor))
- * 3. Register the hook runner via onConstruct
+ * 3. Register the hook runner on an injector via onConstructed, then pass it to the container
  * 4. Methods are automatically called when instances are created
  */
 
@@ -39,10 +39,13 @@ describe('Custom Hooks', () => {
       }
     }
 
-    const container = new Container({ tags: ['application'] }).onConstruct((instance, scope) => {
+    // Construction is the injector's event, so custom construct hooks go on the injector
+    const injector = new MetadataInjector().onConstructed((instance, scope) => {
       // Run all 'initialize' hooks on newly created instances
       initializeHookRunner.execute(instance, { scope });
     });
+
+    const container = new Container({ injector, tags: ['application'] });
 
     const cacheService = container.resolve(CacheService);
 

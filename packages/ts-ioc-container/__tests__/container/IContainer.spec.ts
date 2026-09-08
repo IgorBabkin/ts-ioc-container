@@ -23,7 +23,7 @@ describe('IContainer', function () {
       }
     };
 
-    const container = new Container({ tags: ['root'] }).onInstanceDisposed(onDispose);
+    const container = new Container({ tags: ['root'] }).onScopeDisposed(onDispose);
 
     container.dispose();
 

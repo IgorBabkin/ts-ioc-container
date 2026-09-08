@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  MetadataInjector,
   OnConstructAsyncModule,
   OnConstructModule,
   OnDisposeModule,
@@ -18,6 +19,7 @@ import {
   onContainerDisposed,
   onResolved,
   onceResolved,
+  onResolve,
   Registration as R,
   UnexpectedHookResultError,
 } from '../../lib';
@@ -43,8 +45,7 @@ describe('Spec: lifecycle hooks', () => {
       }
     }
 
-    const container = new Container()
-      .useModule(new OnConstructModule())
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) })
       .useModule(new OnDisposeModule())
       .addRegistration(R.fromClass(Resource));
 
@@ -100,7 +101,9 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
+    }).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -122,7 +125,9 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
+    }).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -143,7 +148,9 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container().useModule(new OnConstructModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructModule()),
+    }).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -184,7 +191,9 @@ describe('Spec: lifecycle hooks', () => {
       async initialize(): Promise<void> {}
     }
 
-    const container = new Container().useModule(new OnConstructAsyncModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructAsyncModule()),
+    }).addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -204,7 +213,9 @@ describe('Spec: lifecycle hooks', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructAsyncModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructAsyncModule()),
+    }).addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
 
@@ -222,9 +233,9 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     let captured: unknown;
-    const container = new Container()
-      .useModule(new OnConstructAsyncModule((ex) => (captured = ex)))
-      .addRegistration(R.fromClass(BrokenResource));
+    const container = new Container({
+      injector: new MetadataInjector().useModule(new OnConstructAsyncModule((ex) => (captured = ex))),
+    }).addRegistration(R.fromClass(BrokenResource));
 
     container.resolve<BrokenResource>('BrokenResource');
 
@@ -241,8 +252,7 @@ describe('Spec: lifecycle hooks', () => {
       logger!: Logger;
     }
 
-    const container = new Container()
-      .useModule(new OnConstructModule())
+    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) })
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(Service));
 
@@ -283,16 +293,72 @@ describe('Spec: lifecycle hooks', () => {
     expect(worker.calls).toEqual(['start']);
   });
 
-  it('runs direct disposal callbacks registered with onDispose', () => {
+  it('runs direct disposal callbacks registered with onScopeDisposed', () => {
     const disposed: string[] = [];
 
-    const container = new Container({ tags: ['app'] }).onInstanceDisposed((c) => {
+    const container = new Container({ tags: ['app'] }).onScopeDisposed((c) => {
       if (c.hasTag('app')) disposed.push('app');
     });
 
     container.dispose();
 
     expect(disposed).toEqual(['app']);
+  });
+
+  it('registers each hook with the domain which raises it', () => {
+    const log: string[] = [];
+
+    class Service {}
+
+    // Injector domain — construction. Configured before the container owns it.
+    const injector = new MetadataInjector().onConstructed((instance) =>
+      log.push(`constructed:${instance.constructor.name}`),
+    );
+
+    const container = new Container({ injector, tags: ['app'] })
+      // Scope domain — the container's own events.
+      .onScopeCreated((scope) => log.push(`scopeCreated:${scope.hasTag('request')}`))
+      .onScopeDisposed(() => log.push('scopeDisposed'))
+      .onRegistered((_provider, key) => log.push(`registered:${String(key)}`));
+
+    container.addRegistration(
+      // Provider domain — resolution.
+      R.fromClass(Service).pipe(
+        onResolve((dependency) => log.push(`resolved:${(dependency as object).constructor.name}`)),
+      ),
+    );
+
+    const scope = container.createScope({ tags: ['request'] });
+    scope.resolve<Service>('Service');
+    scope.dispose();
+
+    expect(log).toEqual([
+      'registered:Service',
+      'registered:Service',
+      'scopeCreated:true',
+      'constructed:Service',
+      'resolved:Service',
+      'scopeDisposed',
+    ]);
+  });
+
+  it('shares injector hooks with every scope built on the same injector', () => {
+    const constructed: string[] = [];
+
+    class Service {}
+
+    const injector = new MetadataInjector();
+    const container = new Container({ injector, tags: ['app'] }).addRegistration(R.fromClass(Service));
+    const scope = container.createScope({ tags: ['request'] });
+
+    // Registered after both scopes exist: one injector backs the whole tree, so
+    // the hook covers every scope in it, whenever it was added.
+    injector.onConstructed((_instance, s) => constructed.push(s.hasTag('request') ? 'request' : 'app'));
+
+    container.resolve<Service>('Service');
+    scope.resolve<Service>('Service');
+
+    expect(constructed).toEqual(['app', 'request']);
   });
 
   it('resolves hook method arguments and separates sync from async execution', async () => {

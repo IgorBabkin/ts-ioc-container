@@ -1,5 +1,5 @@
 import { hook, HookType, prependHooks } from './hook';
-import type { IContainer, IContainerModule } from '../container/IContainer';
+import type { IInjector, IInjectorModule } from '../injector/IInjector';
 import { HooksRunner } from './HooksRunner';
 import type { OnExceptionHandler } from './onConstruct';
 
@@ -8,15 +8,22 @@ export const onConstructAsyncHooksRunner = new HooksRunner('onConstructAsync');
 // `@onX(h1) @onX(h2) method()` runs h1 before h2.
 export const onConstructAsync = (...fns: HookType[]) => hook('onConstructAsync', prependHooks(...fns));
 
-// Resolution stays synchronous, so async construct hooks are started when the
-// instance is tracked and settle afterwards: `resolve` returns before they
-// finish. Instances that must expose readiness should publish it themselves,
-// for example by storing the pending promise on the instance.
-export class OnConstructAsyncModule implements IContainerModule {
+/**
+ * Runs `onConstructAsync` hooks when an instance is constructed.
+ *
+ * Resolution stays synchronous, so async construct hooks are started when the
+ * instance is tracked and settle afterwards: `resolve` returns before they
+ * finish. Instances that must expose readiness should publish it themselves,
+ * for example by storing the pending promise on the instance.
+ *
+ * Like `OnConstructModule`, this is an injector module — see there for how to
+ * apply one.
+ */
+export class OnConstructAsyncModule implements IInjectorModule {
   constructor(private readonly onException?: OnExceptionHandler) {}
 
-  applyTo(container: IContainer) {
-    container.onConstruct((instance, scope) => {
+  applyTo(injector: IInjector) {
+    injector.onConstructed((instance, scope) => {
       if (!onConstructAsyncHooksRunner.hasHooks(instance)) {
         return;
       }

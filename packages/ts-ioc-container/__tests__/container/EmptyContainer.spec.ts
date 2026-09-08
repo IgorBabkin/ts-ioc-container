@@ -42,4 +42,8 @@ describe('EmptyContainer', () => {
       MethodNotImplementedError,
     );
   });
+
+  it('should raise an error when registering a scope disposal hook', () => {
+    expect(() => new EmptyContainer().onScopeDisposed(() => {})).toThrowError(MethodNotImplementedError);
+  });
 });
