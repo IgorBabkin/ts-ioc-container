@@ -18,8 +18,8 @@ import {
   oncePerInstance,
   onResolve,
   Registration as R,
-  SequentialAsyncHookExecutionStrategy,
-  SequentialSyncHookExecutionStrategy,
+  SequentialAsync,
+  SequentialSync,
 } from '../../lib';
 
 const invoke: HookFn = (context) => {
@@ -27,8 +27,8 @@ const invoke: HookFn = (context) => {
 };
 
 // Strategies are keyed, so each module gets one for the hook key it runs.
-const sync = (key: string) => new SequentialSyncHookExecutionStrategy({ key });
-const sequential = (key: string) => new SequentialAsyncHookExecutionStrategy({ key });
+const sync = (key: string) => new SequentialSync({ key });
+const sequential = (key: string) => new SequentialAsync({ key });
 
 describe('Spec: lifecycle hooks', () => {
   it('runs construct and dispose hooks through opt-in modules', () => {
@@ -240,9 +240,7 @@ describe('Spec: lifecycle hooks', () => {
     let captured: unknown;
     const container = new Container()
       .useModule(
-        new OnConstructModule(
-          new SequentialAsyncHookExecutionStrategy({ key: 'onConstruct', onError: () => (ex) => (captured = ex) }),
-        ),
+        new OnConstructModule(new SequentialAsync({ key: 'onConstruct', onError: () => (ex) => (captured = ex) })),
       )
       .addRegistration(R.fromClass(BrokenResource));
 

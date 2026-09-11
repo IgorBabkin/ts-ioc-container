@@ -7,8 +7,8 @@ import {
   inject,
   onConstruct,
   Registration as R,
-  SequentialAsyncHookExecutionStrategy,
-  SequentialSyncHookExecutionStrategy,
+  SequentialAsync,
+  SequentialSync,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
@@ -34,7 +34,7 @@ describe('onConstruct', function () {
 
     // The module takes a strategy for how the hooks run; the strategy is keyed to the hooks it runs.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -56,7 +56,7 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSyncHookExecutionStrategy({
+        new SequentialSync({
           key: 'onConstruct',
           onError: (scope) => (ex) => {
             captured = { ex, scope };
@@ -81,7 +81,7 @@ describe('onConstruct', function () {
     let scope: IContainer | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSyncHookExecutionStrategy({
+        new SequentialSync({
           key: 'onConstruct',
           onError: (s) => () => {
             scope = s;
@@ -121,7 +121,7 @@ describe('onConstruct', function () {
 
     // An async strategy awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -146,7 +146,7 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialAsyncHookExecutionStrategy({
+        new SequentialAsync({
           key: 'onConstruct',
           onError: (scope) => (ex) => {
             captured = { ex, scope };

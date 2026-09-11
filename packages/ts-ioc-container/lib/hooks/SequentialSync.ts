@@ -3,7 +3,7 @@ import { createHookExecutionContext } from './HookContext';
 import { toHookFn } from './hook';
 import { HookExecutionContext, HookExecutionStrategy } from './HooksExecutionStrategy';
 
-export class SequentialSyncHookExecutionStrategy extends HookExecutionStrategy {
+export class SequentialSync extends HookExecutionStrategy {
   processHooks(
     target: Instance,
     {

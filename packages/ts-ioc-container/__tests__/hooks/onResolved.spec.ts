@@ -9,8 +9,8 @@ import {
   onResolved,
   oncePerInstance,
   resolved,
-  SequentialAsyncHookExecutionStrategy,
-  SequentialSyncHookExecutionStrategy,
+  SequentialAsync,
+  SequentialSync,
   singleton,
 } from '../../lib';
 
@@ -20,8 +20,8 @@ const invokeMethod: HookFn = (context) => {
 
 type OnError = (scope: unknown) => (ex: unknown) => void;
 // Sync hooks run under the sync strategy; async ones under a strategy which awaits them.
-const sync = () => new SequentialSyncHookExecutionStrategy({ key: 'onResolved' });
-const sequential = (onError?: OnError) => new SequentialAsyncHookExecutionStrategy({ key: 'onResolved', onError });
+const sync = () => new SequentialSync({ key: 'onResolved' });
+const sequential = (onError?: OnError) => new SequentialAsync({ key: 'onResolved', onError });
 
 class Service {
   resolvedTimes = 0;
@@ -323,9 +323,7 @@ describe('OnResolvedModule', () => {
     const exceptions: unknown[] = [];
     const container = new Container()
       .useModule(
-        new OnResolvedModule(
-          new SequentialSyncHookExecutionStrategy({ key: 'onResolved', onError: () => (ex) => exceptions.push(ex) }),
-        ),
+        new OnResolvedModule(new SequentialSync({ key: 'onResolved', onError: () => (ex) => exceptions.push(ex) })),
       )
       .addRegistration(R.fromClass(Broken));
 

@@ -39,16 +39,16 @@ Hook execution becomes a **strategy object** — an abstract
 `HookExecutionStrategy` with one concrete class per answer to the ordering
 question — and every module takes one:
 
-| Strategy                               | Members            | Hooks of one member                         | Awaits |
-| -------------------------------------- | ------------------ | ------------------------------------------- | ------ |
-| `SequentialSyncHookExecutionStrategy`  | one after another  | in declaration order                        | no     |
-| `SequentialAsyncHookExecutionStrategy` | one after another  | in order, or all at once (`methodStrategy`) | yes    |
-| `ParallelAsyncHookExecutionStrategy`   | all at once        | in order, or all at once (`methodStrategy`) | yes    |
+| Strategy          | Members           | Hooks of one member                         | Awaits |
+| ----------------- | ----------------- | ------------------------------------------- | ------ |
+| `SequentialSync`  | one after another | in declaration order                        | no     |
+| `SequentialAsync` | one after another | in order, or all at once (`methodStrategy`) | yes    |
+| `ParallelAsync`   | all at once       | in order, or all at once (`methodStrategy`) | yes    |
 
 ```typescript
 const container = new Container()
-  .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
-  .useModule(new OnDisposeModule(new ParallelAsyncHookExecutionStrategy({ key: 'onScopeDisposed' })));
+  .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
+  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
 ```
 
 ### The strategy owns the whole "how"
@@ -150,9 +150,9 @@ one-line hook themselves.
 ## References
 
 - `lib/hooks/HooksExecutionStrategy.ts` — `HookExecutionStrategy`, `execute`, `onError`
-- `lib/hooks/SequentialSyncHookExecutionStrategy.ts`
-- `lib/hooks/SequentialAsyncHookExecutionStrategy.ts`
-- `lib/hooks/ParallelAsyncHookExecutionStrategy.ts`
+- `lib/hooks/SequentialSync.ts`
+- `lib/hooks/SequentialAsync.ts`
+- `lib/hooks/ParallelAsync.ts`
 - `lib/hooks/onConstruct.ts`, `lib/hooks/onResolved.ts`, `lib/hooks/onScopeDisposed.ts`
 - `lib/container/IContainer.ts` — `getInjector`
 - `__tests__/specs/lifecycle-hooks.spec.ts`

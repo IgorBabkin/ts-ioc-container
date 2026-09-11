@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi } from 'vitest';
-import { append, Container, hook, type HookFn, once, SequentialSyncHookExecutionStrategy } from '../../lib';
+import { append, Container, hook, type HookFn, once, SequentialSync } from '../../lib';
 
 const invokeMethod: HookFn = (ctx) => {
   ctx.invokeMethod();
@@ -142,7 +142,7 @@ describe('once', () => {
     // touches the method descriptor, so it composes with `@once`, which does, regardless
     // of which decorator is declared first.
     it('memoizes the method body even though the hook invokes it on every run', () => {
-      const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+      const onStartStrategy = new SequentialSync({ key: 'onStart' });
       const fn = vi.fn(() => 42);
 
       class Service {
@@ -163,7 +163,7 @@ describe('once', () => {
     });
 
     it('memoizes the same way regardless of decorator order', () => {
-      const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+      const onStartStrategy = new SequentialSync({ key: 'onStart' });
       const fn = vi.fn(() => 42);
 
       class Service {
@@ -184,7 +184,7 @@ describe('once', () => {
     });
 
     it('caches independently per instance when several instances share the hook', () => {
-      const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+      const onStartStrategy = new SequentialSync({ key: 'onStart' });
       const fn = vi.fn(() => 42);
 
       class Service {
@@ -206,7 +206,7 @@ describe('once', () => {
     });
 
     it('returns the cached result through the hook on the repeat run', () => {
-      const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+      const onStartStrategy = new SequentialSync({ key: 'onStart' });
       let received: unknown;
 
       class Service {

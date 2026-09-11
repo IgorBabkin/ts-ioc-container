@@ -18,8 +18,8 @@ import {
   prependHooks,
   register,
   Registration as R,
-  SequentialAsyncHookExecutionStrategy,
-  SequentialSyncHookExecutionStrategy,
+  SequentialAsync,
+  SequentialSync,
 } from '../../lib';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -58,7 +58,7 @@ describe('hooks', () => {
   });
 
   it('should prepend initial args when resolving hook method arguments', () => {
-    const beforeStrategy = new SequentialSyncHookExecutionStrategy({ key: 'syncBefore' });
+    const beforeStrategy = new SequentialSync({ key: 'syncBefore' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
@@ -87,7 +87,7 @@ describe('hooks', () => {
   });
 
   it('should map the hook context with mapExecutionContext when running execute', () => {
-    const beforeStrategy = new SequentialSyncHookExecutionStrategy({ key: 'syncBefore' });
+    const beforeStrategy = new SequentialSync({ key: 'syncBefore' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
@@ -115,7 +115,7 @@ describe('hooks', () => {
   });
 
   it('should map the hook context with mapExecutionContext when running async hooks', async () => {
-    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
@@ -143,7 +143,7 @@ describe('hooks', () => {
   });
 
   it('should run async hooks to completion', async () => {
-    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
 
     class Logger {
       isStarted = false;
@@ -174,7 +174,7 @@ describe('hooks', () => {
   });
 
   it('should finish sync hooks before returning', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -193,7 +193,7 @@ describe('hooks', () => {
   });
 
   it('should keep a chain sync up to its first async hook and await the rest', async () => {
-    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -227,7 +227,7 @@ describe('hooks', () => {
   });
 
   it('should run a mix of sync and async members through one call', async () => {
-    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -258,7 +258,7 @@ describe('hooks', () => {
   });
 
   it('should report whether a target has hooks for the strategy key', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class WithHooks {
       @hook('onStart', append(execute))
@@ -276,7 +276,7 @@ describe('hooks', () => {
   });
 
   it('should report no hooks when the target has hooks under a different key only', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class MyClass {
       @hook('onDispose', append(execute))
@@ -291,7 +291,7 @@ describe('hooks', () => {
   // Hook metadata lives on the real class, so the hook API unwraps proxies itself -
   // a caller passes whatever the container handed it, wrapped or not.
   it('should find and run hooks through a proxy, wrapped or unwrapped', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -315,7 +315,7 @@ describe('hooks', () => {
   });
 
   it('should run hooks on the real instance behind a lazy proxy', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -340,7 +340,7 @@ describe('hooks', () => {
   });
 
   it('should run async hooks on the real instance behind a lazy proxy', async () => {
-    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -362,7 +362,7 @@ describe('hooks', () => {
   });
 
   it('should run hooks declared on a parent (extended-from) class', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class Base {
       baseStarted = false;
@@ -392,7 +392,7 @@ describe('hooks', () => {
   });
 
   it('should run parent hooks before child hooks', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class Base {
@@ -425,7 +425,7 @@ describe('hooks', () => {
   });
 
   it('should not leak child hooks into parent instances', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class Base {
@@ -459,7 +459,7 @@ describe('hooks', () => {
   });
 
   it('should execute plugin hooks for lazily injected plugins', () => {
-    const onPluginStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onPluginStart' });
+    const onPluginStartStrategy = new SequentialSync({ key: 'onPluginStart' });
     const PluginToken = new GroupAliasToken<Plugin>('Plugin');
 
     interface Plugin {
@@ -510,7 +510,7 @@ describe('hooks', () => {
   });
 
   it('should run hooks passed to appendHooks in declaration order', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -535,7 +535,7 @@ describe('hooks', () => {
   });
 
   it('should add hooks after the already registered ones with appendHooks', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -562,7 +562,7 @@ describe('hooks', () => {
   });
 
   it('should add hooks before the already registered ones with prependHooks', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -593,7 +593,7 @@ describe('hooks', () => {
   });
 
   it('should let a custom mapFn reorder the already registered hooks', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -619,7 +619,7 @@ describe('hooks', () => {
   });
 
   it('should replace the already registered hooks when mapFn ignores them', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -644,7 +644,7 @@ describe('hooks', () => {
   });
 
   it('should run a hook wrapped in oncePerInstance a single time per instance under any hook key', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -664,7 +664,7 @@ describe('hooks', () => {
   });
 
   it('should run oncePerInstance hooks independently for each instance', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class MyClass {
       startedTimes = 0;
@@ -687,7 +687,7 @@ describe('hooks', () => {
   });
 
   it('should accept hook classes in appendHooks and prependHooks', () => {
-    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class AppendedHook implements HookClass {

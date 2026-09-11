@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectProp, Registration } from '../../lib';
+import { append, Container, hook, SequentialSync, injectProp, Registration } from '../../lib';
 
 /**
  * UI Components - Property Injection
@@ -15,7 +15,7 @@ import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectPro
 describe('inject property', () => {
   it('should inject property', () => {
     // Strategy for the 'onInit' lifecycle hook
-    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
+    const onInitStrategy = new SequentialSync({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -40,7 +40,7 @@ describe('inject property', () => {
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
+    const onInitStrategy = new SequentialSync({ key: 'onInit' });
 
     let injectedValue: unknown;
 

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectProp, Registration as R } from '../../lib';
+import { append, Container, hook, SequentialSync, injectProp, Registration as R } from '../../lib';
 
 describe('injectProp(token, ...mappers)', () => {
   function createViewModel<T extends object>(Target: new () => T, container: Container) {
-    const strategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
+    const strategy = new SequentialSync({ key: 'onInit' });
     const instance = container.resolve(Target);
     strategy.execute(instance, { scope: container });
     return instance;

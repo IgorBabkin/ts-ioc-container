@@ -11,14 +11,14 @@ import {
   Container,
   IHookContext,
   HookFn,
-  SequentialSyncHookExecutionStrategy,
+  SequentialSync,
 } from '../../lib';
 
 const execute: HookFn = (ctx: IHookContext) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-const onConstructStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' });
+const onConstructStrategy = new SequentialSync({ key: 'onConstruct' });
 
 // ─── @onConstruct compatibility ───────────────────────────────────────────────
 

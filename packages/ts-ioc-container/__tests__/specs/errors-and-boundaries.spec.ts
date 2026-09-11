@@ -15,7 +15,7 @@ import {
   UnsupportedTokenTypeError,
   ContainerError,
   hook,
-  SequentialSyncHookExecutionStrategy,
+  SequentialSync,
 } from '../../lib';
 import { toToken } from '../../lib/token/toToken';
 
@@ -79,10 +79,9 @@ describe('Spec: errors and boundaries', () => {
     const worker = container.resolve(Worker);
     const reported: unknown[] = [];
 
-    new SequentialSyncHookExecutionStrategy({ key: 'start', onError: () => (ex) => reported.push(ex) }).execute(
-      worker,
-      { scope: container },
-    );
+    new SequentialSync({ key: 'start', onError: () => (ex) => reported.push(ex) }).execute(worker, {
+      scope: container,
+    });
 
     expect(reported).toEqual([failure]);
   });

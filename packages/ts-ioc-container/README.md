@@ -2839,16 +2839,16 @@ choice: each module takes a `HookExecutionStrategy`, keyed to the hooks it runs
 strategy decides the order, what is awaited, and where a failure goes
 ([ADR 0014](../../adr/0014-hook-execution-strategy.md)):
 
-| Strategy                                | Members (decorated methods) | Hooks of one member                              | Awaits |
-| --------------------------------------- | --------------------------- | ------------------------------------------------ | ------ |
-| `SequentialSyncHookExecutionStrategy`   | one after another           | in declaration order                             | no     |
-| `SequentialAsyncHookExecutionStrategy`  | one after another           | in order, or all at once (`methodStrategy`)      | yes    |
-| `ParallelAsyncHookExecutionStrategy`    | all at once                 | in order, or all at once (`methodStrategy`)      | yes    |
+| Strategy          | Members (decorated methods) | Hooks of one member                         | Awaits |
+| ----------------- | --------------------------- | ------------------------------------------- | ------ |
+| `SequentialSync`  | one after another           | in declaration order                        | no     |
+| `SequentialAsync` | one after another           | in order, or all at once (`methodStrategy`) | yes    |
+| `ParallelAsync`   | all at once                 | in order, or all at once (`methodStrategy`) | yes    |
 
 ```typescript
 const container = new Container()
-  .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
-  .useModule(new OnDisposeModule(new ParallelAsyncHookExecutionStrategy({ key: 'onScopeDisposed' })));
+  .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
+  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
 ```
 
 Resolution and disposal stay synchronous under every strategy: sync hooks
@@ -2912,8 +2912,8 @@ import {
   inject,
   onConstruct,
   Registration as R,
-  SequentialAsyncHookExecutionStrategy,
-  SequentialSyncHookExecutionStrategy,
+  SequentialAsync,
+  SequentialSync,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
@@ -2939,7 +2939,7 @@ describe('onConstruct', function () {
 
     // The module takes a strategy for how the hooks run; the strategy is keyed to the hooks it runs.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -2961,7 +2961,7 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSyncHookExecutionStrategy({
+        new SequentialSync({
           key: 'onConstruct',
           onError: (scope) => (ex) => {
             captured = { ex, scope };
@@ -2986,7 +2986,7 @@ describe('onConstruct', function () {
     let scope: IContainer | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSyncHookExecutionStrategy({
+        new SequentialSync({
           key: 'onConstruct',
           onError: (s) => () => {
             scope = s;
@@ -3026,7 +3026,7 @@ describe('onConstruct', function () {
 
     // An async strategy awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3051,7 +3051,7 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialAsyncHookExecutionStrategy({
+        new SequentialAsync({
           key: 'onConstruct',
           onError: (scope) => (ex) => {
             captured = { ex, scope };
@@ -3085,7 +3085,7 @@ import {
   onScopeDisposed,
   register,
   Registration as R,
-  SequentialSyncHookExecutionStrategy,
+  SequentialSync,
   singleton,
 } from 'ts-ioc-container';
 
@@ -3121,7 +3121,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule(new SequentialSyncHookExecutionStrategy({ key: 'onScopeDisposed' })))
+      .useModule(new OnDisposeModule(new SequentialSync({ key: 'onScopeDisposed' })))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 
@@ -3141,7 +3141,7 @@ describe('onScopeDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectProp, Registration } from 'ts-ioc-container';
+import { append, Container, hook, SequentialSync, injectProp, Registration } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -3157,7 +3157,7 @@ import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectPro
 describe('inject property', () => {
   it('should inject property', () => {
     // Strategy for the 'onInit' lifecycle hook
-    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
+    const onInitStrategy = new SequentialSync({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -3182,7 +3182,7 @@ describe('inject property', () => {
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
+    const onInitStrategy = new SequentialSync({ key: 'onInit' });
 
     let injectedValue: unknown;
 

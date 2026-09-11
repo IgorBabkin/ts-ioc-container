@@ -1,4 +1,4 @@
-import { append, Container, hook, SequentialSyncHookExecutionStrategy, type HookFn } from '../../lib';
+import { append, Container, hook, SequentialSync, type HookFn } from '../../lib';
 
 /**
  * User Management Domain - Custom Lifecycle Hooks
@@ -20,7 +20,7 @@ import { append, Container, hook, SequentialSyncHookExecutionStrategy, type Hook
  */
 
 // A strategy for the custom 'initialize' hooks: sync, in declaration order
-const initializeStrategy = new SequentialSyncHookExecutionStrategy({ key: 'initialize' });
+const initializeStrategy = new SequentialSync({ key: 'initialize' });
 
 // Hook executor - defines what happens when the hook fires
 const executeInitialize: HookFn = (ctx) => {

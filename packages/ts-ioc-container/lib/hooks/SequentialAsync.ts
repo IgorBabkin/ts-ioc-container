@@ -10,7 +10,7 @@ type Props = Partial<HookExecutionStrategyContext> & {
   onError?: (c: IContainer) => (error: unknown) => void;
 };
 
-export class SequentialAsyncHookExecutionStrategy extends HookExecutionStrategy {
+export class SequentialAsync extends HookExecutionStrategy {
   private readonly methodStrategy: 'sequential' | 'parallel';
 
   constructor(props: Props) {

@@ -260,7 +260,7 @@ EntityManagerToken.args(UserRepositoryToken).resolve(container);
 
 `@onConstruct` and `@onScopeDisposed` decorators trigger after construction / on scope disposal. `@hook` is the generic base. `injectProp` enables property injection within hooks.
 
-Hooks are async-capable by default, so there is no `Async`-postfixed decorator or module (ADR 0013). *How* hooks run is a `HookExecutionStrategy` (ADR 0014), and every module takes one: `SequentialSyncHookExecutionStrategy` (members and hooks in order, never awaits), `SequentialAsyncHookExecutionStrategy` (members one after another, awaited) and `ParallelAsyncHookExecutionStrategy` (members started at once); the async ones take `methodStrategy: 'sequential' | 'parallel'` for the hooks *within* a member. A strategy is constructed with the hook `key` it reads (`onConstruct`, `onScopeDisposed`, `onResolved`, or a custom key) and an optional `onError: (scope) => (error) => void`, which receives both a sync throw and an async rejection — without it failures are dropped. `strategy.execute(target, { scope })` returns `void`; sync hooks finish before `resolve`/`dispose` returns, async ones settle after it. `predicate`, `createExecutionContext` and `mapExecutionContext` default on the strategy and can be overridden per call. Base class lives in `lib/hooks/HooksExecutionStrategy.ts`; subclasses implement `processHooks`.
+Hooks are async-capable by default, so there is no `Async`-postfixed decorator or module (ADR 0013). *How* hooks run is a `HookExecutionStrategy` (ADR 0014), and every module takes one: `SequentialSync` (members and hooks in order, never awaits), `SequentialAsync` (members one after another, awaited) and `ParallelAsync` (members started at once); the async ones take `methodStrategy: 'sequential' | 'parallel'` for the hooks *within* a member. A strategy is constructed with the hook `key` it reads (`onConstruct`, `onScopeDisposed`, `onResolved`, or a custom key) and an optional `onError: (scope) => (error) => void`, which receives both a sync throw and an async rejection — without it failures are dropped. `strategy.execute(target, { scope })` returns `void`; sync hooks finish before `resolve`/`dispose` returns, async ones settle after it. `predicate`, `createExecutionContext` and `mapExecutionContext` default on the strategy and can be overridden per call. Base class lives in `lib/hooks/HooksExecutionStrategy.ts`; subclasses implement `processHooks`.
 
 Hooks are split by the domain that raises the event (ADR 0012) — where a hook is registered says which subsystem raises it:
 
@@ -269,7 +269,7 @@ Hooks are split by the domain that raises the event (ADR 0012) — where a hook 
 - **Provider** (`IProvider`): `onResolved` (`ProviderHook`), or the `onResolve(...)` registration pipe
 
 `IContainer.getInjector()` hands out the injector shared by the whole scope tree (ADR 0014 reversed ADR 0012's "no accessor" rule). All three modules are `IContainerModule`s applied with `container.useModule(...)`, each taking a strategy keyed to its hook:
-`new Container().useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))`.
+`new Container().useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))`.
 `OnConstructModule` reaches the injector through `getInjector()`; `OnResolvedModule` reaches providers through `onRegistered`. `@onResolved` has no "no hook means invoke the method" shorthand — name the hook, as with `@onConstruct`.
 
 ### `@throws` JSDoc Convention

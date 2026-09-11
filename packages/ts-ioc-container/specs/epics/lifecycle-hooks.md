@@ -5,7 +5,7 @@
   [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md),
   [ADR 0013 - One async-capable hook path, no `Async` variants](../../../adr/0013-one-async-capable-hook-path.md),
   [ADR 0014 - Hook execution is a strategy, chosen by the caller](../../../adr/0014-hook-execution-strategy.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HookExecutionStrategy`, `SequentialSyncHookExecutionStrategy`, `SequentialAsyncHookExecutionStrategy`, `ParallelAsyncHookExecutionStrategy`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HookExecutionStrategy`, `SequentialSync`, `SequentialAsync`, `ParallelAsync`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -148,11 +148,11 @@ reporting are the caller's.
 Acceptance criteria:
 
 - One hook key and one decorator per domain take sync and async hooks alike.
-- `SequentialSyncHookExecutionStrategy` runs members and their hooks one after
+- `SequentialSync` runs members and their hooks one after
   another and never awaits; everything it ran has finished when `execute`
   returns.
-- `SequentialAsyncHookExecutionStrategy` runs members one after another,
-  awaiting each; `ParallelAsyncHookExecutionStrategy` starts every member at
+- `SequentialAsync` runs members one after another,
+  awaiting each; `ParallelAsync` starts every member at
   once. `methodStrategy: 'parallel'` starts the hooks of one member at once
   instead of in declaration order.
 - `execute` returns `void`; async hooks settle after it returns.

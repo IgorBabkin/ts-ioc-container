@@ -117,9 +117,9 @@ export {
   type OnExceptionHandler,
 } from './hooks/HooksExecutionStrategy';
 
-export { SequentialAsyncHookExecutionStrategy } from './hooks/SequentialAsyncHookExecutionStrategy';
-export { ParallelAsyncHookExecutionStrategy } from './hooks/ParallelAsyncHookExecutionStrategy';
-export { SequentialSyncHookExecutionStrategy } from './hooks/SequentialSyncHookExecutionStrategy';
+export { SequentialAsync } from './hooks/SequentialAsync';
+export { ParallelAsync } from './hooks/ParallelAsync';
+export { SequentialSync } from './hooks/SequentialSync';
 
 // Tokens
 export { InjectionToken } from './token/InjectionToken';
