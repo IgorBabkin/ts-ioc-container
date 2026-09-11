@@ -2877,6 +2877,8 @@ abstraction raises the event, one hook type per domain:
 | ------------ | ------------- | --------------- | -------------------------------------------------------- |
 | **Scope**    | `IContainer`  | `ScopeHook`     | `onScopeCreated(...)`, `onScopeDisposed(...)`            |
 | **Scope**    | `IContainer`  | `RegisteredHook`| `onRegistered(...)`                                      |
+| **Scope**    | `IContainer`  | `ITypedEvent`   | `scopeCreated`, `scopeDisposed`, `registered` events     |
+| **Scope**    | `IContainer`  | `ITypedEvent`   | `scopeCreated`, `scopeDisposed`, `registered` events     |
 | **Injector** | `IInjector`   | `InjectorHook`  | `onConstructed(...)`                                     |
 | **Provider** | `IProvider`   | `ProviderHook`  | `onResolved(...)`, or the [`onResolve`](#on-resolve) pipe |
 
@@ -2900,6 +2902,20 @@ container.getInjector().onConstructed((instance, scope) => metrics.built(instanc
 The built-in modules are all container modules: `OnConstructModule` reaches the
 injector through `getInjector()`, `OnDisposeModule` hooks `onScopeDisposed`, and
 `OnResolvedModule` reaches every provider through `onRegistered`.
+
+The scope methods are sugar over three typed events the container exposes —
+`scopeCreated`, `scopeDisposed` (`ITypedEvent<[IContainer]>`) and `registered`
+(`ITypedEvent<[IProvider, DependencyKey, IContainer]>`). Subscribe there when a
+hook needs to be detached again; `subscribe` returns the unsubscribe function.
+The exposed events carry no `emit` — only the container raises its own events:
+
+```typescript
+const stop = container.scopeCreated.subscribe((scope) => audit.scopeOpened(scope));
+stop(); // detached; `container.scopeCreated.unsubscribe(fn)` does the same by reference
+```
+
+`TypedEvent` itself is exported for your own events: `subscribe` / `unsubscribe`
+/ `emit` / `dispose`, with `ITypedEvent` as the subscriber-only view to hand out.
 
 ### OnConstruct
 

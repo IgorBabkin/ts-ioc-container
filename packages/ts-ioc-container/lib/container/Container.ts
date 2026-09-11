@@ -22,6 +22,7 @@ import { unwrapProxy } from '../utils/ProxyRegistry';
 import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
+import { type ITypedEvent, TypedEvent } from '../utils/TypedEvent';
 
 export class Container implements IContainer {
   isDisposed = false;
@@ -34,9 +35,14 @@ export class Container implements IContainer {
   private readonly aliases = new AliasMap();
   private readonly injector: IInjector;
 
-  private readonly onScopeCreatedHookList: ScopeHook[] = [];
-  private readonly onScopeDisposedHookList: ScopeHook[] = [];
-  private readonly onRegisteredHookList: RegisteredHook[] = [];
+  // The concrete events stay private so `emit` is this container's alone; the
+  // public properties expose the subscriber's side only.
+  private readonly scopeCreatedEvent = new TypedEvent<[IContainer]>();
+  private readonly scopeDisposedEvent = new TypedEvent<[IContainer]>();
+  private readonly registeredEvent = new TypedEvent<[IProvider, DependencyKey, IContainer]>();
+  readonly scopeCreated: ITypedEvent<[IContainer]> = this.scopeCreatedEvent;
+  readonly scopeDisposed: ITypedEvent<[IContainer]> = this.scopeDisposedEvent;
+  readonly registered: ITypedEvent<[IProvider, DependencyKey, IContainer]> = this.registeredEvent;
 
   constructor(
     options: {
@@ -59,9 +65,7 @@ export class Container implements IContainer {
     this.aliases.setAliasesByKey(key, aliases);
 
     // Hooks run once the provider and its aliases are in place, so they observe a resolvable key.
-    for (const onRegistered of this.onRegisteredHookList) {
-      onRegistered(provider, key, this);
-    }
+    this.registeredEvent.emit(provider, key, this);
 
     return this;
   }
@@ -137,9 +141,9 @@ export class Container implements IContainer {
 
     // Injector hooks need no copying - the child shares this scope's injector, so it shares its hooks.
     const scope = new Container({ injector: this.injector, parent: this, tags })
-      .onScopeCreated(...this.onScopeCreatedHookList)
-      .onScopeDisposed(...this.onScopeDisposedHookList)
-      .onRegistered(...this.onRegisteredHookList);
+      .onScopeCreated(...this.scopeCreatedEvent.getListeners())
+      .onScopeDisposed(...this.scopeDisposedEvent.getListeners())
+      .onRegistered(...this.registeredEvent.getListeners());
 
     for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
@@ -147,9 +151,7 @@ export class Container implements IContainer {
     this.scopes.push(scope);
 
     // Hooks run once the scope is fully registered and attached, so they observe a usable scope.
-    for (const onScopeCreated of this.onScopeCreatedHookList) {
-      onScopeCreated(scope);
-    }
+    this.scopeCreatedEvent.emit(scope);
 
     return scope;
   }
@@ -180,10 +182,7 @@ export class Container implements IContainer {
     this.validateContainer();
     this.isDisposed = true;
 
-    // Execute onScopeDisposed hooks
-    for (const onScopeDisposed of this.onScopeDisposedHookList) {
-      onScopeDisposed(this);
-    }
+    this.scopeDisposedEvent.emit(this);
 
     // Detach from parent
     this.parent.removeScope(this);
@@ -198,10 +197,10 @@ export class Container implements IContainer {
     this.instances.clear();
     this.registrations = [];
 
-    // Clear hooks. Injector hooks are not this scope's to clear - the injector outlives it.
-    this.onScopeCreatedHookList.length = 0;
-    this.onScopeDisposedHookList.length = 0;
-    this.onRegisteredHookList.length = 0;
+    // Dispose scope events. Injector hooks are not this scope's to clear - the injector outlives it.
+    this.scopeCreatedEvent.dispose();
+    this.scopeDisposedEvent.dispose();
+    this.registeredEvent.dispose();
   }
 
   addRegistration(registration: IRegistration): this {
@@ -222,18 +221,27 @@ export class Container implements IContainer {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
   }
 
+  /**
+   * @throws {TypedEventDisposedError} when the container has already been disposed.
+   */
   onScopeCreated(...hooks: ScopeHook[]): this {
-    this.onScopeCreatedHookList.push(...hooks);
+    hooks.forEach((hook) => this.scopeCreatedEvent.subscribe(hook));
     return this;
   }
 
+  /**
+   * @throws {TypedEventDisposedError} when the container has already been disposed.
+   */
   onScopeDisposed(...hooks: ScopeHook[]): this {
-    this.onScopeDisposedHookList.push(...hooks);
+    hooks.forEach((hook) => this.scopeDisposedEvent.subscribe(hook));
     return this;
   }
 
+  /**
+   * @throws {TypedEventDisposedError} when the container has already been disposed.
+   */
   onRegistered(...hooks: RegisteredHook[]): this {
-    this.onRegisteredHookList.push(...hooks);
+    hooks.forEach((hook) => this.registeredEvent.subscribe(hook));
     return this;
   }
 

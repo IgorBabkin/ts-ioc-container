@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0001 - Container as a linked list of scopes](../../docs/adr/0001-container-as-linked-list.md)
-- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnsupportedTokenTypeError`, `ContainerNotFoundError`, `EmptyContainer`
+- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnsupportedTokenTypeError`, `ContainerNotFoundError`, `TypedEventDisposedError`, `EmptyContainer`
 - **Executable spec:** `__tests__/specs/errors-and-boundaries.spec.ts`
 
 ## Intent
@@ -48,6 +48,8 @@ Acceptance criteria:
 - Registering in a disposed container fails with `ContainerDisposedError`.
 - Creating a scope from a disposed container fails with
   `ContainerDisposedError`.
+- Subscribing to or emitting on a disposed `TypedEvent` fails with
+  `TypedEventDisposedError`.
 
 ### Story: Reject unsupported token operations
 

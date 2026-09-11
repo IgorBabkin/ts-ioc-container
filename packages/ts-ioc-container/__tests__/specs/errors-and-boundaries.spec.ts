@@ -13,6 +13,8 @@ import {
   ProviderDisposedError,
   Registration as R,
   UnsupportedTokenTypeError,
+  TypedEvent,
+  TypedEventDisposedError,
   ContainerError,
   hook,
   SequentialSync,
@@ -54,6 +56,16 @@ describe('Spec: errors and boundaries', () => {
     expect(() => provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toThrowError(
       ProviderDisposedError,
     );
+  });
+
+  it('rejects disposed typed event usage', () => {
+    const event = new TypedEvent<[string]>();
+
+    event.dispose();
+
+    expect(() => event.subscribe(() => {})).toThrowError(TypedEventDisposedError);
+    expect(() => event.emit('late')).toThrowError(TypedEventDisposedError);
+    expect(new TypedEventDisposedError('x')).toBeInstanceOf(ContainerError);
   });
 
   it('rejects unsupported token operations', () => {

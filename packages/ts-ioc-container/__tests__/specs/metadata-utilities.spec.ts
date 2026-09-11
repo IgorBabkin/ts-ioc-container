@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { Mock, Times } from 'moq.ts';
 import {
   addClassLabel,
   addClassTag,
@@ -19,6 +20,9 @@ import {
   addParamTag,
   shallowCache,
   throttle,
+  TypedEvent,
+  type TypedEventListener,
+  TypedEventDisposedError,
 } from '../../lib';
 
 describe('Spec: metadata utilities', () => {
@@ -107,6 +111,55 @@ describe('Spec: metadata utilities', () => {
     vi.advanceTimersByTime(100);
 
     expect(calls).toEqual(['first', 'second', 'latest']);
+  });
+
+  it('publishes typed events to subscribers until they unsubscribe or the event is disposed', () => {
+    const event = new TypedEvent<[string]>();
+    const first = new Mock<TypedEventListener<[string]>>();
+    const second = new Mock<TypedEventListener<[string]>>();
+
+    const unsubscribeFirst = event.subscribe(first.object());
+    event.subscribe(second.object());
+    event.subscribe(second.object()); // a repeated subscription does not double-deliver
+
+    event.emit('one');
+    unsubscribeFirst();
+    unsubscribeFirst(); // harmless when already detached
+    event.emit('two');
+    event.unsubscribe(second.object());
+    event.unsubscribe(second.object()); // harmless when already detached
+    event.emit('three');
+
+    first.verify((l) => l('one'), Times.Once());
+    first.verify((l) => l('two'), Times.Never());
+    second.verify((l) => l('one'), Times.Once());
+    second.verify((l) => l('two'), Times.Once());
+    second.verify((l) => l('three'), Times.Never());
+
+    event.dispose();
+
+    expect(() => event.subscribe(first.object())).toThrowError(TypedEventDisposedError);
+    expect(() => event.emit('four')).toThrowError(TypedEventDisposedError);
+    expect(() => event.unsubscribe(first.object())).not.toThrow();
+  });
+
+  it('delivers an emission in subscription order and settles subscription changes made mid-emission', () => {
+    const event = new TypedEvent<[number]>();
+    const log: string[] = [];
+    const late: TypedEventListener<[number]> = (n) => log.push(`late:${n}`);
+    const second: TypedEventListener<[number]> = (n) => log.push(`second:${n}`);
+
+    event.subscribe((n) => {
+      log.push(`first:${n}`);
+      event.unsubscribe(second);
+      event.subscribe(late);
+    });
+    event.subscribe(second);
+
+    event.emit(1);
+    event.emit(2);
+
+    expect(log).toEqual(['first:1', 'first:2', 'late:2']);
   });
 
   it('handles synchronous and asynchronous method errors with context', async () => {

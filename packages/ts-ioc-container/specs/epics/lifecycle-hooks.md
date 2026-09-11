@@ -121,6 +121,13 @@ Acceptance criteria:
   ScopeHook[])`, `onScopeDisposed(...hooks: ScopeHook[])` and
   `onRegistered(...hooks: RegisteredHook[])`, each returning the
   container for fluent chaining.
+- The same scope events are exposed on `IContainer` as typed events —
+  `scopeCreated`, `scopeDisposed` (`ITypedEvent<[IContainer]>`) and
+  `registered` (`ITypedEvent<[IProvider, DependencyKey, IContainer]>`) — so a
+  hook can be detached with the function `subscribe` returns, or with
+  `unsubscribe`. The fluent `onX(...hooks)` methods are sugar over `subscribe`.
+- The exposed events carry no `emit`: only the container raises its own scope
+  events.
 - Construction is registered on `IInjector`: `onConstructed(...hooks:
   InjectorHook[])`, reached through `container.getInjector()` or configured
   before the injector is passed to `new Container({ injector })`.
@@ -136,7 +143,7 @@ Acceptance criteria:
   whenever it was added.
 - Disposing a scope clears its own scope hooks and leaves the shared injector's
   hooks intact.
-- `EmptyContainer` rejects every scope hook method with
+- `EmptyContainer` rejects every scope hook method and scope event with
   `MethodNotImplementedError`.
 
 ### Story: Choose how hooks run

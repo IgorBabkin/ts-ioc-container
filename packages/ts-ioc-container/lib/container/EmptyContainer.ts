@@ -15,6 +15,7 @@ import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { type constructor, type Instance } from '../utils/basic';
 import { type IInjector } from '../injector/IInjector';
+import { type ITypedEvent } from '../utils/TypedEvent';
 
 export class EmptyContainer implements IContainer {
   /**
@@ -131,6 +132,27 @@ export class EmptyContainer implements IContainer {
    */
   resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T {
     throw new DependencyNotFoundError(`Cannot find alias ${alias.toString()}`);
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
+   */
+  get scopeCreated(): ITypedEvent<[IContainer]> {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
+   */
+  get scopeDisposed(): ITypedEvent<[IContainer]> {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
+   */
+  get registered(): ITypedEvent<[IProvider, DependencyKey, IContainer]> {
+    throw new MethodNotImplementedError();
   }
 
   /**

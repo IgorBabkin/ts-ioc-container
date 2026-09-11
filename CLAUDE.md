@@ -265,6 +265,7 @@ Hooks are async-capable by default, so there is no `Async`-postfixed decorator o
 Hooks are split by the domain that raises the event (ADR 0012) — where a hook is registered says which subsystem raises it:
 
 - **Scope** (`IContainer`): `onScopeCreated`, `onScopeDisposed` (`ScopeHook`), `onRegistered` (`RegisteredHook`)
+  — sugar over the `scopeCreated`, `scopeDisposed`, `registered` properties, which are `ITypedEvent`s (`lib/utils/TypedEvent.ts`: `subscribe` returns an unsubscribe fn; `emit` stays private to `Container`). A child scope gets a copy of the parent's listeners at `createScope` time; `dispose` disposes the events, so a disposed container rejects new hooks with `TypedEventDisposedError`.
 - **Injector** (`IInjector`): `onConstructed` (`InjectorHook`)
 - **Provider** (`IProvider`): `onResolved` (`ProviderHook`), or the `onResolve(...)` registration pipe
 

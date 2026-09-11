@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { expectTypeOf } from 'vitest';
 import {
   MetadataInjector,
   OnConstructModule,
@@ -6,6 +7,9 @@ import {
   OnResolvedModule,
   append,
   Container,
+  EmptyContainer,
+  MethodNotImplementedError,
+  Provider,
   hasHooks,
   hook,
   HookContext,
@@ -348,6 +352,53 @@ describe('Spec: lifecycle hooks', () => {
       'resolved:Service',
       'scopeDisposed',
     ]);
+  });
+
+  it('exposes scope events as typed events which a hook can be detached from', () => {
+    const log: string[] = [];
+    const container = new Container({ tags: ['app'] });
+
+    const stopCreated = container.scopeCreated.subscribe((scope) => log.push(`created:${scope.hasTag('request')}`));
+    const onRegistered = (_provider: unknown, key: unknown) => log.push(`registered:${String(key)}`);
+    container.registered.subscribe(onRegistered);
+    container.scopeDisposed.subscribe(() => log.push('disposed'));
+
+    container.register('a', Provider.fromValue(1));
+    container.createScope({ tags: ['request'] }).dispose();
+
+    stopCreated();
+    container.registered.unsubscribe(onRegistered);
+
+    container.register('b', Provider.fromValue(2));
+    container.createScope({ tags: ['request'] }).dispose();
+
+    // The container's own scopeDisposed event fires for the container itself, not for its children.
+    expect(log).toEqual(['registered:a', 'created:true', 'disposed', 'disposed']);
+    // The exposed event is the subscriber's side only - it carries no emit.
+    expectTypeOf(container.scopeCreated).not.toHaveProperty('emit');
+    expectTypeOf(container.registered).not.toHaveProperty('emit');
+  });
+
+  it('gives a child scope a copy of the parent listeners, so later detaching on either stays local', () => {
+    const log: string[] = [];
+    const container = new Container({ tags: ['app'] });
+    const stop = container.scopeCreated.subscribe((scope) => log.push(`created:${scope.hasTag('child')}`));
+
+    const child = container.createScope({ tags: ['child'] });
+    stop();
+
+    child.createScope({ tags: ['grandchild'] });
+    container.createScope({ tags: ['child'] });
+
+    expect(log).toEqual(['created:true', 'created:false']);
+  });
+
+  it('rejects scope events on the empty container', () => {
+    const empty = new EmptyContainer();
+
+    expect(() => empty.scopeCreated).toThrowError(MethodNotImplementedError);
+    expect(() => empty.scopeDisposed).toThrowError(MethodNotImplementedError);
+    expect(() => empty.registered).toThrowError(MethodNotImplementedError);
   });
 
   it('shares injector hooks with every scope built on the same injector', () => {
