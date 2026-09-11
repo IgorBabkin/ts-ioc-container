@@ -99,19 +99,27 @@ export {
   type InjectFn,
   type HooksOfClass,
 } from './hooks/hook';
-export { HookContext, createHookContextFactory, createHookContext, type IHookContext } from './hooks/HookContext';
-export { injectProp } from './hooks/injectProp';
-export { onConstructHooksRunner, onConstruct, OnConstructModule } from './hooks/onConstruct';
-export { onScopeDisposedHooksRunner, onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
-export { onResolvedHooksRunner, onResolved, OnResolvedModule, resolved } from './hooks/onResolved';
-export { invokeMethod, oncePerInstance, type ResolvedObjectHook } from './hooks/resolveHooks';
 export {
-  HooksRunner,
-  runHooks,
-  type HooksRunnerContext,
-  type MapHookContext,
+  HookContext,
+  createHookContextFactory,
+  createHookExecutionContext,
+  type IHookContext,
+} from './hooks/HookContext';
+export { injectProp } from './hooks/injectProp';
+export { onConstruct, OnConstructModule } from './hooks/onConstruct';
+export { onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
+export { onResolved, OnResolvedModule, resolved } from './hooks/onResolved';
+export { oncePerInstance, type ResolvedObjectHook } from './hooks/resolveHooks';
+export {
+  HookExecutionStrategy,
+  type HookExecutionContext,
+  type MapHookExecutionContext,
   type OnExceptionHandler,
-} from './hooks/HooksRunner';
+} from './hooks/HooksExecutionStrategy';
+
+export { SequentialAsyncHookExecutionStrategy } from './hooks/SequentialAsyncHookExecutionStrategy';
+export { ParallelAsyncHookExecutionStrategy } from './hooks/ParallelAsyncHookExecutionStrategy';
+export { SequentialSyncHookExecutionStrategy } from './hooks/SequentialSyncHookExecutionStrategy';
 
 // Tokens
 export { InjectionToken } from './token/InjectionToken';
