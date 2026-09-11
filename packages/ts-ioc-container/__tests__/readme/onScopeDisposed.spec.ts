@@ -8,6 +8,7 @@ import {
   onScopeDisposed,
   register,
   Registration as R,
+  SequentialSync,
   singleton,
 } from '../../lib';
 
@@ -43,7 +44,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule())
+      .useModule(new OnDisposeModule(new SequentialSync({ key: 'onScopeDisposed' })))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 

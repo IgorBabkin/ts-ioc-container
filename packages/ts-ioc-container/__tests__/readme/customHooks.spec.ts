@@ -1,4 +1,4 @@
-import { append, Container, hook, HooksRunner, MetadataInjector, type HookFn } from '../../lib';
+import { append, Container, hook, SequentialSync, type HookFn } from '../../lib';
 
 /**
  * User Management Domain - Custom Lifecycle Hooks
@@ -13,14 +13,14 @@ import { append, Container, hook, HooksRunner, MetadataInjector, type HookFn } f
  * - @auditCreation: Log service creation for compliance
  *
  * How it works:
- * 1. Define a HooksRunner with a unique hook name
+ * 1. Pick a HookExecutionStrategy, keyed with a unique hook name
  * 2. Create methods decorated with @hook('hookName', append(executor))
- * 3. Register the hook runner on an injector via onConstructed, then pass it to the container
+ * 3. Run the strategy from the container's injector via onConstructed
  * 4. Methods are automatically called when instances are created
  */
 
-// Create a custom hook runner for initialization
-const initializeHookRunner = new HooksRunner('initialize');
+// A strategy for the custom 'initialize' hooks: sync, in declaration order
+const initializeStrategy = new SequentialSync({ key: 'initialize' });
 
 // Hook executor - defines what happens when the hook fires
 const executeInitialize: HookFn = (ctx) => {
@@ -39,13 +39,13 @@ describe('Custom Hooks', () => {
       }
     }
 
-    // Construction is the injector's event, so custom construct hooks go on the injector
-    const injector = new MetadataInjector().onConstructed((instance, scope) => {
-      // Run all 'initialize' hooks on newly created instances
-      initializeHookRunner.execute(instance, { scope });
-    });
+    const container = new Container({ tags: ['application'] });
 
-    const container = new Container({ injector, tags: ['application'] });
+    // Construction is the injector's event, so custom construct hooks go on the injector
+    container.getInjector().onConstructed((instance, scope) => {
+      // Run all 'initialize' hooks on newly created instances
+      initializeStrategy.execute(instance, { scope });
+    });
 
     const cacheService = container.resolve(CacheService);
 

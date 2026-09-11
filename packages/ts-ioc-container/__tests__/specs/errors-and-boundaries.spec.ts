@@ -15,7 +15,7 @@ import {
   UnsupportedTokenTypeError,
   ContainerError,
   hook,
-  HooksRunner,
+  SequentialSync,
 } from '../../lib';
 import { toToken } from '../../lib/token/toToken';
 
@@ -62,7 +62,7 @@ describe('Spec: errors and boundaries', () => {
     expect(() => new GroupInstanceToken(() => true).lazy()).toThrowError(MethodNotImplementedError);
   });
 
-  it('surfaces what a hook threw out of the runner', () => {
+  it('routes what a hook threw to the strategy onError handler', () => {
     const failure = new Error('hook failed');
 
     class Worker {
@@ -77,8 +77,13 @@ describe('Spec: errors and boundaries', () => {
 
     const container = new Container();
     const worker = container.resolve(Worker);
+    const reported: unknown[] = [];
 
-    expect(() => new HooksRunner('start').execute(worker, { scope: container })).toThrowError(failure);
+    new SequentialSync({ key: 'start', onError: () => (ex) => reported.push(ex) }).execute(worker, {
+      scope: container,
+    });
+
+    expect(reported).toEqual([failure]);
   });
 
   it('lets a single catch block handle every container error', () => {

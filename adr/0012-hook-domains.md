@@ -150,14 +150,22 @@ registration.
 > later removed, and `@onContainerDisposed` renamed to `@onScopeDisposed`, by
 > [ADR 0013](0013-one-async-capable-hook-path.md).
 
+> [!NOTE]
+> The "no `getInjector()`" decision and the injector-module form of
+> `OnConstructModule` were reversed by
+> [ADR 0014](0014-hook-execution-strategy.md): `IContainer.getInjector()`
+> exists, and `OnConstructModule` is an `IContainerModule` which reaches the
+> injector through it. The rest of this record — one owner per hook domain,
+> and the type names — stands.
+
 ## References
 
 - [ADR 0013 — One async-capable hook path, no `Async` variants](0013-one-async-capable-hook-path.md)
+- [ADR 0014 — Hook execution is a strategy, chosen by the caller](0014-hook-execution-strategy.md)
 - `lib/container/IContainer.ts` — `ScopeHook`, `RegisteredHook`
 - `lib/injector/IInjector.ts` — `InjectorHook`, `IInjectorModule`, `Injector.onConstructed`
 - `lib/provider/IProvider.ts` — `ProviderHook`, `IProvider.onResolved`
-- `lib/hooks/onConstruct.ts`, `lib/hooks/onConstructAsync.ts`
-- `lib/hooks/onContainerDisposed.ts`
+- `lib/hooks/onConstruct.ts`, `lib/hooks/onScopeDisposed.ts`
 - `__tests__/specs/lifecycle-hooks.spec.ts`
 - [ADR 0007 — Lifecycle hooks via reflect-metadata and opt-in modules](0007-lifecycle-hooks.md)
 - [ADR 0002 — Pluggable injector strategies](0002-pluggable-injectors.md)

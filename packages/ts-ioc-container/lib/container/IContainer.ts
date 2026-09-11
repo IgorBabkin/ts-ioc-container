@@ -1,6 +1,6 @@
 import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { type WithArgs } from '../injector/IInjector';
+import { IInjector, type WithArgs } from '../injector/IInjector';
 import { type constructor, Instance } from '../utils/basic';
 
 export type DependencyKey = string | symbol;
@@ -91,4 +91,6 @@ export interface IContainer extends Tagged {
   dispose(): void;
 
   addInstance(instance: Instance): void;
+
+  getInjector(): IInjector;
 }

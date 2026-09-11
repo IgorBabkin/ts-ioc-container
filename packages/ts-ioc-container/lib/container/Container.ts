@@ -214,6 +214,10 @@ export class Container implements IContainer {
     return [...this.parent.getRegistrations(), ...this.registrations];
   }
 
+  getInjector(): IInjector {
+    return this.injector;
+  }
+
   hasRegistration(key: DependencyKey): boolean {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
   }

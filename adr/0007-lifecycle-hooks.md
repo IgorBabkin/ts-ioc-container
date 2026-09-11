@@ -19,7 +19,7 @@ Store hook declarations with `reflect-metadata`, but activate lifecycle
 execution through container modules.
 
 Decorators such as `onConstruct` and `onContainerDisposed` attach hook metadata to class
-methods. `HooksRunner` reads that metadata and executes hook functions or
+methods. A `HookExecutionStrategy` reads that metadata and executes hook functions or
 hook classes. `OnConstructModule` and `OnDisposeModule` opt a
 container into running those hooks during instance construction and scope
 disposal.
@@ -44,6 +44,13 @@ optional exception handler instead of failing `resolve`.
 > Disposing a parent scope does not run child-scope dispose hooks. Dispose each
 > child scope explicitly when its lifecycle ends.
 
+> [!NOTE]
+> The sync/async split described above was removed by
+> [ADR 0013](0013-one-async-capable-hook-path.md), and the single runner it
+> introduced was in turn replaced by caller-chosen execution strategies in
+> [ADR 0014](0014-hook-execution-strategy.md). Modules are still the opt-in;
+> each now takes the strategy that runs its hooks.
+
 ## Consequences
 
 **Positive**
@@ -51,7 +58,7 @@ optional exception handler instead of failing `resolve`.
 - Lifecycle behavior is available without becoming mandatory container
   behavior.
 - Hook classes can be resolved through the container, so hook logic can use DI.
-- Hook execution is centralized in `HooksRunner`.
+- Hook execution is centralized in `HookExecutionStrategy`.
 - Local disposal maps cleanly to frameworks with explicit child lifecycles,
   such as React component trees.
 
@@ -83,7 +90,7 @@ optional exception handler instead of failing `resolve`.
 - [ADR 0012 — Hook registration lives with the domain which raises the event](0012-hook-domains.md)
 - [ADR 0013 — One async-capable hook path, no `Async` variants](0013-one-async-capable-hook-path.md)
 - `lib/hooks/hook.ts`
-- `lib/hooks/HooksRunner.ts`
+- `lib/hooks/HookExecutionStrategy.ts`
 - `lib/hooks/onConstruct.ts`
 - `lib/hooks/onConstructAsync.ts`
 - `lib/hooks/onContainerDisposed.ts`
