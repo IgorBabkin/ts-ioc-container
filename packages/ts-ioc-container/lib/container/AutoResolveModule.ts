@@ -19,6 +19,6 @@ export class AutoResolveModule implements IContainerModule {
   constructor(private readonly options: AutoResolveOptions = {}) {}
 
   applyTo(container: IContainer): void {
-    container.onScopeCreated((scope) => scope.autoResolve(this.options));
+    container.scopeCreated.subscribe((scope) => scope.autoResolve(this.options));
   }
 }

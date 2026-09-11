@@ -17,7 +17,9 @@ describe('onRegistered', () => {
   it('should run the hook when a provider is registered', () => {
     const log: [DependencyKey, unknown][] = [];
 
-    new Container().onRegistered(record(log)).register('key', Provider.fromValue(1));
+    const container = new Container();
+    container.registered.subscribe(record(log));
+    container.register('key', Provider.fromValue(1));
 
     expect(log).toEqual([['key', 1]]);
   });
@@ -25,13 +27,11 @@ describe('onRegistered', () => {
   it('should run every hook in the order it was added', () => {
     const log: string[] = [];
 
-    new Container()
-      .onRegistered(
-        () => log.push('first'),
-        () => log.push('second'),
-      )
-      .onRegistered(() => log.push('third'))
-      .register('key', Provider.fromValue(1));
+    const container = new Container();
+    container.registered.subscribe(() => log.push('first'));
+    container.registered.subscribe(() => log.push('second'));
+    container.registered.subscribe(() => log.push('third'));
+    container.register('key', Provider.fromValue(1));
 
     expect(log).toEqual(['first', 'second', 'third']);
   });
@@ -39,7 +39,8 @@ describe('onRegistered', () => {
   it('should pass the registering scope to the hook', () => {
     let hookScope: IContainer | undefined;
 
-    const root = new Container({ tags: ['root'] }).onRegistered((_p, _k, s) => {
+    const root = new Container({ tags: ['root'] });
+    root.registered.subscribe((_p, _k, s) => {
       hookScope = s;
     });
     root.register('key', Provider.fromValue(1));
@@ -50,7 +51,9 @@ describe('onRegistered', () => {
   it('should run the hook when a registration is added', () => {
     const log: [DependencyKey, unknown][] = [];
 
-    new Container().onRegistered(record(log)).addRegistration(Registration.fromValue(1).bindTo('key'));
+    const container = new Container();
+    container.registered.subscribe(record(log));
+    container.addRegistration(Registration.fromValue(1).bindTo('key'));
 
     expect(log).toEqual([['key', 1]]);
   });
@@ -58,9 +61,9 @@ describe('onRegistered', () => {
   it('should run inherited hooks for providers cloned into a child scope', () => {
     const log: [DependencyKey, unknown][] = [];
 
-    const root = new Container({ tags: ['root'] })
-      .onRegistered(record(log))
-      .addRegistration(Registration.fromValue(1).bindTo('key'));
+    const root = new Container({ tags: ['root'] });
+    root.registered.subscribe(record(log));
+    root.addRegistration(Registration.fromValue(1).bindTo('key'));
     log.length = 0;
 
     const child = root.createScope({ tags: ['child'] });
@@ -72,7 +75,9 @@ describe('onRegistered', () => {
   it('should not run the hook for registrations which do not match the child scope', () => {
     const log: [DependencyKey, unknown][] = [];
 
-    const root = new Container({ tags: ['root'] }).onRegistered(record(log)).addRegistration(
+    const root = new Container({ tags: ['root'] });
+    root.registered.subscribe(record(log));
+    root.addRegistration(
       Registration.fromValue(1)
         .bindTo('key')
         .when((s) => s.hasTag('other')),
@@ -88,14 +93,14 @@ describe('onRegistered', () => {
     const log: [DependencyKey, unknown][] = [];
 
     const root = new Container({ tags: ['root'] });
-    root.createScope({ tags: ['child'] }).onRegistered(record(log));
+    root.createScope({ tags: ['child'] }).registered.subscribe(record(log));
 
     root.register('key', Provider.fromValue(1));
 
     expect(log).toEqual([]);
   });
 
-  it('should raise an error when registering the hook on an empty container', () => {
-    expect(() => new EmptyContainer().onRegistered(() => {})).toThrowError(MethodNotImplementedError);
+  it('should raise an error when accessing the event on an empty container', () => {
+    expect(() => new EmptyContainer().registered).toThrowError(MethodNotImplementedError);
   });
 });

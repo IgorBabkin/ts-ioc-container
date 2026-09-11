@@ -82,6 +82,7 @@ export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { ProviderDisposedError } from './errors/ProviderDisposedError';
 export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwiceError';
 export { UnsupportedTokenTypeError } from './errors/UnsupportedTokenTypeError';
+export { TypedEventDisposedError } from './errors/TypedEventDisposedError';
 
 // Hooks
 export {
@@ -164,6 +165,7 @@ export { throttle } from './utils/throttle';
 export { debounce } from './utils/debounce';
 export { shallowCache } from './utils/shallowCache';
 export { once } from './utils/once';
+export { TypedEvent, type ITypedEvent, type TypedEventListener, type Unsubscribe } from './utils/TypedEvent';
 
 // Execution
 export { type ExecutionContext } from './ExecutionContext';

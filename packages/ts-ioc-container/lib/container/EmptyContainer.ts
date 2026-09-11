@@ -3,8 +3,6 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type ScopeHook,
-  type RegisteredHook,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
@@ -15,6 +13,7 @@ import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { type constructor, type Instance } from '../utils/basic';
 import { type IInjector } from '../injector/IInjector';
+import { type ITypedEvent } from '../utils/TypedEvent';
 
 export class EmptyContainer implements IContainer {
   /**
@@ -136,21 +135,21 @@ export class EmptyContainer implements IContainer {
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  onScopeCreated(...hooks: ScopeHook[]): this {
+  get scopeCreated(): ITypedEvent<[IContainer]> {
     throw new MethodNotImplementedError();
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  onScopeDisposed(...hooks: ScopeHook[]): this {
+  get scopeDisposed(): ITypedEvent<[IContainer]> {
     throw new MethodNotImplementedError();
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
-  onRegistered(...hooks: RegisteredHook[]): this {
+  get registered(): ITypedEvent<[IProvider, DependencyKey, IContainer]> {
     throw new MethodNotImplementedError();
   }
 }

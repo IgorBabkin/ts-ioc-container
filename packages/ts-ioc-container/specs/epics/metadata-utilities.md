@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0008 - Zero runtime dependencies](../../docs/adr/0008-zero-runtime-dependencies.md)
-- **Public API:** `addClassMeta`, `getClassMeta`, `addClassLabel`, `getClassLabels`, `addClassTag`, `getClassTags`, `addParamMeta`, `getParamMeta`, `addParamLabel`, `getParamLabels`, `addParamTag`, `getParamTags`, `addMethodMeta`, `getMethodMeta`, `addMethodLabel`, `getMethodLabels`, `addMethodTag`, `getMethodTags`, `once`, `debounce`, `throttle`, `shallowCache`, `handleError`, `handleAsyncError`
+- **Public API:** `addClassMeta`, `getClassMeta`, `addClassLabel`, `getClassLabels`, `addClassTag`, `getClassTags`, `addParamMeta`, `getParamMeta`, `addParamLabel`, `getParamLabels`, `addParamTag`, `getParamTags`, `addMethodMeta`, `getMethodMeta`, `addMethodLabel`, `getMethodLabels`, `addMethodTag`, `getMethodTags`, `once`, `debounce`, `throttle`, `shallowCache`, `handleError`, `handleAsyncError`, `TypedEvent`, `ITypedEvent`
 - **Executable spec:** `__tests__/specs/metadata-utilities.spec.ts`
 
 ## Intent
@@ -62,6 +62,28 @@ Acceptance criteria:
 - `shallowCache` caches results per instance and computed argument key.
 - `throttle` blocks calls inside the configured time window per instance.
 - `debounce` delays execution and keeps the latest call in the debounce window.
+
+### Story: Publish typed events
+
+As an application developer, I can expose a typed event so that subscribers
+receive strongly typed payloads and can detach without holding a reference to
+the emitter's internals.
+
+Acceptance criteria:
+
+- `subscribe` registers a listener and returns a function that unsubscribes
+  it; calling that function more than once is harmless.
+- `emit` delivers the payload to every current listener in subscription order.
+- `unsubscribe` detaches a listener by reference; unsubscribing a listener that
+  was never subscribed is harmless.
+- Subscribing the same listener twice delivers each emission to it once.
+- A listener detached while an emission is in progress does not receive that
+  emission after it has been detached, and a listener attached during an
+  emission receives only later emissions.
+- `dispose` detaches every listener; subscribing to or emitting on a disposed
+  event fails with `TypedEventDisposedError`, and unsubscribing stays harmless.
+- `ITypedEvent` exposes `subscribe`, `unsubscribe`, and `dispose` only, so an
+  owner can hand out the event without handing out `emit`.
 
 ### Story: Handle method errors
 

@@ -171,7 +171,7 @@ describe('autoResolve', function () {
 
   it('should not be supported by an empty container', function () {
     expect(() => new EmptyContainer().autoResolve()).toThrowError(MethodNotImplementedError);
-    expect(() => new EmptyContainer().onScopeCreated(() => {})).toThrowError(MethodNotImplementedError);
+    expect(() => new EmptyContainer().scopeCreated).toThrowError(MethodNotImplementedError);
   });
 
   describe('args', function () {

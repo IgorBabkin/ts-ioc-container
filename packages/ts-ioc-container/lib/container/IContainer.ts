@@ -2,6 +2,7 @@ import { type IProvider, ProviderOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { IInjector, type WithArgs } from '../injector/IInjector';
 import { type constructor, Instance } from '../utils/basic';
+import { type ITypedEvent } from '../utils/TypedEvent';
 
 export type DependencyKey = string | symbol;
 export function isDependencyKey(target: unknown): target is DependencyKey {
@@ -32,7 +33,7 @@ export type RegisterOptions = { aliases?: DependencyKey[] };
 
 /**
  * Scope event hooks - the container's own domain: a scope was created, a scope
- * was disposed.
+ * was disposed. The listener type of `IContainer.scopeCreated` / `scopeDisposed`.
  *
  * The other two hook domains live with the abstraction which raises them:
  * injector hooks on `IInjector` (`InjectorHook`), provider hooks on
@@ -45,18 +46,28 @@ export type ScopeHook = (scope: IContainer) => void;
 /**
  * Scope event hook for a registration landing in a scope: a provider entered
  * the provider map under `key`. Registration is always of a provider, so the
- * name says only what varies.
+ * name says only what varies. The listener type of `IContainer.registered`.
  */
 export type RegisteredHook = (provider: IProvider, key: DependencyKey, scope: IContainer) => void;
 
 export interface IContainer extends Tagged {
   readonly isDisposed: boolean;
 
-  onScopeCreated(...hooks: ScopeHook[]): this;
+  /**
+   * Raised once a scope this container created is fully registered and attached.
+   * The subscriber's side only - a container raises its own scope events.
+   */
+  readonly scopeCreated: ITypedEvent<[IContainer]>;
 
-  onScopeDisposed(...hooks: ScopeHook[]): this;
+  /**
+   * Raised by this container as it disposes, before its providers and instances go.
+   */
+  readonly scopeDisposed: ITypedEvent<[IContainer]>;
 
-  onRegistered(...hooks: RegisteredHook[]): this;
+  /**
+   * Raised once a provider is registered here under a resolvable key.
+   */
+  readonly registered: ITypedEvent<[IProvider, DependencyKey, IContainer]>;
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 

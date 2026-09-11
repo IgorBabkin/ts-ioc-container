@@ -10,14 +10,14 @@ export const onScopeDisposed = (...fns: HookType[]) => hook('onScopeDisposed', p
  * Runs the `@onScopeDisposed` hooks of every instance of a scope being disposed,
  * the way `strategy` defines (key it to `onScopeDisposed`).
  *
- * Disposal is a scope event, so the module hangs off `IContainer.onScopeDisposed`.
+ * Disposal is a scope event, so the module hangs off `IContainer.scopeDisposed`.
  * Disposal is local: disposing a parent runs no child-scope hooks.
  */
 export class OnDisposeModule implements IContainerModule {
   constructor(private readonly strategy: HookExecutionStrategy) {}
 
   applyTo(container: IContainer) {
-    container.onScopeDisposed((scope) => {
+    container.scopeDisposed.subscribe((scope) => {
       for (const instance of scope.getInstances()) {
         this.strategy.execute(instance, { scope });
       }
