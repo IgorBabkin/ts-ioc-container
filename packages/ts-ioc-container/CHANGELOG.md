@@ -1,3 +1,18 @@
+# 65.0.0 (2026-09-11)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    add TypedEvent and replace container hook methods with scope events (#151)
+    (a8ab2fdf5a14dc0e503df78b3a20ab195a69b4eb)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add TypedEvent and replace container hook methods with scope events (#151)
+    (a8ab2fdf5a14dc0e503df78b3a20ab195a69b4eb)
+
+
 # 64.0.0 (2026-09-11)
 
   ### 💥 BREAKING CHANGES
@@ -224,6 +239,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
