@@ -2833,7 +2833,7 @@ compensate for the bottom-up application order, so stacked decorators run in
 declaration order: `@onConstruct(h1) @onConstruct(h2)` runs `h1` before `h2`.
 
 Every hook may be sync or async — one decorator and one module take both, so
-there is no separate async form to reach for. A `HooksRunner` runs a hook chain
+there is no separate async form to reach for. A `HooksExecutionStrategy` runs a hook chain
 eagerly and stays synchronous until a hook returns a promise, then awaits the
 rest of that chain. Sync hooks therefore finish before `resolve` (or `dispose`)
 returns, exactly as before; async ones are started there and settle afterwards,
@@ -3138,7 +3138,7 @@ describe('onScopeDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { append, Container, hook, HooksRunner, injectProp, Registration } from 'ts-ioc-container';
+import { append, Container, hook, HooksExecutionStrategy, injectProp, Registration } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -3154,7 +3154,7 @@ import { append, Container, hook, HooksRunner, injectProp, Registration } from '
 describe('inject property', () => {
   it('should inject property', () => {
     // Runner for the 'onInit' lifecycle hook
-    const onInitHookRunner = new HooksRunner('onInit');
+    const onInitHookRunner = new HooksExecutionStrategy('onInit');
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -3179,7 +3179,7 @@ describe('inject property', () => {
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitHookRunner = new HooksRunner('onInit');
+    const onInitHookRunner = new HooksExecutionStrategy('onInit');
 
     let injectedValue: unknown;
 

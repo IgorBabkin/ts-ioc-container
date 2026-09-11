@@ -62,11 +62,11 @@ export class HookContext implements IHookContext {
   }
 }
 
-export type CreateHookContext = (Target: Instance, scope: IContainer, methodName?: string) => IHookContext;
-export const createHookContext: CreateHookContext = (Target, scope, methodName = 'constructor') =>
+export type CreateHookExecutionContext = (Target: Instance, scope: IContainer, methodName?: string) => IHookContext;
+export const createHookExecutionContext: CreateHookExecutionContext = (Target, scope, methodName = 'constructor') =>
   new HookContext(Target, scope, methodName);
 
 export const createHookContextFactory =
-  ({ args = [] }: { args?: unknown[] } = {}): CreateHookContext =>
+  ({ args = [] }: { args?: unknown[] } = {}): CreateHookExecutionContext =>
   (Target, scope, methodName) =>
-    createHookContext(Target, scope, methodName).setInitialArgs(...args);
+    createHookExecutionContext(Target, scope, methodName).setInitialArgs(...args);
