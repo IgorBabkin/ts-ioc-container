@@ -1,31 +1,34 @@
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import type { ProviderHook } from '../provider/IProvider';
-import { HookExecutionStrategy } from './HooksExecutionStrategy';
+import { type HookExecutionStrategy } from './HookExecutionStrategy';
 import { registerPipe } from '../registration/IRegistration';
 import { Is } from '../utils/basic';
-import { hook, HookType, prependHooks } from './hook';
+import { hook, type HookType, prependHooks } from './hook';
 
+// Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
+// `@onX(h1) @onX(h2) method()` runs h1 before h2.
 export const onResolved = (...hooks: HookType[]) => hook('onResolved', prependHooks(...hooks));
 
 // Hook metadata lives on classes, so a primitive dependency has nothing to run.
 const runHooks =
-  (executionStrategy: HookExecutionStrategy): ProviderHook =>
+  (strategy: HookExecutionStrategy): ProviderHook =>
   (dependency, scope) => {
     if (Is.object(dependency)) {
-      executionStrategy.execute(dependency, { scope });
+      strategy.execute(dependency, { scope });
     }
   };
 
 /**
- * Runs `onResolved` hooks every time a dependency object leaves a provider.
+ * Runs `onResolved` hooks every time a dependency object leaves a provider, the
+ * way `strategy` defines (key it to `onResolved`).
  * Providers are hooked through `onRegistered`, so apply the module before the
  * registrations it should cover; scopes created afterwards inherit it.
  */
 export class OnResolvedModule implements IContainerModule {
   private readonly runHooks: ProviderHook;
 
-  constructor(executionStrategy: HookExecutionStrategy) {
-    this.runHooks = runHooks(executionStrategy);
+  constructor(strategy: HookExecutionStrategy) {
+    this.runHooks = runHooks(strategy);
   }
 
   applyTo(container: IContainer) {
@@ -40,5 +43,5 @@ export class OnResolvedModule implements IContainerModule {
  * its `onResolved` hooks on resolve, without the container opting every other
  * registration in.
  */
-export const resolved = <T = unknown>(executionStrategy: HookExecutionStrategy) =>
-  registerPipe<T>((p) => p.onResolved(runHooks(executionStrategy)));
+export const resolved = <T = unknown>(strategy: HookExecutionStrategy) =>
+  registerPipe<T>((p) => p.onResolved(runHooks(strategy)));

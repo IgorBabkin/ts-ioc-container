@@ -110,7 +110,7 @@ applied to the imperative side, now applied to the declaration too.
 
 ## References
 
-- `lib/hooks/HooksExecutionStrategy.ts` — `execute` (formerly `HooksRunner`, see ADR 0014)
+- `lib/hooks/HookExecutionStrategy.ts` — `execute` (formerly `HooksRunner`, see ADR 0014)
 - `lib/hooks/onConstruct.ts`, `lib/hooks/onResolved.ts`, `lib/hooks/onScopeDisposed.ts`
 - `__tests__/specs/lifecycle-hooks.spec.ts`
 - [ADR 0007 — Lifecycle hooks via reflect-metadata and opt-in modules](0007-lifecycle-hooks.md)

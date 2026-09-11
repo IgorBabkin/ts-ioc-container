@@ -77,10 +77,11 @@ have settled reads the state they publish, as ADR 0007 already required of
 instances that expose readiness.
 
 This replaces ADR 0013's `void | Promise<void>` return, which leaked the
-sync-until-async mechanism into the type. Resolution and disposal remain
-synchronous under every strategy: the sync strategy finishes before returning,
-and both async strategies start their first hook synchronously and defer the
-rest.
+sync-until-async mechanism into the type. The mechanism itself stays:
+resolution and disposal remain synchronous under every strategy, because a run
+stays synchronous until a hook actually returns a promise — the sync strategy
+never awaits, and the async strategies await only what is a promise, so sync
+hooks under them finish before `execute` returns too.
 
 ### Failures go to `onError`, or nowhere
 
@@ -140,22 +141,22 @@ one-line hook themselves.
   and readiness checks wait on published state instead.
 - A hook failure is silent unless an `onError` handler is set. The sync
   strategy in particular starts a promise-returning hook and never observes it.
-- The async strategies stay synchronous only up to the first `await`, so a
-  member's second hook, or a second member under the sequential strategy, runs
-  after `resolve` has returned. Hooks that must complete before resolution
-  returns belong under the sync strategy.
+- Under an async strategy, everything declared after the first hook that goes
+  async runs after `resolve` has returned — a later hook of that member, and
+  under the sequential strategy every later member.
 - ADR 0012's "no `getInjector()`" principle is reversed; the accessor exists
   and code holding an `IContainer` can now register construct hooks.
 
 ## References
 
-- `lib/hooks/HooksExecutionStrategy.ts` — `HookExecutionStrategy`, `execute`, `onError`
+- `lib/hooks/HookExecutionStrategy.ts` — `HookExecutionStrategy`, `execute`, `onError`, `runInOrder`, `runAtOnce`
+- `lib/hooks/AsyncHookExecutionStrategy.ts` — `methodStrategy`
 - `lib/hooks/SequentialSync.ts`
 - `lib/hooks/SequentialAsync.ts`
 - `lib/hooks/ParallelAsync.ts`
 - `lib/hooks/onConstruct.ts`, `lib/hooks/onResolved.ts`, `lib/hooks/onScopeDisposed.ts`
 - `lib/container/IContainer.ts` — `getInjector`
-- `__tests__/specs/lifecycle-hooks.spec.ts`
+- `__tests__/hooks/HookExecutionStrategy.spec.ts`, `__tests__/specs/lifecycle-hooks.spec.ts`
 - [ADR 0007 — Lifecycle hooks via reflect-metadata and opt-in modules](0007-lifecycle-hooks.md)
 - [ADR 0012 — Hook registration lives with the domain which raises the event](0012-hook-domains.md)
 - [ADR 0013 — One async-capable hook path, no `Async` variants](0013-one-async-capable-hook-path.md)

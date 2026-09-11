@@ -1,23 +1,16 @@
-import type { Instance } from '../utils/basic';
-import { createHookExecutionContext } from './HookContext';
-import { toHookFn } from './hook';
-import { HookExecutionContext, HookExecutionStrategy } from './HooksExecutionStrategy';
+import { HookExecutionStrategy, type MemberHooks } from './HookExecutionStrategy';
 
+/**
+ * Runs every member, and every hook of a member, one after another and never
+ * awaits: everything it ran has finished when `execute` returns. A hook which
+ * returns a promise is started but not observed — declare such hooks under an
+ * async strategy instead.
+ */
 export class SequentialSync extends HookExecutionStrategy {
-  processHooks(
-    target: Instance,
-    {
-      scope,
-      createExecutionContext = createHookExecutionContext,
-      mapExecutionContext = (context) => context,
-      predicate = () => true,
-    }: HookExecutionContext,
-  ) {
-    for (const [methodName, executions] of this.getHooks(target)) {
-      if (predicate(methodName)) {
-        const hooks = executions.map(toHookFn);
-        const context = createExecutionContext(target, scope, methodName);
-        this.sequentiallySync(hooks, mapExecutionContext(context));
+  protected processHooks(members: MemberHooks[]): void {
+    for (const { hooks, context } of members) {
+      for (const hook of hooks) {
+        hook(context);
       }
     }
   }

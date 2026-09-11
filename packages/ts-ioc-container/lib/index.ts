@@ -103,6 +103,7 @@ export {
   HookContext,
   createHookContextFactory,
   createHookExecutionContext,
+  type CreateHookExecutionContext,
   type IHookContext,
 } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
@@ -113,13 +114,20 @@ export { oncePerInstance, type ResolvedObjectHook } from './hooks/resolveHooks';
 export {
   HookExecutionStrategy,
   type HookExecutionContext,
+  type HookExecutionOptions,
+  type HookExecutionStrategyProps,
   type MapHookExecutionContext,
-  type OnExceptionHandler,
-} from './hooks/HooksExecutionStrategy';
-
+  type MemberHooks,
+  type OnErrorHandler,
+} from './hooks/HookExecutionStrategy';
+export {
+  AsyncHookExecutionStrategy,
+  type AsyncHookExecutionStrategyProps,
+  type MethodStrategy,
+} from './hooks/AsyncHookExecutionStrategy';
+export { SequentialSync } from './hooks/SequentialSync';
 export { SequentialAsync } from './hooks/SequentialAsync';
 export { ParallelAsync } from './hooks/ParallelAsync';
-export { SequentialSync } from './hooks/SequentialSync';
 
 // Tokens
 export { InjectionToken } from './token/InjectionToken';

@@ -155,7 +155,11 @@ Acceptance criteria:
   awaiting each; `ParallelAsync` starts every member at
   once. `methodStrategy: 'parallel'` starts the hooks of one member at once
   instead of in declaration order.
+- A run stays synchronous until a hook returns a promise; the async strategies
+  await only what is a promise.
 - `execute` returns `void`; async hooks settle after it returns.
+- A class's hook metadata is read and resolved to hook functions once per
+  strategy.
 - A strategy reports both a sync throw and a rejected async hook to its
   `onError` handler, and drops both when none is supplied.
 - Hook context can resolve method arguments and invoke the target method.

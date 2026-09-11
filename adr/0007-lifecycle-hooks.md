@@ -90,7 +90,7 @@ optional exception handler instead of failing `resolve`.
 - [ADR 0012 — Hook registration lives with the domain which raises the event](0012-hook-domains.md)
 - [ADR 0013 — One async-capable hook path, no `Async` variants](0013-one-async-capable-hook-path.md)
 - `lib/hooks/hook.ts`
-- `lib/hooks/HooksExecutionStrategy.ts`
+- `lib/hooks/HookExecutionStrategy.ts`
 - `lib/hooks/onConstruct.ts`
 - `lib/hooks/onConstructAsync.ts`
 - `lib/hooks/onContainerDisposed.ts`

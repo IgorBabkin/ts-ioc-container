@@ -1,41 +1,17 @@
-import type { Instance } from '../utils/basic';
-import { createHookExecutionContext } from './HookContext';
-import { toHookFn } from './hook';
-import { HookExecutionContext, HookExecutionStrategy, HookExecutionStrategyContext } from './HooksExecutionStrategy';
-import type { IContainer } from '../container/IContainer';
+import { AsyncHookExecutionStrategy } from './AsyncHookExecutionStrategy';
+import { type MemberHooks } from './HookExecutionStrategy';
 
-type Props = Partial<HookExecutionStrategyContext> & {
-  key: string | symbol;
-  methodStrategy?: 'sequential' | 'parallel';
-  onError?: (c: IContainer) => (error: unknown) => void;
-};
-
-export class SequentialAsync extends HookExecutionStrategy {
-  private readonly methodStrategy: 'sequential' | 'parallel';
-
-  constructor(props: Props) {
-    super(props);
-    this.methodStrategy = props.methodStrategy ?? 'sequential';
-  }
-
-  async processHooks(
-    target: Instance,
-    {
-      scope,
-      createExecutionContext = createHookExecutionContext,
-      mapExecutionContext = (context) => context,
-      predicate = () => true,
-    }: HookExecutionContext,
-  ) {
-    for (const [methodName, executions] of this.getHooks(target)) {
-      if (predicate(methodName)) {
-        const hooks = executions.map(toHookFn);
-        const context = createExecutionContext(target, scope, methodName);
-        if (this.methodStrategy === 'sequential') {
-          await this.sequentiallyAsync(hooks, mapExecutionContext(context));
-        } else {
-          await this.parallelAsync(hooks, mapExecutionContext(context));
-        }
+/**
+ * Runs members one after another, in declaration order: a member whose hooks go
+ * async is awaited before the next member starts. Use it when a later member
+ * depends on what an earlier one set up.
+ */
+export class SequentialAsync extends AsyncHookExecutionStrategy {
+  protected processHooks(members: MemberHooks[], from = 0): void | Promise<void> {
+    for (let i = from; i < members.length; i++) {
+      const result = this.runMember(members[i]);
+      if (result) {
+        return result.then(() => this.processHooks(members, i + 1));
       }
     }
   }

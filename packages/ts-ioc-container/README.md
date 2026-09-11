@@ -2851,12 +2851,13 @@ const container = new Container()
   .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
 ```
 
-Resolution and disposal stay synchronous under every strategy: sync hooks
-finish before `resolve` (or `dispose`) returns, async ones are started there and
-settle afterwards, so `resolve` returns before they finish. Instances that must
-expose readiness should publish it themselves, for example by storing the
-pending promise on the instance. The sync strategy never awaits — a hook that
-returns a promise under it is started but not observed.
+Resolution and disposal stay synchronous under every strategy: a run stays
+synchronous until a hook returns a promise, so sync hooks finish before
+`resolve` (or `dispose`) returns, and async ones are started there and settle
+afterwards. Instances that must expose readiness should publish it themselves,
+for example by storing the pending promise on the instance. The sync strategy
+never awaits — a hook that returns a promise under it is started but not
+observed.
 
 `strategy.execute(instance, { scope })` runs the hooks of a custom key by hand;
 `predicate`, `createExecutionContext` and `mapExecutionContext` can be set on
