@@ -1,3 +1,18 @@
+# 64.0.0 (2026-09-11)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    run lifecycle hooks through caller-chosen execution strategies (#150)
+    (5c0da0d254e879a6048286d4ffeeca69ccf3c5fc)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    run lifecycle hooks through caller-chosen execution strategies (#150)
+    (5c0da0d254e879a6048286d4ffeeca69ccf3c5fc)
+
+
 # 63.0.0 (2026-09-08)
 
   ### 💥 BREAKING CHANGES
@@ -209,6 +224,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
