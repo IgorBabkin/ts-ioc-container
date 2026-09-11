@@ -14,6 +14,7 @@ import { DependencyNotFoundError } from '../errors/DependencyNotFoundError';
 import { type IProvider } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { type constructor, type Instance } from '../utils/basic';
+import { type IInjector } from '../injector/IInjector';
 
 export class EmptyContainer implements IContainer {
   /**
@@ -45,6 +46,13 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot create scopes.
    */
   createScope(): IContainer {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — the empty container constructs nothing, so it has no injector.
+   */
+  getInjector(): IInjector {
     throw new MethodNotImplementedError();
   }
 

@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import {
-  MetadataInjector,
   OnConstructModule,
   Container,
-  type ExecutionContext,
   type HookFn,
   type IContainer,
   inject,
   onConstruct,
   Registration as R,
+  SequentialAsyncHookExecutionStrategy,
+  SequentialSyncHookExecutionStrategy,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
@@ -32,9 +32,10 @@ describe('onConstruct', function () {
       }
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
+    // The module takes a strategy for how the hooks run; the strategy is keyed to the hooks it runs.
+    const container = new Container()
+      .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
 
@@ -42,7 +43,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward hook exceptions to the onException handler with the execution context', function () {
+  it('should forward hook exceptions to the onError handler with the scope', function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -52,36 +53,24 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    let captured: { ex: unknown; context: ExecutionContext } | undefined;
-    const container = new Container({
-      injector: new MetadataInjector().useModule(
-        new OnConstructModule((ex, context) => {
-          captured = { ex, context };
+    let captured: { ex: unknown; scope: IContainer } | undefined;
+    const container = new Container().useModule(
+      new OnConstructModule(
+        new SequentialSyncHookExecutionStrategy({
+          key: 'onConstruct',
+          onError: (scope) => (ex) => {
+            captured = { ex, scope };
+          },
         }),
       ),
-    });
+    );
 
     expect(() => container.resolve(BrokenService)).not.toThrow();
     expect(captured?.ex).toBe(failure);
-    expect(captured?.context.scope).toBe(container);
+    expect(captured?.scope).toBe(container);
   });
 
-  it('should rethrow hook exceptions when no onException handler is provided', function () {
-    const failure = new Error('boom');
-
-    class BrokenService {
-      @onConstruct(() => {
-        throw failure;
-      })
-      init() {}
-    }
-
-    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
-
-    expect(() => container.resolve(BrokenService)).toThrow(failure);
-  });
-
-  it('should expose the resolving scope through the execution context', function () {
+  it('should expose the resolving scope to the onError handler', function () {
     class BrokenService {
       @onConstruct(() => {
         throw new Error('boom');
@@ -90,13 +79,16 @@ describe('onConstruct', function () {
     }
 
     let scope: IContainer | undefined;
-    const container = new Container({
-      injector: new MetadataInjector().useModule(
-        new OnConstructModule((_ex, context) => {
-          scope = context.scope;
+    const container = new Container().useModule(
+      new OnConstructModule(
+        new SequentialSyncHookExecutionStrategy({
+          key: 'onConstruct',
+          onError: (s) => () => {
+            scope = s;
+          },
         }),
       ),
-    });
+    );
     const child = container.createScope();
 
     child.resolve(BrokenService);
@@ -127,9 +119,10 @@ describe('onConstruct', function () {
       }
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
+    // An async strategy awaits the hooks; resolution itself still does not wait for them.
+    const container = new Container()
+      .useModule(new OnConstructModule(new SequentialAsyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
 
@@ -142,7 +135,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward rejected hooks to the onException handler with the execution context', async function () {
+  it('should forward rejected hooks to the onError handler with the scope', async function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -150,14 +143,17 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    let captured: { ex: unknown; context: ExecutionContext } | undefined;
-    const container = new Container({
-      injector: new MetadataInjector().useModule(
-        new OnConstructModule((ex, context) => {
-          captured = { ex, context };
+    let captured: { ex: unknown; scope: IContainer } | undefined;
+    const container = new Container().useModule(
+      new OnConstructModule(
+        new SequentialAsyncHookExecutionStrategy({
+          key: 'onConstruct',
+          onError: (scope) => (ex) => {
+            captured = { ex, scope };
+          },
         }),
       ),
-    });
+    );
 
     const child = container.createScope();
     child.resolve(BrokenService);
@@ -165,6 +161,6 @@ describe('onConstruct', function () {
     await vi.waitFor(() => expect(captured).toBeDefined());
 
     expect(captured?.ex).toBe(failure);
-    expect(captured?.context.scope).toBe(child);
+    expect(captured?.scope).toBe(child);
   });
 });

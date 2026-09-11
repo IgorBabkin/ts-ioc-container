@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-  MetadataInjector,
   OnConstructModule,
   autoResolve,
   AutoResolveModule,
@@ -12,6 +11,7 @@ import {
   register,
   Registration as R,
   scopeAccess,
+  SequentialSyncHookExecutionStrategy,
   singleton,
 } from '../../lib';
 
@@ -74,9 +74,9 @@ describe('Spec: container modules', () => {
       }
     }
 
-    const app = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) }).addRegistration(
-      R.fromClass(FeatureService),
-    );
+    const app = new Container()
+      .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .addRegistration(R.fromClass(FeatureService));
     const request = app.createScope({ tags: ['request'] });
 
     expect(request.resolve<FeatureService>('FeatureService').started).toBe(true);

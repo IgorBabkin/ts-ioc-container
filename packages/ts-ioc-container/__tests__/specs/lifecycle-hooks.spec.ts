@@ -10,7 +10,6 @@ import {
   hook,
   HookContext,
   type HookFn,
-  HooksRunner,
   inject,
   injectProp,
   onConstruct,
@@ -19,11 +18,17 @@ import {
   oncePerInstance,
   onResolve,
   Registration as R,
+  SequentialAsyncHookExecutionStrategy,
+  SequentialSyncHookExecutionStrategy,
 } from '../../lib';
 
 const invoke: HookFn = (context) => {
   context.invokeMethod();
 };
+
+// Strategies are keyed, so each module gets one for the hook key it runs.
+const sync = (key: string) => new SequentialSyncHookExecutionStrategy({ key });
+const sequential = (key: string) => new SequentialAsyncHookExecutionStrategy({ key });
 
 describe('Spec: lifecycle hooks', () => {
   it('runs construct and dispose hooks through opt-in modules', () => {
@@ -42,8 +47,9 @@ describe('Spec: lifecycle hooks', () => {
       }
     }
 
-    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) })
-      .useModule(new OnDisposeModule())
+    const container = new Container()
+      .useModule(new OnConstructModule(sync('onConstruct')))
+      .useModule(new OnDisposeModule(sync('onScopeDisposed')))
       .addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
@@ -60,7 +66,7 @@ describe('Spec: lifecycle hooks', () => {
       usedTimes = 0;
       openedTimes = 0;
 
-      @onResolved()
+      @onResolved(invoke)
       use(): void {
         this.usedTimes += 1;
       }
@@ -73,7 +79,7 @@ describe('Spec: lifecycle hooks', () => {
 
     const connection = new Connection();
     const container = new Container()
-      .useModule(new OnResolvedModule())
+      .useModule(new OnResolvedModule(sync('onResolved')))
       .addRegistration(R.fromValue(connection).bindToKey('Connection'))
       .addRegistration(R.fromValue(connection).bindToKey('ReadOnlyConnection'));
 
@@ -98,9 +104,9 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromClass(Resource));
+    const container = new Container()
+      .useModule(new OnConstructModule(sync('onConstruct')))
+      .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -122,9 +128,9 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromClass(Resource));
+    const container = new Container()
+      .useModule(new OnConstructModule(sync('onConstruct')))
+      .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -145,9 +151,9 @@ describe('Spec: lifecycle hooks', () => {
       initialize(): void {}
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromClass(Resource));
+    const container = new Container()
+      .useModule(new OnConstructModule(sync('onConstruct')))
+      .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -167,7 +173,9 @@ describe('Spec: lifecycle hooks', () => {
       destroy(): void {}
     }
 
-    const container = new Container().useModule(new OnDisposeModule()).addRegistration(R.fromClass(Resource));
+    const container = new Container()
+      .useModule(new OnDisposeModule(sync('onScopeDisposed')))
+      .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
     container.dispose();
@@ -188,9 +196,9 @@ describe('Spec: lifecycle hooks', () => {
       async initialize(): Promise<void> {}
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromClass(Resource));
+    const container = new Container()
+      .useModule(new OnConstructModule(sequential('onConstruct')))
+      .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
@@ -210,9 +218,9 @@ describe('Spec: lifecycle hooks', () => {
       }
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromClass(Resource));
+    const container = new Container()
+      .useModule(new OnConstructModule(sequential('onConstruct')))
+      .addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
 
@@ -221,7 +229,7 @@ describe('Spec: lifecycle hooks', () => {
     await vi.waitFor(() => expect(resource.initialized).toBe(true));
   });
 
-  it('reports rejected async construct hooks to the module exception handler', async () => {
+  it('reports rejected async construct hooks to the strategy onError handler', async () => {
     const failure = new Error('boom');
 
     class BrokenResource {
@@ -230,9 +238,13 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     let captured: unknown;
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule((ex) => (captured = ex))),
-    }).addRegistration(R.fromClass(BrokenResource));
+    const container = new Container()
+      .useModule(
+        new OnConstructModule(
+          new SequentialAsyncHookExecutionStrategy({ key: 'onConstruct', onError: () => (ex) => (captured = ex) }),
+        ),
+      )
+      .addRegistration(R.fromClass(BrokenResource));
 
     container.resolve<BrokenResource>('BrokenResource');
 
@@ -249,7 +261,8 @@ describe('Spec: lifecycle hooks', () => {
       logger!: Logger;
     }
 
-    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) })
+    const container = new Container()
+      .useModule(new OnConstructModule(sync('onConstruct')))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(Service));
 
@@ -277,11 +290,11 @@ describe('Spec: lifecycle hooks', () => {
       }
     }
 
-    const runner = new HooksRunner('workflow');
+    const strategy = sync('workflow');
     const container = new Container().addRegistration(R.fromClass(AuditHook)).addRegistration(R.fromClass(Worker));
     const worker = container.resolve<Worker>('Worker');
 
-    runner.execute(worker, {
+    strategy.execute(worker, {
       scope: container,
       predicate: (methodName) => methodName === 'start',
     });
@@ -358,7 +371,7 @@ describe('Spec: lifecycle hooks', () => {
     expect(constructed).toEqual(['app', 'request']);
   });
 
-  it('resolves hook method arguments and takes sync and async hooks through one runner', async () => {
+  it('resolves hook method arguments and runs sync and async hooks through keyed strategies', async () => {
     class Worker {
       calls: string[] = [];
 
@@ -383,12 +396,13 @@ describe('Spec: lifecycle hooks', () => {
       .addRegistration(R.fromClass(Worker));
     const worker = container.resolve<Worker>('Worker');
 
-    // Sync hooks finish before `execute` returns, so it hands back no promise to await.
-    expect(new HooksRunner('sync').execute(worker, { scope: container })).toBeUndefined();
+    // Sync hooks finish before `execute` returns.
+    sync('sync').execute(worker, { scope: container });
     expect(worker.calls).toEqual(['job:sync']);
 
-    await new HooksRunner('async').execute(worker, { scope: container });
+    // Async hooks are started by `execute` and settle afterwards.
+    sequential('async').execute(worker, { scope: container });
 
-    expect(worker.calls).toEqual(['job:sync', 'job:async']);
+    await vi.waitFor(() => expect(worker.calls).toEqual(['job:sync', 'job:async']));
   });
 });

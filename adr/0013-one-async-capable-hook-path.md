@@ -68,6 +68,15 @@ Separately, `@onContainerDisposed` becomes `@onScopeDisposed`, matching the
 `IContainer.onScopeDisposed` event it is declared against — the naming ADR 0012
 applied to the imperative side, now applied to the declaration too.
 
+> [!NOTE]
+> `HooksRunner`, its `void | Promise<void>` return and the `runHooks` /
+> `OnExceptionHandler` plumbing were replaced by
+> [ADR 0014](0014-hook-execution-strategy.md): hook execution is a
+> `HookExecutionStrategy` chosen by the caller, `execute` returns `void`, and
+> failures go to the strategy's `onError` handler. The decision this record
+> makes — one hook key and one decorator per domain, taking sync and async
+> hooks alike — stands.
+
 ## Consequences
 
 **Positive**
@@ -101,9 +110,9 @@ applied to the imperative side, now applied to the declaration too.
 
 ## References
 
-- `lib/hooks/HooksRunner.ts` — `execute`, `runHooks`, `OnExceptionHandler`
+- `lib/hooks/HooksExecutionStrategy.ts` — `execute` (formerly `HooksRunner`, see ADR 0014)
 - `lib/hooks/onConstruct.ts`, `lib/hooks/onResolved.ts`, `lib/hooks/onScopeDisposed.ts`
-- `lib/hooks/resolveHooks.ts` — `executeHooks`
 - `__tests__/specs/lifecycle-hooks.spec.ts`
 - [ADR 0007 — Lifecycle hooks via reflect-metadata and opt-in modules](0007-lifecycle-hooks.md)
 - [ADR 0012 — Hook registration lives with the domain which raises the event](0012-hook-domains.md)
+- [ADR 0014 — Hook execution is a strategy, chosen by the caller](0014-hook-execution-strategy.md)

@@ -59,7 +59,7 @@ Acceptance criteria:
 - `toToken` fails with `UnsupportedTokenTypeError` for unsupported token input.
 - Constant and instance-list tokens reject unsupported modifiers with
   `MethodNotImplementedError`.
-- What a hook threw surfaces out of the runner that executed it.
+- What a hook threw goes to the `onError` handler of the strategy that executed it.
 
 ### Story: Terminate parent lookup at the empty container
 

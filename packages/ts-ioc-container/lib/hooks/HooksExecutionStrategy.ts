@@ -40,6 +40,12 @@ export abstract class HookExecutionStrategy {
     return hasHooks(target, this.key);
   }
 
+  /**
+   * Runs every hook `target` declares under this strategy's key, the way the
+   * strategy defines. Returns before async hooks settle — a failure of either
+   * kind, what a sync hook threw and what an async hook rejected with, goes to
+   * `onError`. Without an `onError` handler failures are dropped.
+   */
   execute(
     target: Instance,
     {
@@ -54,7 +60,8 @@ export abstract class HookExecutionStrategy {
     };
 
     try {
-      this.processHooks(target, { scope, createExecutionContext, mapExecutionContext, predicate });
+      // An async strategy turns a throw into a rejection, so both are routed to `report`.
+      this.processHooks(target, { scope, createExecutionContext, mapExecutionContext, predicate })?.catch(report);
     } catch (ex) {
       report(ex);
     }

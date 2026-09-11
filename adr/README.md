@@ -24,6 +24,7 @@ is left intact so the historical reasoning remains discoverable.
 | 0011 | [Specs-driven development workflow](0011-spec-driven-development.md)                            | Accepted |
 | 0012 | [Hook registration lives with the domain which raises the event](0012-hook-domains.md)          | Accepted |
 | 0013 | [One async-capable hook path, no `Async` variants](0013-one-async-capable-hook-path.md)         | Accepted |
+| 0014 | [Hook execution is a strategy, chosen by the caller](0014-hook-execution-strategy.md)           | Accepted |
 
 ## Adding a new ADR
 

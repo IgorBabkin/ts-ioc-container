@@ -2833,22 +2833,38 @@ compensate for the bottom-up application order, so stacked decorators run in
 declaration order: `@onConstruct(h1) @onConstruct(h2)` runs `h1` before `h2`.
 
 Every hook may be sync or async — one decorator and one module take both, so
-there is no separate async form to reach for. A `HooksExecutionStrategy` runs a hook chain
-eagerly and stays synchronous until a hook returns a promise, then awaits the
-rest of that chain. Sync hooks therefore finish before `resolve` (or `dispose`)
-returns, exactly as before; async ones are started there and settle afterwards,
-so `resolve` returns before they finish. Instances that must expose readiness
-should publish it themselves, for example by storing the pending promise on the
-instance.
+there is no separate async form to reach for. *How* the hooks run is a separate
+choice: each module takes a `HookExecutionStrategy`, keyed to the hooks it runs
+(`onConstruct`, `onScopeDisposed`, `onResolved`, or a custom key), and the
+strategy decides the order, what is awaited, and where a failure goes
+([ADR 0014](../../adr/0014-hook-execution-strategy.md)):
 
-`HooksRunner.execute` mirrors that: it returns `undefined` when nothing went
-async and a promise otherwise, so a caller running its own hooks can `await` the
-result either way.
+| Strategy                                | Members (decorated methods) | Hooks of one member                              | Awaits |
+| --------------------------------------- | --------------------------- | ------------------------------------------------ | ------ |
+| `SequentialSyncHookExecutionStrategy`   | one after another           | in declaration order                             | no     |
+| `SequentialAsyncHookExecutionStrategy`  | one after another           | in order, or all at once (`methodStrategy`)      | yes    |
+| `ParallelAsyncHookExecutionStrategy`    | all at once                 | in order, or all at once (`methodStrategy`)      | yes    |
 
-Every module takes an optional `onException` handler, and it catches both kinds
-of failure — what a sync hook threw and what an async hook rejected with.
-Without one, a sync hook throws out of the call and an async hook surfaces as an
-unhandled promise rejection.
+```typescript
+const container = new Container()
+  .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
+  .useModule(new OnDisposeModule(new ParallelAsyncHookExecutionStrategy({ key: 'onScopeDisposed' })));
+```
+
+Resolution and disposal stay synchronous under every strategy: sync hooks
+finish before `resolve` (or `dispose`) returns, async ones are started there and
+settle afterwards, so `resolve` returns before they finish. Instances that must
+expose readiness should publish it themselves, for example by storing the
+pending promise on the instance. The sync strategy never awaits — a hook that
+returns a promise under it is started but not observed.
+
+`strategy.execute(instance, { scope })` runs the hooks of a custom key by hand;
+`predicate`, `createExecutionContext` and `mapExecutionContext` can be set on
+the strategy or per call.
+
+A strategy takes an optional `onError: (scope) => (error) => void`, which
+receives both kinds of failure — what a sync hook threw and what an async hook
+rejected with. Without one, failures are dropped.
 
 ### Hook domains
 
@@ -2863,51 +2879,41 @@ abstraction raises the event, one hook type per domain:
 | **Injector** | `IInjector`   | `InjectorHook`  | `onConstructed(...)`                                     |
 | **Provider** | `IProvider`   | `ProviderHook`  | `onResolved(...)`, or the [`onResolve`](#on-resolve) pipe |
 
-A container never hands its injector out — the injector is configured first and
-passed in at construction:
+A container passes its injector to every scope it creates, so **one injector**
+backs the whole scope tree, and `container.getInjector()` hands it out: an
+`onConstructed` hook registered through it covers every scope, whenever it was
+added. Scope hooks, by contrast, are copied into a child at `createScope` time,
+so a child inherits what its parent held then and later additions to either
+stay local.
 
 ```typescript
-// Construction is the injector's event, not a scope's
-const injector = new MetadataInjector().onConstructed((instance, scope) => metrics.built(instance, scope));
-
-const container = new Container({ injector, tags: ['application'] })
+const container = new Container({ tags: ['application'] })
   .onScopeCreated((scope) => audit.scopeOpened(scope))
   .onScopeDisposed((scope) => audit.scopeClosed(scope))
   .onRegistered((provider, key) => audit.registered(key));
+
+// Construction is the injector's event, not a scope's
+container.getInjector().onConstructed((instance, scope) => metrics.built(instance, scope));
 ```
 
-A container passes its injector to every scope it creates, so **one injector**
-backs the whole scope tree and an `onConstructed` hook covers all of it, whenever
-it was added. Scope hooks, by contrast, are copied into a child at `createScope`
-time, so a child inherits what its parent held then and later additions to either
-stay local.
-
-The built-in modules follow the same split. `OnConstructModule` is an
-**injector** module (`IInjectorModule`), applied with `injector.useModule(...)`:
-
-```typescript
-const injector = new MetadataInjector().useModule(new OnConstructModule());
-const container = new Container({ injector });
-```
-
-`OnDisposeModule` is a container module hooking `onScopeDisposed`, and
-`OnResolvedModule` is a container module reaching every provider through
-`onRegistered`.
+The built-in modules are all container modules: `OnConstructModule` reaches the
+injector through `getInjector()`, `OnDisposeModule` hooks `onScopeDisposed`, and
+`OnResolvedModule` reaches every provider through `onRegistered`.
 
 ### OnConstruct
 
 ```typescript
 import 'reflect-metadata';
 import {
-  MetadataInjector,
   OnConstructModule,
   Container,
-  type ExecutionContext,
   type HookFn,
   type IContainer,
   inject,
   onConstruct,
   Registration as R,
+  SequentialAsyncHookExecutionStrategy,
+  SequentialSyncHookExecutionStrategy,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
@@ -2931,9 +2937,10 @@ describe('onConstruct', function () {
       }
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
+    // The module takes a strategy for how the hooks run; the strategy is keyed to the hooks it runs.
+    const container = new Container()
+      .useModule(new OnConstructModule(new SequentialSyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
 
@@ -2941,7 +2948,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward hook exceptions to the onException handler with the execution context', function () {
+  it('should forward hook exceptions to the onError handler with the scope', function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -2951,36 +2958,24 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    let captured: { ex: unknown; context: ExecutionContext } | undefined;
-    const container = new Container({
-      injector: new MetadataInjector().useModule(
-        new OnConstructModule((ex, context) => {
-          captured = { ex, context };
+    let captured: { ex: unknown; scope: IContainer } | undefined;
+    const container = new Container().useModule(
+      new OnConstructModule(
+        new SequentialSyncHookExecutionStrategy({
+          key: 'onConstruct',
+          onError: (scope) => (ex) => {
+            captured = { ex, scope };
+          },
         }),
       ),
-    });
+    );
 
     expect(() => container.resolve(BrokenService)).not.toThrow();
     expect(captured?.ex).toBe(failure);
-    expect(captured?.context.scope).toBe(container);
+    expect(captured?.scope).toBe(container);
   });
 
-  it('should rethrow hook exceptions when no onException handler is provided', function () {
-    const failure = new Error('boom');
-
-    class BrokenService {
-      @onConstruct(() => {
-        throw failure;
-      })
-      init() {}
-    }
-
-    const container = new Container({ injector: new MetadataInjector().useModule(new OnConstructModule()) });
-
-    expect(() => container.resolve(BrokenService)).toThrow(failure);
-  });
-
-  it('should expose the resolving scope through the execution context', function () {
+  it('should expose the resolving scope to the onError handler', function () {
     class BrokenService {
       @onConstruct(() => {
         throw new Error('boom');
@@ -2989,13 +2984,16 @@ describe('onConstruct', function () {
     }
 
     let scope: IContainer | undefined;
-    const container = new Container({
-      injector: new MetadataInjector().useModule(
-        new OnConstructModule((_ex, context) => {
-          scope = context.scope;
+    const container = new Container().useModule(
+      new OnConstructModule(
+        new SequentialSyncHookExecutionStrategy({
+          key: 'onConstruct',
+          onError: (s) => () => {
+            scope = s;
+          },
         }),
       ),
-    });
+    );
     const child = container.createScope();
 
     child.resolve(BrokenService);
@@ -3026,9 +3024,10 @@ describe('onConstruct', function () {
       }
     }
 
-    const container = new Container({
-      injector: new MetadataInjector().useModule(new OnConstructModule()),
-    }).addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
+    // An async strategy awaits the hooks; resolution itself still does not wait for them.
+    const container = new Container()
+      .useModule(new OnConstructModule(new SequentialAsyncHookExecutionStrategy({ key: 'onConstruct' })))
+      .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
 
@@ -3041,7 +3040,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward rejected hooks to the onException handler with the execution context', async function () {
+  it('should forward rejected hooks to the onError handler with the scope', async function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -3049,14 +3048,17 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    let captured: { ex: unknown; context: ExecutionContext } | undefined;
-    const container = new Container({
-      injector: new MetadataInjector().useModule(
-        new OnConstructModule((ex, context) => {
-          captured = { ex, context };
+    let captured: { ex: unknown; scope: IContainer } | undefined;
+    const container = new Container().useModule(
+      new OnConstructModule(
+        new SequentialAsyncHookExecutionStrategy({
+          key: 'onConstruct',
+          onError: (scope) => (ex) => {
+            captured = { ex, scope };
+          },
         }),
       ),
-    });
+    );
 
     const child = container.createScope();
     child.resolve(BrokenService);
@@ -3064,7 +3066,7 @@ describe('onConstruct', function () {
     await vi.waitFor(() => expect(captured).toBeDefined());
 
     expect(captured?.ex).toBe(failure);
-    expect(captured?.context.scope).toBe(child);
+    expect(captured?.scope).toBe(child);
   });
 });
 
@@ -3083,6 +3085,7 @@ import {
   onScopeDisposed,
   register,
   Registration as R,
+  SequentialSyncHookExecutionStrategy,
   singleton,
 } from 'ts-ioc-container';
 
@@ -3118,7 +3121,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule())
+      .useModule(new OnDisposeModule(new SequentialSyncHookExecutionStrategy({ key: 'onScopeDisposed' })))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 
@@ -3138,7 +3141,7 @@ describe('onScopeDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { append, Container, hook, HooksExecutionStrategy, injectProp, Registration } from 'ts-ioc-container';
+import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectProp, Registration } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -3153,8 +3156,8 @@ import { append, Container, hook, HooksExecutionStrategy, injectProp, Registrati
 
 describe('inject property', () => {
   it('should inject property', () => {
-    // Runner for the 'onInit' lifecycle hook
-    const onInitHookRunner = new HooksExecutionStrategy('onInit');
+    // Strategy for the 'onInit' lifecycle hook
+    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -3172,14 +3175,14 @@ describe('inject property', () => {
     const viewModel = container.resolve(UserViewModel);
 
     // 2. Run lifecycle hooks to inject properties
-    onInitHookRunner.execute(viewModel, { scope: container });
+    onInitStrategy.execute(viewModel, { scope: container });
 
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitHookRunner = new HooksExecutionStrategy('onInit');
+    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
 
     let injectedValue: unknown;
 
@@ -3196,7 +3199,7 @@ describe('inject property', () => {
     const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     const viewModel = container.resolve(UserViewModel);
-    onInitHookRunner.execute(viewModel, { scope: container });
+    onInitStrategy.execute(viewModel, { scope: container });
 
     expect(injectedValue).toBe('Hello');
   });

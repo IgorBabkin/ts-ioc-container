@@ -3,8 +3,9 @@
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../../adr/0007-lifecycle-hooks.md),
   [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md),
-  [ADR 0013 - One async-capable hook path, no `Async` variants](../../../adr/0013-one-async-capable-hook-path.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HooksRunner`, `HookContext`, `createHookContext`, `createHookContextFactory`, `runHooks`, `OnExceptionHandler`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+  [ADR 0013 - One async-capable hook path, no `Async` variants](../../../adr/0013-one-async-capable-hook-path.md),
+  [ADR 0014 - Hook execution is a strategy, chosen by the caller](../../../adr/0014-hook-execution-strategy.md)
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `HookExecutionStrategy`, `SequentialSyncHookExecutionStrategy`, `SequentialAsyncHookExecutionStrategy`, `ParallelAsyncHookExecutionStrategy`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -24,8 +25,11 @@ used.
 Acceptance criteria:
 
 - `onConstruct` stores hook metadata on a method.
-- `OnConstructModule` is an injector module: it opts an injector into construct
-  hook execution, and that injector is then passed to the container.
+- `OnConstructModule` is a container module: it opts the container's injector
+  (reached through `getInjector()`) into construct hook execution, so one
+  application covers the whole scope tree.
+- The module takes the `HookExecutionStrategy` which runs the hooks; the
+  strategy is keyed to `onConstruct`.
 - Construct hooks run after the instance is created and tracked.
 - Hook classes are resolved through the container before execution.
 
@@ -38,10 +42,10 @@ that async setup does not have to be forced into the synchronous construct path.
 Acceptance criteria:
 
 - `onConstruct` takes async hooks under the same hook key as sync ones.
-- `OnConstructModule` runs both kinds.
+- `OnConstructModule` runs both kinds; an async strategy awaits the async ones.
 - Async construct hooks start when the instance is created and settle after
   resolution returns.
-- Rejected hooks are reported to the module `onException` handler when one is
+- Rejected hooks are reported to the strategy `onError` handler when one is
   provided.
 
 ### Story: Run resolve hooks
@@ -52,16 +56,18 @@ instances shared across keys and scopes — still get an initialization point.
 
 Acceptance criteria:
 
-- `onResolved` stores hook metadata on a method, takes sync and async hooks as a
-  rest parameter, and invokes the decorated method when no hook is named.
+- `onResolved` stores hook metadata on a method and takes sync and async hooks
+  as a rest parameter; like every other decorator, it runs nothing unless a hook
+  is named.
 - `OnResolvedModule` opts a container into resolve hook execution; the
-  `resolved()` pipe opts in a single registration instead.
+  `resolved(strategy)` pipe opts in a single registration instead. Both take
+  the strategy keyed to `onResolved`.
 - `onResolved` hooks run on every resolve; a hook wrapped in `oncePerInstance`
-  (e.g. `onResolved(oncePerInstance(invokeMethod))`) runs a single time per
+  (e.g. `onResolved(oncePerInstance(invoke))`) runs a single time per
   instance however many keys, scopes, or resolve calls return it.
 - Distinct objects of the same class each get their own once-resolve hook run.
 - Providers registered before the module was applied are not covered.
-- Rejected async hooks are reported to the module `onException` handler when one
+- Rejected async hooks are reported to the strategy `onError` handler when one
   is provided.
 
 ### Story: Run dispose hooks
@@ -72,7 +78,8 @@ so that local resources are released at the lifecycle boundary.
 Acceptance criteria:
 
 - `onScopeDisposed` stores hook metadata on a method.
-- `OnDisposeModule` opts a container into dispose hook execution.
+- `OnDisposeModule` opts a container into dispose hook execution, with the
+  strategy keyed to `onScopeDisposed`.
 - Dispose hooks run for instances tracked by the disposed scope.
 - Disposing a scope does not implicitly run hooks for child scopes.
 
@@ -89,15 +96,17 @@ Acceptance criteria:
 
 ### Story: Execute custom hooks
 
-As a framework integrator, I can define custom hook keys and runners so that
-extension points can reuse the same metadata and execution model.
+As a framework integrator, I can define custom hook keys and run them with the
+same strategies as the built-in hooks so that extension points reuse one
+metadata and execution model.
 
 Acceptance criteria:
 
 - `hook` records one or more hook functions for a method.
 - `getHooks` returns hook metadata for the reflected target.
 - `hasHooks` identifies whether hook metadata exists.
-- `HooksRunner` can execute only methods accepted by a predicate.
+- A `HookExecutionStrategy` keyed to a custom name executes that key's hooks;
+  `predicate` limits the run to accepted methods, on the strategy or per call.
 
 ### Story: Register imperative hooks with the domain which raises them
 
@@ -113,8 +122,8 @@ Acceptance criteria:
   `onRegistered(...hooks: RegisteredHook[])`, each returning the
   container for fluent chaining.
 - Construction is registered on `IInjector`: `onConstructed(...hooks:
-  InjectorHook[])`. The injector is configured before it is passed to
-  `new Container({ injector })`; a container never hands its injector out.
+  InjectorHook[])`, reached through `container.getInjector()` or configured
+  before the injector is passed to `new Container({ injector })`.
 - `IInjectorModule` bundles injector hooks, applied with `injector.useModule(...)`
   or `module.applyTo(injector)`.
 - Resolution is registered on `IProvider`: `onResolved(...hooks:
@@ -130,20 +139,25 @@ Acceptance criteria:
 - `EmptyContainer` rejects every scope hook method with
   `MethodNotImplementedError`.
 
-### Story: Run sync and async hooks through one runner
+### Story: Choose how hooks run
 
-As a maintainer, I have a single execution path for hooks so that a hook's being
-sync or async is the hook's business, not the caller's.
+As a maintainer, I pick a hook execution strategy per module so that a hook's
+being sync or async is the hook's business, and ordering, awaiting and error
+reporting are the caller's.
 
 Acceptance criteria:
 
-- A hook chain runs eagerly and stays synchronous until a hook returns a
-  promise; the remaining hooks of that member are then awaited.
-- `HooksRunner.execute` returns `undefined` when nothing went async and a promise
-  settling after the async hooks otherwise, so a caller can `await` it either
-  way.
-- `runHooks` reports both a sync throw and a rejected async hook to an
-  `OnExceptionHandler`, and lets both surface when none is supplied.
+- One hook key and one decorator per domain take sync and async hooks alike.
+- `SequentialSyncHookExecutionStrategy` runs members and their hooks one after
+  another and never awaits; everything it ran has finished when `execute`
+  returns.
+- `SequentialAsyncHookExecutionStrategy` runs members one after another,
+  awaiting each; `ParallelAsyncHookExecutionStrategy` starts every member at
+  once. `methodStrategy: 'parallel'` starts the hooks of one member at once
+  instead of in declaration order.
+- `execute` returns `void`; async hooks settle after it returns.
+- A strategy reports both a sync throw and a rejected async hook to its
+  `onError` handler, and drops both when none is supplied.
 - Hook context can resolve method arguments and invoke the target method.
 
 ## Notes

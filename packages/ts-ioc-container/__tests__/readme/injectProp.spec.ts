@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { append, Container, hook, HooksRunner, injectProp, Registration } from '../../lib';
+import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectProp, Registration } from '../../lib';
 
 /**
  * UI Components - Property Injection
@@ -14,8 +14,8 @@ import { append, Container, hook, HooksRunner, injectProp, Registration } from '
 
 describe('inject property', () => {
   it('should inject property', () => {
-    // Runner for the 'onInit' lifecycle hook
-    const onInitHookRunner = new HooksRunner('onInit');
+    // Strategy for the 'onInit' lifecycle hook
+    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -33,14 +33,14 @@ describe('inject property', () => {
     const viewModel = container.resolve(UserViewModel);
 
     // 2. Run lifecycle hooks to inject properties
-    onInitHookRunner.execute(viewModel, { scope: container });
+    onInitStrategy.execute(viewModel, { scope: container });
 
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitHookRunner = new HooksRunner('onInit');
+    const onInitStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
 
     let injectedValue: unknown;
 
@@ -57,7 +57,7 @@ describe('inject property', () => {
     const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     const viewModel = container.resolve(UserViewModel);
-    onInitHookRunner.execute(viewModel, { scope: container });
+    onInitStrategy.execute(viewModel, { scope: container });
 
     expect(injectedValue).toBe('Hello');
   });

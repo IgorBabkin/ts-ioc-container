@@ -1,11 +1,11 @@
 import 'reflect-metadata';
-import { append, Container, hook, HooksRunner, injectProp, Registration as R } from '../../lib';
+import { append, Container, hook, SequentialSyncHookExecutionStrategy, injectProp, Registration as R } from '../../lib';
 
 describe('injectProp(token, ...mappers)', () => {
   function createViewModel<T extends object>(Target: new () => T, container: Container) {
-    const runner = new HooksRunner('onInit');
+    const strategy = new SequentialSyncHookExecutionStrategy({ key: 'onInit' });
     const instance = container.resolve(Target);
-    runner.execute(instance, { scope: container });
+    strategy.execute(instance, { scope: container });
     return instance;
   }
 

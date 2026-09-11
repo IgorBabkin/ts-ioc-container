@@ -12,14 +12,14 @@ import {
   type HookClass,
   HookContext,
   type HookFn,
-  HooksRunner,
   inject,
-  invokeMethod,
   oncePerInstance,
   prepend,
   prependHooks,
   register,
   Registration as R,
+  SequentialAsyncHookExecutionStrategy,
+  SequentialSyncHookExecutionStrategy,
 } from '../../lib';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,6 +27,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod();
 };
+const invokeMethod = execute;
 
 const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod();
@@ -57,7 +58,7 @@ describe('hooks', () => {
   });
 
   it('should prepend initial args when resolving hook method arguments', () => {
-    const beforeHooksRunner = new HooksRunner('syncBefore');
+    const beforeStrategy = new SequentialSyncHookExecutionStrategy({ key: 'syncBefore' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
@@ -76,17 +77,17 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue('injected').bindTo('suffix'));
     const instance = root.resolve(MyClass);
 
-    beforeHooksRunner.execute(instance, {
+    beforeStrategy.execute(instance, {
       scope: root,
-      createContext: (Target, scope, methodName) =>
+      createExecutionContext: (Target, scope, methodName) =>
         new HookContext(Target, scope, methodName).setInitialArgs('initial'),
     });
 
     expect(instance.receivedArgs).toEqual(['initial', 'injected', undefined]);
   });
 
-  it('should map the hook context with mapContext when running execute', () => {
-    const beforeHooksRunner = new HooksRunner('syncBefore');
+  it('should map the hook context with mapExecutionContext when running execute', () => {
+    const beforeStrategy = new SequentialSyncHookExecutionStrategy({ key: 'syncBefore' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
@@ -105,16 +106,16 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue('injected').bindTo('suffix'));
     const instance = root.resolve(MyClass);
 
-    beforeHooksRunner.execute(instance, {
+    beforeStrategy.execute(instance, {
       scope: root,
-      mapContext: (context) => context.setInitialArgs('mapped'),
+      mapExecutionContext: (context) => context.setInitialArgs('mapped'),
     });
 
     expect(instance.receivedArgs).toEqual(['mapped', 'injected']);
   });
 
-  it('should map the hook context with mapContext when running async hooks', async () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+  it('should map the hook context with mapExecutionContext when running async hooks', async () => {
+    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
@@ -133,16 +134,16 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    await onStartHooksRunner.execute(instance, {
+    onStartStrategy.execute(instance, {
       scope: root,
-      mapContext: (context) => context.setInitialArgs('mapped'),
+      mapExecutionContext: (context) => context.setInitialArgs('mapped'),
     });
 
-    expect(instance.receivedArgs).toEqual(['mapped']);
+    await vi.waitFor(() => expect(instance.receivedArgs).toEqual(['mapped']));
   });
 
-  it('should await async hooks', async () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+  it('should run async hooks to completion', async () => {
+    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
 
     class Logger {
       isStarted = false;
@@ -163,17 +164,17 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] }).addRegistration(R.fromValue(100).bindTo('TimeToSleep'));
     const instance = root.resolve(Logger);
 
-    await onStartHooksRunner.execute(instance, {
+    onStartStrategy.execute(instance, {
       scope: root,
       predicate: (methodName) => methodName === 'initialize',
     });
 
-    expect(instance.isStarted).toBe(true);
+    await vi.waitFor(() => expect(instance.isStarted).toBe(true));
     expect(hasHooks(instance, 'onStart')).toBe(true);
   });
 
-  it('should finish sync hooks before returning and hand back no promise', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+  it('should finish sync hooks before returning', () => {
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -187,12 +188,12 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    expect(onStartHooksRunner.execute(instance, { scope: root })).toBeUndefined();
+    expect(onStartStrategy.execute(instance, { scope: root })).toBeUndefined();
     expect(instance.isStarted).toBe(true);
   });
 
   it('should keep a chain sync up to its first async hook and await the rest', async () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -217,18 +218,16 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    const pending = onStartHooksRunner.execute(instance, { scope: root });
+    onStartStrategy.execute(instance, { scope: root });
 
     // the hooks ahead of the first async one have already run
     expect(invoked).toEqual(['first']);
 
-    await pending;
-
-    expect(invoked).toEqual(['first', 'second', 'third']);
+    await vi.waitFor(() => expect(invoked).toEqual(['first', 'second', 'third']));
   });
 
   it('should run a mix of sync and async members through one call', async () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -253,13 +252,13 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    await onStartHooksRunner.execute(instance, { scope: root });
+    onStartStrategy.execute(instance, { scope: root });
 
-    expect(invoked.sort()).toEqual(['async', 'sync']);
+    await vi.waitFor(() => expect(invoked.sort()).toEqual(['async', 'sync']));
   });
 
-  it('should report whether a target has hooks for the runner key', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+  it('should report whether a target has hooks for the strategy key', () => {
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
 
     class WithHooks {
       @hook('onStart', append(execute))
@@ -272,12 +271,12 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    expect(onStartHooksRunner.hasHooks(root.resolve(WithHooks))).toBe(true);
-    expect(onStartHooksRunner.hasHooks(root.resolve(WithoutHooks))).toBe(false);
+    expect(onStartStrategy.hasHooks(root.resolve(WithHooks))).toBe(true);
+    expect(onStartStrategy.hasHooks(root.resolve(WithoutHooks))).toBe(false);
   });
 
   it('should report no hooks when the target has hooks under a different key only', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
 
     class MyClass {
       @hook('onDispose', append(execute))
@@ -286,13 +285,13 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    expect(onStartHooksRunner.hasHooks(root.resolve(MyClass))).toBe(false);
+    expect(onStartStrategy.hasHooks(root.resolve(MyClass))).toBe(false);
   });
 
   // Hook metadata lives on the real class, so the hook API unwraps proxies itself -
   // a caller passes whatever the container handed it, wrapped or not.
   it('should find and run hooks through a proxy, wrapped or unwrapped', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -310,13 +309,13 @@ describe('hooks', () => {
     expect(hasHooks(proxy, 'onStart')).toBe(true);
     expect(hasHooks(ProxyRegistry.getInstance().unwrap(proxy), 'onStart')).toBe(true);
 
-    onStartHooksRunner.execute(proxy, { scope: root });
+    onStartStrategy.execute(proxy, { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
 
   it('should run hooks on the real instance behind a lazy proxy', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -331,17 +330,17 @@ describe('hooks', () => {
     const instance = root.resolve(MyClass);
     const lazy = ProxyRegistry.getInstance().createLazyProxy(() => instance);
 
-    expect(onStartHooksRunner.hasHooks(lazy)).toBe(true);
+    expect(onStartStrategy.hasHooks(lazy)).toBe(true);
 
-    // The runner does not unwrap: the metadata lookup normalizes the target itself,
+    // The strategy does not unwrap: the metadata lookup normalizes the target itself,
     // and the hook reaches the real object through the proxy.
-    onStartHooksRunner.execute(lazy, { scope: root });
+    onStartStrategy.execute(lazy, { scope: root });
 
     expect(instance.isStarted).toBe(true);
   });
 
   it('should run async hooks on the real instance behind a lazy proxy', async () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialAsyncHookExecutionStrategy({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
@@ -357,13 +356,13 @@ describe('hooks', () => {
     const instance = root.resolve(MyClass);
     const lazy = ProxyRegistry.getInstance().createLazyProxy(() => instance);
 
-    await onStartHooksRunner.execute(lazy, { scope: root });
+    onStartStrategy.execute(lazy, { scope: root });
 
-    expect(instance.isStarted).toBe(true);
+    await vi.waitFor(() => expect(instance.isStarted).toBe(true));
   });
 
   it('should run hooks declared on a parent (extended-from) class', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
 
     class Base {
       baseStarted = false;
@@ -386,14 +385,14 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(Derived);
 
-    onStartHooksRunner.execute(instance, { scope: root });
+    onStartStrategy.execute(instance, { scope: root });
 
     expect(instance.baseStarted).toBe(true);
     expect(instance.derivedStarted).toBe(true);
   });
 
   it('should run parent hooks before child hooks', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class Base {
@@ -420,13 +419,13 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    onStartHooksRunner.execute(root.resolve(Derived), { scope: root });
+    onStartStrategy.execute(root.resolve(Derived), { scope: root });
 
     expect(invoked).toEqual(['startBase', 'startDerived']);
   });
 
   it('should not leak child hooks into parent instances', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class Base {
@@ -453,14 +452,14 @@ describe('hooks', () => {
 
     const root = new Container({ tags: ['root'] });
 
-    onStartHooksRunner.execute(root.resolve(Base), { scope: root });
+    onStartStrategy.execute(root.resolve(Base), { scope: root });
 
     expect(invoked).toEqual(['startBase']);
     expect(Derived).toBeDefined();
   });
 
   it('should execute plugin hooks for lazily injected plugins', () => {
-    const onPluginStartHooksRunner = new HooksRunner('onPluginStart');
+    const onPluginStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onPluginStart' });
     const PluginToken = new GroupAliasToken<Plugin>('Plugin');
 
     interface Plugin {
@@ -491,7 +490,7 @@ describe('hooks', () => {
       constructor(@inject(PluginToken.lazy()) private readonly plugins: Plugin[]) {}
 
       runPlugins(scope: Container) {
-        this.plugins.forEach((plugin) => onPluginStartHooksRunner.execute(plugin, { scope }));
+        this.plugins.forEach((plugin) => onPluginStartStrategy.execute(plugin, { scope }));
       }
 
       getPlugins() {
@@ -511,7 +510,7 @@ describe('hooks', () => {
   });
 
   it('should run hooks passed to appendHooks in declaration order', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -530,13 +529,13 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['first', 'second']);
   });
 
   it('should add hooks after the already registered ones with appendHooks', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -557,13 +556,13 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['declared', 'appended']);
   });
 
   it('should add hooks before the already registered ones with prependHooks', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -583,7 +582,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['prepended', 'declared']);
   });
@@ -594,7 +593,7 @@ describe('hooks', () => {
   });
 
   it('should let a custom mapFn reorder the already registered hooks', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -614,13 +613,13 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['second', 'first']);
   });
 
   it('should replace the already registered hooks when mapFn ignores them', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -639,13 +638,13 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['replacement']);
   });
 
   it('should run a hook wrapped in oncePerInstance a single time per instance under any hook key', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -658,14 +657,14 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     const instance = root.resolve(MyClass);
 
-    onStartHooksRunner.execute(instance, { scope: root });
-    onStartHooksRunner.execute(instance, { scope: root });
+    onStartStrategy.execute(instance, { scope: root });
+    onStartStrategy.execute(instance, { scope: root });
 
     expect(invoked).toEqual(['start']);
   });
 
   it('should run oncePerInstance hooks independently for each instance', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
 
     class MyClass {
       startedTimes = 0;
@@ -680,15 +679,15 @@ describe('hooks', () => {
     const first = root.resolve(MyClass);
     const second = root.resolve(MyClass);
 
-    onStartHooksRunner.execute(first, { scope: root });
-    onStartHooksRunner.execute(first, { scope: root });
-    onStartHooksRunner.execute(second, { scope: root });
+    onStartStrategy.execute(first, { scope: root });
+    onStartStrategy.execute(first, { scope: root });
+    onStartStrategy.execute(second, { scope: root });
 
     expect([first.startedTimes, second.startedTimes]).toEqual([1, 1]);
   });
 
   it('should accept hook classes in appendHooks and prependHooks', () => {
-    const onStartHooksRunner = new HooksRunner('onStart');
+    const onStartStrategy = new SequentialSyncHookExecutionStrategy({ key: 'onStart' });
     const invoked: string[] = [];
 
     class AppendedHook implements HookClass {
@@ -710,7 +709,7 @@ describe('hooks', () => {
     }
 
     const root = new Container({ tags: ['root'] });
-    onStartHooksRunner.execute(root.resolve(MyClass), { scope: root });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['prepended', 'appended']);
   });
