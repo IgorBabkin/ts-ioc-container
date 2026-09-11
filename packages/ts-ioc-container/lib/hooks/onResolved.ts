@@ -21,8 +21,8 @@ const runHooks =
 /**
  * Runs `onResolved` hooks every time a dependency object leaves a provider, the
  * way `strategy` defines (key it to `onResolved`).
- * Providers are hooked through `onRegistered`, so apply the module before the
- * registrations it should cover; scopes created afterwards inherit it.
+ * Providers are hooked through the `registered` event, so apply the module before
+ * the registrations it should cover; scopes created afterwards inherit it.
  */
 export class OnResolvedModule implements IContainerModule {
   private readonly runHooks: ProviderHook;
@@ -32,7 +32,7 @@ export class OnResolvedModule implements IContainerModule {
   }
 
   applyTo(container: IContainer) {
-    container.onRegistered((provider) => {
+    container.registered.subscribe((provider) => {
       provider.onResolved(this.runHooks);
     });
   }

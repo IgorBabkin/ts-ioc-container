@@ -4,11 +4,9 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type RegisteredHook,
   type RegisterOptions,
   ResolveManyOptions,
   type ResolveOneOptions,
-  type ScopeHook,
   type Tag,
 } from './IContainer';
 import { type IInjector } from '../injector/IInjector';
@@ -140,10 +138,10 @@ export class Container implements IContainer {
     this.validateContainer();
 
     // Injector hooks need no copying - the child shares this scope's injector, so it shares its hooks.
-    const scope = new Container({ injector: this.injector, parent: this, tags })
-      .onScopeCreated(...this.scopeCreatedEvent.getListeners())
-      .onScopeDisposed(...this.scopeDisposedEvent.getListeners())
-      .onRegistered(...this.registeredEvent.getListeners());
+    const scope = new Container({ injector: this.injector, parent: this, tags });
+    this.scopeCreatedEvent.getListeners().forEach((hook) => scope.scopeCreatedEvent.subscribe(hook));
+    this.scopeDisposedEvent.getListeners().forEach((hook) => scope.scopeDisposedEvent.subscribe(hook));
+    this.registeredEvent.getListeners().forEach((hook) => scope.registeredEvent.subscribe(hook));
 
     for (const registration of this.getRegistrations()) {
       registration.applyTo(scope);
@@ -219,30 +217,6 @@ export class Container implements IContainer {
 
   hasRegistration(key: DependencyKey): boolean {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
-  }
-
-  /**
-   * @throws {TypedEventDisposedError} when the container has already been disposed.
-   */
-  onScopeCreated(...hooks: ScopeHook[]): this {
-    hooks.forEach((hook) => this.scopeCreatedEvent.subscribe(hook));
-    return this;
-  }
-
-  /**
-   * @throws {TypedEventDisposedError} when the container has already been disposed.
-   */
-  onScopeDisposed(...hooks: ScopeHook[]): this {
-    hooks.forEach((hook) => this.scopeDisposedEvent.subscribe(hook));
-    return this;
-  }
-
-  /**
-   * @throws {TypedEventDisposedError} when the container has already been disposed.
-   */
-  onRegistered(...hooks: RegisteredHook[]): this {
-    hooks.forEach((hook) => this.registeredEvent.subscribe(hook));
-    return this;
   }
 
   addInstance(instance: Instance) {

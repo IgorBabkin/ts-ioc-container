@@ -117,15 +117,11 @@ hook is registered says which domain owns it.
 
 Acceptance criteria:
 
-- Scope events are registered on `IContainer`: `onScopeCreated(...hooks:
-  ScopeHook[])`, `onScopeDisposed(...hooks: ScopeHook[])` and
-  `onRegistered(...hooks: RegisteredHook[])`, each returning the
-  container for fluent chaining.
-- The same scope events are exposed on `IContainer` as typed events —
-  `scopeCreated`, `scopeDisposed` (`ITypedEvent<[IContainer]>`) and
-  `registered` (`ITypedEvent<[IProvider, DependencyKey, IContainer]>`) — so a
-  hook can be detached with the function `subscribe` returns, or with
-  `unsubscribe`. The fluent `onX(...hooks)` methods are sugar over `subscribe`.
+- Scope events are exposed on `IContainer` as typed events — `scopeCreated`,
+  `scopeDisposed` (`ITypedEvent<[IContainer]>`) and `registered`
+  (`ITypedEvent<[IProvider, DependencyKey, IContainer]>`). A hook is attached
+  with `subscribe` and detached with the function it returns, or with
+  `unsubscribe`. There are no fluent `onX(...hooks)` methods on the container.
 - The exposed events carry no `emit`: only the container raises its own scope
   events.
 - Construction is registered on `IInjector`: `onConstructed(...hooks:
@@ -143,8 +139,7 @@ Acceptance criteria:
   whenever it was added.
 - Disposing a scope clears its own scope hooks and leaves the shared injector's
   hooks intact.
-- `EmptyContainer` rejects every scope hook method and scope event with
-  `MethodNotImplementedError`.
+- `EmptyContainer` rejects every scope event with `MethodNotImplementedError`.
 
 ### Story: Choose how hooks run
 

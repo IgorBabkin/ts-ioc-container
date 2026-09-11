@@ -3,8 +3,6 @@ import {
   type DependencyKey,
   type IContainer,
   type IContainerModule,
-  type ScopeHook,
-  type RegisteredHook,
   type ResolveManyOptions,
   type ResolveOneOptions,
   type Tag,
@@ -152,27 +150,6 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
   get registered(): ITypedEvent<[IProvider, DependencyKey, IContainer]> {
-    throw new MethodNotImplementedError();
-  }
-
-  /**
-   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
-   */
-  onScopeCreated(...hooks: ScopeHook[]): this {
-    throw new MethodNotImplementedError();
-  }
-
-  /**
-   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
-   */
-  onScopeDisposed(...hooks: ScopeHook[]): this {
-    throw new MethodNotImplementedError();
-  }
-
-  /**
-   * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
-   */
-  onRegistered(...hooks: RegisteredHook[]): this {
     throw new MethodNotImplementedError();
   }
 }

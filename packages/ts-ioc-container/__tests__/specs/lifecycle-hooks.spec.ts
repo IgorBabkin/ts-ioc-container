@@ -305,10 +305,11 @@ describe('Spec: lifecycle hooks', () => {
     expect(worker.calls).toEqual(['start']);
   });
 
-  it('runs direct disposal callbacks registered with onScopeDisposed', () => {
+  it('runs direct disposal callbacks subscribed to scopeDisposed', () => {
     const disposed: string[] = [];
 
-    const container = new Container({ tags: ['app'] }).onScopeDisposed((c) => {
+    const container = new Container({ tags: ['app'] });
+    container.scopeDisposed.subscribe((c) => {
       if (c.hasTag('app')) disposed.push('app');
     });
 
@@ -327,11 +328,11 @@ describe('Spec: lifecycle hooks', () => {
       log.push(`constructed:${instance.constructor.name}`),
     );
 
-    const container = new Container({ injector, tags: ['app'] })
-      // Scope domain — the container's own events.
-      .onScopeCreated((scope) => log.push(`scopeCreated:${scope.hasTag('request')}`))
-      .onScopeDisposed(() => log.push('scopeDisposed'))
-      .onRegistered((_provider, key) => log.push(`registered:${String(key)}`));
+    const container = new Container({ injector, tags: ['app'] });
+    // Scope domain — the container's own events.
+    container.scopeCreated.subscribe((scope) => log.push(`scopeCreated:${scope.hasTag('request')}`));
+    container.scopeDisposed.subscribe(() => log.push('scopeDisposed'));
+    container.registered.subscribe((_provider, key) => log.push(`registered:${String(key)}`));
 
     container.addRegistration(
       // Provider domain — resolution.

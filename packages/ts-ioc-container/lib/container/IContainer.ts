@@ -33,7 +33,7 @@ export type RegisterOptions = { aliases?: DependencyKey[] };
 
 /**
  * Scope event hooks - the container's own domain: a scope was created, a scope
- * was disposed.
+ * was disposed. The listener type of `IContainer.scopeCreated` / `scopeDisposed`.
  *
  * The other two hook domains live with the abstraction which raises them:
  * injector hooks on `IInjector` (`InjectorHook`), provider hooks on
@@ -46,7 +46,7 @@ export type ScopeHook = (scope: IContainer) => void;
 /**
  * Scope event hook for a registration landing in a scope: a provider entered
  * the provider map under `key`. Registration is always of a provider, so the
- * name says only what varies.
+ * name says only what varies. The listener type of `IContainer.registered`.
  */
 export type RegisteredHook = (provider: IProvider, key: DependencyKey, scope: IContainer) => void;
 
@@ -68,21 +68,6 @@ export interface IContainer extends Tagged {
    * Raised once a provider is registered here under a resolvable key.
    */
   readonly registered: ITypedEvent<[IProvider, DependencyKey, IContainer]>;
-
-  /**
-   * Sugar over `scopeCreated.subscribe(...)` for fluent setup.
-   */
-  onScopeCreated(...hooks: ScopeHook[]): this;
-
-  /**
-   * Sugar over `scopeDisposed.subscribe(...)` for fluent setup.
-   */
-  onScopeDisposed(...hooks: ScopeHook[]): this;
-
-  /**
-   * Sugar over `registered.subscribe(...)` for fluent setup.
-   */
-  onRegistered(...hooks: RegisteredHook[]): this;
 
   register(key: DependencyKey, value: IProvider, options?: RegisterOptions): this;
 
