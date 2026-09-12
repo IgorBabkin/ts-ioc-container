@@ -17,6 +17,7 @@ import {
   ProviderDisposedError,
   register,
   Registration as R,
+  namespace,
   scopeAccess,
   SingleToken,
   singleton,
@@ -294,5 +295,24 @@ describe('Spec: provider behavior', () => {
     );
 
     expect(() => container.resolve('Fragile')).toThrow(failure);
+  });
+
+  it('restricts a provider to the module namespace its template covers', () => {
+    const ILoggerToken = new SingleToken<Logger>('ILogger');
+
+    @register(ILoggerToken, namespace('/domain/**'))
+    class Logger {
+      readonly layer = 'domain';
+    }
+
+    const container = new Container().addRegistration(R.fromClass(Logger));
+
+    // `__dirname` of the resolving module, plus the key
+    expect(ILoggerToken.namespace('/app/src/domain/user').resolve(container).layer).toBe('domain');
+    expect(() => ILoggerToken.namespace('/app/src/infra/http').resolve(container)).toThrowError(
+      DependencyNotFoundError,
+    );
+    // A caller which names no namespace is denied as well
+    expect(() => container.resolve('ILogger')).toThrowError(DependencyNotFoundError);
   });
 });

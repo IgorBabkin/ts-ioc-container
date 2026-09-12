@@ -201,6 +201,30 @@ any new normalization in `toBindToken` / `toProviderFn` / `toRegistrationFn`
 
 Pipe order generally doesn't matter except for `decorate()`: it wraps the instance at the point it appears in the chain, so order relative to `lazy()` changes whether you decorate the proxy or the real instance.
 
+### Namespaces
+
+A **namespace** is where a dependency is resolved *from*: the module path a
+`SingleToken` was given — `__dirname` in a real module — plus the dependency
+key. `new SingleToken('ILogger', { namespace: __dirname })` declared in
+`/app/src/domain/user` has the namespace name `/app/src/domain/user/ILogger`,
+and `token.namespace(__dirname)` returns a new token pointing at the module
+resolving it (immutable, like every other token method — the namespace also
+survives `args` / `argsFn` / `lazy` chaining).
+
+That name travels in `ProviderOptions.namespace` (and `ScopeAccessOptions`), so
+`namespace(template)` / `IProvider.addNamespaceTemplate(template)` can restrict
+a provider to one module tree: `@register(ILoggerToken, namespace('/domain/**'))`
+is resolvable only from tokens whose module path is under a `domain` directory.
+Templates are globs (`lib/utils/glob.ts`: `*` = one segment, `**` = any number)
+matched against the **end** of the namespace name, so they need not spell out
+the absolute prefix `__dirname` brings. Several templates are alternatives; a
+provider with none is reachable from everywhere. A restricted provider denies a
+resolution which names no namespace at all, and denial cascades to the parent
+scope exactly as `scopeAccess` denial does.
+
+A scope holds one provider per key, so namespaces decide *which callers reach a
+provider*, not which of several providers registered under one key answers.
+
 ### Scope Access vs Scope Match Rules
 
 Two distinct concepts:
@@ -230,7 +254,7 @@ const userToken = ApiToken.args('https://users.api.com', 1000); // another new t
 
 Chaining appends to the sequence: `token.args('a').argsFn(() => ['b', 'c'])` produces args `['a', 'b', 'c']`.
 
-All token classes accept `{ getArgsFn?, isLazy? }` as an optional second constructor argument for internal state propagation. Never pass this from outside — use `.args()`, `.argsFn()`, `.lazy()` instead.
+All token classes accept `{ getArgsFn?, isLazy? }` as an optional second constructor argument for internal state propagation (`SingleToken` also takes `namespace`, the module path — see [Namespaces](#namespaces)). Never pass this from outside — use `.args()`, `.argsFn()`, `.lazy()`, `.namespace()` instead.
 
 ### ProxyInjector Conventions
 
