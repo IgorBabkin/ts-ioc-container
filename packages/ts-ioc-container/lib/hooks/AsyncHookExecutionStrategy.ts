@@ -13,8 +13,8 @@ import {
 export type MethodStrategy = 'sequential' | 'parallel';
 
 export type AsyncHookExecutionStrategyProps = HookExecutionStrategyProps & {
-  /** Defaults to `sequential` — the order the decorators declare. */
-  methodStrategy?: MethodStrategy;
+  /** Always named explicitly: whether the hooks of one member run in declaration order or all at once. */
+  methodStrategy: MethodStrategy;
 };
 
 /**
@@ -26,7 +26,7 @@ export type AsyncHookExecutionStrategyProps = HookExecutionStrategyProps & {
 export abstract class AsyncHookExecutionStrategy extends HookExecutionStrategy {
   private readonly methodStrategy: MethodStrategy;
 
-  constructor({ methodStrategy = 'sequential', ...props }: AsyncHookExecutionStrategyProps) {
+  constructor({ methodStrategy, ...props }: AsyncHookExecutionStrategyProps) {
     super(props);
     this.methodStrategy = methodStrategy;
   }

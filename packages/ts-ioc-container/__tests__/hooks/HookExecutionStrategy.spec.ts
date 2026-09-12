@@ -78,7 +78,7 @@ describe('HookExecutionStrategy', () => {
 
       const scope = new Container();
 
-      new SequentialAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
+      new SequentialAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
 
       await vi.waitFor(() => expect(log).toEqual(['slow', 'fast']));
     });
@@ -99,7 +99,7 @@ describe('HookExecutionStrategy', () => {
 
       const scope = new Container();
 
-      new SequentialAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
+      new SequentialAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
 
       // everything ahead of the first async hook has already run; the rest waits on it
       expect(log).toEqual(['a1', 'a2', 'b1']);
@@ -135,7 +135,7 @@ describe('HookExecutionStrategy', () => {
 
       const scope = new Container();
 
-      new ParallelAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
+      new ParallelAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
 
       await vi.waitFor(() => expect(log).toEqual(['fast', 'slow']));
     });
@@ -150,7 +150,7 @@ describe('HookExecutionStrategy', () => {
 
       const scope = new Container();
 
-      new ParallelAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
+      new ParallelAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
 
       await vi.waitFor(() => expect(log).toEqual(['slow', 'fast']));
     });
@@ -181,8 +181,8 @@ describe('HookExecutionStrategy', () => {
 
       for (const strategy of [
         new SequentialSync({ key: 'start', onError, predicate: (m) => m === 'sync' }),
-        new SequentialAsync({ key: 'start', onError, predicate: (m) => m === 'sync' }),
-        new ParallelAsync({ key: 'start', onError, predicate: (m) => m === 'sync' }),
+        new SequentialAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'sync' }),
+        new ParallelAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'sync' }),
       ]) {
         strategy.execute(scope.resolve(Broken), { scope });
       }
@@ -202,8 +202,8 @@ describe('HookExecutionStrategy', () => {
       };
 
       for (const strategy of [
-        new SequentialAsync({ key: 'start', onError, predicate: (m) => m === 'async' }),
-        new ParallelAsync({ key: 'start', onError, predicate: (m) => m === 'async' }),
+        new SequentialAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'async' }),
+        new ParallelAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'async' }),
       ]) {
         strategy.execute(scope.resolve(Broken), { scope });
       }

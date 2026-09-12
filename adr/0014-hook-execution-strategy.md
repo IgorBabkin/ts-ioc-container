@@ -45,10 +45,14 @@ question — and every module takes one:
 | `SequentialAsync` | one after another | in order, or all at once (`methodStrategy`) | yes    |
 | `ParallelAsync`   | all at once       | in order, or all at once (`methodStrategy`) | yes    |
 
+The async strategies require `methodStrategy` — `'sequential'` or `'parallel'`
+is named at every construction site, so how the hooks of one member relate is
+read off the call instead of inherited from a default.
+
 ```typescript
 const container = new Container()
   .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
-  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
+  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed', methodStrategy: 'parallel' })));
 ```
 
 ### The strategy owns the whole "how"
@@ -60,6 +64,8 @@ identifies one:
   `onResolved`, or any custom key);
 - an optional **`onError: (scope) => (error) => void`**, which receives what a
   sync hook threw and what an async hook rejected with alike;
+- for the async strategies, a required **`methodStrategy`** — `'sequential'` or
+  `'parallel'` — for the hooks *within* one member;
 - defaults for **`predicate`**, **`createExecutionContext`** and
   **`mapExecutionContext`**, each overridable per `execute` call.
 
@@ -137,6 +143,9 @@ one-line hook themselves.
 - Every module now needs a strategy, and the strategy needs the key — a
   container with construct, dispose and resolve hooks constructs three
   strategies where it used to construct three modules.
+- `methodStrategy` has no default, so every `SequentialAsync` / `ParallelAsync`
+  construction spells it out — more to write, but a member's hook order is
+  never silently inherited.
 - `execute` returning `void` means a caller cannot `await` a strategy; tests
   and readiness checks wait on published state instead.
 - A hook failure is silent unless an `onError` handler is set. The sync
