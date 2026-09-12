@@ -6,8 +6,8 @@ import {
   hook,
   HookCollector,
   type HookType,
+  type IContainerModule,
   inject,
-  OnConstructModule,
   Registration as R,
   runInOrder,
   toTask,
@@ -27,7 +27,7 @@ const executeAsync: HookFn = async (ctx) => {
 const onConstruct = (fn: HookType) => hook('onConstruct', fn);
 const onConstructHooks = new HookCollector({ key: 'onConstruct' });
 
-// The module collects the hooks; running them is ours. This runner keeps the
+// Running the collected hooks is ours too. This runner keeps the
 // actions in declaration order, stays synchronous until one returns a promise,
 // and reports a throw and a rejection alike.
 const run =
@@ -39,6 +39,15 @@ const run =
       onError(scope)(ex);
     }
   };
+
+// Construction is the injector's event, and hanging the collection off it is
+// ours: the library ships no module for that, and a module is just an `applyTo`.
+const onConstructModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.getInjector().onConstructed((instance, scope) => {
+      run(onConstructHooks.getActions(instance, { scope }), { scope });
+    }),
+});
 
 describe('onConstruct', function () {
   it('should run initialization method after dependencies are resolved', function () {
@@ -53,9 +62,8 @@ describe('onConstruct', function () {
       }
     }
 
-    // The module takes the runner which performs the collected hooks.
     const container = new Container()
-      .useModule(new OnConstructModule(run(), onConstructHooks))
+      .useModule(onConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -76,11 +84,10 @@ describe('onConstruct', function () {
 
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
-      new OnConstructModule(
+      onConstructModule(
         run((scope) => (ex) => {
           captured = { ex, scope };
         }),
-        onConstructHooks,
       ),
     );
 
@@ -99,11 +106,10 @@ describe('onConstruct', function () {
 
     let scope: IContainer | undefined;
     const container = new Container().useModule(
-      new OnConstructModule(
+      onConstructModule(
         run((s) => () => {
           scope = s;
         }),
-        onConstructHooks,
       ),
     );
     const child = container.createScope();
@@ -138,7 +144,7 @@ describe('onConstruct', function () {
 
     // The runner awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(run(), onConstructHooks))
+      .useModule(onConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -162,11 +168,10 @@ describe('onConstruct', function () {
 
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
-      new OnConstructModule(
+      onConstructModule(
         run((scope) => (ex) => {
           captured = { ex, scope };
         }),
-        onConstructHooks,
       ),
     );
 

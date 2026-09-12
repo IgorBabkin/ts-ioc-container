@@ -7,8 +7,9 @@
   [ADR 0014 - Hook execution is a strategy, chosen by the caller](../../../adr/0014-hook-execution-strategy.md),
   [ADR 0015 - One hook per member, combined by higher-order functions](../../../adr/0015-one-hook-per-member.md),
   [ADR 0016 - The library collects hooks; the caller runs them](../../../adr/0016-collect-hooks-let-the-caller-run-them.md),
-  [ADR 0017 - No predefined hook keys or decorators](../../../adr/0017-no-predefined-hook-keys.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `toHookFn`, `sequential`, `parallel`, `HookCollector`, `HookAction`, `HookRunner`, `toTask`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `injectProp`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+  [ADR 0017 - No predefined hook keys or decorators](../../../adr/0017-no-predefined-hook-keys.md),
+  [ADR 0018 - No hook modules: the container's events are the API](../../../adr/0018-no-hook-modules.md)
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `toHookFn`, `sequential`, `parallel`, `HookCollector`, `HookAction`, `HookRunner`, `toTask`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `injectProp`, `oncePerInstance`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -31,11 +32,10 @@ Acceptance criteria:
   application's own key — the library ships no construct decorator; several
   hooks are combined into one with `sequential(...)` / `parallel(...)` at the
   declaration site.
-- `OnConstructModule` is a container module: it opts the container's injector
-  (reached through `getInjector()`) into construct hook execution, so one
-  application covers the whole scope tree.
-- The module takes the `HookRunner` which performs the collected actions and
-  the `HookCollector` which reads them; it has no key of its own.
+- Collection on construction is wired by the application, through
+  `container.getInjector().onConstructed(...)` — the library ships no module for
+  it. One injector backs the whole scope tree, so wiring it once covers every
+  scope.
 - Construct hooks run after the instance is created and tracked.
 - Hook classes are resolved through the container before execution.
 
@@ -48,7 +48,7 @@ that async setup does not have to be forced into the synchronous construct path.
 Acceptance criteria:
 
 - A construct hook key takes an async hook as readily as a sync one.
-- `OnConstructModule` collects both kinds; a runner built on `runInOrder`
+- Collecting on construction yields both kinds; a runner built on `runInOrder`
   awaits the async ones.
 - Async construct hooks start when the instance is created and settle after
   resolution returns.
@@ -65,14 +65,14 @@ Acceptance criteria:
 
 - A resolve hook key stores one hook as metadata on a method and takes a sync
   or an async one; like every other key, it runs nothing unless a hook is named.
-- `OnResolvedModule` opts a container into resolve hook collection; the
-  `resolved(runner, collector)` pipe opts in a single registration instead.
-  Both take the runner and the collector.
+- Resolve hooks are wired through `registered.subscribe(...)` and
+  `provider.onResolved(...)` for a whole container, or through the
+  `onResolve(...)` pipe for a single registration.
 - Resolve hooks run on every resolve; a hook wrapped in `oncePerInstance`
   (e.g. `hook('onResolved', oncePerInstance(invoke))`) runs a single time per
   instance however many keys, scopes, or resolve calls return it.
 - Distinct objects of the same class each get their own once-resolve hook run.
-- Providers registered before the module was applied are not covered.
+- Providers registered before the `registered` subscription are not covered.
 - Rejected async hooks reach whatever the runner attached to the promise it was
   handed; the library reports nothing itself.
 
@@ -84,9 +84,9 @@ so that local resources are released at the lifecycle boundary.
 Acceptance criteria:
 
 - A dispose hook key stores hook metadata on a method.
-- `OnDisposeModule` opts a container into dispose hook collection with the
-  collector it is given, and hands the runner the actions of every instance of
-  the scope as one list.
+- Dispose hooks are wired through `scopeDisposed.subscribe(...)`; collecting
+  every instance of the scope into one list lets the runner order the instances
+  as well as the members.
 - Dispose hooks run for instances tracked by the disposed scope.
 - Disposing a scope does not implicitly run hooks for child scopes.
 
@@ -175,8 +175,8 @@ Acceptance criteria:
 - A sync hook which throws throws out of the call which performed it, and an
   async one rejects the promise handed to the runner: the library catches
   neither.
-- A class's hook metadata is re-read on every collection; a caller who wants it
-  cached wraps `getHooks` in `memoize`.
+- A collector reads a class's hook metadata once and reuses it; `getHooks`
+  itself stays a plain merge, which a caller memoizes the same way.
 - Hook context can resolve method arguments and invoke the target method.
 
 ## Notes

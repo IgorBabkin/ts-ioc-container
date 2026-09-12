@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `IContainerModule`, `Container.useModule`, `OnDisposeModule`, `OnResolvedModule`, `AutoResolveModule`, `Container.autoResolve`
+- **Public API:** `IContainerModule`, `Container.useModule`, `AutoResolveModule`, `Container.autoResolve`
 - **Executable spec:** `__tests__/specs/container-modules.spec.ts`
 
 ## Intent
@@ -39,20 +39,23 @@ Acceptance criteria:
 
 ### Story: Enable lifecycle behavior through modules
 
-As an application developer, I can opt into lifecycle hooks through modules so
-that projects that need hooks can enable them explicitly.
+As an application developer, I can opt into lifecycle hooks by writing a module
+over the container's own events, so that projects that need hooks enable them
+explicitly and the library ships none.
 
 Acceptance criteria:
 
-- `OnDisposeModule` enables dispose hook execution for instances tracked
-  by the disposed scope.
-- `OnResolvedModule` enables resolve hook execution for every provider
-  registered after it is applied.
+- `IContainerModule` is one method — `applyTo(container)` — so a lifecycle
+  module is a function returning an object literal; the library ships no hook
+  module of its own (ADR 0018).
+- A module subscribing to `scopeDisposed` collects from the instances tracked by
+  the disposed scope.
+- A module subscribing to `registered` covers every provider registered after it
+  is applied, and none registered before.
 - Child scopes created after module setup inherit the lifecycle hooks configured
   on the parent.
-- Construct hooks are not a container concern: `OnConstructModule` is an
-  `IInjectorModule`, applied to the injector before it reaches the container.
-  See the lifecycle-hooks epic.
+- Construct hooks are not a container concern: they are wired on the injector,
+  reached through `getInjector()`. See the lifecycle-hooks epic.
 
 ### Story: Eagerly instantiate scope services through a module
 

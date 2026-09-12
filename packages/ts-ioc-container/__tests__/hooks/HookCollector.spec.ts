@@ -366,7 +366,7 @@ describe('HookCollector', () => {
       expect(instance.received).toEqual([['overridden']]);
     });
 
-    it('reads a class’s hook metadata on every collection, leaving caching to the caller', () => {
+    it('reads a class’s hook metadata once and reuses it on later collections', () => {
       const scope = new Container();
       const collect = new HookCollector({ key: 'start' });
       const first = scope.resolve(Service);
@@ -378,15 +378,15 @@ describe('HookCollector', () => {
       const reads = getOwnMetadata.mock.calls.length;
       run(second, { scope });
 
-      expect(getOwnMetadata.mock.calls.length).toBe(reads * 2);
+      expect(getOwnMetadata.mock.calls.length).toBe(reads);
       expect([first.received.length, second.received.length]).toEqual([2, 2]);
 
       getOwnMetadata.mockRestore();
     });
 
-    // Hook metadata is fixed once a class is defined, so a caller which collects often
-    // can memoize the merge itself — the library does not decide that for them.
-    it('lets the caller memoize the metadata read', () => {
+    // `getHooks` itself stays a plain function: it merges the prototype chain on every
+    // call, and a caller outside the collector memoizes it the same way the collector does.
+    it('leaves getHooks uncached, for a caller to memoize as the collector does', () => {
       const scope = new Container();
       const hooksOf = memoize(getHooks);
       const first = scope.resolve(Service);

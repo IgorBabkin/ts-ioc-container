@@ -6,11 +6,11 @@ import {
   debounce,
   handleError,
   HandleErrorParams,
-  OnConstructModule,
   Container,
   IHookContext,
   HookFn,
 } from '../../lib';
+import { OnConstructModule } from '../hooks/modules';
 import { runSync } from '../hooks/runners';
 import { onConstruct, onConstructHooks } from '../hooks/decorators';
 

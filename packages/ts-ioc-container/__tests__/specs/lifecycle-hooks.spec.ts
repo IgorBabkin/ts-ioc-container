@@ -12,16 +12,14 @@ import {
   MetadataInjector,
   MethodNotImplementedError,
   oncePerInstance,
-  OnConstructModule,
-  OnDisposeModule,
   onResolve,
-  OnResolvedModule,
   Provider,
   Registration as R,
   parallel,
   sequential,
   HookCollector,
 } from '../../lib';
+import { OnConstructModule, OnDisposeModule, OnResolvedModule } from '../hooks/modules';
 import { perform, runSequential, runSync } from '../hooks/runners';
 import {
   onConstruct,

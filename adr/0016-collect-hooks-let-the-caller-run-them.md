@@ -3,7 +3,10 @@
 - **Status:** Accepted, supersedes
   [ADR 0014](0014-hook-execution-strategy.md)'s strategy classes; completed by
   [ADR 0017](0017-no-predefined-hook-keys.md), which removed the hook keys and
-  decorators this ADR still assumed, and reverted the memoization below
+  decorators this ADR still assumed and reverted the memoization below, and by
+  [ADR 0018](0018-no-hook-modules.md), which removed the modules themselves —
+  read every `useModule(new OnConstructModule(...))` here as the consumer wiring
+  that replaced it
 - **Date:** 2026-09-12
 - **Deciders:** core maintainers
 - **Tags:** hooks, lifecycle, api-design

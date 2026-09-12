@@ -1,5 +1,7 @@
 import type { ExecutionContext } from '../ExecutionContext';
+import { resolveConstructor } from '../metadata/target';
 import { type Instance } from '../utils/basic';
+import { memoize } from '../utils/memoize';
 import { type Task } from '../utils/task';
 import { getHooks, hasHooks, type HookFn, toHookFn } from './hook';
 import { createHookExecutionContext, type CreateHookExecutionContext, type IHookContext } from './HookContext';
@@ -45,14 +47,24 @@ export type HookRunner = (actions: HookAction[], context: ExecutionContext) => v
  * actions are performed in, what is awaited and where a failure goes are
  * answered by the caller (ADR 0016).
  *
+ * Wire it to whichever event should collect — the injector's `onConstructed`,
+ * the scope's `scopeDisposed`, a provider's `onResolved` — the library ships no
+ * module which does that for you (ADR 0018).
+ *
  * ```typescript
  * const collector = new HookCollector({ key: 'onStart' });
- * runInOrder(collector.getActions(instance, { scope }).map(toTask))?.catch(report);
+ *
+ * container.getInjector().onConstructed((instance, scope) => {
+ *   runInOrder(collector.getActions(instance, { scope }).map(toTask))?.catch(report);
+ * });
  * ```
  */
 export class HookCollector {
   private readonly key: string | symbol;
   private readonly options: Required<HookCollectorOptions>;
+  // Hook metadata is fixed once a class is defined - decorators have all run by the time
+  // there is an instance to read them off - so the merge runs once per class and key.
+  private readonly hooksOf = memoize(getHooks);
 
   constructor({
     key,
@@ -79,7 +91,7 @@ export class HookCollector {
     }: HookCollectionContext,
   ): HookAction[] {
     const actions: HookAction[] = [];
-    for (const [methodName, fn] of getHooks(target, this.key)) {
+    for (const [methodName, fn] of this.hooksOf(resolveConstructor(target), this.key)) {
       if (predicate(methodName)) {
         actions.push({
           hook: toHookFn(fn),

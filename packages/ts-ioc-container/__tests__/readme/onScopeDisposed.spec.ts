@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-  OnDisposeModule,
   bindTo,
   Container,
   type HookFn,
@@ -12,6 +11,7 @@ import {
   Registration as R,
   singleton,
   type HookRunner,
+  type IContainerModule,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
@@ -23,13 +23,26 @@ const execute: HookFn = (ctx) => {
 const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
 const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
 
-// The module collects the hooks of every instance of the disposed scope into one
-// list; this runner performs them in order and never awaits.
+// This runner performs the collected hooks in order and never awaits.
 const run: HookRunner = (actions) => {
   for (const { hook, context } of actions) {
     hook(context);
   }
 };
+
+// Disposal is a scope event, and hanging the collection off it is ours: the
+// library ships no module for that, and a module is just an `applyTo`. Every
+// instance of the scope is collected into one list, so the runner orders the
+// instances as well as the members.
+const onScopeDisposedModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.scopeDisposed.subscribe((scope) => {
+      run(
+        scope.getInstances().flatMap((instance) => onScopeDisposedHooks.getActions(instance, { scope })),
+        { scope },
+      );
+    }),
+});
 
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
@@ -59,7 +72,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule(run, onScopeDisposedHooks))
+      .useModule(onScopeDisposedModule(run))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 

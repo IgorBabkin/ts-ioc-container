@@ -4,13 +4,12 @@ import {
   type HookFn,
   type HookType,
   oncePerInstance,
-  OnResolvedModule,
   Provider,
   Registration as R,
-  resolved,
   sequential,
   singleton,
 } from '../../lib';
+import { OnResolvedModule, resolved } from './modules';
 import { type OnError, runSequential, runSync } from './runners';
 import { onResolved, onResolvedHooks } from './decorators';
 

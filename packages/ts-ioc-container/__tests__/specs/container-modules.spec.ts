@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-  OnConstructModule,
   autoResolve,
   AutoResolveModule,
   bindTo,
@@ -12,6 +11,7 @@ import {
   scopeAccess,
   singleton,
 } from '../../lib';
+import { OnConstructModule } from '../hooks/modules';
 import { runSync } from '../hooks/runners';
 import { onConstruct, onConstructHooks } from '../hooks/decorators';
 

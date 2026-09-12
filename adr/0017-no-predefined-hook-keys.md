@@ -1,7 +1,8 @@
 # ADR 0017 — No predefined hook keys or decorators
 
 - **Status:** Accepted, completes
-  [ADR 0016](0016-collect-hooks-let-the-caller-run-them.md)
+  [ADR 0016](0016-collect-hooks-let-the-caller-run-them.md); the modules it kept
+  were then removed by [ADR 0018](0018-no-hook-modules.md)
 - **Date:** 2026-09-12
 - **Deciders:** core maintainers
 - **Tags:** hooks, lifecycle, api-design
@@ -48,20 +49,20 @@ container.useModule(new OnConstructModule(runner, onConstructHooks));
   library's exports.
 - `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule` and the
   `resolved(...)` pipe now **require** a collector: with no key of its own, a
-  module cannot default one. Each still owns what it always owned — the wiring
-  of one domain event (ADR 0012): the injector's `onConstructed`, the scope's
-  `scopeDisposed`, a provider's `onResolved`.
+  module cannot default one. (They were removed outright by
+  [ADR 0018](0018-no-hook-modules.md), which found that a module holding only a
+  `subscribe` was not worth shipping either.)
 - `injectProp` stays: it is a hook *function*, not a key.
 
-### Collection is not cached either
+### `getHooks` is a plain function again
 
-ADR 0016 memoized `getHooks` per class and key. That is also a caller's
-decision, and it is reverted: `getHooks` merges the prototype chain on every
-call and returns a fresh map, as it did before. A caller which collects often
-wraps it — `memoize(getHooks)` — with the `memoize` util the library exports
-alongside `once`, `throttle` and `debounce`. Hook metadata is fixed once a class
-is defined, so memoizing it is always safe; whether it is worth it is not the
-library's call.
+ADR 0016 memoized `getHooks` itself, for every caller. That is reverted:
+`getHooks` merges the prototype chain on each call and returns a fresh map, as
+it did before. The cache lives where the repeated reads are — `HookCollector`
+holds a `memoize(getHooks)` — so collecting on a hot event still reads a class's
+metadata once per key, while a caller reading hooks directly gets a plain
+function and can wrap it in the same exported `memoize` if they want. Hook
+metadata is fixed once a class is defined, so memoizing it is always safe.
 
 ## Consequences
 
