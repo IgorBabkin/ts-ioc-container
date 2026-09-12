@@ -17,25 +17,8 @@ export interface HookClass<T extends IHookContext = IHookContext> {
 // HookType - anything that can be registered as a hook: a plain function or a hook class
 export type HookType<T extends IHookContext = IHookContext> = HookFn<T> | constructor<HookClass<T>>;
 
-// MapHooksFn - receives the hooks already registered for the decorated member and returns the new list
-export type MapHooksFn = (...prev: HookType[]) => HookType[];
-
-// HooksOfClass
-export type HooksOfClass = Map<string, HookType[]>;
-
-// Adds hooks after the ones already registered for the decorated member.
-export const appendHooks =
-  (...fns: HookType[]): MapHooksFn =>
-  (...prev) => [...prev, ...fns];
-
-// Adds hooks before the ones already registered for the decorated member.
-export const prependHooks =
-  (...fns: HookType[]): MapHooksFn =>
-  (...prev) => [...fns, ...prev];
-
-// Short aliases
-export const append = appendHooks;
-export const prepend = prependHooks;
+// HooksOfClass - one hook per decorated member; compose several with `sequential`/`parallel`
+export type HooksOfClass = Map<string, HookType>;
 
 const isHookClassConstructor = <C extends IHookContext>(
   execute: HookFn<C> | constructor<HookClass<C>>,
@@ -58,8 +41,8 @@ const getConstructorChain = (ctor: unknown): object[] => {
 };
 
 // Get hooks metadata, merging hooks declared on parent (extended-from) classes.
-// Hooks are collected from base to derived so a derived class's hooks for the same
-// method name take precedence over (replace) the parent's.
+// Hooks are collected from base to derived so a derived class's hook for the same
+// method name takes precedence over (replaces) the parent's.
 //
 // `target` is an instance or its class, a proxy of either included - it is normalized
 // by `resolveConstructor`, so callers never have to unwrap it themselves.
@@ -68,8 +51,8 @@ export function getHooks(target: Instance | constructor<unknown>, key: string | 
   for (const ctor of getConstructorChain(resolveConstructor(target)).reverse()) {
     const ownHooks: HooksOfClass | undefined = Reflect.getOwnMetadata(key, ctor);
     if (ownHooks) {
-      for (const [methodName, fns] of ownHooks) {
-        merged.set(methodName, fns);
+      for (const [methodName, fn] of ownHooks) {
+        merged.set(methodName, fn);
       }
     }
   }
@@ -82,12 +65,12 @@ export function hasHooks(target: Instance | constructor<unknown>, key: string | 
 }
 
 // Hook decorator
-// `mapFn` receives the hooks already registered on this class for the decorated member
-// and returns the resulting list, so `append(...)`/`prepend(...)` control ordering.
-export const hook = (key: string | symbol, mapFn: MapHooksFn) => (target: object, propertyKey: string | symbol) => {
+// A member carries exactly one hook per key: decorating the same member twice under the
+// same key replaces the earlier hook. Compose several with `sequential(...)`/`parallel(...)`.
+export const hook = (key: string | symbol, fn: HookType) => (target: object, propertyKey: string | symbol) => {
   const hooks: HooksOfClass = Reflect.hasOwnMetadata(key, target.constructor)
     ? Reflect.getOwnMetadata(key, target.constructor)
     : new Map();
-  hooks.set(propertyKey as string, mapFn(...(hooks.get(propertyKey as string) ?? [])));
+  hooks.set(propertyKey as string, fn);
   Reflect.defineMetadata(key, hooks, target.constructor);
 };

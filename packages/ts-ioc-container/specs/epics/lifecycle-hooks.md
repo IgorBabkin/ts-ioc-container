@@ -4,8 +4,9 @@
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../../adr/0007-lifecycle-hooks.md),
   [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md),
   [ADR 0013 - One async-capable hook path, no `Async` variants](../../../adr/0013-one-async-capable-hook-path.md),
-  [ADR 0014 - Hook execution is a strategy, chosen by the caller](../../../adr/0014-hook-execution-strategy.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `HookExecutionStrategy`, `SequentialSync`, `SequentialAsync`, `ParallelAsync`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+  [ADR 0014 - Hook execution is a strategy, chosen by the caller](../../../adr/0014-hook-execution-strategy.md),
+  [ADR 0015 - One hook per member, combined by higher-order functions](../../../adr/0015-one-hook-per-member.md)
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `toHookFn`, `sequential`, `parallel`, `HookExecutionStrategy`, `SequentialSync`, `SequentialAsync`, `ParallelAsync`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -24,7 +25,9 @@ used.
 
 Acceptance criteria:
 
-- `onConstruct` stores hook metadata on a method.
+- `onConstruct` stores one hook as metadata on a method; several hooks are
+  combined into one with `sequential(...)` / `parallel(...)` at the
+  declaration site.
 - `OnConstructModule` is a container module: it opts the container's injector
   (reached through `getInjector()`) into construct hook execution, so one
   application covers the whole scope tree.
@@ -41,7 +44,7 @@ that async setup does not have to be forced into the synchronous construct path.
 
 Acceptance criteria:
 
-- `onConstruct` takes async hooks under the same hook key as sync ones.
+- `onConstruct` takes an async hook under the same hook key as a sync one.
 - `OnConstructModule` runs both kinds; an async strategy awaits the async ones.
 - Async construct hooks start when the instance is created and settle after
   resolution returns.
@@ -56,9 +59,8 @@ instances shared across keys and scopes — still get an initialization point.
 
 Acceptance criteria:
 
-- `onResolved` stores hook metadata on a method and takes sync and async hooks
-  as a rest parameter; like every other decorator, it runs nothing unless a hook
-  is named.
+- `onResolved` stores one hook as metadata on a method and takes a sync or an
+  async one; like every other decorator, it runs nothing unless a hook is named.
 - `OnResolvedModule` opts a container into resolve hook execution; the
   `resolved(strategy)` pipe opts in a single registration instead. Both take
   the strategy keyed to `onResolved`.
@@ -102,7 +104,8 @@ metadata and execution model.
 
 Acceptance criteria:
 
-- `hook` records one or more hook functions for a method.
+- `hook` records exactly one hook for a method under a key; decorating the same
+  member twice under one key replaces the earlier hook.
 - `getHooks` returns hook metadata for the reflected target.
 - `hasHooks` identifies whether hook metadata exists.
 - A `HookExecutionStrategy` keyed to a custom name executes that key's hooks;
@@ -150,13 +153,15 @@ reporting are the caller's.
 Acceptance criteria:
 
 - One hook key and one decorator per domain take sync and async hooks alike.
-- `SequentialSync` runs members and their hooks one after
-  another and never awaits; everything it ran has finished when `execute`
-  returns.
-- `SequentialAsync` runs members one after another,
-  awaiting each; `ParallelAsync` starts every member at
-  once. Both require `methodStrategy`: `'sequential'` runs the hooks of one
-  member in declaration order, `'parallel'` starts them at once.
+- A strategy defines how the *members* — the decorated methods — run; how the
+  hooks of one member relate is the combinator's business, not the strategy's.
+- `SequentialSync` runs members one after another and never awaits; everything
+  it ran has finished when `execute` returns.
+- `SequentialAsync` runs members one after another, awaiting each;
+  `ParallelAsync` starts every member at once.
+- `sequential(...hooks)` runs the hooks it combines in declaration order,
+  awaiting each one that goes async; `parallel(...hooks)` starts them at once.
+  Both return a `HookFn`, so they nest and compose with `oncePerInstance`.
 - A run stays synchronous until a hook returns a promise; the async strategies
   await only what is a promise.
 - `execute` returns `void`; async hooks settle after it returns.

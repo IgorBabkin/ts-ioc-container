@@ -1,12 +1,13 @@
 import 'reflect-metadata';
 import {
-  append,
   Container,
   hook,
   HookContext,
   type HookFn,
   type IContainer,
+  parallel,
   ParallelAsync,
+  sequential,
   SequentialAsync,
   SequentialSync,
 } from '../../lib';
@@ -34,10 +35,10 @@ describe('HookExecutionStrategy', () => {
       const log: string[] = [];
 
       class Service {
-        @hook('start', append(recordSync(log, 'a1'), recordSync(log, 'a2')))
+        @hook('start', sequential(recordSync(log, 'a1'), recordSync(log, 'a2')))
         a() {}
 
-        @hook('start', append(recordSync(log, 'b1')))
+        @hook('start', recordSync(log, 'b1'))
         b() {}
       }
 
@@ -48,12 +49,15 @@ describe('HookExecutionStrategy', () => {
       expect(log).toEqual(['a1', 'a2', 'b1']);
     });
 
-    it('starts a promise-returning hook but does not wait for it', () => {
+    it('starts a promise-returning member but does not wait for it', () => {
       const log: string[] = [];
 
       class Service {
-        @hook('start', append(record(log, 'async', 1), recordSync(log, 'sync')))
+        @hook('start', record(log, 'async', 1))
         a() {}
+
+        @hook('start', recordSync(log, 'sync'))
+        b() {}
       }
 
       const scope = new Container();
@@ -69,16 +73,16 @@ describe('HookExecutionStrategy', () => {
       const log: string[] = [];
 
       class Service {
-        @hook('start', append(record(log, 'slow', 10)))
+        @hook('start', record(log, 'slow', 10))
         a() {}
 
-        @hook('start', append(record(log, 'fast', 1)))
+        @hook('start', record(log, 'fast', 1))
         b() {}
       }
 
       const scope = new Container();
 
-      new SequentialAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
+      new SequentialAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
 
       await vi.waitFor(() => expect(log).toEqual(['slow', 'fast']));
     });
@@ -87,35 +91,35 @@ describe('HookExecutionStrategy', () => {
       const log: string[] = [];
 
       class Service {
-        @hook('start', append(recordSync(log, 'a1'), recordSync(log, 'a2')))
+        @hook('start', sequential(recordSync(log, 'a1'), recordSync(log, 'a2')))
         a() {}
 
-        @hook('start', append(recordSync(log, 'b1'), record(log, 'b2', 0), recordSync(log, 'b3')))
+        @hook('start', sequential(recordSync(log, 'b1'), record(log, 'b2', 0), recordSync(log, 'b3')))
         b() {}
 
-        @hook('start', append(recordSync(log, 'c1')))
+        @hook('start', recordSync(log, 'c1'))
         c() {}
       }
 
       const scope = new Container();
 
-      new SequentialAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
+      new SequentialAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
 
       // everything ahead of the first async hook has already run; the rest waits on it
       expect(log).toEqual(['a1', 'a2', 'b1']);
     });
 
-    it('starts the hooks of one member at once with methodStrategy parallel', async () => {
+    it('starts the hooks of one member at once when they are combined with parallel', async () => {
       const log: string[] = [];
 
       class Service {
-        @hook('start', append(record(log, 'slow', 10), record(log, 'fast', 1)))
+        @hook('start', parallel(record(log, 'slow', 10), record(log, 'fast', 1)))
         a() {}
       }
 
       const scope = new Container();
 
-      new SequentialAsync({ key: 'start', methodStrategy: 'parallel' }).execute(scope.resolve(Service), { scope });
+      new SequentialAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
 
       await vi.waitFor(() => expect(log).toEqual(['fast', 'slow']));
     });
@@ -126,31 +130,31 @@ describe('HookExecutionStrategy', () => {
       const log: string[] = [];
 
       class Service {
-        @hook('start', append(record(log, 'slow', 10)))
+        @hook('start', record(log, 'slow', 10))
         a() {}
 
-        @hook('start', append(record(log, 'fast', 1)))
+        @hook('start', record(log, 'fast', 1))
         b() {}
       }
 
       const scope = new Container();
 
-      new ParallelAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
+      new ParallelAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
 
       await vi.waitFor(() => expect(log).toEqual(['fast', 'slow']));
     });
 
-    it('keeps the hooks of one member in order unless methodStrategy is parallel', async () => {
+    it('keeps the hooks of one member in order when they are combined with sequential', async () => {
       const log: string[] = [];
 
       class Service {
-        @hook('start', append(record(log, 'slow', 10), record(log, 'fast', 1)))
+        @hook('start', sequential(record(log, 'slow', 10), record(log, 'fast', 1)))
         a() {}
       }
 
       const scope = new Container();
 
-      new ParallelAsync({ key: 'start', methodStrategy: 'sequential' }).execute(scope.resolve(Service), { scope });
+      new ParallelAsync({ key: 'start' }).execute(scope.resolve(Service), { scope });
 
       await vi.waitFor(() => expect(log).toEqual(['slow', 'fast']));
     });
@@ -160,15 +164,12 @@ describe('HookExecutionStrategy', () => {
     const failure = new Error('boom');
 
     class Broken {
-      @hook(
-        'start',
-        append(() => {
-          throw failure;
-        }),
-      )
+      @hook('start', () => {
+        throw failure;
+      })
       sync() {}
 
-      @hook('start', append(() => Promise.reject(failure)))
+      @hook('start', () => Promise.reject(failure))
       async() {}
     }
 
@@ -181,8 +182,8 @@ describe('HookExecutionStrategy', () => {
 
       for (const strategy of [
         new SequentialSync({ key: 'start', onError, predicate: (m) => m === 'sync' }),
-        new SequentialAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'sync' }),
-        new ParallelAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'sync' }),
+        new SequentialAsync({ key: 'start', onError, predicate: (m) => m === 'sync' }),
+        new ParallelAsync({ key: 'start', onError, predicate: (m) => m === 'sync' }),
       ]) {
         strategy.execute(scope.resolve(Broken), { scope });
       }
@@ -202,8 +203,8 @@ describe('HookExecutionStrategy', () => {
       };
 
       for (const strategy of [
-        new SequentialAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'async' }),
-        new ParallelAsync({ key: 'start', methodStrategy: 'sequential', onError, predicate: (m) => m === 'async' }),
+        new SequentialAsync({ key: 'start', onError, predicate: (m) => m === 'async' }),
+        new ParallelAsync({ key: 'start', onError, predicate: (m) => m === 'async' }),
       ]) {
         strategy.execute(scope.resolve(Broken), { scope });
       }
@@ -224,22 +225,16 @@ describe('HookExecutionStrategy', () => {
     class Service {
       received: unknown[][] = [];
 
-      @hook(
-        'start',
-        append((ctx) => {
-          ctx.invokeMethod({ args: ctx.getInitialArgs() });
-        }),
-      )
+      @hook('start', (ctx) => {
+        ctx.invokeMethod({ args: ctx.getInitialArgs() });
+      })
       a(...args: unknown[]) {
         this.received.push(args);
       }
 
-      @hook(
-        'start',
-        append((ctx) => {
-          ctx.invokeMethod({ args: ctx.getInitialArgs() });
-        }),
-      )
+      @hook('start', (ctx) => {
+        ctx.invokeMethod({ args: ctx.getInitialArgs() });
+      })
       b(...args: unknown[]) {
         this.received.push(args);
       }

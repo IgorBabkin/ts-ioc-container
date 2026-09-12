@@ -162,7 +162,7 @@ describe('Quickstart', function () {
 - Lazy token: `select.token('Service').lazy()`
 - Inject decorator: `@inject('Key')`
 - Map an injected value: `@inject('Key', sanitize(), validate())`
-- Property inject: `@hook('onInit', append(injectProp('Key')))`
+- Property inject: `@hook('onInit', injectProp('Key'))`
 
 > [!TIP]
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
@@ -2811,50 +2811,56 @@ describe('Container Modules', function () {
 
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
-The generic `@hook` decorator takes a hook key and a map function
-`(...prev: HookType[]) => HookType[]`, where `prev` is the list of hooks already
-registered on the class for the decorated member. Use `appendHooks` /
-`prependHooks` (exported as `append` / `prepend` too) to place new hooks around
-the existing ones:
+Every hook decorator — the generic `@hook(key, hook)` and `@onConstruct`,
+`@onScopeDisposed`, `@onResolved` — takes **one** hook for the decorated member.
+Several hooks are combined at the declaration site, by the combinator that says
+how they relate:
 
 ```typescript
 class OrderService {
-  @hook('actions', append(validate, persist))
-  @hook('actions', prepend(authorize))
+  @hook('actions', sequential(authorize, validate, persist))
   submit() {}
+
+  @onScopeDisposed(parallel(flushMetrics, closeSocket))
+  destroy() {}
 }
 ```
 
-Decorators are applied bottom-up, so `authorize` runs first, then `validate` and
-`persist`. Any other map function works as well — for example
-`(...prev) => [...prev].reverse()` to reorder, or `() => [onlyThisOne]` to
-replace the accumulated hooks.
+- `sequential(...hooks)` runs them in declaration order, awaiting each one that
+  goes async before the next.
+- `parallel(...hooks)` starts them all at once and settles when every one has.
+- `oncePerInstance(hook)` runs its hook a single time per instance, however
+  often the event fires.
 
-`@onConstruct` and `@onScopeDisposed` keep their variadic signature and
-compensate for the bottom-up application order, so stacked decorators run in
-declaration order: `@onConstruct(h1) @onConstruct(h2)` runs `h1` before `h2`.
+They compose, because each returns an ordinary `HookFn`:
+`oncePerInstance(sequential(connect, warmUp))`, or a `parallel(...)` nested
+inside a `sequential(...)`. A hook class (`HookType`) may be passed anywhere a
+hook function can. Writing your own combinator needs nothing from the library
+beyond `toHookFn`.
+
+A member carries exactly one hook per key, so decorating the same member twice
+under one key replaces the earlier hook rather than adding to it — decorators
+are applied bottom-up, so the topmost one is the one that stays.
 
 Every hook may be sync or async — one decorator and one module take both, so
 there is no separate async form to reach for. *How* the hooks run is a separate
 choice: each module takes a `HookExecutionStrategy`, keyed to the hooks it runs
-(`onConstruct`, `onScopeDisposed`, `onResolved`, or a custom key), and the
-strategy decides the order, what is awaited, and where a failure goes
-([ADR 0014](../../adr/0014-hook-execution-strategy.md)):
+(`onConstruct`, `onScopeDisposed`, `onResolved`, or a custom key). A strategy
+decides how the **members** — the decorated methods — relate to each other,
+what is awaited, and where a failure goes
+([ADR 0015](../../adr/0015-one-hook-per-member.md)); how the hooks *within* one
+member relate is the combinator's job, not the strategy's:
 
-| Strategy          | Members (decorated methods) | Hooks of one member                         | Awaits |
-| ----------------- | --------------------------- | ------------------------------------------- | ------ |
-| `SequentialSync`  | one after another           | in declaration order                        | no     |
-| `SequentialAsync` | one after another           | in order, or all at once (`methodStrategy`) | yes    |
-| `ParallelAsync`   | all at once                 | in order, or all at once (`methodStrategy`) | yes    |
-
-The async strategies require `methodStrategy` (`'sequential'` or `'parallel'`):
-how the hooks of one member relate is named at the construction site rather
-than left to a default.
+| Strategy          | Members (decorated methods) | Awaits |
+| ----------------- | --------------------------- | ------ |
+| `SequentialSync`  | one after another           | no     |
+| `SequentialAsync` | one after another           | yes    |
+| `ParallelAsync`   | all at once                 | yes    |
 
 ```typescript
 const container = new Container()
   .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
-  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed', methodStrategy: 'parallel' })));
+  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
 ```
 
 Resolution and disposal stay synchronous under every strategy: a run stays
@@ -2935,12 +2941,12 @@ and `OnResolvedModule` reaches every provider through `registered`.
 ```typescript
 import 'reflect-metadata';
 import {
-  OnConstructModule,
   Container,
   type HookFn,
   type IContainer,
   inject,
   onConstruct,
+  OnConstructModule,
   Registration as R,
   SequentialAsync,
   SequentialSync,
@@ -3056,7 +3062,7 @@ describe('onConstruct', function () {
 
     // An async strategy awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct', methodStrategy: 'sequential' })))
+      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3083,7 +3089,6 @@ describe('onConstruct', function () {
       new OnConstructModule(
         new SequentialAsync({
           key: 'onConstruct',
-          methodStrategy: 'sequential',
           onError: (scope) => (ex) => {
             captured = { ex, scope };
           },
@@ -3172,7 +3177,7 @@ describe('onScopeDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { append, Container, hook, SequentialSync, injectProp, Registration } from 'ts-ioc-container';
+import { Container, hook, injectProp, Registration, sequential, SequentialSync } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -3192,7 +3197,7 @@ describe('inject property', () => {
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
-      @hook('onInit', append(injectProp('GreetingService')))
+      @hook('onInit', injectProp('GreetingService'))
       greetingService!: string;
 
       display(): string {
@@ -3220,7 +3225,7 @@ describe('inject property', () => {
     class UserViewModel {
       @hook(
         'onInit',
-        append(injectProp('GreetingService'), (context) => {
+        sequential(injectProp('GreetingService'), (context) => {
           injectedValue = context.getProperty();
         }),
       )

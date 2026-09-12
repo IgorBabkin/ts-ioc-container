@@ -31,46 +31,21 @@ export type HookExecutionStrategyProps = HookExecutionOptions & {
   onError?: OnErrorHandler;
 };
 
-/** The hooks of one decorated member, resolved to functions, with the context they run against. */
-export type MemberHooks = {
-  hooks: HookFn[];
+/** One decorated member's hook, resolved to a function, with the context it runs against. */
+export type MemberHook = {
+  hook: HookFn;
   context: IHookContext;
 };
 
-type ClassHooks = { methodName: string; hooks: HookFn[] }[];
+type ClassHooks = { methodName: string; hook: HookFn }[];
 
 /**
- * Runs `hooks` in declaration order, staying synchronous until one returns a
- * promise and awaiting the rest from that point (ADR 0013).
- */
-export const runInOrder = (hooks: HookFn[], context: IHookContext, from = 0): void | Promise<void> => {
-  for (let i = from; i < hooks.length; i++) {
-    const result = hooks[i](context);
-    if (result instanceof Promise) {
-      return result.then(() => runInOrder(hooks, context, i + 1));
-    }
-  }
-};
-
-/**
- * Starts every hook at once. Settles once all have; `undefined` when none went
- * async, so a fully synchronous run hands back no promise.
- */
-export const runAtOnce = (hooks: HookFn[], context: IHookContext): void | Promise<void> => {
-  const pending: Promise<void>[] = [];
-  for (const hook of hooks) {
-    const result = hook(context);
-    if (result instanceof Promise) {
-      pending.push(result);
-    }
-  }
-  return pending.length > 0 ? Promise.all(pending).then(() => undefined) : undefined;
-};
-
-/**
- * How the hooks declared under a key run: in what order, what is awaited, and
- * where a failure goes (ADR 0014). The strategy owns that *how* together with
- * the key; the target and scope arrive with each `execute` call.
+ * How the hooks declared under a key run: in what order the *members* run, what
+ * is awaited, and where a failure goes (ADR 0015). A member carries a single
+ * hook — how several hooks of one member relate is `sequential(...)` /
+ * `parallel(...)` at the declaration site, not the strategy's business. The
+ * strategy owns that *how* together with the key; the target and scope arrive
+ * with each `execute` call.
  */
 export abstract class HookExecutionStrategy {
   private readonly key: string | symbol;
@@ -96,10 +71,10 @@ export abstract class HookExecutionStrategy {
   }
 
   /**
-   * Runs every hook `target` declares under this strategy's key, the way the
-   * strategy defines. Returns before async hooks settle — a failure of either
-   * kind, what a sync hook threw and what an async hook rejected with, goes to
-   * `onError`. Without an `onError` handler failures are dropped.
+   * Runs the hook every member of `target` declares under this strategy's key,
+   * the way the strategy defines. Returns before async hooks settle — a failure
+   * of either kind, what a sync hook threw and what an async hook rejected with,
+   * goes to `onError`. Without an `onError` handler failures are dropped.
    */
   execute(target: Instance, { scope, ...overrides }: HookExecutionContext): void {
     const report = (ex: unknown) => this.onError?.(scope)(ex);
@@ -113,10 +88,10 @@ export abstract class HookExecutionStrategy {
   }
 
   /**
-   * The strategy proper: runs the members, each with its own hooks and context.
+   * The strategy proper: runs the members, each with its own hook and context.
    * Failures — thrown or rejected — are handled by `execute`.
    */
-  protected abstract processHooks(members: MemberHooks[]): void | Promise<void>;
+  protected abstract processHooks(members: MemberHook[]): void | Promise<void>;
 
   private collect(
     target: Instance,
@@ -126,11 +101,11 @@ export abstract class HookExecutionStrategy {
       mapExecutionContext = this.options.mapExecutionContext,
       predicate = this.options.predicate,
     }: HookExecutionOptions,
-  ): MemberHooks[] {
-    const members: MemberHooks[] = [];
-    for (const { methodName, hooks } of this.hooksOf(target)) {
+  ): MemberHook[] {
+    const members: MemberHook[] = [];
+    for (const { methodName, hook } of this.hooksOf(target)) {
       if (predicate(methodName)) {
-        members.push({ hooks, context: mapExecutionContext(createExecutionContext(target, scope, methodName)) });
+        members.push({ hook, context: mapExecutionContext(createExecutionContext(target, scope, methodName)) });
       }
     }
     return members;
@@ -140,7 +115,7 @@ export abstract class HookExecutionStrategy {
     const Target = resolveConstructor(target);
     let hooks = this.hooksByClass.get(Target);
     if (!hooks) {
-      hooks = Array.from(getHooks(Target, this.key), ([methodName, fns]) => ({ methodName, hooks: fns.map(toHookFn) }));
+      hooks = Array.from(getHooks(Target, this.key), ([methodName, fn]) => ({ methodName, hook: toHookFn(fn) }));
       this.hooksByClass.set(Target, hooks);
     }
     return hooks;

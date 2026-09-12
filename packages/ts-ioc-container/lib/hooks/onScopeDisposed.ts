@@ -1,10 +1,10 @@
-import { hook, type HookType, prependHooks } from './hook';
+import { hook, type HookType } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import { type HookExecutionStrategy } from './HookExecutionStrategy';
 
-// Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
-// `@onX(h1) @onX(h2) method()` runs h1 before h2.
-export const onScopeDisposed = (...fns: HookType[]) => hook('onScopeDisposed', prependHooks(...fns));
+// A member carries one hook: declare several with `sequential(...)`/`parallel(...)`,
+// as in `@onScopeDisposed(parallel(flush, close))`.
+export const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
 
 /**
  * Runs the `@onScopeDisposed` hooks of every instance of a scope being disposed,

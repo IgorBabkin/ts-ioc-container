@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { append, Container, hook, SequentialSync, injectProp, Registration as R } from '../../lib';
+import { Container, hook, injectProp, Registration as R, SequentialSync } from '../../lib';
 
 describe('injectProp(token, ...mappers)', () => {
   function createViewModel<T extends object>(Target: new () => T, container: Container) {
@@ -11,7 +11,7 @@ describe('injectProp(token, ...mappers)', () => {
 
   it('assigns the whole dependency when no mapper is given', () => {
     class ViewModel {
-      @hook('onInit', append(injectProp('Greeting')))
+      @hook('onInit', injectProp('Greeting'))
       greeting!: string;
     }
 
@@ -26,7 +26,7 @@ describe('injectProp(token, ...mappers)', () => {
     const exclaim = () => (value: string) => `${value}!`;
 
     class ViewModel {
-      @hook('onInit', append(injectProp('Greeting', trim(), upper(), exclaim())))
+      @hook('onInit', injectProp('Greeting', trim(), upper(), exclaim()))
       greeting!: string;
     }
 
@@ -39,7 +39,7 @@ describe('injectProp(token, ...mappers)', () => {
     const mappers = [(value: string) => `${value}-a`, (value: string) => `${value}-b`];
 
     class ViewModel {
-      @hook('onInit', append(injectProp('Greeting', ...mappers)))
+      @hook('onInit', injectProp('Greeting', ...mappers))
       greeting!: string;
     }
 
@@ -54,7 +54,7 @@ describe('injectProp(token, ...mappers)', () => {
     }
 
     class ViewModel {
-      @hook('onInit', append(injectProp(Config, (config) => config.apiUrl)))
+      @hook('onInit', injectProp(Config, (config) => config.apiUrl))
       apiUrl!: string;
     }
 

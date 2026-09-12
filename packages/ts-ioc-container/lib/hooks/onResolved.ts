@@ -3,11 +3,11 @@ import type { ProviderHook } from '../provider/IProvider';
 import { type HookExecutionStrategy } from './HookExecutionStrategy';
 import { registerPipe } from '../registration/IRegistration';
 import { Is } from '../utils/basic';
-import { hook, type HookType, prependHooks } from './hook';
+import { hook, type HookType } from './hook';
 
-// Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
-// `@onX(h1) @onX(h2) method()` runs h1 before h2.
-export const onResolved = (...hooks: HookType[]) => hook('onResolved', prependHooks(...hooks));
+// A member carries one hook: declare several with `sequential(...)`/`parallel(...)`,
+// as in `@onResolved(sequential(h1, h2))`.
+export const onResolved = (fn: HookType) => hook('onResolved', fn);
 
 // Hook metadata lives on classes, so a primitive dependency has nothing to run.
 const runHooks =

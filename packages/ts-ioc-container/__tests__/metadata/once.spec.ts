@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi } from 'vitest';
-import { append, Container, hook, type HookFn, once, SequentialSync } from '../../lib';
+import { Container, hook, type HookFn, once, SequentialSync } from '../../lib';
 
 const invokeMethod: HookFn = (ctx) => {
   ctx.invokeMethod();
@@ -146,7 +146,7 @@ describe('once', () => {
       const fn = vi.fn(() => 42);
 
       class Service {
-        @hook('onStart', append(invokeMethod))
+        @hook('onStart', invokeMethod)
         @once()
         getValue() {
           return fn();
@@ -168,7 +168,7 @@ describe('once', () => {
 
       class Service {
         @once()
-        @hook('onStart', append(invokeMethod))
+        @hook('onStart', invokeMethod)
         getValue() {
           return fn();
         }
@@ -188,7 +188,7 @@ describe('once', () => {
       const fn = vi.fn(() => 42);
 
       class Service {
-        @hook('onStart', append(invokeMethod))
+        @hook('onStart', invokeMethod)
         @once()
         getValue() {
           return fn();
@@ -210,12 +210,9 @@ describe('once', () => {
       let received: unknown;
 
       class Service {
-        @hook(
-          'onStart',
-          append((context) => {
-            received = context.invokeMethod();
-          }),
-        )
+        @hook('onStart', (context) => {
+          received = context.invokeMethod();
+        })
         @once()
         getValue() {
           return 42;

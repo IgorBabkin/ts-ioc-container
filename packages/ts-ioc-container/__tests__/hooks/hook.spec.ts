@@ -1,11 +1,8 @@
 import 'reflect-metadata';
 import {
-  append,
-  appendHooks,
   arg,
   bindTo,
   Container,
-  ProxyRegistry,
   GroupAliasToken,
   hasHooks,
   hook,
@@ -14,10 +11,11 @@ import {
   type HookFn,
   inject,
   oncePerInstance,
-  prepend,
-  prependHooks,
+  parallel,
+  ProxyRegistry,
   register,
   Registration as R,
+  sequential,
   SequentialAsync,
   SequentialSync,
 } from '../../lib';
@@ -63,12 +61,9 @@ describe('hooks', () => {
     class MyClass {
       receivedArgs: unknown[] = [];
 
-      @hook(
-        'syncBefore',
-        append((ctx) => {
-          ctx.invokeMethod();
-        }),
-      )
+      @hook('syncBefore', (ctx) => {
+        ctx.invokeMethod();
+      })
       start(@inject(arg(0)) firstArg: string, @inject('suffix') suffix: string, runtimeArg: string) {
         this.receivedArgs = [firstArg, suffix, runtimeArg];
       }
@@ -92,12 +87,9 @@ describe('hooks', () => {
     class MyClass {
       receivedArgs: unknown[] = [];
 
-      @hook(
-        'syncBefore',
-        append((ctx) => {
-          ctx.invokeMethod();
-        }),
-      )
+      @hook('syncBefore', (ctx) => {
+        ctx.invokeMethod();
+      })
       start(@inject(arg(0)) firstArg: string, @inject('suffix') suffix: string) {
         this.receivedArgs = [firstArg, suffix];
       }
@@ -115,17 +107,14 @@ describe('hooks', () => {
   });
 
   it('should map the hook context with mapExecutionContext when running async hooks', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
 
-      @hook(
-        'onStart',
-        append(async (ctx) => {
-          await ctx.invokeMethod();
-        }),
-      )
+      @hook('onStart', async (ctx) => {
+        await ctx.invokeMethod();
+      })
       async start(@inject(arg(0)) firstArg: string) {
         this.receivedArgs = [firstArg];
       }
@@ -143,18 +132,18 @@ describe('hooks', () => {
   });
 
   it('should run async hooks to completion', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
 
     class Logger {
       isStarted = false;
 
-      @hook('onStart', append(executeAsync))
+      @hook('onStart', executeAsync)
       async initialize(@inject('TimeToSleep') timeToSleep: number) {
         await sleep(timeToSleep);
         this.isStarted = true;
       }
 
-      @hook('onStart', append(executeAsync))
+      @hook('onStart', executeAsync)
       async dispose(@inject('TimeToSleep') timeToSleep: number) {
         await sleep(timeToSleep);
         this.isStarted = false;
@@ -179,7 +168,7 @@ describe('hooks', () => {
     class MyClass {
       isStarted = false;
 
-      @hook('onStart', append(execute))
+      @hook('onStart', execute)
       start() {
         this.isStarted = true;
       }
@@ -193,13 +182,13 @@ describe('hooks', () => {
   });
 
   it('should keep a chain sync up to its first async hook and await the rest', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
       @hook(
         'onStart',
-        append(
+        sequential(
           () => {
             invoked.push('first');
           },
@@ -227,25 +216,19 @@ describe('hooks', () => {
   });
 
   it('should run a mix of sync and async members through one call', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
-      @hook(
-        'onStart',
-        append(() => {
-          invoked.push('sync');
-        }),
-      )
+      @hook('onStart', () => {
+        invoked.push('sync');
+      })
       start() {}
 
-      @hook(
-        'onStart',
-        append(async () => {
-          await sleep(1);
-          invoked.push('async');
-        }),
-      )
+      @hook('onStart', async () => {
+        await sleep(1);
+        invoked.push('async');
+      })
       warmUp() {}
     }
 
@@ -261,7 +244,7 @@ describe('hooks', () => {
     const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class WithHooks {
-      @hook('onStart', append(execute))
+      @hook('onStart', execute)
       start() {}
     }
 
@@ -279,7 +262,7 @@ describe('hooks', () => {
     const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class MyClass {
-      @hook('onDispose', append(execute))
+      @hook('onDispose', execute)
       stop() {}
     }
 
@@ -296,7 +279,7 @@ describe('hooks', () => {
     class MyClass {
       isStarted = false;
 
-      @hook('onStart', append(execute))
+      @hook('onStart', execute)
       start() {
         this.isStarted = true;
       }
@@ -320,7 +303,7 @@ describe('hooks', () => {
     class MyClass {
       isStarted = false;
 
-      @hook('onStart', append(execute))
+      @hook('onStart', execute)
       start() {
         this.isStarted = true;
       }
@@ -340,12 +323,12 @@ describe('hooks', () => {
   });
 
   it('should run async hooks on the real instance behind a lazy proxy', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
 
     class MyClass {
       isStarted = false;
 
-      @hook('onStart', append(executeAsync))
+      @hook('onStart', executeAsync)
       async start() {
         await sleep(1);
         this.isStarted = true;
@@ -367,7 +350,7 @@ describe('hooks', () => {
     class Base {
       baseStarted = false;
 
-      @hook('onStart', append(execute))
+      @hook('onStart', execute)
       startBase() {
         this.baseStarted = true;
       }
@@ -376,7 +359,7 @@ describe('hooks', () => {
     class Derived extends Base {
       derivedStarted = false;
 
-      @hook('onStart', append(execute))
+      @hook('onStart', execute)
       startDerived() {
         this.derivedStarted = true;
       }
@@ -396,24 +379,18 @@ describe('hooks', () => {
     const invoked: string[] = [];
 
     class Base {
-      @hook(
-        'onStart',
-        append((ctx) => {
-          invoked.push('startBase');
-          ctx.invokeMethod();
-        }),
-      )
+      @hook('onStart', (ctx) => {
+        invoked.push('startBase');
+        ctx.invokeMethod();
+      })
       startBase() {}
     }
 
     class Derived extends Base {
-      @hook(
-        'onStart',
-        append((ctx) => {
-          invoked.push('startDerived');
-          ctx.invokeMethod();
-        }),
-      )
+      @hook('onStart', (ctx) => {
+        invoked.push('startDerived');
+        ctx.invokeMethod();
+      })
       startDerived() {}
     }
 
@@ -429,24 +406,18 @@ describe('hooks', () => {
     const invoked: string[] = [];
 
     class Base {
-      @hook(
-        'onStart',
-        append((ctx) => {
-          invoked.push('startBase');
-          ctx.invokeMethod();
-        }),
-      )
+      @hook('onStart', (ctx) => {
+        invoked.push('startBase');
+        ctx.invokeMethod();
+      })
       startBase() {}
     }
 
     class Derived extends Base {
-      @hook(
-        'onStart',
-        append((ctx) => {
-          invoked.push('startDerived');
-          ctx.invokeMethod();
-        }),
-      )
+      @hook('onStart', (ctx) => {
+        invoked.push('startDerived');
+        ctx.invokeMethod();
+      })
       startDerived() {}
     }
 
@@ -470,7 +441,7 @@ describe('hooks', () => {
     class FirstPlugin implements Plugin {
       isStarted = false;
 
-      @hook('onPluginStart', append(execute))
+      @hook('onPluginStart', execute)
       start() {
         this.isStarted = true;
       }
@@ -480,7 +451,7 @@ describe('hooks', () => {
     class SecondPlugin implements Plugin {
       isStarted = false;
 
-      @hook('onPluginStart', append(execute))
+      @hook('onPluginStart', execute)
       start() {
         this.isStarted = true;
       }
@@ -509,14 +480,14 @@ describe('hooks', () => {
     expect(app.getPlugins().every((plugin) => plugin.isStarted)).toBe(true);
   });
 
-  it('should run hooks passed to appendHooks in declaration order', () => {
+  it('should run hooks combined with sequential in declaration order', () => {
     const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
       @hook(
         'onStart',
-        appendHooks(
+        sequential(
           () => {
             invoked.push('first');
           },
@@ -534,78 +505,20 @@ describe('hooks', () => {
     expect(invoked).toEqual(['first', 'second']);
   });
 
-  it('should add hooks after the already registered ones with appendHooks', () => {
-    const onStartStrategy = new SequentialSync({ key: 'onStart' });
-    const invoked: string[] = [];
-
-    class MyClass {
-      // Decorators are applied bottom-up, so 'declared' is registered first
-      @hook(
-        'onStart',
-        appendHooks(() => {
-          invoked.push('appended');
-        }),
-      )
-      @hook(
-        'onStart',
-        appendHooks(() => {
-          invoked.push('declared');
-        }),
-      )
-      start() {}
-    }
-
-    const root = new Container({ tags: ['root'] });
-    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
-
-    expect(invoked).toEqual(['declared', 'appended']);
-  });
-
-  it('should add hooks before the already registered ones with prependHooks', () => {
-    const onStartStrategy = new SequentialSync({ key: 'onStart' });
+  it('should await each hook of a sequential combination before the next one', async () => {
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
       @hook(
         'onStart',
-        prependHooks(() => {
-          invoked.push('prepended');
-        }),
-      )
-      @hook(
-        'onStart',
-        appendHooks(() => {
-          invoked.push('declared');
-        }),
-      )
-      start() {}
-    }
-
-    const root = new Container({ tags: ['root'] });
-    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
-
-    expect(invoked).toEqual(['prepended', 'declared']);
-  });
-
-  it('should expose append and prepend as aliases of appendHooks and prependHooks', () => {
-    expect(append).toBe(appendHooks);
-    expect(prepend).toBe(prependHooks);
-  });
-
-  it('should let a custom mapFn reorder the already registered hooks', () => {
-    const onStartStrategy = new SequentialSync({ key: 'onStart' });
-    const invoked: string[] = [];
-
-    class MyClass {
-      @hook('onStart', (...prev) => [...prev].reverse())
-      @hook(
-        'onStart',
-        appendHooks(
-          () => {
-            invoked.push('first');
+        sequential(
+          async () => {
+            await sleep(10);
+            invoked.push('slow');
           },
           () => {
-            invoked.push('second');
+            invoked.push('fast');
           },
         ),
       )
@@ -615,23 +528,74 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
-    expect(invoked).toEqual(['second', 'first']);
+    await sleep(30);
+
+    expect(invoked).toEqual(['slow', 'fast']);
   });
 
-  it('should replace the already registered hooks when mapFn ignores them', () => {
-    const onStartStrategy = new SequentialSync({ key: 'onStart' });
+  it('should start every hook of a parallel combination at once', async () => {
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
     const invoked: string[] = [];
 
     class MyClass {
-      @hook('onStart', () => [
-        () => {
-          invoked.push('replacement');
-        },
-      ])
       @hook(
         'onStart',
-        appendHooks(() => {
-          invoked.push('replaced');
+        parallel(
+          async () => {
+            await sleep(10);
+            invoked.push('slow');
+          },
+          () => {
+            invoked.push('fast');
+          },
+        ),
+      )
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
+
+    await sleep(30);
+
+    expect(invoked).toEqual(['fast', 'slow']);
+  });
+
+  it('should run a combination nested in another combination', async () => {
+    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
+    const invoked: string[] = [];
+    const record = (name: string) => () => {
+      invoked.push(name);
+    };
+
+    class MyClass {
+      @hook('onStart', sequential(record('first'), parallel(record('second'), record('third')), record('fourth')))
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
+
+    await sleep(10);
+
+    expect(invoked).toEqual(['first', 'second', 'third', 'fourth']);
+  });
+
+  it('should resolve a hook class passed to a combination', () => {
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
+    const invoked: string[] = [];
+
+    class RecordHook implements HookClass {
+      execute() {
+        invoked.push('class');
+      }
+    }
+
+    class MyClass {
+      @hook(
+        'onStart',
+        sequential(RecordHook, () => {
+          invoked.push('fn');
         }),
       )
       start() {}
@@ -640,7 +604,29 @@ describe('hooks', () => {
     const root = new Container({ tags: ['root'] });
     onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
-    expect(invoked).toEqual(['replacement']);
+    expect(invoked).toEqual(['class', 'fn']);
+  });
+
+  it('should keep the last declared hook when a member is decorated twice under one key', () => {
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
+    const invoked: string[] = [];
+
+    class MyClass {
+      // A member carries one hook per key, and decorators are applied bottom-up,
+      // so the topmost decorator is the one which stays.
+      @hook('onStart', () => {
+        invoked.push('outer');
+      })
+      @hook('onStart', () => {
+        invoked.push('inner');
+      })
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    onStartStrategy.execute(root.resolve(MyClass), { scope: root });
+
+    expect(invoked).toEqual(['outer']);
   });
 
   it('should run a hook wrapped in oncePerInstance a single time per instance under any hook key', () => {
@@ -648,7 +634,7 @@ describe('hooks', () => {
     const invoked: string[] = [];
 
     class MyClass {
-      @hook('onStart', append(oncePerInstance(invokeMethod)))
+      @hook('onStart', oncePerInstance(invokeMethod))
       start() {
         invoked.push('start');
       }
@@ -663,13 +649,34 @@ describe('hooks', () => {
     expect(invoked).toEqual(['start']);
   });
 
+  it('should run a whole sequence a single time per instance when wrapped in oncePerInstance', () => {
+    const onStartStrategy = new SequentialSync({ key: 'onStart' });
+    const invoked: string[] = [];
+    const record = (name: string) => () => {
+      invoked.push(name);
+    };
+
+    class MyClass {
+      @hook('onStart', oncePerInstance(sequential(record('connect'), record('warmUp'))))
+      start() {}
+    }
+
+    const root = new Container({ tags: ['root'] });
+    const instance = root.resolve(MyClass);
+
+    onStartStrategy.execute(instance, { scope: root });
+    onStartStrategy.execute(instance, { scope: root });
+
+    expect(invoked).toEqual(['connect', 'warmUp']);
+  });
+
   it('should run oncePerInstance hooks independently for each instance', () => {
     const onStartStrategy = new SequentialSync({ key: 'onStart' });
 
     class MyClass {
       startedTimes = 0;
 
-      @hook('onStart', append(oncePerInstance(invokeMethod)))
+      @hook('onStart', oncePerInstance(invokeMethod))
       start() {
         this.startedTimes += 1;
       }
@@ -686,31 +693,24 @@ describe('hooks', () => {
     expect([first.startedTimes, second.startedTimes]).toEqual([1, 1]);
   });
 
-  it('should accept hook classes in appendHooks and prependHooks', () => {
+  it('should resolve a hook class declared directly on a member', () => {
     const onStartStrategy = new SequentialSync({ key: 'onStart' });
     const invoked: string[] = [];
 
-    class AppendedHook implements HookClass {
+    class StartHook implements HookClass {
       execute() {
-        invoked.push('appended');
-      }
-    }
-
-    class PrependedHook implements HookClass {
-      execute() {
-        invoked.push('prepended');
+        invoked.push('started');
       }
     }
 
     class MyClass {
-      @hook('onStart', prependHooks(PrependedHook))
-      @hook('onStart', appendHooks(AppendedHook))
+      @hook('onStart', StartHook)
       start() {}
     }
 
     const root = new Container({ tags: ['root'] });
     onStartStrategy.execute(root.resolve(MyClass), { scope: root });
 
-    expect(invoked).toEqual(['prepended', 'appended']);
+    expect(invoked).toEqual(['started']);
   });
 });
