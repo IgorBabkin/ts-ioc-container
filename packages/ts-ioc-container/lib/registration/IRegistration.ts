@@ -5,6 +5,7 @@ import { BindToken } from '../token/BindToken';
 import { MapFn } from '../utils/fp';
 import { addClassMeta, getClassMeta } from '../metadata/class';
 import { type constructor } from '../utils/basic';
+import { type NamespaceTemplate } from '../utils/namespace';
 
 export type ScopeMatchRule = (s: IContainer, prev: boolean) => boolean;
 
@@ -96,6 +97,16 @@ export const appendArgsFn = <T>(fn: ArgsFn) =>
   registerPipe<T>((p) => p.addArgsFn((scope, options) => [...(options?.args ?? []), ...fn(scope, options)]));
 
 export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.addAccessRule(rule));
+
+/**
+ * Restricts a provider to the modules a namespace template covers, so only
+ * classes under `/domain/**` see the dependency registered for them.
+ *
+ * Several templates act as alternatives - a provider reachable from either of
+ * two module trees lists both.
+ */
+export const namespace = <T>(...templates: NamespaceTemplate[]) =>
+  registerPipe<T>((p) => templates.reduce((provider, template) => provider.addNamespaceTemplate(template), p));
 
 export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 

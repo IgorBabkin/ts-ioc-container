@@ -41,6 +41,7 @@ export {
   type ScopeAccessOptions,
   type ScopeAccessRule,
   type ProviderHook,
+  type WithNamespace,
 } from './provider/IProvider';
 export { Provider } from './provider/Provider';
 
@@ -69,6 +70,7 @@ export {
   appendArgs,
   appendArgsFn,
   onResolve,
+  namespace,
 } from './registration/IRegistration';
 export { Registration } from './registration/Registration';
 
@@ -163,3 +165,11 @@ export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
 export { ProxyRegistry, unwrapProxy, type IProxyRegistry } from './utils/ProxyRegistry';
 export { type Branded, type constructor, type Instance, Is } from './utils/basic';
+export { glob, matchGlob, type Glob } from './utils/glob';
+export {
+  joinNamespace,
+  matchNamespace,
+  normalizeNamespace,
+  type Namespace,
+  type NamespaceTemplate,
+} from './utils/namespace';

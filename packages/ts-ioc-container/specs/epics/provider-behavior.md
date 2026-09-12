@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0004 - Pipe-based composition via ProviderPipe](../../docs/adr/0004-provider-pipe-composition.md), [ADR 0011 - Specs-driven development workflow](../../docs/adr/0011-spec-driven-development.md)
-- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `autoResolve`, `scopeAccess`, `decorate`, `onResolve`, `ProviderPipe`
+- **Public API:** `Provider`, `IProvider`, `singleton`, `multiCache`, `appendArgs`, `appendArgsFn`, `lazy`, `autoResolve`, `scopeAccess`, `namespace`, `decorate`, `onResolve`, `ProviderPipe`
 - **Executable spec:** `__tests__/specs/provider-behavior.spec.ts`
 
 ## Intent
@@ -98,6 +98,38 @@ Acceptance criteria:
   rule receives the accumulated result of all previous rules.
 - A provider that denies access is skipped during normal resolution.
 - Denied alias providers are not returned in alias-group resolution.
+
+### Story: Restrict provider visibility to a module namespace
+
+As an application architect, I can restrict a provider to a module namespace so
+that a dependency registered for one part of the source tree stays invisible to
+the rest of it, keeping architectural boundaries enforced by the container
+rather than by convention.
+
+Acceptance criteria:
+
+- A namespace name is `namespace + key`: the module path a `SingleToken` was
+  given - `__dirname` in a real module - followed by the dependency key.
+- `SingleToken.namespace(dirname)` returns a new token carrying that module
+  path, leaving the parent token untouched, and the namespace survives `args`,
+  `argsFn`, and `lazy` chaining.
+- A token's namespace name travels in `ProviderOptions.namespace`, so a
+  provider sees where the resolution came from.
+- `namespace(template)` restricts a provider to resolutions whose namespace name
+  the glob template covers; `*` matches one segment, `**` matches any number,
+  and a template is matched against the end of the name so it need not spell
+  out the absolute prefix `__dirname` brings.
+- Several templates on one provider act as alternatives; a provider with none is
+  reachable from everywhere, which is the default.
+- A restricted provider denies a resolution which names no namespace at all,
+  and a denied provider is skipped exactly as a denied `scopeAccess` provider
+  is - resolution cascades to the parent scope, then fails with
+  `DependencyNotFoundError`.
+
+> **!Important** — A scope holds one provider per key, so two registrations of
+> the same key in the same scope still overwrite each other. Namespace templates
+> select which callers reach a provider, not which of several providers under
+> one key answers a call.
 
 ### Story: Decorate provider results
 
