@@ -17,6 +17,11 @@ permissions:
   packages: write  # Required for publishing to GitHub Packages
 
 jobs:
+  # Builds every released package and gates that build on the static checks:
+  # lint, type-check and format, for both packages. The react checks sit after
+  # `build:all` because @ts-ioc-container/react resolves ts-ioc-container
+  # through the workspace link — it reads that package's build output rather
+  # than a tarball from the registry.
   build:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -38,19 +43,35 @@ jobs:
       - name: Install dependencies
         run: pnpm run ci
 
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run type-check
+
+      - name: Format check
+        run: pnpm run format:check
+
       - name: Build
         run: pnpm run build:all
+
+      - name: Lint @ts-ioc-container/react
+        run: pnpm run lint:react
+
+      - name: Type check @ts-ioc-container/react
+        run: pnpm run type-check:react
+
+      - name: Format check @ts-ioc-container/react
+        run: pnpm --filter @ts-ioc-container/react run format:check
 
       - name: Upload build artifacts
         uses: ./.github/actions/build-artifacts
         with:
           mode: upload
 
-  # Lint, type-check, format and test every released package. Runs after
-  # `build` rather than beside it: @ts-ioc-container/react resolves
-  # ts-ioc-container through the workspace link, so its checks import that
-  # package's build output rather than a tarball from the registry — the
-  # artifact `build` uploaded supplies it without a second build here.
+  # Tests only — every static check lives in `build`. Downloading that job's
+  # artifact gives the react tests the ts-ioc-container build output they
+  # resolve through the workspace link, with no second build here.
   test:
     needs: build
     runs-on: ubuntu-latest
@@ -82,15 +103,6 @@ jobs:
         with:
           mode: download
 
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Type check
-        run: pnpm run type-check
-
-      - name: Format check
-        run: pnpm run format:check
-
       - name: Test with coverage
         run: pnpm run test:coverage
 
@@ -99,15 +111,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./packages/ts-ioc-container/coverage/lcov.info
-
-      - name: Lint @ts-ioc-container/react
-        run: pnpm run lint:react
-
-      - name: Type check @ts-ioc-container/react
-        run: pnpm run type-check:react
-
-      - name: Format check @ts-ioc-container/react
-        run: pnpm --filter @ts-ioc-container/react run format:check
 
       - name: Test @ts-ioc-container/react
         run: pnpm run test:react

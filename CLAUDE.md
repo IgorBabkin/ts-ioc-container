@@ -140,9 +140,10 @@ consumers still receive an exact version. `peerDependencies` stays a range
 **Consequence for CI ordering:** react resolves the container through the
 workspace link, so it imports that package's *build output*. `pnpm run build`
 must therefore run before any react lint / type-check / test step — see the
-build step in `pr-checks.yml`, and in `publish.yml` the `test` job's
-`needs: build` plus its download of the build artifact. Without it those steps
-fail to resolve `ts-ioc-container` at all.
+build step in `pr-checks.yml`, and in `publish.yml` the `build` job's own
+ordering (its react lint / type-check / format steps follow `build:all`) plus
+the `test` job's `needs: build` and its download of the build artifact.
+Without it those steps fail to resolve `ts-ioc-container` at all.
 
 ### Known `release-monorepo-semantically` defects
 
