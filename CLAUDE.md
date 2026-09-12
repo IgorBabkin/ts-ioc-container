@@ -272,6 +272,8 @@ Hooks are split by the domain that raises the event (ADR 0012) — where a hook 
 `new Container().useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))`.
 `OnConstructModule` reaches the injector through `getInjector()`; `OnResolvedModule` reaches providers through `onRegistered`. `@onResolved` has no "no hook means invoke the method" shorthand — name the hook, as with `@onConstruct`.
 
+Prefer `@onResolved` (or the `onResolve(...)` pipe) over `@onConstruct` when documenting or writing hooks: construction is the injector's event, so `@onConstruct` misses dependencies the injector never builds (`fromValue` constants, factory registrations) and observes the instance before the provider's `decorate(...)` chain. `@onResolved` runs on every dependency leaving a provider, after decoration.
+
 ### `@throws` JSDoc Convention
 
 Every function/method that can `throw` — directly, or indirectly via a method it calls (e.g. `Container.resolve` cascading into `EmptyContainer.resolve`) — gets a JSDoc comment with one `@throws {ErrorClass} condition` tag per distinct error type. See `lib/container/Container.ts`, `lib/container/EmptyContainer.ts`, `lib/provider/Provider.ts`, `lib/registration/Registration.ts`, `lib/token/*.ts` for examples.

@@ -170,3 +170,8 @@ Acceptance criteria:
 
 Lifecycle hook execution is opt-in. Decorators record intent; modules or manual
 container hooks activate execution.
+
+`@onResolved` (the provider event) is the recommended hook for reacting to a
+dependency: it covers every dependency leaving a provider, whoever produced it,
+and runs after the `decorate(...)` chain. `@onConstruct` is the narrower tool —
+it fires only for what the injector constructs, and before decoration.
