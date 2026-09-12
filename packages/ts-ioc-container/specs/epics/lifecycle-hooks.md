@@ -5,8 +5,9 @@
   [ADR 0012 - Hook registration lives with the domain which raises the event](../../../adr/0012-hook-domains.md),
   [ADR 0013 - One async-capable hook path, no `Async` variants](../../../adr/0013-one-async-capable-hook-path.md),
   [ADR 0014 - Hook execution is a strategy, chosen by the caller](../../../adr/0014-hook-execution-strategy.md),
-  [ADR 0015 - One hook per member, combined by higher-order functions](../../../adr/0015-one-hook-per-member.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `toHookFn`, `sequential`, `parallel`, `HookExecutionStrategy`, `SequentialSync`, `SequentialAsync`, `ParallelAsync`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+  [ADR 0015 - One hook per member, combined by higher-order functions](../../../adr/0015-one-hook-per-member.md),
+  [ADR 0016 - The library collects hooks; the caller runs them](../../../adr/0016-collect-hooks-let-the-caller-run-them.md)
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `toHookFn`, `sequential`, `parallel`, `HookCollector`, `HookAction`, `HookRunner`, `toTask`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `onConstruct`, `onScopeDisposed`, `injectProp`, `onResolved`, `oncePerInstance`, `OnConstructModule`, `OnDisposeModule`, `OnResolvedModule`, `resolved`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -31,8 +32,8 @@ Acceptance criteria:
 - `OnConstructModule` is a container module: it opts the container's injector
   (reached through `getInjector()`) into construct hook execution, so one
   application covers the whole scope tree.
-- The module takes the `HookExecutionStrategy` which runs the hooks; the
-  strategy is keyed to `onConstruct`.
+- The module takes the `HookRunner` which performs the collected actions, and
+  defaults its collector to the `onConstruct` key.
 - Construct hooks run after the instance is created and tracked.
 - Hook classes are resolved through the container before execution.
 
@@ -45,11 +46,12 @@ that async setup does not have to be forced into the synchronous construct path.
 Acceptance criteria:
 
 - `onConstruct` takes an async hook under the same hook key as a sync one.
-- `OnConstructModule` runs both kinds; an async strategy awaits the async ones.
+- `OnConstructModule` collects both kinds; a runner built on `runInOrder`
+  awaits the async ones.
 - Async construct hooks start when the instance is created and settle after
   resolution returns.
-- Rejected hooks are reported to the strategy `onError` handler when one is
-  provided.
+- Rejected hooks reach whatever the runner attached to the promise it was
+  handed; the library reports nothing itself.
 
 ### Story: Run resolve hooks
 
@@ -61,16 +63,16 @@ Acceptance criteria:
 
 - `onResolved` stores one hook as metadata on a method and takes a sync or an
   async one; like every other decorator, it runs nothing unless a hook is named.
-- `OnResolvedModule` opts a container into resolve hook execution; the
-  `resolved(strategy)` pipe opts in a single registration instead. Both take
-  the strategy keyed to `onResolved`.
+- `OnResolvedModule` opts a container into resolve hook collection; the
+  `resolved(runner)` pipe opts in a single registration instead. Both take the
+  runner, and default their collector to the `onResolved` key.
 - `onResolved` hooks run on every resolve; a hook wrapped in `oncePerInstance`
   (e.g. `onResolved(oncePerInstance(invoke))`) runs a single time per
   instance however many keys, scopes, or resolve calls return it.
 - Distinct objects of the same class each get their own once-resolve hook run.
 - Providers registered before the module was applied are not covered.
-- Rejected async hooks are reported to the strategy `onError` handler when one
-  is provided.
+- Rejected async hooks reach whatever the runner attached to the promise it was
+  handed; the library reports nothing itself.
 
 ### Story: Run dispose hooks
 
@@ -80,8 +82,9 @@ so that local resources are released at the lifecycle boundary.
 Acceptance criteria:
 
 - `onScopeDisposed` stores hook metadata on a method.
-- `OnDisposeModule` opts a container into dispose hook execution, with the
-  strategy keyed to `onScopeDisposed`.
+- `OnDisposeModule` opts a container into dispose hook collection, defaulting
+  its collector to the `onScopeDisposed` key, and hands the runner the actions
+  of every instance of the scope as one list.
 - Dispose hooks run for instances tracked by the disposed scope.
 - Disposing a scope does not implicitly run hooks for child scopes.
 
@@ -108,8 +111,9 @@ Acceptance criteria:
   member twice under one key replaces the earlier hook.
 - `getHooks` returns hook metadata for the reflected target.
 - `hasHooks` identifies whether hook metadata exists.
-- A `HookExecutionStrategy` keyed to a custom name executes that key's hooks;
-  `predicate` limits the run to accepted methods, on the strategy or per call.
+- A `HookCollector` keyed to a custom name collects that key's hooks;
+  `predicate` limits collection to accepted methods, on the collector or per
+  `getActions` call.
 
 ### Story: Register imperative hooks with the domain which raises them
 
@@ -146,29 +150,29 @@ Acceptance criteria:
 
 ### Story: Choose how hooks run
 
-As a maintainer, I pick a hook execution strategy per module so that a hook's
-being sync or async is the hook's business, and ordering, awaiting and error
-reporting are the caller's.
+As a maintainer, I write the runner which performs the hooks a module collects,
+so that a hook's being sync or async is the hook's business, and ordering,
+awaiting and error reporting are mine.
 
 Acceptance criteria:
 
 - One hook key and one decorator per domain take sync and async hooks alike.
-- A strategy defines how the *members* — the decorated methods — run; how the
-  hooks of one member relate is the combinator's business, not the strategy's.
-- `SequentialSync` runs members one after another and never awaits; everything
-  it ran has finished when `execute` returns.
-- `SequentialAsync` runs members one after another, awaiting each;
-  `ParallelAsync` starts every member at once.
+- `HookCollector.getActions(target, { scope })` returns one `HookAction` per
+  decorated member, in declaration order, with its hook resolved to a function
+  and its context built; nothing has run when it returns.
+- A hook class is resolved through the scope when its action is performed, not
+  while collecting.
+- `toTask` turns an action into the `Task` that `runInOrder` and `runAtOnce`
+  take, so a runner is a line of caller code.
 - `sequential(...hooks)` runs the hooks it combines in declaration order,
   awaiting each one that goes async; `parallel(...hooks)` starts them at once.
   Both return a `HookFn`, so they nest and compose with `oncePerInstance`.
-- A run stays synchronous until a hook returns a promise; the async strategies
-  await only what is a promise.
-- `execute` returns `void`; async hooks settle after it returns.
-- A class's hook metadata is read and resolved to hook functions once per
-  strategy.
-- A strategy reports both a sync throw and a rejected async hook to its
-  `onError` handler, and drops both when none is supplied.
+- A run stays synchronous until a hook returns a promise; `runInOrder` and
+  `runAtOnce` await only what is a promise.
+- A sync hook which throws throws out of the call which performed it, and an
+  async one rejects the promise handed to the runner: the library catches
+  neither.
+- A class's hook metadata is read once per class and key, whatever collects it.
 - Hook context can resolve method arguments and invoke the target method.
 
 ## Notes

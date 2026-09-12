@@ -3,6 +3,7 @@ import type { IContainer } from '../container/IContainer';
 import { type constructor, Is, type Instance } from '../utils/basic';
 import { resolveConstructor } from '../metadata/target';
 import { ProviderOptions } from '../provider/IProvider';
+import { memoize } from '../utils/memoize';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
 
@@ -40,15 +41,11 @@ const getConstructorChain = (ctor: unknown): object[] => {
   return chain;
 };
 
-// Get hooks metadata, merging hooks declared on parent (extended-from) classes.
-// Hooks are collected from base to derived so a derived class's hook for the same
-// method name takes precedence over (replaces) the parent's.
-//
-// `target` is an instance or its class, a proxy of either included - it is normalized
-// by `resolveConstructor`, so callers never have to unwrap it themselves.
-export function getHooks(target: Instance | constructor<unknown>, key: string | symbol): HooksOfClass {
+// Hook metadata is fixed once a class is defined - decorators have all run by the time there is
+// an instance to read them off - so the merge happens once per class and key.
+const mergeHooks = memoize((Target: constructor<unknown>, key: string | symbol): HooksOfClass => {
   const merged: HooksOfClass = new Map();
-  for (const ctor of getConstructorChain(resolveConstructor(target)).reverse()) {
+  for (const ctor of getConstructorChain(Target).reverse()) {
     const ownHooks: HooksOfClass | undefined = Reflect.getOwnMetadata(key, ctor);
     if (ownHooks) {
       for (const [methodName, fn] of ownHooks) {
@@ -57,6 +54,19 @@ export function getHooks(target: Instance | constructor<unknown>, key: string | 
     }
   }
   return merged;
+});
+
+// Get hooks metadata, merging hooks declared on parent (extended-from) classes.
+// Hooks are collected from base to derived so a derived class's hook for the same
+// method name takes precedence over (replaces) the parent's.
+//
+// `target` is an instance or its class, a proxy of either included - it is normalized
+// by `resolveConstructor`, so callers never have to unwrap it themselves.
+//
+// The map is memoized per class and key and shared with every other caller: read it,
+// never mutate it.
+export function getHooks(target: Instance | constructor<unknown>, key: string | symbol): HooksOfClass {
+  return mergeHooks(resolveConstructor(target), key);
 }
 
 // `target` is an instance or its class, a proxy of either included, see {@link getHooks}.

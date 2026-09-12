@@ -7,8 +7,9 @@ import {
   onConstruct,
   OnConstructModule,
   Registration as R,
-  SequentialAsync,
-  SequentialSync,
+  runInOrder,
+  toTask,
+  type HookRunner,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
@@ -18,6 +19,19 @@ const execute: HookFn = (ctx) => {
 const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+// The module collects the hooks; running them is ours. This runner keeps the
+// actions in declaration order, stays synchronous until one returns a promise,
+// and reports a throw and a rejection alike.
+const run =
+  (onError: (scope: IContainer) => (ex: unknown) => void = () => () => {}): HookRunner =>
+  (actions, { scope }) => {
+    try {
+      runInOrder(actions.map(toTask))?.catch(onError(scope));
+    } catch (ex) {
+      onError(scope)(ex);
+    }
+  };
 
 describe('onConstruct', function () {
   it('should run initialization method after dependencies are resolved', function () {
@@ -32,9 +46,9 @@ describe('onConstruct', function () {
       }
     }
 
-    // The module takes a strategy for how the hooks run; the strategy is keyed to the hooks it runs.
+    // The module takes the runner which performs the collected hooks.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -43,7 +57,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward hook exceptions to the onError handler with the scope', function () {
+  it('should forward hook exceptions to the runner’s error handler with the scope', function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -56,11 +70,8 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSync({
-          key: 'onConstruct',
-          onError: (scope) => (ex) => {
-            captured = { ex, scope };
-          },
+        run((scope) => (ex) => {
+          captured = { ex, scope };
         }),
       ),
     );
@@ -70,7 +81,7 @@ describe('onConstruct', function () {
     expect(captured?.scope).toBe(container);
   });
 
-  it('should expose the resolving scope to the onError handler', function () {
+  it('should expose the resolving scope to the runner’s error handler', function () {
     class BrokenService {
       @onConstruct(() => {
         throw new Error('boom');
@@ -81,11 +92,8 @@ describe('onConstruct', function () {
     let scope: IContainer | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSync({
-          key: 'onConstruct',
-          onError: (s) => () => {
-            scope = s;
-          },
+        run((s) => () => {
+          scope = s;
         }),
       ),
     );
@@ -119,9 +127,9 @@ describe('onConstruct', function () {
       }
     }
 
-    // An async strategy awaits the hooks; resolution itself still does not wait for them.
+    // The runner awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -135,7 +143,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward rejected hooks to the onError handler with the scope', async function () {
+  it('should forward rejected hooks to the runner’s error handler with the scope', async function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -146,11 +154,8 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialAsync({
-          key: 'onConstruct',
-          onError: (scope) => (ex) => {
-            captured = { ex, scope };
-          },
+        run((scope) => (ex) => {
+          captured = { ex, scope };
         }),
       ),
     );

@@ -13,11 +13,12 @@ import {
   Provider,
   ProviderDisposedError,
   Registration as R,
-  SequentialSync,
+  HookCollector,
   TypedEvent,
   TypedEventDisposedError,
   UnsupportedTokenTypeError,
 } from '../../lib';
+import { perform, runSync } from '../hooks/runners';
 import { toToken } from '../../lib/token/toToken';
 
 describe('Spec: errors and boundaries', () => {
@@ -73,7 +74,7 @@ describe('Spec: errors and boundaries', () => {
     expect(() => new GroupInstanceToken(() => true).lazy()).toThrowError(MethodNotImplementedError);
   });
 
-  it('routes what a hook threw to the strategy onError handler', () => {
+  it('routes what a hook threw to the caller’s error handler', () => {
     const failure = new Error('hook failed');
 
     class Worker {
@@ -87,7 +88,10 @@ describe('Spec: errors and boundaries', () => {
     const worker = container.resolve(Worker);
     const reported: unknown[] = [];
 
-    new SequentialSync({ key: 'start', onError: () => (ex) => reported.push(ex) }).execute(worker, {
+    perform(
+      runSync(() => (ex) => reported.push(ex)),
+      new HookCollector({ key: 'start' }),
+    )(worker, {
       scope: container,
     });
 

@@ -109,17 +109,15 @@ export { onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
 export { onResolved, OnResolvedModule, resolved } from './hooks/onResolved';
 export { sequential, parallel, oncePerInstance, type ResolvedObjectHook } from './hooks/combinators';
 export {
-  HookExecutionStrategy,
-  type HookExecutionContext,
-  type HookExecutionOptions,
-  type HookExecutionStrategyProps,
+  HookCollector,
+  toTask,
+  type HookAction,
+  type HookCollectionContext,
+  type HookCollectorOptions,
+  type HookCollectorProps,
+  type HookRunner,
   type MapHookExecutionContext,
-  type MemberHook,
-  type OnErrorHandler,
-} from './hooks/HookExecutionStrategy';
-export { SequentialSync } from './hooks/SequentialSync';
-export { SequentialAsync } from './hooks/SequentialAsync';
-export { ParallelAsync } from './hooks/ParallelAsync';
+} from './hooks/HookCollector';
 
 // Tokens
 export { InjectionToken } from './token/InjectionToken';
@@ -157,6 +155,7 @@ export { throttle } from './utils/throttle';
 export { debounce } from './utils/debounce';
 export { shallowCache } from './utils/shallowCache';
 export { once } from './utils/once';
+export { memoize } from './utils/memoize';
 export { TypedEvent, type ITypedEvent, type TypedEventListener, type Unsubscribe } from './utils/TypedEvent';
 
 // Execution

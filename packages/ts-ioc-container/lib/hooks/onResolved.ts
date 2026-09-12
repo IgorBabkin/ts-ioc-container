@@ -1,6 +1,6 @@
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import type { ProviderHook } from '../provider/IProvider';
-import { type HookExecutionStrategy } from './HookExecutionStrategy';
+import { HookCollector, type HookRunner } from './HookCollector';
 import { registerPipe } from '../registration/IRegistration';
 import { Is } from '../utils/basic';
 import { hook, type HookType } from './hook';
@@ -9,26 +9,31 @@ import { hook, type HookType } from './hook';
 // as in `@onResolved(sequential(h1, h2))`.
 export const onResolved = (fn: HookType) => hook('onResolved', fn);
 
-// Hook metadata lives on classes, so a primitive dependency has nothing to run.
+// Hook metadata lives on classes, so a primitive dependency has nothing to collect.
 const runHooks =
-  (strategy: HookExecutionStrategy): ProviderHook =>
+  (run: HookRunner, collector: HookCollector): ProviderHook =>
   (dependency, scope) => {
     if (Is.object(dependency)) {
-      strategy.execute(dependency, { scope });
+      const actions = collector.getActions(dependency, { scope });
+      if (actions.length > 0) {
+        run(actions, { scope });
+      }
     }
   };
 
 /**
- * Runs `onResolved` hooks every time a dependency object leaves a provider, the
- * way `strategy` defines (key it to `onResolved`).
+ * Hands `run` the `onResolved` hooks of every dependency object leaving a
+ * provider; how they run is `run`'s business (ADR 0016), and it is not called
+ * for a dependency which declares none.
+ *
  * Providers are hooked through the `registered` event, so apply the module before
  * the registrations it should cover; scopes created afterwards inherit it.
  */
 export class OnResolvedModule implements IContainerModule {
   private readonly runHooks: ProviderHook;
 
-  constructor(strategy: HookExecutionStrategy) {
-    this.runHooks = runHooks(strategy);
+  constructor(run: HookRunner, collector: HookCollector = new HookCollector({ key: 'onResolved' })) {
+    this.runHooks = runHooks(run, collector);
   }
 
   applyTo(container: IContainer) {
@@ -43,5 +48,7 @@ export class OnResolvedModule implements IContainerModule {
  * its `onResolved` hooks on resolve, without the container opting every other
  * registration in.
  */
-export const resolved = <T = unknown>(strategy: HookExecutionStrategy) =>
-  registerPipe<T>((p) => p.onResolved(runHooks(strategy)));
+export const resolved = <T = unknown>(
+  run: HookRunner,
+  collector: HookCollector = new HookCollector({ key: 'onResolved' }),
+) => registerPipe<T>((p) => p.onResolved(runHooks(run, collector)));

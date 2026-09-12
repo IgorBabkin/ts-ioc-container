@@ -8,12 +8,20 @@ import {
   onScopeDisposed,
   register,
   Registration as R,
-  SequentialSync,
   singleton,
+  type HookRunner,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
+};
+
+// The module collects the hooks of every instance of the disposed scope into one
+// list; this runner performs them in order and never awaits.
+const run: HookRunner = (actions) => {
+  for (const { hook, context } of actions) {
+    hook(context);
+  }
 };
 
 @register(bindTo('logsRepo'), singleton())
@@ -44,7 +52,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule(new SequentialSync({ key: 'onScopeDisposed' })))
+      .useModule(new OnDisposeModule(run))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 

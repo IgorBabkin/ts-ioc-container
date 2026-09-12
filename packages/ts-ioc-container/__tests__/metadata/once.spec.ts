@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi } from 'vitest';
-import { Container, hook, type HookFn, once, SequentialSync } from '../../lib';
+import { HookCollector, Container, hook, type HookFn, once } from '../../lib';
+import { perform, runSync } from '../hooks/runners';
 
 const invokeMethod: HookFn = (ctx) => {
   ctx.invokeMethod();
@@ -138,11 +139,11 @@ describe('once', () => {
   });
 
   describe('combined with @hook', () => {
-    // `hook(key, ...)` only records metadata for a `HookExecutionStrategy` to read later - it never
+    // `hook(key, ...)` only records metadata for a `HookCollector` to read later - it never
     // touches the method descriptor, so it composes with `@once`, which does, regardless
     // of which decorator is declared first.
     it('memoizes the method body even though the hook invokes it on every run', () => {
-      const onStartStrategy = new SequentialSync({ key: 'onStart' });
+      const runOnStart = perform(runSync(), new HookCollector({ key: 'onStart' }));
       const fn = vi.fn(() => 42);
 
       class Service {
@@ -156,14 +157,14 @@ describe('once', () => {
       const root = new Container({ tags: ['root'] });
       const instance = root.resolve(Service);
 
-      onStartStrategy.execute(instance, { scope: root });
-      onStartStrategy.execute(instance, { scope: root });
+      runOnStart(instance, { scope: root });
+      runOnStart(instance, { scope: root });
 
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
     it('memoizes the same way regardless of decorator order', () => {
-      const onStartStrategy = new SequentialSync({ key: 'onStart' });
+      const runOnStart = perform(runSync(), new HookCollector({ key: 'onStart' }));
       const fn = vi.fn(() => 42);
 
       class Service {
@@ -177,14 +178,14 @@ describe('once', () => {
       const root = new Container({ tags: ['root'] });
       const instance = root.resolve(Service);
 
-      onStartStrategy.execute(instance, { scope: root });
-      onStartStrategy.execute(instance, { scope: root });
+      runOnStart(instance, { scope: root });
+      runOnStart(instance, { scope: root });
 
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
     it('caches independently per instance when several instances share the hook', () => {
-      const onStartStrategy = new SequentialSync({ key: 'onStart' });
+      const runOnStart = perform(runSync(), new HookCollector({ key: 'onStart' }));
       const fn = vi.fn(() => 42);
 
       class Service {
@@ -199,14 +200,14 @@ describe('once', () => {
       const first = root.resolve(Service);
       const second = root.resolve(Service);
 
-      onStartStrategy.execute(first, { scope: root });
-      onStartStrategy.execute(second, { scope: root });
+      runOnStart(first, { scope: root });
+      runOnStart(second, { scope: root });
 
       expect(fn).toHaveBeenCalledTimes(2);
     });
 
     it('returns the cached result through the hook on the repeat run', () => {
-      const onStartStrategy = new SequentialSync({ key: 'onStart' });
+      const runOnStart = perform(runSync(), new HookCollector({ key: 'onStart' }));
       let received: unknown;
 
       class Service {
@@ -222,8 +223,8 @@ describe('once', () => {
       const root = new Container({ tags: ['root'] });
       const instance = root.resolve(Service);
 
-      onStartStrategy.execute(instance, { scope: root });
-      onStartStrategy.execute(instance, { scope: root });
+      runOnStart(instance, { scope: root });
+      runOnStart(instance, { scope: root });
 
       expect(received).toBe(42);
     });

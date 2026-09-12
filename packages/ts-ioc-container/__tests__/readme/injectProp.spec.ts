@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, hook, injectProp, Registration, sequential, SequentialSync } from '../../lib';
+import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask } from '../../lib';
 
 /**
  * UI Components - Property Injection
@@ -14,8 +14,8 @@ import { Container, hook, injectProp, Registration, sequential, SequentialSync }
 
 describe('inject property', () => {
   it('should inject property', () => {
-    // Strategy for the 'onInit' lifecycle hook
-    const onInitStrategy = new SequentialSync({ key: 'onInit' });
+    // Collector for the 'onInit' lifecycle hook
+    const onInit = new HookCollector({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -32,15 +32,18 @@ describe('inject property', () => {
     // 1. Create instance (dependencies not yet injected)
     const viewModel = container.resolve(UserViewModel);
 
-    // 2. Run lifecycle hooks to inject properties
-    onInitStrategy.execute(viewModel, { scope: container });
+    // 2. Collect the lifecycle hooks and run them to inject properties
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitStrategy = new SequentialSync({ key: 'onInit' });
+    const onInit = new HookCollector({ key: 'onInit' });
 
     let injectedValue: unknown;
 
@@ -57,7 +60,10 @@ describe('inject property', () => {
     const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     const viewModel = container.resolve(UserViewModel);
-    onInitStrategy.execute(viewModel, { scope: container });
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(injectedValue).toBe('Hello');
   });

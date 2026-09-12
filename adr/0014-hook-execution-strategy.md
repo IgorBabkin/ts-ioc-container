@@ -1,6 +1,9 @@
 # ADR 0014 — Hook execution is a strategy, chosen by the caller
 
-- **Status:** Accepted, amended in part by
+- **Status:** Superseded by
+  [ADR 0016](0016-collect-hooks-let-the-caller-run-them.md), which removed the
+  strategy classes altogether: the library collects hooks as `HookAction`s and
+  the caller runs them. Amended before that by
   [ADR 0015](0015-one-hook-per-member.md), which removed `methodStrategy`: a
   member carries one hook, and how several hooks relate is decided by
   `sequential(...)` / `parallel(...)` where they are declared

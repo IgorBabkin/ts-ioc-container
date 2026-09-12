@@ -2843,41 +2843,82 @@ under one key replaces the earlier hook rather than adding to it — decorators
 are applied bottom-up, so the topmost one is the one that stays.
 
 Every hook may be sync or async — one decorator and one module take both, so
-there is no separate async form to reach for. *How* the hooks run is a separate
-choice: each module takes a `HookExecutionStrategy`, keyed to the hooks it runs
-(`onConstruct`, `onScopeDisposed`, `onResolved`, or a custom key). A strategy
-decides how the **members** — the decorated methods — relate to each other,
-what is awaited, and where a failure goes
-([ADR 0015](../../adr/0015-one-hook-per-member.md)); how the hooks *within* one
-member relate is the combinator's job, not the strategy's:
+there is no separate async form to reach for. *Running* them is not the
+library's job at all: a module collects the hooks an event turns up and hands
+them to the runner you gave it
+([ADR 0016](../../adr/0016-collect-hooks-let-the-caller-run-them.md)).
 
-| Strategy          | Members (decorated methods) | Awaits |
-| ----------------- | --------------------------- | ------ |
-| `SequentialSync`  | one after another           | no     |
-| `SequentialAsync` | one after another           | yes    |
-| `ParallelAsync`   | all at once                 | yes    |
+A **`HookCollector`** is keyed to one hook key (`onConstruct`,
+`onScopeDisposed`, `onResolved`, or a custom one) and answers a single
+question: `getActions(target, { scope })` returns one **`HookAction`** per
+decorated member — the hook resolved to a function, bound to the
+`IHookContext` it runs against. It performs nothing, and how the hooks *within*
+one member relate was already settled by the combinator at the declaration site
+([ADR 0015](../../adr/0015-one-hook-per-member.md)).
+
+A **`HookRunner`** — `(actions, { scope }) => void` — performs them. Order,
+awaiting and failure handling are decided there and nowhere else; `toTask`
+turns an action into the `Task` that `runInOrder` and `runAtOnce` take:
 
 ```typescript
+// members one after another, never awaited: sync hooks finish before this returns
+const immediate: HookRunner = (actions) => {
+  for (const { hook, context } of actions) {
+    hook(context);
+  }
+};
+
+// members one after another, awaiting any that goes async; both kinds of failure reported
+const inOrder =
+  (onError: (scope: IContainer) => (error: unknown) => void): HookRunner =>
+  (actions, { scope }) => {
+    try {
+      runInOrder(actions.map(toTask))?.catch(onError(scope));
+    } catch (ex) {
+      onError(scope)(ex);
+    }
+  };
+
+// every member started at once
+const atOnce: HookRunner = (actions) => {
+  runAtOnce(actions.map(toTask));
+};
+
 const container = new Container()
-  .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
-  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
+  .useModule(new OnConstructModule(inOrder(report)))
+  .useModule(new OnDisposeModule(atOnce));
 ```
 
-Resolution and disposal stay synchronous under every strategy: a run stays
-synchronous until a hook returns a promise, so sync hooks finish before
-`resolve` (or `dispose`) returns, and async ones are started there and settle
-afterwards. Instances that must expose readiness should publish it themselves,
-for example by storing the pending promise on the instance. The sync strategy
-never awaits — a hook that returns a promise under it is started but not
-observed.
+Each module defaults its collector to its own key, so pass one only to change
+how collection works:
+`new OnConstructModule(immediate, new HookCollector({ key: 'onConstruct', predicate }))`.
+`OnDisposeModule` collects from every instance of the disposed scope into
+**one** list, so its runner orders the instances as well as the members. No
+runner is called when nothing was collected.
 
-`strategy.execute(instance, { scope })` runs the hooks of a custom key by hand;
+Resolution and disposal stay synchronous unless the runner makes them
+otherwise: `runInOrder` and `runAtOnce` stay synchronous until a hook returns a
+promise, so sync hooks finish before `resolve` (or `dispose`) returns and async
+ones are started there and settle afterwards. Instances that must expose
+readiness should publish it themselves, for example by storing the pending
+promise on the instance.
+
+Failures belong to the runner too — nothing in the library catches what a hook
+throws or rejects with. A runner which neither guards nor awaits lets a sync
+throw propagate out of `resolve` / `dispose` and drops an async rejection.
+
+A custom key is collected and run the same way, with no module in between:
+
+```typescript
+const workflow = new HookCollector({ key: 'workflow' });
+
+container.getInjector().onConstructed((instance, scope) => {
+  runInOrder(workflow.getActions(instance, { scope }).map(toTask));
+});
+```
+
 `predicate`, `createExecutionContext` and `mapExecutionContext` can be set on
-the strategy or per call.
-
-A strategy takes an optional `onError: (scope) => (error) => void`, which
-receives both kinds of failure — what a sync hook threw and what an async hook
-rejected with. Without one, failures are dropped.
+the collector or overridden per `getActions` call.
 
 ### Hook domains
 
@@ -2948,8 +2989,9 @@ import {
   onConstruct,
   OnConstructModule,
   Registration as R,
-  SequentialAsync,
-  SequentialSync,
+  runInOrder,
+  toTask,
+  type HookRunner,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
@@ -2959,6 +3001,19 @@ const execute: HookFn = (ctx) => {
 const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+// The module collects the hooks; running them is ours. This runner keeps the
+// actions in declaration order, stays synchronous until one returns a promise,
+// and reports a throw and a rejection alike.
+const run =
+  (onError: (scope: IContainer) => (ex: unknown) => void = () => () => {}): HookRunner =>
+  (actions, { scope }) => {
+    try {
+      runInOrder(actions.map(toTask))?.catch(onError(scope));
+    } catch (ex) {
+      onError(scope)(ex);
+    }
+  };
 
 describe('onConstruct', function () {
   it('should run initialization method after dependencies are resolved', function () {
@@ -2973,9 +3028,9 @@ describe('onConstruct', function () {
       }
     }
 
-    // The module takes a strategy for how the hooks run; the strategy is keyed to the hooks it runs.
+    // The module takes the runner which performs the collected hooks.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -2984,7 +3039,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward hook exceptions to the onError handler with the scope', function () {
+  it('should forward hook exceptions to the runner’s error handler with the scope', function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -2997,11 +3052,8 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSync({
-          key: 'onConstruct',
-          onError: (scope) => (ex) => {
-            captured = { ex, scope };
-          },
+        run((scope) => (ex) => {
+          captured = { ex, scope };
         }),
       ),
     );
@@ -3011,7 +3063,7 @@ describe('onConstruct', function () {
     expect(captured?.scope).toBe(container);
   });
 
-  it('should expose the resolving scope to the onError handler', function () {
+  it('should expose the resolving scope to the runner’s error handler', function () {
     class BrokenService {
       @onConstruct(() => {
         throw new Error('boom');
@@ -3022,11 +3074,8 @@ describe('onConstruct', function () {
     let scope: IContainer | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialSync({
-          key: 'onConstruct',
-          onError: (s) => () => {
-            scope = s;
-          },
+        run((s) => () => {
+          scope = s;
         }),
       ),
     );
@@ -3060,9 +3109,9 @@ describe('onConstruct', function () {
       }
     }
 
-    // An async strategy awaits the hooks; resolution itself still does not wait for them.
+    // The runner awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3076,7 +3125,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward rejected hooks to the onError handler with the scope', async function () {
+  it('should forward rejected hooks to the runner’s error handler with the scope', async function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -3087,11 +3136,8 @@ describe('onConstruct', function () {
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
       new OnConstructModule(
-        new SequentialAsync({
-          key: 'onConstruct',
-          onError: (scope) => (ex) => {
-            captured = { ex, scope };
-          },
+        run((scope) => (ex) => {
+          captured = { ex, scope };
         }),
       ),
     );
@@ -3121,12 +3167,20 @@ import {
   onScopeDisposed,
   register,
   Registration as R,
-  SequentialSync,
   singleton,
+  type HookRunner,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
+};
+
+// The module collects the hooks of every instance of the disposed scope into one
+// list; this runner performs them in order and never awaits.
+const run: HookRunner = (actions) => {
+  for (const { hook, context } of actions) {
+    hook(context);
+  }
 };
 
 @register(bindTo('logsRepo'), singleton())
@@ -3157,7 +3211,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule(new SequentialSync({ key: 'onScopeDisposed' })))
+      .useModule(new OnDisposeModule(run))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 
@@ -3177,7 +3231,7 @@ describe('onScopeDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { Container, hook, injectProp, Registration, sequential, SequentialSync } from 'ts-ioc-container';
+import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -3192,8 +3246,8 @@ import { Container, hook, injectProp, Registration, sequential, SequentialSync }
 
 describe('inject property', () => {
   it('should inject property', () => {
-    // Strategy for the 'onInit' lifecycle hook
-    const onInitStrategy = new SequentialSync({ key: 'onInit' });
+    // Collector for the 'onInit' lifecycle hook
+    const onInit = new HookCollector({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -3210,15 +3264,18 @@ describe('inject property', () => {
     // 1. Create instance (dependencies not yet injected)
     const viewModel = container.resolve(UserViewModel);
 
-    // 2. Run lifecycle hooks to inject properties
-    onInitStrategy.execute(viewModel, { scope: container });
+    // 2. Collect the lifecycle hooks and run them to inject properties
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitStrategy = new SequentialSync({ key: 'onInit' });
+    const onInit = new HookCollector({ key: 'onInit' });
 
     let injectedValue: unknown;
 
@@ -3235,7 +3292,10 @@ describe('inject property', () => {
     const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     const viewModel = container.resolve(UserViewModel);
-    onInitStrategy.execute(viewModel, { scope: container });
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(injectedValue).toBe('Hello');
   });

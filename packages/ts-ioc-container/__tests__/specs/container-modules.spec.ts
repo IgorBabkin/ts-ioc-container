@@ -11,9 +11,9 @@ import {
   register,
   Registration as R,
   scopeAccess,
-  SequentialSync,
   singleton,
 } from '../../lib';
+import { runSync } from '../hooks/runners';
 
 describe('Spec: container modules', () => {
   it('applies reusable module configuration to a container', () => {
@@ -75,7 +75,7 @@ describe('Spec: container modules', () => {
     }
 
     const app = new Container()
-      .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(runSync()))
       .addRegistration(R.fromClass(FeatureService));
     const request = app.createScope({ tags: ['request'] });
 
