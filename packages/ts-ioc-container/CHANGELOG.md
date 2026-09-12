@@ -1,3 +1,18 @@
+# 66.0.0 (2026-09-12)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    require methodStrategy on async hook strategies (#157)
+    (f87df9ae4d23f23c619e3d76dc1edea3dc1dac0a)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    require methodStrategy on async hook strategies (#157)
+    (f87df9ae4d23f23c619e3d76dc1edea3dc1dac0a)
+
+
 # 65.0.0 (2026-09-11)
 
   ### 💥 BREAKING CHANGES
@@ -239,6 +254,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
