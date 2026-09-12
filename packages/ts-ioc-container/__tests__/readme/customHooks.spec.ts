@@ -1,10 +1,10 @@
-import { Container, hook, type HookFn, SequentialSync } from '../../lib';
+import { Container, hook, HookCollector, type HookFn, runInOrder, toTask } from '../../lib';
 
 /**
  * User Management Domain - Custom Lifecycle Hooks
  *
- * Custom hooks extend the container's lifecycle management beyond
- * the built-in @onConstruct and @onScopeDisposed hooks.
+ * Every hook is a custom hook: the library ships no hook keys or decorators of
+ * its own, so construct and dispose hooks are written exactly like these.
  *
  * Use cases:
  * - @validateConfig: Validate service configuration after construction
@@ -13,14 +13,14 @@ import { Container, hook, type HookFn, SequentialSync } from '../../lib';
  * - @auditCreation: Log service creation for compliance
  *
  * How it works:
- * 1. Pick a HookExecutionStrategy, keyed with a unique hook name
+ * 1. Create a HookCollector, keyed with a unique hook name
  * 2. Create methods decorated with @hook('hookName', executor)
- * 3. Run the strategy from the container's injector via onConstructed
+ * 3. Collect the hooks from the container's injector via onConstructed, and run them
  * 4. Methods are automatically called when instances are created
  */
 
-// A strategy for the custom 'initialize' hooks: sync, in declaration order
-const initializeStrategy = new SequentialSync({ key: 'initialize' });
+// A collector for the custom 'initialize' hooks
+const initialize = new HookCollector({ key: 'initialize' });
 
 // Hook executor - defines what happens when the hook fires
 const executeInitialize: HookFn = (ctx) => {
@@ -43,8 +43,8 @@ describe('Custom Hooks', () => {
 
     // Construction is the injector's event, so custom construct hooks go on the injector
     container.getInjector().onConstructed((instance, scope) => {
-      // Run all 'initialize' hooks on newly created instances
-      initializeStrategy.execute(instance, { scope });
+      // Collect all 'initialize' hooks of newly created instances, and run them in order
+      runInOrder(initialize.getActions(instance, { scope }).map(toTask));
     });
 
     const cacheService = container.resolve(CacheService);

@@ -2,6 +2,7 @@ import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
 import { type constructor, Is, type Instance } from '../utils/basic';
 import { resolveConstructor } from '../metadata/target';
+import { getConstructorChain } from '../utils/getConstructorChain';
 import { ProviderOptions } from '../provider/IProvider';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
@@ -29,23 +30,15 @@ const isHookClassConstructor = <C extends IHookContext>(
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
   isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
 
-// Walk the constructor's prototype chain (most-derived first) collecting each class.
-const getConstructorChain = (ctor: unknown): object[] => {
-  const chain: object[] = [];
-  let current = ctor;
-  while (typeof current === 'function' && current !== Function.prototype) {
-    chain.push(current);
-    current = Object.getPrototypeOf(current);
-  }
-  return chain;
-};
-
 // Get hooks metadata, merging hooks declared on parent (extended-from) classes.
 // Hooks are collected from base to derived so a derived class's hook for the same
 // method name takes precedence over (replaces) the parent's.
 //
 // `target` is an instance or its class, a proxy of either included - it is normalized
 // by `resolveConstructor`, so callers never have to unwrap it themselves.
+//
+// The merge runs on every call and hands back a fresh map. Hook metadata is fixed once
+// a class is defined, so a caller which reads it often can wrap this in `memoize`.
 export function getHooks(target: Instance | constructor<unknown>, key: string | symbol): HooksOfClass {
   const merged: HooksOfClass = new Map();
   for (const ctor of getConstructorChain(resolveConstructor(target)).reverse()) {

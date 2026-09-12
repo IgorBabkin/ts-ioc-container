@@ -1,6 +1,8 @@
 # ADR 0015 — One hook per member, combined by higher-order functions
 
-- **Status:** Accepted
+- **Status:** Accepted; the strategy table below is superseded by
+  [ADR 0016](0016-collect-hooks-let-the-caller-run-them.md), which replaced the
+  strategies with a collector the caller runs
 - **Date:** 2026-09-12
 - **Deciders:** core maintainers
 - **Tags:** hooks, lifecycle, api-design

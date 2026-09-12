@@ -18,7 +18,7 @@ provider pipelines, aliases, and custom injector strategies.
 - clean API for classes, keys, tokens, aliases, and scopes
 - no global container object; pass containers and scopes explicitly
 - supports tagged application, request, transaction, page, and widget scopes
-- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onScopeDisposed`
+- decorator support with `@register`, `@inject`, and `@hook` — lifecycle hook keys are yours to name
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
@@ -56,8 +56,8 @@ provider pipelines, aliases, and custom injector strategies.
 - [Module](#module)
 - [Hook](#hook) `@hook`
   - [Hook domains](#hook-domains) `ScopeHook` `InjectorHook` `ProviderHook`
-  - [OnConstruct](#onconstruct) `@onConstruct`
-  - [OnScopeDisposed](#onscopedisposed) `@onScopeDisposed`
+  - [Construct hooks](#construct-hooks) `onConstructed`
+  - [Scope disposal hooks](#scope-disposal-hooks) `scopeDisposed`
   - [Inject Property](#inject-property)
   - [Inject Method](#inject-method)
 - [Mock](#mock)
@@ -107,8 +107,8 @@ bundlers tree-shake unused exports.
 | Bun | ✅ | CJS + ESM | Runs the native ESM/CJS builds directly. |
 
 > [!NOTE]
-> The default `MetadataInjector` (and the `@inject` / `@onConstruct` /
-> `@onScopeDisposed` decorators) rely on `reflect-metadata`. It is declared as an
+> The default `MetadataInjector` (and the `@inject` / `@hook` decorators) rely
+> on `reflect-metadata`. It is declared as an
 > optional peer dependency — install it and import it once at your entrypoint.
 > `SimpleInjector` and `ProxyInjector` do not need it.
 
@@ -2497,7 +2497,7 @@ Sometimes you don't want to change the dependency, only to react to it. Use the 
 
 Hooks run after the whole `decorate(...)` chain, so they always observe the fully decorated dependency, and their return value is ignored — `onResolve` can never swap the dependency out. They fire per resolution, which means a `singleton()` provider runs them only on the resolve that fills the cache.
 
-This — or the `@onResolved` decorator over the same provider event — is the recommended way to react to a dependency; see [OnConstruct](#onconstruct) for why `@onConstruct` is the narrower tool.
+This — or a hook key collected over the same provider event — is the recommended way to react to a dependency; see [Construct hooks](#construct-hooks) for why construction is the narrower event.
 
 ```typescript
 import 'reflect-metadata';
@@ -2923,10 +2923,18 @@ describe('Container Modules', function () {
 
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
-Every hook decorator — the generic `@hook(key, hook)` and `@onConstruct`,
-`@onScopeDisposed`, `@onResolved` — takes **one** hook for the decorated member.
-Several hooks are combined at the declaration site, by the combinator that says
-how they relate:
+`@hook(key, hook)` is the only hook decorator the library ships, and the key is
+yours: there is no `@onConstruct` or `@onScopeDisposed` in the package, because
+each is one line of your own code
+([ADR 0017](../../adr/0017-no-predefined-hook-keys.md)).
+
+```typescript
+// yours, named in your vocabulary
+const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
+```
+
+A decorated member takes **one** hook. Several hooks are combined at the
+declaration site, by the combinator that says how they relate:
 
 ```typescript
 class OrderService {
@@ -2954,42 +2962,115 @@ A member carries exactly one hook per key, so decorating the same member twice
 under one key replaces the earlier hook rather than adding to it — decorators
 are applied bottom-up, so the topmost one is the one that stays.
 
-Every hook may be sync or async — one decorator and one module take both, so
-there is no separate async form to reach for. *How* the hooks run is a separate
-choice: each module takes a `HookExecutionStrategy`, keyed to the hooks it runs
-(`onConstruct`, `onScopeDisposed`, `onResolved`, or a custom key). A strategy
-decides how the **members** — the decorated methods — relate to each other,
-what is awaited, and where a failure goes
-([ADR 0015](../../adr/0015-one-hook-per-member.md)); how the hooks *within* one
-member relate is the combinator's job, not the strategy's:
+Every hook may be sync or async — the one decorator takes both, so there is no
+separate async form to reach for. *Running* them is not the library's job at
+all, and neither is deciding when to collect them
+([ADR 0016](../../adr/0016-collect-hooks-let-the-caller-run-them.md),
+[ADR 0018](../../adr/0018-no-hook-modules.md)). The library answers one
+question — which hooks does this object declare, and against what context do
+they run — and the container's events are where you ask it.
 
-| Strategy          | Members (decorated methods) | Awaits |
-| ----------------- | --------------------------- | ------ |
-| `SequentialSync`  | one after another           | no     |
-| `SequentialAsync` | one after another           | yes    |
-| `ParallelAsync`   | all at once                 | yes    |
+A **`HookCollector`** is keyed to one of your hook keys and answers a single
+question: `getActions(target, { scope })` returns one **`HookAction`** per
+decorated member — the hook resolved to a function, bound to the
+`IHookContext` it runs against (which carries the member's own `methodName`). It performs nothing, and how the
+hooks *within* one member relate was already settled by the combinator at the
+declaration site ([ADR 0015](../../adr/0015-one-hook-per-member.md)). It reads a
+class's metadata once and reuses it, so collecting on a hot event is cheap.
+
+A **runner** performs them. Order, awaiting and failure handling are decided
+there and nowhere else; `toTask` turns an action into the `Task` that
+`runInOrder` and `runAtOnce` take. The library exports no type for it — it
+never calls a runner, nor is it handed one — so name the shape yourself:
 
 ```typescript
-const container = new Container()
-  .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
-  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
+// yours, like the hook keys
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// members one after another, never awaited: sync hooks finish before this returns
+const immediate: HookRunner = (actions) => {
+  for (const { hook, context } of actions) {
+    hook(context);
+  }
+};
+
+// members one after another, awaiting any that goes async; both kinds of failure reported
+const inOrder =
+  (onError: (scope: IContainer) => (error: unknown) => void): HookRunner =>
+  (actions, { scope }) => {
+    try {
+      runInOrder(actions.map(toTask))?.catch(onError(scope));
+    } catch (ex) {
+      onError(scope)(ex);
+    }
+  };
+
+// every member started at once
+const atOnce: HookRunner = (actions) => {
+  runAtOnce(actions.map(toTask));
+};
+
 ```
 
-Resolution and disposal stay synchronous under every strategy: a run stays
-synchronous until a hook returns a promise, so sync hooks finish before
-`resolve` (or `dispose`) returns, and async ones are started there and settle
-afterwards. Instances that must expose readiness should publish it themselves,
-for example by storing the pending promise on the instance. The sync strategy
-never awaits — a hook that returns a promise under it is started but not
-observed.
+Then wire collecting to the event you want it on. There is no
+`OnConstructModule` in the package: an `IContainerModule` is one method, and
+these are the whole of what the modules this library used to ship contained.
 
-`strategy.execute(instance, { scope })` runs the hooks of a custom key by hand;
+```typescript
+const onConstructHooks = new HookCollector({ key: 'onConstruct' });
+const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
+
+// construction is the injector's event, and one injector backs the whole scope tree
+const constructModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.getInjector().onConstructed((instance, scope) => {
+      run(onConstructHooks.getActions(instance, { scope }), { scope });
+    }),
+});
+
+// disposal is a scope event; collecting every instance into one list lets the
+// runner order the instances as well as the members
+const disposeModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.scopeDisposed.subscribe((scope) => {
+      run(
+        scope.getInstances().flatMap((instance) => onScopeDisposedHooks.getActions(instance, { scope })),
+        { scope },
+      );
+    }),
+});
+
+const container = new Container().useModule(constructModule(inOrder(report))).useModule(disposeModule(atOnce));
+```
+
+For resolve hooks, reach the providers through `registered.subscribe(...)` and
+`provider.onResolved(...)`, or pipe a single registration with
+[`onResolve`](#on-resolve). Narrowing is the collector's:
+`new HookCollector({ key: 'onConstruct', predicate })`.
+
+Resolution and disposal stay synchronous unless the runner makes them
+otherwise: `runInOrder` and `runAtOnce` stay synchronous until a hook returns a
+promise, so sync hooks finish before `resolve` (or `dispose`) returns and async
+ones are started there and settle afterwards. Instances that must expose
+readiness should publish it themselves, for example by storing the pending
+promise on the instance.
+
+Failures belong to the runner too — nothing in the library catches what a hook
+throws or rejects with. A runner which neither guards nor awaits lets a sync
+throw propagate out of `resolve` / `dispose` and drops an async rejection.
+
+A custom key is collected and run the same way, with no module in between:
+
+```typescript
+const workflow = new HookCollector({ key: 'workflow' });
+
+container.getInjector().onConstructed((instance, scope) => {
+  runInOrder(workflow.getActions(instance, { scope }).map(toTask));
+});
+```
+
 `predicate`, `createExecutionContext` and `mapExecutionContext` can be set on
-the strategy or per call.
-
-A strategy takes an optional `onError: (scope) => (error) => void`, which
-receives both kinds of failure — what a sync hook threw and what an async hook
-rejected with. Without one, failures are dropped.
+the collector or overridden per `getActions` call.
 
 ### Hook domains
 
@@ -3033,22 +3114,22 @@ and `registered` (`ITypedEvent<[IProvider, DependencyKey, IContainer]>`);
 `TypedEvent` itself is exported for your own events: `subscribe` / `unsubscribe`
 / `emit` / `dispose`, with `ITypedEvent` as the subscriber-only view to hand out.
 
-The built-in modules are all container modules: `OnConstructModule` reaches the
-injector through `getInjector()`, `OnDisposeModule` subscribes to `scopeDisposed`,
-and `OnResolvedModule` reaches every provider through `registered`.
+These four events are the whole surface hooks are wired to; the library ships no
+module over them ([ADR 0018](../../adr/0018-no-hook-modules.md)).
 
-### OnConstruct
+### Construct hooks
 
-> **Prefer `@onResolved` — or the [`onResolve`](#on-resolve) pipe — over
-> `@onConstruct`.** Construction is the *injector's* event, so `@onConstruct`
-> fires only for dependencies the injector builds: a `fromValue` constant or a
-> factory registration never triggers it. It also observes the instance before
+> **Prefer collecting on resolve — through `registered` / `onResolved`, or the
+> [`onResolve`](#on-resolve) pipe — over collecting on construction.**
+> Construction is the *injector's* event, so it fires only for dependencies the
+> injector builds: a `fromValue` constant or a factory registration never
+> triggers it. It also observes the instance before
 > the provider's `decorate(...)` chain wraps it, so a hook sees the bare
-> instance rather than what the caller receives. `@onResolved` runs on every
+> instance rather than what the caller receives. A resolve hook runs on every
 > dependency leaving a provider, after the whole decorate chain — the same
 > ordering, awaiting and error handling, on what the caller actually gets.
-> Reach for `@onConstruct` only when you mean "this class was just constructed"
-> specifically.
+> Reach for construct hooks only when you mean "this class was just
+> constructed" specifically.
 
 ```typescript
 import 'reflect-metadata';
@@ -3056,12 +3137,16 @@ import {
   Container,
   type HookFn,
   type IContainer,
+  hook,
+  HookCollector,
+  type HookType,
+  type IContainerModule,
   inject,
-  onConstruct,
-  OnConstructModule,
   Registration as R,
-  SequentialAsync,
-  SequentialSync,
+  runInOrder,
+  toTask,
+  type ExecutionContext,
+  type HookAction,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
@@ -3071,6 +3156,37 @@ const execute: HookFn = (ctx) => {
 const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+// The library ships no construct decorator: the key, the decorator which writes
+// it and the collector which reads it are all ours.
+const onConstruct = (fn: HookType) => hook('onConstruct', fn);
+const onConstructHooks = new HookCollector({ key: 'onConstruct' });
+
+// Running the collected hooks is ours too, and so is naming the shape that does
+// it: the library neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// This runner keeps the
+// actions in declaration order, stays synchronous until one returns a promise,
+// and reports a throw and a rejection alike.
+const run =
+  (onError: (scope: IContainer) => (ex: unknown) => void = () => () => {}): HookRunner =>
+  (actions, { scope }) => {
+    try {
+      runInOrder(actions.map(toTask))?.catch(onError(scope));
+    } catch (ex) {
+      onError(scope)(ex);
+    }
+  };
+
+// Construction is the injector's event, and hanging the collection off it is
+// ours: the library ships no module for that, and a module is just an `applyTo`.
+const onConstructModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.getInjector().onConstructed((instance, scope) => {
+      run(onConstructHooks.getActions(instance, { scope }), { scope });
+    }),
+});
 
 describe('onConstruct', function () {
   it('should run initialization method after dependencies are resolved', function () {
@@ -3085,9 +3201,8 @@ describe('onConstruct', function () {
       }
     }
 
-    // The module takes a strategy for how the hooks run; the strategy is keyed to the hooks it runs.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
+      .useModule(onConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3096,7 +3211,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward hook exceptions to the onError handler with the scope', function () {
+  it('should forward hook exceptions to the runner’s error handler with the scope', function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -3108,12 +3223,9 @@ describe('onConstruct', function () {
 
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
-      new OnConstructModule(
-        new SequentialSync({
-          key: 'onConstruct',
-          onError: (scope) => (ex) => {
-            captured = { ex, scope };
-          },
+      onConstructModule(
+        run((scope) => (ex) => {
+          captured = { ex, scope };
         }),
       ),
     );
@@ -3123,7 +3235,7 @@ describe('onConstruct', function () {
     expect(captured?.scope).toBe(container);
   });
 
-  it('should expose the resolving scope to the onError handler', function () {
+  it('should expose the resolving scope to the runner’s error handler', function () {
     class BrokenService {
       @onConstruct(() => {
         throw new Error('boom');
@@ -3133,12 +3245,9 @@ describe('onConstruct', function () {
 
     let scope: IContainer | undefined;
     const container = new Container().useModule(
-      new OnConstructModule(
-        new SequentialSync({
-          key: 'onConstruct',
-          onError: (s) => () => {
-            scope = s;
-          },
+      onConstructModule(
+        run((s) => () => {
+          scope = s;
         }),
       ),
     );
@@ -3172,9 +3281,9 @@ describe('onConstruct', function () {
       }
     }
 
-    // An async strategy awaits the hooks; resolution itself still does not wait for them.
+    // The runner awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
+      .useModule(onConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3188,7 +3297,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward rejected hooks to the onError handler with the scope', async function () {
+  it('should forward rejected hooks to the runner’s error handler with the scope', async function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -3198,12 +3307,9 @@ describe('onConstruct', function () {
 
     let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
-      new OnConstructModule(
-        new SequentialAsync({
-          key: 'onConstruct',
-          onError: (scope) => (ex) => {
-            captured = { ex, scope };
-          },
+      onConstructModule(
+        run((scope) => (ex) => {
+          captured = { ex, scope };
         }),
       ),
     );
@@ -3220,26 +3326,59 @@ describe('onConstruct', function () {
 
 ```
 
-### OnScopeDisposed
+### Scope disposal hooks
 
 ```typescript
 import 'reflect-metadata';
 import {
-  OnDisposeModule,
   bindTo,
   Container,
   type HookFn,
+  hook,
+  HookCollector,
+  type HookType,
   inject,
-  onScopeDisposed,
   register,
   Registration as R,
-  SequentialSync,
   singleton,
+  type ExecutionContext,
+  type HookAction,
+  type IContainerModule,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+// The library ships no dispose decorator: the key, the decorator which writes it
+// and the collector which reads it are all ours.
+const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
+const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
+
+// Naming the shape which performs collected actions is ours: the library
+// neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// This runner performs the collected hooks in order and never awaits.
+const run: HookRunner = (actions) => {
+  for (const { hook, context } of actions) {
+    hook(context);
+  }
+};
+
+// Disposal is a scope event, and hanging the collection off it is ours: the
+// library ships no module for that, and a module is just an `applyTo`. Every
+// instance of the scope is collected into one list, so the runner orders the
+// instances as well as the members.
+const onScopeDisposedModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.scopeDisposed.subscribe((scope) => {
+      run(
+        scope.getInstances().flatMap((instance) => onScopeDisposedHooks.getActions(instance, { scope })),
+        { scope },
+      );
+    }),
+});
 
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
@@ -3269,7 +3408,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule(new SequentialSync({ key: 'onScopeDisposed' })))
+      .useModule(onScopeDisposedModule(run))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 
@@ -3289,7 +3428,7 @@ describe('onScopeDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { Container, hook, injectProp, Registration, sequential, SequentialSync } from 'ts-ioc-container';
+import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -3304,8 +3443,8 @@ import { Container, hook, injectProp, Registration, sequential, SequentialSync }
 
 describe('inject property', () => {
   it('should inject property', () => {
-    // Strategy for the 'onInit' lifecycle hook
-    const onInitStrategy = new SequentialSync({ key: 'onInit' });
+    // Collector for the 'onInit' lifecycle hook
+    const onInit = new HookCollector({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
@@ -3322,15 +3461,18 @@ describe('inject property', () => {
     // 1. Create instance (dependencies not yet injected)
     const viewModel = container.resolve(UserViewModel);
 
-    // 2. Run lifecycle hooks to inject properties
-    onInitStrategy.execute(viewModel, { scope: container });
+    // 2. Collect the lifecycle hooks and run them to inject properties
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitStrategy = new SequentialSync({ key: 'onInit' });
+    const onInit = new HookCollector({ key: 'onInit' });
 
     let injectedValue: unknown;
 
@@ -3347,7 +3489,10 @@ describe('inject property', () => {
     const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     const viewModel = container.resolve(UserViewModel);
-    onInitStrategy.execute(viewModel, { scope: container });
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(injectedValue).toBe('Hello');
   });

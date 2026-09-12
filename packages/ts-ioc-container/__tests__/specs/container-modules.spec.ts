@@ -1,19 +1,19 @@
 import 'reflect-metadata';
 import {
-  OnConstructModule,
   autoResolve,
   AutoResolveModule,
   bindTo,
   Container,
   type IContainer,
   type IContainerModule,
-  onConstruct,
   register,
   Registration as R,
   scopeAccess,
-  SequentialSync,
   singleton,
 } from '../../lib';
+import { OnConstructModule } from '../hooks/modules';
+import { runSync } from '../hooks/runners';
+import { onConstruct, onConstructHooks } from '../hooks/decorators';
 
 describe('Spec: container modules', () => {
   it('applies reusable module configuration to a container', () => {
@@ -75,7 +75,7 @@ describe('Spec: container modules', () => {
     }
 
     const app = new Container()
-      .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(runSync(), onConstructHooks))
       .addRegistration(R.fromClass(FeatureService));
     const request = app.createScope({ tags: ['request'] });
 
