@@ -12,7 +12,7 @@ export type ResolvedObjectHook = (dependency: object, scope: IContainer) => void
  * synchronous until one returns a promise and awaiting the rest from that point.
  *
  * A member carries a single hook, so this is how several are declared together:
- * `@onConstruct(sequential(validate, persist))`.
+ * `@hook('onConstruct', sequential(validate, persist))`.
  */
 export const sequential = (...hooks: HookType[]): HookFn => {
   const fns = hooks.map(toHookFn);
@@ -24,7 +24,7 @@ export const sequential = (...hooks: HookType[]): HookFn => {
  * hook has; a fully synchronous run returns nothing, like {@link sequential}.
  *
  * Use it for hooks of one member which do not depend on each other:
- * `@onScopeDisposed(parallel(flush, closeSocket))`.
+ * `@hook('onScopeDisposed', parallel(flush, closeSocket))`.
  */
 export const parallel = (...hooks: HookType[]): HookFn => {
   const fns = hooks.map(toHookFn);

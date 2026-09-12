@@ -6,19 +6,19 @@ import {
   debounce,
   handleError,
   HandleErrorParams,
-  onConstruct,
-  OnConstructModule,
   Container,
   IHookContext,
   HookFn,
-  SequentialSync,
 } from '../../lib';
+import { OnConstructModule } from '../hooks/modules';
+import { runSync } from '../hooks/runners';
+import { onConstruct, onConstructHooks } from '../hooks/decorators';
 
 const execute: HookFn = (ctx: IHookContext) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
 
-const onConstructStrategy = new SequentialSync({ key: 'onConstruct' });
+const runOnConstruct = runSync();
 
 // ─── @onConstruct compatibility ───────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule(onConstructStrategy));
+    const container = new Container().useModule(new OnConstructModule(runOnConstruct, onConstructHooks));
     const s = container.resolve(Service);
 
     expect(s.initialized).toBe(true);
@@ -62,7 +62,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule(onConstructStrategy));
+    const container = new Container().useModule(new OnConstructModule(runOnConstruct, onConstructHooks));
     container.resolve(Service);
 
     expect(calls).toEqual(['ran']); // hook fired, throttle allowed it
@@ -88,7 +88,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule(onConstructStrategy));
+    const container = new Container().useModule(new OnConstructModule(runOnConstruct, onConstructHooks));
     // onConstruct calls compute() with no args (x = undefined)
     const s = container.resolve(Service);
 
@@ -115,7 +115,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule(onConstructStrategy));
+    const container = new Container().useModule(new OnConstructModule(runOnConstruct, onConstructHooks));
 
     // Resolving should not propagate the error because @handleError catches it
     expect(() => container.resolve(Service)).not.toThrow();
@@ -136,7 +136,7 @@ describe('@onConstruct + method decorators', () => {
       }
     }
 
-    const container = new Container().useModule(new OnConstructModule(onConstructStrategy));
+    const container = new Container().useModule(new OnConstructModule(runOnConstruct, onConstructHooks));
     container.resolve(Service);
 
     expect(fn).not.toHaveBeenCalled(); // debounce deferred it

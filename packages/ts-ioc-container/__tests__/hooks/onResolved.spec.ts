@@ -4,25 +4,22 @@ import {
   type HookFn,
   type HookType,
   oncePerInstance,
-  onResolved,
-  OnResolvedModule,
   Provider,
   Registration as R,
-  resolved,
   sequential,
-  SequentialAsync,
-  SequentialSync,
   singleton,
 } from '../../lib';
+import { OnResolvedModule, resolved } from './modules';
+import { type OnError, runSequential, runSync } from './runners';
+import { onResolved, onResolvedHooks } from './decorators';
 
 const invokeMethod: HookFn = (context) => {
   context.invokeMethod();
 };
 
-type OnError = (scope: unknown) => (ex: unknown) => void;
-// Sync hooks run under the sync strategy; async ones under a strategy which awaits them.
-const sync = () => new SequentialSync({ key: 'onResolved' });
-const asyncStrategy = (onError?: OnError) => new SequentialAsync({ key: 'onResolved', onError });
+// Sync hooks run under a caller which never awaits; async ones under a caller which awaits them.
+const sync = () => runSync();
+const awaited = (onError?: OnError) => runSequential(onError);
 
 class Service {
   resolvedTimes = 0;
@@ -60,7 +57,9 @@ const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 describe('OnResolvedModule', () => {
   it('should run the hooks when a dependency is resolved', () => {
-    const container = new Container().useModule(new OnResolvedModule(sync())).addRegistration(R.fromClass(Service));
+    const container = new Container()
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
+      .addRegistration(R.fromClass(Service));
 
     const service = container.resolve<Service>('Service');
 
@@ -70,7 +69,9 @@ describe('OnResolvedModule', () => {
   it('should not run the hooks until the dependency is resolved', () => {
     const service = new Service();
 
-    new Container().useModule(new OnResolvedModule(sync())).addRegistration(R.fromValue(service).bindToKey('Service'));
+    new Container()
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
+      .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     expect(service.resolvedTimes).toBe(0);
   });
@@ -79,7 +80,7 @@ describe('OnResolvedModule', () => {
     const service = new Service();
 
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     container.resolve('Service');
@@ -92,7 +93,7 @@ describe('OnResolvedModule', () => {
     const service = new Service();
 
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     container.resolve('Service');
@@ -105,7 +106,7 @@ describe('OnResolvedModule', () => {
     const service = new Service();
 
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Service'))
       .addRegistration(R.fromValue(service).bindToKey('OtherService'));
 
@@ -119,7 +120,7 @@ describe('OnResolvedModule', () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] })
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     root.createScope({ tags: ['child'] }).resolve('Service');
@@ -129,7 +130,9 @@ describe('OnResolvedModule', () => {
   });
 
   it('should run once-per-instance hooks for every distinct object of the same class', () => {
-    const container = new Container().useModule(new OnResolvedModule(sync())).addRegistration(R.fromClass(Service));
+    const container = new Container()
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
+      .addRegistration(R.fromClass(Service));
 
     const first = container.resolve<Service>('Service');
     const second = container.resolve<Service>('Service');
@@ -140,7 +143,7 @@ describe('OnResolvedModule', () => {
 
   it('should run the hooks of a singleton on the resolve that filled its cache', () => {
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromClass(Service).pipe(singleton()));
 
     container.resolve('Service');
@@ -164,7 +167,9 @@ describe('OnResolvedModule', () => {
       }
     }
 
-    const container = new Container().useModule(new OnResolvedModule(sync())).addRegistration(R.fromClass(Documented));
+    const container = new Container()
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
+      .addRegistration(R.fromClass(Documented));
 
     container.resolve('Documented');
     container.resolve('Documented');
@@ -189,7 +194,7 @@ describe('OnResolvedModule', () => {
 
     const documented = new Documented();
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(documented).bindToKey('Documented'));
 
     container.resolve('Documented');
@@ -211,7 +216,7 @@ describe('OnResolvedModule', () => {
     }
 
     new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromClass(Documented))
       .resolve('Documented');
 
@@ -237,7 +242,7 @@ describe('OnResolvedModule', () => {
 
     const documented = new Documented();
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(documented).bindToKey('Documented'));
 
     container.resolve('Documented');
@@ -262,7 +267,7 @@ describe('OnResolvedModule', () => {
 
     const service = new Documented();
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Documented'));
 
     container.resolve('Documented');
@@ -282,7 +287,7 @@ describe('OnResolvedModule', () => {
     }
 
     const root = new Container({ tags: ['root'] })
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromClass(ScopeAware));
     const child = root.createScope({ tags: ['child'] });
 
@@ -293,7 +298,7 @@ describe('OnResolvedModule', () => {
 
   it('should skip dependencies which are not objects', () => {
     const container = new Container()
-      .useModule(new OnResolvedModule(sync()))
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks))
       .addRegistration(R.fromValue(1).bindToKey('One'));
 
     expect(container.resolve('One')).toBe(1);
@@ -304,14 +309,14 @@ describe('OnResolvedModule', () => {
 
     const container = new Container()
       .addRegistration(R.fromValue(service).bindToKey('Service'))
-      .useModule(new OnResolvedModule(sync()));
+      .useModule(new OnResolvedModule(sync(), onResolvedHooks));
 
     container.resolve('Service');
 
     expect(service.resolvedTimes).toBe(0);
   });
 
-  it('should report what a hook threw to the strategy onError handler', () => {
+  it('should report what a hook threw to the caller’s error handler', () => {
     const failure = new Error('hook failed');
 
     class Broken {
@@ -324,7 +329,10 @@ describe('OnResolvedModule', () => {
     const exceptions: unknown[] = [];
     const container = new Container()
       .useModule(
-        new OnResolvedModule(new SequentialSync({ key: 'onResolved', onError: () => (ex) => exceptions.push(ex) })),
+        new OnResolvedModule(
+          runSync(() => (ex) => exceptions.push(ex)),
+          onResolvedHooks,
+        ),
       )
       .addRegistration(R.fromClass(Broken));
 
@@ -335,8 +343,8 @@ describe('OnResolvedModule', () => {
   it('should keep once-per-instance hooks deduplicated across containers', () => {
     const service = new Service();
 
-    const first = new Container().useModule(new OnResolvedModule(sync()));
-    const second = new Container().useModule(new OnResolvedModule(sync()));
+    const first = new Container().useModule(new OnResolvedModule(sync(), onResolvedHooks));
+    const second = new Container().useModule(new OnResolvedModule(sync(), onResolvedHooks));
     first.register('Service', Provider.fromValue(service));
     second.register('Service', Provider.fromValue(service));
 
@@ -347,9 +355,9 @@ describe('OnResolvedModule', () => {
   });
 });
 
-describe('resolved(sync())', () => {
+describe('resolved(sync(), onResolvedHooks)', () => {
   it('should run the hooks when the piped dependency is resolved', () => {
-    const container = new Container().addRegistration(R.fromClass(Service).pipe(resolved(sync())));
+    const container = new Container().addRegistration(R.fromClass(Service).pipe(resolved(sync(), onResolvedHooks)));
 
     const service = container.resolve<Service>('Service');
 
@@ -359,7 +367,9 @@ describe('resolved(sync())', () => {
   it('should run once-per-instance hooks a single time however often the object is resolved', () => {
     const service = new Service();
 
-    const container = new Container().addRegistration(R.fromValue(service).bindToKey('Service').pipe(resolved(sync())));
+    const container = new Container().addRegistration(
+      R.fromValue(service).bindToKey('Service').pipe(resolved(sync(), onResolvedHooks)),
+    );
 
     container.resolve('Service');
     container.resolve('Service');
@@ -371,7 +381,7 @@ describe('resolved(sync())', () => {
     const service = new Service();
 
     const root = new Container({ tags: ['root'] }).addRegistration(
-      R.fromValue(service).bindToKey('Service').pipe(resolved(sync())),
+      R.fromValue(service).bindToKey('Service').pipe(resolved(sync(), onResolvedHooks)),
     );
 
     root.createScope({ tags: ['child'] }).resolve('Service');
@@ -382,14 +392,16 @@ describe('resolved(sync())', () => {
 
   it('should leave registrations it was not piped into alone', () => {
     const container = new Container()
-      .addRegistration(R.fromClass(Service).pipe(resolved(sync())))
+      .addRegistration(R.fromClass(Service).pipe(resolved(sync(), onResolvedHooks)))
       .addRegistration(R.fromClass(Service).bindToKey('OtherService'));
 
     expect(container.resolve<Service>('OtherService').resolvedTimes).toBe(0);
   });
 
   it('should skip dependencies which are not objects', () => {
-    const container = new Container().addRegistration(R.fromValue(1).bindToKey('One').pipe(resolved(sync())));
+    const container = new Container().addRegistration(
+      R.fromValue(1).bindToKey('One').pipe(resolved(sync(), onResolvedHooks)),
+    );
 
     expect(container.resolve('One')).toBe(1);
   });
@@ -398,7 +410,7 @@ describe('resolved(sync())', () => {
 describe('OnResolvedModule with async hooks', () => {
   it('should start the hooks on resolve and settle after it returns', async () => {
     const container = new Container()
-      .useModule(new OnResolvedModule(asyncStrategy()))
+      .useModule(new OnResolvedModule(awaited(), onResolvedHooks))
       .addRegistration(R.fromClass(AsyncService));
 
     const service = container.resolve<AsyncService>('AsyncService');
@@ -414,7 +426,7 @@ describe('OnResolvedModule with async hooks', () => {
     const service = new AsyncService();
 
     const container = new Container()
-      .useModule(new OnResolvedModule(asyncStrategy()))
+      .useModule(new OnResolvedModule(awaited(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     container.resolve('Service');
@@ -428,7 +440,7 @@ describe('OnResolvedModule with async hooks', () => {
     const service = new AsyncService();
 
     const container = new Container()
-      .useModule(new OnResolvedModule(asyncStrategy()))
+      .useModule(new OnResolvedModule(awaited(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     container.resolve('Service');
@@ -442,7 +454,7 @@ describe('OnResolvedModule with async hooks', () => {
     const service = new AsyncService();
 
     const root = new Container({ tags: ['root'] })
-      .useModule(new OnResolvedModule(asyncStrategy()))
+      .useModule(new OnResolvedModule(awaited(), onResolvedHooks))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     root.createScope({ tags: ['child'] }).resolve('Service');
@@ -471,7 +483,7 @@ describe('OnResolvedModule with async hooks', () => {
 
     const documented = new Documented();
     const container = new Container()
-      .useModule(new OnResolvedModule(asyncStrategy()))
+      .useModule(new OnResolvedModule(awaited(), onResolvedHooks))
       .addRegistration(R.fromValue(documented).bindToKey('Documented'));
 
     container.resolve('Documented');
@@ -496,7 +508,12 @@ describe('OnResolvedModule with async hooks', () => {
 
     const exceptions: unknown[] = [];
     const container = new Container()
-      .useModule(new OnResolvedModule(asyncStrategy(() => (ex) => exceptions.push(ex))))
+      .useModule(
+        new OnResolvedModule(
+          awaited(() => (ex) => exceptions.push(ex)),
+          onResolvedHooks,
+        ),
+      )
       .addRegistration(R.fromClass(Broken));
 
     container.resolve('Broken');
@@ -515,7 +532,12 @@ describe('OnResolvedModule with async hooks', () => {
 
     const exceptions: unknown[] = [];
     const container = new Container()
-      .useModule(new OnResolvedModule(asyncStrategy(() => (ex) => exceptions.push(ex))))
+      .useModule(
+        new OnResolvedModule(
+          awaited(() => (ex) => exceptions.push(ex)),
+          onResolvedHooks,
+        ),
+      )
       .addRegistration(R.fromClass(Broken));
 
     expect(() => container.resolve('Broken')).not.toThrow();
@@ -528,7 +550,7 @@ describe('OnResolvedModule with async hooks', () => {
     class Plain {}
 
     const container = new Container()
-      .useModule(new OnResolvedModule(asyncStrategy()))
+      .useModule(new OnResolvedModule(awaited(), onResolvedHooks))
       .addRegistration(R.fromClass(Plain))
       .addRegistration(R.fromValue(1).bindToKey('One'));
 
@@ -539,7 +561,9 @@ describe('OnResolvedModule with async hooks', () => {
 
 describe('resolved() with async hooks', () => {
   it('should run the hooks when the piped dependency is resolved', async () => {
-    const container = new Container().addRegistration(R.fromClass(AsyncService).pipe(resolved(asyncStrategy())));
+    const container = new Container().addRegistration(
+      R.fromClass(AsyncService).pipe(resolved(awaited(), onResolvedHooks)),
+    );
 
     const service = container.resolve<AsyncService>('AsyncService');
     await settle();
@@ -551,7 +575,7 @@ describe('resolved() with async hooks', () => {
     const service = new AsyncService();
 
     const root = new Container({ tags: ['root'] }).addRegistration(
-      R.fromValue(service).bindToKey('Service').pipe(resolved(asyncStrategy())),
+      R.fromValue(service).bindToKey('Service').pipe(resolved(awaited(), onResolvedHooks)),
     );
 
     root.createScope({ tags: ['child'] }).resolve('Service');
@@ -563,7 +587,7 @@ describe('resolved() with async hooks', () => {
 
   it('should leave registrations it was not piped into alone', async () => {
     const container = new Container()
-      .addRegistration(R.fromClass(AsyncService).pipe(resolved(asyncStrategy())))
+      .addRegistration(R.fromClass(AsyncService).pipe(resolved(awaited(), onResolvedHooks)))
       .addRegistration(R.fromClass(AsyncService).bindToKey('OtherService'));
 
     const service = container.resolve<AsyncService>('OtherService');
@@ -582,7 +606,12 @@ describe('resolved() with async hooks', () => {
 
     const exceptions: unknown[] = [];
     const container = new Container().addRegistration(
-      R.fromClass(Broken).pipe(resolved(asyncStrategy(() => (ex) => exceptions.push(ex)))),
+      R.fromClass(Broken).pipe(
+        resolved(
+          awaited(() => (ex) => exceptions.push(ex)),
+          onResolvedHooks,
+        ),
+      ),
     );
 
     container.resolve('Broken');
