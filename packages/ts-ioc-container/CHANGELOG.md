@@ -1,3 +1,18 @@
+# 67.0.0 (2026-09-12)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    one hook per member, combined by sequential/parallel (#159)
+    (e700005ac20730f402556c99fa0358317704c8cf)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    one hook per member, combined by sequential/parallel (#159)
+    (e700005ac20730f402556c99fa0358317704c8cf)
+
+
 # 66.0.0 (2026-09-12)
 
   ### 💥 BREAKING CHANGES
@@ -254,6 +269,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
