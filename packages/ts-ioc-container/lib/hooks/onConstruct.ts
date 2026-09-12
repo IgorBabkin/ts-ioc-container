@@ -1,10 +1,10 @@
-import { hook, type HookType, prependHooks } from './hook';
+import { hook, type HookType } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import { type HookExecutionStrategy } from './HookExecutionStrategy';
 
-// Decorators are applied bottom-up, so hooks are prepended to keep them in declaration order:
-// `@onX(h1) @onX(h2) method()` runs h1 before h2.
-export const onConstruct = (...fns: HookType[]) => hook('onConstruct', prependHooks(...fns));
+// A member carries one hook: declare several with `sequential(...)`/`parallel(...)`,
+// as in `@onConstruct(sequential(h1, h2))`.
+export const onConstruct = (fn: HookType) => hook('onConstruct', fn);
 
 /**
  * Runs `onConstruct` hooks when an instance is constructed, the way `strategy`

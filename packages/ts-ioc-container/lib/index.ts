@@ -89,14 +89,10 @@ export {
   getHooks,
   hook,
   hasHooks,
-  appendHooks,
-  prependHooks,
-  append,
-  prepend,
+  toHookFn,
   type HookFn,
   type HookClass,
   type HookType,
-  type MapHooksFn,
   type InjectFn,
   type HooksOfClass,
 } from './hooks/hook';
@@ -111,21 +107,16 @@ export { injectProp } from './hooks/injectProp';
 export { onConstruct, OnConstructModule } from './hooks/onConstruct';
 export { onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
 export { onResolved, OnResolvedModule, resolved } from './hooks/onResolved';
-export { oncePerInstance, type ResolvedObjectHook } from './hooks/resolveHooks';
+export { sequential, parallel, oncePerInstance, type ResolvedObjectHook } from './hooks/combinators';
 export {
   HookExecutionStrategy,
   type HookExecutionContext,
   type HookExecutionOptions,
   type HookExecutionStrategyProps,
   type MapHookExecutionContext,
-  type MemberHooks,
+  type MemberHook,
   type OnErrorHandler,
 } from './hooks/HookExecutionStrategy';
-export {
-  AsyncHookExecutionStrategy,
-  type AsyncHookExecutionStrategyProps,
-  type MethodStrategy,
-} from './hooks/AsyncHookExecutionStrategy';
 export { SequentialSync } from './hooks/SequentialSync';
 export { SequentialAsync } from './hooks/SequentialAsync';
 export { ParallelAsync } from './hooks/ParallelAsync';
@@ -161,6 +152,7 @@ export {
   getMethodTags,
 } from './metadata/method';
 export { handleError, handleAsyncError, type HandleErrorParams } from './utils/errorHandler';
+export { runInOrder, runAtOnce, type Task } from './utils/task';
 export { throttle } from './utils/throttle';
 export { debounce } from './utils/debounce';
 export { shallowCache } from './utils/shallowCache';

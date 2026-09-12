@@ -1,4 +1,4 @@
-import { append, Container, hook, SequentialSync, type HookFn } from '../../lib';
+import { Container, hook, type HookFn, SequentialSync } from '../../lib';
 
 /**
  * User Management Domain - Custom Lifecycle Hooks
@@ -14,7 +14,7 @@ import { append, Container, hook, SequentialSync, type HookFn } from '../../lib'
  *
  * How it works:
  * 1. Pick a HookExecutionStrategy, keyed with a unique hook name
- * 2. Create methods decorated with @hook('hookName', append(executor))
+ * 2. Create methods decorated with @hook('hookName', executor)
  * 3. Run the strategy from the container's injector via onConstructed
  * 4. Methods are automatically called when instances are created
  */
@@ -33,7 +33,7 @@ describe('Custom Hooks', () => {
       isWarmedUp = false;
 
       // Custom hook - called automatically after construction
-      @hook('initialize', append(executeInitialize))
+      @hook('initialize', executeInitialize)
       warmCache() {
         this.isWarmedUp = true;
       }

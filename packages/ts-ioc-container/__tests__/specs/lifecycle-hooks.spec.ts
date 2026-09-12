@@ -1,27 +1,28 @@
 import 'reflect-metadata';
 import { expectTypeOf } from 'vitest';
 import {
-  MetadataInjector,
-  OnConstructModule,
-  OnDisposeModule,
-  OnResolvedModule,
-  append,
   Container,
   EmptyContainer,
-  MethodNotImplementedError,
-  Provider,
   hasHooks,
   hook,
   HookContext,
   type HookFn,
   inject,
   injectProp,
-  onConstruct,
-  onScopeDisposed,
-  onResolved,
+  MetadataInjector,
+  MethodNotImplementedError,
   oncePerInstance,
+  onConstruct,
+  OnConstructModule,
+  OnDisposeModule,
   onResolve,
+  onResolved,
+  OnResolvedModule,
+  onScopeDisposed,
+  Provider,
   Registration as R,
+  parallel,
+  sequential,
   SequentialAsync,
   SequentialSync,
 } from '../../lib';
@@ -32,7 +33,9 @@ const invoke: HookFn = (context) => {
 
 // Strategies are keyed, so each module gets one for the hook key it runs.
 const sync = (key: string) => new SequentialSync({ key });
-const sequential = (key: string) => new SequentialAsync({ key, methodStrategy: 'sequential' });
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const asyncStrategy = (key: string) => new SequentialAsync({ key });
 
 describe('Spec: lifecycle hooks', () => {
   it('runs construct and dispose hooks through opt-in modules', () => {
@@ -93,7 +96,7 @@ describe('Spec: lifecycle hooks', () => {
     expect([connection.usedTimes, connection.openedTimes]).toEqual([2, 1]);
   });
 
-  it('runs stacked @onConstruct decorators in declaration order', () => {
+  it('runs hooks combined with sequential in declaration order', () => {
     const invoked: string[] = [];
     const h1: HookFn = () => {
       invoked.push('h1');
@@ -103,8 +106,7 @@ describe('Spec: lifecycle hooks', () => {
     };
 
     class Resource {
-      @onConstruct(h1)
-      @onConstruct(h2)
+      @onConstruct(sequential(h1, h2))
       initialize(): void {}
     }
 
@@ -117,31 +119,34 @@ describe('Spec: lifecycle hooks', () => {
     expect(invoked).toEqual(['h1', 'h2']);
   });
 
-  it('runs hooks of a single @onConstruct decorator in argument order', () => {
+  it('starts hooks combined with parallel at once', async () => {
     const invoked: string[] = [];
 
     class Resource {
       @onConstruct(
-        () => {
-          invoked.push('h1');
-        },
-        () => {
-          invoked.push('h2');
-        },
+        parallel(
+          async () => {
+            await sleep(10);
+            invoked.push('slow');
+          },
+          () => {
+            invoked.push('fast');
+          },
+        ),
       )
       initialize(): void {}
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(sync('onConstruct')))
+      .useModule(new OnConstructModule(asyncStrategy('onConstruct')))
       .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
 
-    expect(invoked).toEqual(['h1', 'h2']);
+    await vi.waitFor(() => expect(invoked).toEqual(['fast', 'slow']));
   });
 
-  it('keeps declaration order when stacked @onConstruct decorators carry several hooks each', () => {
+  it('keeps only the last hook declared for a member under one key', () => {
     const invoked: string[] = [];
     const push =
       (label: string): HookFn =>
@@ -150,8 +155,10 @@ describe('Spec: lifecycle hooks', () => {
       };
 
     class Resource {
-      @onConstruct(push('h1'), push('h2'))
-      @onConstruct(push('h3'), push('h4'))
+      // A member carries one hook per key, and decorators are applied bottom-up,
+      // so the topmost decorator is the one which stays.
+      @onConstruct(sequential(push('h1'), push('h2')))
+      @onConstruct(sequential(push('h3'), push('h4')))
       initialize(): void {}
     }
 
@@ -161,19 +168,23 @@ describe('Spec: lifecycle hooks', () => {
 
     container.resolve<Resource>('Resource');
 
-    expect(invoked).toEqual(['h1', 'h2', 'h3', 'h4']);
+    expect(invoked).toEqual(['h1', 'h2']);
   });
 
-  it('runs stacked @onScopeDisposed decorators in declaration order', () => {
+  it('runs @onScopeDisposed hooks combined with sequential in declaration order', () => {
     const invoked: string[] = [];
 
     class Resource {
-      @onScopeDisposed(() => {
-        invoked.push('h1');
-      })
-      @onScopeDisposed(() => {
-        invoked.push('h2');
-      })
+      @onScopeDisposed(
+        sequential(
+          () => {
+            invoked.push('h1');
+          },
+          () => {
+            invoked.push('h2');
+          },
+        ),
+      )
       destroy(): void {}
     }
 
@@ -187,21 +198,25 @@ describe('Spec: lifecycle hooks', () => {
     expect(invoked).toEqual(['h1', 'h2']);
   });
 
-  it('runs stacked async @onConstruct decorators in declaration order', async () => {
+  it('runs async hooks combined with sequential in declaration order', async () => {
     const invoked: string[] = [];
 
     class Resource {
-      @onConstruct(async () => {
-        invoked.push('h1');
-      })
-      @onConstruct(async () => {
-        invoked.push('h2');
-      })
+      @onConstruct(
+        sequential(
+          async () => {
+            invoked.push('h1');
+          },
+          async () => {
+            invoked.push('h2');
+          },
+        ),
+      )
       async initialize(): Promise<void> {}
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(sequential('onConstruct')))
+      .useModule(new OnConstructModule(asyncStrategy('onConstruct')))
       .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
@@ -223,7 +238,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(sequential('onConstruct')))
+      .useModule(new OnConstructModule(asyncStrategy('onConstruct')))
       .addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
@@ -247,7 +262,6 @@ describe('Spec: lifecycle hooks', () => {
         new OnConstructModule(
           new SequentialAsync({
             key: 'onConstruct',
-            methodStrategy: 'sequential',
             onError: () => (ex) => (captured = ex),
           }),
         ),
@@ -287,12 +301,12 @@ describe('Spec: lifecycle hooks', () => {
     class Worker {
       calls: string[] = [];
 
-      @hook('workflow', append(AuditHook))
+      @hook('workflow', AuditHook)
       start(): void {
         this.calls.push('start');
       }
 
-      @hook('workflow', append(invoke))
+      @hook('workflow', invoke)
       stop(): void {
         this.calls.push('stop');
       }
@@ -431,17 +445,14 @@ describe('Spec: lifecycle hooks', () => {
     class Worker {
       calls: string[] = [];
 
-      @hook('sync', append(invoke))
+      @hook('sync', invoke)
       start(@inject('prefix') prefix: string): void {
         this.calls.push(`${prefix}:sync`);
       }
 
-      @hook(
-        'async',
-        append(async (context) => {
-          context.invokeMethod();
-        }),
-      )
+      @hook('async', async (context) => {
+        context.invokeMethod();
+      })
       stop(@inject('prefix') prefix: string): void {
         this.calls.push(`${prefix}:async`);
       }
@@ -457,7 +468,7 @@ describe('Spec: lifecycle hooks', () => {
     expect(worker.calls).toEqual(['job:sync']);
 
     // Async hooks are started by `execute` and settle afterwards.
-    sequential('async').execute(worker, { scope: container });
+    asyncStrategy('async').execute(worker, { scope: container });
 
     await vi.waitFor(() => expect(worker.calls).toEqual(['job:sync', 'job:async']));
   });

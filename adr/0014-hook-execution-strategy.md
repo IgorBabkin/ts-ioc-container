@@ -1,6 +1,9 @@
 # ADR 0014 — Hook execution is a strategy, chosen by the caller
 
-- **Status:** Accepted
+- **Status:** Accepted, amended in part by
+  [ADR 0015](0015-one-hook-per-member.md), which removed `methodStrategy`: a
+  member carries one hook, and how several hooks relate is decided by
+  `sequential(...)` / `parallel(...)` where they are declared
 - **Date:** 2026-09-12
 - **Deciders:** core maintainers
 - **Tags:** hooks, lifecycle, api-design

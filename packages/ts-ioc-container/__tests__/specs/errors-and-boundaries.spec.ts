@@ -1,23 +1,22 @@
 import 'reflect-metadata';
 import {
-  append,
   ConstantToken,
   Container,
   ContainerDisposedError,
+  ContainerError,
   DependencyMissingKeyError,
   DependencyNotFoundError,
   EmptyContainer,
   GroupInstanceToken,
+  hook,
   MethodNotImplementedError,
   Provider,
   ProviderDisposedError,
   Registration as R,
-  UnsupportedTokenTypeError,
+  SequentialSync,
   TypedEvent,
   TypedEventDisposedError,
-  ContainerError,
-  hook,
-  SequentialSync,
+  UnsupportedTokenTypeError,
 } from '../../lib';
 import { toToken } from '../../lib/token/toToken';
 
@@ -78,12 +77,9 @@ describe('Spec: errors and boundaries', () => {
     const failure = new Error('hook failed');
 
     class Worker {
-      @hook(
-        'start',
-        append(() => {
-          throw failure;
-        }),
-      )
+      @hook('start', () => {
+        throw failure;
+      })
       start(): void {}
     }
 

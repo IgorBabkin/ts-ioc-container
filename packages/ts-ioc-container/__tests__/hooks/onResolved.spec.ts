@@ -3,12 +3,13 @@ import {
   Container,
   type HookFn,
   type HookType,
+  oncePerInstance,
+  onResolved,
   OnResolvedModule,
   Provider,
   Registration as R,
-  onResolved,
-  oncePerInstance,
   resolved,
+  sequential,
   SequentialAsync,
   SequentialSync,
   singleton,
@@ -21,8 +22,7 @@ const invokeMethod: HookFn = (context) => {
 type OnError = (scope: unknown) => (ex: unknown) => void;
 // Sync hooks run under the sync strategy; async ones under a strategy which awaits them.
 const sync = () => new SequentialSync({ key: 'onResolved' });
-const sequential = (onError?: OnError) =>
-  new SequentialAsync({ key: 'onResolved', methodStrategy: 'sequential', onError });
+const asyncStrategy = (onError?: OnError) => new SequentialAsync({ key: 'onResolved', onError });
 
 class Service {
   resolvedTimes = 0;
@@ -158,7 +158,7 @@ describe('OnResolvedModule', () => {
       };
 
     class Documented {
-      @onResolved(oncePerInstance(record('first')), oncePerInstance(record('second')))
+      @onResolved(sequential(oncePerInstance(record('first')), oncePerInstance(record('second'))))
       initialize(): void {
         invoked.push('method');
       }
@@ -228,10 +228,10 @@ describe('OnResolvedModule', () => {
     const hooks: HookType[] = [record('first'), record('second')];
 
     class Documented {
-      @onResolved(...hooks)
+      @onResolved(sequential(...hooks))
       track(): void {}
 
-      @onResolved(...hooks.map(oncePerInstance))
+      @onResolved(sequential(...hooks.map(oncePerInstance)))
       open(): void {}
     }
 
@@ -398,7 +398,7 @@ describe('resolved(sync())', () => {
 describe('OnResolvedModule with async hooks', () => {
   it('should start the hooks on resolve and settle after it returns', async () => {
     const container = new Container()
-      .useModule(new OnResolvedModule(sequential()))
+      .useModule(new OnResolvedModule(asyncStrategy()))
       .addRegistration(R.fromClass(AsyncService));
 
     const service = container.resolve<AsyncService>('AsyncService');
@@ -414,7 +414,7 @@ describe('OnResolvedModule with async hooks', () => {
     const service = new AsyncService();
 
     const container = new Container()
-      .useModule(new OnResolvedModule(sequential()))
+      .useModule(new OnResolvedModule(asyncStrategy()))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     container.resolve('Service');
@@ -428,7 +428,7 @@ describe('OnResolvedModule with async hooks', () => {
     const service = new AsyncService();
 
     const container = new Container()
-      .useModule(new OnResolvedModule(sequential()))
+      .useModule(new OnResolvedModule(asyncStrategy()))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     container.resolve('Service');
@@ -442,7 +442,7 @@ describe('OnResolvedModule with async hooks', () => {
     const service = new AsyncService();
 
     const root = new Container({ tags: ['root'] })
-      .useModule(new OnResolvedModule(sequential()))
+      .useModule(new OnResolvedModule(asyncStrategy()))
       .addRegistration(R.fromValue(service).bindToKey('Service'));
 
     root.createScope({ tags: ['child'] }).resolve('Service');
@@ -462,16 +462,16 @@ describe('OnResolvedModule with async hooks', () => {
     const hooks: HookType[] = [record('first'), record('second')];
 
     class Documented {
-      @onResolved(...hooks)
+      @onResolved(sequential(...hooks))
       track(): void {}
 
-      @onResolved(...hooks.map(oncePerInstance))
+      @onResolved(sequential(...hooks.map(oncePerInstance)))
       open(): void {}
     }
 
     const documented = new Documented();
     const container = new Container()
-      .useModule(new OnResolvedModule(sequential()))
+      .useModule(new OnResolvedModule(asyncStrategy()))
       .addRegistration(R.fromValue(documented).bindToKey('Documented'));
 
     container.resolve('Documented');
@@ -496,7 +496,7 @@ describe('OnResolvedModule with async hooks', () => {
 
     const exceptions: unknown[] = [];
     const container = new Container()
-      .useModule(new OnResolvedModule(sequential(() => (ex) => exceptions.push(ex))))
+      .useModule(new OnResolvedModule(asyncStrategy(() => (ex) => exceptions.push(ex))))
       .addRegistration(R.fromClass(Broken));
 
     container.resolve('Broken');
@@ -515,7 +515,7 @@ describe('OnResolvedModule with async hooks', () => {
 
     const exceptions: unknown[] = [];
     const container = new Container()
-      .useModule(new OnResolvedModule(sequential(() => (ex) => exceptions.push(ex))))
+      .useModule(new OnResolvedModule(asyncStrategy(() => (ex) => exceptions.push(ex))))
       .addRegistration(R.fromClass(Broken));
 
     expect(() => container.resolve('Broken')).not.toThrow();
@@ -528,7 +528,7 @@ describe('OnResolvedModule with async hooks', () => {
     class Plain {}
 
     const container = new Container()
-      .useModule(new OnResolvedModule(sequential()))
+      .useModule(new OnResolvedModule(asyncStrategy()))
       .addRegistration(R.fromClass(Plain))
       .addRegistration(R.fromValue(1).bindToKey('One'));
 
@@ -539,7 +539,7 @@ describe('OnResolvedModule with async hooks', () => {
 
 describe('resolved() with async hooks', () => {
   it('should run the hooks when the piped dependency is resolved', async () => {
-    const container = new Container().addRegistration(R.fromClass(AsyncService).pipe(resolved(sequential())));
+    const container = new Container().addRegistration(R.fromClass(AsyncService).pipe(resolved(asyncStrategy())));
 
     const service = container.resolve<AsyncService>('AsyncService');
     await settle();
@@ -551,7 +551,7 @@ describe('resolved() with async hooks', () => {
     const service = new AsyncService();
 
     const root = new Container({ tags: ['root'] }).addRegistration(
-      R.fromValue(service).bindToKey('Service').pipe(resolved(sequential())),
+      R.fromValue(service).bindToKey('Service').pipe(resolved(asyncStrategy())),
     );
 
     root.createScope({ tags: ['child'] }).resolve('Service');
@@ -563,7 +563,7 @@ describe('resolved() with async hooks', () => {
 
   it('should leave registrations it was not piped into alone', async () => {
     const container = new Container()
-      .addRegistration(R.fromClass(AsyncService).pipe(resolved(sequential())))
+      .addRegistration(R.fromClass(AsyncService).pipe(resolved(asyncStrategy())))
       .addRegistration(R.fromClass(AsyncService).bindToKey('OtherService'));
 
     const service = container.resolve<AsyncService>('OtherService');
@@ -582,7 +582,7 @@ describe('resolved() with async hooks', () => {
 
     const exceptions: unknown[] = [];
     const container = new Container().addRegistration(
-      R.fromClass(Broken).pipe(resolved(sequential(() => (ex) => exceptions.push(ex)))),
+      R.fromClass(Broken).pipe(resolved(asyncStrategy(() => (ex) => exceptions.push(ex)))),
     );
 
     container.resolve('Broken');
