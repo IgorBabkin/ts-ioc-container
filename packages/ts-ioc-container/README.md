@@ -2385,6 +2385,8 @@ Sometimes you don't want to change the dependency, only to react to it. Use the 
 
 Hooks run after the whole `decorate(...)` chain, so they always observe the fully decorated dependency, and their return value is ignored — `onResolve` can never swap the dependency out. They fire per resolution, which means a `singleton()` provider runs them only on the resolve that fills the cache.
 
+This — or the `@onResolved` decorator over the same provider event — is the recommended way to react to a dependency; see [OnConstruct](#onconstruct) for why `@onConstruct` is the narrower tool.
+
 ```typescript
 import 'reflect-metadata';
 import { Container, type IContainer, onResolve, register, Registration as R, singleton } from 'ts-ioc-container';
@@ -2845,10 +2847,14 @@ strategy decides the order, what is awaited, and where a failure goes
 | `SequentialAsync` | one after another           | in order, or all at once (`methodStrategy`) | yes    |
 | `ParallelAsync`   | all at once                 | in order, or all at once (`methodStrategy`) | yes    |
 
+The async strategies require `methodStrategy` (`'sequential'` or `'parallel'`):
+how the hooks of one member relate is named at the construction site rather
+than left to a default.
+
 ```typescript
 const container = new Container()
   .useModule(new OnConstructModule(new SequentialSync({ key: 'onConstruct' })))
-  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed' })));
+  .useModule(new OnDisposeModule(new ParallelAsync({ key: 'onScopeDisposed', methodStrategy: 'parallel' })));
 ```
 
 Resolution and disposal stay synchronous under every strategy: a run stays
@@ -2914,6 +2920,17 @@ injector through `getInjector()`, `OnDisposeModule` subscribes to `scopeDisposed
 and `OnResolvedModule` reaches every provider through `registered`.
 
 ### OnConstruct
+
+> **Prefer `@onResolved` — or the [`onResolve`](#on-resolve) pipe — over
+> `@onConstruct`.** Construction is the *injector's* event, so `@onConstruct`
+> fires only for dependencies the injector builds: a `fromValue` constant or a
+> factory registration never triggers it. It also observes the instance before
+> the provider's `decorate(...)` chain wraps it, so a hook sees the bare
+> instance rather than what the caller receives. `@onResolved` runs on every
+> dependency leaving a provider, after the whole decorate chain — the same
+> ordering, awaiting and error handling, on what the caller actually gets.
+> Reach for `@onConstruct` only when you mean "this class was just constructed"
+> specifically.
 
 ```typescript
 import 'reflect-metadata';
@@ -3039,7 +3056,7 @@ describe('onConstruct', function () {
 
     // An async strategy awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct', methodStrategy: 'sequential' })))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -3066,6 +3083,7 @@ describe('onConstruct', function () {
       new OnConstructModule(
         new SequentialAsync({
           key: 'onConstruct',
+          methodStrategy: 'sequential',
           onError: (scope) => (ex) => {
             captured = { ex, scope };
           },

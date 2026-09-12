@@ -115,7 +115,7 @@ describe('hooks', () => {
   });
 
   it('should map the hook context with mapExecutionContext when running async hooks', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
 
     class MyClass {
       receivedArgs: unknown[] = [];
@@ -143,7 +143,7 @@ describe('hooks', () => {
   });
 
   it('should run async hooks to completion', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
 
     class Logger {
       isStarted = false;
@@ -193,7 +193,7 @@ describe('hooks', () => {
   });
 
   it('should keep a chain sync up to its first async hook and await the rest', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -227,7 +227,7 @@ describe('hooks', () => {
   });
 
   it('should run a mix of sync and async members through one call', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
     const invoked: string[] = [];
 
     class MyClass {
@@ -340,7 +340,7 @@ describe('hooks', () => {
   });
 
   it('should run async hooks on the real instance behind a lazy proxy', async () => {
-    const onStartStrategy = new SequentialAsync({ key: 'onStart' });
+    const onStartStrategy = new SequentialAsync({ key: 'onStart', methodStrategy: 'sequential' });
 
     class MyClass {
       isStarted = false;

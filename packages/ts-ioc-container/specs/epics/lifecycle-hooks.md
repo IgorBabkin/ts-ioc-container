@@ -155,8 +155,8 @@ Acceptance criteria:
   returns.
 - `SequentialAsync` runs members one after another,
   awaiting each; `ParallelAsync` starts every member at
-  once. `methodStrategy: 'parallel'` starts the hooks of one member at once
-  instead of in declaration order.
+  once. Both require `methodStrategy`: `'sequential'` runs the hooks of one
+  member in declaration order, `'parallel'` starts them at once.
 - A run stays synchronous until a hook returns a promise; the async strategies
   await only what is a promise.
 - `execute` returns `void`; async hooks settle after it returns.
@@ -170,3 +170,8 @@ Acceptance criteria:
 
 Lifecycle hook execution is opt-in. Decorators record intent; modules or manual
 container hooks activate execution.
+
+`@onResolved` (the provider event) is the recommended hook for reacting to a
+dependency: it covers every dependency leaving a provider, whoever produced it,
+and runs after the `decorate(...)` chain. `@onConstruct` is the narrower tool —
+it fires only for what the injector constructs, and before decoration.

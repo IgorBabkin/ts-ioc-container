@@ -21,7 +21,8 @@ const invokeMethod: HookFn = (context) => {
 type OnError = (scope: unknown) => (ex: unknown) => void;
 // Sync hooks run under the sync strategy; async ones under a strategy which awaits them.
 const sync = () => new SequentialSync({ key: 'onResolved' });
-const sequential = (onError?: OnError) => new SequentialAsync({ key: 'onResolved', onError });
+const sequential = (onError?: OnError) =>
+  new SequentialAsync({ key: 'onResolved', methodStrategy: 'sequential', onError });
 
 class Service {
   resolvedTimes = 0;

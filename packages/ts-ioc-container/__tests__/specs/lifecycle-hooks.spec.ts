@@ -32,7 +32,7 @@ const invoke: HookFn = (context) => {
 
 // Strategies are keyed, so each module gets one for the hook key it runs.
 const sync = (key: string) => new SequentialSync({ key });
-const sequential = (key: string) => new SequentialAsync({ key });
+const sequential = (key: string) => new SequentialAsync({ key, methodStrategy: 'sequential' });
 
 describe('Spec: lifecycle hooks', () => {
   it('runs construct and dispose hooks through opt-in modules', () => {
@@ -244,7 +244,13 @@ describe('Spec: lifecycle hooks', () => {
     let captured: unknown;
     const container = new Container()
       .useModule(
-        new OnConstructModule(new SequentialAsync({ key: 'onConstruct', onError: () => (ex) => (captured = ex) })),
+        new OnConstructModule(
+          new SequentialAsync({
+            key: 'onConstruct',
+            methodStrategy: 'sequential',
+            onError: () => (ex) => (captured = ex),
+          }),
+        ),
       )
       .addRegistration(R.fromClass(BrokenResource));
 

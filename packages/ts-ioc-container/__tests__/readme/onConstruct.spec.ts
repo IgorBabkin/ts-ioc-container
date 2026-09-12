@@ -121,7 +121,7 @@ describe('onConstruct', function () {
 
     // An async strategy awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct' })))
+      .useModule(new OnConstructModule(new SequentialAsync({ key: 'onConstruct', methodStrategy: 'sequential' })))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -148,6 +148,7 @@ describe('onConstruct', function () {
       new OnConstructModule(
         new SequentialAsync({
           key: 'onConstruct',
+          methodStrategy: 'sequential',
           onError: (scope) => (ex) => {
             captured = { ex, scope };
           },
