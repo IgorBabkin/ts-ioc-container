@@ -2,6 +2,7 @@ import { type IHookContext } from './HookContext';
 import type { IContainer } from '../container/IContainer';
 import { type constructor, Is, type Instance } from '../utils/basic';
 import { resolveConstructor } from '../metadata/target';
+import { getConstructorChain } from '../utils/getConstructorChain';
 import { ProviderOptions } from '../provider/IProvider';
 
 export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
@@ -28,17 +29,6 @@ const isHookClassConstructor = <C extends IHookContext>(
 
 export const toHookFn = <C extends IHookContext>(execute: HookFn<C> | constructor<HookClass<C>>): HookFn<C> =>
   isHookClassConstructor(execute) ? (context) => context.scope.resolve(execute).execute(context) : execute;
-
-// Walk the constructor's prototype chain (most-derived first) collecting each class.
-const getConstructorChain = (ctor: unknown): object[] => {
-  const chain: object[] = [];
-  let current = ctor;
-  while (typeof current === 'function' && current !== Function.prototype) {
-    chain.push(current);
-    current = Object.getPrototypeOf(current);
-  }
-  return chain;
-};
 
 // Get hooks metadata, merging hooks declared on parent (extended-from) classes.
 // Hooks are collected from base to derived so a derived class's hook for the same

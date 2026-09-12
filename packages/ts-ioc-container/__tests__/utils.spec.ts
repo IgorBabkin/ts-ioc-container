@@ -1,4 +1,4 @@
-import { pipe } from '../lib';
+import { getConstructorChain, pipe } from '../lib';
 import { ProxyRegistry, unwrapProxy } from '../lib/utils/ProxyRegistry';
 
 describe('fp', () => {
@@ -223,5 +223,26 @@ describe('proxy', () => {
 
       expect(proxies.unwrap(proxy)).toBe(target);
     });
+  });
+});
+
+describe('getConstructorChain', () => {
+  class Base {}
+  class Middle extends Base {}
+  class Derived extends Middle {}
+
+  it('walks the prototype chain most-derived first', () => {
+    expect(getConstructorChain(Derived)).toEqual([Derived, Middle, Base]);
+  });
+
+  it('stops before Function.prototype', () => {
+    expect(getConstructorChain(Base)).toEqual([Base]);
+    expect(getConstructorChain(Function.prototype)).toEqual([]);
+  });
+
+  it('returns an empty chain for anything which is not a function', () => {
+    expect(getConstructorChain(new Derived())).toEqual([]);
+    expect(getConstructorChain(undefined)).toEqual([]);
+    expect(getConstructorChain('Derived')).toEqual([]);
   });
 });

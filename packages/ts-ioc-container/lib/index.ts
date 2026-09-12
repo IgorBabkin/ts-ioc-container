@@ -152,6 +152,7 @@ export { debounce } from './utils/debounce';
 export { shallowCache } from './utils/shallowCache';
 export { once } from './utils/once';
 export { memoize } from './utils/memoize';
+export { getConstructorChain } from './utils/getConstructorChain';
 export { TypedEvent, type ITypedEvent, type TypedEventListener, type Unsubscribe } from './utils/TypedEvent';
 
 // Execution
