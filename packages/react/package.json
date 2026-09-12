@@ -57,6 +57,8 @@
     "test:coverage": "vitest run --coverage --coverage.reporter=lcov",
     "type-check": "tsc --noEmit",
     "lint": "eslint lib/**/*.tsx lib/**/*.ts __tests__/**/*.tsx",
+    "lint:fix": "pnpm run lint --fix",
+    "format": "prettier --write \"lib/**/*.ts\" \"lib/**/*.tsx\" \"__tests__/**/*.tsx\"",
     "format:check": "prettier --check \"lib/**/*.ts\" \"lib/**/*.tsx\" \"__tests__/**/*.tsx\""
   },
   "peerDependencies": {
@@ -67,6 +69,7 @@
     "@testing-library/react": "^16.3.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@vitest/coverage-v8": "^4.1.2",
     "jsdom": "^27.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

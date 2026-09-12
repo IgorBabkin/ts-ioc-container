@@ -30,31 +30,37 @@ in `docs/` was removed; the only generated doc is the core package's
 `README.md` (see `pnpm run generate:docs` below).
 
 Root `package.json` scripts with no package suffix (`pnpm test`, `pnpm run
-lint`, `pnpm run build`, etc.) are thin proxies to `packages/ts-ioc-container`'s
-own scripts (`pnpm --filter ts-ioc-container run <script>`) — kept so the
-core library's commands don't require a package suffix, matching how it
-behaved before the extraction. Only add new root proxies for the core
-package this way; for every other package, call
-`pnpm --filter <package-name> run <script>` directly at the call site
-instead of growing root's script list further.
+lint`, `pnpm run build`, etc.) are **recursive** — each one is
+`pnpm -r run <script>`, so it runs that script in every workspace package that
+defines it (`pnpm -r` skips packages without it, and runs them in topological
+order, so `ts-ioc-container` always builds before `@ts-ioc-container/react`).
+Trailing args are forwarded, so `pnpm test --maxWorkers=2` still works. Add new
+root scripts the same way instead of proxying a single package with
+`pnpm --filter`; for a one-off, package-specific run, call
+`pnpm --filter <package-name> run <script>` at the call site.
+
+Because they are recursive, a root script only covers a package that declares
+the matching script name — that's why `lint:fix` and `format` exist in all three
+packages, while `generate:docs`, `test:spec`, `bench:spec` and
+`type-check:watch` (core-only) effectively still target the core package. The
+`*:react` scripts remain as a shortcut for running just the react package.
 
 ## Common Commands
 
 ```bash
-pnpm test                        # Run all tests (core package)
-pnpm run test:coverage           # Run tests with coverage (core package)
-pnpm run type-check              # TypeScript type checking (no emit, core package)
-pnpm run lint:fix                # Auto-fix linting issues (core package)
-pnpm run build                   # Build all formats (CJS, ESM, types) for the core package
-pnpm run generate:docs           # Regenerate README.md from .readme.hbs.md
+pnpm test                        # Run all tests (every package)
+pnpm run test:coverage           # Run tests with coverage (every package)
+pnpm run type-check              # TypeScript type checking (no emit, every package)
+pnpm run lint                    # Lint every package
+pnpm run lint:fix                # Auto-fix linting issues (every package)
+pnpm run format:check            # Prettier check (every package)
+pnpm run build                   # Build all formats (CJS, ESM, types) for every package
+pnpm run generate:docs           # Regenerate README.md from .readme.hbs.md (core package)
 
-pnpm run test:react              # Run @ts-ioc-container/react tests
-pnpm run type-check:react        # Type check @ts-ioc-container/react
-pnpm run lint:react              # Lint @ts-ioc-container/react
-pnpm run build:react             # Build @ts-ioc-container/react
-
-pnpm run test:all                # Run tests for every released package
-pnpm run build:all               # Build every released package
+pnpm run test:react              # Run @ts-ioc-container/react tests only
+pnpm run type-check:react        # Type check @ts-ioc-container/react only
+pnpm run lint:react              # Lint @ts-ioc-container/react only
+pnpm run build:react             # Build @ts-ioc-container/react only
 
 pnpm exec vitest run __tests__/path/to/test.spec.ts   # Run a single test file (from the package's own directory)
 pnpm exec vitest -t "test name pattern"                # Run tests matching pattern
@@ -138,12 +144,12 @@ consumers still receive an exact version. `peerDependencies` stays a range
 (`>=56`) and is never rewritten.
 
 **Consequence for CI ordering:** react resolves the container through the
-workspace link, so it imports that package's *build output*. `pnpm run build`
-must therefore run before any react lint / type-check / test step — see the
-build step in `pr-checks.yml`, and in `publish.yml` the `build` job's own
-ordering (its react lint / type-check / format steps follow `build:all`) plus
-the `test` job's `needs: build` and its download of the build artifact.
-Without it those steps fail to resolve `ts-ioc-container` at all.
+workspace link, so it imports that package's *build output*. Since the root
+lint / type-check / test scripts are recursive and therefore include react,
+`pnpm run build` must run *before* all of them — see the `Build` step ahead of
+the checks in `pr-checks.yml` and in `publish.yml`'s `build` job, plus the
+`test` job's `needs: build` and its download of the build artifact. Without it
+those steps fail to resolve `ts-ioc-container` at all.
 
 ### Known `release-monorepo-semantically` defects
 
