@@ -6,6 +6,8 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "lint": "eslint generate-readme/**/*.ts build.mjs postbuild-extensions.mjs verify-package-contents.mjs",
+    "lint:fix": "pnpm run lint --fix",
+    "format": "prettier --write \"generate-readme/**/*.ts\" \"build.mjs\" \"postbuild-extensions.mjs\" \"verify-package-contents.mjs\"",
     "format:check": "prettier --check \"generate-readme/**/*.ts\" \"build.mjs\" \"postbuild-extensions.mjs\" \"verify-package-contents.mjs\""
   },
   "devDependencies": {

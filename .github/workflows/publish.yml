@@ -18,10 +18,11 @@ permissions:
 
 jobs:
   # Builds every released package and gates that build on the static checks:
-  # lint, type-check and format, for both packages. The react checks sit after
-  # `build:all` because @ts-ioc-container/react resolves ts-ioc-container
-  # through the workspace link — it reads that package's build output rather
-  # than a tarball from the registry.
+  # lint, type-check and format, for every package. Those root scripts run
+  # recursively across the workspace, so they sit after the build:
+  # @ts-ioc-container/react resolves ts-ioc-container through the workspace
+  # link — it reads that package's build output rather than a tarball from the
+  # registry.
   build:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -43,6 +44,9 @@ jobs:
       - name: Install dependencies
         run: pnpm run ci
 
+      - name: Build
+        run: pnpm run build
+
       - name: Lint
         run: pnpm run lint
 
@@ -51,18 +55,6 @@ jobs:
 
       - name: Format check
         run: pnpm run format:check
-
-      - name: Build
-        run: pnpm run build:all
-
-      - name: Lint @ts-ioc-container/react
-        run: pnpm run lint:react
-
-      - name: Type check @ts-ioc-container/react
-        run: pnpm run type-check:react
-
-      - name: Format check @ts-ioc-container/react
-        run: pnpm --filter @ts-ioc-container/react run format:check
 
       - name: Upload build artifacts
         uses: ./.github/actions/build-artifacts
@@ -111,9 +103,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./packages/ts-ioc-container/coverage/lcov.info
-
-      - name: Test @ts-ioc-container/react
-        run: pnpm run test:react
 
   release:
     needs: [build, test]
