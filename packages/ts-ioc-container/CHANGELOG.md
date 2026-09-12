@@ -1,3 +1,18 @@
+# 68.0.0 (2026-09-12)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    collect hooks as actions and let the caller run them (#161)
+    (078b5a4d7ee4ecde3c0ac7d5d68c919a5691b567)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    collect hooks as actions and let the caller run them (#161)
+    (078b5a4d7ee4ecde3c0ac7d5d68c919a5691b567)
+
+
 # 67.0.0 (2026-09-12)
 
   ### 💥 BREAKING CHANGES
@@ -269,6 +284,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
