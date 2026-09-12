@@ -2866,11 +2866,15 @@ hooks *within* one member relate was already settled by the combinator at the
 declaration site ([ADR 0015](../../adr/0015-one-hook-per-member.md)). It reads a
 class's metadata once and reuses it, so collecting on a hot event is cheap.
 
-A **`HookRunner`** — `(actions, { scope }) => void` — performs them. Order,
-awaiting and failure handling are decided there and nowhere else; `toTask`
-turns an action into the `Task` that `runInOrder` and `runAtOnce` take:
+A **runner** performs them. Order, awaiting and failure handling are decided
+there and nowhere else; `toTask` turns an action into the `Task` that
+`runInOrder` and `runAtOnce` take. The library exports no type for it — it
+never calls a runner, nor is it handed one — so name the shape yourself:
 
 ```typescript
+// yours, like the hook keys
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
 // members one after another, never awaited: sync hooks finish before this returns
 const immediate: HookRunner = (actions) => {
   for (const { hook, context } of actions) {
@@ -3029,7 +3033,8 @@ import {
   Registration as R,
   runInOrder,
   toTask,
-  type HookRunner,
+  type ExecutionContext,
+  type HookAction,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
@@ -3045,7 +3050,11 @@ const executeAsync: HookFn = async (ctx) => {
 const onConstruct = (fn: HookType) => hook('onConstruct', fn);
 const onConstructHooks = new HookCollector({ key: 'onConstruct' });
 
-// Running the collected hooks is ours too. This runner keeps the
+// Running the collected hooks is ours too, and so is naming the shape that does
+// it: the library neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// This runner keeps the
 // actions in declaration order, stays synchronous until one returns a promise,
 // and reports a throw and a rejection alike.
 const run =
@@ -3220,7 +3229,8 @@ import {
   register,
   Registration as R,
   singleton,
-  type HookRunner,
+  type ExecutionContext,
+  type HookAction,
   type IContainerModule,
 } from 'ts-ioc-container';
 
@@ -3232,6 +3242,10 @@ const execute: HookFn = (ctx) => {
 // and the collector which reads it are all ours.
 const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
 const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
+
+// Naming the shape which performs collected actions is ours: the library
+// neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
 
 // This runner performs the collected hooks in order and never awaits.
 const run: HookRunner = (actions) => {

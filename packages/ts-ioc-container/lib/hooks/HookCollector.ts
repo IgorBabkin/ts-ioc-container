@@ -1,8 +1,8 @@
 import type { ExecutionContext } from '../ExecutionContext';
 import { resolveConstructor } from '../metadata/target';
+import { type Task } from '../utils/task';
 import { type Instance } from '../utils/basic';
 import { memoize } from '../utils/memoize';
-import { type Task } from '../utils/task';
 import { getHooks, hasHooks, type HookFn, toHookFn } from './hook';
 import { createHookExecutionContext, type CreateHookExecutionContext, type IHookContext } from './HookContext';
 
@@ -37,9 +37,6 @@ export type HookCollectorProps = HookCollectorOptions & {
   /** The hook key this collector reads: `onConstruct`, `onScopeDisposed`, `onResolved`, or a custom one. */
   key: string | symbol;
 };
-
-/** Performs collected actions. Supplied by the caller — see {@link toTask}, `runInOrder` and `runAtOnce`. */
-export type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
 
 /**
  * Reads the hooks declared under one key off a target and hands them back as

@@ -11,7 +11,8 @@ import {
   Registration as R,
   runInOrder,
   toTask,
-  type HookRunner,
+  type ExecutionContext,
+  type HookAction,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
@@ -27,7 +28,11 @@ const executeAsync: HookFn = async (ctx) => {
 const onConstruct = (fn: HookType) => hook('onConstruct', fn);
 const onConstructHooks = new HookCollector({ key: 'onConstruct' });
 
-// Running the collected hooks is ours too. This runner keeps the
+// Running the collected hooks is ours too, and so is naming the shape that does
+// it: the library neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// This runner keeps the
 // actions in declaration order, stays synchronous until one returns a promise,
 // and reports a throw and a rejection alike.
 const run =

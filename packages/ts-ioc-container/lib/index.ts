@@ -112,7 +112,6 @@ export {
   type HookCollectionContext,
   type HookCollectorOptions,
   type HookCollectorProps,
-  type HookRunner,
   type MapHookExecutionContext,
 } from './hooks/HookCollector';
 

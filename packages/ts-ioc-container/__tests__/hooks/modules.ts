@@ -1,12 +1,12 @@
 import {
   type HookCollector,
-  type HookRunner,
   type IContainer,
   type IContainerModule,
   Is,
   onResolve,
   type ProviderHook,
 } from '../../lib';
+import { type HookRunner } from './runners';
 
 // The library wires no hooks (ADR 0018): it collects, and the container's own
 // events — the injector's `onConstructed`, the scope's `scopeDisposed`, a

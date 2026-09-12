@@ -9,7 +9,7 @@
   [ADR 0016 - The library collects hooks; the caller runs them](../../../adr/0016-collect-hooks-let-the-caller-run-them.md),
   [ADR 0017 - No predefined hook keys or decorators](../../../adr/0017-no-predefined-hook-keys.md),
   [ADR 0018 - No hook modules: the container's events are the API](../../../adr/0018-no-hook-modules.md)
-- **Public API:** `hook`, `getHooks`, `hasHooks`, `toHookFn`, `sequential`, `parallel`, `HookCollector`, `HookAction`, `HookRunner`, `toTask`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `injectProp`, `oncePerInstance`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
+- **Public API:** `hook`, `getHooks`, `hasHooks`, `toHookFn`, `sequential`, `parallel`, `HookCollector`, `HookAction`, `toTask`, `HookContext`, `createHookExecutionContext`, `createHookContextFactory`, `injectProp`, `oncePerInstance`, `ScopeHook`, `RegisteredHook`, `InjectorHook`, `ProviderHook`, `IInjectorModule`
 - **Executable spec:** `__tests__/specs/lifecycle-hooks.spec.ts`
 
 ## Intent
@@ -166,7 +166,8 @@ Acceptance criteria:
 - A hook class is resolved through the scope when its action is performed, not
   while collecting.
 - `toTask` turns an action into the `Task` that `runInOrder` and `runAtOnce`
-  take, so a runner is a line of caller code.
+  take, so a runner is a line of caller code; the library exports no type for a
+  runner, since it neither calls one nor takes one.
 - `sequential(...hooks)` runs the hooks it combines in declaration order,
   awaiting each one that goes async; `parallel(...hooks)` starts them at once.
   Both return a `HookFn`, so they nest and compose with `oncePerInstance`.

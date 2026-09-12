@@ -51,7 +51,9 @@ always public:
 const onConstruct = (fn: HookType) => hook('onConstruct', fn);
 const onConstructHooks = new HookCollector({ key: 'onConstruct' });
 
-// a module is just an `applyTo`
+// a module is just an `applyTo`; the runner's shape is the application's to name
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
 const onConstructModule = (run: HookRunner): IContainerModule => ({
   applyTo: (container) =>
     container.getInjector().onConstructed((instance, scope) => {
@@ -70,8 +72,10 @@ container.useModule(onConstructModule(immediate));
 | a dependency is resolved | the provider                        | `onResolved()`, `onResolve(...)` |
 
 `IContainerModule` stays: it is the generic "apply this wiring to a container"
-seam, and `AutoResolveModule` still uses it. `HookRunner` stays as the named
-shape of a runner, though nothing in the library now calls one.
+seam, and `AutoResolveModule` still uses it. The `HookRunner` type goes: it
+existed as those module constructors' parameter, and with them gone the library
+neither calls a runner nor is handed one, so the shape is the application's to
+name — as `__tests__/hooks/runners.ts` does.
 
 The emptiness check the modules performed — not calling the runner when nothing
 was collected — goes with them. A runner over an empty array does nothing, and
@@ -93,7 +97,8 @@ whether that case deserves a branch is the caller's to decide.
 
 **Negative / trade-offs**
 
-- Breaking change with no shim: four exports are gone, and every consumer who
+- Breaking change with no shim: five exports are gone (the four above and the
+  `HookRunner` type), and every consumer who
   used them writes the five-line module themselves. `__tests__/hooks/modules.ts`
   keeps that code verbatim, and the README carries it.
 - The shortest path to a working construct hook is now a decorator, a collector,

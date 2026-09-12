@@ -10,7 +10,8 @@ import {
   register,
   Registration as R,
   singleton,
-  type HookRunner,
+  type ExecutionContext,
+  type HookAction,
   type IContainerModule,
 } from '../../lib';
 
@@ -22,6 +23,10 @@ const execute: HookFn = (ctx) => {
 // and the collector which reads it are all ours.
 const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
 const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
+
+// Naming the shape which performs collected actions is ours: the library
+// neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
 
 // This runner performs the collected hooks in order and never awaits.
 const run: HookRunner = (actions) => {

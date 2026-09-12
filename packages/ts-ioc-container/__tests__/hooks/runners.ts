@@ -1,14 +1,21 @@
 import {
+  type ExecutionContext,
   type HookAction,
   type HookCollectionContext,
   HookCollector,
-  type HookRunner,
   type IContainer,
   type Instance,
   runAtOnce,
   runInOrder,
   toTask,
 } from '../../lib';
+
+/**
+ * What performs collected actions. The library names no such type — it neither
+ * calls a runner nor is handed one — so this is ours, as it is every
+ * consumer's.
+ */
+export type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
 
 /** Receives a hook failure — what a sync hook threw, or what an async one rejected with — in the scope it ran in. */
 export type OnError = (scope: IContainer) => (error: unknown) => void;
