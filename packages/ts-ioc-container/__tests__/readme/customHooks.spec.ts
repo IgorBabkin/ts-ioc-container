@@ -3,8 +3,8 @@ import { Container, hook, HookCollector, type HookFn, runInOrder, toTask } from 
 /**
  * User Management Domain - Custom Lifecycle Hooks
  *
- * Custom hooks extend the container's lifecycle management beyond
- * the built-in @onConstruct and @onScopeDisposed hooks.
+ * Every hook is a custom hook: the library ships no hook keys or decorators of
+ * its own, so construct and dispose hooks are written exactly like these.
  *
  * Use cases:
  * - @validateConfig: Validate service configuration after construction

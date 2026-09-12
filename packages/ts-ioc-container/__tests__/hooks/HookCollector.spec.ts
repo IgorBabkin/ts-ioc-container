@@ -2,11 +2,14 @@ import 'reflect-metadata';
 import {
   HookCollector,
   Container,
+  getHooks,
   hook,
   HookContext,
   type HookFn,
   type IContainer,
+  memoize,
   parallel,
+  resolveConstructor,
   sequential,
   toTask,
 } from '../../lib';
@@ -363,7 +366,7 @@ describe('HookCollector', () => {
       expect(instance.received).toEqual([['overridden']]);
     });
 
-    it('reads a class’s hook metadata once and reuses it on later collections', () => {
+    it('reads a class’s hook metadata on every collection, leaving caching to the caller', () => {
       const scope = new Container();
       const collect = new HookCollector({ key: 'start' });
       const first = scope.resolve(Service);
@@ -375,8 +378,27 @@ describe('HookCollector', () => {
       const reads = getOwnMetadata.mock.calls.length;
       run(second, { scope });
 
-      expect(getOwnMetadata.mock.calls.length).toBe(reads);
+      expect(getOwnMetadata.mock.calls.length).toBe(reads * 2);
       expect([first.received.length, second.received.length]).toEqual([2, 2]);
+
+      getOwnMetadata.mockRestore();
+    });
+
+    // Hook metadata is fixed once a class is defined, so a caller which collects often
+    // can memoize the merge itself — the library does not decide that for them.
+    it('lets the caller memoize the metadata read', () => {
+      const scope = new Container();
+      const hooksOf = memoize(getHooks);
+      const first = scope.resolve(Service);
+      const second = scope.resolve(Service);
+      const getOwnMetadata = vi.spyOn(Reflect, 'getOwnMetadata');
+
+      hooksOf(resolveConstructor(first), 'start');
+      const reads = getOwnMetadata.mock.calls.length;
+      hooksOf(resolveConstructor(second), 'start');
+
+      expect(reads).toBeGreaterThan(0);
+      expect(getOwnMetadata.mock.calls.length).toBe(reads);
 
       getOwnMetadata.mockRestore();
     });

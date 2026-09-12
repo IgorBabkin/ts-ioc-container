@@ -27,6 +27,7 @@ is left intact so the historical reasoning remains discoverable.
 | 0014 | [Hook execution is a strategy, chosen by the caller](0014-hook-execution-strategy.md)           | Accepted |
 | 0015 | [One hook per member, combined by higher-order functions](0015-one-hook-per-member.md)          | Accepted |
 | 0016 | [The library collects hooks; the caller runs them](0016-collect-hooks-let-the-caller-run-them.md) | Accepted |
+| 0017 | [No predefined hook keys or decorators](0017-no-predefined-hook-keys.md)                        | Accepted |
 
 ## Adding a new ADR
 

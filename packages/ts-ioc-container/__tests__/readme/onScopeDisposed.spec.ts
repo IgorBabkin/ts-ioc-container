@@ -4,8 +4,10 @@ import {
   bindTo,
   Container,
   type HookFn,
+  hook,
+  HookCollector,
+  type HookType,
   inject,
-  onScopeDisposed,
   register,
   Registration as R,
   singleton,
@@ -15,6 +17,11 @@ import {
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+// The library ships no dispose decorator: the key, the decorator which writes it
+// and the collector which reads it are all ours.
+const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
+const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
 
 // The module collects the hooks of every instance of the disposed scope into one
 // list; this runner performs them in order and never awaits.
@@ -52,7 +59,7 @@ class Logger {
 describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new OnDisposeModule(run))
+      .useModule(new OnDisposeModule(run, onScopeDisposedHooks))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 

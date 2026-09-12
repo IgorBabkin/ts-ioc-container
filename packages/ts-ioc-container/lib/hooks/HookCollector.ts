@@ -79,7 +79,6 @@ export class HookCollector {
     }: HookCollectionContext,
   ): HookAction[] {
     const actions: HookAction[] = [];
-    // `getHooks` is memoized per class and key, so this reads metadata at most once per class.
     for (const [methodName, fn] of getHooks(target, this.key)) {
       if (predicate(methodName)) {
         actions.push({

@@ -3,11 +3,6 @@ import type { ProviderHook } from '../provider/IProvider';
 import { HookCollector, type HookRunner } from './HookCollector';
 import { registerPipe } from '../registration/IRegistration';
 import { Is } from '../utils/basic';
-import { hook, type HookType } from './hook';
-
-// A member carries one hook: declare several with `sequential(...)`/`parallel(...)`,
-// as in `@onResolved(sequential(h1, h2))`.
-export const onResolved = (fn: HookType) => hook('onResolved', fn);
 
 // Hook metadata lives on classes, so a primitive dependency has nothing to collect.
 const runHooks =
@@ -22,9 +17,9 @@ const runHooks =
   };
 
 /**
- * Hands `run` the `onResolved` hooks of every dependency object leaving a
- * provider; how they run is `run`'s business (ADR 0016), and it is not called
- * for a dependency which declares none.
+ * Hands `run` whatever `collector` finds on every dependency object leaving a
+ * provider. The hook key is the collector's (ADR 0017) and how the actions run
+ * is `run`'s business (ADR 0016).
  *
  * Providers are hooked through the `registered` event, so apply the module before
  * the registrations it should cover; scopes created afterwards inherit it.
@@ -32,7 +27,7 @@ const runHooks =
 export class OnResolvedModule implements IContainerModule {
   private readonly runHooks: ProviderHook;
 
-  constructor(run: HookRunner, collector: HookCollector = new HookCollector({ key: 'onResolved' })) {
+  constructor(run: HookRunner, collector: HookCollector) {
     this.runHooks = runHooks(run, collector);
   }
 
@@ -45,10 +40,8 @@ export class OnResolvedModule implements IContainerModule {
 
 /**
  * Per-registration form of {@link OnResolvedModule}: the piped registration runs
- * its `onResolved` hooks on resolve, without the container opting every other
+ * the collected hooks on resolve, without the container opting every other
  * registration in.
  */
-export const resolved = <T = unknown>(
-  run: HookRunner,
-  collector: HookCollector = new HookCollector({ key: 'onResolved' }),
-) => registerPipe<T>((p) => p.onResolved(runHooks(run, collector)));
+export const resolved = <T = unknown>(run: HookRunner, collector: HookCollector) =>
+  registerPipe<T>((p) => p.onResolved(runHooks(run, collector)));

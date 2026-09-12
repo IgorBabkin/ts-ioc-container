@@ -1,7 +1,9 @@
 # ADR 0016 — The library collects hooks; the caller runs them
 
 - **Status:** Accepted, supersedes
-  [ADR 0014](0014-hook-execution-strategy.md)'s strategy classes
+  [ADR 0014](0014-hook-execution-strategy.md)'s strategy classes; completed by
+  [ADR 0017](0017-no-predefined-hook-keys.md), which removed the hook keys and
+  decorators this ADR still assumed, and reverted the memoization below
 - **Date:** 2026-09-12
 - **Deciders:** core maintainers
 - **Tags:** hooks, lifecycle, api-design
@@ -70,14 +72,17 @@ const inOrder: HookRunner = (actions) => void runInOrder(actions.map(toTask));
 const atOnce: HookRunner = (actions) => void runAtOnce(actions.map(toTask));
 ```
 
-Each module takes that runner and defaults its collector to its own key:
+Each module takes that runner and the collector to read with:
 
 ```typescript
 const container = new Container()
-  .useModule(new OnConstructModule(immediate))
-  .useModule(new OnDisposeModule(atOnce))
+  .useModule(new OnConstructModule(immediate, new HookCollector({ key: 'onConstruct' })))
+  .useModule(new OnDisposeModule(atOnce, new HookCollector({ key: 'onScopeDisposed' })))
   .useModule(new OnResolvedModule(inOrder, new HookCollector({ key: 'onResolved', predicate })));
 ```
+
+(ADR 0017 made that collector argument required; this ADR shipped with each
+module defaulting it to its own key.)
 
 ### What the modules still own, and what they gave up
 
@@ -98,12 +103,12 @@ injector's `onConstructed`, the scope's `scopeDisposed`, a provider's
 
 ### Collecting stays cheap
 
-The per-strategy cache of resolved hooks is gone. `getHooks` itself is memoized
-per class and key (`memoize` in `lib/utils/memoize.ts`, a `WeakMap` of target
-to per-key results), so the prototype-chain merge happens once per class
-whatever collects it — including callers of the exported `getHooks`, which
-never benefited from the strategy-local cache. Hook metadata is fixed once a
-class is defined, so the memoized map is safe to share; it must not be mutated.
+The per-strategy cache of resolved hooks is gone, and nothing replaces it inside
+the library: [ADR 0017](0017-no-predefined-hook-keys.md) settled that caching is
+the caller's decision too. `getHooks` merges the prototype chain on each call and
+returns a fresh map; a caller which collects often wraps it in the exported
+`memoize` (`lib/utils/memoize.ts`). Hook metadata is fixed once a class is
+defined, so memoizing it is always safe.
 
 ## Consequences
 
@@ -115,11 +120,11 @@ class is defined, so the memoized map is safe to share; it must not be mutated.
 - Any execution policy is expressible without the library's cooperation, in
   ordinary code over an ordinary array.
 - Failures surface by default instead of being dropped by a missing handler.
-- One less key to repeat and to get wrong: the module knows its own.
 - Three classes, one abstract base and the `OnErrorHandler` /
   `HookExecutionContext` / `HookExecutionOptions` / `HookExecutionStrategyProps`
   types collapse into one class and two types (`HookAction`, `HookRunner`).
-- `getHooks` is now memoized for every caller, not just for strategies.
+- `getHooks` is a plain function again, and the `memoize` util lets any caller
+  cache it — including callers the strategy-local cache never served.
 
 **Negative / trade-offs**
 

@@ -12,13 +12,10 @@ import {
   MetadataInjector,
   MethodNotImplementedError,
   oncePerInstance,
-  onConstruct,
   OnConstructModule,
   OnDisposeModule,
   onResolve,
-  onResolved,
   OnResolvedModule,
-  onScopeDisposed,
   Provider,
   Registration as R,
   parallel,
@@ -26,6 +23,14 @@ import {
   HookCollector,
 } from '../../lib';
 import { perform, runSequential, runSync } from '../hooks/runners';
+import {
+  onConstruct,
+  onConstructHooks,
+  onResolved,
+  onResolvedHooks,
+  onScopeDisposed,
+  onScopeDisposedHooks,
+} from '../hooks/decorators';
 
 const invoke: HookFn = (context) => {
   context.invokeMethod();
@@ -55,8 +60,8 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(runSync()))
-      .useModule(new OnDisposeModule(runSync()))
+      .useModule(new OnConstructModule(runSync(), onConstructHooks))
+      .useModule(new OnDisposeModule(runSync(), onScopeDisposedHooks))
       .addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
@@ -86,7 +91,7 @@ describe('Spec: lifecycle hooks', () => {
 
     const connection = new Connection();
     const container = new Container()
-      .useModule(new OnResolvedModule(runSync()))
+      .useModule(new OnResolvedModule(runSync(), onResolvedHooks))
       .addRegistration(R.fromValue(connection).bindToKey('Connection'))
       .addRegistration(R.fromValue(connection).bindToKey('ReadOnlyConnection'));
 
@@ -111,7 +116,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(runSync()))
+      .useModule(new OnConstructModule(runSync(), onConstructHooks))
       .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
@@ -138,7 +143,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(runSequential()))
+      .useModule(new OnConstructModule(runSequential(), onConstructHooks))
       .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
@@ -163,7 +168,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(runSync()))
+      .useModule(new OnConstructModule(runSync(), onConstructHooks))
       .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
@@ -188,7 +193,9 @@ describe('Spec: lifecycle hooks', () => {
       destroy(): void {}
     }
 
-    const container = new Container().useModule(new OnDisposeModule(runSync())).addRegistration(R.fromClass(Resource));
+    const container = new Container()
+      .useModule(new OnDisposeModule(runSync(), onScopeDisposedHooks))
+      .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
     container.dispose();
@@ -214,7 +221,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(runSequential()))
+      .useModule(new OnConstructModule(runSequential(), onConstructHooks))
       .addRegistration(R.fromClass(Resource));
 
     container.resolve<Resource>('Resource');
@@ -236,7 +243,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(runSequential()))
+      .useModule(new OnConstructModule(runSequential(), onConstructHooks))
       .addRegistration(R.fromClass(Resource));
 
     const resource = container.resolve<Resource>('Resource');
@@ -256,7 +263,12 @@ describe('Spec: lifecycle hooks', () => {
 
     let captured: unknown;
     const container = new Container()
-      .useModule(new OnConstructModule(runSequential(() => (ex) => (captured = ex))))
+      .useModule(
+        new OnConstructModule(
+          runSequential(() => (ex) => (captured = ex)),
+          onConstructHooks,
+        ),
+      )
       .addRegistration(R.fromClass(BrokenResource));
 
     container.resolve<BrokenResource>('BrokenResource');
@@ -275,7 +287,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     const container = new Container()
-      .useModule(new OnConstructModule(runSync()))
+      .useModule(new OnConstructModule(runSync(), onConstructHooks))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(Service));
 

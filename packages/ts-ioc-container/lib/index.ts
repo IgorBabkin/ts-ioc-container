@@ -104,9 +104,9 @@ export {
   type IHookContext,
 } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
-export { onConstruct, OnConstructModule } from './hooks/onConstruct';
-export { onScopeDisposed, OnDisposeModule } from './hooks/onScopeDisposed';
-export { onResolved, OnResolvedModule, resolved } from './hooks/onResolved';
+export { OnConstructModule } from './hooks/OnConstructModule';
+export { OnDisposeModule } from './hooks/OnDisposeModule';
+export { OnResolvedModule, resolved } from './hooks/OnResolvedModule';
 export { sequential, parallel, oncePerInstance, type ResolvedObjectHook } from './hooks/combinators';
 export {
   HookCollector,

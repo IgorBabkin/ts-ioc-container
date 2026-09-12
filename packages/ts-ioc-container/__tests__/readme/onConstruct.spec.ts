@@ -3,8 +3,10 @@ import {
   Container,
   type HookFn,
   type IContainer,
+  hook,
+  HookCollector,
+  type HookType,
   inject,
-  onConstruct,
   OnConstructModule,
   Registration as R,
   runInOrder,
@@ -19,6 +21,11 @@ const execute: HookFn = (ctx) => {
 const executeAsync: HookFn = async (ctx) => {
   await ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+// The library ships no construct decorator: the key, the decorator which writes
+// it and the collector which reads it are all ours.
+const onConstruct = (fn: HookType) => hook('onConstruct', fn);
+const onConstructHooks = new HookCollector({ key: 'onConstruct' });
 
 // The module collects the hooks; running them is ours. This runner keeps the
 // actions in declaration order, stays synchronous until one returns a promise,
@@ -48,7 +55,7 @@ describe('onConstruct', function () {
 
     // The module takes the runner which performs the collected hooks.
     const container = new Container()
-      .useModule(new OnConstructModule(run()))
+      .useModule(new OnConstructModule(run(), onConstructHooks))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -73,6 +80,7 @@ describe('onConstruct', function () {
         run((scope) => (ex) => {
           captured = { ex, scope };
         }),
+        onConstructHooks,
       ),
     );
 
@@ -95,6 +103,7 @@ describe('onConstruct', function () {
         run((s) => () => {
           scope = s;
         }),
+        onConstructHooks,
       ),
     );
     const child = container.createScope();
@@ -129,7 +138,7 @@ describe('onConstruct', function () {
 
     // The runner awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new OnConstructModule(run()))
+      .useModule(new OnConstructModule(run(), onConstructHooks))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -157,6 +166,7 @@ describe('onConstruct', function () {
         run((scope) => (ex) => {
           captured = { ex, scope };
         }),
+        onConstructHooks,
       ),
     );
 

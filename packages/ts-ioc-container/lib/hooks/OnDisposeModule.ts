@@ -1,15 +1,11 @@
-import { hook, type HookType } from './hook';
 import type { IContainer, IContainerModule } from '../container/IContainer';
 import { HookCollector, type HookRunner } from './HookCollector';
 
-// A member carries one hook: declare several with `sequential(...)`/`parallel(...)`,
-// as in `@onScopeDisposed(parallel(flush, close))`.
-export const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
-
 /**
- * Hands `run` the `@onScopeDisposed` hooks of every instance of a scope being
+ * Hands `run` whatever `collector` finds on every instance of a scope being
  * disposed — one flat list, so `run` orders the instances as well as the
- * members (ADR 0016). It is not called when the scope holds no such hooks.
+ * members (ADR 0016). The hook key is the collector's (ADR 0017). `run` is not
+ * called when the scope holds no such hooks.
  *
  * Disposal is a scope event, so the module hangs off `IContainer.scopeDisposed`.
  * Disposal is local: disposing a parent collects nothing from child scopes.
@@ -17,7 +13,7 @@ export const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
 export class OnDisposeModule implements IContainerModule {
   constructor(
     private readonly run: HookRunner,
-    private readonly collector: HookCollector = new HookCollector({ key: 'onScopeDisposed' }),
+    private readonly collector: HookCollector,
   ) {}
 
   applyTo(container: IContainer) {
