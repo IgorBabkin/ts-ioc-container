@@ -38,6 +38,59 @@ jobs:
       - name: Install dependencies
         run: pnpm run ci
 
+      - name: Build
+        run: pnpm run build:all
+
+      - name: Upload build artifacts
+        uses: ./.github/actions/build-artifacts
+        with:
+          mode: upload
+
+  # Lint, type-check, format and test every released package. Runs after
+  # `build` rather than beside it: @ts-ioc-container/react resolves
+  # ts-ioc-container through the workspace link, so its checks import that
+  # package's build output rather than a tarball from the registry — the
+  # artifact `build` uploaded supplies it without a second build here.
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    env:
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Cache pnpm store
+        uses: ./.github/actions/cache-pnpm-store
+
+      - name: Install dependencies
+        run: pnpm run ci
+
+      - name: Download build artifacts
+        uses: ./.github/actions/build-artifacts
+        with:
+          mode: download
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run type-check
+
+      - name: Format check
+        run: pnpm run format:check
+
       - name: Test with coverage
         run: pnpm run test:coverage
 
@@ -47,22 +100,20 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./packages/ts-ioc-container/coverage/lcov.info
 
-      # Must precede the react tests: @ts-ioc-container/react resolves
-      # ts-ioc-container through the workspace link, so it imports that
-      # package's build output rather than a tarball from the registry.
-      - name: Build
-        run: pnpm run build:all
+      - name: Lint @ts-ioc-container/react
+        run: pnpm run lint:react
+
+      - name: Type check @ts-ioc-container/react
+        run: pnpm run type-check:react
+
+      - name: Format check @ts-ioc-container/react
+        run: pnpm --filter @ts-ioc-container/react run format:check
 
       - name: Test @ts-ioc-container/react
         run: pnpm run test:react
 
-      - name: Upload build artifacts
-        uses: ./.github/actions/build-artifacts
-        with:
-          mode: upload
-
   release:
-    needs: build
+    needs: [build, test]
     environment:
       name: production
       url: https://www.npmjs.com/package/ts-ioc-container
