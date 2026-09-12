@@ -9,10 +9,10 @@ export type MapHookExecutionContext = (context: IHookContext) => IHookContext;
 /**
  * One decorated member's hook, resolved to a function and bound to the context
  * it runs against — the model the library hands back, and the whole of what it
- * says about a hook. Performing it is the caller's business (ADR 0016).
+ * says about a hook. The member it came from is `context.methodName`.
+ * Performing it is the caller's business (ADR 0016).
  */
 export type HookAction = {
-  methodName: string;
   hook: HookFn;
   context: IHookContext;
 };
@@ -83,7 +83,6 @@ export class HookCollector {
     for (const [methodName, fn] of getHooks(target, this.key)) {
       if (predicate(methodName)) {
         actions.push({
-          methodName,
           hook: toHookFn(fn),
           context: mapExecutionContext(createExecutionContext(target, scope, methodName)),
         });

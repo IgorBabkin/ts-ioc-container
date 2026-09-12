@@ -52,9 +52,8 @@ declaration order:
 
 ```typescript
 type HookAction = {
-  methodName: string;
   hook: HookFn; // a hook class is already resolved to a function
-  context: IHookContext; // built, mapped, and bound to the target and scope
+  context: IHookContext; // built, mapped, and bound to the target, scope and member
 };
 ```
 
@@ -133,8 +132,9 @@ class is defined, so the memoized map is safe to share; it must not be mutated.
 - A careless runner is a footgun the strategies prevented: forgetting to guard
   turns a throwing `@onConstruct` hook into a failing `resolve`, and forgetting
   `?.catch` turns a rejecting one into an unhandled rejection.
-- `MemberHook` is renamed `HookAction` and carries a `methodName`; code which
-  destructured the old type by name must follow.
+- `MemberHook` is renamed `HookAction`, and the `methodName` it carried is gone
+  — `context.methodName` already held it; code which destructured the old type
+  by name must follow.
 
 ## References
 

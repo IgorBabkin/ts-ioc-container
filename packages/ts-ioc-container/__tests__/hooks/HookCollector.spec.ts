@@ -51,7 +51,7 @@ describe('HookCollector', () => {
 
       const actions = new HookCollector({ key: 'start' }).getActions(instance, { scope });
 
-      expect(actions.map(({ methodName, hook: fn }) => [methodName, fn])).toEqual([
+      expect(actions.map(({ context, hook: fn }) => [context.methodName, fn])).toEqual([
         ['a', hookA],
         ['b', hookB],
       ]);

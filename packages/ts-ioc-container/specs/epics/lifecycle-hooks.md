@@ -159,7 +159,8 @@ Acceptance criteria:
 - One hook key and one decorator per domain take sync and async hooks alike.
 - `HookCollector.getActions(target, { scope })` returns one `HookAction` per
   decorated member, in declaration order, with its hook resolved to a function
-  and its context built; nothing has run when it returns.
+  and its context — carrying the member's `methodName` — built; nothing has run
+  when it returns.
 - A hook class is resolved through the scope when its action is performed, not
   while collecting.
 - `toTask` turns an action into the `Task` that `runInOrder` and `runAtOnce`
