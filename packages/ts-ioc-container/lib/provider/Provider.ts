@@ -13,6 +13,7 @@ import type { DependencyKey, IContainer } from '../container/IContainer';
 import { type constructor } from '../utils/basic';
 import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
+import { matchNamespace, type Namespace, type NamespaceTemplate } from '../utils/namespace';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
@@ -29,6 +30,7 @@ export class Provider<T = any> implements IProvider<T> {
 
   private readonly argsFnList: ArgsFn[] = [];
   private readonly accessRules: ScopeAccessRule[] = [];
+  private readonly namespaceTemplates: NamespaceTemplate[] = [];
   private readonly mappers: DecorateFn<T>[] = [];
   private isLazy = false;
   private isAutoResolve = false;
@@ -62,10 +64,12 @@ export class Provider<T = any> implements IProvider<T> {
   /**
    * @throws {unknown} rethrows whatever an `onResolved` hook threw.
    */
-  private resolveDep(scope: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
+  private resolveDep(scope: IContainer, { args = [], lazy, namespace }: ProviderOptions = {}): T {
     let dependency = this.resolveDependency(scope, {
       args: this.argsFnList.reduce((acc, current) => current(scope, { args: acc }), args),
       lazy: lazy ?? this.isLazy,
+      // Still the same resolution, so a class provider constructs its target under the caller's namespace.
+      namespace,
     });
     dependency = this.mappers.reduce((acc, current) => current(acc, scope), dependency);
     for (const onResolved of this.onResolvedHookList) {
@@ -81,6 +85,18 @@ export class Provider<T = any> implements IProvider<T> {
 
   addAccessRule(...rules: ScopeAccessRule[]): this {
     this.accessRules.push(...rules);
+    return this;
+  }
+
+  /**
+   * Restricts the provider to resolutions coming from a matching namespace.
+   *
+   * Templates accumulate as alternatives: a provider with several of them is
+   * reachable from any namespace matching at least one. A provider with none is
+   * reachable from everywhere, which is how every provider behaves by default.
+   */
+  addNamespaceTemplate(template: NamespaceTemplate): this {
+    this.namespaceTemplates.push(template);
     return this;
   }
 
@@ -114,7 +130,21 @@ export class Provider<T = any> implements IProvider<T> {
   hasAccess(options: ScopeAccessOptions): boolean {
     ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
 
-    return this.accessRules.reduce((acc, rule) => rule(options, acc), true);
+    return (
+      this.hasNamespaceAccess(options.namespace) && this.accessRules.reduce((acc, rule) => rule(options, acc), true)
+    );
+  }
+
+  /**
+   * A restricted provider denies a resolution which names no namespace at all -
+   * only a caller which says where it resolves from can be let through.
+   */
+  private hasNamespaceAccess(namespace: Namespace | undefined): boolean {
+    if (this.namespaceTemplates.length === 0) {
+      return true;
+    }
+
+    return namespace !== undefined && this.namespaceTemplates.some((template) => matchNamespace(template, namespace));
   }
 
   /**
@@ -145,6 +175,7 @@ export class Provider<T = any> implements IProvider<T> {
     this.getKey = undefined;
     this.cache.clear();
     this.accessRules.splice(0, this.accessRules.length);
+    this.namespaceTemplates.splice(0, this.namespaceTemplates.length);
     this.mappers.splice(0, this.mappers.length);
     this.argsFnList.splice(0, this.argsFnList.length);
     this.onResolvedHookList.splice(0, this.onResolvedHookList.length);

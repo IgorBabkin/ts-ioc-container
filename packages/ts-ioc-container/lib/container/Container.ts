@@ -72,18 +72,21 @@ export class Container implements IContainer {
    * @throws {ContainerDisposedError} when the container has already been disposed.
    * @throws {DependencyNotFoundError} when `target` cannot be resolved in this container or any parent scope.
    */
-  resolve<T>(target: constructor<T> | DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+  resolve<T>(
+    target: constructor<T> | DependencyKey,
+    { args = [], child = this, lazy, namespace }: ResolveOneOptions = {},
+  ): T {
     this.validateContainer();
 
     if (Is.constructor(target)) {
-      return this.injector.resolve(this, target, { args, lazy });
+      return this.injector.resolve(this, target, { args, lazy, namespace });
     }
 
     const provider = this.providers.get(target) as IProvider<T> | undefined;
 
-    return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
-      ? provider.resolve(this, { args, lazy })
-      : this.parent.resolve<T>(target, { args, child, lazy });
+    return provider?.hasAccess({ invocationScope: child, providerScope: this, args, namespace })
+      ? provider.resolve(this, { args, lazy, namespace })
+      : this.parent.resolve<T>(target, { args, child, lazy, namespace });
   }
 
   /**
@@ -92,7 +95,7 @@ export class Container implements IContainer {
    */
   resolveByAlias<T>(
     alias: DependencyKey,
-    { args = [], child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
+    { args = [], child = this, lazy, namespace, excludedKeys = [] }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
@@ -100,17 +103,18 @@ export class Container implements IContainer {
     const deps: T[] = [];
     for (const key of this.aliases.getKeysByAlias(alias).filter(F.exclude(excludedKeys))) {
       const provider = this.findProviderByKeyOrFail<T>(key);
-      if (!provider.hasAccess({ invocationScope: child, providerScope: this, args })) {
+      if (!provider.hasAccess({ invocationScope: child, providerScope: this, args, namespace })) {
         continue;
       }
       keys.push(key);
-      deps.push(provider.resolve(this, { args, lazy }));
+      deps.push(provider.resolve(this, { args, lazy, namespace }));
     }
 
     const parentDeps = this.parent.resolveByAlias<T>(alias, {
       args,
       child,
       lazy,
+      namespace,
       excludedKeys: [...excludedKeys, ...keys],
     });
     return [...deps, ...parentDeps];
@@ -120,15 +124,15 @@ export class Container implements IContainer {
    * @throws {ContainerDisposedError} when the container has already been disposed.
    * @throws {DependencyNotFoundError} when `alias` cannot be resolved in this container or any parent scope.
    */
-  resolveOneByAlias<T>(alias: DependencyKey, { args = [], child = this, lazy }: ResolveOneOptions = {}): T {
+  resolveOneByAlias<T>(alias: DependencyKey, { args = [], child = this, lazy, namespace }: ResolveOneOptions = {}): T {
     this.validateContainer();
 
     const [key] = this.aliases.getKeysByAlias(alias);
     const provider = key ? this.findProviderByKeyOrFail<T>(key) : undefined;
 
-    return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
-      ? provider.resolve(this, { args, lazy })
-      : this.parent.resolveOneByAlias<T>(alias, { args, child, lazy });
+    return provider?.hasAccess({ invocationScope: child, providerScope: this, args, namespace })
+      ? provider.resolve(this, { args, lazy, namespace })
+      : this.parent.resolveOneByAlias<T>(alias, { args, child, lazy, namespace });
   }
 
   /**
