@@ -8,9 +8,9 @@ import { ZodTypeAny } from 'zod';
 const inputFile = path.resolve(__dirname, './constraints.yaml');
 const outputFile = path.resolve(__dirname, './generated/constraints.ts');
 
-type Generated = Record<string, ZodTypeAny> & { PAYLOADS: Record<string, ZodTypeAny> };
+type Generated = Record<string, ZodTypeAny<any, any>> & { PAYLOADS: Record<string, ZodTypeAny<any, any>> };
 
-const accepts = (schema: ZodTypeAny, value: unknown) => schema.safeParse(value).success;
+const accepts = (schema: ZodTypeAny<any, any>, value: unknown) => schema.safeParse(value).success;
 
 describe('validation constraints', () => {
   let validators: string;
