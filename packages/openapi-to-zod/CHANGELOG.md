@@ -1,3 +1,12 @@
+# 1.4.1 (2026-09-16)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-to-zod:**
+    trigger dependency release
+    (9812445711ef59298fc7fac7bc3d1ff4cfaec61f)
+
+
 # 1.4.0 (2026-09-16)
 
   ### ✨ Features
@@ -17,6 +26,7 @@
     - **@ibabkin/openapi-to-zod:**
     publish under the existing package name
     (8d522ae590718b67abc91308ece3976364013638)
+
 
 
 

@@ -1,3 +1,23 @@
+# 1.2.0 (2026-09-16)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-express-server:**
+    trigger dependency release
+    (872dc1a92c050a096c375da24bb646263e4b4911)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    @ibabkin/openapi-to-server
+    to
+    1.21.1
+    - 📦 update
+    @ibabkin/openapi-to-zod
+    to
+    1.4.1
+
+
 # 1.1.2 (2026-09-16)
 
   ### 🐞 Bug Fixes
@@ -34,6 +54,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 

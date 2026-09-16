@@ -1,6 +1,6 @@
 {
   "name": "@ibabkin/openapi-to-server",
-  "version": "1.21.0",
+  "version": "1.21.1",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
