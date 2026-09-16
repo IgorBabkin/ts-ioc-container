@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renderClient should generate an axios based ApiClient 1`] = `
+"import { AxiosInstance } from 'axios';
+import { createUrl } from '@ibabkin/openapi-to-server';
+
+// Components
+  export type Item = {
+id: string  ;
+name: string  ;
+}
+;
+
+// Routes
+    export type CreateItemPayload = {
+    body: Item
+};
+
+export type CreateItemResponse = void;
+
+    export type GetItemsPayload = {
+    query: {
+  limit?: number
+  ,
+}
+
+};
+
+export type GetItemsResponse =     Item[]
+;
+
+    export type DeleteItemPayload = {
+    params: {
+  id: string  ,
+}
+
+};
+
+export type DeleteItemResponse = void;
+
+    export type GetItemPayload = {
+    params: {
+  id: string  ,
+}
+
+};
+
+export type GetItemResponse = Item;
+
+
+export class ApiClient {
+  constructor(private httpClient: AxiosInstance) {}
+
+  async createItem(data: CreateItemPayload): Promise<CreateItemResponse> {
+    const response = await this.httpClient.request({
+      method: 'post',
+      url: createUrl('/items', data),
+      data: data.body,
+    });
+
+    return response.data;
+  }
+  async getItems(data: GetItemsPayload): Promise<GetItemsResponse> {
+    const response = await this.httpClient.request({
+      method: 'get',
+      url: createUrl('/items', data),
+    });
+
+    return response.data;
+  }
+  async deleteItem(data: DeleteItemPayload): Promise<DeleteItemResponse> {
+    const response = await this.httpClient.request({
+      method: 'delete',
+      url: createUrl('/items/{id}', data),
+    });
+
+    return response.data;
+  }
+  async getItem(data: GetItemPayload): Promise<GetItemResponse> {
+    const response = await this.httpClient.request({
+      method: 'get',
+      url: createUrl('/items/{id}', data),
+    });
+
+    return response.data;
+  }
+}
+"
+`;

@@ -11,6 +11,8 @@ Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This pac
 - ✅ Server interface with dependency injection support
 - ✅ Request payload types (params, query, body)
 - ✅ Response types with HTTP status codes and headers
+- ✅ Axios-based `ApiClient` generation for the browser/Node
+- ✅ `openapi-to-server` and `openapi-to-client` CLIs
 - ✅ YAML import support for modular specs
 
 ## Installation
@@ -91,7 +93,24 @@ components:
 
 ### 2. Generate TypeScript interfaces
 
-Load your OpenAPI specification and generate interfaces:
+The quickest way is the CLI. `--json` additionally writes the parsed spec as `swagger.json` next to the output, handy for
+registering routes at runtime:
+
+```bash
+openapi-to-server --input src/swagger.yaml --output src/.generated/operations.d.ts --json
+openapi-to-client --input src/swagger.yaml --output src/.generated/client.ts
+```
+
+The same is available programmatically:
+
+```typescript
+import { openapiToServer, openapiToClient } from '@ibabkin/openapi-to-server';
+
+openapiToServer({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/operations.d.ts', emitJSON: true });
+openapiToClient({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/client.ts' });
+```
+
+Or render the individual parts yourself:
 
 ```typescript
 import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server';
@@ -153,9 +172,29 @@ export interface IServer {
 
 ## API Reference
 
+### CLI
+
+| Command | Flags | Output |
+| --- | --- | --- |
+| `openapi-to-server` | `--input <spec>` `--output <file>` `[--json]` | Components, controller interfaces and `IServer` in one file; with `--json`, the parsed spec as `<spec-name>.json` beside it |
+| `openapi-to-client` | `--input <spec>` `--output <file>` | Component types, payload/response types and an Axios `ApiClient` class |
+
+`--input` accepts `.yaml`/`.yml` (with `yaml-import` directives) or `.json`. Short flags `-i`, `-o`, `-j` work too.
+
+### File Functions
+
+#### `openapiToServer({ inputFile, outputFile, emitJSON? })`
+
+Reads the spec, renders components + controllers + server and writes them to `outputFile` (directories are created).
+With `emitJSON: true` and a YAML input, also writes the parsed document as JSON next to `outputFile`.
+
+#### `openapiToClient({ inputFile, outputFile })`
+
+Reads the spec and writes the generated `ApiClient` to `outputFile`.
+
 ### Render Functions
 
-The package provides three render functions to generate TypeScript interfaces:
+The package provides four render functions that return TypeScript source as a string:
 
 #### `renderComponents(doc)`
 
@@ -183,6 +222,24 @@ Generates the `IServer` interface for dependency injection.
 - `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
 
 **Returns:** `string` - TypeScript code containing the IServer interface
+
+#### `renderClient(doc)`
+
+Generates component types, payload/response types and an Axios-based `ApiClient` class. The generated file imports
+`createUrl` from this package at runtime, so `@ibabkin/openapi-to-server` must be a regular dependency of the consumer.
+
+**Parameters:**
+- `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
+
+**Returns:** `string` - TypeScript code containing the client
+
+```typescript
+import axios from 'axios';
+import { ApiClient } from './.generated/client';
+
+const api = new ApiClient(axios.create({ baseURL: 'https://api.example.com' }));
+const todos = await api.getTodos({ query: { limit: 10 } });
+```
 
 #### Example
 
@@ -226,6 +283,18 @@ import {
 - **`HttpStatus`**: Enum of HTTP status codes (OK, Created, NoContent, Found)
 - **`RouteOptions`**: Options for routes (tags)
 - **`constructor<T>`**: Type helper for class constructors
+
+### Runtime Helpers
+
+Used by the generated client, but useful on their own:
+
+```typescript
+import { createUrl, addPathParams, addQueryParams, Payload } from '@ibabkin/openapi-to-server';
+
+createUrl('/users/{id}', { params: { id: 1 }, query: { expand: 'posts' } }); // '/users/1?expand=posts'
+```
+
+`null`/`undefined` values are skipped; keys and values are URL-encoded.
 
 ## Generated Output Structure
 
