@@ -42,14 +42,14 @@
     "hbs/**/*"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:hbs && npm run build:ts",
-    "test": "npm run build:hbs && make-dir .generated && jest",
+    "build": "pnpm run clean && pnpm run build:hbs && pnpm run build:ts",
+    "test": "pnpm run build:hbs && make-dir .generated && jest",
     "test:watch": "jest --coverage --watch",
     "clean": "rimraf esm *.tsbuildinfo",
-    "watch": "nodemon --watch lib --exec 'npm run build'",
+    "watch": "nodemon --watch lib --exec 'pnpm run build'",
     "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars",
     "build:ts": "tsc -p tsconfig.prod.json --outDir esm",
-    "postinstall": "npm run build:hbs"
+    "postinstall": "pnpm run build:hbs"
   },
   "dependencies": {
     "handlebars": "^4.7.7",

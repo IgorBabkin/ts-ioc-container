@@ -35,12 +35,12 @@
     "esm/**/*"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:ts",
+    "build": "pnpm run clean && pnpm run build:ts",
     "test": "jest",
     "test:generate:code": "tsx ./__tests__/generate.ts",
     "test:watch": "jest --coverage --watch",
     "clean": "rimraf esm *.tsbuildinfo",
-    "watch": "nodemon --watch lib --exec 'npm run compile'",
+    "watch": "nodemon --watch lib --exec 'pnpm run compile'",
     "build:ts": "tsc -p tsconfig.prod.json"
   },
   "dependencies": {
