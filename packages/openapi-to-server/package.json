@@ -1,6 +1,10 @@
 {
   "name": "@ibabkin/openapi-to-server-interface",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "description": "Generates TypeScript server interfaces from OpenAPI specifications",
   "keywords": [
     "openapi",
@@ -12,7 +16,7 @@
     "codegen"
   ],
   "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/openapi-to-server-interface",
+  "homepage": "https://github.com/IgorBabkin/openapi-to-server/tree/master/packages/openapi-to-server-interface",
   "license": "ISC",
   "type": "module",
   "main": "esm/index.js",
@@ -26,7 +30,7 @@
   "module": "esm/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IgorBabkin/ts-ioc-container.git"
+    "url": "git+https://github.com/IgorBabkin/openapi-to-server.git"
   },
   "sideEffects": true,
   "directories": {
@@ -35,16 +39,17 @@
   },
   "files": [
     "esm/**/*",
-    "precompiled/**/*"
+    "hbs/**/*"
   ],
   "scripts": {
-    "build": "npm run clean && npm run compile",
-    "test": "npm run hbs:compile && make-dir .generated && jest",
+    "build": "npm run clean && npm run build:hbs && npm run build:ts",
+    "test": "npm run build:hbs && make-dir .generated && jest",
     "test:watch": "jest --coverage --watch",
-    "hbs:compile": "handlebars lib/templates/*.hbs -f precompiled.js -c handlebars/runtime",
-    "clean": "rimraf esm",
-    "watch": "nodemon --watch lib --exec 'npm run compile'",
-    "compile": "npm run hbs:compile && tsc -p tsconfig.json --outDir esm"
+    "clean": "rimraf esm *.tsbuildinfo",
+    "watch": "nodemon --watch lib --exec 'npm run build'",
+    "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars",
+    "build:ts": "tsc -p tsconfig.prod.json --outDir esm",
+    "postinstall": "npm run build:hbs"
   },
   "dependencies": {
     "handlebars": "^4.7.7",

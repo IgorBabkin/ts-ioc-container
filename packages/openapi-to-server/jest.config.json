@@ -4,9 +4,16 @@
   "roots": ["<rootDir>/__tests__"],
   "testMatch": ["**/__tests__/**/*.spec.ts"],
   "collectCoverageFrom": ["lib/**/*.ts", "!lib/**/*.d.ts"],
-  "moduleFileExtensions": ["ts", "js", "json"],
+  "moduleFileExtensions": ["ts", "js", "cjs", "json"],
   "transform": {
-    "^.+\\.ts$": "ts-jest"
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.test.json"
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
   }
 }
-

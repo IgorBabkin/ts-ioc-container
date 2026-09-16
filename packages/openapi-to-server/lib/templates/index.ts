@@ -1,4 +1,4 @@
-import Handlebars from 'handlebars/runtime';
+import Handlebars from 'handlebars';
 import { OpenAPIV3 } from 'openapi-types';
 
 function capitalize(value: string) {
@@ -136,4 +136,7 @@ export function renderTemplate(filename: string, data: unknown) {
   return template(data);
 }
 
-Handlebars.registerHelper('render_template', renderTemplate);
+Handlebars.registerHelper(
+  'render_template',
+  (filename: string, data: unknown) => new Handlebars.SafeString(renderTemplate(filename, data)),
+);

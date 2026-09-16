@@ -1,8 +1,8 @@
-import '../precompiled.js';
+import '../hbs/index.cjs';
 import { OpenAPIV3 } from 'openapi-types';
-import { renderTemplate } from './templates';
+import { renderTemplate } from './templates/index.js';
 
-export { HttpResponse, HttpStatus, Route, RouteOptions, constructor } from './types';
+export { HttpResponse, HttpStatus, Route, RouteOptions, constructor } from './types.js';
 
 export const renderComponents = (doc: OpenAPIV3.Document) => {
   return renderTemplate('Components.ts.hbs', doc);

@@ -10,18 +10,9 @@
     "declaration": true,
     "declarationMap": true,
     "incremental": true,
-    "rootDir": "./lib",
-    "outDir": "./esm",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
   },
-  "include": [
-    "lib"
-  ],
-  "exclude": [
-    "node_modules",
-    "esm",
-    "__tests__"
-  ]
+  "exclude": ["node_modules", "esm"]
 }
