@@ -51,8 +51,7 @@
     "clean": "rimraf esm *.tsbuildinfo",
     "watch": "nodemon --watch lib --exec 'pnpm run build'",
     "build:ts": "tsc -p tsconfig.prod.json --outDir esm",
-    "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars",
-    "postinstall": "pnpm run build:hbs"
+    "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars"
   },
   "dependencies": {
     "handlebars": "^4.7.9",
