@@ -1,4 +1,4 @@
-# @ibabkin/openapi-to-server-interface
+# @ibabkin/openapi-to-server
 
 Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This package converts OpenAPI/Swagger specs into type-safe TypeScript interfaces for server implementations, including component types, controller interfaces, and server contracts.
 
@@ -16,9 +16,9 @@ Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This pac
 ## Installation
 
 ```bash
-pnpm add @ibabkin/openapi-to-server-interface
+pnpm add @ibabkin/openapi-to-server
 # or
-npm install @ibabkin/openapi-to-server-interface
+npm install @ibabkin/openapi-to-server
 ```
 
 ## Quick Start
@@ -94,7 +94,7 @@ components:
 Load your OpenAPI specification and generate interfaces:
 
 ```typescript
-import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server-interface';
+import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import'; // or use js-yaml, json-loader, etc.
 import fs from 'fs';
@@ -191,7 +191,7 @@ import {
   renderComponents, 
   renderControllers, 
   renderServer 
-} from '@ibabkin/openapi-to-server-interface';
+} from '@ibabkin/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import';
 import fs from 'fs';
@@ -218,7 +218,7 @@ import {
   HttpStatus, 
   RouteOptions,
   constructor 
-} from '@ibabkin/openapi-to-server-interface';
+} from '@ibabkin/openapi-to-server';
 ```
 
 - **`Route<Payload, Response>`**: Interface for route handlers
@@ -305,7 +305,7 @@ npm run watch
 
 ## Related Packages
 
-- [`@ibabkin/openapi-to-request-validator`](../openapi-to-request-validator): Generate Zod validation schemas from OpenAPI specs
+- [`@ibabkin/openapi-to-zod`](../openapi-to-request-validator): Generate Zod validation schemas from OpenAPI specs
 - [`@ibabkin/openapi-express-server`](../openapi-express-server): Express.js server implementation using generated interfaces
 
 ## License
