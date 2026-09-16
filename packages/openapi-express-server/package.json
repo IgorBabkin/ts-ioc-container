@@ -1,7 +1,10 @@
 {
   "name": "@ibabkin/openapi-express-server",
   "version": "1.0.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "description": "Express.js server implementation for OpenAPI-generated interfaces",
   "keywords": [
     "openapi",
