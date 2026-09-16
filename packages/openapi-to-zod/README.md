@@ -1,4 +1,4 @@
-# @ibabkin/openapi-to-request-validator
+# @ibabkin/openapi-to-zod
 
 Generates Zod validation schemas from OpenAPI 3.0 specifications. Automatically creates type-safe request validators for path parameters, query parameters, and request bodies based on your OpenAPI spec.
 
@@ -14,9 +14,9 @@ Generates Zod validation schemas from OpenAPI 3.0 specifications. Automatically 
 ## Installation
 
 ```bash
-pnpm add @ibabkin/openapi-to-request-validator zod
+pnpm add @ibabkin/openapi-to-zod zod
 # or
-npm install @ibabkin/openapi-to-request-validator zod
+npm install @ibabkin/openapi-to-zod zod
 ```
 
 **Note:** `zod` is a peer dependency and must be installed separately.
@@ -76,7 +76,7 @@ components:
 Load your OpenAPI specification and generate validators:
 
 ```typescript
-import { renderValidators } from '@ibabkin/openapi-to-request-validator';
+import { renderValidators } from '@ibabkin/openapi-to-zod';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import'; // or use js-yaml, json-loader, etc.
 import fs from 'fs';
@@ -158,7 +158,7 @@ Generates Zod validators code as a string from an OpenAPI document object.
 **Example:**
 
 ```typescript
-import { renderValidators } from '@ibabkin/openapi-to-request-validator';
+import { renderValidators } from '@ibabkin/openapi-to-zod';
 import { OpenAPIV3 } from 'openapi-types';
 
 const doc: OpenAPIV3.Document = {

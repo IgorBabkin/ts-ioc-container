@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`openapi-to-server-interface renderComponents should generate component types from OpenAPI spec 1`] = `
-"import { Route, HttpResponse, HttpStatus } from '@ibabkin/openapi-to-server-interface';
+"import { Route, HttpResponse, HttpStatus } from '@ibabkin/openapi-to-server';
 
 // Components
 export type Item = {

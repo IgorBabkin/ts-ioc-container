@@ -1,6 +1,6 @@
 {
-  "name": "@ibabkin/openapi-to-server-interface",
-  "version": "1.0.1",
+  "name": "@ibabkin/openapi-to-server",
+  "version": "1.19.0",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

@@ -2,7 +2,7 @@
 
 Express.js building blocks for wiring routes from an OpenAPI spec to controllers resolved from a
 [`ts-ioc-container`](https://github.com/IgorBabkin/ts-ioc-container) scope. Pairs with
-`@ibabkin/openapi-to-server-interface` (controller interfaces) and `@ibabkin/openapi-to-request-validator`
+`@ibabkin/openapi-to-server` (controller interfaces) and `@ibabkin/openapi-to-zod`
 (Zod payload validators).
 
 ## Exports

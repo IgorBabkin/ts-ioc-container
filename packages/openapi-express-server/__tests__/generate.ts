@@ -1,5 +1,5 @@
-import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server-interface';
-import { renderValidators } from '@ibabkin/openapi-to-request-validator';
+import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server';
+import { renderValidators } from '@ibabkin/openapi-to-zod';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import';
 import * as path from 'path';
