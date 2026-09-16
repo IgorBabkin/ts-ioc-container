@@ -1,0 +1,197 @@
+openapi: 3.0.0
+info:
+  title: Constraints API
+  version: 1.0.0
+paths:
+  /items:
+    get:
+      operationId: searchItems
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: ratio
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1
+      responses:
+        '200':
+          description: ok
+    post:
+      operationId: createItem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+      responses:
+        '201':
+          description: created
+components:
+  schemas:
+    Strings:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          minLength: 2
+          maxLength: 5
+          pattern: '^[A-Z]+/[0-9]+$'
+        email:
+          type: string
+          format: email
+        id:
+          type: string
+          format: uuid
+        homepage:
+          type: string
+          format: uri
+        birthday:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+    Numbers:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 0
+          maximum: 10
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          multipleOf: 0.5
+        temperature:
+          type: number
+          exclusiveMaximum: 100
+        level:
+          type: integer
+          exclusiveMinimum: 0
+          exclusiveMaximum: 5
+    Arrays:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+        anything:
+          type: array
+    Objects:
+      type: object
+      properties:
+        open:
+          type: object
+          properties:
+            name:
+              type: string
+          additionalProperties: true
+        closed:
+          type: object
+          properties:
+            name:
+              type: string
+          additionalProperties: false
+        dictionary:
+          type: object
+          additionalProperties:
+            type: integer
+        freeForm:
+          type: object
+        sized:
+          type: object
+          properties:
+            a:
+              type: string
+            b:
+              type: string
+            c:
+              type: string
+          minProperties: 1
+          maxProperties: 2
+    Cat:
+      type: object
+      required: [kind, meows]
+      properties:
+        kind:
+          type: string
+          enum: [cat]
+        meows:
+          type: boolean
+    Dog:
+      type: object
+      required: [kind, barks]
+      properties:
+        kind:
+          type: string
+          enum: [dog]
+        barks:
+          type: boolean
+    Named:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+    Combinators:
+      type: object
+      properties:
+        pet:
+          oneOf:
+            - $ref: '#/components/schemas/Cat'
+            - $ref: '#/components/schemas/Dog'
+        idOrCode:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: integer
+        namedCat:
+          allOf:
+            - $ref: '#/components/schemas/Named'
+            - $ref: '#/components/schemas/Cat'
+        notAString:
+          not:
+            type: string
+        version:
+          const: 2
+        priority:
+          type: integer
+          enum: [1, 2, 3]
+        status:
+          type: string
+          enum: [active, archived]
+        nickname:
+          type: string
+          nullable: true
+        score:
+          type: [number, 'null']
+        nothing:
+          type: 'null'
+    Item:
+      type: object
+      required: [name, quantity]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+          minimum: 1

@@ -49,6 +49,56 @@ Handlebars.registerHelper('array', function (...args: unknown[]) {
   return args;
 });
 
+Handlebars.registerHelper('is_defined', function (value: unknown) {
+  return value !== undefined && value !== null;
+});
+
+Handlebars.registerHelper('is_empty', function (value: object | undefined) {
+  return !value || Object.keys(value).length === 0;
+});
+
+Handlebars.registerHelper('all_strings', function (values: unknown[]) {
+  return values.every((value) => typeof value === 'string');
+});
+
+// OpenAPI 3.1 allows `type: ['string', 'null']`; 3.0 uses `nullable: true` next to a single type.
+Handlebars.registerHelper('base_type', function (schema: { type?: string | string[] }) {
+  return Array.isArray(schema.type) ? schema.type.find((type) => type !== 'null') : schema.type;
+});
+
+Handlebars.registerHelper('is_nullable', function (schema: { type?: string | string[]; nullable?: boolean }) {
+  return schema.nullable === true || (Array.isArray(schema.type) && schema.type.includes('null'));
+});
+
+// `exclusiveMinimum`/`exclusiveMaximum` are booleans modifying `minimum`/`maximum` in OpenAPI 3.0 and numbers in 3.1.
+Handlebars.registerHelper(
+  'number_constraints',
+  function (schema: {
+    minimum?: number;
+    maximum?: number;
+    exclusiveMinimum?: number | boolean;
+    exclusiveMaximum?: number | boolean;
+    multipleOf?: number;
+  }) {
+    const { minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf } = schema;
+    const parts: string[] = [];
+    if (typeof exclusiveMinimum === 'number') {
+      parts.push(`.gt(${exclusiveMinimum})`);
+    } else if (typeof minimum === 'number') {
+      parts.push(exclusiveMinimum === true ? `.gt(${minimum})` : `.gte(${minimum})`);
+    }
+    if (typeof exclusiveMaximum === 'number') {
+      parts.push(`.lt(${exclusiveMaximum})`);
+    } else if (typeof maximum === 'number') {
+      parts.push(exclusiveMaximum === true ? `.lt(${maximum})` : `.lte(${maximum})`);
+    }
+    if (typeof multipleOf === 'number') {
+      parts.push(`.multipleOf(${multipleOf})`);
+    }
+    return new Handlebars.SafeString(parts.join(''));
+  },
+);
+
 Handlebars.registerHelper('get_methods', function (items: OpenAPIV3.PathsObject) {
   return Object.entries(items)
     .map(([_, item]) => item!.put ?? item!.post ?? item!.get ?? item!.delete)
