@@ -1,4 +1,4 @@
-import { Route, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server-interface';
+import { Route, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
 
 // Components
 export type Item = {
