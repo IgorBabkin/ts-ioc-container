@@ -1,14 +1,14 @@
 import { Express, NextFunction, Request, Response } from 'express';
 import { OpenAPIV3 } from 'openapi-types';
-import { type IContainer, inject, select } from 'ts-ioc-container';
+import { arg, type IContainer, inject, select } from 'ts-ioc-container';
 import { convertOpenAPIPathToExpress, extractRoutes, getContainerOrFail, RouteMetadata } from '../lib';
 import { ZodObject } from 'zod';
 
 export class RouteBuilder {
   constructor(
     @inject(select.scope.current) private readonly currentScope: IContainer,
-    private readonly spec: OpenAPIV3.Document,
-    private readonly validators: Record<string, ZodObject>,
+    @inject(arg(0)) private readonly spec: OpenAPIV3.Document,
+    @inject(arg(1)) private readonly validators: Record<string, ZodObject>,
   ) {}
 
   applyTo(app: Express): void {
