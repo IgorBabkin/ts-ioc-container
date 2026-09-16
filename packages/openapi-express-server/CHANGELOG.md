@@ -1,3 +1,12 @@
+# 1.1.2 (2026-09-16)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-express-server:**
+    upgrade ts-ioc-container to v68
+    (597599d9c210b9a47eabeaccd0274541df36e2b0)
+
+
 # 1.1.1 (2026-09-16)
 
   ### 🐞 Bug Fixes
@@ -25,6 +34,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 
