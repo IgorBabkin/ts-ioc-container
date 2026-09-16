@@ -2,10 +2,12 @@ import 'reflect-metadata';
 import request from 'supertest';
 import express, { type Express } from 'express';
 import * as path from 'path';
-import { containerMiddleware } from '../lib/containerMiddleware';
-import { Container, Provider } from 'ts-ioc-container';
-import { RouteBuilder } from '../lib/RouteBuilder';
+import { containerMiddleware } from '../lib';
+import { Container, Registration } from 'ts-ioc-container';
 import { z } from 'zod';
+import * as YAML from 'yaml';
+import * as fs from 'fs';
+import { RouteBuilder } from './RouteBuilder';
 
 enum HttpStatus {
   OK = 200,
@@ -51,36 +53,33 @@ class ItemsController {
   }
 }
 
+const SWAGGER_PATH = path.resolve(__dirname, './swagger.yaml');
+const VALIDATORS = {
+  getItems: z.object({
+    query: z.object({ limit: z.string().optional() }).optional(),
+  }),
+  createItem: z.object({
+    body: z.object({ name: z.string() }),
+  }),
+  getItem: z.object({
+    params: z.object({ id: z.string() }),
+  }),
+  deleteItem: z.object({
+    params: z.object({ id: z.string() }),
+  }),
+};
+
 describe('ExpressOpenAPIServer', () => {
   let app: Express;
 
   beforeAll(() => {
-    const specPath = path.resolve(__dirname, './swagger.yaml');
     const container = new Container({ tags: ['application'] });
 
     // Register controllers in the container
-    container.register('Items', Provider.fromClass(ItemsController));
+    container.addRegistration(Registration.fromClass(ItemsController).bindToKey('Items'));
 
-    const routeBuilder = new RouteBuilder({
-      specPath,
-      server: {
-        Items: ItemsController,
-      },
-      payloadValidators: {
-        getItems: z.object({
-          query: z.object({ limit: z.string().optional() }).optional(),
-        }),
-        createItem: z.object({
-          body: z.object({ name: z.string() }),
-        }),
-        getItem: z.object({
-          params: z.object({ id: z.string() }),
-        }),
-        deleteItem: z.object({
-          params: z.object({ id: z.string() }),
-        }),
-      },
-    });
+    const spec = YAML.parse(fs.readFileSync(SWAGGER_PATH, 'utf8'));
+    const routeBuilder = container.resolve(RouteBuilder, { args: [spec, VALIDATORS] });
 
     app = express();
     app.use(express.json());

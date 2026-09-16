@@ -1,38 +1,15 @@
 import { Express, NextFunction, Request, Response } from 'express';
 import { OpenAPIV3 } from 'openapi-types';
-import * as fs from 'fs';
-import * as yaml from 'js-yaml';
-import { RouteMetadata } from './types';
-import { convertOpenAPIPathToExpress, extractRoutes } from './utils/routeExtractor';
-import { getContainerOrFail } from './containerMiddleware';
-import { PayloadValidator } from './PayloadValidator';
+import { type IContainer, inject, select } from 'ts-ioc-container';
+import { convertOpenAPIPathToExpress, extractRoutes, getContainerOrFail, RouteMetadata } from '../lib';
 import { ZodObject } from 'zod';
 
-export interface RouteBuilderConfig {
-  specPath: string;
-  server: Record<string, any>;
-  payloadValidators: Record<string, ZodObject>;
-}
-
 export class RouteBuilder {
-  private readonly spec: OpenAPIV3.Document;
-  private readonly controllers: Map<string, any>;
-  private readonly payloadValidator: PayloadValidator;
-
-  constructor(config: RouteBuilderConfig) {
-    this.spec = this.loadSpec(config.specPath);
-    this.controllers = new Map();
-    this.payloadValidator = new PayloadValidator(config.payloadValidators);
-
-    for (const [name, ControllerClass] of Object.entries(config.server)) {
-      this.controllers.set(name, ControllerClass);
-    }
-  }
-
-  private loadSpec(specPath: string): OpenAPIV3.Document {
-    const content = fs.readFileSync(specPath, 'utf8');
-    return yaml.load(content) as OpenAPIV3.Document;
-  }
+  constructor(
+    @inject(select.scope.current) private readonly currentScope: IContainer,
+    private readonly spec: OpenAPIV3.Document,
+    private readonly validators: Record<string, ZodObject>,
+  ) {}
 
   applyTo(app: Express): void {
     const routes = extractRoutes(this.spec);
@@ -43,9 +20,7 @@ export class RouteBuilder {
   }
 
   private registerRoute(app: Express, route: RouteMetadata): void {
-    const ControllerClass = this.controllers.get(route.controllerName);
-
-    if (!ControllerClass) {
+    if (!this.currentScope.hasRegistration(route.controllerName)) {
       console.warn(`Controller "${route.controllerName}" not found for operation "${route.operationId}"`);
       return;
     }
@@ -57,7 +32,7 @@ export class RouteBuilder {
       try {
         const container = getContainerOrFail(req);
         const controller = container.resolve(route.controllerName);
-        const payload = this.payloadValidator.parseByOperationId(route.operationId, req);
+        const payload = this.findValidatorOrFail(route.operationId).parse(req);
         const result = await controller[route.methodName](payload);
         this.sendResponse(result, res);
       } catch (error) {
@@ -66,6 +41,14 @@ export class RouteBuilder {
     });
 
     console.log(`Registered route: ${route.method} ${expressPath} -> ${route.controllerName}.${route.methodName}`);
+  }
+
+  private findValidatorOrFail(operationId: string) {
+    if (!this.validators[operationId]) {
+      throw new Error(`Validator for operation "${operationId}" not found`);
+    }
+
+    return this.validators[operationId];
   }
 
   private sendResponse(result: any, res: Response): void {
