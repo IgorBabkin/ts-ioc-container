@@ -73,7 +73,21 @@ components:
 
 ### 2. Generate Validators
 
-Load your OpenAPI specification and generate validators:
+With the CLI:
+
+```bash
+openapi-to-zod --input src/swagger.yaml --output src/.generated/validators.ts
+```
+
+Programmatically, writing straight to a file:
+
+```typescript
+import { openapiToZod } from '@ibabkin/openapi-to-zod';
+
+openapiToZod({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/validators.ts' });
+```
+
+Or render the code yourself:
 
 ```typescript
 import { renderValidators } from '@ibabkin/openapi-to-zod';
@@ -144,6 +158,14 @@ if (result.success) {
 ```
 
 ## API Reference
+
+### CLI: `openapi-to-zod --input <spec> --output <file>`
+
+`--input` accepts `.yaml`/`.yml` (with `yaml-import` directives) or `.json`. Short flags `-i` and `-o` work too.
+
+### `openapiToZod({ inputFile, outputFile })`
+
+Reads the spec and writes the generated validators to `outputFile` (directories are created).
 
 ### `renderValidators(doc)`
 
