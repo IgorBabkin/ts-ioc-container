@@ -1,5 +1,5 @@
 import { OpenAPIV3 } from 'openapi-types';
-import { RouteMetadata } from '../types';
+import { RouteMetadata } from './types.js';
 
 export function extractRoutes(spec: OpenAPIV3.Document): RouteMetadata[] {
   const routes: RouteMetadata[] = [];

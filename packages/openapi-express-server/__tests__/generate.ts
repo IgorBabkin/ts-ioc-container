@@ -2,8 +2,8 @@ import { renderComponents, renderControllers, renderServer } from '@ibabkin/open
 import { renderValidators } from '@ibabkin/openapi-to-request-validator';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import';
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 
 const swaggerPath = path.resolve(__dirname, './swagger.yaml');
 const doc = read(swaggerPath) as OpenAPIV3.Document;

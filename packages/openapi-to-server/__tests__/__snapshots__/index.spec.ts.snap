@@ -27,7 +27,7 @@ export interface CreateItemRoute extends Route<CreateItemPayload, CreateItemResp
 
     export type GetItemsPayload = {
     query: {
-  limit: number
+  limit?: number
   ,
 }
 

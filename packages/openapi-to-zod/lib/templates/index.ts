@@ -1,4 +1,4 @@
-import Handlebars from 'handlebars/runtime';
+import Handlebars from 'handlebars';
 import { OpenAPIV3 } from 'openapi-types';
 
 Handlebars.registerHelper('capitalize', function (value: string) {
@@ -19,6 +19,10 @@ Handlebars.registerHelper('is_equal', function (a: unknown, b: unknown) {
 
 Handlebars.registerHelper('has_property', function (a: unknown) {
   return !!a;
+});
+
+Handlebars.registerHelper('json', function (value: unknown) {
+  return new Handlebars.SafeString(JSON.stringify(value));
 });
 
 const last = (arr: string[]) => arr[arr.length - 1];
@@ -68,4 +72,7 @@ export function renderTemplate(filename: string, data: unknown) {
   return template(data);
 }
 
-Handlebars.registerHelper('render_template', renderTemplate);
+Handlebars.registerHelper(
+  'render_template',
+  (filename: string, data: unknown) => new Handlebars.SafeString(renderTemplate(filename, data)),
+);

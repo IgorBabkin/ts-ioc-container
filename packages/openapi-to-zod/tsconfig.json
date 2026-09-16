@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": "./lib",
     "lib": ["es2016"],
     "types": ["jest", "node"],
     "target": "ES2020",
@@ -10,18 +9,10 @@
     "declaration": true,
     "declarationMap": true,
     "incremental": true,
-    "rootDir": "./lib",
-    "outDir": "./esm",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
   },
-  "include": [
-    "lib"
-  ],
-  "exclude": [
-    "node_modules",
-    "esm",
-    "__tests__"
-  ]
+  "include": ["lib"],
+  "exclude": ["node_modules", "esm"]
 }

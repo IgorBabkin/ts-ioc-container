@@ -1,5 +1,4 @@
-import { convertOpenAPIPathToExpress } from '../lib/utils/routeExtractor';
-import { buildPayload } from '../lib/utils/payloadBuilder';
+import { buildPayload, convertOpenAPIPathToExpress } from '../lib';
 import { Request } from 'express';
 
 describe('Utility functions', () => {

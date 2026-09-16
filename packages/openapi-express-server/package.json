@@ -1,6 +1,7 @@
 {
   "name": "@ibabkin/openapi-express-server",
   "version": "1.0.0",
+  "private": true,
   "description": "Express.js server implementation for OpenAPI-generated interfaces",
   "keywords": [
     "openapi",
@@ -10,29 +11,37 @@
     "typescript"
   ],
   "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/master/packages/openapi-express-server",
+  "homepage": "https://github.com/IgorBabkin/openapi-to-server/tree/master/packages/openapi-express-server",
   "license": "ISC",
-  "main": "cjm/index.js",
-  "types": "cjm/index.d.ts",
+  "type": "module",
+  "main": "esm/index.js",
+  "types": "esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./esm/index.js",
+      "types": "./esm/index.d.ts"
+    }
+  },
+  "module": "esm/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IgorBabkin/ts-ioc-container.git"
+    "url": "git+https://github.com/IgorBabkin/openapi-to-server.git"
   },
   "directories": {
     "lib": "lib",
     "test": "__tests__"
   },
   "files": [
-    "cjm/**/*"
+    "esm/**/*"
   ],
   "scripts": {
-    "build": "npm run clean && npm run compile",
+    "build": "pnpm run clean && pnpm run build:ts",
     "test": "jest",
     "test:generate:code": "tsx ./__tests__/generate.ts",
     "test:watch": "jest --coverage --watch",
-    "clean": "rimraf cjm",
-    "watch": "nodemon --watch lib --exec 'npm run compile'",
-    "compile": "tsc -p tsconfig.json --outDir cjm"
+    "clean": "rimraf esm *.tsbuildinfo",
+    "watch": "nodemon --watch lib --exec 'pnpm run compile'",
+    "build:ts": "tsc -p tsconfig.prod.json"
   },
   "dependencies": {
     "@ibabkin/openapi-to-server-interface": "workspace:*",
@@ -40,10 +49,11 @@
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "reflect-metadata": "^0.2.2",
-    "ts-ioc-container": "^46.6.2",
+    "ts-ioc-container": "^46.8.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@jest/test-sequencer": "29.7.0",
     "@types/express": "^4.17.21",
     "@types/jest": "29.5.14",
     "@types/js-yaml": "^4.0.5",

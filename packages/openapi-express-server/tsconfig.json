@@ -1,28 +1,21 @@
 {
   "compilerOptions": {
-    "outDir": "./cjm",
-    "rootDir": "./lib",
+    "baseUrl": "./lib",
+    "lib": ["es2016"],
+    "types": ["node"],
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "composite": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "composite": true,
     "incremental": true,
-    "target": "ES6",
-    "module": "commonjs",
-    "baseUrl": ".",
-    "paths": {
-      "@ibabkin/openapi-to-server-interface": ["../openapi-to-server-interface/cjm/index"],
-      "@ibabkin/openapi-to-request-validator": ["../openapi-to-request-validator/cjm/index"]
-    },
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "lib/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "cjm",
-    "__tests__"
-  ]
+  "exclude": ["node_modules", "esm"]
 }

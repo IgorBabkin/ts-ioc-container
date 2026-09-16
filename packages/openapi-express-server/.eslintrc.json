@@ -1,0 +1,11 @@
+{
+  "extends": ["../../.eslintrc.js"],
+  "overrides": [
+    {
+      "files": [".eslintrc.json"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

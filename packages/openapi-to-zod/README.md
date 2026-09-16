@@ -109,10 +109,12 @@ export const User = z.object({
 // Operation payload validators
 export const PAYLOADS = {
   getUsers: z.object({
-    query: z.object({
-      page: z.string().regex(/^\d+$/).transform(Number).optional(),
-      limit: z.string().regex(/^\d+$/).transform(Number).optional(),
-    }).optional(),
+    query: z
+      .object({
+        page: z.string().regex(/^\d+$/).transform(Number).optional(),
+        limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+      })
+      .optional(),
   }),
   getUser: z.object({
     params: z.object({
@@ -129,7 +131,7 @@ import { PAYLOADS } from './validators';
 
 // Validate request payload
 const result = PAYLOADS.getUsers.safeParse({
-  query: { page: '1', limit: '10' }
+  query: { page: '1', limit: '10' },
 });
 
 if (result.success) {
@@ -148,16 +150,20 @@ if (result.success) {
 Generates Zod validators code as a string from an OpenAPI document object.
 
 **Parameters:**
+
 - `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
 
 **Returns:** `string` - TypeScript code containing Zod validators
 
 **Example:**
+
 ```typescript
 import { renderValidators } from '@ibabkin/openapi-to-request-validator';
 import { OpenAPIV3 } from 'openapi-types';
 
-const doc: OpenAPIV3.Document = { /* ... */ };
+const doc: OpenAPIV3.Document = {
+  /* ... */
+};
 const code = renderValidators(doc);
 ```
 
@@ -166,18 +172,29 @@ const code = renderValidators(doc);
 The generated validators file includes:
 
 1. **Schema Exports**: Each schema defined in `components.schemas` is exported as a Zod schema
+
    ```typescript
-   export const User = z.object({ /* ... */ });
-   export const CreateUserRequest = z.object({ /* ... */ });
+   export const User = z.object({
+     /* ... */
+   });
+   export const CreateUserRequest = z.object({
+     /* ... */
+   });
    ```
 
 2. **PAYLOADS Object**: A single export containing validators for all operations, keyed by `operationId`
    ```typescript
    export const PAYLOADS = {
      operationId1: z.object({
-       params: z.object({ /* path params */ }),
-       query: z.object({ /* query params */ }),
-       body: z.object({ /* request body */ }),
+       params: z.object({
+         /* path params */
+       }),
+       query: z.object({
+         /* query params */
+       }),
+       body: z.object({
+         /* request body */
+       }),
      }),
      // ...
    };
@@ -186,13 +203,17 @@ The generated validators file includes:
 ## Type Handling
 
 ### Numbers
+
 Query parameters and path parameters are automatically converted from strings to numbers using a regex transformation:
+
 ```typescript
 const zNumber = z.string().regex(/^\d+$/).transform(Number);
 ```
 
 ### Dates
+
 Date strings are automatically converted to Date objects:
+
 ```typescript
 const zDate = z.preprocess((arg) => {
   if (typeof arg === 'string' || typeof arg === 'number') {
@@ -203,31 +224,26 @@ const zDate = z.preprocess((arg) => {
 ```
 
 ### Optional Fields
-Fields marked as `required: false` or not in the `required` array are automatically marked as optional with `.optional()`.
+
+Object properties not listed in `required`, and parameters without `required: true`, are marked optional with `.optional()`.
+
+### String Constraints
+
+`enum` becomes `z.enum([...])`, `format: email` adds `.email()`, and `minLength`/`maxLength` add `.min()`/`.max()`.
 
 ## Integration with Express
 
-This package works seamlessly with `@ibabkin/openapi-express-server`:
+This package works seamlessly with `@ibabkin/openapi-express-server`. The generated `PAYLOADS` map is keyed by
+`operationId`, so it can be handed straight to a route builder:
 
 ```typescript
-import { RouteBuilder } from '@ibabkin/openapi-express-server';
-import * as validators from './validators';
+import { PAYLOADS } from './validators';
 
-const routeBuilder = new RouteBuilder({
-  specPath: './swagger.yaml',
-  server: {
-    Users: UsersController,
-  },
-  payloadValidators: {
-    getUsers: validators.PAYLOADS.getUsers,
-    getUser: validators.PAYLOADS.getUser,
-    // ... other operations
-  },
-});
-
-const app = express();
+const routeBuilder = container.resolve(RouteBuilder, { args: [spec, PAYLOADS] });
 routeBuilder.applyTo(app);
 ```
+
+See `packages/openapi-express-server/__tests__/RouteBuilder.ts` for a reference implementation.
 
 ## Building from Source
 

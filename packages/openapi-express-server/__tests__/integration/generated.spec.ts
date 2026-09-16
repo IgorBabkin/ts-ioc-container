@@ -1,13 +1,14 @@
+import 'reflect-metadata';
 import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server-interface';
 import { renderValidators } from '@ibabkin/openapi-to-request-validator';
 import * as path from 'path';
 import * as fs from 'fs';
 import request from 'supertest';
-import { type Express } from 'express';
-import express from 'express';
-import { Container, Provider } from 'ts-ioc-container';
-import { containerMiddleware } from '../../lib/containerMiddleware';
-import { RouteBuilder } from '../../lib/RouteBuilder';
+import express, { type Express, type NextFunction, type Request, type Response } from 'express';
+import { ZodError } from 'zod';
+import { Container, Registration } from 'ts-ioc-container';
+import { containerMiddleware } from '../../lib';
+import { RouteBuilder } from '../RouteBuilder';
 import { read } from 'yaml-import';
 import { OpenAPIV3 } from 'openapi-types';
 
@@ -74,16 +75,15 @@ describe('Generated Types Integration Test', () => {
     const content = fs.readFileSync(GENERATED_VALIDATORS, 'utf-8');
 
     // Check for schema exports
-    expect(content).toContain('export const UserSchema');
-    expect(content).toContain('export const CreateUserRequestSchema');
-    expect(content).toContain('export const UpdateUserRequestSchema');
+    expect(content).toContain('export const User =');
+    expect(content).toContain('export const CreateUserRequest =');
+    expect(content).toContain('export const UpdateUserRequest =');
 
-    // Check for payload validator exports
-    expect(content).toContain('export const GetUsersPayloadSchema');
-    expect(content).toContain('export const CreateUserPayloadSchema');
-    expect(content).toContain('export const GetUserPayloadSchema');
-    expect(content).toContain('export const UpdateUserPayloadSchema');
-    expect(content).toContain('export const DeleteUserPayloadSchema');
+    // Check for payload validators map keyed by operationId
+    expect(content).toContain('export const PAYLOADS =');
+    for (const operationId of ['getUsers', 'createUser', 'getUser', 'updateUser', 'deleteUser']) {
+      expect(content).toContain(`${operationId}: z.object(`);
+    }
   });
 
   afterAll(() => {
@@ -234,28 +234,16 @@ describe('Integration Test with Generated Types and Validators', () => {
     fs.writeFileSync(GENERATED_TYPES, components + controllers + server);
 
     // Generate Zod validators
-    const validators = renderValidators(doc);
-    fs.writeFileSync(GENERATED_VALIDATORS, validators);
+    const validatorsCode = renderValidators(doc);
+    fs.writeFileSync(GENERATED_VALIDATORS, validatorsCode);
 
     // Dynamically import generated validators
     validatorsModule = await import('./generated-validators' as any);
 
     const container = new Container({ tags: ['application'] });
-    container.register('Users', Provider.fromClass(UsersController));
+    container.addRegistration(Registration.fromClass(UsersController).bindToKey('Users'));
 
-    const routeBuilder = new RouteBuilder({
-      specPath: API_SPEC,
-      server: {
-        Users: UsersController,
-      },
-      payloadValidators: {
-        getUsers: validatorsModule.GetUsersPayloadSchema,
-        createUser: validatorsModule.CreateUserPayloadSchema,
-        getUser: validatorsModule.GetUserPayloadSchema,
-        updateUser: validatorsModule.UpdateUserPayloadSchema,
-        deleteUser: validatorsModule.DeleteUserPayloadSchema,
-      },
-    });
+    const routeBuilder = new RouteBuilder(container, doc, validatorsModule.PAYLOADS);
 
     app = express();
     app.use(express.json());
@@ -263,6 +251,13 @@ describe('Integration Test with Generated Types and Validators', () => {
     app.use(containerMiddleware(container));
 
     routeBuilder.applyTo(app);
+
+    app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+      if (res.headersSent) {
+        return next(error);
+      }
+      res.status(error instanceof ZodError ? 400 : 500).json({ error: error.message });
+    });
   });
 
   describe('GET /users', () => {
