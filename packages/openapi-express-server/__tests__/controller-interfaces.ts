@@ -1,4 +1,4 @@
-import { Route, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
+import { Route, HttpResponse, HttpStatus } from '@ibabkin/openapi-to-server';
 
 // Components
 export type Item = {
@@ -21,7 +21,7 @@ export interface CreateItemRoute extends Route<CreateItemPayload, CreateItemResp
 
 export type GetItemsPayload = {
   query: {
-    limit: number;
+    limit?: number;
   };
 };
 
@@ -84,6 +84,7 @@ export type RoutesPayloads = {
 export interface RequestContext {
   getUrl<Key extends keyof RoutesPayloads>(key: Key, payload: RoutesPayloads[Key]): string;
 }
+
 // Controller Interfaces
 /**
  * Controller interface for items operations
@@ -118,6 +119,7 @@ export interface IItemsController {
    */
   deleteItem(payload: DeleteItemPayload): Promise<DeleteItemResponse>;
 }
+
 // Server Interface
 export interface IServer {
   items: constructor<IItemsController>;

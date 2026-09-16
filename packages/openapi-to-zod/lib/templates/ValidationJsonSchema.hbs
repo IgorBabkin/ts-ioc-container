@@ -1,24 +1,34 @@
 {{~#if (has_property $ref)~}}
-  {{render_ref $ref~}}
-{{else}}
-  {{#if (is_equal type "array")}}
-    z.array({{render_template 'ValidationJsonSchema.hbs' items}})
-  {{else if (is_equal type "object")}}
-    z.object({
-    {{#each properties as |prop key|}}
-      {{key}}: {{render_template 'ValidationJsonSchema.hbs' prop}}{{#if (excludes ../required key)}}.optional(){{/if}},
-    {{/each}}
-    })
-  {{else}}
-    {{~#if (includes (array 'integer' 'number') type)}}zNumber{{/if~}}
-    {{~#if (is_equal type "string")}}
-      {{~#if enum}}z.enum({{json enum}})
-      {{~else if (is_equal format "date-time")}}zDate
-      {{~else}}z.string(){{#if (is_equal format "email")}}.email(){{/if}}{{#if minLength}}.min({{minLength}}){{/if}}{{#if maxLength}}.max({{maxLength}}){{/if}}
-      {{~/if~}}
-    {{/if~}}
-    {{~#if (is_equal type "boolean")}}z.boolean(){{/if~}}
-  {{/if}}
+{{render_ref $ref}}
+{{~else if allOf~}}
+{{#each allOf}}{{#unless @first}}.and({{/unless}}{{render_template 'ValidationJsonSchema.hbs' this}}{{#unless @first}}){{/unless}}{{/each}}
+{{~else if oneOf~}}
+z.union([{{#each oneOf}}{{render_template 'ValidationJsonSchema.hbs' this}}{{#unless @last}}, {{/unless}}{{/each}}])
+{{~else if anyOf~}}
+z.union([{{#each anyOf}}{{render_template 'ValidationJsonSchema.hbs' this}}{{#unless @last}}, {{/unless}}{{/each}}])
+{{~else if not~}}
+z.any().refine((value) => !{{render_template 'ValidationJsonSchema.hbs' not}}.safeParse(value).success, { message: 'Must not match the excluded schema' })
+{{~else if (is_defined const)~}}
+z.literal({{json const}})
+{{~else if enum~}}
+{{#if (all_strings enum)}}z.enum({{json enum}}){{else}}z.union([{{#each enum}}z.literal({{json this}}){{#unless @last}}, {{/unless}}{{/each}}]){{/if}}
+{{~else if (is_equal (base_type this) "array")~}}
+z.array({{#if items}}{{render_template 'ValidationJsonSchema.hbs' items}}{{else}}z.any(){{/if}}){{#if (is_defined minItems)}}.min({{minItems}}){{/if}}{{#if (is_defined maxItems)}}.max({{maxItems}}){{/if}}{{#if uniqueItems}}.refine((items) => new Set(items.map((item) => JSON.stringify(item))).size === items.length, { message: 'Items must be unique' }){{/if}}
+{{~else if (is_equal (base_type this) "object")~}}
+z.object({
+{{#each properties as |prop key|}}
+  {{key}}: {{render_template 'ValidationJsonSchema.hbs' prop}}{{#if (excludes ../required key)}}.optional(){{/if}},
+{{/each}}
+}){{#if (is_equal additionalProperties true)}}.passthrough(){{else if (is_equal additionalProperties false)}}.strict(){{else if additionalProperties}}.catchall({{render_template 'ValidationJsonSchema.hbs' additionalProperties}}){{else if (is_empty properties)}}.passthrough(){{/if}}{{#if (is_defined minProperties)}}.refine((value) => Object.keys(value).length >= {{minProperties}}, { message: 'Must have at least {{minProperties}} properties' }){{/if}}{{#if (is_defined maxProperties)}}.refine((value) => Object.keys(value).length <= {{maxProperties}}, { message: 'Must have at most {{maxProperties}} properties' }){{/if}}
+{{~else if (includes (array 'integer' 'number') (base_type this))~}}
+zNumber(z.number(){{#if (is_equal (base_type this) "integer")}}.int(){{/if}}{{number_constraints this}})
+{{~else if (is_equal (base_type this) "string")~}}
+{{#if (is_equal format "date-time")}}zDate{{else}}z.string(){{#if (is_equal format "email")}}.email(){{/if}}{{#if (is_equal format "uuid")}}.uuid(){{/if}}{{#if (includes (array 'uri' 'url') format)}}.url(){{/if}}{{#if (is_equal format "date")}}.date(){{/if}}{{#if (is_defined minLength)}}.min({{minLength}}){{/if}}{{#if (is_defined maxLength)}}.max({{maxLength}}){{/if}}{{#if pattern}}.regex(new RegExp({{json pattern}})){{/if}}{{/if}}
+{{~else if (is_equal (base_type this) "boolean")~}}
+z.boolean()
+{{~else if (is_equal (base_type this) "null")~}}
+z.null()
+{{~else~}}
+z.any()
 {{~/if~}}
-
-
+{{~#if (is_nullable this)~}}.nullable(){{~/if~}}

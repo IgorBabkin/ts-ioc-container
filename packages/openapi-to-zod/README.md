@@ -226,15 +226,38 @@ The generated validators file includes:
 
 ### Numbers
 
-Query parameters and path parameters are automatically converted from strings to numbers using a regex transformation:
+`integer` and `number` schemas render as `zNumber(z.number()...)`. Path and query parameters arrive as strings while JSON
+bodies carry real numbers, so `zNumber` coerces numeric strings and passes numbers through before applying the constraints:
 
 ```typescript
-const zNumber = z.string().regex(/^\d+$/).transform(Number);
+const zNumber = (schema: z.ZodNumber) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value)) ? Number(value) : value),
+    schema,
+  );
 ```
+
+| OpenAPI | Zod |
+| --- | --- |
+| `type: integer` | `.int()` |
+| `minimum` / `maximum` | `.gte()` / `.lte()` |
+| `exclusiveMinimum` / `exclusiveMaximum` (boolean, OpenAPI 3.0, or number, 3.1) | `.gt()` / `.lt()` |
+| `multipleOf` | `.multipleOf()` |
+
+### Strings
+
+| OpenAPI | Zod |
+| --- | --- |
+| `minLength` / `maxLength` | `.min()` / `.max()` |
+| `pattern` | `.regex(new RegExp(pattern))` |
+| `format: email` / `uuid` / `uri` (or `url`) / `date` | `.email()` / `.uuid()` / `.url()` / `.date()` |
+| `format: date-time` | `zDate` (see below) |
+| `enum` | `z.enum([...])` for strings, a union of `z.literal()` otherwise |
+| `const` | `z.literal()` |
 
 ### Dates
 
-Date strings are automatically converted to Date objects:
+`format: date-time` strings are converted to `Date` objects:
 
 ```typescript
 const zDate = z.preprocess((arg) => {
@@ -245,13 +268,26 @@ const zDate = z.preprocess((arg) => {
 }, z.date());
 ```
 
+### Arrays
+
+`minItems` / `maxItems` become `.min()` / `.max()`, `uniqueItems` adds a refinement comparing items by their JSON
+representation, and an array without `items` accepts `z.any()`.
+
+### Objects
+
+Properties not listed in `required` are `.optional()`. `additionalProperties: true` → `.passthrough()`, `false` →
+`.strict()`, a schema → `.catchall(schema)`; an object with no `properties` at all is treated as free-form
+(`.passthrough()`), otherwise unknown keys are stripped (Zod's default). `minProperties` / `maxProperties` add
+refinements.
+
+### Combinators and null
+
+`oneOf` / `anyOf` → `z.union([...])`, `allOf` → `a.and(b)`, `not` → a refinement that rejects values matching the excluded
+schema. `nullable: true` (OpenAPI 3.0) and `type: [T, 'null']` (3.1) add `.nullable()`; `type: 'null'` is `z.null()`.
+
 ### Optional Fields
 
 Object properties not listed in `required`, and parameters without `required: true`, are marked optional with `.optional()`.
-
-### String Constraints
-
-`enum` becomes `z.enum([...])`, `format: email` adds `.email()`, and `minLength`/`maxLength` add `.min()`/`.max()`.
 
 ## Integration with Express
 

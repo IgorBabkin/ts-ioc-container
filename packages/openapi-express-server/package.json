@@ -40,7 +40,7 @@
   "scripts": {
     "build": "pnpm run clean && pnpm run build:ts",
     "test": "jest",
-    "test:generate:code": "tsx ./__tests__/generate.ts",
+    "test:generate:code": "tsx ./__tests__/generate.ts && prettier --write __tests__/controller-interfaces.ts __tests__/validators.ts",
     "test:watch": "jest --coverage --watch",
     "clean": "rimraf esm *.tsbuildinfo",
     "watch": "nodemon --watch lib --exec 'pnpm run compile'",
