@@ -37,11 +37,12 @@
     "test": "__tests__"
   },
   "files": [
+    "bin/**/*",
     "esm/**/*",
     "hbs/**/*"
   ],
   "bin": {
-    "openapi-to-zod": "esm/bin/openapi-to-zod.js"
+    "openapi-to-zod": "bin/openapi-to-zod.js"
   },
   "scripts": {
     "build": "pnpm run clean && pnpm run build:hbs && pnpm run build:ts",

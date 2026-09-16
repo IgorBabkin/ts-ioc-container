@@ -38,12 +38,13 @@
     "test": "__tests__"
   },
   "files": [
+    "bin/**/*",
     "esm/**/*",
     "hbs/**/*"
   ],
   "bin": {
-    "openapi-to-server": "esm/bin/openapi-to-server.js",
-    "openapi-to-client": "esm/bin/openapi-to-client.js"
+    "openapi-to-server": "bin/openapi-to-server.js",
+    "openapi-to-client": "bin/openapi-to-client.js"
   },
   "scripts": {
     "build": "pnpm run clean && pnpm run build:hbs && pnpm run build:ts",

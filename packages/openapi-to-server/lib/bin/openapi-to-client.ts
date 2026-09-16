@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { parseCliFlags } from '../utils/cli.js';
 import { openapiToClient } from '../useCases/openapiToClient.js';
 
