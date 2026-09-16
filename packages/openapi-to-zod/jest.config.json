@@ -1,23 +1,17 @@
 {
-  "testMatch": [
-    "**/?(*.)+(spec|test).+(ts)"
-  ],
+  "testMatch": ["**/?(*.)+(spec|test).+(ts)"],
   "transform": {
-    "^.+\\.tsx?$": "ts-jest"
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.test.json"
+      }
+    ]
   },
-  "transformIgnorePatterns": [
-    "node_modules/(?!.*\\.mjs$)",
-    "precompiled/"
-  ],
-  "coveragePathIgnorePatterns": [
-    "/node_modules/",
-    "/fixtures/",
-    "/cjm/",
-    "/esm/",
-    "/precompiled/"
-  ],
-  "moduleDirectories": [
-    "node_modules",
-    "<rootDir>"
-  ]
+  "transformIgnorePatterns": ["node_modules/(?!.*\\.mjs$)", "/hbs/"],
+  "coveragePathIgnorePatterns": ["/node_modules/", "/fixtures/", "/esm/", "/hbs/"],
+  "moduleDirectories": ["node_modules", "<rootDir>"],
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  }
 }

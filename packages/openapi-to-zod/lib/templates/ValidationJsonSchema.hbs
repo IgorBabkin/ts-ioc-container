@@ -12,7 +12,10 @@
   {{else}}
     {{~#if (includes (array 'integer' 'number') type)}}zNumber{{/if~}}
     {{~#if (is_equal type "string")}}
-      {{~#if (is_equal format "date-time")}}zDate{{else}}z.string(){{/if~}}
+      {{~#if enum}}z.enum({{json enum}})
+      {{~else if (is_equal format "date-time")}}zDate
+      {{~else}}z.string(){{#if (is_equal format "email")}}.email(){{/if}}{{#if minLength}}.min({{minLength}}){{/if}}{{#if maxLength}}.max({{maxLength}}){{/if}}
+      {{~/if~}}
     {{/if~}}
     {{~#if (is_equal type "boolean")}}z.boolean(){{/if~}}
   {{/if}}
