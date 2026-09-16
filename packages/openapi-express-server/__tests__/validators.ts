@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
-const zNumber = z.string().regex(/^\d+$/).transform(Number);
+// Path and query parameters arrive as strings while JSON bodies carry real numbers: accept both.
+const zNumber = (schema: z.ZodNumber) =>
+  z.preprocess(
+    (value) =>
+      typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value)) ? Number(value) : value,
+    schema,
+  );
 
 const zDate = z.preprocess((arg) => {
   if (typeof arg === 'string' || typeof arg === 'number') {
@@ -21,7 +27,7 @@ export const PAYLOADS = {
   }),
   getItems: z.object({
     query: z.object({
-      limit: zNumber,
+      limit: zNumber(z.number().int()).optional(),
     }),
   }),
   deleteItem: z.object({
