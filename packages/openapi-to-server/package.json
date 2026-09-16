@@ -41,19 +41,24 @@
     "esm/**/*",
     "hbs/**/*"
   ],
+  "bin": {
+    "openapi-to-server": "esm/bin/openapi-to-server.js",
+    "openapi-to-client": "esm/bin/openapi-to-client.js"
+  },
   "scripts": {
     "build": "pnpm run clean && pnpm run build:hbs && pnpm run build:ts",
     "test": "pnpm run build:hbs && make-dir .generated && jest",
     "test:watch": "jest --coverage --watch",
     "clean": "rimraf esm *.tsbuildinfo",
     "watch": "nodemon --watch lib --exec 'pnpm run build'",
-    "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars",
     "build:ts": "tsc -p tsconfig.prod.json --outDir esm",
+    "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars",
     "postinstall": "pnpm run build:hbs"
   },
   "dependencies": {
     "handlebars": "^4.7.7",
     "js-yaml": "^4.1.0",
+    "openapi-types": "^12.1.0",
     "yaml-import": "^2.0.0"
   },
   "devDependencies": {
@@ -63,7 +68,6 @@
     "jest": "29.7.0",
     "make-dir-cli": "^3.0.0",
     "nodemon": "^2.0.22",
-    "openapi-types": "^12.1.0",
     "rimraf": "3.0.2",
     "ts-jest": "29.2.5",
     "typescript": "5.7.3"
