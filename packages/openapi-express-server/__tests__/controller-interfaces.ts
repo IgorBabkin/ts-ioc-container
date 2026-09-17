@@ -87,7 +87,7 @@ export interface RequestContext {
 
 // Controller Interfaces
 /**
- * Controller interface for items operations
+ * Controller interface for Items operations
  * Each method corresponds to an OpenAPI operation defined in swagger.yaml
  */
 export interface IItemsController {
@@ -122,5 +122,5 @@ export interface IItemsController {
 
 // Server Interface
 export interface IServer {
-  items: constructor<IItemsController>;
+  Items: constructor<IItemsController>;
 }

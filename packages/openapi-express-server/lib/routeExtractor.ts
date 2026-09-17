@@ -1,3 +1,4 @@
+import { toIdentifier } from '@ibabkin/openapi-to-server/identifier';
 import { OpenAPIV3 } from 'openapi-types';
 import { RouteMetadata } from './types.js';
 
@@ -28,7 +29,7 @@ export function extractRoutes(spec: OpenAPIV3.Document): RouteMetadata[] {
         continue;
       }
 
-      const controllerName = capitalizeFirst(firstTag);
+      const controllerName = toIdentifier(firstTag);
       const methodName = operation.operationId;
 
       routes.push({
@@ -43,10 +44,6 @@ export function extractRoutes(spec: OpenAPIV3.Document): RouteMetadata[] {
   }
 
   return routes;
-}
-
-function capitalizeFirst(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export function convertOpenAPIPathToExpress(openApiPath: string): string {

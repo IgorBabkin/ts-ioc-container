@@ -68,7 +68,7 @@ describe('Generated Types Integration Test', () => {
 
     // Check for IServer interface
     expect(content).toContain('export interface IServer');
-    expect(content).toContain('users: constructor<IUsersController>');
+    expect(content).toContain('Users: constructor<IUsersController>');
   });
 
   it('should generate Zod validators', () => {

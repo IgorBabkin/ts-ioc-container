@@ -315,6 +315,28 @@ The generated file contains three main sections:
    - `IServer` interface mapping tags to controller constructors
    - Designed for use with dependency injection containers
 
+## Controller Naming
+
+An operation belongs to the controller derived from its **first** tag; the remaining tags do not
+affect naming. Tags are free text in OpenAPI, so they are normalised into a TypeScript identifier
+before being used as an interface name or an object key — the tag is cut at the first character
+that is illegal in an identifier, and only that first word names the controller:
+
+| Tag | Controller interface | `IServer` key |
+| --- | --- | --- |
+| `items` | `IItemsController` | `Items` |
+| `Network Health` | `INetworkController` | `Network` |
+| `station-groups` | `IStationController` | `Station` |
+| `v1/admin` | `IV1Controller` | `V1` |
+
+Because truncation is lossy, two tags sharing a first word share one controller — `Network Health`
+and `network-status` both land on `INetworkController`. Rename the tag on the contract side when
+they should be separate. The same helper is exported as `toIdentifier`, and
+`@ibabkin/openapi-express-server` uses it to build the DI lookup key, so the key you register a
+controller under always matches the generated `IServer` key.
+
+See [SPEC-001](../../specs/SPEC-001-controller-naming.md) for the full rules.
+
 ## YAML Import Support
 
 The package supports `yaml-import` syntax for modular OpenAPI specifications:
