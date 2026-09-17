@@ -1,6 +1,7 @@
 import { addPathParams, addQueryParams, createUrl } from '../lib';
 
-describe('query utils', () => {
+describe('SPEC-005 · query utils', () => {
+  // URL-3
   describe('addPathParams', () => {
     it('should substitute and encode path parameters', () => {
       expect(addPathParams('/users/{id}/posts/{postId}', { id: 'a b', postId: 42 })).toBe('/users/a%20b/posts/42');
@@ -11,6 +12,7 @@ describe('query utils', () => {
     });
   });
 
+  // URL-4
   describe('addQueryParams', () => {
     it('should build an encoded query string', () => {
       expect(addQueryParams('/items', { q: 'x&y', limit: 10, active: true })).toBe(
@@ -27,6 +29,7 @@ describe('query utils', () => {
     });
   });
 
+  // URL-2
   describe('createUrl', () => {
     it('should combine path and query parameters', () => {
       expect(createUrl('/users/{id}', { params: { id: 1 }, query: { expand: 'posts' } })).toBe('/users/1?expand=posts');

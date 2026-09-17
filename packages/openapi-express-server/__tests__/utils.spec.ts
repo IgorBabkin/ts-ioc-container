@@ -2,7 +2,8 @@ import { buildPayload, convertOpenAPIPathToExpress } from '../lib';
 import { Request } from 'express';
 
 describe('Utility functions', () => {
-  describe('convertOpenAPIPathToExpress', () => {
+  describe('SPEC-005 · convertOpenAPIPathToExpress', () => {
+    // URL-5
     it('should convert OpenAPI path parameters to Express format', () => {
       expect(convertOpenAPIPathToExpress('/users/{id}')).toBe('/users/:id');
       expect(convertOpenAPIPathToExpress('/users/{userId}/posts/{postId}')).toBe('/users/:userId/posts/:postId');
@@ -10,7 +11,10 @@ describe('Utility functions', () => {
     });
   });
 
-  describe('buildPayload', () => {
+  // RP-8 — buildPayload is the validator-free projection: it carries headers, which the generated
+  // payload type does not have, and drops params/query when they are empty, which the generated
+  // payload type requires whenever the operation declares them.
+  describe('SPEC-003 · buildPayload', () => {
     it('should build payload from request with params', () => {
       const req = {
         params: { id: '123' },
