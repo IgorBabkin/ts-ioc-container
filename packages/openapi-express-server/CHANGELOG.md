@@ -1,3 +1,19 @@
+# 1.3.0 (2026-09-17)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-express-server:**
+    derive controller name with shared helper
+    (a9a588da21071082f06d3e1cb2f3118e767a7c49)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    @ibabkin/openapi-to-server
+    to
+    2.0.0
+
+
 # 1.2.0 (2026-09-16)
 
   ### 🐞 Bug Fixes
@@ -54,6 +70,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 

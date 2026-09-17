@@ -1,3 +1,18 @@
+# 2.0.0 (2026-09-17)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ibabkin/openapi-to-server:**
+    normalise tags into valid identifiers
+    (df65e111cab88687f275c3e70e44c1922c5e5c92)
+
+  ### ✨ Features
+
+    - **@ibabkin/openapi-to-server:**
+    normalise tags into valid identifiers
+    (df65e111cab88687f275c3e70e44c1922c5e5c92)
+
+
 # 1.21.1 (2026-09-16)
 
   ### 🐞 Bug Fixes
@@ -23,6 +38,7 @@
     - **@ibabkin/openapi-to-server:**
     publish under the existing package name
     (8e6973ced01f7d64dfae65da2e204e24d674c9a8)
+
 
 
 
