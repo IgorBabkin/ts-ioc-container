@@ -25,6 +25,7 @@ describe('renderClient', () => {
     expect(client).toContain('async deleteItem(data: DeleteItemPayload): Promise<DeleteItemResponse>');
   });
 
+  // SPEC-003 RP-7 — the client sends `body` only when the operation declares a requestBody.
   it('should send the body only for operations with a request body', () => {
     const createItem = client.slice(client.indexOf('async createItem'), client.indexOf('async getItem('));
     const getItems = client.slice(client.indexOf('async getItems'), client.indexOf('async createItem'));
