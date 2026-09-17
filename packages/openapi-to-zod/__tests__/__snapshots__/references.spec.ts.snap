@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`schema references should render the expected schemas 1`] = `
+"import {z} from 'zod';
+
+// Path and query parameters arrive as strings while JSON bodies carry real numbers: accept both.
+const zNumber = (schema: z.ZodNumber) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value)) ? Number(value) : value),
+    schema,
+  );
+
+const zDate = z.preprocess((arg) => {
+  if (typeof arg === 'string' || typeof arg === 'number') {
+    return new Date(arg);
+  }
+
+  return arg;
+}, z.date());
+
+export const Category = z.object({
+  name: z.string(),
+  get children() { return z.array(Category).optional(); },
+  get parent() { return Category.optional(); },
+});
+export const DriverType = z.enum(["guest","employee","fleet","roaming"]);
+export const Vehicle = z.object({
+  plate: z.string(),
+  driverType: DriverType,
+});
+export const ChargingSessionSummary = z.object({
+  id: z.string(),
+  driverType: DriverType,
+  vehicle: Vehicle.optional(),
+});
+export const Node = z.object({
+  id: z.string(),
+  get edges() { return z.array(Edge).optional(); },
+});
+export const Edge = z.object({
+  to: Node,
+});
+
+export const PAYLOADS = {
+    createSession: z.object({
+    body: ChargingSessionSummary,
+})
+,
+};
+"
+`;
