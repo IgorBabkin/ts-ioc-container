@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server';
+import { renderComponents, renderServer } from '@ibabkin/openapi-to-server';
 import { renderValidators } from '@ibabkin/openapi-to-zod';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -7,7 +7,6 @@ import request from 'supertest';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import { ZodError } from 'zod';
 import { Container, Registration } from 'ts-ioc-container';
-import { containerMiddleware } from '../../lib';
 import { RouteBuilder } from '../RouteBuilder';
 import { read } from 'yaml-import';
 import { OpenAPIV3 } from 'openapi-types';
@@ -23,9 +22,8 @@ describe('Generated Types Integration Test', () => {
 
     // Generate TypeScript types
     const components = renderComponents(doc);
-    const controllers = renderControllers(doc);
     const server = renderServer(doc);
-    fs.writeFileSync(GENERATED_TYPES, components + controllers + server);
+    fs.writeFileSync(GENERATED_TYPES, components + server);
 
     // Generate Zod validators
     const validators = renderValidators(doc);
@@ -58,17 +56,23 @@ describe('Generated Types Integration Test', () => {
     expect(content).toContain('export interface UpdateUserResponse');
     expect(content).toContain('export interface DeleteUserResponse');
 
-    // Check for controller interface
-    expect(content).toContain('export interface IUsersController');
-    expect(content).toContain('getUsers(payload: GetUsersPayload)');
-    expect(content).toContain('createUser(payload: CreateUserPayload)');
-    expect(content).toContain('getUser(payload: GetUserPayload)');
-    expect(content).toContain('updateUser(payload: UpdateUserPayload)');
-    expect(content).toContain('deleteUser(payload: DeleteUserPayload)');
+    // Check for use case interfaces
+    expect(content).toContain('export interface GetUsersUseCase extends UseCase<GetUsersPayload, GetUsersResponse>');
+    expect(content).toContain(
+      'export interface CreateUserUseCase extends UseCase<CreateUserPayload, CreateUserResponse>',
+    );
+    expect(content).toContain('export interface GetUserUseCase extends UseCase<GetUserPayload, GetUserResponse>');
+    expect(content).toContain(
+      'export interface UpdateUserUseCase extends UseCase<UpdateUserPayload, UpdateUserResponse>',
+    );
+    expect(content).toContain(
+      'export interface DeleteUserUseCase extends UseCase<DeleteUserPayload, DeleteUserResponse>',
+    );
 
     // Check for IServer interface
     expect(content).toContain('export interface IServer');
-    expect(content).toContain('Users: constructor<IUsersController>');
+    expect(content).toContain('getUsers: constructor<GetUsersUseCase>');
+    expect(content).toContain('deleteUser: constructor<DeleteUserUseCase>');
   });
 
   it('should generate Zod validators', () => {
@@ -123,9 +127,9 @@ const users = new Map<string, any>([
 
 let nextId = 3;
 
-// Implementation of UsersController using generated types
-class UsersController {
-  async getUsers(payload: any) {
+// One use case per operation, each implementing the generated `<Op>UseCase`
+class GetUsersUseCase {
+  async handle(payload: any) {
     let filteredUsers = Array.from(users.values());
 
     if (payload.query?.role) {
@@ -146,8 +150,10 @@ class UsersController {
       },
     };
   }
+}
 
-  async createUser(payload: any) {
+class CreateUserUseCase {
+  async handle(payload: any) {
     const id = `${nextId++}23e4567-e89b-12d3-a456-42661417400${nextId}`;
     const user = {
       id,
@@ -167,8 +173,10 @@ class UsersController {
       body: user,
     };
   }
+}
 
-  async getUser(payload: any) {
+class GetUserUseCase {
+  async handle(payload: any) {
     const user = users.get(payload.params.id);
 
     if (!user) {
@@ -181,8 +189,10 @@ class UsersController {
       body: user,
     };
   }
+}
 
-  async updateUser(payload: any) {
+class UpdateUserUseCase {
+  async handle(payload: any) {
     const user = users.get(payload.params.id);
 
     if (!user) {
@@ -204,8 +214,10 @@ class UsersController {
       body: updated,
     };
   }
+}
 
-  async deleteUser(payload: any) {
+class DeleteUserUseCase {
+  async handle(payload: any) {
     const deleted = users.delete(payload.params.id);
 
     if (!deleted) {
@@ -229,9 +241,8 @@ describe('Integration Test with Generated Types and Validators', () => {
 
     // Generate TypeScript types
     const components = renderComponents(doc);
-    const controllers = renderControllers(doc);
     const server = renderServer(doc);
-    fs.writeFileSync(GENERATED_TYPES, components + controllers + server);
+    fs.writeFileSync(GENERATED_TYPES, components + server);
 
     // Generate Zod validators
     const validatorsCode = renderValidators(doc);
@@ -241,14 +252,17 @@ describe('Integration Test with Generated Types and Validators', () => {
     validatorsModule = await import('./generated-validators' as any);
 
     const container = new Container({ tags: ['application'] });
-    container.addRegistration(Registration.fromClass(UsersController).bindToKey('Users'));
+    container.addRegistration(Registration.fromClass(GetUsersUseCase).bindToKey('getUsers'));
+    container.addRegistration(Registration.fromClass(CreateUserUseCase).bindToKey('createUser'));
+    container.addRegistration(Registration.fromClass(GetUserUseCase).bindToKey('getUser'));
+    container.addRegistration(Registration.fromClass(UpdateUserUseCase).bindToKey('updateUser'));
+    container.addRegistration(Registration.fromClass(DeleteUserUseCase).bindToKey('deleteUser'));
 
     const routeBuilder = new RouteBuilder(container, doc, validatorsModule.PAYLOADS);
 
     app = express();
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.use(containerMiddleware(container));
 
     routeBuilder.applyTo(app);
 

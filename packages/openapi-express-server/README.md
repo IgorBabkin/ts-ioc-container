@@ -1,37 +1,37 @@
 # @ibabkin/openapi-express-server
 
-Express.js building blocks for wiring routes from an OpenAPI spec to controllers resolved from a
+Express.js building blocks for wiring routes from an OpenAPI spec to use cases resolved from a
 [`ts-ioc-container`](https://github.com/IgorBabkin/ts-ioc-container) scope. Pairs with
-`@ibabkin/openapi-to-server` (controller interfaces) and `@ibabkin/openapi-to-zod`
+`@ibabkin/openapi-to-server` (one `<Op>UseCase` interface per operation) and `@ibabkin/openapi-to-zod`
 (Zod payload validators).
 
 ## Exports
 
-- `extractRoutes(spec)` — flattens an `OpenAPIV3.Document` into `RouteMetadata[]` (path, method, operationId, controller/method names derived from the first tag and `operationId`)
+- `extractRoutes(spec)` — flattens an `OpenAPIV3.Document` into `RouteMetadata[]` (`path`, `method`, `operationId`, `tags`); `operationId` is the DI key of the operation's use case, `tags` are the operation's tags verbatim
 - `convertOpenAPIPathToExpress(path)` — `/users/{id}` → `/users/:id`
 - `buildPayload(req)` — picks `params`, `query`, `body`, `headers` off an Express request
-- `containerMiddleware(appContainer)` — creates a request-scoped child container, attaches it to `req.container`, and disposes it when the response finishes
+- `containerMiddleware(appContainer, tags?)` — creates a request-scoped child container tagged `['request', ...tags]`, attaches it to `req.container`, and disposes it when the response finishes. Mount it per route with `route.tags` so registrations bound to a tag (`scope((s) => s.hasTag('admins'))`) apply to exactly the operations carrying it
 - `getContainerOrFail(req)` — reads `req.container` or throws
 
 ## Usage
 
-Register controllers in an application container keyed by their OpenAPI tag, then register one Express route per
-operation. A reference `RouteBuilder` that does exactly this lives in [`__tests__/RouteBuilder.ts`](./__tests__/RouteBuilder.ts):
+Register one use case per operation in an application container, keyed by its `operationId`, then register one
+Express route per operation. A reference `RouteBuilder` that does exactly this lives in
+[`__tests__/RouteBuilder.ts`](./__tests__/RouteBuilder.ts):
 
 ```typescript
 import 'reflect-metadata';
 import express from 'express';
 import { Container, Registration } from 'ts-ioc-container';
-import { containerMiddleware } from '@ibabkin/openapi-express-server';
 import { PAYLOADS } from './generated-validators';
 import { RouteBuilder } from './RouteBuilder';
 
 const container = new Container({ tags: ['application'] });
-container.addRegistration(Registration.fromClass(UsersController).bindToKey('Users'));
+container.addRegistration(Registration.fromClass(GetUsers).bindToKey('getUsers'));
+container.addRegistration(Registration.fromClass(CreateUser).bindToKey('createUser'));
 
 const app = express();
 app.use(express.json());
-app.use(containerMiddleware(container));
 
 container.resolve(RouteBuilder, { args: [spec, PAYLOADS] }).applyTo(app);
 
@@ -40,8 +40,10 @@ app.use((error, req, res, next) => {
 });
 ```
 
-Each request resolves the controller from the request scope, validates `req` with the Zod schema for the
-`operationId`, calls `controller[methodName](payload)`, and writes `{ status, headers, body }` to the response.
+Each route mounts `containerMiddleware(container, route.tags)`, so every request gets a scope tagged with
+`request` and the operation's tags. The handler resolves the use case from that scope under the `operationId`,
+validates `req` with the Zod schema for the same `operationId`, calls `useCase.handle(payload, scope)`, and writes
+`{ status, headers, body }` to the response.
 
 ## Development
 

@@ -2,8 +2,7 @@ import 'reflect-metadata';
 import request from 'supertest';
 import express, { type Express } from 'express';
 import * as path from 'path';
-import { containerMiddleware } from '../lib';
-import { Container, Registration } from 'ts-ioc-container';
+import { Container, IContainer, Registration } from 'ts-ioc-container';
 import { z } from 'zod';
 import * as YAML from 'yaml';
 import * as fs from 'fs';
@@ -15,8 +14,9 @@ enum HttpStatus {
   NoContent = 204,
 }
 
-class ItemsController {
-  async getItems() {
+// One use case per operation, each registered under its operationId.
+class GetItemsUseCase {
+  async handle() {
     return {
       status: HttpStatus.OK,
       headers: {},
@@ -26,8 +26,10 @@ class ItemsController {
       ],
     };
   }
+}
 
-  async createItem(payload: any) {
+class CreateItemUseCase {
+  async handle(payload: any) {
     return {
       status: HttpStatus.Created,
       headers: {
@@ -36,16 +38,23 @@ class ItemsController {
       body: { id: '123', name: payload.body.name },
     };
   }
+}
 
-  async getItem(payload: any) {
+/** Echoes the tags of the request scope it was resolved from, so the test can see them. */
+class GetItemUseCase {
+  async handle(payload: any, scope: IContainer) {
+    const scopeTags = ['request', 'items', 'application', 'unrelated'].filter((tag) => scope.hasTag(tag));
+
     return {
       status: HttpStatus.OK,
       headers: {},
-      body: { id: payload.params.id, name: 'Test Item' },
+      body: { id: payload.params.id, name: 'Test Item', scopeTags },
     };
   }
+}
 
-  async deleteItem() {
+class DeleteItemUseCase {
+  async handle() {
     return {
       status: HttpStatus.NoContent,
       headers: {},
@@ -75,8 +84,11 @@ describe('ExpressOpenAPIServer', () => {
   beforeAll(() => {
     const container = new Container({ tags: ['application'] });
 
-    // Register controllers in the container
-    container.addRegistration(Registration.fromClass(ItemsController).bindToKey('Items'));
+    // UC-4 — use cases are registered under the operationId verbatim.
+    container.addRegistration(Registration.fromClass(GetItemsUseCase).bindToKey('getItems'));
+    container.addRegistration(Registration.fromClass(CreateItemUseCase).bindToKey('createItem'));
+    container.addRegistration(Registration.fromClass(GetItemUseCase).bindToKey('getItem'));
+    container.addRegistration(Registration.fromClass(DeleteItemUseCase).bindToKey('deleteItem'));
 
     const spec = YAML.parse(fs.readFileSync(SWAGGER_PATH, 'utf8'));
     const routeBuilder = container.resolve(RouteBuilder, { args: [spec, VALIDATORS] });
@@ -84,7 +96,6 @@ describe('ExpressOpenAPIServer', () => {
     app = express();
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.use(containerMiddleware(container));
 
     routeBuilder.applyTo(app);
   });
@@ -125,7 +136,16 @@ describe('ExpressOpenAPIServer', () => {
       expect(response.body).toEqual({
         id: '123',
         name: 'Test Item',
+        scopeTags: ['request', 'items'],
       });
+    });
+
+    // SPEC-007 UC-6 — the request scope carries `request` and the operation's tags, so a
+    // registration bound to a tag applies to exactly the operations carrying it.
+    it('resolves the use case from a request scope tagged with the operation tags', async () => {
+      const response = await request(app).get('/items/123').expect(200);
+
+      expect(response.body.scopeTags).toEqual(['request', 'items']);
     });
   });
 

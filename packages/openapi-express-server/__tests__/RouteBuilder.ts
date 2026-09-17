@@ -1,7 +1,14 @@
 import { Express, NextFunction, Request, Response } from 'express';
 import { OpenAPIV3 } from 'openapi-types';
 import { arg, type IContainer, inject, select } from 'ts-ioc-container';
-import { convertOpenAPIPathToExpress, extractRoutes, getContainerOrFail, RouteMetadata } from '../lib';
+import {
+  containerMiddleware,
+  convertOpenAPIPathToExpress,
+  extractRoutes,
+  getContainerOrFail,
+  RouteMetadata,
+  UseCaseInstance,
+} from '../lib';
 import { ZodObject } from 'zod';
 
 export class RouteBuilder {
@@ -20,27 +27,31 @@ export class RouteBuilder {
   }
 
   private registerRoute(app: Express, route: RouteMetadata): void {
-    if (!this.currentScope.hasRegistration(route.controllerName)) {
-      console.warn(`Controller "${route.controllerName}" not found for operation "${route.operationId}"`);
+    // The use case is registered under the operationId verbatim (SPEC-007 UC-4).
+    if (!this.currentScope.hasRegistration(route.operationId)) {
+      console.warn(`Use case "${route.operationId}" not found`);
       return;
     }
 
     const expressPath = convertOpenAPIPathToExpress(route.path);
     const httpMethod = route.method.toLowerCase() as keyof Express;
 
-    app[httpMethod](expressPath, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    // The request scope carries the operation's tags (SPEC-007 UC-6).
+    const requestScope = containerMiddleware(this.currentScope, route.tags);
+
+    app[httpMethod](expressPath, requestScope, async (req: Request, res: Response, next: NextFunction) => {
       try {
         const container = getContainerOrFail(req);
-        const controller = container.resolve(route.controllerName);
+        const useCase = container.resolve<UseCaseInstance>(route.operationId);
         const payload = this.findValidatorOrFail(route.operationId).parse(req);
-        const result = await controller[route.methodName](payload);
+        const result = await useCase.handle(payload, container);
         this.sendResponse(result, res);
       } catch (error) {
         next(error);
       }
     });
 
-    console.log(`Registered route: ${route.method} ${expressPath} -> ${route.controllerName}.${route.methodName}`);
+    console.log(`Registered route: ${route.method} ${expressPath} -> ${route.operationId}`);
   }
 
   private findValidatorOrFail(operationId: string) {
