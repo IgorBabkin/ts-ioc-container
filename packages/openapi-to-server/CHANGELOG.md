@@ -1,3 +1,18 @@
+# 3.0.0 (2026-09-17)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ibabkin/openapi-to-server:**
+    replace tag-named controllers with one use case per operationId
+    (10b12b9f9453819d1d5aca8dbe46f93e0c239afe)
+
+  ### ✨ Features
+
+    - **@ibabkin/openapi-to-server:**
+    replace tag-named controllers with one use case per operationId
+    (10b12b9f9453819d1d5aca8dbe46f93e0c239afe)
+
+
 # 2.0.1 (2026-09-17)
 
   ### 📝 Other Changes
@@ -50,6 +65,7 @@
     - **@ibabkin/openapi-to-server:**
     publish under the existing package name
     (8e6973ced01f7d64dfae65da2e204e24d674c9a8)
+
 
 
 

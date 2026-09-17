@@ -1,3 +1,25 @@
+# 2.0.0 (2026-09-17)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ibabkin/openapi-express-server:**
+    resolve use cases by operationId and tag the request scope
+    (a526ce7cfe410bf7cbac003327d27b4e08764be4)
+
+  ### ✨ Features
+
+    - **@ibabkin/openapi-express-server:**
+    resolve use cases by operationId and tag the request scope
+    (a526ce7cfe410bf7cbac003327d27b4e08764be4)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    @ibabkin/openapi-to-server
+    to
+    3.0.0
+
+
 # 1.4.0 (2026-09-17)
 
   ### 📝 Other Changes
@@ -93,6 +115,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 
