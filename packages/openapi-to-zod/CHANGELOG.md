@@ -1,3 +1,12 @@
+# 1.4.3 (2026-09-17)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-to-zod:**
+    declare schemas in dependency order and defer cyclic references
+    (8547a11f078d772148923d5236b451786e7a49f3)
+
+
 # 1.4.2 (2026-09-17)
 
   ### 📝 Other Changes
@@ -41,6 +50,7 @@
     - **@ibabkin/openapi-to-zod:**
     publish under the existing package name
     (8d522ae590718b67abc91308ece3976364013638)
+
 
 
 
