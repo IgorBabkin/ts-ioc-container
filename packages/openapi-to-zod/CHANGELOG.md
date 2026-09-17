@@ -1,3 +1,18 @@
+# 1.4.2 (2026-09-17)
+
+  ### 📝 Other Changes
+
+    - **release:**
+    bump published packages for the upgraded release tooling
+    (ecaae04be48ee5834ff1d692971e8ef68756a2bf)
+    - **config:**
+    extract five cross-package specs from existing behaviour
+    (64a5c6ebd9eab2d36f2010d2830ac406442c35bc)
+    - **config:**
+    add specs directory for spec-driven development
+    (0fa3455264a20cfe5ccd5fa9c6b8873a72d13bb9)
+
+
 # 1.4.1 (2026-09-16)
 
   ### 🐞 Bug Fixes
@@ -26,6 +41,7 @@
     - **@ibabkin/openapi-to-zod:**
     publish under the existing package name
     (8d522ae590718b67abc91308ece3976364013638)
+
 
 
 

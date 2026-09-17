@@ -1,3 +1,26 @@
+# 1.4.0 (2026-09-17)
+
+  ### 📝 Other Changes
+
+    - **release:**
+    bump published packages for the upgraded release tooling
+    (ecaae04be48ee5834ff1d692971e8ef68756a2bf)
+    - **config:**
+    extract five cross-package specs from existing behaviour
+    (64a5c6ebd9eab2d36f2010d2830ac406442c35bc)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    @ibabkin/openapi-to-server
+    to
+    2.0.1
+    - 📦 update
+    @ibabkin/openapi-to-zod
+    to
+    1.4.2
+
+
 # 1.3.0 (2026-09-17)
 
   ### 🐞 Bug Fixes
@@ -70,6 +93,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 

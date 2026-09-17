@@ -1,3 +1,15 @@
+# 2.0.1 (2026-09-17)
+
+  ### 📝 Other Changes
+
+    - **release:**
+    bump published packages for the upgraded release tooling
+    (ecaae04be48ee5834ff1d692971e8ef68756a2bf)
+    - **config:**
+    extract five cross-package specs from existing behaviour
+    (64a5c6ebd9eab2d36f2010d2830ac406442c35bc)
+
+
 # 2.0.0 (2026-09-17)
 
   ### 💥 BREAKING CHANGES
@@ -38,6 +50,7 @@
     - **@ibabkin/openapi-to-server:**
     publish under the existing package name
     (8e6973ced01f7d64dfae65da2e204e24d674c9a8)
+
 
 
 
