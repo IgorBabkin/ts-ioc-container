@@ -1,6 +1,8 @@
 // Server Interface
 export interface IServer {
-{{#each (group_by_tags paths) as |operations tag|}}
-  {{tag}}: constructor<{{controller_name tag}}>;
+{{#each paths as |path url|}}
+  {{#each (get_methods_obj path)}}
+  {{operationId}}: constructor<{{use_case_name operationId}}>;
+  {{/each}}
 {{/each}}
 }

@@ -1,4 +1,4 @@
-import { renderComponents, renderControllers, renderServer } from '../lib';
+import { renderComponents, renderServer } from '../lib';
 import { loadYAML } from './yaml';
 import fs from 'fs';
 import * as path from 'path';
@@ -24,7 +24,7 @@ describe('openapi-to-server-interface', () => {
 
       expect(fs.existsSync(outputFile)).toBe(true);
       expect(components).toContain('export type Item');
-      expect(components).toContain('import { Route, HttpResponse, HttpStatus }');
+      expect(components).toContain('import { UseCase, HttpResponse, HttpStatus, constructor }');
       expect(components).toMatchSnapshot();
     });
 
@@ -55,36 +55,21 @@ describe('openapi-to-server-interface', () => {
       expect(components).toContain('export interface RequestContext');
       expect(components).toContain('getUrl<Key extends keyof RoutesPayloads>');
     });
-  });
 
-  describe('renderControllers', () => {
-    it('should generate controller interfaces from OpenAPI spec', () => {
+    it('should contain a use case interface for each operation', () => {
       const doc = loadYAML<OpenAPIV3.Document>(inputFile);
-      const controllers = renderControllers(doc);
+      const components = renderComponents(doc);
 
-      const outputFile = path.resolve(outputDir, 'controllers.ts');
-      fs.writeFileSync(outputFile, controllers);
-
-      expect(fs.existsSync(outputFile)).toBe(true);
-      expect(controllers).toContain('export interface IItemsController');
-      expect(controllers).toMatchSnapshot();
-    });
-
-    it('should contain controller methods for each operation', () => {
-      const doc = loadYAML<OpenAPIV3.Document>(inputFile);
-      const controllers = renderControllers(doc);
-
-      expect(controllers).toContain('getItems(payload: GetItemsPayload): Promise<GetItemsResponse>');
-      expect(controllers).toContain('createItem(payload: CreateItemPayload): Promise<CreateItemResponse>');
-      expect(controllers).toContain('getItem(payload: GetItemPayload): Promise<GetItemResponse>');
-      expect(controllers).toContain('deleteItem(payload: DeleteItemPayload): Promise<DeleteItemResponse>');
-    });
-
-    it('should group operations by tags', () => {
-      const doc = loadYAML<OpenAPIV3.Document>(inputFile);
-      const controllers = renderControllers(doc);
-
-      expect(controllers).toContain('Controller interface for Items operations');
+      expect(components).toContain(
+        'export interface GetItemsUseCase extends UseCase<GetItemsPayload, GetItemsResponse>',
+      );
+      expect(components).toContain(
+        'export interface CreateItemUseCase extends UseCase<CreateItemPayload, CreateItemResponse>',
+      );
+      expect(components).toContain('export interface GetItemUseCase extends UseCase<GetItemPayload, GetItemResponse>');
+      expect(components).toContain(
+        'export interface DeleteItemUseCase extends UseCase<DeleteItemPayload, DeleteItemResponse>',
+      );
     });
   });
 
@@ -101,11 +86,14 @@ describe('openapi-to-server-interface', () => {
       expect(server).toMatchSnapshot();
     });
 
-    it('should contain constructor types for each tag', () => {
+    it('should contain a constructor type for each operation', () => {
       const doc = loadYAML<OpenAPIV3.Document>(inputFile);
       const server = renderServer(doc);
 
-      expect(server).toContain('Items: constructor<IItemsController>');
+      expect(server).toContain('getItems: constructor<GetItemsUseCase>');
+      expect(server).toContain('createItem: constructor<CreateItemUseCase>');
+      expect(server).toContain('getItem: constructor<GetItemUseCase>');
+      expect(server).toContain('deleteItem: constructor<DeleteItemUseCase>');
     });
 
     it('should use constructor type helper', () => {
@@ -117,19 +105,18 @@ describe('openapi-to-server-interface', () => {
   });
 
   describe('integration', () => {
-    it('should generate all three outputs together', () => {
+    it('should generate both outputs together', () => {
       const doc = loadYAML<OpenAPIV3.Document>(inputFile);
       const components = renderComponents(doc);
-      const controllers = renderControllers(doc);
       const server = renderServer(doc);
 
-      const output = components + '\n\n' + controllers + '\n\n' + server;
+      const output = components + '\n\n' + server;
       const outputFile = path.resolve(outputDir, 'server-interfaces.ts');
       fs.writeFileSync(outputFile, output);
 
       expect(fs.existsSync(outputFile)).toBe(true);
       expect(output).toContain('export type Item');
-      expect(output).toContain('export interface IItemsController');
+      expect(output).toContain('export interface GetItemsUseCase');
       expect(output).toContain('export interface IServer');
     });
   });

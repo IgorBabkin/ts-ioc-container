@@ -40,14 +40,17 @@ export interface {{response_name operationId}} extends HttpResponse {
 {{/if}}
 }
 
-{{#if (get_value_by_key responses '200')}}
-export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}
-{{else if (get_value_by_key responses '201')}}
-export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}
-{{else if (get_value_by_key responses '302')}}
-export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}
-{{else if (get_value_by_key responses '204')}}
-export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}
-{{else}}
-export interface {{route_name operationId}} extends Route<{{payload_name operationId}}, {{response_name operationId}}> {}
+{{#if (has_some_key this (array 'summary' 'description' 'tags'))}}
+/**
+{{#if summary}}
+ * {{{summary}}}
 {{/if}}
+{{#if description}}
+ * {{{description}}}
+{{/if}}
+{{#if tags}}
+ * @tags {{#each tags}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+ */
+{{/if}}
+export interface {{use_case_name operationId}} extends UseCase<{{payload_name operationId}}, {{response_name operationId}}> {}

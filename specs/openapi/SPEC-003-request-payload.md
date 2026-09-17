@@ -9,15 +9,15 @@ have to be the same object:
 
 | Producer | Artefact | Role |
 | --- | --- | --- |
-| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what the controller method receives |
+| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what `<Op>UseCase.handle()` receives |
 | `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ClientRoute.hbs`) | what `ApiClient.<op>()` accepts |
 | `@ibabkin/openapi-to-zod` | `PAYLOADS[<operationId>]` (`ValidationRoute.hbs`) | what turns an Express `Request` into that object at runtime |
 
 The runtime never constructs the payload from the type — it parses the Express `Request` with the
-Zod schema and hands the result to the controller (`validators[operationId].parse(req)` in the
+Zod schema and hands the result to the use case (`validators[operationId].parse(req)` in the
 reference `RouteBuilder`). A Zod object strips unknown keys, so **the validator is the projection**:
-whatever it does not mention never reaches the controller, whatever it mentions must exist on the
-generated type, or the controller's typed signature is a lie.
+whatever it does not mention never reaches the use case, whatever it mentions must exist on the
+generated type, or the use case's typed signature is a lie.
 
 ## Requirements
 
@@ -48,10 +48,10 @@ are reachable through the request, not through the payload.
 
 **RP-6** — `PAYLOADS[operationId].parse(req)` returns exactly the members RP-2 requires and strips
 everything else off the `Request`, so its result is assignable to `<Op>Payload`. This is the
-requirement that makes the generated controller signature true at runtime.
+requirement that makes the generated `handle(payload)` signature true at runtime.
 
 **RP-7** — The client payload type and the server payload type of one operation are the same
-shape, so a value built for `ApiClient.<op>()` satisfies the controller's parameter and vice
+shape, so a value built for `ApiClient.<op>()` satisfies `<Op>UseCase.handle()` and vice
 versa. The client splits it back apart: `params` and `query` build the URL
 ([SPEC-005](./SPEC-005-url-construction.md)), `body` is sent as the request body, and `body` is
 sent **only** when the operation declares a `requestBody`.
@@ -59,7 +59,7 @@ sent **only** when the operation declares a `requestBody`.
 **RP-8** — `buildPayload(req)` (`@ibabkin/openapi-express-server`) is a validator-free projection
 for callers that do not generate validators. It is **not** interchangeable with RP-6: it adds a
 `headers` member, and it omits `params`/`query` when they are empty, where RP-2 makes them
-required members of the type. A route wired with `buildPayload` alone can hand a controller a
+required members of the type. A route wired with `buildPayload` alone can hand a use case a
 payload its type says cannot occur.
 
 ## Known divergence

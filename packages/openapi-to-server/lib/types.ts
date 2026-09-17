@@ -21,6 +21,10 @@ export interface HttpResponse {
   body?: unknown;
 }
 
-export interface Route<Payload, Response extends HttpResponse> {
+/**
+ * One operation of the OpenAPI document: receives its validated payload and returns its response.
+ * The generated `<Op>UseCase` interfaces bind `Payload` and `Response` to the operation's types.
+ */
+export interface UseCase<Payload, Response extends HttpResponse> {
   handle(payload: Payload, context: any): Promise<Response>;
 }

@@ -1,6 +1,11 @@
 # SPEC-001 · Controller naming from OpenAPI tags
 
-Status: **active** · Requirement prefix: `CN` · Implements [#11](https://github.com/IgorBabkin/openapi-to-server/issues/11)
+Status: **superseded** by [SPEC-007](./SPEC-007-use-case-per-operation.md) ([#18](https://github.com/IgorBabkin/openapi-to-server/issues/18)) · Requirement prefix: `CN` · Implemented [#11](https://github.com/IgorBabkin/openapi-to-server/issues/11)
+
+> There are no controllers any more. Every operation is its own use case, named from
+> `operationId`, and a tag names nothing — it is attached to the request scope instead. Every
+> requirement below is struck through; the IDs stay so that older commits and test names keep
+> resolving. `toIdentifier` and `@ibabkin/openapi-to-server/identifier` were removed with it.
 
 ## Context
 
@@ -21,36 +26,44 @@ match the key the runtime resolved.
 
 ## Requirements
 
-**CN-1** — An operation is assigned to the controller derived from its **first** tag. Remaining
+~~**CN-1** — An operation is assigned to the controller derived from its **first** tag. Remaining
 tags do not affect naming or grouping; they are carried through unchanged on
-`RouteMetadata.tags`.
+`RouteMetadata.tags`.~~
 
-**CN-2** — An operation with no tags is assigned to the tag `Default` by the generators, and is
-skipped with a warning by `extractRoutes`.
 
-**CN-3** — A tag is normalised into a TypeScript identifier by `toIdentifier` before it is used as
+~~**CN-2** — An operation with no tags is assigned to the tag `Default` by the generators, and is
+skipped with a warning by `extractRoutes`.~~
+
+
+~~**CN-3** — A tag is normalised into a TypeScript identifier by `toIdentifier` before it is used as
 a name or a key. Normalisation splits the tag on every run of characters that are illegal in an
 identifier (outside `[A-Za-z0-9_$]`) and keeps **only the first segment**, upper-casing its first
-character. `Network Health` names the `Network` controller; `Health` is dropped.
+character. `Network Health` names the `Network` controller; `Health` is dropped.~~
 
-**CN-4** — When the normalised result would begin with a digit it is prefixed with `_`. When
-nothing usable remains, the result is `_`.
 
-**CN-5** — `toIdentifier` is idempotent: `toIdentifier(toIdentifier(t)) === toIdentifier(t)`.
+~~**CN-4** — When the normalised result would begin with a digit it is prefixed with `_`. When
+nothing usable remains, the result is `_`.~~
 
-**CN-6** — The controller interface name is `I<identifier>Controller`, and the `IServer` property
+
+~~**CN-5** — `toIdentifier` is idempotent: `toIdentifier(toIdentifier(t)) === toIdentifier(t)`.~~
+
+
+~~**CN-6** — The controller interface name is `I<identifier>Controller`, and the `IServer` property
 key is `<identifier>`. Both are valid TypeScript, so generated output parses for any spec-valid
-tag.
+tag.~~
 
-**CN-7** — `RouteMetadata.controllerName` is the same `<identifier>` the `IServer` key uses, so a
+
+~~**CN-7** — `RouteMetadata.controllerName` is the same `<identifier>` the `IServer` key uses, so a
 controller registered under the generated key resolves at runtime. All three consumers share one
-implementation of `toIdentifier`, exported from `@ibabkin/openapi-to-server/identifier`.
+implementation of `toIdentifier`, exported from `@ibabkin/openapi-to-server/identifier`.~~
 
-**CN-8** — Two tags that normalise to the same identifier describe the same controller: their
+
+~~**CN-8** — Two tags that normalise to the same identifier describe the same controller: their
 operations are merged into a single interface and a single `IServer` key, rather than emitting a
 duplicate declaration. CN-3 is lossy, so this is reachable from distinct tags — `Network Health`
 and `network-status` both name the `Network` controller. Tags whose first word is shared but whose
-controllers should differ must be renamed on the contract side.
+controllers should differ must be renamed on the contract side.~~
+
 
 ## Normalisation table
 
@@ -82,8 +95,4 @@ name is part of the controller's call contract, so normalising it is a separate,
 
 ## Tests
 
-| Requirement | Test |
-| --- | --- |
-| CN-1, CN-2, CN-7 | `packages/openapi-express-server/__tests__/routeExtractor.spec.ts` |
-| CN-3, CN-4, CN-5 | `packages/openapi-to-server-interface/__tests__/tags.spec.ts` |
-| CN-6, CN-8 | `packages/openapi-to-server-interface/__tests__/tags.spec.ts` |
+Removed with the requirements. `routeExtractor.spec.ts` now asserts SPEC-007; `tags.spec.ts` was deleted.

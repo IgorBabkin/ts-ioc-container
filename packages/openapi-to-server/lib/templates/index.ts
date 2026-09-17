@@ -1,6 +1,5 @@
 import Handlebars from 'handlebars';
 import { OpenAPIV3 } from 'openapi-types';
-import { toIdentifier } from '../utils/identifier.js';
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -84,8 +83,8 @@ Handlebars.registerHelper('object', function (...args: unknown[]) {
   return args.reduce((acc: any, [key, value]: any) => ({ ...acc, [key]: value }), {} as Record<string, string>);
 });
 
-Handlebars.registerHelper('route_name', function (operationId: string) {
-  return `${capitalize(operationId)}Route`;
+Handlebars.registerHelper('use_case_name', function (operationId: string) {
+  return `${capitalize(operationId)}UseCase`;
 });
 
 Handlebars.registerHelper('payload_name', function (operationId: string) {
@@ -95,42 +94,6 @@ Handlebars.registerHelper('payload_name', function (operationId: string) {
 Handlebars.registerHelper('response_name', function (operationId: string) {
   return `${capitalize(operationId)}Response`;
 });
-Handlebars.registerHelper('controller_name', function (tag: string) {
-  return `I${toIdentifier(tag)}Controller`;
-});
-
-Handlebars.registerHelper('group_by_tags', function (paths: OpenAPIV3.PathsObject) {
-  const grouped: Record<
-    string,
-    Array<{ operationId: string; operation: OpenAPIV3.OperationObject; method: string; path: string }>
-  > = {};
-
-  Object.entries(paths).forEach(([path, pathItem]) => {
-    if (!pathItem) return;
-
-    ['get', 'post', 'put', 'delete', 'patch'].forEach((method) => {
-      const operation = pathItem[method as keyof OpenAPIV3.PathItemObject] as OpenAPIV3.OperationObject | undefined;
-      if (operation?.operationId) {
-        const tags = operation.tags || ['Default'];
-        // Tags are free text, so they are normalised into identifiers before they reach the
-        // templates; two tags that normalise to the same identifier share a controller.
-        const tag = toIdentifier(tags[0]); // Use only the first tag
-        if (!grouped[tag]) {
-          grouped[tag] = [];
-        }
-        grouped[tag].push({
-          operationId: operation.operationId!,
-          operation,
-          method,
-          path,
-        });
-      }
-    });
-  });
-
-  return grouped;
-});
-
 export function renderTemplate(filename: string, data: unknown) {
   const template = Handlebars.templates[filename];
   if (!template) {

@@ -1,13 +1,13 @@
 # @ibabkin/openapi-to-server
 
-Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This package converts OpenAPI/Swagger specs into type-safe TypeScript interfaces for server implementations, including component types, controller interfaces, and server contracts.
+Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This package converts OpenAPI/Swagger specs into type-safe TypeScript interfaces for server implementations: component types, one use case interface per operation, and the `IServer` contract that lists them.
 
 ## Features
 
 - ✅ Generate TypeScript interfaces from OpenAPI 3.0 specifications
 - ✅ Support for both YAML and JSON OpenAPI files
 - ✅ Type-safe component schemas, routes, and operations
-- ✅ Controller interfaces grouped by tags
+- ✅ One `<Op>UseCase` interface per `operationId`
 - ✅ Server interface with dependency injection support
 - ✅ Request payload types (params, query, body)
 - ✅ Response types with HTTP status codes and headers
@@ -113,7 +113,7 @@ openapiToClient({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/cli
 Or render the individual parts yourself:
 
 ```typescript
-import { renderComponents, renderControllers, renderServer } from '@ibabkin/openapi-to-server';
+import { renderComponents, renderServer } from '@ibabkin/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import'; // or use js-yaml, json-loader, etc.
 import fs from 'fs';
@@ -124,12 +124,10 @@ const doc: OpenAPIV3.Document = read(path.resolve(__dirname, './swagger.yaml'));
 
 // Generate interface code
 const components = renderComponents(doc);
-const controllers = renderControllers(doc);
 const server = renderServer(doc);
 
 // Combine and write to file
-const output = components + '\n\n' + controllers + '\n\n' + server;
-fs.writeFileSync(path.resolve(__dirname, './server-interfaces.ts'), output);
+fs.writeFileSync(path.resolve(__dirname, './server-interfaces.ts'), components + '\n\n' + server);
 ```
 
 ### 3. Use the generated interfaces
@@ -148,25 +146,27 @@ export type CreateTodoPayload = {
 };
 ```
 
-**Route Types** - Type-safe route handlers:
+**Use Cases** - One per operation, named from its `operationId`, with the operation's summary and
+tags in the doc comment:
 ```typescript
-export interface GetTodosRoute extends Route<GetTodosPayload, GetTodosResponse> {}
+/**
+ * List all todos
+ * @tags todos
+ */
+export interface GetTodosUseCase extends UseCase<GetTodosPayload, GetTodosResponse> {}
 
-export interface CreateTodoRoute extends Route<CreateTodoPayload, CreateTodoResponse> {}
+/**
+ * Create a new todo
+ * @tags todos
+ */
+export interface CreateTodoUseCase extends UseCase<CreateTodoPayload, CreateTodoResponse> {}
 ```
 
-**Controller Interfaces** - Grouped by tags:
-```typescript
-export interface TodosController {
-  getTodos(payload: GetTodosPayload): Promise<GetTodosResponse>;
-  createTodo(payload: CreateTodoPayload): Promise<CreateTodoResponse>;
-}
-```
-
-**Server Interface** - For dependency injection:
+**Server Interface** - For dependency injection, keyed by `operationId`:
 ```typescript
 export interface IServer {
-  Todos: constructor<TodosController>;
+  getTodos: constructor<GetTodosUseCase>;
+  createTodo: constructor<CreateTodoUseCase>;
 }
 ```
 
@@ -176,7 +176,7 @@ export interface IServer {
 
 | Command | Flags | Output |
 | --- | --- | --- |
-| `openapi-to-server` | `--input <spec>` `--output <file>` `[--json]` | Components, controller interfaces and `IServer` in one file; with `--json`, the parsed spec as `<spec-name>.json` beside it |
+| `openapi-to-server` | `--input <spec>` `--output <file>` `[--json]` | Components, use case interfaces and `IServer` in one file; with `--json`, the parsed spec as `<spec-name>.json` beside it |
 | `openapi-to-client` | `--input <spec>` `--output <file>` | Component types, payload/response types and an Axios `ApiClient` class |
 
 `--input` accepts `.yaml`/`.yml` (with `yaml-import` directives) or `.json`. Short flags `-i`, `-o`, `-j` work too.
@@ -185,7 +185,7 @@ export interface IServer {
 
 #### `openapiToServer({ inputFile, outputFile, emitJSON? })`
 
-Reads the spec, renders components + controllers + server and writes them to `outputFile` (directories are created).
+Reads the spec, renders components + server and writes them to `outputFile` (directories are created).
 With `emitJSON: true` and a YAML input, also writes the parsed document as JSON next to `outputFile`.
 
 #### `openapiToClient({ inputFile, outputFile })`
@@ -194,29 +194,22 @@ Reads the spec and writes the generated `ApiClient` to `outputFile`.
 
 ### Render Functions
 
-The package provides four render functions that return TypeScript source as a string:
+The package provides three render functions that return TypeScript source as a string:
 
 #### `renderComponents(doc)`
 
-Generates TypeScript type definitions from `components.schemas` and route-related types.
+Generates TypeScript type definitions from `components.schemas`, the payload / response types and the
+`<Op>UseCase` interface of every operation, and the `Operations` / `RoutesPayloads` maps.
 
 **Parameters:**
 - `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
 
-**Returns:** `string` - TypeScript code containing component types and route types
-
-#### `renderControllers(doc)`
-
-Generates controller interfaces grouped by OpenAPI tags.
-
-**Parameters:**
-- `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
-
-**Returns:** `string` - TypeScript code containing controller interfaces
+**Returns:** `string` - TypeScript code containing component types and use case types
 
 #### `renderServer(doc)`
 
-Generates the `IServer` interface for dependency injection.
+Generates the `IServer` interface for dependency injection: one `constructor<<Op>UseCase>` per operation,
+keyed by `operationId`.
 
 **Parameters:**
 - `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
@@ -244,11 +237,7 @@ const todos = await api.getTodos({ query: { limit: 10 } });
 #### Example
 
 ```typescript
-import { 
-  renderComponents, 
-  renderControllers, 
-  renderServer 
-} from '@ibabkin/openapi-to-server';
+import { renderComponents, renderServer } from '@ibabkin/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import';
 import fs from 'fs';
@@ -256,12 +245,10 @@ import fs from 'fs';
 const doc: OpenAPIV3.Document = read('./swagger.yaml');
 
 const components = renderComponents(doc);
-const controllers = renderControllers(doc);
 const server = renderServer(doc);
 
 // Combine and write to file
-const output = components + '\n\n' + controllers + '\n\n' + server;
-fs.writeFileSync('./server-interfaces.ts', output);
+fs.writeFileSync('./server-interfaces.ts', components + '\n\n' + server);
 ```
 
 ### Exported Types
@@ -270,7 +257,7 @@ The package exports several utility types:
 
 ```typescript
 import { 
-  Route, 
+  UseCase, 
   HttpResponse, 
   HttpStatus, 
   RouteOptions,
@@ -278,7 +265,7 @@ import {
 } from '@ibabkin/openapi-to-server';
 ```
 
-- **`Route<Payload, Response>`**: Interface for route handlers
+- **`UseCase<Payload, Response>`**: `handle(payload, context): Promise<Response>` — what every generated `<Op>UseCase` extends
 - **`HttpResponse`**: Response interface with status, headers, and body
 - **`HttpStatus`**: Enum of HTTP status codes (OK, Created, NoContent, Found)
 - **`RouteOptions`**: Options for routes (tags)
@@ -298,44 +285,36 @@ createUrl('/users/{id}', { params: { id: 1 }, query: { expand: 'posts' } }); // 
 
 ## Generated Output Structure
 
-The generated file contains three main sections:
+The generated file contains two main sections:
 
 1. **Components Section**:
    - Type definitions from `components.schemas`
-   - Route type interfaces
+   - `<Op>Payload`, `<Op>Response` and `<Op>UseCase` for every operation
    - Operations type mapping
    - RoutesPayloads type mapping
    - RequestContext interface
 
-2. **Controllers Section**:
-   - Controller interfaces grouped by OpenAPI tags
-   - Each controller has methods corresponding to operations with that tag
-
-3. **Server Section**:
-   - `IServer` interface mapping tags to controller constructors
+2. **Server Section**:
+   - `IServer` interface mapping every `operationId` to its use case constructor
    - Designed for use with dependency injection containers
 
-## Controller Naming
+## Use Case Naming
 
-An operation belongs to the controller derived from its **first** tag; the remaining tags do not
-affect naming. Tags are free text in OpenAPI, so they are normalised into a TypeScript identifier
-before being used as an interface name or an object key — the tag is cut at the first character
-that is illegal in an identifier, and only that first word names the controller:
+Every operation is its own use case, named from its `operationId` with the first character
+upper-cased and nothing else changed. The same `operationId`, verbatim, is the key in `IServer`,
+`Operations`, the Zod `PAYLOADS` map and the DI container:
 
-| Tag | Controller interface | `IServer` key |
+| `operationId` | Use case interface | `IServer` / DI key |
 | --- | --- | --- |
-| `items` | `IItemsController` | `Items` |
-| `Network Health` | `INetworkController` | `Network` |
-| `station-groups` | `IStationController` | `Station` |
-| `v1/admin` | `IV1Controller` | `V1` |
+| `getUser` | `GetUserUseCase` | `getUser` |
+| `get_user` | `Get_userUseCase` | `get_user` |
+| `GETUser` | `GETUserUseCase` | `GETUser` |
 
-Because truncation is lossy, two tags sharing a first word share one controller — `Network Health`
-and `network-status` both land on `INetworkController`. Rename the tag on the contract side when
-they should be separate. The same helper is exported as `toIdentifier`, and
-`@ibabkin/openapi-express-server` uses it to build the DI lookup key, so the key you register a
-controller under always matches the generated `IServer` key.
+Tags name nothing. They are listed in the use case's doc comment (`@tags`) and, at runtime,
+`@ibabkin/openapi-express-server` attaches them to the request scope so middleware and
+registrations can be bound per domain.
 
-See [SPEC-001](../../specs/SPEC-001-controller-naming.md) for the full rules.
+See [SPEC-007](../../specs/SPEC-007-use-case-per-operation.md) for the full rules.
 
 ## YAML Import Support
 
@@ -356,21 +335,24 @@ components:
 The generated `IServer` interface is designed to work with dependency injection:
 
 ```typescript
-import { IServer, constructor } from './server-interfaces';
+import { IServer, GetTodosUseCase, CreateTodoUseCase } from './server-interfaces';
 
-class TodosController implements TodosController {
-  async getTodos(payload: GetTodosPayload): Promise<GetTodosResponse> {
-    // Implementation
-  }
-  
-  async createTodo(payload: CreateTodoPayload): Promise<CreateTodoResponse> {
+class GetTodos implements GetTodosUseCase {
+  async handle(payload: GetTodosPayload, scope: IContainer): Promise<GetTodosResponse> {
     // Implementation
   }
 }
 
-// Register with DI container
+class CreateTodo implements CreateTodoUseCase {
+  async handle(payload: CreateTodoPayload, scope: IContainer): Promise<CreateTodoResponse> {
+    // Implementation
+  }
+}
+
+// One registration per operation, keyed by operationId
 const server: IServer = {
-  Todos: TodosController
+  getTodos: GetTodos,
+  createTodo: CreateTodo,
 };
 ```
 

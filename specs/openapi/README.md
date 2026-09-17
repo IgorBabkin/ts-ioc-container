@@ -7,9 +7,11 @@ that implements them.
 
 The generators and the Express runtime derive the same names from the same OpenAPI input in
 different places. When those derivations are only described by their implementation they drift —
-[SPEC-001](./SPEC-001-controller-naming.md) exists because the controller name was computed three
-times, in three slightly different ways, and two of them disagreed. A spec gives one statement of
-the rule that all three implementations and their tests point at.
+[SPEC-001](./SPEC-001-controller-naming.md) was written because the controller name was computed
+three times, in three slightly different ways, and two of them disagreed. A spec gives one
+statement of the rule that all implementations and their tests point at — and when the concept
+itself goes away, as the controller did in [SPEC-007](./SPEC-007-use-case-per-operation.md), the
+spec is what says so.
 
 A spec belongs here when the behaviour is **observable by a consumer** (the shape of generated
 code, a runtime lookup key, a CLI contract) **and touched by more than one package**. Behaviour
@@ -49,12 +51,13 @@ adding its row.
 
 | Spec | Title | Prefix | Packages | Covers |
 | --- | --- | --- | --- | --- |
-| [SPEC-001](./SPEC-001-controller-naming.md) | Controller naming from OpenAPI tags | `CN` | `openapi-to-server`, `openapi-express-server` | How a free-text tag becomes the controller interface name, the `IServer` key and the DI lookup key |
-| [SPEC-002](./SPEC-002-operation-identity.md) | Operation identity from `operationId` | `OP` | all three | `operationId` as the join key between the generated types, the controller, the validator, the client and the runtime |
+| [SPEC-001](./SPEC-001-controller-naming.md) | ~~Controller naming from OpenAPI tags~~ | `CN` | — | **Superseded** by SPEC-007: there are no controllers |
+| [SPEC-002](./SPEC-002-operation-identity.md) | Operation identity from `operationId` | `OP` | all three | `operationId` as the join key between the generated types, the use case, the validator, the client and the runtime |
 | [SPEC-003](./SPEC-003-request-payload.md) | Request payload projection | `RP` | all three | The one payload object described by the server types, the client types and the Zod validator that projects the Express `Request` |
 | [SPEC-004](./SPEC-004-http-methods.md) | HTTP method coverage | `HM` | all three | Which (path, method) pairs each stage of the pipeline looks at, and how the three hard-coded method lists differ |
 | [SPEC-005](./SPEC-005-url-construction.md) | URL construction and path parameters | `URL` | `openapi-to-server`, `openapi-express-server` | `createUrl` filling `{name}` in and `convertOpenAPIPathToExpress` rewriting it into a route that matches the result |
 | [SPEC-006](./SPEC-006-template-registry.md) | Shared Handlebars registry | `TR` | `openapi-to-server`, `openapi-to-zod` | The process-global template and helper namespaces that both generators precompile into |
+| [SPEC-007](./SPEC-007-use-case-per-operation.md) | Use case per operation | `UC` | `openapi-to-server`, `openapi-express-server` | One `<Op>UseCase` per `operationId`, `IServer` and the DI key keyed by it, and tags carried onto the request scope instead of naming anything |
 
 Each spec carries its own requirements, edge-case tables and the tests that assert them; this index
 does not repeat them, so there is one place to change when a requirement changes.
