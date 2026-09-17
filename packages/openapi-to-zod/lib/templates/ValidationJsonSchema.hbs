@@ -1,5 +1,5 @@
 {{~#if (has_property $ref)~}}
-{{render_ref $ref}}
+{{#if [x-lazy]}}z.lazy(() => {{render_ref $ref}}){{else}}{{render_ref $ref}}{{/if}}
 {{~else if allOf~}}
 {{#each allOf}}{{#unless @first}}.and({{/unless}}{{render_template 'ValidationJsonSchema.hbs' this}}{{#unless @first}}){{/unless}}{{/each}}
 {{~else if oneOf~}}
@@ -17,7 +17,7 @@ z.array({{#if items}}{{render_template 'ValidationJsonSchema.hbs' items}}{{else}
 {{~else if (is_equal (base_type this) "object")~}}
 z.object({
 {{#each properties as |prop key|}}
-  {{key}}: {{render_template 'ValidationJsonSchema.hbs' prop}}{{#if (excludes ../required key)}}.optional(){{/if}},
+  {{#if prop.[x-getter]}}get {{key}}() { return {{render_template 'ValidationJsonSchema.hbs' prop}}{{#if (excludes ../required key)}}.optional(){{/if}}; }{{else}}{{key}}: {{render_template 'ValidationJsonSchema.hbs' prop}}{{#if (excludes ../required key)}}.optional(){{/if}}{{/if}},
 {{/each}}
 }){{#if (is_equal additionalProperties true)}}.passthrough(){{else if (is_equal additionalProperties false)}}.strict(){{else if additionalProperties}}.catchall({{render_template 'ValidationJsonSchema.hbs' additionalProperties}}){{else if (is_empty properties)}}.passthrough(){{/if}}{{#if (is_defined minProperties)}}.refine((value) => Object.keys(value).length >= {{minProperties}}, { message: 'Must have at least {{minProperties}} properties' }){{/if}}{{#if (is_defined maxProperties)}}.refine((value) => Object.keys(value).length <= {{maxProperties}}, { message: 'Must have at most {{maxProperties}} properties' }){{/if}}
 {{~else if (includes (array 'integer' 'number') (base_type this))~}}

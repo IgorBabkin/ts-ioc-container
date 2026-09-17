@@ -1,0 +1,71 @@
+# components.schemas sorted alphabetically (as TypeSpec emits them), so most references point forward.
+openapi: 3.0.0
+info:
+  title: References API
+  version: 1.0.0
+paths:
+  /sessions:
+    post:
+      operationId: createSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargingSessionSummary'
+      responses:
+        '201':
+          description: created
+components:
+  schemas:
+    # Refers to itself, directly and through an array.
+    Category:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        parent:
+          $ref: '#/components/schemas/Category'
+    # Refers forward to DriverType and Vehicle.
+    ChargingSessionSummary:
+      type: object
+      required: [id, driverType]
+      properties:
+        id:
+          type: string
+        driverType:
+          $ref: '#/components/schemas/DriverType'
+        vehicle:
+          $ref: '#/components/schemas/Vehicle'
+    DriverType:
+      type: string
+      enum: [guest, employee, fleet, roaming]
+    # Edge and Node refer to each other.
+    Edge:
+      type: object
+      required: [to]
+      properties:
+        to:
+          $ref: '#/components/schemas/Node'
+    Node:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+    Vehicle:
+      type: object
+      required: [plate, driverType]
+      properties:
+        plate:
+          type: string
+        driverType:
+          $ref: '#/components/schemas/DriverType'

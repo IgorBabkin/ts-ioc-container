@@ -285,6 +285,14 @@ refinements.
 `oneOf` / `anyOf` → `z.union([...])`, `allOf` → `a.and(b)`, `not` → a refinement that rejects values matching the excluded
 schema. `nullable: true` (OpenAPI 3.0) and `type: [T, 'null']` (3.1) add `.nullable()`; `type: 'null'` is `z.null()`.
 
+### References
+
+`$ref`s to `components.schemas` render as the referenced constant (`driverType: DriverType`). Schemas are declared
+in dependency order regardless of their order in the document, so a reference to a schema that appears later in the
+file does not throw at import. A reference that closes a cycle is deferred: inside an object property it becomes a
+getter (`get children() { return z.array(Category); }`), which Zod 4 infers without type annotations; anywhere else
+(`Nested: { type: array, items: { $ref: Nested } }`) it is wrapped in `z.lazy(() => Nested)`.
+
 ### Optional Fields
 
 Object properties not listed in `required`, and parameters without `required: true`, are marked optional with `.optional()`.
