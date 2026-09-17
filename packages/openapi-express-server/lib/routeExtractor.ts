@@ -1,4 +1,3 @@
-import { toIdentifier } from '@ibabkin/openapi-to-server/identifier';
 import { OpenAPIV3 } from 'openapi-types';
 import { RouteMetadata } from './types.js';
 
@@ -21,24 +20,12 @@ export function extractRoutes(spec: OpenAPIV3.Document): RouteMetadata[] {
         continue;
       }
 
-      const tags = operation.tags || [];
-      const firstTag = tags[0];
-
-      if (!firstTag) {
-        console.warn(`Operation ${operation.operationId} has no tags, skipping`);
-        continue;
-      }
-
-      const controllerName = toIdentifier(firstTag);
-      const methodName = operation.operationId;
-
       routes.push({
         path,
         method: method.toUpperCase(),
         operationId: operation.operationId,
-        tags,
-        controllerName,
-        methodName,
+        // Tags name nothing; they are attached to the request scope verbatim (SPEC-007 UC-5/UC-6).
+        tags: operation.tags ?? [],
       });
     }
   }

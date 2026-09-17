@@ -2,14 +2,14 @@ import { renderServer } from '@ibabkin/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { extractRoutes } from '../lib';
 
-function specWithTags(tags?: string[]): OpenAPIV3.Document {
+function specWithTags(tags?: string[], operationId = 'getNetworkHealth'): OpenAPIV3.Document {
   return {
     openapi: '3.0.0',
     info: { title: 'tags', version: '1.0.0' },
     paths: {
       '/network-health': {
         get: {
-          operationId: 'getNetworkHealth',
+          operationId,
           ...(tags ? { tags } : {}),
           responses: { '200': { description: 'ok' } },
         },
@@ -18,37 +18,45 @@ function specWithTags(tags?: string[]): OpenAPIV3.Document {
   };
 }
 
-describe('SPEC-001 · extractRoutes', () => {
-  // CN-3, CN-6
-  it('turns a tag into a valid identifier', () => {
+describe('SPEC-007 · extractRoutes', () => {
+  // UC-4 — the metadata is the path, the method, the operationId and the tags; nothing else is
+  // derived from the document.
+  it('describes a route by its operationId only', () => {
     const [route] = extractRoutes(specWithTags(['Network Health']));
 
-    expect(route.controllerName).toBe('Network');
-    expect(route.methodName).toBe('getNetworkHealth');
+    expect(route).toEqual({
+      path: '/network-health',
+      method: 'GET',
+      operationId: 'getNetworkHealth',
+      tags: ['Network Health'],
+    });
   });
 
-  // CN-1
-  it('names the controller after the first tag and carries the rest through', () => {
-    const [route] = extractRoutes(specWithTags(['Network Health', 'Diagnostics', 'v1/admin']));
+  // UC-5 — tags are carried verbatim: not normalised, not truncated, not reordered.
+  it('carries every tag through untouched', () => {
+    const [route] = extractRoutes(specWithTags(['Network Health', 'v1/admin', '2fa', 'Diagnostics']));
 
-    expect(route.controllerName).toBe('Network');
-    expect(route.tags).toEqual(['Network Health', 'Diagnostics', 'v1/admin']);
+    expect(route.tags).toEqual(['Network Health', 'v1/admin', '2fa', 'Diagnostics']);
   });
 
-  // CN-2
-  it('skips operations without tags', () => {
-    expect(extractRoutes(specWithTags())).toEqual([]);
+  // UC-5 — an untagged operation is still a route, with no tags.
+  it('returns an untagged operation with an empty tag list', () => {
+    const [route] = extractRoutes(specWithTags());
+
+    expect(route.operationId).toBe('getNetworkHealth');
+    expect(route.tags).toEqual([]);
   });
 
-  // CN-7 — the runtime lookup key and the generated IServer key are derived from one helper,
-  // so a controller registered under the generated key resolves.
-  it.each([['Network Health'], ['station-groups'], ['v1/admin'], ['items'], ['2fa']])(
-    'derives the same controller name as the generated IServer key for tag %p',
-    (tag) => {
-      const doc = specWithTags([tag]);
+  // UC-3, UC-4 — the runtime lookup key and the generated IServer key are the same string, so a
+  // use case registered under the generated key resolves at runtime.
+  it.each([['getNetworkHealth'], ['get_network_health'], ['GETNetworkHealth']])(
+    'uses the same key as the generated IServer for operation %p',
+    (operationId) => {
+      const doc = specWithTags(['Network Health'], operationId);
       const [route] = extractRoutes(doc);
+      const capitalized = operationId.charAt(0).toUpperCase() + operationId.slice(1);
 
-      expect(renderServer(doc)).toContain(`${route.controllerName}: constructor<I${route.controllerName}Controller>`);
+      expect(renderServer(doc)).toContain(`${route.operationId}: constructor<${capitalized}UseCase>;`);
     },
   );
 });

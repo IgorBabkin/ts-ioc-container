@@ -4,24 +4,24 @@ import { IContainer } from 'ts-ioc-container';
 
 export interface OpenAPIServerConfig {
   spec: OpenAPIV3.Document;
-  controllers: Record<string, any>;
+  /** One use case per operation, keyed by `operationId`. */
+  useCases: Record<string, any>;
   basePath?: string;
   errorHandler?: ErrorHandler;
 }
 
+/** One operation of the document. `operationId` is the DI key of its use case (SPEC-007 UC-4). */
 export interface RouteMetadata {
   path: string;
   method: string;
   operationId: string;
   tags: string[];
-  controllerName: string;
-  methodName: string;
 }
 
 export type ErrorHandler = (error: Error, req: Request, res: Response, next: NextFunction) => void;
 
-export interface ControllerInstance {
-  [methodName: string]: (payload: any) => Promise<any>;
+export interface UseCaseInstance {
+  handle(payload: any, context: IContainer): Promise<any>;
 }
 
 declare global {

@@ -3,7 +3,7 @@ import path from 'path';
 import { loadDocument } from '../utils/document.js';
 import { isYAML } from '../utils/yaml.js';
 import { saveJSON } from '../utils/json.js';
-import { renderComponents, renderControllers, renderServer } from '../render.js';
+import { renderComponents, renderServer } from '../render.js';
 
 export type OpenapiToServerOptions = {
   inputFile: string;
@@ -21,5 +21,5 @@ export function openapiToServer({ inputFile, outputFile, emitJSON }: OpenapiToSe
     saveJSON(path.join(path.dirname(outputFile), jsonName), doc);
   }
 
-  fs.writeFileSync(outputFile, [renderComponents(doc), renderControllers(doc), renderServer(doc)].join(''), 'utf8');
+  fs.writeFileSync(outputFile, [renderComponents(doc), renderServer(doc)].join(''), 'utf8');
 }

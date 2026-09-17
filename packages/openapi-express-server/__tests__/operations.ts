@@ -1,26 +1,20 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`openapi-to-server-interface renderComponents should generate component types from OpenAPI spec 1`] = `
-"import { UseCase, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
+import { UseCase, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
 
 // Components
 export type Item = {
-id: string  ;
-name: string  ;
-}
-;
+  id: string;
+  name: string;
+};
 
 // Use cases
-    export type CreateItemPayload = {
-    body: Item
+export type CreateItemPayload = {
+  body: Item;
 };
 
 export interface CreateItemResponse extends HttpResponse {
   status: HttpStatus.Created;
 
-  headers: {
-  };
-
+  headers: {};
 }
 
 /**
@@ -28,22 +22,18 @@ export interface CreateItemResponse extends HttpResponse {
  */
 export interface CreateItemUseCase extends UseCase<CreateItemPayload, CreateItemResponse> {}
 
-    export type GetItemsPayload = {
-    query: {
-  limit?: number
-  ,
-}
-
+export type GetItemsPayload = {
+  query: {
+    limit?: number;
+  };
 };
 
 export interface GetItemsResponse extends HttpResponse {
   status: HttpStatus.OK;
 
-  headers: {
-  };
+  headers: {};
 
-  body:     Item[]
-;
+  body: Item[];
 }
 
 /**
@@ -51,19 +41,16 @@ export interface GetItemsResponse extends HttpResponse {
  */
 export interface GetItemsUseCase extends UseCase<GetItemsPayload, GetItemsResponse> {}
 
-    export type DeleteItemPayload = {
-    params: {
-  id: string  ,
-}
-
+export type DeleteItemPayload = {
+  params: {
+    id: string;
+  };
 };
 
 export interface DeleteItemResponse extends HttpResponse {
   status: HttpStatus.NoContent;
 
-  headers: {
-  };
-
+  headers: {};
 }
 
 /**
@@ -71,18 +58,16 @@ export interface DeleteItemResponse extends HttpResponse {
  */
 export interface DeleteItemUseCase extends UseCase<DeleteItemPayload, DeleteItemResponse> {}
 
-    export type GetItemPayload = {
-    params: {
-  id: string  ,
-}
-
+export type GetItemPayload = {
+  params: {
+    id: string;
+  };
 };
 
 export interface GetItemResponse extends HttpResponse {
   status: HttpStatus.OK;
 
-  headers: {
-  };
+  headers: {};
 
   body: Item;
 }
@@ -92,36 +77,30 @@ export interface GetItemResponse extends HttpResponse {
  */
 export interface GetItemUseCase extends UseCase<GetItemPayload, GetItemResponse> {}
 
-
 // Operations
 export type Operations = {
   createItem: CreateItemUseCase;
   getItems: GetItemsUseCase;
   deleteItem: DeleteItemUseCase;
   getItem: GetItemUseCase;
-}
+};
 
 export type RoutesPayloads = {
   createItem: CreateItemPayload;
   getItems: GetItemsPayload;
   deleteItem: DeleteItemPayload;
   getItem: GetItemPayload;
-}
+};
 
 // Context
 export interface RequestContext {
   getUrl<Key extends keyof RoutesPayloads>(key: Key, payload: RoutesPayloads[Key]): string;
 }
-"
-`;
 
-exports[`openapi-to-server-interface renderServer should generate IServer interface from OpenAPI spec 1`] = `
-"// Server Interface
+// Server Interface
 export interface IServer {
   createItem: constructor<CreateItemUseCase>;
   getItems: constructor<GetItemsUseCase>;
   deleteItem: constructor<DeleteItemUseCase>;
   getItem: constructor<GetItemUseCase>;
 }
-"
-`;

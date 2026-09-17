@@ -11,14 +11,14 @@ describe('use cases', () => {
   });
 
   describe('openapiToServer', () => {
-    it('should write components, controllers and server into a single file', () => {
+    it('should write components and server into a single file', () => {
       const outputFile = path.join(outputDir, 'server', 'operations.ts');
 
       openapiToServer({ inputFile, outputFile });
 
       const output = fs.readFileSync(outputFile, 'utf8');
       expect(output).toContain('export type Item');
-      expect(output).toContain('export interface IItemsController');
+      expect(output).toContain('export interface GetItemsUseCase');
       expect(output).toContain('export interface IServer');
       expect(fs.existsSync(path.join(outputDir, 'server', 'swagger.json'))).toBe(false);
     });
