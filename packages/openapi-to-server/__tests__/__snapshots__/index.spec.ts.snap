@@ -106,7 +106,7 @@ export interface RequestContext {
 exports[`openapi-to-server-interface renderControllers should generate controller interfaces from OpenAPI spec 1`] = `
 "// Controller Interfaces
   /**
-  * Controller interface for items operations
+  * Controller interface for Items operations
   * Each method corresponds to an OpenAPI operation defined in swagger.yaml
   */
   export interface IItemsController {
@@ -145,7 +145,7 @@ exports[`openapi-to-server-interface renderControllers should generate controlle
 exports[`openapi-to-server-interface renderServer should generate IServer interface from OpenAPI spec 1`] = `
 "// Server Interface
 export interface IServer {
-  items: constructor<IItemsController>;
+  Items: constructor<IItemsController>;
 }
 "
 `;

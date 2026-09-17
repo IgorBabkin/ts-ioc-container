@@ -84,7 +84,7 @@ describe('openapi-to-server-interface', () => {
       const doc = loadYAML<OpenAPIV3.Document>(inputFile);
       const controllers = renderControllers(doc);
 
-      expect(controllers).toContain('Controller interface for items operations');
+      expect(controllers).toContain('Controller interface for Items operations');
     });
   });
 
@@ -105,7 +105,7 @@ describe('openapi-to-server-interface', () => {
       const doc = loadYAML<OpenAPIV3.Document>(inputFile);
       const server = renderServer(doc);
 
-      expect(server).toContain('items: constructor<IItemsController>');
+      expect(server).toContain('Items: constructor<IItemsController>');
     });
 
     it('should use constructor type helper', () => {

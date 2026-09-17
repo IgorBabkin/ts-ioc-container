@@ -1,5 +1,6 @@
 import Handlebars from 'handlebars';
 import { OpenAPIV3 } from 'openapi-types';
+import { toIdentifier } from '../utils/identifier.js';
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -95,7 +96,7 @@ Handlebars.registerHelper('response_name', function (operationId: string) {
   return `${capitalize(operationId)}Response`;
 });
 Handlebars.registerHelper('controller_name', function (tag: string) {
-  return `I${capitalize(tag)}Controller`;
+  return `I${toIdentifier(tag)}Controller`;
 });
 
 Handlebars.registerHelper('group_by_tags', function (paths: OpenAPIV3.PathsObject) {
@@ -111,7 +112,9 @@ Handlebars.registerHelper('group_by_tags', function (paths: OpenAPIV3.PathsObjec
       const operation = pathItem[method as keyof OpenAPIV3.PathItemObject] as OpenAPIV3.OperationObject | undefined;
       if (operation?.operationId) {
         const tags = operation.tags || ['Default'];
-        const tag = tags[0]; // Use only the first tag
+        // Tags are free text, so they are normalised into identifiers before they reach the
+        // templates; two tags that normalise to the same identifier share a controller.
+        const tag = toIdentifier(tags[0]); // Use only the first tag
         if (!grouped[tag]) {
           grouped[tag] = [];
         }
