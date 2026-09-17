@@ -15,6 +15,7 @@
   },
   "moduleNameMapper": {
     "^@ibabkin/openapi-to-server$": "<rootDir>/../openapi-to-server-interface/lib/index.ts",
+    "^@ibabkin/openapi-to-server/identifier$": "<rootDir>/../openapi-to-server-interface/lib/utils/identifier.ts",
     "^@ibabkin/openapi-to-zod$": "<rootDir>/../openapi-to-request-validator/lib/index.ts",
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
