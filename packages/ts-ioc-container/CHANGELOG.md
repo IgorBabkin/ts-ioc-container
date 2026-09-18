@@ -1,3 +1,12 @@
+# 69.2.0 (2026-09-18)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add InjectionToken.getKey() (#166)
+    (12ade8c2c7ccfc35ea7b564c7956fbea6f65c185)
+
+
 # 69.1.0 (2026-09-18)
 
   ### ✨ Features
@@ -317,6 +326,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
