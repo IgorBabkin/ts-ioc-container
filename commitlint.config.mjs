@@ -1,6 +1,20 @@
+const releaseTypes = new Set(['feat', 'fix', 'perf']);
+const packageScopes = new Set(['ts-ioc-container', '@ts-ioc-container/react']);
+
 export default {
   extends: ['@commitlint/config-conventional'],
+  plugins: [
+    {
+      rules: {
+        'release-package-scope': ({ type, scope }) => [
+          !releaseTypes.has(type) || packageScopes.has(scope),
+          'release-triggering commits must use an exact package scope',
+        ],
+      },
+    },
+  ],
   rules: {
+    'release-package-scope': [2, 'always'],
     // Type enum - restrict to allowed types
     'type-enum': [
       2,
