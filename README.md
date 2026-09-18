@@ -18,7 +18,7 @@ provider pipelines, aliases, and custom injector strategies.
 - clean API for classes, keys, tokens, aliases, and scopes
 - no global container object; pass containers and scopes explicitly
 - supports tagged application, request, transaction, page, and widget scopes
-- decorator support with `@register`, `@inject`, `@onConstruct`, and `@onContainerDisposed`
+- decorator support with `@register`, `@inject`, and `@hook` — lifecycle hook keys are yours to name
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
@@ -38,22 +38,25 @@ provider pipelines, aliases, and custom injector strategies.
   - [Lazy with registerPipe](#lazy-with-registerpipe) `lazy()`
 - [Injector](#injector)
   - [Metadata](#metadata) `@inject`
+  - [Mapping injected values](#mapping-injected-values)
   - [Simple](#simple)
   - [Proxy](#proxy)
 - [Provider](#provider) `provider`
   - [Singleton](#singleton) `singleton`
+  - [Auto resolve](#auto-resolve) `autoResolve`
   - [Arguments](#arguments) `appendArgs` `appendArgsFn`
   - [Visibility](#visibility) `visible`
   - [Alias](#alias) `asAlias`
   - [Decorator](#decorator) `decorate`
+  - [On resolve](#on-resolve) `onResolve`
 - [Registration](#registration) `@register`
   - [Token](#token) `bindTo`
   - [Scope](#scope) `scope`
 - [Module](#module)
 - [Hook](#hook) `@hook`
-  - [OnConstruct](#onconstruct) `@onConstruct`
-  - [OnConstructAsync](#onconstructasync) `@onConstructAsync`
-  - [OnContainerDisposed](#oncontainerdisposed) `@onContainerDisposed`
+  - [Hook domains](#hook-domains) `ScopeHook` `InjectorHook` `ProviderHook`
+  - [Construct hooks](#construct-hooks) `onConstructed`
+  - [Scope disposal hooks](#scope-disposal-hooks) `scopeDisposed`
   - [Inject Property](#inject-property)
   - [Inject Method](#inject-method)
 - [Mock](#mock)
@@ -103,8 +106,8 @@ bundlers tree-shake unused exports.
 | Bun | ✅ | CJS + ESM | Runs the native ESM/CJS builds directly. |
 
 > [!NOTE]
-> The default `MetadataInjector` (and the `@inject` / `@onConstruct` /
-> `@onContainerDisposed` decorators) rely on `reflect-metadata`. It is declared as an
+> The default `MetadataInjector` (and the `@inject` / `@hook` decorators) rely
+> on `reflect-metadata`. It is declared as an
 > optional peer dependency — install it and import it once at your entrypoint.
 > `SimpleInjector` and `ProxyInjector` do not need it.
 
@@ -152,12 +155,14 @@ describe('Quickstart', function () {
 - Register value: `R.fromValue(config).bindTo('Config')`
 - Register factory: `R.fromFn((c) => createX(c)).bindTo('X')`
 - Singleton: `@register(singleton())`
+- Eager service: `@register(autoResolve())` + `container.useModule(new AutoResolveModule())`
 - Scoped registration: `@register(scope((s) => s.hasTag('request')))`
 - Resolve by alias: `container.resolveByAlias('Alias')`
 - Current scope token: `select.scope.current`
 - Lazy token: `select.token('Service').lazy()`
 - Inject decorator: `@inject('Key')`
-- Property inject: `injectProp(target, 'propName', select.token('Key'))`
+- Map an injected value: `@inject('Key', sanitize(), validate())`
+- Property inject: `@hook('onInit', injectProp('Key'))`
 
 > [!TIP]
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
@@ -449,7 +454,7 @@ describe('Instances', function () {
 Sometimes you want to dispose a container or scope. For example, when a request, page, widget, or other local lifecycle ends.
 
 - container can be disposed
-- when container is disposed then it runs its `onContainerDisposed` hooks, unregisters its providers, removes its local instances, and detaches from its parent
+- when container is disposed then it runs its `onScopeDisposed` hooks, unregisters its providers, removes its local instances, and detaches from its parent
 
 > [!IMPORTANT]
 > Dispose is local to the container being disposed. Child scopes are not disposed automatically; dispose them explicitly when their own lifecycle ends.
@@ -468,7 +473,7 @@ import { bindTo, Container, ContainerDisposedError, register, Registration as R,
  * - Cache entries cleared
  *
  * The container.dispose() method:
- * 1. Executes all onContainerDisposed hooks
+ * 1. Executes all onScopeDisposed hooks
  * 2. Clears all instances and registrations
  * 3. Detaches from parent scope
  * 4. Prevents further resolution
@@ -706,7 +711,7 @@ The `lazy()` registerPipe can be used in two ways: with the `@register` decorato
 import 'reflect-metadata';
 import {
   appendArgs,
-  args,
+  arg,
   bindTo,
   Container,
   inject,
@@ -1015,8 +1020,8 @@ describe('lazy registerPipe', () => {
     @register(bindTo('Config'))
     class ConfigService {
       constructor(
-        @inject(args(0)) public apiUrl: string,
-        @inject(args(1)) public timeout: number,
+        @inject(arg(0)) public apiUrl: string,
+        @inject(arg(1)) public timeout: number,
       ) {
         initLog.push(`ConfigService initialized with ${apiUrl}`);
       }
@@ -1187,6 +1192,78 @@ describe('Metadata Injector', function () {
 
 ```
 
+### Mapping injected values
+
+Every argument after the first one is a **mapper** applied to the resolved
+instance, left to right — the value the last mapper returns is what reaches the
+constructor parameter:
+
+```typescript
+@inject('Config', takeApiUrl(), stripTrailingSlash(), requireHttps())
+```
+
+A mapper is a plain `(value) => value` function, so mappers compose into named,
+reusable steps (selecting a member, sanitizing, validating) and each step's
+parameter type is inferred from the previous one. With no mapper the resolved
+instance is injected untouched.
+
+`injectProp` takes the same rest parameters: `injectProp('Config', takeApiUrl())`.
+
+```typescript
+import 'reflect-metadata';
+import { Container, inject, Registration as R } from 'ts-ioc-container';
+
+/**
+ * Mapping injected values
+ *
+ * Every argument after the first one passed to `@inject` (or `injectProp`) is a
+ * mapper applied to the resolved instance, left to right. Mappers are plain
+ * functions, so they compose into reusable, named steps.
+ */
+
+interface Config {
+  apiUrl: string;
+  retries: number;
+}
+
+// Reusable mappers, each returning a `(value) => value` function
+const takeApiUrl = () => (config: Config) => config.apiUrl;
+const stripTrailingSlash = () => (url: string) => url.replace(/\/$/, '');
+const requireHttps = () => (url: string) => {
+  if (!url.startsWith('https://')) {
+    throw new Error(`Insecure api url: ${url}`);
+  }
+  return url;
+};
+
+describe('inject mappers', () => {
+  it('should pipe the resolved dependency through every mapper', () => {
+    class ApiClient {
+      constructor(@inject('Config', takeApiUrl(), stripTrailingSlash(), requireHttps()) readonly apiUrl: string) {}
+    }
+
+    const container = new Container().addRegistration(
+      R.fromValue<Config>({ apiUrl: 'https://api.com/', retries: 3 }).bindToKey('Config'),
+    );
+
+    expect(container.resolve(ApiClient).apiUrl).toBe('https://api.com');
+  });
+
+  it('should throw from a mapper when the resolved value is not acceptable', () => {
+    class ApiClient {
+      constructor(@inject('Config', takeApiUrl(), requireHttps()) readonly apiUrl: string) {}
+    }
+
+    const container = new Container().addRegistration(
+      R.fromValue<Config>({ apiUrl: 'http://api.com', retries: 3 }).bindToKey('Config'),
+    );
+
+    expect(() => container.resolve(ApiClient)).toThrow('Insecure api url: http://api.com');
+  });
+});
+
+```
+
 ### Simple
 
 This type of injector just passes container to constructor with others arguments.
@@ -1317,7 +1394,7 @@ Provider is dependency factory which creates dependency.
 - `new Provider((container, options) => container.resolve(Logger, options))`
 
 ```typescript
-import { args, bindTo, Container, inject, lazy, Provider, register, Registration as R } from 'ts-ioc-container';
+import { arg, bindTo, Container, inject, lazy, Provider, register, Registration as R } from 'ts-ioc-container';
 
 /**
  * Data Processing Pipeline - Provider Patterns
@@ -1384,7 +1461,7 @@ describe('Provider', () => {
 
   it('supports args decorator for providing extra arguments', () => {
     class FileService {
-      constructor(@inject(args(0)) readonly basePath: string) {}
+      constructor(@inject(arg(0)) readonly basePath: string) {}
     }
 
     const container = new Container().register(
@@ -1398,7 +1475,7 @@ describe('Provider', () => {
 
   it('supports argsFn decorator for dynamic arguments', () => {
     class Database {
-      constructor(@inject(args(0)) readonly connectionString: string) {}
+      constructor(@inject(arg(0)) readonly connectionString: string) {}
     }
 
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(
@@ -1542,6 +1619,153 @@ describe('Singleton', function () {
 
 ```
 
+### Auto resolve
+
+Some services are never injected anywhere - they subscribe to a queue, start a
+timer, or warm a cache as soon as their scope exists. Lazy resolution would
+never create them, because nothing asks for them.
+
+- `@register(autoResolve())` marks a provider as eager
+- `container.useModule(new AutoResolveModule())` enables eager resolution for
+  every scope created afterwards
+- `container.autoResolve()` resolves the eager providers of one container on demand
+
+Both accept an optional `AutoResolveOptions` (`{ args?: unknown[] }`) whose `args`
+are forwarded to every eagerly resolved provider, exactly as `resolve` forwards
+them - so they reach `@inject(arg(0))` parameters, `scopeAccess` rules and the
+`singleton()` cache key. `new AutoResolveModule({ args })` applies the same args
+to every created scope; call `scope.autoResolve({ args })` yourself when the
+value differs per scope.
+
+> [!IMPORTANT]
+> `autoResolve()` on its own does nothing - the container has to opt in with
+> `AutoResolveModule`. The container the module is applied to is not a created
+> scope, so call `container.autoResolve()` explicitly to eagerly resolve its own
+> providers.
+
+Eager resolution goes through the provider unchanged, so `singleton()` still
+returns the eagerly created instance later, and providers which are not
+registered in the created scope (`scope(...)`) or deny access to it
+(`scopeAccess(...)`) are skipped.
+
+```typescript
+import 'reflect-metadata';
+import {
+  arg,
+  autoResolve,
+  AutoResolveModule,
+  bindTo,
+  Container,
+  type IContainer,
+  inject,
+  register,
+  Registration as R,
+  scope,
+  singleton,
+} from 'ts-ioc-container';
+
+/**
+ * User Management Domain - Eager Services
+ *
+ * Some services are never injected anywhere: they subscribe to a queue, start a
+ * timer, or warm a cache as soon as their scope exists. Nothing resolves them,
+ * so lazy resolution would never create them at all.
+ *
+ * `autoResolve()` marks such a provider as eager, and `AutoResolveModule`
+ * resolves every eager provider of a scope right after the scope is created.
+ */
+
+const auditTrail: string[] = [];
+const openedLogs: string[] = [];
+
+// Started for every request, even though no other class injects it
+@register(bindTo('IRequestAuditor'), scope((s) => s.hasTag('request')), autoResolve(), singleton())
+class RequestAuditor {
+  constructor() {
+    auditTrail.push('request started');
+  }
+}
+
+// Eager too, but parameterized - the args come from whoever triggers eager resolution
+@register(bindTo('IRequestLog'), scope((s) => s.hasTag('request')), autoResolve())
+class RequestLog {
+  constructor(@inject(arg(0)) readonly requestId: string = 'anonymous') {
+    openedLogs.push(requestId);
+  }
+}
+
+// Resolved on demand, the usual way
+@register(bindTo('IUserRepository'), singleton())
+class UserRepository {
+  findById(id: string): string {
+    return `user_${id}`;
+  }
+}
+
+describe('Auto resolve', function () {
+  function createAppContainer(options: { args?: unknown[] } = {}): IContainer {
+    return new Container({ tags: ['application'] })
+      .useModule(new AutoResolveModule(options))
+      .addRegistration(R.fromClass(RequestAuditor))
+      .addRegistration(R.fromClass(RequestLog))
+      .addRegistration(R.fromClass(UserRepository));
+  }
+
+  beforeEach(() => {
+    auditTrail.length = 0;
+    openedLogs.length = 0;
+  });
+
+  it('should create eager services as soon as a scope is created', function () {
+    const app = createAppContainer();
+
+    // Nothing has been created yet - the application container is not a created scope
+    expect(auditTrail).toEqual([]);
+
+    app.createScope({ tags: ['request'] });
+    app.createScope({ tags: ['request'] });
+
+    // One auditor per request scope, without anybody resolving it
+    expect(auditTrail).toEqual(['request started', 'request started']);
+  });
+
+  it('should reuse the eagerly created instance', function () {
+    const requestScope = createAppContainer().createScope({ tags: ['request'] });
+
+    const auditor = requestScope.resolve<RequestAuditor>('IRequestAuditor');
+
+    expect(auditTrail).toEqual(['request started']);
+    expect(requestScope.resolve<RequestAuditor>('IRequestAuditor')).toBe(auditor);
+  });
+
+  it('should treat resolve options as optional', function () {
+    createAppContainer().createScope({ tags: ['request'] });
+
+    expect(openedLogs).toEqual(['anonymous']);
+  });
+
+  it('should forward args to every eagerly resolved provider', function () {
+    // The same args reach every scope the module creates...
+    createAppContainer({ args: ['req-42'] }).createScope({ tags: ['request'] });
+
+    expect(openedLogs).toEqual(['req-42']);
+
+    // ...or pass a per-scope value by calling autoResolve yourself
+    const requestScope = createAppContainer().createScope({ tags: ['request'] });
+    requestScope.autoResolve({ args: ['req-43'] });
+
+    expect(openedLogs).toEqual(['req-42', 'anonymous', 'req-43']);
+  });
+
+  it('should leave other providers lazy', function () {
+    const requestScope = createAppContainer().createScope({ tags: ['request'] });
+
+    expect(requestScope.resolve<UserRepository>('IUserRepository').findById('1')).toBe('user_1');
+  });
+});
+
+```
+
 ### Arguments
 
 Sometimes you want to bind some arguments to provider.
@@ -1550,22 +1774,89 @@ Sometimes you want to bind some arguments to provider.
 - `provider(appendArgsFn((container) => [container.resolve(Logger), 'someValue']))`
 - `Provider.fromClass(Logger).pipe(appendArgs('someArgument'))`
 
-### Token as argument
+### Dependencies as arguments
 
-When you pass an `InjectionToken` via `token.args(...)`, the container resolves it before the value reaches the constructor. Bare constructors are **not** auto-resolved — wrap a class in `ClassToken` to opt into resolution.
+Args are passed to the constructor **as-is** — the library never resolves an `InjectionToken` (or a bare constructor) it finds in the args list. Resolve it at the call site with `argsFn`:
 
-- `ServiceToken.args(ValueToken)` — `ValueToken` is resolved from the container, its value is passed as arg
-- `ServiceToken.args(new ClassToken(SomeService))` — `SomeService` is constructed by the container
+- `ServiceToken.argsFn((scope) => [ValueToken.resolve(scope)])` — `ValueToken` is resolved from the container, its value is passed as arg
+- `ServiceToken.argsFn((scope) => [scope.resolve(SomeService)])` — `SomeService` is constructed by the container
 - `ServiceToken.args('literal')` — literal value passed directly
+- `ServiceToken.args(ValueToken)` — the token object itself is passed as arg
 
-### Positional arg injection with `args(index)` and `argsFn`
+`argToToken(value)` is the helper for a call site that wants "resolve tokens, pass literals through": it returns an `InjectionToken` as-is and wraps anything else in a `ConstantToken`, so `@inject((scope, { args = [] }) => argToToken(args[0]).resolve(scope))` accepts either.
 
-Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(args(index))`. Parameters without `@inject` resolve to `undefined`.
+### Positional arg injection with `arg(index)`, `args`, and `argsFn`
 
-- `@inject(args(0))` — resolves the first element of the `args` array passed at resolution time
-- Works together with `token.args(...)` to pass typed dependencies through the args context
+Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(arg(index))`. Parameters without `@inject` resolve to `undefined`.
 
-`argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `args(index)` is just a shortcut for matching by position: `args(0)` is `argsFn((value, index) => index === 0)`. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array.
+- `@inject(arg(0))` — resolves the first element of the `args` array passed at resolution time
+- `@inject(args)` — resolves the whole runtime `args` array
+- Works together with `token.args(...)` / `token.argsFn(...)` to pass typed dependencies through the args context
+
+`argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `arg(index)` is just a shortcut for matching by position: `arg(0)` is `argsFn((value, index) => index === 0)`. `args` is `(scope, options) => options.args`, i.e. it returns the runtime args array as-is. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array.
+
+`findOrFail(predicate)` is the strict counterpart for `singleton()` cache keys — `singleton(findOrFail(isUserId))` keys a per-argument singleton, for example. It receives the full runtime `args` array, returns the first argument matching `predicate(value)`, and throws `ArgumentNotFoundError` when none does, instead of silently handing out `undefined`.
+
+### Runtime args flow through tokens
+
+Every container-backed token (`SingleToken`, `ClassToken`, `SingleAliasToken`, `GroupAliasToken`, `FunctionToken`) forwards the `args` of its own `resolve` call to the provider, exactly like `container.resolve(key, { args })` does. `token.args(...)` and `token.argsFn(...)` **append after** the runtime args, so `token.args('x').resolve(container, { args: ['r'] })` hands the provider `['r', 'x']`.
+
+Because `@inject(token)` parameters are resolved with the args of the class being constructed, those args **cascade** into every injected dependency: they reach the dependency's provider, its `@inject(arg(index))` parameters, its `scopeAccess` rule and its `singleton()` cache key. That is what lets a per-user `UserService` share a per-user `UserRepository` without passing the id along by hand:
+
+```typescript
+import {
+  arg,
+  bindTo,
+  Container,
+  findOrFail,
+  inject,
+  register,
+  Registration as R,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
+
+interface IUserRepository {
+  userId: string;
+}
+
+const IUserRepositoryKey = new SingleToken<IUserRepository>('IUserRepository');
+const isUserId = (value: unknown): value is string => typeof value === 'string';
+
+// one repository per user id - the id is the singleton cache key
+@register(bindTo(IUserRepositoryKey), singleton(findOrFail<string>(isUserId)))
+class UserRepository implements IUserRepository {
+  constructor(@inject(arg(0)) public userId: string) {}
+}
+
+class UserService {
+  constructor(@inject(IUserRepositoryKey) public repository: IUserRepository) {}
+}
+
+describe('Token Runtime Arguments', function () {
+  it('should forward runtime args to the provider behind the token', function () {
+    const container = new Container().addRegistration(R.fromClass(UserRepository));
+
+    expect(IUserRepositoryKey.resolve(container, { args: ['user-1'] }).userId).toBe('user-1');
+  });
+
+  it('should cascade the runtime args of a class into its injected dependencies', function () {
+    const container = new Container().addRegistration(R.fromClass(UserRepository));
+
+    const service = container.resolve(UserService, { args: ['user-1'] });
+    const sameUser = container.resolve(UserService, { args: ['user-1'] });
+    const otherUser = container.resolve(UserService, { args: ['user-2'] });
+
+    expect(service.repository.userId).toBe('user-1');
+    expect(sameUser.repository).toBe(service.repository);
+    expect(otherUser.repository.userId).toBe('user-2');
+  });
+});
+
+```
+
+> [!IMPORTANT]
+> Runtime args come first. A dependency that reads `@inject(arg(0))` sees the *caller's* first runtime arg whenever the caller was resolved with args, even if its token was specialized with `token.args(...)`. Pick args by shape (`argsFn(predicate)`, `findOrFail(predicate)`) rather than by position when a class can be resolved with runtime args and its dependencies are specialized with `token.args(...)`.
 
 ### Immutable token chaining
 
@@ -1580,7 +1871,7 @@ const userToken = ApiToken.args('https://users.api.com', 1000);
 
 ```typescript
 import {
-  args,
+  arg,
   appendArgs,
   appendArgsFn,
   bindTo,
@@ -1612,7 +1903,7 @@ describe('IProvider', function () {
       // Pre-configure the logger with a filename
       @register(appendArgs('/var/log/app.log'))
       class FileLogger {
-        constructor(@inject(args(0)) public filename: string) {}
+        constructor(@inject(arg(0)) public filename: string) {}
       }
 
       const root = createContainer().addRegistration(R.fromClass(FileLogger));
@@ -1626,8 +1917,8 @@ describe('IProvider', function () {
       @register(appendArgs('ConfiguredContext'))
       class Logger {
         constructor(
-          @inject(args(0)) public runtimeContext: string,
-          @inject(args(1)) public configuredContext: string,
+          @inject(arg(0)) public runtimeContext: string,
+          @inject(arg(1)) public configuredContext: string,
         ) {}
       }
 
@@ -1649,7 +1940,7 @@ describe('IProvider', function () {
       // Extract 'env' from Config service dynamically
       @register(appendArgsFn((scope) => [scope.resolve<Config>('Config').env]))
       class Service {
-        constructor(@inject(args(0)) public env: string) {}
+        constructor(@inject(arg(0)) public env: string) {}
       }
 
       const root = createContainer()
@@ -1666,8 +1957,8 @@ describe('IProvider', function () {
       @register(appendArgs('configured'))
       class Service {
         constructor(
-          @inject(args(0)) public runtime: string,
-          @inject(args(1)) public configured: string,
+          @inject(arg(0)) public runtime: string,
+          @inject(arg(1)) public configured: string,
         ) {}
       }
 
@@ -1686,9 +1977,9 @@ describe('IProvider', function () {
       @register(appendArgs('fixed'), appendArgsFn((scope) => [scope.resolve<Config>('Config').tenant]))
       class Service {
         constructor(
-          @inject(args(0)) public runtime: string,
-          @inject(args(1)) public fixed: string,
-          @inject(args(2)) public tenant: string,
+          @inject(arg(0)) public runtime: string,
+          @inject(arg(1)) public fixed: string,
+          @inject(arg(2)) public tenant: string,
         ) {}
       }
 
@@ -1724,27 +2015,29 @@ describe('IProvider', function () {
     }
 
     // EntityManager is generic - it works with ANY repository.
-    // The repository is the first arg passed via `EntityManagerToken.args(...)`.
-    // `@inject(args(0))` reads it; the container auto-resolves InjectionToken args
-    // before they reach the constructor.
+    // The repository is the first arg; `@inject(arg(0))` reads it. Args are
+    // passed through as-is, so the call site resolves the repository token
+    // itself with `argsFn` before it reaches the constructor.
     const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
+    const withRepository = (token: SingleToken<IRepository>) =>
+      EntityManagerToken.argsFn((scope) => [token.resolve(scope)]);
 
     @register(
       bindTo(EntityManagerToken),
-      singleton((arg1) => (arg1 as SingleToken).token), // Cache unique instance per repository type
+      singleton(([repository]) => (repository as IRepository).name), // Cache unique instance per repository type
     )
     class EntityManager {
-      constructor(@inject(args(0)) public repository: IRepository) {}
+      constructor(@inject(arg(0)) public repository: IRepository) {}
     }
 
     class App {
       constructor(
         // Inject EntityManager configured for Users
-        @inject(EntityManagerToken.args(UserRepositoryToken))
+        @inject(withRepository(UserRepositoryToken))
         public userManager: EntityManager,
 
         // Inject EntityManager configured for Todos
-        @inject(EntityManagerToken.args(TodoRepositoryToken))
+        @inject(withRepository(TodoRepositoryToken))
         public todoManager: EntityManager,
       ) {}
     }
@@ -1768,14 +2061,14 @@ describe('IProvider', function () {
         .addRegistration(R.fromClass(TodoRepository));
 
       // Resolve user manager twice
-      const userManager1 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
-      const userManager2 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
+      const userManager1 = withRepository(UserRepositoryToken).resolve(root);
+      const userManager2 = withRepository(UserRepositoryToken).resolve(root);
 
       // Should be same instance (cached)
       expect(userManager1).toBe(userManager2);
 
       // Resolve todo manager
-      const todoManager = EntityManagerToken.args(TodoRepositoryToken).resolve(root);
+      const todoManager = withRepository(TodoRepositoryToken).resolve(root);
 
       // Should be different from user manager
       expect(todoManager).not.toBe(userManager1);
@@ -2043,7 +2336,7 @@ Sometimes you want to decorate you class with some logic. Use the `decorate(...)
 
 ```typescript
 import {
-  args,
+  arg,
   bindTo,
   Container,
   decorate,
@@ -2097,7 +2390,7 @@ describe('Decorator Pattern', () => {
   // Decorator: Wraps any IRepository with logging behavior
   class LoggingRepository implements IRepository {
     constructor(
-      @inject(args(0)) private repository: IRepository,
+      @inject(arg(0)) private repository: IRepository,
       @inject(s.token('Logger').lazy()) private logger: Logger,
     ) {}
 
@@ -2147,6 +2440,86 @@ describe('Decorator Pattern', () => {
 
     // All operations were logged transparently
     expect(logger.printLogs()).toBe('1,2');
+  });
+});
+
+```
+
+### On resolve
+
+Sometimes you don't want to change the dependency, only to react to it. Use the `onResolve(...)` pipe — it appends a `ProviderHook` that receives the resolved dependency and the resolving scope.
+
+- `provider(onResolve((instance, scope) => tracker.track(instance)))`
+
+Hooks run after the whole `decorate(...)` chain, so they always observe the fully decorated dependency, and their return value is ignored — `onResolve` can never swap the dependency out. They fire per resolution, which means a `singleton()` provider runs them only on the resolve that fills the cache.
+
+This — or a hook key collected over the same provider event — is the recommended way to react to a dependency; see [Construct hooks](#construct-hooks) for why construction is the narrower event.
+
+```typescript
+import 'reflect-metadata';
+import { Container, type IContainer, onResolve, register, Registration as R, singleton } from 'ts-ioc-container';
+
+/**
+ * Observability Domain - onResolve hooks
+ *
+ * `onResolve(...)` attaches side effects to a provider. Every time the provider
+ * hands a dependency back, each hook is called with that dependency and the
+ * resolving scope.
+ *
+ * Unlike `decorate(...)`, a hook cannot replace the dependency - its return
+ * value is ignored. Use `decorate` to change what the caller gets, and
+ * `onResolve` to react to what the caller got: tracking, metrics, registering
+ * the instance with an external bus.
+ *
+ * Hooks always run after the whole `decorate` chain, so they observe the fully
+ * decorated dependency no matter where `onResolve` sits in the pipe list.
+ */
+describe('onResolve', () => {
+  it('should observe every resolved dependency without changing it', () => {
+    const resolved: Array<{ name: string; fromRequest: boolean }> = [];
+
+    const track = (dependency: unknown, scope: IContainer) => {
+      resolved.push({ name: (dependency as Connection).name, fromRequest: scope.hasTag('request') });
+    };
+
+    @register(onResolve(track))
+    class Connection {
+      readonly name = 'Connection';
+    }
+
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Connection));
+    const request = app.createScope({ tags: ['request'] });
+
+    const connection = request.resolve<Connection>('Connection');
+
+    // The caller still receives the untouched instance
+    expect(connection).toBeInstanceOf(Connection);
+    // ...and the hook saw it, together with the scope it was resolved from
+    expect(resolved).toEqual([{ name: 'Connection', fromRequest: true }]);
+  });
+
+  it('should run once for a singleton and on every resolve otherwise', () => {
+    let poolCount = 0;
+    let sessionCount = 0;
+
+    @register(singleton(), onResolve(() => poolCount++))
+    class ConnectionPool {}
+
+    @register(onResolve(() => sessionCount++))
+    class Session {}
+
+    const app = new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(ConnectionPool))
+      .addRegistration(R.fromClass(Session));
+
+    app.resolve('ConnectionPool');
+    app.resolve('ConnectionPool');
+    app.resolve('Session');
+    app.resolve('Session');
+
+    // A singleton caches the dependency, so hooks fire on the resolve that filled the cache
+    expect(poolCount).toBe(1);
+    expect(sessionCount).toBe(2);
   });
 });
 
@@ -2506,48 +2879,270 @@ describe('Container Modules', function () {
 
 Sometimes you need to invoke methods after construct or dispose of class. This is what hooks are for.
 
-The generic `@hook` decorator takes a hook key and a map function
-`(...prev: HookType[]) => HookType[]`, where `prev` is the list of hooks already
-registered on the class for the decorated member. Use `appendHooks` /
-`prependHooks` (exported as `append` / `prepend` too) to place new hooks around
-the existing ones:
+`@hook(key, hook)` is the only hook decorator the library ships, and the key is
+yours: there is no `@onConstruct` or `@onScopeDisposed` in the package, because
+each is one line of your own code
+([ADR 0017](../../adr/0017-no-predefined-hook-keys.md)).
+
+```typescript
+// yours, named in your vocabulary
+const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
+```
+
+A decorated member takes **one** hook. Several hooks are combined at the
+declaration site, by the combinator that says how they relate:
 
 ```typescript
 class OrderService {
-  @hook('actions', append(validate, persist))
-  @hook('actions', prepend(authorize))
+  @hook('actions', sequential(authorize, validate, persist))
   submit() {}
+
+  @onScopeDisposed(parallel(flushMetrics, closeSocket))
+  destroy() {}
 }
 ```
 
-Decorators are applied bottom-up, so `authorize` runs first, then `validate` and
-`persist`. Any other map function works as well — for example
-`(...prev) => [...prev].reverse()` to reorder, or `() => [onlyThisOne]` to
-replace the accumulated hooks.
+- `sequential(...hooks)` runs them in declaration order, awaiting each one that
+  goes async before the next.
+- `parallel(...hooks)` starts them all at once and settles when every one has.
+- `oncePerInstance(hook)` runs its hook a single time per instance, however
+  often the event fires.
 
-`@onConstruct`, `@onConstructAsync` and `@onContainerDisposed` keep their
-variadic signature and compensate for the bottom-up application order, so
-stacked decorators run in declaration order: `@onConstruct(h1) @onConstruct(h2)`
-runs `h1` before `h2`.
+They compose, because each returns an ordinary `HookFn`:
+`oncePerInstance(sequential(connect, warmUp))`, or a `parallel(...)` nested
+inside a `sequential(...)`. A hook class (`HookType`) may be passed anywhere a
+hook function can. Writing your own combinator needs nothing from the library
+beyond `toHookFn`.
 
-### OnConstruct
+A member carries exactly one hook per key, so decorating the same member twice
+under one key replaces the earlier hook rather than adding to it — decorators
+are applied bottom-up, so the topmost one is the one that stays.
+
+Every hook may be sync or async — the one decorator takes both, so there is no
+separate async form to reach for. *Running* them is not the library's job at
+all, and neither is deciding when to collect them
+([ADR 0016](../../adr/0016-collect-hooks-let-the-caller-run-them.md),
+[ADR 0018](../../adr/0018-no-hook-modules.md)). The library answers one
+question — which hooks does this object declare, and against what context do
+they run — and the container's events are where you ask it.
+
+A **`HookCollector`** is keyed to one of your hook keys and answers a single
+question: `getActions(target, { scope })` returns one **`HookAction`** per
+decorated member — the hook resolved to a function, bound to the
+`IHookContext` it runs against (which carries the member's own `methodName`). It performs nothing, and how the
+hooks *within* one member relate was already settled by the combinator at the
+declaration site ([ADR 0015](../../adr/0015-one-hook-per-member.md)). It reads a
+class's metadata once and reuses it, so collecting on a hot event is cheap.
+
+A **runner** performs them. Order, awaiting and failure handling are decided
+there and nowhere else; `toTask` turns an action into the `Task` that
+`runInOrder` and `runAtOnce` take. The library exports no type for it — it
+never calls a runner, nor is it handed one — so name the shape yourself:
+
+```typescript
+// yours, like the hook keys
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// members one after another, never awaited: sync hooks finish before this returns
+const immediate: HookRunner = (actions) => {
+  for (const { hook, context } of actions) {
+    hook(context);
+  }
+};
+
+// members one after another, awaiting any that goes async; both kinds of failure reported
+const inOrder =
+  (onError: (scope: IContainer) => (error: unknown) => void): HookRunner =>
+  (actions, { scope }) => {
+    try {
+      runInOrder(actions.map(toTask))?.catch(onError(scope));
+    } catch (ex) {
+      onError(scope)(ex);
+    }
+  };
+
+// every member started at once
+const atOnce: HookRunner = (actions) => {
+  runAtOnce(actions.map(toTask));
+};
+
+```
+
+Then wire collecting to the event you want it on. There is no
+`OnConstructModule` in the package: an `IContainerModule` is one method, and
+these are the whole of what the modules this library used to ship contained.
+
+```typescript
+const onConstructHooks = new HookCollector({ key: 'onConstruct' });
+const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
+
+// construction is the injector's event, and one injector backs the whole scope tree
+const constructModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.getInjector().onConstructed((instance, scope) => {
+      run(onConstructHooks.getActions(instance, { scope }), { scope });
+    }),
+});
+
+// disposal is a scope event; collecting every instance into one list lets the
+// runner order the instances as well as the members
+const disposeModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.scopeDisposed.subscribe((scope) => {
+      run(
+        scope.getInstances().flatMap((instance) => onScopeDisposedHooks.getActions(instance, { scope })),
+        { scope },
+      );
+    }),
+});
+
+const container = new Container().useModule(constructModule(inOrder(report))).useModule(disposeModule(atOnce));
+```
+
+For resolve hooks, reach the providers through `registered.subscribe(...)` and
+`provider.onResolved(...)`, or pipe a single registration with
+[`onResolve`](#on-resolve). Narrowing is the collector's:
+`new HookCollector({ key: 'onConstruct', predicate })`.
+
+Resolution and disposal stay synchronous unless the runner makes them
+otherwise: `runInOrder` and `runAtOnce` stay synchronous until a hook returns a
+promise, so sync hooks finish before `resolve` (or `dispose`) returns and async
+ones are started there and settle afterwards. Instances that must expose
+readiness should publish it themselves, for example by storing the pending
+promise on the instance.
+
+Failures belong to the runner too — nothing in the library catches what a hook
+throws or rejects with. A runner which neither guards nor awaits lets a sync
+throw propagate out of `resolve` / `dispose` and drops an async rejection.
+
+A custom key is collected and run the same way, with no module in between:
+
+```typescript
+const workflow = new HookCollector({ key: 'workflow' });
+
+container.getInjector().onConstructed((instance, scope) => {
+  runInOrder(workflow.getActions(instance, { scope }).map(toTask));
+});
+```
+
+`predicate`, `createExecutionContext` and `mapExecutionContext` can be set on
+the collector or overridden per `getActions` call.
+
+### Hook domains
+
+The decorators above declare hook *metadata* on a class. The imperative side —
+the callbacks the container machinery runs — is registered on whichever
+abstraction raises the event, one hook type per domain:
+
+| Domain       | Registered on | Type            | Where                                                    |
+| ------------ | ------------- | --------------- | -------------------------------------------------------- |
+| **Scope**    | `IContainer`  | `ScopeHook`     | `scopeCreated.subscribe(...)`, `scopeDisposed.subscribe(...)` |
+| **Scope**    | `IContainer`  | `RegisteredHook`| `registered.subscribe(...)`                              |
+| **Injector** | `IInjector`   | `InjectorHook`  | `onConstructed(...)`                                     |
+| **Provider** | `IProvider`   | `ProviderHook`  | `onResolved(...)`, or the [`onResolve`](#on-resolve) pipe |
+
+A container passes its injector to every scope it creates, so **one injector**
+backs the whole scope tree, and `container.getInjector()` hands it out: an
+`onConstructed` hook registered through it covers every scope, whenever it was
+added. Scope hooks, by contrast, are copied into a child at `createScope` time,
+so a child inherits what its parent held then and later additions to either
+stay local.
+
+```typescript
+const container = new Container({ tags: ['application'] });
+
+// Scope events are typed events on the container itself
+const stop = container.scopeCreated.subscribe((scope) => audit.scopeOpened(scope));
+container.scopeDisposed.subscribe((scope) => audit.scopeClosed(scope));
+container.registered.subscribe((provider, key) => audit.registered(key));
+
+stop(); // detached; `container.scopeCreated.unsubscribe(fn)` does the same by reference
+
+// Construction is the injector's event, not a scope's
+container.getInjector().onConstructed((instance, scope) => metrics.built(instance, scope));
+```
+
+The scope events are `scopeCreated`, `scopeDisposed` (`ITypedEvent<[IContainer]>`)
+and `registered` (`ITypedEvent<[IProvider, DependencyKey, IContainer]>`);
+`subscribe` returns the unsubscribe function. The exposed events carry no
+`emit` — only the container raises its own events.
+
+`TypedEvent` itself is exported for your own events: `subscribe` / `unsubscribe`
+/ `emit` / `dispose`, with `ITypedEvent` as the subscriber-only view to hand out.
+
+These four events are the whole surface hooks are wired to; the library ships no
+module over them ([ADR 0018](../../adr/0018-no-hook-modules.md)).
+
+### Construct hooks
+
+> **Prefer collecting on resolve — through `registered` / `onResolved`, or the
+> [`onResolve`](#on-resolve) pipe — over collecting on construction.**
+> Construction is the *injector's* event, so it fires only for dependencies the
+> injector builds: a `fromValue` constant or a factory registration never
+> triggers it. It also observes the instance before
+> the provider's `decorate(...)` chain wraps it, so a hook sees the bare
+> instance rather than what the caller receives. A resolve hook runs on every
+> dependency leaving a provider, after the whole decorate chain — the same
+> ordering, awaiting and error handling, on what the caller actually gets.
+> Reach for construct hooks only when you mean "this class was just
+> constructed" specifically.
 
 ```typescript
 import 'reflect-metadata';
 import {
-  AddOnConstructHookModule,
   Container,
-  type ExecutionContext,
   type HookFn,
   type IContainer,
+  hook,
+  HookCollector,
+  type HookType,
+  type IContainerModule,
   inject,
-  onConstruct,
   Registration as R,
+  runInOrder,
+  toTask,
+  type ExecutionContext,
+  type HookAction,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+const executeAsync: HookFn = async (ctx) => {
+  await ctx.invokeMethod({ args: ctx.resolveArgs() });
+};
+
+// The library ships no construct decorator: the key, the decorator which writes
+// it and the collector which reads it are all ours.
+const onConstruct = (fn: HookType) => hook('onConstruct', fn);
+const onConstructHooks = new HookCollector({ key: 'onConstruct' });
+
+// Running the collected hooks is ours too, and so is naming the shape that does
+// it: the library neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// This runner keeps the
+// actions in declaration order, stays synchronous until one returns a promise,
+// and reports a throw and a rejection alike.
+const run =
+  (onError: (scope: IContainer) => (ex: unknown) => void = () => () => {}): HookRunner =>
+  (actions, { scope }) => {
+    try {
+      runInOrder(actions.map(toTask))?.catch(onError(scope));
+    } catch (ex) {
+      onError(scope)(ex);
+    }
+  };
+
+// Construction is the injector's event, and hanging the collection off it is
+// ours: the library ships no module for that, and a module is just an `applyTo`.
+const onConstructModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.getInjector().onConstructed((instance, scope) => {
+      run(onConstructHooks.getActions(instance, { scope }), { scope });
+    }),
+});
 
 describe('onConstruct', function () {
   it('should run initialization method after dependencies are resolved', function () {
@@ -2563,7 +3158,7 @@ describe('onConstruct', function () {
     }
 
     const container = new Container()
-      .useModule(new AddOnConstructHookModule())
+      .useModule(onConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -2572,7 +3167,7 @@ describe('onConstruct', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward hook exceptions to the onException handler with the execution context', function () {
+  it('should forward hook exceptions to the runner’s error handler with the scope', function () {
     const failure = new Error('boom');
 
     class BrokenService {
@@ -2582,34 +3177,21 @@ describe('onConstruct', function () {
       init() {}
     }
 
-    let captured: { ex: unknown; context: ExecutionContext } | undefined;
+    let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
-      new AddOnConstructHookModule((ex, context) => {
-        captured = { ex, context };
-      }),
+      onConstructModule(
+        run((scope) => (ex) => {
+          captured = { ex, scope };
+        }),
+      ),
     );
 
     expect(() => container.resolve(BrokenService)).not.toThrow();
     expect(captured?.ex).toBe(failure);
-    expect(captured?.context.scope).toBe(container);
+    expect(captured?.scope).toBe(container);
   });
 
-  it('should rethrow hook exceptions when no onException handler is provided', function () {
-    const failure = new Error('boom');
-
-    class BrokenService {
-      @onConstruct(() => {
-        throw failure;
-      })
-      init() {}
-    }
-
-    const container = new Container().useModule(new AddOnConstructHookModule());
-
-    expect(() => container.resolve(BrokenService)).toThrow(failure);
-  });
-
-  it('should expose the resolving scope through the execution context', function () {
+  it('should expose the resolving scope to the runner’s error handler', function () {
     class BrokenService {
       @onConstruct(() => {
         throw new Error('boom');
@@ -2619,9 +3201,11 @@ describe('onConstruct', function () {
 
     let scope: IContainer | undefined;
     const container = new Container().useModule(
-      new AddOnConstructHookModule((_ex, context) => {
-        scope = context.scope;
-      }),
+      onConstructModule(
+        run((s) => () => {
+          scope = s;
+        }),
+      ),
     );
     const child = container.createScope();
 
@@ -2629,33 +3213,7 @@ describe('onConstruct', function () {
 
     expect(scope).toBe(child);
   });
-});
 
-```
-
-### OnConstructAsync
-
-`@onConstructAsync` runs promise-returning initialization. Resolution stays
-synchronous: `AddOnConstructAsyncHookModule` starts the hooks when the instance
-is created and they settle afterwards, so `resolve` returns before they finish.
-
-```typescript
-import 'reflect-metadata';
-import {
-  AddOnConstructAsyncHookModule,
-  Container,
-  type ExecutionContext,
-  type HookFn,
-  inject,
-  onConstructAsync,
-  Registration as R,
-} from 'ts-ioc-container';
-
-const execute: HookFn = async (ctx) => {
-  await ctx.invokeMethod({ args: ctx.resolveArgs() });
-};
-
-describe('onConstructAsync', function () {
   it('should run an async initialization method after the instance is created', async function () {
     class DatabaseConnection {
       isConnected = false;
@@ -2670,7 +3228,7 @@ describe('onConstructAsync', function () {
         });
       }
 
-      @onConstructAsync(execute)
+      @onConstruct(executeAsync)
       async connect(@inject('ConnectionString') connectionString: string) {
         await Promise.resolve();
         this.connectionString = connectionString;
@@ -2679,8 +3237,9 @@ describe('onConstructAsync', function () {
       }
     }
 
+    // The runner awaits the hooks; resolution itself still does not wait for them.
     const container = new Container()
-      .useModule(new AddOnConstructAsyncHookModule())
+      .useModule(onConstructModule(run()))
       .addRegistration(R.fromValue('postgres://localhost:5432').bindTo('ConnectionString'));
 
     const db = container.resolve(DatabaseConnection);
@@ -2694,19 +3253,21 @@ describe('onConstructAsync', function () {
     expect(db.connectionString).toBe('postgres://localhost:5432');
   });
 
-  it('should forward rejected hooks to the onException handler with the execution context', async function () {
+  it('should forward rejected hooks to the runner’s error handler with the scope', async function () {
     const failure = new Error('boom');
 
     class BrokenService {
-      @onConstructAsync(() => Promise.reject(failure))
+      @onConstruct(() => Promise.reject(failure))
       init() {}
     }
 
-    let captured: { ex: unknown; context: ExecutionContext } | undefined;
+    let captured: { ex: unknown; scope: IContainer } | undefined;
     const container = new Container().useModule(
-      new AddOnConstructAsyncHookModule((ex, context) => {
-        captured = { ex, context };
-      }),
+      onConstructModule(
+        run((scope) => (ex) => {
+          captured = { ex, scope };
+        }),
+      ),
     );
 
     const child = container.createScope();
@@ -2715,31 +3276,65 @@ describe('onConstructAsync', function () {
     await vi.waitFor(() => expect(captured).toBeDefined());
 
     expect(captured?.ex).toBe(failure);
-    expect(captured?.context.scope).toBe(child);
+    expect(captured?.scope).toBe(child);
   });
 });
 
 ```
 
-### OnContainerDisposed
+### Scope disposal hooks
 
 ```typescript
 import 'reflect-metadata';
 import {
-  AddOnDisposeHookModule,
   bindTo,
   Container,
   type HookFn,
+  hook,
+  HookCollector,
+  type HookType,
   inject,
-  onContainerDisposed,
   register,
   Registration as R,
   singleton,
+  type ExecutionContext,
+  type HookAction,
+  type IContainerModule,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
   ctx.invokeMethod({ args: ctx.resolveArgs() });
 };
+
+// The library ships no dispose decorator: the key, the decorator which writes it
+// and the collector which reads it are all ours.
+const onScopeDisposed = (fn: HookType) => hook('onScopeDisposed', fn);
+const onScopeDisposedHooks = new HookCollector({ key: 'onScopeDisposed' });
+
+// Naming the shape which performs collected actions is ours: the library
+// neither calls a runner nor is handed one.
+type HookRunner = (actions: HookAction[], context: ExecutionContext) => void;
+
+// This runner performs the collected hooks in order and never awaits.
+const run: HookRunner = (actions) => {
+  for (const { hook, context } of actions) {
+    hook(context);
+  }
+};
+
+// Disposal is a scope event, and hanging the collection off it is ours: the
+// library ships no module for that, and a module is just an `applyTo`. Every
+// instance of the scope is collected into one list, so the runner orders the
+// instances as well as the members.
+const onScopeDisposedModule = (run: HookRunner): IContainerModule => ({
+  applyTo: (container) =>
+    container.scopeDisposed.subscribe((scope) => {
+      run(
+        scope.getInstances().flatMap((instance) => onScopeDisposedHooks.getActions(instance, { scope })),
+        { scope },
+      );
+    }),
+});
 
 @register(bindTo('logsRepo'), singleton())
 class LogsRepo {
@@ -2760,16 +3355,16 @@ class Logger {
     this.messages.push(message);
   }
 
-  @onContainerDisposed(execute)
+  @onScopeDisposed(execute)
   save() {
     this.logsRepo.saveLogs(this.messages);
   }
 }
 
-describe('onContainerDisposed', function () {
+describe('onScopeDisposed', function () {
   it('should invoke hooks on all instances when container is disposed', function () {
     const container = new Container()
-      .useModule(new AddOnDisposeHookModule())
+      .useModule(onScopeDisposedModule(run))
       .addRegistration(R.fromClass(Logger))
       .addRegistration(R.fromClass(LogsRepo));
 
@@ -2789,7 +3384,7 @@ describe('onContainerDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { append, Container, hook, HooksRunner, injectProp, Registration } from 'ts-ioc-container';
+import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -2804,12 +3399,12 @@ import { append, Container, hook, HooksRunner, injectProp, Registration } from '
 
 describe('inject property', () => {
   it('should inject property', () => {
-    // Runner for the 'onInit' lifecycle hook
-    const onInitHookRunner = new HooksRunner('onInit');
+    // Collector for the 'onInit' lifecycle hook
+    const onInit = new HookCollector({ key: 'onInit' });
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
-      @hook('onInit', append(injectProp('GreetingService')))
+      @hook('onInit', injectProp('GreetingService'))
       greetingService!: string;
 
       display(): string {
@@ -2822,22 +3417,25 @@ describe('inject property', () => {
     // 1. Create instance (dependencies not yet injected)
     const viewModel = container.resolve(UserViewModel);
 
-    // 2. Run lifecycle hooks to inject properties
-    onInitHookRunner.execute(viewModel, { scope: container });
+    // 2. Collect the lifecycle hooks and run them to inject properties
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(viewModel.greetingService).toBe('Hello');
     expect(viewModel.display()).toBe('Hello User');
   });
 
   it('should read the applied instance property via getProperty', () => {
-    const onInitHookRunner = new HooksRunner('onInit');
+    const onInit = new HookCollector({ key: 'onInit' });
 
     let injectedValue: unknown;
 
     class UserViewModel {
       @hook(
         'onInit',
-        append(injectProp('GreetingService'), (context) => {
+        sequential(injectProp('GreetingService'), (context) => {
           injectedValue = context.getProperty();
         }),
       )
@@ -2847,7 +3445,10 @@ describe('inject property', () => {
     const container = new Container().addRegistration(Registration.fromValue('Hello').bindToKey('GreetingService'));
 
     const viewModel = container.resolve(UserViewModel);
-    onInitHookRunner.execute(viewModel, { scope: container });
+    onInit
+      .getActions(viewModel, { scope: container })
+      .map(toTask)
+      .forEach((task) => task());
 
     expect(injectedValue).toBe('Hello');
   });
@@ -2865,3 +3466,4 @@ The product-facing error contract is described in
 - [MethodNotImplementedError.ts](..%2F..%2Flib%2Ferrors%2FMethodNotImplementedError.ts)
 - [DependencyMissingKeyError.ts](..%2F..%2Flib%2Ferrors%2FDependencyMissingKeyError.ts)
 - [ContainerDisposedError.ts](..%2F..%2Flib%2Ferrors%2FContainerDisposedError.ts)
+- [ArgumentNotFoundError.ts](..%2F..%2Flib%2Ferrors%2FArgumentNotFoundError.ts)

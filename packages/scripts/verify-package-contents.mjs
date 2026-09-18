@@ -5,8 +5,8 @@
 // `pnpm publish` packs whatever is on disk and reports success even when every
 // `files` glob matches nothing — that is how ts-ioc-container@56.1.0 reached
 // npm containing only package.json, README.md and LICENSE. Run this between
-// restoring the build artifacts and publishing so a broken tarball fails the
-// pipeline instead of the registry.
+// building and publishing so a broken tarball fails the pipeline instead of
+// the registry.
 //
 // Usage: node packages/scripts/verify-package-contents.mjs [<package-dir>...]
 // With no arguments every non-private workspace package is checked.
