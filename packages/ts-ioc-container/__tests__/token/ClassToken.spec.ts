@@ -32,8 +32,8 @@ describe('ClassToken', () => {
     expect(token.args('chained').resolve(new Container(), { args: ['runtime'] }).value).toBe('runtime');
   });
 
-  it('should expose the underlying constructor via getKey()', () => {
+  it('should expose the underlying constructor name via toString()', () => {
     const token = new ClassToken(TestClass);
-    expect(token.getKey()).toBe(TestClass);
+    expect(token.toString()).toBe('TestClass');
   });
 });

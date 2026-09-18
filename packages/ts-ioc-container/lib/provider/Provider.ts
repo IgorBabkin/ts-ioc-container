@@ -10,7 +10,7 @@ import {
   type ProviderHook,
 } from './IProvider';
 import type { DependencyKey, IContainer } from '../container/IContainer';
-import { type constructor } from '../utils/basic';
+import { type constructor, toString } from '../utils/basic';
 import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
@@ -32,7 +32,7 @@ export class Provider<T = any> implements IProvider<T> {
   private readonly mappers: DecorateFn<T>[] = [];
   private isLazy = false;
   private isAutoResolve = false;
-  private cache = new Map<string | symbol, unknown>();
+  private cache = new Map<string, unknown>();
   private getKey: GetCacheKey | undefined;
   private isDisposed: boolean = false;
   private readonly onResolvedHookList: ProviderHook[] = [];
@@ -50,7 +50,7 @@ export class Provider<T = any> implements IProvider<T> {
       return this.resolveDep(scope, options);
     }
 
-    const key = this.getKey(...(options.args ?? []));
+    const key = toString(this.getKey(...(options.args ?? [])));
 
     if (!this.cache.has(key)) {
       this.cache.set(key, this.resolveDep(scope, options));

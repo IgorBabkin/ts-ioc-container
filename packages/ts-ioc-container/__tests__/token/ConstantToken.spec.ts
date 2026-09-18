@@ -32,9 +32,9 @@ describe('ConstantToken', () => {
     expect(() => token.lazy()).toThrow('not implemented');
   });
 
-  it('should throw error on getKey method', () => {
+  it('should throw error on toString method', () => {
     const token = new ConstantToken('value');
-    expect(() => token.getKey()).toThrow(MethodNotImplementedError);
-    expect(() => token.getKey()).toThrow('not implemented');
+    expect(() => token.toString()).toThrow(MethodNotImplementedError);
+    expect(() => token.toString()).toThrow('not implemented');
   });
 });

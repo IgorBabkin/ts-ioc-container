@@ -79,6 +79,22 @@ describe('Spec: provider behavior', () => {
     expect(firstB.tenant).toBe('b');
   });
 
+  it('caches singleton results by a Serializable cache key through its string form', () => {
+    @register(singleton((tenant) => new SingleToken(tenant as string)))
+    class TenantRepository {
+      constructor(@inject(arg(0)) readonly tenant: string) {}
+    }
+
+    const container = new Container().addRegistration(R.fromClass(TenantRepository));
+
+    const firstA = container.resolve<TenantRepository>('TenantRepository', { args: ['a'] });
+    const secondA = container.resolve<TenantRepository>('TenantRepository', { args: ['a'] });
+    const firstB = container.resolve<TenantRepository>('TenantRepository', { args: ['b'] });
+
+    expect(firstA).toBe(secondA);
+    expect(firstA).not.toBe(firstB);
+  });
+
   it('parameterizes provider resolution with static, dynamic, and token arguments', () => {
     @register(singleton())
     class RegionConfig {

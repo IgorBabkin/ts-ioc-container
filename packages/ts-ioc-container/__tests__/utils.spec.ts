@@ -1,5 +1,6 @@
-import { ArgumentNotFoundError, findOrFail, getConstructorChain, pipe } from '../lib';
+import { ArgumentNotFoundError, findOrFail, getConstructorChain, isSerializable, pipe, SingleToken } from '../lib';
 import { ProxyRegistry, unwrapProxy } from '../lib/utils/ProxyRegistry';
+import { toString } from '../lib/utils/basic';
 
 describe('fp', () => {
   it('should work with single transformation (same type)', () => {
@@ -261,5 +262,38 @@ describe('getConstructorChain', () => {
     expect(getConstructorChain(new Derived())).toEqual([]);
     expect(getConstructorChain(undefined)).toEqual([]);
     expect(getConstructorChain('Derived')).toEqual([]);
+  });
+});
+
+describe('isSerializable', () => {
+  it('accepts an object that overrides toString', () => {
+    class Named {
+      toString() {
+        return 'named';
+      }
+    }
+
+    expect(isSerializable(new Named())).toBe(true);
+    expect(isSerializable(new SingleToken('key'))).toBe(true);
+    expect(isSerializable({ toString: () => 'inline' })).toBe(true);
+  });
+
+  it('rejects primitives, nullish values and objects with only the inherited toString', () => {
+    expect(isSerializable('text')).toBe(false);
+    expect(isSerializable(42)).toBe(false);
+    expect(isSerializable(null)).toBe(false);
+    expect(isSerializable(undefined)).toBe(false);
+    expect(isSerializable({})).toBe(false);
+  });
+});
+
+describe('toString', () => {
+  it('uses an overridden toString and falls back to String() otherwise', () => {
+    expect(toString(new SingleToken('key'))).toBe('key');
+    expect(toString({ toString: () => 'inline' })).toBe('inline');
+    expect(toString('text')).toBe('text');
+    expect(toString(42)).toBe('42');
+    expect(toString(Symbol('s'))).toBe('Symbol(s)');
+    expect(toString(undefined)).toBe('undefined');
   });
 });

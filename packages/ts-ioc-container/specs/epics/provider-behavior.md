@@ -37,6 +37,9 @@ Acceptance criteria:
   same cache key.
 - A multi-cache singleton can cache different values for different argument
   keys.
+- A cache key is a `string` or a `Serializable` (anything with its own
+  `toString()`, such as a token); two `Serializable` keys with the same string
+  form share one cache entry.
 - Singleton caching is local to the provider instance registered in a scope.
 
 ### Story: Parameterize provider resolution

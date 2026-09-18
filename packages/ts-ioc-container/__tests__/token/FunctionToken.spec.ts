@@ -17,9 +17,9 @@ describe('FunctionToken', () => {
     expect(token.resolve(container)).toBe(container);
   });
 
-  it('should throw error on getKey method', () => {
+  it('should throw error on toString method', () => {
     const token = new FunctionToken(() => 'value');
-    expect(() => token.getKey()).toThrow(MethodNotImplementedError);
-    expect(() => token.getKey()).toThrow('not implemented');
+    expect(() => token.toString()).toThrow(MethodNotImplementedError);
+    expect(() => token.toString()).toThrow('not implemented');
   });
 });

@@ -1,9 +1,9 @@
 import { IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
-import { type constructor } from '../utils/basic';
+import { type constructor, Serializable } from '../utils/basic';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 
-export class ClassToken<T = any> extends InjectionToken<T> {
+export class ClassToken<T = any> extends InjectionToken<T> implements Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;
 
@@ -50,7 +50,7 @@ export class ClassToken<T = any> extends InjectionToken<T> {
     });
   }
 
-  getKey(): constructor<T> {
-    return this.target;
+  toString(): string {
+    return this.target.name;
   }
 }
