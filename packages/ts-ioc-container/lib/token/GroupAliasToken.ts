@@ -3,8 +3,9 @@ import { forwardArgs, InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { BindToken } from './BindToken';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { Serializable } from '../utils/basic';
 
-export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T> {
+export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T>, Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;
 
@@ -55,8 +56,8 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
     });
   }
 
-  getKey(): DependencyKey {
-    return this.token;
+  toString(): string {
+    return this.token.toString();
   }
 }
 

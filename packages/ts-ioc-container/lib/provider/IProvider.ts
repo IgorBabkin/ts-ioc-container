@@ -1,5 +1,6 @@
 import { IContainer, Tagged } from '../container/IContainer';
 import { InjectOptions } from '../injector/IInjector';
+import { Serializable } from '../utils/basic';
 
 export type WithLazy = { lazy: boolean };
 export type ProviderOptions = InjectOptions & Partial<WithLazy>;
@@ -9,7 +10,7 @@ export type ScopeAccessRule = (options: ScopeAccessOptions, prev: boolean) => bo
 
 export type ArgsFn = (l: IContainer, options?: InjectOptions) => unknown[];
 
-export type GetCacheKey = (...args: unknown[]) => string | symbol;
+export type GetCacheKey = (...args: unknown[]) => string | Serializable;
 export type DecorateFn<Instance = any> = (dep: Instance, scope: IContainer) => Instance;
 
 /**

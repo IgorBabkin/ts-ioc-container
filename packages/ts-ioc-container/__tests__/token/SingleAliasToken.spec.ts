@@ -50,8 +50,8 @@ describe('SingleAliasToken', () => {
     expect(token.args('a').resolve(container, { args: ['r'] })).toBe('r-a');
   });
 
-  it('should expose the underlying alias via getKey()', () => {
+  it('should expose the underlying alias via toString()', () => {
     const token = new SingleAliasToken<string>('myAlias');
-    expect(token.getKey()).toBe('myAlias');
+    expect(token.toString()).toBe('myAlias');
   });
 });

@@ -1,9 +1,9 @@
-import type { DependencyKey, IContainer } from '../container/IContainer';
+import type { IContainer } from '../container/IContainer';
 import { InjectionToken } from './InjectionToken';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
-import { type constructor } from '../utils/basic';
+import { Serializable } from '../utils/basic';
 
-export class ConstantToken<T = any> extends InjectionToken<T> {
+export class ConstantToken<T = any> extends InjectionToken<T> implements Serializable {
   constructor(private readonly token: T) {
     super();
   }
@@ -36,7 +36,7 @@ export class ConstantToken<T = any> extends InjectionToken<T> {
   /**
    * @throws {MethodNotImplementedError} always — a constant token has no underlying key.
    */
-  getKey(): DependencyKey | constructor<T> {
+  toString(): string {
     throw new MethodNotImplementedError('not implemented');
   }
 }

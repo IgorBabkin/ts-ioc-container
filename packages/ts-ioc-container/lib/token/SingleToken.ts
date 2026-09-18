@@ -2,8 +2,9 @@ import { DependencyKey, IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { Serializable } from '../utils/basic';
 
-export class SingleToken<T = any> extends InjectionToken<T> {
+export class SingleToken<T = any> extends InjectionToken<T> implements Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;
 
@@ -54,7 +55,7 @@ export class SingleToken<T = any> extends InjectionToken<T> {
     });
   }
 
-  getKey(): DependencyKey {
-    return this.token;
+  toString(): string {
+    return this.token.toString();
   }
 }

@@ -164,4 +164,4 @@ export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
 export { findOrFail, type Predicate } from './utils/array';
 export { ProxyRegistry, unwrapProxy, type IProxyRegistry } from './utils/ProxyRegistry';
-export { type Branded, type constructor, type Instance, Is } from './utils/basic';
+export { type Branded, type constructor, type Instance, type Serializable, Is, isSerializable } from './utils/basic';
