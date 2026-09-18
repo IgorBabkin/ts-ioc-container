@@ -23,7 +23,10 @@ class FeatureFlags {
 }
 
 class Widget {
-  constructor(@inject(select.token('FeatureFlags').lazy()) public flags: FeatureFlags) {}
+  constructor(
+    @inject(({ scope, args }) => select.token('FeatureFlags').lazy().resolve(scope, { args }))
+    public flags: FeatureFlags,
+  ) {}
 }
 
 describe('Frontend widget/page scope with lazy dependency', () => {

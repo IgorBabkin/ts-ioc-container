@@ -30,7 +30,7 @@ class Logger implements ILogger {
 
 class App {
   // Token provides type safety - logger is guaranteed to be ILogger
-  constructor(@inject(ILoggerToken) public logger: ILogger) {}
+  constructor(@inject(({ scope, args }) => ILoggerToken.resolve(scope, { args })) public logger: ILogger) {}
 }
 
 describe('SingleToken', function () {

@@ -32,7 +32,7 @@ const createDependencyRegistrationContainer = () =>
     .addRegistration(R.fromClass(TsIocBenchmarkRepository))
     .addRegistration(R.fromValue({ env: 'benchmark' }).bindToKey('TsIocBenchmarkConfig'))
     .addRegistration(
-      R.fromFn((scope) => new TsIocBenchmarkService(scope.resolve('TsIocBenchmarkRepository'))).bindToKey(
+      R.fromFn(({ scope }) => new TsIocBenchmarkService(scope.resolve('TsIocBenchmarkRepository'))).bindToKey(
         'TsIocBenchmarkService',
       ),
     )

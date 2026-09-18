@@ -1,4 +1,4 @@
-import { type CreateScopeOptions, type IContainer } from './container/IContainer';
+import { type CreateScopeOptions } from './container/IContainer';
 import { toGroupAlias } from './token/GroupAliasToken';
 import { FunctionToken } from './token/FunctionToken';
 import { GroupInstanceToken, InstancePredicate } from './token/GroupInstanceToken';
@@ -12,8 +12,8 @@ export const select = {
   instances: (predicate: InstancePredicate = () => true) => new GroupInstanceToken(predicate),
 
   scope: {
-    current: new FunctionToken((s) => s),
+    current: new FunctionToken(({ scope }) => scope),
 
-    create: (options: CreateScopeOptions) => new FunctionToken((s: IContainer) => s.createScope(options)),
+    create: (options: CreateScopeOptions) => new FunctionToken(({ scope }) => scope.createScope(options)),
   },
 };

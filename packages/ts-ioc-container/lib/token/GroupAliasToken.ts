@@ -2,7 +2,7 @@ import { DependencyKey, IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { BindToken } from './BindToken';
-import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { Serializable } from '../utils/basic';
 
 export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T>, Serializable {
@@ -26,9 +26,9 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, { args = [], lazy }: ProviderOptions = {}): T[] {
+  resolve(s: IContainer, { args = [], lazy }: ResolveOptions = {}): T[] {
     return s.resolveByAlias(this.token, {
-      args: this._getArgsFn(s, { args }),
+      args: this._getArgsFn({ scope: s, args }),
       lazy: this._isLazy || lazy,
     });
   }
@@ -40,7 +40,7 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
   args(...newArgs: unknown[]) {
     const parentFn = this._getArgsFn;
     return new GroupAliasToken<T>(this.token, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
+      getArgsFn: (options) => [...parentFn(options), ...newArgs],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });
@@ -49,7 +49,7 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
   argsFn(fn: (s: IContainer) => unknown[]) {
     const parentFn = this._getArgsFn;
     return new GroupAliasToken<T>(this.token, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
+      getArgsFn: (options) => [...parentFn(options), ...fn(options.scope)],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });

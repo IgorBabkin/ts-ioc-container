@@ -17,7 +17,9 @@ const IConfigKey = new SingleToken<IConfig>('IConfig');
 
 class App {
   constructor(
-    @inject(IConfigKey.argsFn((scope) => [scope.resolve('API_URL'), 5000]))
+    @inject(({ scope, args }) =>
+      IConfigKey.argsFn((scope) => [scope.resolve('API_URL'), 5000]).resolve(scope, { args }),
+    )
     public config: IConfig,
   ) {}
 }

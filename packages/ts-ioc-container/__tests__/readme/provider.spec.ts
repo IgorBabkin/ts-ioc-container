@@ -70,7 +70,7 @@ describe('Provider', () => {
 
     const container = new Container().register(
       'FileService',
-      Provider.fromClass(FileService).addArgsFn((_, { args = [] } = {}) => [...args, '/var/data']),
+      Provider.fromClass(FileService).addArgsFn(({ args = [] }) => [...args, '/var/data']),
     );
 
     const service = container.resolve<FileService>('FileService');
@@ -85,7 +85,7 @@ describe('Provider', () => {
     const container = new Container().register('DbPath', Provider.fromValue('localhost:5432')).register(
       'Database',
       // Dynamically resolve connection string at creation time
-      Provider.fromClass(Database).addArgsFn((scope) => [`postgres://${scope.resolve('DbPath')}`]),
+      Provider.fromClass(Database).addArgsFn(({ scope }) => [`postgres://${scope.resolve('DbPath')}`]),
     );
 
     const db = container.resolve<Database>('Database');

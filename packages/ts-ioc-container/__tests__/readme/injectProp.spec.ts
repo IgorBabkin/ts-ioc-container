@@ -19,7 +19,7 @@ describe('inject property', () => {
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
-      @hook('onInit', injectProp('GreetingService'))
+      @hook('onInit', injectProp(({ scope }) => scope.resolve('GreetingService')))
       greetingService!: string;
 
       display(): string {
@@ -50,9 +50,12 @@ describe('inject property', () => {
     class UserViewModel {
       @hook(
         'onInit',
-        sequential(injectProp('GreetingService'), (context) => {
-          injectedValue = context.getProperty();
-        }),
+        sequential(
+          injectProp(({ scope }) => scope.resolve('GreetingService')),
+          (context) => {
+            injectedValue = context.getProperty();
+          },
+        ),
       )
       greetingService!: string;
     }

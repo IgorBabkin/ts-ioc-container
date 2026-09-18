@@ -7,7 +7,7 @@ import { bindTo, Container, inject, register, Registration as R } from '../../li
  * to automatically inject dependencies into constructor parameters.
  *
  * How it works:
- * 1. @inject('key') decorator marks a parameter for injection
+ * 1. @inject(({ scope, args }) => scope.resolve('key', { args })) decorator marks a parameter for injection
  * 2. Container reads metadata at resolution time
  * 3. Dependencies are resolved and passed to constructor
  *
@@ -22,10 +22,10 @@ class Logger {
 
 class App {
   // @inject tells the container which dependency to resolve for this parameter
-  constructor(@inject('ILogger') private logger: Logger) {}
+  constructor(@inject(({ scope, args }) => scope.resolve('ILogger', { args })) private logger: Logger) {}
 
   // Alternative: inject via function for dynamic resolution
-  // constructor(@inject((container, ...args) => container.resolve('ILogger', ...args)) private logger: ILogger) {}
+  // constructor(@inject(({ scope, args }) => scope.resolve('ILogger', { args })) private logger: ILogger) {}
 
   getLoggerName(): string {
     return this.logger.name;

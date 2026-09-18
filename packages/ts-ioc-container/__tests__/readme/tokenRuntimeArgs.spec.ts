@@ -24,7 +24,9 @@ class UserRepository implements IUserRepository {
 }
 
 class UserService {
-  constructor(@inject(IUserRepositoryKey) public repository: IUserRepository) {}
+  constructor(
+    @inject(({ scope, args }) => IUserRepositoryKey.resolve(scope, { args })) public repository: IUserRepository,
+  ) {}
 }
 
 describe('Token Runtime Arguments', function () {

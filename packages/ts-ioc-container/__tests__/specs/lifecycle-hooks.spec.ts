@@ -280,7 +280,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     class Service {
-      @onConstruct(injectProp('Logger'))
+      @onConstruct(injectProp(({ scope }) => scope.resolve('Logger')))
       logger!: Logger;
     }
 
@@ -447,14 +447,14 @@ describe('Spec: lifecycle hooks', () => {
       calls: string[] = [];
 
       @hook('sync', invoke)
-      start(@inject('prefix') prefix: string): void {
+      start(@inject(({ scope, args }) => scope.resolve('prefix', { args })) prefix: string): void {
         this.calls.push(`${prefix}:sync`);
       }
 
       @hook('async', async (context) => {
         context.invokeMethod();
       })
-      stop(@inject('prefix') prefix: string): void {
+      stop(@inject(({ scope, args }) => scope.resolve('prefix', { args })) prefix: string): void {
         this.calls.push(`${prefix}:async`);
       }
     }

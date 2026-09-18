@@ -1,7 +1,7 @@
 import type { IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
 import { InjectFn } from '../hooks/hook';
-import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { Serializable } from '../utils/basic';
 
@@ -22,9 +22,10 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
     this._isLazy = isLazy;
   }
 
-  resolve(s: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
-    return this.fn(s, {
-      args: this._getArgsFn(s, { args }),
+  resolve(s: IContainer, { args = [], lazy }: ResolveOptions = {}): T {
+    return this.fn({
+      scope: s,
+      args: this._getArgsFn({ scope: s, args }),
       lazy: this._isLazy || lazy,
     });
   }
@@ -32,7 +33,7 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
   args(...newArgs: unknown[]): InjectionToken<T> {
     const parentFn = this._getArgsFn;
     return new FunctionToken<T>(this.fn, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
+      getArgsFn: (options) => [...parentFn(options), ...newArgs],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });
@@ -41,7 +42,7 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
   argsFn(fn: (s: IContainer) => unknown[]): InjectionToken<T> {
     const parentFn = this._getArgsFn;
     return new FunctionToken<T>(this.fn, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
+      getArgsFn: (options) => [...parentFn(options), ...fn(options.scope)],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });

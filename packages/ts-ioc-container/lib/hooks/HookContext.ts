@@ -1,8 +1,8 @@
 import type { IContainer } from '../container/IContainer';
 
-import { InjectionToken } from '../token/InjectionToken';
 import { type Instance } from '../utils/basic';
 import { resolveArgs } from '../injector/MetadataInjector';
+import { type InjectFn } from './hook';
 
 export interface IHookContext {
   instance: Instance;
@@ -13,7 +13,7 @@ export interface IHookContext {
 
   invokeMethod(options?: { args?: unknown[] }): unknown;
 
-  setProperty(fn: InjectionToken): void;
+  setProperty(fn: InjectFn): void;
 
   getProperty(): unknown;
 
@@ -32,7 +32,11 @@ export class HookContext implements IHookContext {
   ) {}
 
   resolveArgs(...args: unknown[]): unknown[] {
-    return resolveArgs(this.instance, this.methodName)(this.scope, {
+    return resolveArgs(
+      this.instance,
+      this.methodName,
+    )({
+      scope: this.scope,
       args: [...this.initialArgs, ...args],
     });
   }
@@ -42,9 +46,9 @@ export class HookContext implements IHookContext {
     return this.instance[this.methodName](...args);
   }
 
-  setProperty(fn: InjectionToken): void {
+  setProperty(fn: InjectFn): void {
     // @ts-ignore
-    this.instance[this.methodName] = fn.resolve(this.scope);
+    this.instance[this.methodName] = fn({ scope: this.scope });
   }
 
   getProperty(): unknown {

@@ -11,7 +11,7 @@ import {
 
 describe('onRegistered', () => {
   const record = (log: [DependencyKey, unknown][]) => (provider: IProvider, key: DependencyKey) => {
-    log.push([key, provider.resolve(new Container(), {})]);
+    log.push([key, provider.resolve({ scope: new Container() })]);
   };
 
   it('should run the hook when a provider is registered', () => {

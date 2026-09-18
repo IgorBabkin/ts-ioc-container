@@ -21,7 +21,7 @@ class FileLogger implements ILogger {
 }
 
 class App {
-  constructor(@inject(ILoggerToken) public logger: ILogger) {}
+  constructor(@inject(({ scope, args }) => ILoggerToken.resolve(scope, { args })) public logger: ILogger) {}
 
   run() {
     this.logger.log('Hello'); // Uses one of the registered loggers

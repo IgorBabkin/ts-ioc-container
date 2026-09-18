@@ -19,7 +19,7 @@ class AuditLog {
 }
 
 class CreateUser {
-  constructor(@inject('AuditLog') private readonly auditLog: AuditLog) {}
+  constructor(@inject(({ scope, args }) => scope.resolve('AuditLog', { args })) private readonly auditLog: AuditLog) {}
 
   execute(email: string): string[] {
     this.auditLog.record(`created:${email}`);

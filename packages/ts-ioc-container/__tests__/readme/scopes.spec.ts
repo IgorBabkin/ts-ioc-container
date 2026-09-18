@@ -69,7 +69,10 @@ describe('Scopes', function () {
 
     // RequestHandler can create a transaction scope for database operations
     class RequestHandler {
-      constructor(@inject(select.scope.create({ tags: ['transaction'] })) public transactionScope: IContainer) {}
+      constructor(
+        @inject(({ scope, args }) => select.scope.create({ tags: ['transaction'] }).resolve(scope, { args }))
+        public transactionScope: IContainer,
+      ) {}
 
       executeInTransaction(): boolean {
         // Transaction scope inherits from request scope

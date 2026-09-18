@@ -50,9 +50,9 @@ generic services can be specialized for a call site.
 Acceptance criteria:
 
 - `appendArgs` supplies fixed arguments after any incoming resolve arguments.
-- `appendArgsFn` computes additional arguments from the resolving container and
-  incoming options, then appends them after the provider's existing argument
-  function.
+- `appendArgsFn` computes additional arguments from one options object - the
+  resolving `scope` and the incoming `args` - then appends them after the
+  provider's existing argument function.
 - Arguments forwarded into a class constructor are passed through as-is,
   `InjectionToken` instances included - the library never resolves them.
 

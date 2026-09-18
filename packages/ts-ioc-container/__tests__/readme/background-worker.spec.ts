@@ -24,7 +24,7 @@ class QueueClient {
 class JobHandler {
   readonly result: string;
 
-  constructor(@inject('QueueClient') private queue: QueueClient) {
+  constructor(@inject(({ scope, args }) => scope.resolve('QueueClient', { args })) private queue: QueueClient) {
     this.result = this.queue.dequeue();
   }
 }

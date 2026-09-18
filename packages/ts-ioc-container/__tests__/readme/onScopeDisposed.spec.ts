@@ -62,7 +62,7 @@ class LogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
+  constructor(@inject(({ scope, args }) => scope.resolve('logsRepo', { args })) private logsRepo: LogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);

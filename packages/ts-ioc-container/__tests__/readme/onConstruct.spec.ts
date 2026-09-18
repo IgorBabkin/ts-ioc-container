@@ -61,7 +61,7 @@ describe('onConstruct', function () {
       connectionString = '';
 
       @onConstruct(execute)
-      connect(@inject('ConnectionString') connectionString: string) {
+      connect(@inject(({ scope, args }) => scope.resolve('ConnectionString', { args })) connectionString: string) {
         this.connectionString = connectionString;
         this.isConnected = true;
       }
@@ -139,7 +139,9 @@ describe('onConstruct', function () {
       }
 
       @onConstruct(executeAsync)
-      async connect(@inject('ConnectionString') connectionString: string) {
+      async connect(
+        @inject(({ scope, args }) => scope.resolve('ConnectionString', { args })) connectionString: string,
+      ) {
         await Promise.resolve();
         this.connectionString = connectionString;
         this.isConnected = true;

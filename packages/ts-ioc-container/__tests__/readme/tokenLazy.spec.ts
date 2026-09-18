@@ -12,7 +12,7 @@ class ConfigService implements IConfig {
 const IConfigToken = new SingleToken<IConfig>('IConfig');
 
 class App {
-  constructor(@inject(IConfigToken.lazy()) public config: IConfig) {}
+  constructor(@inject(({ scope, args }) => IConfigToken.lazy().resolve(scope, { args })) public config: IConfig) {}
 }
 
 describe('Token Lazy Loading', function () {

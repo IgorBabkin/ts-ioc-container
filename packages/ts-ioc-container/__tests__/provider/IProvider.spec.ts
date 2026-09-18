@@ -66,7 +66,7 @@ describe('IProvider', function () {
       }
 
       // Extract 'env' from Config service dynamically
-      @register(appendArgsFn((scope) => [scope.resolve<Config>('Config').env]))
+      @register(appendArgsFn(({ scope }) => [scope.resolve<Config>('Config').env]))
       class Service {
         constructor(@inject(arg(0)) public env: string) {}
       }
@@ -102,7 +102,7 @@ describe('IProvider', function () {
         tenant = 'tenant-a';
       }
 
-      @register(appendArgs('fixed'), appendArgsFn((scope) => [scope.resolve<Config>('Config').tenant]))
+      @register(appendArgs('fixed'), appendArgsFn(({ scope }) => [scope.resolve<Config>('Config').tenant]))
       class Service {
         constructor(
           @inject(arg(0)) public runtime: string,
@@ -161,11 +161,11 @@ describe('IProvider', function () {
     class App {
       constructor(
         // Inject EntityManager configured for Users
-        @inject(withRepository(UserRepositoryToken))
+        @inject(({ scope, args }) => withRepository(UserRepositoryToken).resolve(scope, { args }))
         public userManager: EntityManager,
 
         // Inject EntityManager configured for Todos
-        @inject(withRepository(TodoRepositoryToken))
+        @inject(({ scope, args }) => withRepository(TodoRepositoryToken).resolve(scope, { args }))
         public todoManager: EntityManager,
       ) {}
     }

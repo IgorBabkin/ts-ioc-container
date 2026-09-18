@@ -38,7 +38,7 @@ class FormatValidator implements IValidator {
 
 class FormService {
   // Inject ALL registered validators as an array
-  constructor(@inject(IValidatorToken) public validators: IValidator[]) {}
+  constructor(@inject(({ scope, args }) => IValidatorToken.resolve(scope, { args })) public validators: IValidator[]) {}
 
   isValid(input: string): boolean {
     return this.validators.every((v) => v.validate(input));

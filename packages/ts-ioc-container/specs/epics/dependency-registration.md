@@ -23,7 +23,8 @@ Acceptance criteria:
 
 - A class registration creates instances through the container injector.
 - A value registration resolves the same configured value.
-- A factory registration receives the resolving container and options.
+- A factory registration receives one options object carrying the resolving
+  `scope`, the runtime `args` and the `lazy` flag.
 - A key registration redirects resolution to another registered dependency.
 
 ### Story: Bind registrations to keys and aliases

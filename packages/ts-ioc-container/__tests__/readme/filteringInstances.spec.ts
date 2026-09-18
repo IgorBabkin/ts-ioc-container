@@ -23,7 +23,7 @@ const isLogger = (instance: unknown) => instance instanceof Logger;
 
 class App {
   // Only inject instances that pass the isLogger predicate
-  constructor(@inject(select.instances(isLogger)) public loggers: Logger[]) {}
+  constructor(@inject(({ scope }) => select.instances(isLogger).resolve(scope)) public loggers: Logger[]) {}
 }
 
 describe('Filtering Instances', function () {

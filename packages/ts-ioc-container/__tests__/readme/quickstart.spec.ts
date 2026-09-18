@@ -14,7 +14,7 @@ class Logger implements ILogger {
 }
 
 class App {
-  constructor(@inject(ILoggerToken) private logger: ILogger) {}
+  constructor(@inject(({ scope, args }) => ILoggerToken.resolve(scope, { args })) private logger: ILogger) {}
   start() {
     this.logger.log('hello');
   }

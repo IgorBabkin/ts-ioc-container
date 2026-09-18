@@ -52,7 +52,7 @@ describe('lazy registerPipe', () => {
     // Analytics service - expensive, but only used occasionally
     @register(bindTo('AnalyticsService'), lazy(), singleton())
     class AnalyticsService {
-      constructor(@inject('DatabasePool') private db: DatabasePool) {
+      constructor(@inject(({ scope, args }) => scope.resolve('DatabasePool', { args })) private db: DatabasePool) {
         initLog.push('AnalyticsService initialized');
       }
 
@@ -67,7 +67,9 @@ describe('lazy registerPipe', () => {
 
     // Application service - always used
     class AppService {
-      constructor(@inject('AnalyticsService') public analytics: AnalyticsService) {
+      constructor(
+        @inject(({ scope, args }) => scope.resolve('AnalyticsService', { args })) public analytics: AnalyticsService,
+      ) {
         initLog.push('AppService initialized');
       }
 
@@ -164,8 +166,8 @@ describe('lazy registerPipe', () => {
     // Notification service - uses email and SMS, but maybe not both
     class NotificationService {
       constructor(
-        @inject('EmailService') public email: EmailService,
-        @inject('SmsService') public sms: SmsService,
+        @inject(({ scope, args }) => scope.resolve('EmailService', { args })) public email: EmailService,
+        @inject(({ scope, args }) => scope.resolve('SmsService', { args })) public sms: SmsService,
       ) {
         initLog.push('NotificationService initialized');
       }
@@ -257,7 +259,7 @@ describe('lazy registerPipe', () => {
     }
 
     class ApiService {
-      constructor(@inject('CacheService') private cache: CacheService) {
+      constructor(@inject(({ scope, args }) => scope.resolve('CacheService', { args })) private cache: CacheService) {
         initLog.push('ApiService initialized');
       }
 
@@ -375,8 +377,8 @@ describe('lazy registerPipe', () => {
 
     class Application {
       constructor(
-        @inject('FeatureFlagService') private flags: FeatureFlagService,
-        @inject('PremiumFeature') private premium: PremiumFeature,
+        @inject(({ scope, args }) => scope.resolve('FeatureFlagService', { args })) private flags: FeatureFlagService,
+        @inject(({ scope, args }) => scope.resolve('PremiumFeature', { args })) private premium: PremiumFeature,
       ) {
         initLog.push('Application initialized');
       }

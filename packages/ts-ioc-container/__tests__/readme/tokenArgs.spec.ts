@@ -34,7 +34,7 @@ const ApiClientToken = new SingleToken<IApiClient>('IApiClient');
 class DataService {
   constructor(
     // Inject ApiClient configured for the 'data' service
-    @inject(ApiClientToken.args('https://data.api.com', 5000))
+    @inject(({ scope, args }) => ApiClientToken.args('https://data.api.com', 5000).resolve(scope, { args }))
     public client: IApiClient,
   ) {}
 }
@@ -42,7 +42,7 @@ class DataService {
 class UserService {
   constructor(
     // Inject ApiClient configured for the 'users' service
-    @inject(ApiClientToken.args('https://users.api.com', 1000))
+    @inject(({ scope, args }) => ApiClientToken.args('https://users.api.com', 1000).resolve(scope, { args }))
     public client: IApiClient,
   ) {}
 }

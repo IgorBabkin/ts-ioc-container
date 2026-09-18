@@ -30,7 +30,9 @@ describe('lazy provider', () => {
 
   // EmailNotifier is expensive - establishes SMTP connection on construction
   class EmailNotifier {
-    constructor(@inject('SmtpConnectionStatus') private smtp: SmtpConnectionStatus) {
+    constructor(
+      @inject(({ scope, args }) => scope.resolve('SmtpConnectionStatus', { args })) private smtp: SmtpConnectionStatus,
+    ) {
       // Simulate expensive SMTP connection
       this.smtp.connect();
     }
@@ -43,7 +45,10 @@ describe('lazy provider', () => {
   // AuthService might need to send password reset emails
   // But most login requests don't need email (only password reset does)
   class AuthService {
-    constructor(@inject(s.token('EmailNotifier').lazy()) public emailNotifier: EmailNotifier) {}
+    constructor(
+      @inject(({ scope, args }) => s.token('EmailNotifier').lazy().resolve(scope, { args }))
+      public emailNotifier: EmailNotifier,
+    ) {}
 
     login(email: string, password: string): boolean {
       // Most requests just validate credentials - no email needed
