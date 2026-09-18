@@ -50,11 +50,13 @@ Acceptance criteria:
 - `appendArgsFn` computes additional arguments from the resolving container and
   incoming options, then appends them after the provider's existing argument
   function.
-- Arguments forwarded into a class constructor are resolved when they are
-  `InjectionToken` instances and passed through as literals otherwise.
+- Arguments forwarded into a class constructor are passed through as-is,
+  `InjectionToken` instances included - the library never resolves them.
 
-> **!Important** — Bare constructors are **not** auto-resolved when passed as
-> arguments. Consumers must wrap them in a `ClassToken` to opt into resolution.
+> **!Important** — Resolving an argument is the call site's job:
+> `token.argsFn((scope) => [DependencyToken.resolve(scope)])` hands the
+> constructor the resolved value, `token.args(DependencyToken)` hands it the
+> token object itself.
 
 ### Story: Delay class-instance construction
 

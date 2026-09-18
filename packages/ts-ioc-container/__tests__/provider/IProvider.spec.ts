@@ -143,14 +143,16 @@ describe('IProvider', function () {
     }
 
     // EntityManager is generic - it works with ANY repository.
-    // The repository is the first arg passed via `EntityManagerToken.args(...)`.
-    // `@inject(arg(0))` reads it; the container auto-resolves InjectionToken args
-    // before they reach the constructor.
+    // The repository is the first arg; `@inject(arg(0))` reads it. Args are
+    // passed through as-is, so the call site resolves the repository token
+    // itself with `argsFn` before it reaches the constructor.
     const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
+    const withRepository = (token: SingleToken<IRepository>) =>
+      EntityManagerToken.argsFn((scope) => [token.resolve(scope)]);
 
     @register(
       bindTo(EntityManagerToken),
-      singleton((arg1) => (arg1 as SingleToken).token), // Cache unique instance per repository type
+      singleton((repository) => (repository as IRepository).name), // Cache unique instance per repository type
     )
     class EntityManager {
       constructor(@inject(arg(0)) public repository: IRepository) {}
@@ -159,11 +161,11 @@ describe('IProvider', function () {
     class App {
       constructor(
         // Inject EntityManager configured for Users
-        @inject(EntityManagerToken.args(UserRepositoryToken))
+        @inject(withRepository(UserRepositoryToken))
         public userManager: EntityManager,
 
         // Inject EntityManager configured for Todos
-        @inject(EntityManagerToken.args(TodoRepositoryToken))
+        @inject(withRepository(TodoRepositoryToken))
         public todoManager: EntityManager,
       ) {}
     }
@@ -187,14 +189,14 @@ describe('IProvider', function () {
         .addRegistration(R.fromClass(TodoRepository));
 
       // Resolve user manager twice
-      const userManager1 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
-      const userManager2 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
+      const userManager1 = withRepository(UserRepositoryToken).resolve(root);
+      const userManager2 = withRepository(UserRepositoryToken).resolve(root);
 
       // Should be same instance (cached)
       expect(userManager1).toBe(userManager2);
 
       // Resolve todo manager
-      const todoManager = EntityManagerToken.args(TodoRepositoryToken).resolve(root);
+      const todoManager = withRepository(TodoRepositoryToken).resolve(root);
 
       // Should be different from user manager
       expect(todoManager).not.toBe(userManager1);

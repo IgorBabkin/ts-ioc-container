@@ -1,5 +1,5 @@
 import type { IContainer } from '../container/IContainer';
-import { InjectionToken } from './InjectionToken';
+import { forwardArgs, InjectionToken } from './InjectionToken';
 import { InjectFn } from '../hooks/hook';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 
@@ -9,7 +9,7 @@ export class FunctionToken<T = any> extends InjectionToken<T> {
 
   constructor(
     private readonly fn: InjectFn<T>,
-    { getArgsFn = (_, { args = [] } = {}) => args, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+    { getArgsFn = forwardArgs, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
   ) {
     super();
     this._getArgsFn = getArgsFn;

@@ -40,6 +40,22 @@ Acceptance criteria:
 - Chained argument modifiers preserve earlier arguments in order.
 - The original token remains unchanged after a modifier is called.
 
+### Story: Forward runtime arguments through tokens
+
+As a library user, I can pass runtime arguments when resolving through a token
+so that the provider behind the token receives them the same way it does from
+`container.resolve(key, { args })`.
+
+Acceptance criteria:
+
+- Every token shape that resolves through the container (`SingleToken`,
+  `ClassToken`, `SingleAliasToken`, `GroupAliasToken`, `FunctionToken`)
+  forwards the runtime `args` of its `resolve` call to the provider.
+- Runtime arguments come first; `args` and `argsFn` append after them.
+- The runtime arguments of a class being constructed cascade into every
+  `@inject(token)` dependency of that class, so they reach the dependency's
+  provider, its `scopeAccess` rule and its `singleton()` cache key.
+
 ### Story: Configure lazy token resolution
 
 As an application developer, I can mark a token resolution as lazy so that class

@@ -1,6 +1,13 @@
 import { type IContainer } from '../container/IContainer';
-import { ProviderOptions } from '../provider/IProvider';
+import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 import { Is } from '../utils/basic';
+
+/**
+ * The default `getArgsFn` of every token: the runtime `args` a token is
+ * resolved with reach the provider as they are, and `token.args(...)` /
+ * `token.argsFn(...)` append after them.
+ */
+export const forwardArgs: ArgsFn = (_, { args = [] } = {}) => args;
 
 export abstract class InjectionToken<T = any> {
   abstract resolve(s: IContainer, options?: ProviderOptions): T;
