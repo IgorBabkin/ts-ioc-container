@@ -31,7 +31,7 @@ export abstract class InjectionToken<T = any> {
   }
 }
 
-export function isInjectionToken(target: unknown): target is InjectionToken {
+export function isInjectionToken<T = any>(target: unknown): target is InjectionToken<T> {
   return (
     Is.object(target) &&
     'resolve' in target &&
