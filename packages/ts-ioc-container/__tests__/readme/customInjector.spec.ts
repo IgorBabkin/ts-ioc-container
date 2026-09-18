@@ -1,4 +1,4 @@
-import { type constructor, Container, type IContainer, Injector, ProviderOptions, Registration } from '../../lib';
+import { type constructor, Container, type IContainer, Injector, InjectOptions, Registration } from '../../lib';
 
 /**
  * Advanced - Custom Injector
@@ -17,11 +17,11 @@ interface IFactoryClass<T> {
 }
 
 class StaticFactoryInjector extends Injector {
-  createInstance<T>(container: IContainer, target: constructor<T>, { args = [] }: ProviderOptions = {}): T {
+  createInstance<T>(target: constructor<T>, { scope, args = [] }: InjectOptions): T {
     // Check if the class has a static 'create' method
     const factoryClass = target as unknown as IFactoryClass<T>;
     if (typeof factoryClass.create === 'function') {
-      return factoryClass.create(container, ...args);
+      return factoryClass.create(scope, ...args);
     }
 
     // Fallback to standard constructor instantiation

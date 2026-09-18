@@ -13,6 +13,7 @@ import {
   type ExecutionContext,
   type HookAction,
   type IContainerModule,
+  by,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
@@ -62,7 +63,7 @@ class LogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject('logsRepo') private logsRepo: LogsRepo) {}
+  constructor(@inject(by('logsRepo')) private logsRepo: LogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, inject, register, Registration as R, singleton } from '../../lib';
+import { Container, inject, register, Registration as R, singleton, by } from '../../lib';
 
 /**
  * Background Worker - Singleton Client, Transient Jobs
@@ -24,7 +24,7 @@ class QueueClient {
 class JobHandler {
   readonly result: string;
 
-  constructor(@inject('QueueClient') private queue: QueueClient) {
+  constructor(@inject(by('QueueClient')) private queue: QueueClient) {
     this.result = this.queue.dequeue();
   }
 }

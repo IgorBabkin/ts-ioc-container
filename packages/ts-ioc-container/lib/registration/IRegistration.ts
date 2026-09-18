@@ -90,10 +90,10 @@ export const scope =
     r.when(...rules);
 
 export const appendArgs = <T>(...extraArgs: unknown[]) =>
-  registerPipe<T>((p) => p.addArgsFn((_, { args = [] } = {}) => [...args, ...extraArgs]));
+  registerPipe<T>((p) => p.addArgsFn(({ args = [] }) => [...args, ...extraArgs]));
 
 export const appendArgsFn = <T>(fn: ArgsFn) =>
-  registerPipe<T>((p) => p.addArgsFn((scope, options) => [...(options?.args ?? []), ...fn(scope, options)]));
+  registerPipe<T>((p) => p.addArgsFn((options) => [...(options.args ?? []), ...fn(options)]));
 
 export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => p.addAccessRule(rule));
 

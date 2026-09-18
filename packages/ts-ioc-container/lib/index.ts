@@ -21,12 +21,14 @@ export { EmptyContainer } from './container/EmptyContainer';
 export {
   type IInjector,
   type InjectOptions,
+  type WithScope,
+  type WithArgs,
   type IInjectFnResolver,
   type IInjectorModule,
   type InjectorHook,
   Injector,
 } from './injector/IInjector';
-export { MetadataInjector, inject, arg, args, argsFn, resolveArgs } from './injector/MetadataInjector';
+export { MetadataInjector, inject, arg, args, argsFn, by, resolveArgs } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 
@@ -37,6 +39,7 @@ export {
   type DecorateFn,
   type ArgsFn,
   type ProviderOptions,
+  type ResolveOptions,
   type GetCacheKey,
   type ScopeAccessOptions,
   type ScopeAccessRule,
@@ -118,7 +121,7 @@ export {
 
 // Tokens
 export { InjectionToken, isInjectionToken, forwardArgs } from './token/InjectionToken';
-export { type Injectable, toToken, toMappedToken, argToToken } from './token/toToken';
+export { type Injectable, toToken, argToToken } from './token/toToken';
 export { GroupAliasToken, toGroupAlias } from './token/GroupAliasToken';
 export { SingleAliasToken, toSingleAlias } from './token/SingleAliasToken';
 export { ClassToken } from './token/ClassToken';

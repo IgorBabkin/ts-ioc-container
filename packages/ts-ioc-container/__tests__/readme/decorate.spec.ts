@@ -9,6 +9,7 @@ import {
   Registration as R,
   select as s,
   singleton,
+  by,
 } from '../../lib';
 
 /**
@@ -54,7 +55,7 @@ describe('Decorator Pattern', () => {
   class LoggingRepository implements IRepository {
     constructor(
       @inject(arg(0)) private repository: IRepository,
-      @inject(s.token('Logger').lazy()) private logger: Logger,
+      @inject(by(s.token('Logger').lazy())) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {
@@ -78,7 +79,7 @@ describe('Decorator Pattern', () => {
   }
 
   class App {
-    constructor(@inject('IRepository') public repository: IRepository) {}
+    constructor(@inject(by('IRepository')) public repository: IRepository) {}
 
     async run() {
       await this.repository.save({ id: '1', text: 'Buy groceries' });

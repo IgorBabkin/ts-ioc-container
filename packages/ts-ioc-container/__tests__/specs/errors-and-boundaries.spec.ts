@@ -61,7 +61,7 @@ describe('Spec: errors and boundaries', () => {
 
     provider.dispose();
 
-    expect(() => provider.resolve(container, {})).toThrowError(ProviderDisposedError);
+    expect(() => provider.resolve({ scope: container })).toThrowError(ProviderDisposedError);
     expect(() => provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toThrowError(
       ProviderDisposedError,
     );

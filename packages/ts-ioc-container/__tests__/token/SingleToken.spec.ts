@@ -13,7 +13,7 @@ describe('SingleToken', () => {
   it('should support chaining args and argsFn preserving order', () => {
     const token = new SingleToken<string>('myKey');
     const container = new Container().addRegistration(
-      Registration.fromFn((c, { args = [] }) => args.join('-')).bindToKey('myKey'),
+      Registration.fromFn(({ args = [] }) => args.join('-')).bindToKey('myKey'),
     );
 
     expect(
@@ -27,7 +27,7 @@ describe('SingleToken', () => {
   it('should support select with args', () => {
     const token = new SingleToken<string>('myKey');
     const container = new Container().addRegistration(
-      Registration.fromFn((c, { args = [] }) => `value-${args.join('-')}`).bindToKey('myKey'),
+      Registration.fromFn(({ args = [] }) => `value-${args.join('-')}`).bindToKey('myKey'),
     );
 
     const selectFn = token.args('x', 'y').select((v) => v.toUpperCase());
@@ -37,7 +37,7 @@ describe('SingleToken', () => {
   it('should forward runtime args ahead of chained args', () => {
     const token = new SingleToken<string>('myKey');
     const container = new Container().addRegistration(
-      Registration.fromFn((c, { args = [] }) => args.join('-')).bindToKey('myKey'),
+      Registration.fromFn(({ args = [] }) => args.join('-')).bindToKey('myKey'),
     );
 
     expect(token.resolve(container, { args: ['r'] })).toBe('r');

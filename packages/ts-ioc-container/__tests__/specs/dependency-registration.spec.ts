@@ -24,7 +24,7 @@ describe('Spec: dependency registration', () => {
     const container = new Container()
       .addRegistration(R.fromClass(Repository))
       .addRegistration(R.fromValue({ env: 'test' }).bindToKey('Config'))
-      .addRegistration(R.fromFn((scope) => new Service(scope.resolve('Repository'))).bindToKey('Service'))
+      .addRegistration(R.fromFn(({ scope }) => new Service(scope.resolve('Repository'))).bindToKey('Service'))
       .addRegistration(R.fromKey<Service>('Service').bindToKey('ServiceAlias'));
 
     expect(container.resolve<Repository>('Repository').source).toBe('db');

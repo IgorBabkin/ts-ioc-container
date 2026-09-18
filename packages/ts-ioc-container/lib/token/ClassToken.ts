@@ -1,7 +1,7 @@
 import { IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
 import { type constructor, Serializable } from '../utils/basic';
-import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 
 export class ClassToken<T = any> extends InjectionToken<T> implements Serializable {
   private readonly _getArgsFn: ArgsFn;
@@ -24,9 +24,9 @@ export class ClassToken<T = any> extends InjectionToken<T> implements Serializab
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
+  resolve(s: IContainer, { args = [], lazy }: ResolveOptions = {}): T {
     return s.resolve(this.target, {
-      args: this._getArgsFn(s, { args }),
+      args: this._getArgsFn({ scope: s, args }),
       lazy: this._isLazy || lazy,
     });
   }
@@ -34,7 +34,7 @@ export class ClassToken<T = any> extends InjectionToken<T> implements Serializab
   args(...newArgs: unknown[]) {
     const parentFn = this._getArgsFn;
     return new ClassToken<T>(this.target, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
+      getArgsFn: (options) => [...parentFn(options), ...newArgs],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });
@@ -43,7 +43,7 @@ export class ClassToken<T = any> extends InjectionToken<T> implements Serializab
   argsFn(fn: (s: IContainer) => unknown[]) {
     const parentFn = this._getArgsFn;
     return new ClassToken<T>(this.target, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
+      getArgsFn: (options) => [...parentFn(options), ...fn(options.scope)],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });

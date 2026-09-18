@@ -1,4 +1,4 @@
-import { arg, appendArgs, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
+import { arg, appendArgs, bindTo, Container, inject, register, Registration as R, SingleToken, by } from '../../lib';
 
 interface IConfig {
   apiUrl: string;
@@ -12,7 +12,7 @@ class ConfigService implements IConfig {
 const IConfigToken = new SingleToken<IConfig>('IConfig');
 
 class App {
-  constructor(@inject(IConfigToken.lazy()) public config: IConfig) {}
+  constructor(@inject(by(IConfigToken.lazy())) public config: IConfig) {}
 }
 
 describe('Token Lazy Loading', function () {

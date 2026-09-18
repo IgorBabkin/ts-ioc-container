@@ -1,5 +1,5 @@
 import { type IContainer, type Tag } from '../container/IContainer';
-import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { Is } from '../utils/basic';
 
 /**
@@ -7,7 +7,7 @@ import { Is } from '../utils/basic';
  * resolved with reach the provider as they are, and `token.args(...)` /
  * `token.argsFn(...)` append after them.
  */
-export const forwardArgs: ArgsFn = (_, { args = [] } = {}) => args;
+export const forwardArgs: ArgsFn = ({ args = [] }) => args;
 
 export abstract class InjectionToken<T = any> {
   private readonly tags: Set<Tag>;
@@ -16,7 +16,7 @@ export abstract class InjectionToken<T = any> {
     this.tags = new Set(tags);
   }
 
-  abstract resolve(s: IContainer, options?: ProviderOptions): T;
+  abstract resolve(s: IContainer, options?: ResolveOptions): T;
   abstract args(...deps: unknown[]): InjectionToken<T>;
   abstract argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T>;
   abstract lazy(): InjectionToken<T>;

@@ -1,4 +1,4 @@
-import { bindTo, Container, inject, register, Registration as R, singleton, SingleToken } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, singleton, SingleToken, by } from '../../lib';
 
 interface ILogger {
   log(message: string): void;
@@ -14,7 +14,7 @@ class Logger implements ILogger {
 }
 
 class App {
-  constructor(@inject(ILoggerToken) private logger: ILogger) {}
+  constructor(@inject(by(ILoggerToken)) private logger: ILogger) {}
   start() {
     this.logger.log('hello');
   }

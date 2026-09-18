@@ -1,7 +1,7 @@
 import { DependencyKey, IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
-import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { Serializable } from '../utils/basic';
 
 export class SingleToken<T = any> extends InjectionToken<T> implements Serializable {
@@ -25,9 +25,9 @@ export class SingleToken<T = any> extends InjectionToken<T> implements Serializa
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
+  resolve(s: IContainer, { args = [], lazy }: ResolveOptions = {}): T {
     return s.resolve(this.token, {
-      args: this._getArgsFn(s, { args }),
+      args: this._getArgsFn({ scope: s, args }),
       lazy: this._isLazy || lazy,
     });
   }
@@ -39,7 +39,7 @@ export class SingleToken<T = any> extends InjectionToken<T> implements Serializa
   args(...newArgs: unknown[]) {
     const parentFn = this._getArgsFn;
     return new SingleToken<T>(this.token, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
+      getArgsFn: (options) => [...parentFn(options), ...newArgs],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });
@@ -48,7 +48,7 @@ export class SingleToken<T = any> extends InjectionToken<T> implements Serializa
   argsFn(fn: (s: IContainer) => unknown[]) {
     const parentFn = this._getArgsFn;
     return new SingleToken<T>(this.token, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
+      getArgsFn: (options) => [...parentFn(options), ...fn(options.scope)],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });

@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0002 - Pluggable injector strategies](../../docs/adr/0002-pluggable-injectors.md)
-- **Public API:** `IInjector`, `IInjectorModule`, `InjectorHook`, `Injector`, `MetadataInjector`, `SimpleInjector`, `ProxyInjector`, `inject`, `resolveArgs`, `arg`, `args`, `argsFn`
+- **Public API:** `IInjector`, `IInjectorModule`, `InjectorHook`, `Injector`, `MetadataInjector`, `SimpleInjector`, `ProxyInjector`, `inject`, `by`, `resolveArgs`, `arg`, `args`, `argsFn`
 - **Executable spec:** `__tests__/specs/injector-strategies.spec.ts`
 
 ## Intent
@@ -27,9 +27,18 @@ like `arg` / `args` / `argsFn`) are resolved by the container.
 
 Acceptance criteria:
 
-- `@inject` records an injection token for a constructor parameter.
-- `MetadataInjector` resolves annotated constructor arguments from the
-  container.
+- `@inject` takes exactly one argument, an `InjectFn`
+  `(options: ProviderOptions) => T`, and records it for the constructor
+  parameter; there is no token, key, class or mapper form of the decorator.
+- `by(target)` builds the `InjectFn` for an `InjectionToken`, a
+  `DependencyKey` or a class: it resolves `target` from the scope and forwards
+  the runtime args and the `lazy` flag, so `@inject(by(Token))` is the token
+  injection.
+- `MetadataInjector` calls each recorded function with the resolution context
+  of the class being constructed - the `scope` and the runtime `args` - and
+  injects what it returns.
+- A mapped value is composition: `pipe(fn, ...mappers)` is an `InjectFn`, so
+  `@inject(pipe(fn, sanitize(), validate()))` injects the last mapper's result.
 - Constructor parameters without `@inject` metadata resolve to `undefined`.
 
 ### Story: Inject positional runtime arguments
@@ -75,8 +84,8 @@ can follow framework-specific rules.
 Acceptance criteria:
 
 - A container can be constructed with a custom injector.
-- The custom injector receives the resolving container, target constructor, and
-  provider options.
+- The custom injector receives the target constructor and one options object
+  carrying the resolving `scope`, the runtime `args` and the `lazy` flag.
 - Instances created through the custom injector participate in normal instance
   tracking and lifecycle behavior.
 

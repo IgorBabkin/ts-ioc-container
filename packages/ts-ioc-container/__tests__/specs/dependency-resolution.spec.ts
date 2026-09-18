@@ -7,6 +7,7 @@ import {
   register,
   Registration as R,
   singleton,
+  by,
 } from '../../lib';
 
 @register(singleton())
@@ -19,7 +20,7 @@ class AuditLog {
 }
 
 class CreateUser {
-  constructor(@inject('AuditLog') private readonly auditLog: AuditLog) {}
+  constructor(@inject(by('AuditLog')) private readonly auditLog: AuditLog) {}
 
   execute(email: string): string[] {
     this.auditLog.record(`created:${email}`);

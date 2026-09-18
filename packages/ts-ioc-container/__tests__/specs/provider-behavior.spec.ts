@@ -31,7 +31,7 @@ describe('Spec: provider behavior', () => {
     const container = new Container()
       .addRegistration(R.fromClass(Repository))
       .addRegistration(R.fromValue('test').bindToKey('Environment'))
-      .addRegistration(R.fromFn((scope) => `${scope.resolve('Environment')}:service`).bindToKey('ServiceName'))
+      .addRegistration(R.fromFn(({ scope }) => `${scope.resolve('Environment')}:service`).bindToKey('ServiceName'))
       .addRegistration(R.fromKey<string>('ServiceName').bindToKey('ServiceAlias'));
 
     expect(container.resolve<Repository>('Repository')).toBeInstanceOf(Repository);
@@ -51,12 +51,12 @@ describe('Spec: provider behavior', () => {
       .addAccessRule(() => true);
     const container = new Container();
 
-    expect(provider.resolve(container, {})).toBe('ready');
+    expect(provider.resolve({ scope: container })).toBe('ready');
     expect(provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toBe(true);
 
     provider.dispose();
 
-    expect(() => provider.resolve(container, {})).toThrowError(ProviderDisposedError);
+    expect(() => provider.resolve({ scope: container })).toThrowError(ProviderDisposedError);
     expect(() => provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toThrowError(
       ProviderDisposedError,
     );
@@ -101,7 +101,7 @@ describe('Spec: provider behavior', () => {
       readonly region = 'eu';
     }
 
-    @register(appendArgsFn((scope) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing']))
+    @register(appendArgsFn(({ scope }) => [scope.resolve<RegionConfig>('RegionConfig').region, 'billing']))
     class Endpoint {
       constructor(
         @inject(arg(0)) readonly region: string,
@@ -147,7 +147,7 @@ describe('Spec: provider behavior', () => {
       readonly tenant = 'tenant-a';
     }
 
-    @register(appendArgsFn((scope) => [scope.resolve<TenantConfig>('TenantConfig').tenant]), appendArgs('tail'))
+    @register(appendArgsFn(({ scope }) => [scope.resolve<TenantConfig>('TenantConfig').tenant]), appendArgs('tail'))
     class Endpoint {
       constructor(
         @inject(arg(0)) readonly runtime: string,

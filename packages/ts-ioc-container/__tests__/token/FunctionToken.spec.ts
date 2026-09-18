@@ -3,7 +3,7 @@ import { Container, FunctionToken, MethodNotImplementedError } from '../../lib';
 describe('FunctionToken', () => {
   it('should pass lazy: true to the resolver function when token is lazy', () => {
     let receivedLazy: boolean | undefined;
-    const token = new FunctionToken((_, { lazy }) => {
+    const token = new FunctionToken(({ lazy }) => {
       receivedLazy = lazy;
       return 'value';
     });
@@ -13,7 +13,7 @@ describe('FunctionToken', () => {
 
   it('should pass the container as the first argument to the resolver', () => {
     const container = new Container();
-    const token = new FunctionToken((c) => c);
+    const token = new FunctionToken(({ scope }) => scope);
     expect(token.resolve(container)).toBe(container);
   });
 

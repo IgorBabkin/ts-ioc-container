@@ -1,4 +1,4 @@
-import { type IProvider, ProviderOptions } from '../provider/IProvider';
+import { type IProvider, ResolveOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
 import { IInjector, type WithArgs } from '../injector/IInjector';
 import { type constructor, Instance } from '../utils/basic';
@@ -18,7 +18,7 @@ export interface Tagged {
   addTags(...tags: Tag[]): void;
 }
 
-export type ResolveOneOptions = ProviderOptions & Partial<WithChild>;
+export type ResolveOneOptions = ResolveOptions & Partial<WithChild>;
 export type ResolveManyOptions = ResolveOneOptions & Partial<WithExcludedKeys>;
 export interface Resolvable {
   resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;

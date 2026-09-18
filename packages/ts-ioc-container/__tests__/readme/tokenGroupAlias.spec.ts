@@ -1,4 +1,4 @@
-import { bindTo, Container, GroupAliasToken, inject, register, Registration as R } from '../../lib';
+import { bindTo, Container, GroupAliasToken, inject, register, Registration as R, by } from '../../lib';
 
 /**
  * Plugins - Group Alias Token
@@ -38,7 +38,7 @@ class FormatValidator implements IValidator {
 
 class FormService {
   // Inject ALL registered validators as an array
-  constructor(@inject(IValidatorToken) public validators: IValidator[]) {}
+  constructor(@inject(by(IValidatorToken)) public validators: IValidator[]) {}
 
   isValid(input: string): boolean {
     return this.validators.every((v) => v.validate(input));

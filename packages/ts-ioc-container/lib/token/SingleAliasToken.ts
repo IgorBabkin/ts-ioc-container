@@ -1,8 +1,8 @@
-import { DependencyKey, IContainer, ResolveOneOptions } from '../container/IContainer';
+import { DependencyKey, IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { BindToken } from './BindToken';
-import { ArgsFn } from '../provider/IProvider';
+import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { Serializable } from '../utils/basic';
 
 export class SingleAliasToken<T = any> extends InjectionToken<T> implements BindToken<T>, Serializable {
@@ -26,9 +26,9 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, { args = [], lazy }: ResolveOneOptions = {}): T {
+  resolve(s: IContainer, { args = [], lazy }: ResolveOptions = {}): T {
     return s.resolveOneByAlias(this.token, {
-      args: this._getArgsFn(s, { args }),
+      args: this._getArgsFn({ scope: s, args }),
       lazy: this._isLazy || lazy,
     });
   }
@@ -40,7 +40,7 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
   args(...newArgs: unknown[]) {
     const parentFn = this._getArgsFn;
     return new SingleAliasToken<T>(this.token, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
+      getArgsFn: (options) => [...parentFn(options), ...newArgs],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });
@@ -49,7 +49,7 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
   argsFn(fn: (s: IContainer) => unknown[]) {
     const parentFn = this._getArgsFn;
     return new SingleAliasToken<T>(this.token, {
-      getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
+      getArgsFn: (options) => [...parentFn(options), ...fn(options.scope)],
       isLazy: this._isLazy,
       tags: this.getTags(),
     });

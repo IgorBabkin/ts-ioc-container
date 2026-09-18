@@ -20,6 +20,7 @@ import {
   SingleToken,
   toGroupAlias,
   toSingleAlias,
+  by,
 } from '../../lib';
 import { UnsupportedTokenTypeError } from '../../lib/errors/UnsupportedTokenTypeError';
 
@@ -39,7 +40,7 @@ describe('Spec: token-based injection', () => {
 
     const repository = new SingleToken<Repository>('Repository').resolve(container);
     const classInstance = new ClassToken(Repository).resolve(container);
-    const computed = new FunctionToken((scope) => scope.resolve<Repository>('Repository').name).resolve(container);
+    const computed = new FunctionToken(({ scope }) => scope.resolve<Repository>('Repository').name).resolve(container);
     const constant = new ConstantToken('literal').resolve(container);
     const singleAlias = new SingleAliasToken<Repository>('SingleRepository').resolve(container);
     const groupAlias = new GroupAliasToken<Plugin>('PluginGroup').resolve(container);
@@ -73,9 +74,9 @@ describe('Spec: token-based injection', () => {
 
   it('forwards runtime arguments through every container-backed token shape', () => {
     const container = new Container()
-      .addRegistration(R.fromFn((_, { args = [] }) => args).bindToKey('Echo'))
+      .addRegistration(R.fromFn(({ args = [] }) => args).bindToKey('Echo'))
       .addRegistration(
-        R.fromFn((_, { args = [] }) => args)
+        R.fromFn(({ args = [] }) => args)
           .bindToKey('AliasedEcho')
           .bindToAlias('EchoAlias'),
       );
@@ -88,11 +89,11 @@ describe('Spec: token-based injection', () => {
     expect(new ClassToken(EchoClass).resolve(container, { args: ['a', 1] }).args).toEqual(['a', 1]);
     expect(new SingleAliasToken<unknown[]>('EchoAlias').resolve(container, { args: ['a', 1] })).toEqual(['a', 1]);
     expect(new GroupAliasToken<unknown[]>('EchoAlias').resolve(container, { args: ['a', 1] })).toEqual([['a', 1]]);
-    expect(new FunctionToken((_, { args = [] }) => args).resolve(container, { args: ['a', 1] })).toEqual(['a', 1]);
+    expect(new FunctionToken(({ args = [] }) => args).resolve(container, { args: ['a', 1] })).toEqual(['a', 1]);
   });
 
   it('appends token arguments after the runtime arguments', () => {
-    const container = new Container().addRegistration(R.fromFn((_, { args = [] }) => args).bindToKey('Echo'));
+    const container = new Container().addRegistration(R.fromFn(({ args = [] }) => args).bindToKey('Echo'));
     const token = new SingleToken<unknown[]>('Echo').args('static').argsFn(() => ['dynamic']);
 
     expect(token.resolve(container, { args: ['runtime'] })).toEqual(['runtime', 'static', 'dynamic']);
@@ -106,7 +107,10 @@ describe('Spec: token-based injection', () => {
     }
 
     class TenantService {
-      constructor(@inject(TenantRepositoryToken) readonly repository: TenantRepository) {}
+      constructor(
+        @inject(by(TenantRepositoryToken))
+        readonly repository: TenantRepository,
+      ) {}
     }
 
     const container = new Container().addRegistration(

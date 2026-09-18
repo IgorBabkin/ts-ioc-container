@@ -25,7 +25,7 @@ describe('GroupAliasToken', () => {
   it('should support chaining args and argsFn preserving order', () => {
     const token = new GroupAliasToken<string>('myAlias');
     const container = new Container().addRegistration(
-      Registration.fromFn((c, { args = [] }) => args.join('-'))
+      Registration.fromFn(({ args = [] }) => args.join('-'))
         .bindTo('myKey')
         .bindTo(token),
     );
@@ -41,7 +41,7 @@ describe('GroupAliasToken', () => {
   it('should forward runtime args ahead of chained args', () => {
     const token = new GroupAliasToken<string>('myAlias');
     const container = new Container().addRegistration(
-      Registration.fromFn((c, { args = [] }) => args.join('-'))
+      Registration.fromFn(({ args = [] }) => args.join('-'))
         .bindToKey('myKey')
         .bindToAlias('myAlias'),
     );

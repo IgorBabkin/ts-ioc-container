@@ -9,6 +9,7 @@ import {
   Registration as R,
   SingleToken,
   singleton,
+  by,
 } from '../../lib';
 
 /**
@@ -66,7 +67,7 @@ describe('IProvider', function () {
       }
 
       // Extract 'env' from Config service dynamically
-      @register(appendArgsFn((scope) => [scope.resolve<Config>('Config').env]))
+      @register(appendArgsFn(({ scope }) => [scope.resolve<Config>('Config').env]))
       class Service {
         constructor(@inject(arg(0)) public env: string) {}
       }
@@ -102,7 +103,7 @@ describe('IProvider', function () {
         tenant = 'tenant-a';
       }
 
-      @register(appendArgs('fixed'), appendArgsFn((scope) => [scope.resolve<Config>('Config').tenant]))
+      @register(appendArgs('fixed'), appendArgsFn(({ scope }) => [scope.resolve<Config>('Config').tenant]))
       class Service {
         constructor(
           @inject(arg(0)) public runtime: string,
@@ -161,11 +162,11 @@ describe('IProvider', function () {
     class App {
       constructor(
         // Inject EntityManager configured for Users
-        @inject(withRepository(UserRepositoryToken))
+        @inject(by(withRepository(UserRepositoryToken)))
         public userManager: EntityManager,
 
         // Inject EntityManager configured for Todos
-        @inject(withRepository(TodoRepositoryToken))
+        @inject(by(withRepository(TodoRepositoryToken)))
         public todoManager: EntityManager,
       ) {}
     }

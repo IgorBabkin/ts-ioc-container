@@ -45,7 +45,7 @@ describe('IContainer', function () {
 
   it('should support custom Provider with appended args', function () {
     const greeting = appendArgs<string>('world').mapProvider(
-      new Provider<string>((_, { args = [] }) => `hello ${args[0]}`),
+      new Provider<string>(({ args = [] }) => `hello ${args[0]}`),
     );
     const root = new Container({ tags: ['root'] }).register('myProvider', greeting, { aliases: ['greeting'] });
 

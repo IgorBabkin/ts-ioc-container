@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { HookCollector, Container, hook, injectProp, Registration as R } from '../../lib';
+import { HookCollector, Container, hook, injectProp, pipe, Registration as R, by } from '../../lib';
 import { perform, runSync } from './runners';
 
-describe('injectProp(token, ...mappers)', () => {
+describe('injectProp(fn)', () => {
   function createViewModel<T extends object>(Target: new () => T, container: Container) {
     const runOnInit = perform(runSync(), new HookCollector({ key: 'onInit' }));
     const instance = container.resolve(Target);
@@ -10,9 +10,9 @@ describe('injectProp(token, ...mappers)', () => {
     return instance;
   }
 
-  it('assigns the whole dependency when no mapper is given', () => {
+  it('assigns whatever the function returns', () => {
     class ViewModel {
-      @hook('onInit', injectProp('Greeting'))
+      @hook('onInit', injectProp(by('Greeting')))
       greeting!: string;
     }
 
@@ -21,13 +21,13 @@ describe('injectProp(token, ...mappers)', () => {
     expect(createViewModel(ViewModel, container).greeting).toBe('hello');
   });
 
-  it('pipes the resolved dependency through every mapper, left to right', () => {
+  it('composes with pipe to map the dependency, left to right', () => {
     const trim = () => (value: string) => value.trim();
     const upper = () => (value: string) => value.toUpperCase();
     const exclaim = () => (value: string) => `${value}!`;
 
     class ViewModel {
-      @hook('onInit', injectProp('Greeting', trim(), upper(), exclaim()))
+      @hook('onInit', injectProp(pipe(by<string>('Greeting'), trim(), upper(), exclaim())))
       greeting!: string;
     }
 
@@ -36,26 +36,13 @@ describe('injectProp(token, ...mappers)', () => {
     expect(createViewModel(ViewModel, container).greeting).toBe('HELLO!');
   });
 
-  it('accepts a spread list of mappers', () => {
-    const mappers = [(value: string) => `${value}-a`, (value: string) => `${value}-b`];
-
-    class ViewModel {
-      @hook('onInit', injectProp('Greeting', ...mappers))
-      greeting!: string;
-    }
-
-    const container = new Container().addRegistration(R.fromValue('hello').bindToKey('Greeting'));
-
-    expect(createViewModel(ViewModel, container).greeting).toBe('hello-a-b');
-  });
-
   it('maps a class dependency down to one of its members', () => {
     class Config {
       readonly apiUrl = 'https://api.com';
     }
 
     class ViewModel {
-      @hook('onInit', injectProp(Config, (config) => config.apiUrl))
+      @hook('onInit', injectProp(pipe(by(Config), (config) => config.apiUrl)))
       apiUrl!: string;
     }
 
