@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0001 - Container as a linked list of scopes](../../docs/adr/0001-container-as-linked-list.md)
-- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnsupportedTokenTypeError`, `ContainerNotFoundError`, `TypedEventDisposedError`, `EmptyContainer`
+- **Public API:** `DependencyNotFoundError`, `DependencyMissingKeyError`, `ContainerDisposedError`, `MethodNotImplementedError`, `UnsupportedTokenTypeError`, `ContainerNotFoundError`, `TypedEventDisposedError`, `ArgumentNotFoundError`, `EmptyContainer`
 - **Executable spec:** `__tests__/specs/errors-and-boundaries.spec.ts`
 
 ## Intent
@@ -24,6 +24,18 @@ Acceptance criteria:
 - Alias resolution with no visible provider fails through the same missing
   dependency boundary.
 - The failure message identifies the missing dependency when available.
+
+### Story: Fail clearly for missing arguments
+
+As a library user, I can pick a runtime argument by predicate - for a
+singleton cache key, for instance - and have a missing one fail loudly instead
+of resolving to `undefined`.
+
+Acceptance criteria:
+
+- `findOrFail(predicate)(...args)` returns the first argument matching
+  `predicate`.
+- It fails with `ArgumentNotFoundError` when no argument matches.
 
 ### Story: Fail clearly for invalid registrations
 
