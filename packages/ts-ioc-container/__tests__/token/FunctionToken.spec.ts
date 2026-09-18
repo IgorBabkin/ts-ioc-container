@@ -1,4 +1,4 @@
-import { Container, FunctionToken } from '../../lib';
+import { Container, FunctionToken, MethodNotImplementedError } from '../../lib';
 
 describe('FunctionToken', () => {
   it('should pass lazy: true to the resolver function when token is lazy', () => {
@@ -15,5 +15,11 @@ describe('FunctionToken', () => {
     const container = new Container();
     const token = new FunctionToken((c) => c);
     expect(token.resolve(container)).toBe(container);
+  });
+
+  it('should throw error on getKey method', () => {
+    const token = new FunctionToken(() => 'value');
+    expect(() => token.getKey()).toThrow(MethodNotImplementedError);
+    expect(() => token.getKey()).toThrow('not implemented');
   });
 });

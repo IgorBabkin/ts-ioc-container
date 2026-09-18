@@ -53,4 +53,8 @@ export class SingleToken<T = any> extends InjectionToken<T> {
       isLazy: true,
     });
   }
+
+  getKey(): DependencyKey {
+    return this.token;
+  }
 }

@@ -1,6 +1,6 @@
-import { type IContainer } from '../container/IContainer';
+import { type DependencyKey, type IContainer } from '../container/IContainer';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
-import { Is } from '../utils/basic';
+import { type constructor, Is } from '../utils/basic';
 
 /**
  * The default `getArgsFn` of every token: the runtime `args` a token is
@@ -14,6 +14,10 @@ export abstract class InjectionToken<T = any> {
   abstract args(...deps: unknown[]): InjectionToken<T>;
   abstract argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T>;
   abstract lazy(): InjectionToken<T>;
+  /**
+   * @throws {MethodNotImplementedError} when the token has no underlying key (e.g. `FunctionToken`, `ConstantToken`, `GroupInstanceToken`).
+   */
+  abstract getKey(): DependencyKey | constructor<T>;
 }
 
 export function isInjectionToken(target: unknown): target is InjectionToken {
