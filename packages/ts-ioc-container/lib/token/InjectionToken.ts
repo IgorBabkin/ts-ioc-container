@@ -32,5 +32,13 @@ export abstract class InjectionToken<T = any> {
 }
 
 export function isInjectionToken(target: unknown): target is InjectionToken {
-  return Is.object(target) && 'resolve' in target && 'args' in target && 'argsFn' in target && 'lazy' in target;
+  return (
+    Is.object(target) &&
+    'resolve' in target &&
+    'args' in target &&
+    'argsFn' in target &&
+    'lazy' in target &&
+    'hasTag' in target &&
+    'addTags' in target
+  );
 }

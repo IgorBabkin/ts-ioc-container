@@ -1,5 +1,5 @@
-import { ClassToken, Container, FunctionToken, SingleToken } from '../../lib';
-import { toToken } from '../../lib/token/toToken';
+import { ClassToken, ConstantToken, Container, FunctionToken, SingleToken } from '../../lib';
+import { argToToken, toToken } from '../../lib/token/toToken';
 import { UnsupportedTokenTypeError } from '../../lib/errors/UnsupportedTokenTypeError';
 import type { IContainer } from '../../lib/container/IContainer';
 
@@ -14,6 +14,11 @@ describe('toToken', () => {
     const token = new SingleToken('key');
     const result = toToken(token);
     expect(result).toBe(token);
+  });
+
+  it('should reject token-shaped objects without tag methods', () => {
+    const token = { resolve() {}, args() {}, argsFn() {}, lazy() {} };
+    expect(argToToken(token)).toBeInstanceOf(ConstantToken);
   });
 
   it('should convert DependencyKey to SingleToken', () => {
