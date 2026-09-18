@@ -7,7 +7,6 @@ import { InjectionToken, isInjectionToken } from './InjectionToken';
 import { InjectFn } from '../hooks/hook';
 import { type constructor, Is } from '../utils/basic';
 import { ConstantToken } from './ConstantToken';
-import { type MapFn, pipe } from '../utils/fp';
 
 export type Injectable<T = any> = InjectFn<T> | InjectionToken<T> | DependencyKey | constructor<T>;
 
@@ -39,17 +38,6 @@ export const toToken = <T = any>(token: Injectable<T>): InjectionToken<T> => {
  * is returned as-is, anything else becomes a `ConstantToken` of itself. The
  * library never applies it to the args list - a call site that wants
  * "resolve tokens, pass literals through" does so explicitly, e.g.
- * `@inject((scope, { args = [] }) => argToToken(args[0]).resolve(scope))`.
+ * `@inject(({ scope, args = [] }) => argToToken(args[0]).resolve(scope))`.
  */
-export const argToToken = (v: unknown): InjectionToken<unknown> => (isInjectionToken(v) ? v : new ConstantToken(v));
-
-/**
- * Builds a token that resolves `token` and then pipes the resolved instance through `mappers`,
- * left to right. With no mappers the instance is passed through untouched.
- * @throws {UnsupportedTokenTypeError} when `token` is not an `InjectionToken`, a `DependencyKey`, a constructor, or a function.
- */
-export const toMappedToken = <T = any, R = T>(token: Injectable<T>, mappers: MapFn<any, any>[]): InjectionToken<R> => {
-  const source = toToken<T>(token);
-  const mapInstance = pipe<any>(...mappers);
-  return new FunctionToken<R>((scope, options) => mapInstance(source.resolve(scope, options)));
-};
+export const argToToken = <T = unknown>(v: T): InjectionToken<T> => (isInjectionToken<T>(v) ? v : new ConstantToken(v));

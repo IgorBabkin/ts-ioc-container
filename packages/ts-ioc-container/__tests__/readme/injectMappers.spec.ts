@@ -1,12 +1,13 @@
 import 'reflect-metadata';
-import { Container, inject, Registration as R } from '../../lib';
+import { Container, inject, Registration as R, pipe, by } from '../../lib';
 
 /**
  * Mapping injected values
  *
- * Every argument after the first one passed to `@inject` (or `injectProp`) is a
- * mapper applied to the resolved instance, left to right. Mappers are plain
- * functions, so they compose into reusable, named steps.
+ * `@inject` takes one `InjectFn`, so mapping what it resolves is composition:
+ * `pipe(fn, ...mappers)` applies each mapper to the previous result, left to
+ * right, and is itself an `InjectFn`. Mappers are plain functions, so they
+ * compose into reusable, named steps.
  */
 
 interface Config {
@@ -27,7 +28,10 @@ const requireHttps = () => (url: string) => {
 describe('inject mappers', () => {
   it('should pipe the resolved dependency through every mapper', () => {
     class ApiClient {
-      constructor(@inject('Config', takeApiUrl(), stripTrailingSlash(), requireHttps()) readonly apiUrl: string) {}
+      constructor(
+        @inject(pipe(by<Config>('Config'), takeApiUrl(), stripTrailingSlash(), requireHttps()))
+        readonly apiUrl: string,
+      ) {}
     }
 
     const container = new Container().addRegistration(
@@ -39,7 +43,10 @@ describe('inject mappers', () => {
 
   it('should throw from a mapper when the resolved value is not acceptable', () => {
     class ApiClient {
-      constructor(@inject('Config', takeApiUrl(), requireHttps()) readonly apiUrl: string) {}
+      constructor(
+        @inject(pipe(by<Config>('Config'), takeApiUrl(), requireHttps()))
+        readonly apiUrl: string,
+      ) {}
     }
 
     const container = new Container().addRegistration(

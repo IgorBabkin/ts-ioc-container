@@ -1,4 +1,4 @@
-import { arg, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
+import { arg, bindTo, Container, inject, register, Registration as R, SingleToken, by } from '../../lib';
 
 /**
  * Configuration - Token with Arguments
@@ -34,7 +34,7 @@ const ApiClientToken = new SingleToken<IApiClient>('IApiClient');
 class DataService {
   constructor(
     // Inject ApiClient configured for the 'data' service
-    @inject(ApiClientToken.args('https://data.api.com', 5000))
+    @inject(by(ApiClientToken.args('https://data.api.com', 5000)))
     public client: IApiClient,
   ) {}
 }
@@ -42,7 +42,7 @@ class DataService {
 class UserService {
   constructor(
     // Inject ApiClient configured for the 'users' service
-    @inject(ApiClientToken.args('https://users.api.com', 1000))
+    @inject(by(ApiClientToken.args('https://users.api.com', 1000)))
     public client: IApiClient,
   ) {}
 }

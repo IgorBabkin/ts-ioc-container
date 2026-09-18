@@ -17,6 +17,7 @@ permissions:
   packages: write  # Required for publishing to GitHub Packages
 
 jobs:
+<<<<<<< HEAD
   # Builds every released package and gates that build on the static checks:
   # lint, type-check and format, for every package. Those root scripts run
   # recursively across the workspace, so they sit after the build:
@@ -104,8 +105,18 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./packages/ts-ioc-container/coverage/lcov.info
 
+=======
+  # One job, start to finish: build, static checks, tests, then the release
+  # pipeline. Splitting these into build → test → release jobs cost a
+  # checkout + pnpm install per job and an artifact upload/download to hand
+  # the build output across, which roughly tripled the wall time of a push
+  # to main. The steps run in the same order as before.
+  #
+  # Every root script below runs recursively across the workspace, so the
+  # build has to come first: @ts-ioc-container/react resolves
+  # ts-ioc-container through the workspace link and reads its build output.
+>>>>>>> origin/main
   release:
-    needs: [build, test]
     environment:
       name: production
       url: https://www.npmjs.com/package/ts-ioc-container
@@ -144,10 +155,28 @@ jobs:
       - name: Install dependencies
         run: pnpm run ci
 
-      - name: Download build artifacts
-        uses: ./.github/actions/build-artifacts
+      - name: Build
+        run: pnpm run build
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run type-check
+
+      - name: Format check
+        run: pnpm run format:check
+
+      - name: Test with coverage
+        run: pnpm run test:coverage
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
         with:
-          mode: download
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./packages/ts-ioc-container/coverage/lcov.info
 
       - name: Verify package contents
         run: pnpm run verify:package-contents

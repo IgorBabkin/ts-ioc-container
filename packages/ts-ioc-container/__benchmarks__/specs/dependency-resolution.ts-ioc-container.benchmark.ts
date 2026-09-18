@@ -23,7 +23,7 @@ const createDependencyResolutionContainer = () =>
   new Container()
     .addRegistration(R.fromClass(TsIocBenchmarkAuditLog))
     .addRegistration(
-      R.fromFn((container) => new TsIocBenchmarkCreateUser(container.resolve('TsIocBenchmarkAuditLog'))).bindToKey(
+      R.fromFn(({ scope }) => new TsIocBenchmarkCreateUser(scope.resolve('TsIocBenchmarkAuditLog'))).bindToKey(
         'TsIocBenchmarkCreateUser',
       ),
     );

@@ -76,13 +76,13 @@ export class Container implements IContainer {
     this.validateContainer();
 
     if (Is.constructor(target)) {
-      return this.injector.resolve(this, target, { args, lazy });
+      return this.injector.resolve(target, { scope: this, args, lazy });
     }
 
     const provider = this.providers.get(target) as IProvider<T> | undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
-      ? provider.resolve(this, { args, lazy })
+      ? provider.resolve({ scope: this, args, lazy })
       : this.parent.resolve<T>(target, { args, child, lazy });
   }
 
@@ -104,7 +104,7 @@ export class Container implements IContainer {
         continue;
       }
       keys.push(key);
-      deps.push(provider.resolve(this, { args, lazy }));
+      deps.push(provider.resolve({ scope: this, args, lazy }));
     }
 
     const parentDeps = this.parent.resolveByAlias<T>(alias, {
@@ -127,7 +127,7 @@ export class Container implements IContainer {
     const provider = key ? this.findProviderByKeyOrFail<T>(key) : undefined;
 
     return provider?.hasAccess({ invocationScope: child, providerScope: this, args })
-      ? provider.resolve(this, { args, lazy })
+      ? provider.resolve({ scope: this, args, lazy })
       : this.parent.resolveOneByAlias<T>(alias, { args, child, lazy });
   }
 
@@ -166,7 +166,7 @@ export class Container implements IContainer {
 
     for (const provider of this.providers.values()) {
       if (provider.isAutoResolvable() && provider.hasAccess({ invocationScope: this, providerScope: this, args })) {
-        provider.resolve(this, { args });
+        provider.resolve({ scope: this, args });
       }
     }
 

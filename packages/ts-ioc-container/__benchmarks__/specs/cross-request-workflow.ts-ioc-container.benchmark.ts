@@ -68,7 +68,7 @@ const createCrossRequestWorkflowContainer = () =>
     .addRegistration(R.fromClass(TsIocBenchmarkWorkflowAuditPlugin))
     .addRegistration(
       R.fromFn(
-        (scope, { args = [] } = {}) =>
+        ({ scope, args = [] }) =>
           new TsIocBenchmarkWorkflowService(
             scope.resolve('TsIocBenchmarkWorkflowSession', { args }),
             scope.resolve('TsIocBenchmarkWorkflowAuditLog'),
@@ -77,7 +77,7 @@ const createCrossRequestWorkflowContainer = () =>
       ).bindToKey('TsIocBenchmarkWorkflowService'),
     );
 
-const requestIdToken = new FunctionToken((scope, { args = [] } = {}) => {
+const requestIdToken = new FunctionToken(({ scope, args = [] }) => {
   scope.resolve<TsIocBenchmarkWorkflowSession>('TsIocBenchmarkWorkflowSession', { args });
   return args[0] ?? 'request';
 });

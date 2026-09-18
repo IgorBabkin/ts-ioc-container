@@ -8,6 +8,7 @@ import {
   Registration as R,
   scope,
   select as s,
+  by,
 } from '../../lib';
 
 /**
@@ -62,7 +63,10 @@ describe('alias', () => {
   it('should notify through all channels', () => {
     // NotificationManager broadcasts to ALL registered channels
     class NotificationManager {
-      constructor(@inject(s.alias(INotificationChannel)) private channels: INotificationChannel[]) {}
+      constructor(
+        @inject(by(s.alias(INotificationChannel)))
+        private channels: INotificationChannel[],
+      ) {}
 
       notifyUser(userId: string, message: string): void {
         for (const channel of this.channels) {

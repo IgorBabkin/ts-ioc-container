@@ -97,9 +97,10 @@ legacy or framework-owned objects can receive dependencies after construction.
 
 Acceptance criteria:
 
-- `injectProp` resolves the configured token from the hook context scope.
-- `injectProp` assigns the resolved value to the decorated property.
-- Property injection participates in normal token conversion rules.
+- `injectProp` takes exactly one `InjectFn`, as `@inject` does, and calls it
+  with the hook context scope.
+- `injectProp` assigns the value the function returns to the decorated property.
+- A mapped property is composition, `injectProp(pipe(fn, ...mappers))`.
 
 ### Story: Execute custom hooks
 

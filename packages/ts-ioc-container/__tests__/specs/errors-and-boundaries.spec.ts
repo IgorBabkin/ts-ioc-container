@@ -41,8 +41,8 @@ describe('Spec: errors and boundaries', () => {
   it('fails clearly for missing arguments', () => {
     const findUserId = findOrFail((value): value is string => typeof value === 'string');
 
-    expect(findUserId(42, 'user-1')).toBe('user-1');
-    expect(() => findUserId(42)).toThrowError(ArgumentNotFoundError);
+    expect(findUserId([42, 'user-1'])).toBe('user-1');
+    expect(() => findUserId([42])).toThrowError(ArgumentNotFoundError);
   });
 
   it('rejects disposed container usage', () => {
@@ -61,7 +61,7 @@ describe('Spec: errors and boundaries', () => {
 
     provider.dispose();
 
-    expect(() => provider.resolve(container, {})).toThrowError(ProviderDisposedError);
+    expect(() => provider.resolve({ scope: container })).toThrowError(ProviderDisposedError);
     expect(() => provider.hasAccess({ invocationScope: container, providerScope: container, args: [] })).toThrowError(
       ProviderDisposedError,
     );

@@ -1,11 +1,10 @@
 import { type IHookContext } from './HookContext';
-import type { IContainer } from '../container/IContainer';
-import { type constructor, Is, type Instance } from '../utils/basic';
+import { type constructor, type Instance, Is } from '../utils/basic';
 import { resolveConstructor } from '../metadata/target';
 import { getConstructorChain } from '../utils/getConstructorChain';
 import { ProviderOptions } from '../provider/IProvider';
 
-export type InjectFn<T = unknown> = (s: IContainer, options: ProviderOptions) => T;
+export type InjectFn<T = unknown> = (options: ProviderOptions) => T;
 
 // HookFn
 export type HookFn<T extends IHookContext = IHookContext> = (context: T) => void | Promise<void>;

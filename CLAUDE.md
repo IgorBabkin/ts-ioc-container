@@ -147,9 +147,11 @@ consumers still receive an exact version. `peerDependencies` stays a range
 workspace link, so it imports that package's *build output*. Since the root
 lint / type-check / test scripts are recursive and therefore include react,
 `pnpm run build` must run *before* all of them — see the `Build` step ahead of
-the checks in `pr-checks.yml` and in `publish.yml`'s `build` job, plus the
-`test` job's `needs: build` and its download of the build artifact. Without it
-those steps fail to resolve `ts-ioc-container` at all.
+the checks in both `pr-checks.yml` and `publish.yml`. Without it those steps
+fail to resolve `ts-ioc-container` at all. `publish.yml` is deliberately a
+single job (build → checks → tests → release): separate jobs each paid for a
+checkout and `pnpm install` and needed an artifact upload/download to hand the
+build output across, which roughly tripled the wall time of a push to `main`.
 
 ### Known `release-monorepo-semantically` defects
 
@@ -243,6 +245,34 @@ All token classes accept `{ getArgsFn?, isLazy? }` as an optional second constru
 - **`args` reserved keyword**: `deps.args` returns the raw `args[]` array passed at resolve time
 - **Alias convention**: property names containing `"alias"` (case-insensitive) resolve via `resolveByAlias` instead of `resolve`
 
+### `@inject` Takes One `InjectFn` (ADR 0019)
+
+`inject(fn)` and `injectProp(fn)` take **exactly one argument**, an `InjectFn`:
+`(options: ProviderOptions) => T`. There is no `Injectable` union on them and no
+mapper rest parameters. `by(target)` (`lib/injector/MetadataInjector.ts`,
+exported) builds the usual one for a token, a `DependencyKey` or a class —
+`@inject(by(Token))`, `@inject(by('Key'))`, `@inject(by(Logger))` — as
+`({ scope, ...options }) => toToken(target).resolve(scope, options)`, so it
+forwards the runtime args (the cascade). A mapped value is
+`pipe(fn, ...mappers)` (`pipe` is exported and returns an `InjectFn`), e.g.
+`pipe(by(Config), (c) => c.apiUrl)`. Prefer `by(...)` over spelling the arrow
+out; write the arrow only when the site wants something `by` doesn't do (no
+args forwarded, the scope itself, a computed value).
+`resolveArgs(target)` stores those functions and calls each with the options it
+is given, so its resolver is `(options: ProviderOptions) => unknown[]`. `toToken`
+and `Injectable` remain, for `select.token(...)` and `toToken(...)` only;
+`toMappedToken` is gone.
+
+**The scope travels inside the options, never beside them.** `InjectOptions`
+is `{ scope, args? }` and `ProviderOptions` adds `lazy?`, so every callback the
+library hands a resolution context — `InjectFn`, `ArgsFn`, `ResolveDependency`
+— and every plumbing method — `IProvider.resolve(options)`,
+`IInjector.resolve(Target, options)`, `Injector.createInstance(Target, options)`
+— takes one object and destructures what it uses. The calls where a caller
+already addresses the scope keep it positional: `container.resolve(key, options)`
+and `token.resolve(scope, options)` take `ResolveOptions`
+(`ProviderOptions` minus `scope`; `ResolveOneOptions` adds `child`).
+
 ### Token Args and Explicit Injection
 
 **Constructor params without `@inject` resolve to `undefined`.** Injection is
@@ -268,19 +298,21 @@ EntityManagerToken.argsFn((scope) => [UserRepositoryToken.resolve(scope)]).resol
 
 `argToToken(value)` (`lib/token/toToken.ts`, exported) is the consumer helper
 for "token → resolve it, literal → pass through": a custom `InjectFn` such as
-`(scope, { args = [] }) => argToToken(args[0]).resolve(scope)` accepts either.
+`({ scope, args = [] }) => argToToken(args[0]).resolve(scope)` accepts either.
 
 **Runtime args cascade through tokens.** Every container-backed token
 (`SingleToken`, `ClassToken`, `SingleAliasToken`, `GroupAliasToken`,
 `FunctionToken`) defaults its `getArgsFn` to `forwardArgs`
 (`lib/token/InjectionToken.ts`), which hands the `args` of the token's own
 `resolve` call to the provider; `token.args(...)` / `token.argsFn(...)` append
-*after* them. Since `resolveArgs` (`lib/injector/MetadataInjector.ts`) resolves
-each `@inject(token)` parameter with the args of the class being constructed,
-those args reach every injected dependency's provider, `scopeAccess` rule and
-`singleton()` cache key. Positional pickers (`arg(0)`) on a specialized
-dependency therefore see the caller's args first — prefer `argsFn(predicate)` /
-`findOrFail(predicate)` there.
+*after* them. Since `resolveArgs` (`lib/injector/MetadataInjector.ts`) calls
+each `@inject` function with the args of the class being constructed, an
+`InjectFn` which hands them on — `by(Token)` does — cascades them into the
+dependency's provider, `scopeAccess` rule and `singleton()` cache key, while
+`({ scope }) => Token.resolve(scope)` does not;
+the choice is written at the parameter. Positional pickers (`arg(0)`) on a
+specialized dependency resolved with the cascade therefore see the caller's
+args first — prefer `argsFn(predicate)` / `findOrFail(predicate)` there.
 
 ### Hooks
 

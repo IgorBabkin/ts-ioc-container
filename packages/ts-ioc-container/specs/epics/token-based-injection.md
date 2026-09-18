@@ -52,9 +52,11 @@ Acceptance criteria:
   `ClassToken`, `SingleAliasToken`, `GroupAliasToken`, `FunctionToken`)
   forwards the runtime `args` of its `resolve` call to the provider.
 - Runtime arguments come first; `args` and `argsFn` append after them.
-- The runtime arguments of a class being constructed cascade into every
-  `@inject(token)` dependency of that class, so they reach the dependency's
-  provider, its `scopeAccess` rule and its `singleton()` cache key.
+- Every `@inject` function of a class being constructed is called with that
+  class's runtime arguments, so a function which forwards them -
+  `({ scope, args }) => Token.resolve(scope, { args })` - cascades them into
+  the dependency's provider, its `scopeAccess` rule and its `singleton()`
+  cache key, while one which does not resolves the dependency without them.
 
 ### Story: Configure lazy token resolution
 

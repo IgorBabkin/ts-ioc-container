@@ -36,7 +36,7 @@ Acceptance criteria:
 - A singleton provider returns the same value for repeated resolution with the
   same cache key.
 - A multi-cache singleton can cache different values for different argument
-  keys.
+  keys; its cache key function receives the full argument list as an array.
 - A cache key is a `string` or a `Serializable` (anything with its own
   `toString()`, such as a token); two `Serializable` keys with the same string
   form share one cache entry.
@@ -50,9 +50,9 @@ generic services can be specialized for a call site.
 Acceptance criteria:
 
 - `appendArgs` supplies fixed arguments after any incoming resolve arguments.
-- `appendArgsFn` computes additional arguments from the resolving container and
-  incoming options, then appends them after the provider's existing argument
-  function.
+- `appendArgsFn` computes additional arguments from one options object - the
+  resolving `scope` and the incoming `args` - then appends them after the
+  provider's existing argument function.
 - Arguments forwarded into a class constructor are passed through as-is,
   `InjectionToken` instances included - the library never resolves them.
 

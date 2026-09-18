@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { bindTo, Container, inject, register, Registration as R, select, singleton } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, select, singleton, by } from '../../lib';
 
 /**
  * Frontend Widget - Page Scope with Lazy Dependency
@@ -23,7 +23,10 @@ class FeatureFlags {
 }
 
 class Widget {
-  constructor(@inject(select.token('FeatureFlags').lazy()) public flags: FeatureFlags) {}
+  constructor(
+    @inject(by(select.token('FeatureFlags').lazy()))
+    public flags: FeatureFlags,
+  ) {}
 }
 
 describe('Frontend widget/page scope with lazy dependency', () => {

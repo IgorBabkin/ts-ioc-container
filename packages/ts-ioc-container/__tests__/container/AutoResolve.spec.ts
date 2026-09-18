@@ -233,7 +233,7 @@ describe('autoResolve', function () {
     });
 
     it('should pass args to the singleton cache key', function () {
-      @register(autoResolve(), singleton((tenant) => tenant as string))
+      @register(autoResolve(), singleton(([tenant]) => tenant as string))
       class TenantCache {
         constructor(@inject(arg(0)) readonly tenant: string) {
           constructed.push(`TenantCache:${tenant}`);

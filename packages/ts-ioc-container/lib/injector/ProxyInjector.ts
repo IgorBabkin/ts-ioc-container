@@ -1,9 +1,8 @@
 import { IInjector, InjectOptions, Injector } from './IInjector';
-import type { IContainer } from '../container/IContainer';
 import { type constructor } from '../utils/basic';
 
 export class ProxyInjector extends Injector implements IInjector {
-  protected createInstance<T>(scope: IContainer, Target: constructor<T>, { args = [] }: InjectOptions = {}): T {
+  protected createInstance<T>(Target: constructor<T>, { scope, args = [] }: InjectOptions): T {
     const proxy = new Proxy(
       {},
       {

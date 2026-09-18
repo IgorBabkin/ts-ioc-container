@@ -9,14 +9,14 @@ import {
   type ScopeAccessRule,
   type ProviderHook,
 } from './IProvider';
-import type { DependencyKey, IContainer } from '../container/IContainer';
+import type { DependencyKey } from '../container/IContainer';
 import { type constructor, toString } from '../utils/basic';
 import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
-    return new Provider((container, options) => container.resolve(Target, options));
+    return new Provider(({ scope, ...options }) => scope.resolve(Target, options));
   }
 
   static fromValue<T>(value: T): IProvider<T> {
@@ -24,7 +24,7 @@ export class Provider<T = any> implements IProvider<T> {
   }
 
   static fromKey<T>(key: DependencyKey) {
-    return new Provider<T>((c) => c.resolve(key));
+    return new Provider<T>(({ scope }) => scope.resolve(key));
   }
 
   private readonly argsFnList: ArgsFn[] = [];
@@ -43,17 +43,17 @@ export class Provider<T = any> implements IProvider<T> {
    * @throws {ProviderDisposedError} when the provider has already been disposed.
    * @throws {unknown} rethrows whatever an `onResolved` hook threw.
    */
-  resolve(scope: IContainer, options: ProviderOptions): T {
+  resolve(options: ProviderOptions): T {
     ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
 
     if (!this.getKey) {
-      return this.resolveDep(scope, options);
+      return this.resolveDep(options);
     }
 
-    const key = toString(this.getKey(...(options.args ?? [])));
+    const key = toString(this.getKey(options.args ?? []));
 
     if (!this.cache.has(key)) {
-      this.cache.set(key, this.resolveDep(scope, options));
+      this.cache.set(key, this.resolveDep(options));
     }
 
     return this.cache.get(key)! as T;
@@ -62,9 +62,10 @@ export class Provider<T = any> implements IProvider<T> {
   /**
    * @throws {unknown} rethrows whatever an `onResolved` hook threw.
    */
-  private resolveDep(scope: IContainer, { args = [], lazy }: ProviderOptions = {}): T {
-    let dependency = this.resolveDependency(scope, {
-      args: this.argsFnList.reduce((acc, current) => current(scope, { args: acc }), args),
+  private resolveDep({ scope, args = [], lazy }: ProviderOptions): T {
+    let dependency = this.resolveDependency({
+      scope,
+      args: this.argsFnList.reduce((acc, current) => current({ scope, args: acc }), args),
       lazy: lazy ?? this.isLazy,
     });
     dependency = this.mappers.reduce((acc, current) => current(acc, scope), dependency);

@@ -1,3 +1,42 @@
+# 72.0.0 (2026-09-18)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    inject takes one InjectFn; scope moves into options (#175)
+    (14d5bbdf8a4ed2d75a732b179a5071eaaf44730f)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    inject takes one InjectFn; scope moves into options (#175)
+    (14d5bbdf8a4ed2d75a732b179a5071eaaf44730f)
+
+
+# 71.0.0 (2026-09-18)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    pass full args array to singleton cache keys (#173)
+    (757fe3c1d620483fda7e520612f4dfe9e247ffc3)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    pass full args array to singleton cache keys (#173)
+    (757fe3c1d620483fda7e520612f4dfe9e247ffc3)
+
+
+# 70.1.0 (2026-09-18)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    include tag methods in token detection (#169)
+    (54572ef2d056b23d6beca1bfc279d6d32b303410)
+
+
 # 70.0.0 (2026-09-18)
 
   ### 💥 BREAKING CHANGES
@@ -341,6 +380,9 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
+
+
 
 
 

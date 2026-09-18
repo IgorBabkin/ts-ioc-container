@@ -6,11 +6,14 @@ import {
   appendArgsFn,
   argsFn,
   argToToken,
+  by,
   Container,
   inject,
   register,
   Registration as R,
   SingleToken,
+  pipe,
+  UnsupportedTokenTypeError,
 } from '../../lib';
 
 describe('inject helpers', () => {
@@ -40,8 +43,8 @@ describe('inject helpers', () => {
 
       class Service {
         constructor(
-          @inject((scope, { args = [] }) => argToToken(args[0]).resolve(scope)) public first: unknown,
-          @inject((scope, { args = [] }) => argToToken(args[1]).resolve(scope)) public second: unknown,
+          @inject(({ scope, args = [] }) => argToToken(args[0]).resolve(scope)) public first: unknown,
+          @inject(({ scope, args = [] }) => argToToken(args[1]).resolve(scope)) public second: unknown,
         ) {}
       }
 
@@ -99,32 +102,16 @@ describe('inject helpers', () => {
     });
   });
 
-  describe('inject(token, ...mappers)', () => {
-    it('injects the selected part of the resolved dependency', () => {
-      class Config {
-        constructor(readonly apiUrl: string = 'https://api.com') {}
-      }
+  describe('by(target)', () => {
+    class Config {
+      constructor(@inject(arg(0)) readonly env: string = 'default') {}
+    }
 
-      const ConfigToken = new SingleToken<Config>('Config');
+    const ConfigToken = new SingleToken<Config>('Config');
 
+    it('resolves a token from the scope', () => {
       class Service {
-        constructor(@inject(ConfigToken, (config) => config.apiUrl) public apiUrl: string) {}
-      }
-
-      const container = createContainer()
-        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
-        .addRegistration(R.fromClass(Service));
-
-      expect(container.resolve<Service>('Service').apiUrl).toBe('https://api.com');
-    });
-
-    it('injects the whole dependency when selectFn is omitted', () => {
-      class Config {}
-
-      const ConfigToken = new SingleToken<Config>('Config');
-
-      class Service {
-        constructor(@inject(ConfigToken) public config: Config) {}
+        constructor(@inject(by(ConfigToken)) public config: Config) {}
       }
 
       const container = createContainer()
@@ -132,6 +119,95 @@ describe('inject helpers', () => {
         .addRegistration(R.fromClass(Service));
 
       expect(container.resolve<Service>('Service').config).toBeInstanceOf(Config);
+    });
+
+    it('resolves a dependency key from the scope', () => {
+      class Service {
+        constructor(@inject(by('Config')) public config: Config) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').config).toBeInstanceOf(Config);
+    });
+
+    it('resolves a class from the scope', () => {
+      class Service {
+        constructor(@inject(by(Config)) public config: Config) {}
+      }
+
+      const container = createContainer().addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').config).toBeInstanceOf(Config);
+    });
+
+    it('forwards the runtime args of the class being constructed', () => {
+      class Service {
+        constructor(@inject(by(ConfigToken)) public config: Config) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service', { args: ['prod'] }).config.env).toBe('prod');
+    });
+
+    it('composes with pipe', () => {
+      class Service {
+        constructor(@inject(pipe(by(ConfigToken), (config) => config.env)) public env: string) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').env).toBe('default');
+    });
+
+    it('rejects anything but a token, a key or a class', () => {
+      expect(() => by(42 as never)).toThrowError(UnsupportedTokenTypeError);
+    });
+  });
+
+  describe('inject(fn)', () => {
+    it('injects whatever the function returns', () => {
+      class Config {}
+
+      const ConfigToken = new SingleToken<Config>('Config');
+
+      class Service {
+        constructor(@inject(by(ConfigToken)) public config: Config) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').config).toBeInstanceOf(Config);
+    });
+
+    it('composes with pipe to inject a selected part of the dependency', () => {
+      class Config {
+        constructor(readonly apiUrl: string = 'https://api.com') {}
+      }
+
+      const ConfigToken = new SingleToken<Config>('Config');
+
+      class Service {
+        constructor(
+          @inject(pipe(by(ConfigToken), (config) => config.apiUrl))
+          public apiUrl: string,
+        ) {}
+      }
+
+      const container = createContainer()
+        .addRegistration(R.fromClass(Config).bindTo(ConfigToken))
+        .addRegistration(R.fromClass(Service));
+
+      expect(container.resolve<Service>('Service').apiUrl).toBe('https://api.com');
     });
 
     it('forwards resolve args to the dependency before selecting', () => {
@@ -142,7 +218,10 @@ describe('inject helpers', () => {
       const ConfigToken = new SingleToken<Config>('Config');
 
       class Service {
-        constructor(@inject(ConfigToken.args('https://other.com'), (c) => c.apiUrl) public apiUrl: string) {}
+        constructor(
+          @inject(pipe(by(ConfigToken.args('https://other.com')), (c) => c.apiUrl))
+          public apiUrl: string,
+        ) {}
       }
 
       const container = createContainer()
@@ -155,7 +234,7 @@ describe('inject helpers', () => {
     it('selects from a runtime arg', () => {
       @register(appendArgs({ id: 42 }))
       class Service {
-        constructor(@inject(arg<{ id: number }>(0), (value) => value.id) public id: number) {}
+        constructor(@inject(pipe(arg<{ id: number }>(0), (value) => value.id)) public id: number) {}
       }
 
       const container = createContainer().addRegistration(R.fromClass(Service));
@@ -168,7 +247,10 @@ describe('inject helpers', () => {
       const exclaim = () => (value: string) => `${value}!`;
 
       class Service {
-        constructor(@inject('Greeting', trim(), upper(), exclaim()) public greeting: string) {}
+        constructor(
+          @inject(pipe(by<string>('Greeting'), trim(), upper(), exclaim()))
+          public greeting: string,
+        ) {}
       }
 
       const container = createContainer()
@@ -178,38 +260,7 @@ describe('inject helpers', () => {
       expect(container.resolve<Service>('Service').greeting).toBe('HELLO!');
     });
 
-    it('accepts a spread list of mappers', () => {
-      const mappers = [(value: string) => `${value}-a`, (value: string) => `${value}-b`];
-
-      class Service {
-        constructor(@inject('Greeting', ...mappers) public greeting: string) {}
-      }
-
-      const container = createContainer()
-        .addRegistration(R.fromValue('hello').bindToKey('Greeting'))
-        .addRegistration(R.fromClass(Service));
-
-      expect(container.resolve<Service>('Service').greeting).toBe('hello-a-b');
-    });
-
-    it('keeps the chain typed across ten mappers', () => {
-      const step = (n: number) => (value: string) => `${value}-${n}`;
-
-      class Service {
-        constructor(
-          @inject('Greeting', step(1), step(2), step(3), step(4), step(5), step(6), step(7), step(8), step(9), step(10))
-          public greeting: string,
-        ) {}
-      }
-
-      const container = createContainer()
-        .addRegistration(R.fromValue('hello').bindToKey('Greeting'))
-        .addRegistration(R.fromClass(Service));
-
-      expect(container.resolve<Service>('Service').greeting).toBe('hello-1-2-3-4-5-6-7-8-9-10');
-    });
-
-    it('runs the mappers on every resolution', () => {
+    it('runs the function on every resolution', () => {
       let calls = 0;
       const count = () => (value: string) => {
         calls += 1;
@@ -217,7 +268,7 @@ describe('inject helpers', () => {
       };
 
       class Service {
-        constructor(@inject('Greeting', count()) public greeting: string) {}
+        constructor(@inject(pipe(by<string>('Greeting'), count())) public greeting: string) {}
       }
 
       const container = createContainer()

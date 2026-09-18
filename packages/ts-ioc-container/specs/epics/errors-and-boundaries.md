@@ -33,7 +33,7 @@ of resolving to `undefined`.
 
 Acceptance criteria:
 
-- `findOrFail(predicate)(...args)` returns the first argument matching
+- `findOrFail(predicate)(args)` returns the first argument matching
   `predicate`.
 - It fails with `ArgumentNotFoundError` when no argument matches.
 

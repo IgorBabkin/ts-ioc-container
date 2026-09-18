@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import { Container, inject, ProxyRegistry, resolveArgs, Registration as R, SingleToken } from '../../lib';
+import { Container, inject, ProxyRegistry, resolveArgs, Registration as R, SingleToken, by } from '../../lib';
 
 const GreetingToken = new SingleToken<string>('greeting');
 
 class Service {
-  constructor(@inject(GreetingToken) public greeting: string) {}
+  constructor(@inject(by(GreetingToken)) public greeting: string) {}
 
-  greet(@inject(GreetingToken) other?: string) {
+  greet(@inject(by(GreetingToken)) other?: string) {
     return other;
   }
 }
@@ -19,14 +19,14 @@ describe('resolveArgs', () => {
   it('accepts the constructor', () => {
     const scope = createContainer();
 
-    expect(resolveArgs(Service)(scope, {})).toEqual(['hello']);
+    expect(resolveArgs(Service)({ scope })).toEqual(['hello']);
   });
 
   it('accepts an instance of that constructor', () => {
     const scope = createContainer();
     const instance = scope.resolve(Service);
 
-    expect(resolveArgs(instance)(scope, {})).toEqual(['hello']);
+    expect(resolveArgs(instance)({ scope })).toEqual(['hello']);
   });
 
   it('accepts a proxy of the constructor, unwrapping it to reach the metadata', () => {
@@ -35,7 +35,7 @@ describe('resolveArgs', () => {
     // read from - the one case that has to be unwrapped rather than read through.
     const ProxiedService = ProxyRegistry.getInstance().createProxy(Service, {});
 
-    expect(resolveArgs(ProxiedService)(scope, {})).toEqual(['hello']);
+    expect(resolveArgs(ProxiedService)({ scope })).toEqual(['hello']);
   });
 
   it('accepts an instance proxy whose handler does not forward `constructor`', () => {
@@ -46,21 +46,21 @@ describe('resolveArgs', () => {
       get: (target, prop) => (prop === 'constructor' ? undefined : Reflect.get(target, prop)),
     });
 
-    expect(resolveArgs(opaque)(scope, {})).toEqual(['hello']);
+    expect(resolveArgs(opaque)({ scope })).toEqual(['hello']);
   });
 
   it('accepts a proxy of an instance', () => {
     const scope = createContainer();
     const proxy = ProxyRegistry.getInstance().createProxy(scope.resolve(Service), {});
 
-    expect(resolveArgs(proxy)(scope, {})).toEqual(['hello']);
+    expect(resolveArgs(proxy)({ scope })).toEqual(['hello']);
   });
 
   it('accepts a lazy proxy, unwrapping it before reading metadata', () => {
     const scope = createContainer();
     const lazy = ProxyRegistry.getInstance().createLazyProxy(() => scope.resolve(Service));
 
-    expect(resolveArgs(lazy)(scope, {})).toEqual(['hello']);
+    expect(resolveArgs(lazy)({ scope })).toEqual(['hello']);
   });
 
   it('reads method metadata from any of them', () => {
@@ -68,8 +68,8 @@ describe('resolveArgs', () => {
     const instance = scope.resolve(Service);
     const lazy = ProxyRegistry.getInstance().createLazyProxy(() => instance);
 
-    expect(resolveArgs(Service, 'greet')(scope, {})).toEqual(['hello']);
-    expect(resolveArgs(instance, 'greet')(scope, {})).toEqual(['hello']);
-    expect(resolveArgs(lazy, 'greet')(scope, {})).toEqual(['hello']);
+    expect(resolveArgs(Service, 'greet')({ scope })).toEqual(['hello']);
+    expect(resolveArgs(instance, 'greet')({ scope })).toEqual(['hello']);
+    expect(resolveArgs(lazy, 'greet')({ scope })).toEqual(['hello']);
   });
 });
