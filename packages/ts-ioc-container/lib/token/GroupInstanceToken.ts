@@ -7,10 +7,14 @@ import { Instance, Serializable } from '../utils/basic';
 export type InstancePredicate = (dep: unknown) => boolean;
 
 export class GroupInstanceToken extends InjectionToken<Instance[]> implements Serializable {
-  private isCascade = true;
+  private isCascade: boolean;
 
-  constructor(private predicate: InstancePredicate) {
-    super();
+  constructor(
+    private predicate: InstancePredicate,
+    { tags = [], isCascade = true }: { tags?: string[]; isCascade?: boolean } = {},
+  ) {
+    super(tags);
+    this.isCascade = isCascade;
   }
 
   select<R>(fn: (target: Instance) => R) {
@@ -45,6 +49,10 @@ export class GroupInstanceToken extends InjectionToken<Instance[]> implements Se
 
   resolve(c: IContainer): Instance[] {
     return c.getInstances(this.isCascade).filter(this.predicate);
+  }
+
+  addTags(...tags: string[]): GroupInstanceToken {
+    return new GroupInstanceToken(this.predicate, { tags: [...this.getTags(), ...tags], isCascade: this.isCascade });
   }
 
   /**

@@ -48,4 +48,17 @@ describe('SingleToken', () => {
     const token = new SingleToken<string>('myKey');
     expect(token.toString()).toBe('myKey');
   });
+
+  it('should add tags immutably and preserve them through token methods', () => {
+    const token = new SingleToken<string>('myKey');
+    const tagged = token.addTags('request', 'admin');
+
+    expect(token.hasTag('request')).toBe(false);
+    expect(tagged.hasTag('request')).toBe(true);
+    expect(tagged.hasTag('admin')).toBe(true);
+    expect(tagged.args('value').hasTag('request')).toBe(true);
+    expect(tagged.argsFn(() => []).hasTag('request')).toBe(true);
+    expect(tagged.lazy().hasTag('request')).toBe(true);
+    expect(tagged.addTags('request')).not.toBe(tagged);
+  });
 });

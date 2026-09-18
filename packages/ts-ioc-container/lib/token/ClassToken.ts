@@ -9,9 +9,13 @@ export class ClassToken<T = any> extends InjectionToken<T> implements Serializab
 
   constructor(
     private readonly target: constructor<T>,
-    { getArgsFn = forwardArgs, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+    {
+      getArgsFn = forwardArgs,
+      isLazy = false,
+      tags = [],
+    }: { getArgsFn?: ArgsFn; isLazy?: boolean; tags?: string[] } = {},
   ) {
-    super();
+    super(tags);
     this._getArgsFn = getArgsFn;
     this._isLazy = isLazy;
   }
@@ -32,6 +36,7 @@ export class ClassToken<T = any> extends InjectionToken<T> implements Serializab
     return new ClassToken<T>(this.target, {
       getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
       isLazy: this._isLazy,
+      tags: this.getTags(),
     });
   }
 
@@ -40,6 +45,7 @@ export class ClassToken<T = any> extends InjectionToken<T> implements Serializab
     return new ClassToken<T>(this.target, {
       getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
       isLazy: this._isLazy,
+      tags: this.getTags(),
     });
   }
 
@@ -47,6 +53,15 @@ export class ClassToken<T = any> extends InjectionToken<T> implements Serializab
     return new ClassToken<T>(this.target, {
       getArgsFn: this._getArgsFn,
       isLazy: true,
+      tags: this.getTags(),
+    });
+  }
+
+  addTags(...tags: string[]): ClassToken<T> {
+    return new ClassToken<T>(this.target, {
+      getArgsFn: this._getArgsFn,
+      isLazy: this._isLazy,
+      tags: [...this.getTags(), ...tags],
     });
   }
 
