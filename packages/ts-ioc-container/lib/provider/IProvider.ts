@@ -10,7 +10,7 @@ export type ScopeAccessRule = (options: ScopeAccessOptions, prev: boolean) => bo
 
 export type ArgsFn = (l: IContainer, options?: InjectOptions) => unknown[];
 
-export type GetCacheKey = (...args: unknown[]) => string | Serializable;
+export type GetCacheKey = (args: unknown[]) => string | Serializable;
 export type DecorateFn<Instance = any> = (dep: Instance, scope: IContainer) => Instance;
 
 /**

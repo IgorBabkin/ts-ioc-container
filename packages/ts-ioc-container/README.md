@@ -1795,7 +1795,7 @@ Constructor parameters that should pick up positional args from `ProviderOptions
 
 `argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `arg(index)` is just a shortcut for matching by position: `arg(0)` is `argsFn((value, index) => index === 0)`. `args` is `(scope, options) => options.args`, i.e. it returns the runtime args array as-is. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array.
 
-`findOrFail(predicate)` is the strict, variadic counterpart for places that take the raw args list — `singleton(findOrFail(isUserId))` keys a per-argument singleton, for example. It returns the first argument matching `predicate(value)` and throws `ArgumentNotFoundError` when none does, instead of silently handing out `undefined`.
+`findOrFail(predicate)` is the strict counterpart for `singleton()` cache keys — `singleton(findOrFail(isUserId))` keys a per-argument singleton, for example. It receives the full runtime `args` array, returns the first argument matching `predicate(value)`, and throws `ArgumentNotFoundError` when none does, instead of silently handing out `undefined`.
 
 ### Runtime args flow through tokens
 
@@ -2024,7 +2024,7 @@ describe('IProvider', function () {
 
     @register(
       bindTo(EntityManagerToken),
-      singleton((repository) => (repository as IRepository).name), // Cache unique instance per repository type
+      singleton(([repository]) => (repository as IRepository).name), // Cache unique instance per repository type
     )
     class EntityManager {
       constructor(@inject(arg(0)) public repository: IRepository) {}

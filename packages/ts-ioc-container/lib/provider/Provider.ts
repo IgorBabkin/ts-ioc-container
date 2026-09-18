@@ -50,7 +50,7 @@ export class Provider<T = any> implements IProvider<T> {
       return this.resolveDep(scope, options);
     }
 
-    const key = toString(this.getKey(...(options.args ?? [])));
+    const key = toString(this.getKey(options.args ?? []));
 
     if (!this.cache.has(key)) {
       this.cache.set(key, this.resolveDep(scope, options));

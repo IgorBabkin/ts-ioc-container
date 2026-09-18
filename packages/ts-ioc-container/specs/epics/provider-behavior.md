@@ -36,7 +36,7 @@ Acceptance criteria:
 - A singleton provider returns the same value for repeated resolution with the
   same cache key.
 - A multi-cache singleton can cache different values for different argument
-  keys.
+  keys; its cache key function receives the full argument list as an array.
 - A cache key is a `string` or a `Serializable` (anything with its own
   `toString()`, such as a token); two `Serializable` keys with the same string
   form share one cache entry.

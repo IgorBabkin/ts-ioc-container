@@ -100,13 +100,13 @@ describe('findOrFail', () => {
   it('should return the first argument matching the predicate', () => {
     const findString = findOrFail(isString);
 
-    expect(findString(1, 'first', 'second')).toBe('first');
+    expect(findString([1, 'first', 'second'])).toBe('first');
   });
 
   it('should throw ArgumentNotFoundError when no argument matches', () => {
     const findString = findOrFail(isString);
 
-    expect(() => findString(1, 2)).toThrowError(ArgumentNotFoundError);
+    expect(() => findString([1, 2])).toThrowError(ArgumentNotFoundError);
     expect(() => findString()).toThrowError(ArgumentNotFoundError);
   });
 });

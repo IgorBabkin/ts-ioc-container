@@ -152,7 +152,7 @@ describe('IProvider', function () {
 
     @register(
       bindTo(EntityManagerToken),
-      singleton((repository) => (repository as IRepository).name), // Cache unique instance per repository type
+      singleton(([repository]) => (repository as IRepository).name), // Cache unique instance per repository type
     )
     class EntityManager {
       constructor(@inject(arg(0)) public repository: IRepository) {}
