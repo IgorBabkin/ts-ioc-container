@@ -1,3 +1,18 @@
+# 72.0.0 (2026-09-18)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    inject takes one InjectFn; scope moves into options (#175)
+    (14d5bbdf8a4ed2d75a732b179a5071eaaf44730f)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    inject takes one InjectFn; scope moves into options (#175)
+    (14d5bbdf8a4ed2d75a732b179a5071eaaf44730f)
+
+
 # 71.0.0 (2026-09-18)
 
   ### 💥 BREAKING CHANGES
@@ -365,6 +380,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
