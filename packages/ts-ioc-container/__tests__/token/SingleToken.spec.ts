@@ -33,4 +33,14 @@ describe('SingleToken', () => {
     const selectFn = token.args('x', 'y').select((v) => v.toUpperCase());
     expect(selectFn(container)).toBe('VALUE-X-Y');
   });
+
+  it('should forward runtime args ahead of chained args', () => {
+    const token = new SingleToken<string>('myKey');
+    const container = new Container().addRegistration(
+      Registration.fromFn((c, { args = [] }) => args.join('-')).bindToKey('myKey'),
+    );
+
+    expect(token.resolve(container, { args: ['r'] })).toBe('r');
+    expect(token.args('a').resolve(container, { args: ['r'] })).toBe('r-a');
+  });
 });

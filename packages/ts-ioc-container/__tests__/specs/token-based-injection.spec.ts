@@ -1,10 +1,12 @@
 import 'reflect-metadata';
 import {
   arg,
+  args,
   bindTo,
   ClassToken,
   ConstantToken,
   Container,
+  findOrFail,
   FunctionToken,
   GroupAliasToken,
   GroupInstanceToken,
@@ -13,6 +15,7 @@ import {
   register,
   Registration as R,
   select,
+  singleton,
   SingleAliasToken,
   SingleToken,
   toGroupAlias,
@@ -66,6 +69,60 @@ describe('Spec: token-based injection', () => {
     expect(specialized.resolve(container)).toMatchObject({ format: 'pdf', tenant: 'tenant-a' });
     expect(token.resolve(container)).toMatchObject({ format: undefined, tenant: undefined });
     expect(specialized).not.toBe(token);
+  });
+
+  it('forwards runtime arguments through every container-backed token shape', () => {
+    const container = new Container()
+      .addRegistration(R.fromFn((_, { args = [] }) => args).bindToKey('Echo'))
+      .addRegistration(
+        R.fromFn((_, { args = [] }) => args)
+          .bindToKey('AliasedEcho')
+          .bindToAlias('EchoAlias'),
+      );
+
+    class EchoClass {
+      constructor(@inject(args) readonly args: unknown[]) {}
+    }
+
+    expect(new SingleToken<unknown[]>('Echo').resolve(container, { args: ['a', 1] })).toEqual(['a', 1]);
+    expect(new ClassToken(EchoClass).resolve(container, { args: ['a', 1] }).args).toEqual(['a', 1]);
+    expect(new SingleAliasToken<unknown[]>('EchoAlias').resolve(container, { args: ['a', 1] })).toEqual(['a', 1]);
+    expect(new GroupAliasToken<unknown[]>('EchoAlias').resolve(container, { args: ['a', 1] })).toEqual([['a', 1]]);
+    expect(new FunctionToken((_, { args = [] }) => args).resolve(container, { args: ['a', 1] })).toEqual(['a', 1]);
+  });
+
+  it('appends token arguments after the runtime arguments', () => {
+    const container = new Container().addRegistration(R.fromFn((_, { args = [] }) => args).bindToKey('Echo'));
+    const token = new SingleToken<unknown[]>('Echo').args('static').argsFn(() => ['dynamic']);
+
+    expect(token.resolve(container, { args: ['runtime'] })).toEqual(['runtime', 'static', 'dynamic']);
+  });
+
+  it('cascades the runtime arguments of a class into its injected dependencies', () => {
+    const TenantRepositoryToken = new SingleToken<TenantRepository>('TenantRepository');
+
+    class TenantRepository {
+      constructor(@inject(arg(0)) readonly tenant: string) {}
+    }
+
+    class TenantService {
+      constructor(@inject(TenantRepositoryToken) readonly repository: TenantRepository) {}
+    }
+
+    const container = new Container().addRegistration(
+      R.fromClass(TenantRepository)
+        .bindTo(TenantRepositoryToken)
+        .pipe(singleton(findOrFail<string>((value) => typeof value === 'string'))),
+    );
+
+    const first = container.resolve(TenantService, { args: ['tenant-a'] });
+    const same = container.resolve(TenantService, { args: ['tenant-a'] });
+    const other = container.resolve(TenantService, { args: ['tenant-b'] });
+
+    expect(first.repository.tenant).toBe('tenant-a');
+    expect(same.repository).toBe(first.repository);
+    expect(other.repository.tenant).toBe('tenant-b');
+    expect(other.repository).not.toBe(first.repository);
   });
 
   it('configures lazy token resolution without mutating the original token', () => {

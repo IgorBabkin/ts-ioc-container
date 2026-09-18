@@ -1,5 +1,5 @@
 import { IContainer } from '../container/IContainer';
-import { InjectionToken } from './InjectionToken';
+import { forwardArgs, InjectionToken } from './InjectionToken';
 import { type constructor } from '../utils/basic';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 
@@ -9,7 +9,7 @@ export class ClassToken<T = any> extends InjectionToken<T> {
 
   constructor(
     private readonly target: constructor<T>,
-    { getArgsFn = () => [], isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+    { getArgsFn = forwardArgs, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
   ) {
     super();
     this._getArgsFn = getArgsFn;

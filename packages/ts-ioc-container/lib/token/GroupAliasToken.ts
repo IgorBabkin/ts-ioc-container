@@ -1,5 +1,5 @@
 import { DependencyKey, IContainer } from '../container/IContainer';
-import { InjectionToken } from './InjectionToken';
+import { forwardArgs, InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { BindToken } from './BindToken';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
@@ -10,7 +10,7 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
 
   constructor(
     readonly token: DependencyKey,
-    { getArgsFn = () => [], isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+    { getArgsFn = forwardArgs, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
   ) {
     super();
     this._getArgsFn = getArgsFn;

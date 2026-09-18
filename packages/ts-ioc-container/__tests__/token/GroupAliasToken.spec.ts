@@ -37,4 +37,16 @@ describe('GroupAliasToken', () => {
         .resolve(container),
     ).toEqual(['a-b-c']);
   });
+
+  it('should forward runtime args ahead of chained args', () => {
+    const token = new GroupAliasToken<string>('myAlias');
+    const container = new Container().addRegistration(
+      Registration.fromFn((c, { args = [] }) => args.join('-'))
+        .bindToKey('myKey')
+        .bindToAlias('myAlias'),
+    );
+
+    expect(token.resolve(container, { args: ['r'] })).toEqual(['r']);
+    expect(token.args('a').resolve(container, { args: ['r'] })).toEqual(['r-a']);
+  });
 });

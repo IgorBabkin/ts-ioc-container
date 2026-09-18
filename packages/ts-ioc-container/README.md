@@ -1794,6 +1794,67 @@ Constructor parameters that should pick up positional args from `ProviderOptions
 
 `findOrFail(predicate)` is the strict, variadic counterpart for places that take the raw args list — `singleton(findOrFail(isUserId))` keys a per-argument singleton, for example. It returns the first argument matching `predicate(value)` and throws `ArgumentNotFoundError` when none does, instead of silently handing out `undefined`.
 
+### Runtime args flow through tokens
+
+Every container-backed token (`SingleToken`, `ClassToken`, `SingleAliasToken`, `GroupAliasToken`, `FunctionToken`) forwards the `args` of its own `resolve` call to the provider, exactly like `container.resolve(key, { args })` does. `token.args(...)` and `token.argsFn(...)` **append after** the runtime args, so `token.args('x').resolve(container, { args: ['r'] })` hands the provider `['r', 'x']`.
+
+Because `@inject(token)` parameters are resolved with the args of the class being constructed, those args **cascade** into every injected dependency: they reach the dependency's provider, its `@inject(arg(index))` parameters, its `scopeAccess` rule and its `singleton()` cache key. That is what lets a per-user `UserService` share a per-user `UserRepository` without passing the id along by hand:
+
+```typescript
+import {
+  arg,
+  bindTo,
+  Container,
+  findOrFail,
+  inject,
+  register,
+  Registration as R,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
+
+interface IUserRepository {
+  userId: string;
+}
+
+const IUserRepositoryKey = new SingleToken<IUserRepository>('IUserRepository');
+const isUserId = (value: unknown): value is string => typeof value === 'string';
+
+// one repository per user id - the id is the singleton cache key
+@register(bindTo(IUserRepositoryKey), singleton(findOrFail<string>(isUserId)))
+class UserRepository implements IUserRepository {
+  constructor(@inject(arg(0)) public userId: string) {}
+}
+
+class UserService {
+  constructor(@inject(IUserRepositoryKey) public repository: IUserRepository) {}
+}
+
+describe('Token Runtime Arguments', function () {
+  it('should forward runtime args to the provider behind the token', function () {
+    const container = new Container().addRegistration(R.fromClass(UserRepository));
+
+    expect(IUserRepositoryKey.resolve(container, { args: ['user-1'] }).userId).toBe('user-1');
+  });
+
+  it('should cascade the runtime args of a class into its injected dependencies', function () {
+    const container = new Container().addRegistration(R.fromClass(UserRepository));
+
+    const service = container.resolve(UserService, { args: ['user-1'] });
+    const sameUser = container.resolve(UserService, { args: ['user-1'] });
+    const otherUser = container.resolve(UserService, { args: ['user-2'] });
+
+    expect(service.repository.userId).toBe('user-1');
+    expect(sameUser.repository).toBe(service.repository);
+    expect(otherUser.repository.userId).toBe('user-2');
+  });
+});
+
+```
+
+> [!IMPORTANT]
+> Runtime args come first. A dependency that reads `@inject(arg(0))` sees the *caller's* first runtime arg whenever the caller was resolved with args, even if its token was specialized with `token.args(...)`. Pick args by shape (`argsFn(predicate)`, `findOrFail(predicate)`) rather than by position when a class can be resolved with runtime args and its dependencies are specialized with `token.args(...)`.
+
 ### Immutable token chaining
 
 `token.args(...)`, `token.argsFn(...)`, and `token.lazy()` all return **new token instances** — the parent token is never mutated. This allows the same token to be specialized in multiple independent ways (one-way linked list: parent → many children).

@@ -1,5 +1,5 @@
 import { DependencyKey, IContainer } from '../container/IContainer';
-import { InjectionToken } from './InjectionToken';
+import { forwardArgs, InjectionToken } from './InjectionToken';
 import { IRegistration } from '../registration/IRegistration';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 
@@ -9,7 +9,7 @@ export class SingleToken<T = any> extends InjectionToken<T> {
 
   constructor(
     public token: DependencyKey,
-    { getArgsFn = () => [], isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+    { getArgsFn = forwardArgs, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
   ) {
     super();
     this._getArgsFn = getArgsFn;

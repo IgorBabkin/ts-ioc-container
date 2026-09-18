@@ -25,4 +25,10 @@ describe('ClassToken', () => {
     expect(lazyToken).toBeInstanceOf(ClassToken);
     expect(lazyToken).not.toBe(token);
   });
+
+  it('should forward runtime args ahead of chained args', () => {
+    const token = new ClassToken(TestClass);
+    expect(token.resolve(new Container(), { args: ['runtime'] }).value).toBe('runtime');
+    expect(token.args('chained').resolve(new Container(), { args: ['runtime'] }).value).toBe('runtime');
+  });
 });

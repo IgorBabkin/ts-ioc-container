@@ -264,6 +264,18 @@ class EntityManager {
 EntityManagerToken.args(UserRepositoryToken).resolve(container);
 ```
 
+**Runtime args cascade through tokens.** Every container-backed token
+(`SingleToken`, `ClassToken`, `SingleAliasToken`, `GroupAliasToken`,
+`FunctionToken`) defaults its `getArgsFn` to `forwardArgs`
+(`lib/token/InjectionToken.ts`), which hands the `args` of the token's own
+`resolve` call to the provider; `token.args(...)` / `token.argsFn(...)` append
+*after* them. Since `resolveArgs` (`lib/injector/MetadataInjector.ts`) resolves
+each `@inject(token)` parameter with the args of the class being constructed,
+those args reach every injected dependency's provider, `scopeAccess` rule and
+`singleton()` cache key. Positional pickers (`arg(0)`) on a specialized
+dependency therefore see the caller's args first — prefer `argsFn(predicate)` /
+`findOrFail(predicate)` there.
+
 ### Hooks
 
 **The library ships no hook keys and no hook decorators (ADR 0017):** `@hook(key, fn)` is the only one, and `onConstruct` / `onScopeDisposed` / `onResolved` are names an application defines for itself — `export const onConstruct = (fn: HookType) => hook('onConstruct', fn)` — paired with a `new HookCollector({ key: 'onConstruct' })` it hands to a module. `injectProp` enables property injection within hooks.
