@@ -1,3 +1,18 @@
+# 70.0.0 (2026-09-18)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    replace InjectionToken.getKey() with Serializable tokens (#167)
+    (3585b4d7c80ab67de2626225cff07d466cd90990)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    replace InjectionToken.getKey() with Serializable tokens (#167)
+    (3585b4d7c80ab67de2626225cff07d466cd90990)
+
+
 # 69.2.0 (2026-09-18)
 
   ### ✨ Features
@@ -326,6 +341,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
