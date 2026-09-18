@@ -1,4 +1,4 @@
-import { getConstructorChain, pipe } from '../lib';
+import { ArgumentNotFoundError, findOrFail, getConstructorChain, pipe } from '../lib';
 import { ProxyRegistry, unwrapProxy } from '../lib/utils/ProxyRegistry';
 
 describe('fp', () => {
@@ -90,6 +90,23 @@ describe('fp', () => {
     const result = pipe(toFullName, extractFull, toUpperCase);
 
     expect(result({ firstName: 'John', lastName: 'Doe' })).toBe('JOHN DOE');
+  });
+});
+
+describe('findOrFail', () => {
+  const isString = (value: unknown): value is string => typeof value === 'string';
+
+  it('should return the first argument matching the predicate', () => {
+    const findString = findOrFail(isString);
+
+    expect(findString(1, 'first', 'second')).toBe('first');
+  });
+
+  it('should throw ArgumentNotFoundError when no argument matches', () => {
+    const findString = findOrFail(isString);
+
+    expect(() => findString(1, 2)).toThrowError(ArgumentNotFoundError);
+    expect(() => findString()).toThrowError(ArgumentNotFoundError);
   });
 });
 
