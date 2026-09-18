@@ -1,3 +1,12 @@
+# 68.1.0 (2026-09-18)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add findOrFail argument picker and ArgumentNotFoundError (#163)
+    (14d197c647309e4d04e002a1ecb216599703e268)
+
+
 # 68.0.0 (2026-09-12)
 
   ### 💥 BREAKING CHANGES
@@ -284,6 +293,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
