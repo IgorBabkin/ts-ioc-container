@@ -117,7 +117,7 @@ export {
 } from './hooks/HookCollector';
 
 // Tokens
-export { InjectionToken } from './token/InjectionToken';
+export { InjectionToken, isInjectionToken, forwardArgs } from './token/InjectionToken';
 export { type Injectable, toToken, toMappedToken, argToToken } from './token/toToken';
 export { GroupAliasToken, toGroupAlias } from './token/GroupAliasToken';
 export { SingleAliasToken, toSingleAlias } from './token/SingleAliasToken';
