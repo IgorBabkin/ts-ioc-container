@@ -63,7 +63,7 @@ describe('Spec: provider behavior', () => {
   });
 
   it('caches singleton results by configured cache key', () => {
-    @register(singleton((tenant) => tenant as string))
+    @register(singleton(([tenant]) => tenant as string))
     class TenantRepository {
       constructor(@inject(arg(0)) readonly tenant: string) {}
     }
@@ -80,7 +80,7 @@ describe('Spec: provider behavior', () => {
   });
 
   it('caches singleton results by a Serializable cache key through its string form', () => {
-    @register(singleton((tenant) => new SingleToken(tenant as string)))
+    @register(singleton(([tenant]) => new SingleToken(tenant as string)))
     class TenantRepository {
       constructor(@inject(arg(0)) readonly tenant: string) {}
     }

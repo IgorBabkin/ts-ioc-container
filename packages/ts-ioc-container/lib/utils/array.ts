@@ -10,14 +10,14 @@ export const Filter = {
 };
 
 /**
- * Returns a variadic picker of the first argument matching `predicate` - the
- * shape `singleton(getCacheKey)` and `argsFn` consumers expect.
+ * Returns a picker of the first argument in `args` matching `predicate` - the
+ * shape `singleton(getCacheKey)` consumers expect.
  *
  * @throws {ArgumentNotFoundError} when no argument matches `predicate`
  */
 export const findOrFail =
   <T>(predicate: Predicate<T>) =>
-  (...args: unknown[]): T => {
+  (args: unknown[] = []): T => {
     const index = args.findIndex((arg) => predicate(arg as T));
 
     if (index === -1) {
