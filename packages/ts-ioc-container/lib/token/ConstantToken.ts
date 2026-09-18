@@ -4,8 +4,11 @@ import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { Serializable } from '../utils/basic';
 
 export class ConstantToken<T = any> extends InjectionToken<T> implements Serializable {
-  constructor(private readonly token: T) {
-    super();
+  constructor(
+    private readonly token: T,
+    { tags = [] }: { tags?: string[] } = {},
+  ) {
+    super(tags);
   }
 
   resolve(s: IContainer): T {
@@ -31,6 +34,10 @@ export class ConstantToken<T = any> extends InjectionToken<T> implements Seriali
    */
   lazy(): InjectionToken<T> {
     throw new MethodNotImplementedError('not implemented');
+  }
+
+  addTags(...tags: string[]): ConstantToken<T> {
+    return new ConstantToken<T>(this.token, { tags: [...this.getTags(), ...tags] });
   }
 
   /**

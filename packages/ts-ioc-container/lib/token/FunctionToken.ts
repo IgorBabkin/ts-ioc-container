@@ -11,9 +11,13 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
 
   constructor(
     private readonly fn: InjectFn<T>,
-    { getArgsFn = forwardArgs, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+    {
+      getArgsFn = forwardArgs,
+      isLazy = false,
+      tags = [],
+    }: { getArgsFn?: ArgsFn; isLazy?: boolean; tags?: string[] } = {},
   ) {
-    super();
+    super(tags);
     this._getArgsFn = getArgsFn;
     this._isLazy = isLazy;
   }
@@ -30,6 +34,7 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
     return new FunctionToken<T>(this.fn, {
       getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
       isLazy: this._isLazy,
+      tags: this.getTags(),
     });
   }
 
@@ -38,6 +43,7 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
     return new FunctionToken<T>(this.fn, {
       getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
       isLazy: this._isLazy,
+      tags: this.getTags(),
     });
   }
 
@@ -45,6 +51,15 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
     return new FunctionToken<T>(this.fn, {
       getArgsFn: this._getArgsFn,
       isLazy: true,
+      tags: this.getTags(),
+    });
+  }
+
+  addTags(...tags: string[]): FunctionToken<T> {
+    return new FunctionToken<T>(this.fn, {
+      getArgsFn: this._getArgsFn,
+      isLazy: this._isLazy,
+      tags: [...this.getTags(), ...tags],
     });
   }
 

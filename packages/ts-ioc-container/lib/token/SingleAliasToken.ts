@@ -11,9 +11,13 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
 
   constructor(
     readonly token: DependencyKey,
-    { getArgsFn = forwardArgs, isLazy = false }: { getArgsFn?: ArgsFn; isLazy?: boolean } = {},
+    {
+      getArgsFn = forwardArgs,
+      isLazy = false,
+      tags = [],
+    }: { getArgsFn?: ArgsFn; isLazy?: boolean; tags?: string[] } = {},
   ) {
-    super();
+    super(tags);
     this._getArgsFn = getArgsFn;
     this._isLazy = isLazy;
   }
@@ -38,6 +42,7 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
     return new SingleAliasToken<T>(this.token, {
       getArgsFn: (s, opts) => [...parentFn(s, opts), ...newArgs],
       isLazy: this._isLazy,
+      tags: this.getTags(),
     });
   }
 
@@ -46,6 +51,7 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
     return new SingleAliasToken<T>(this.token, {
       getArgsFn: (s, opts) => [...parentFn(s, opts), ...fn(s)],
       isLazy: this._isLazy,
+      tags: this.getTags(),
     });
   }
 
@@ -53,6 +59,15 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
     return new SingleAliasToken<T>(this.token, {
       getArgsFn: this._getArgsFn,
       isLazy: true,
+      tags: this.getTags(),
+    });
+  }
+
+  addTags(...tags: string[]): SingleAliasToken<T> {
+    return new SingleAliasToken<T>(this.token, {
+      getArgsFn: this._getArgsFn,
+      isLazy: this._isLazy,
+      tags: [...this.getTags(), ...tags],
     });
   }
 

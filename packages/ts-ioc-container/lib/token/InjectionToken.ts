@@ -1,4 +1,4 @@
-import { type IContainer } from '../container/IContainer';
+import { type IContainer, type Tag } from '../container/IContainer';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
 import { Is } from '../utils/basic';
 
@@ -10,10 +10,25 @@ import { Is } from '../utils/basic';
 export const forwardArgs: ArgsFn = (_, { args = [] } = {}) => args;
 
 export abstract class InjectionToken<T = any> {
+  private readonly tags: Set<Tag>;
+
+  protected constructor(tags: Tag[] = []) {
+    this.tags = new Set(tags);
+  }
+
   abstract resolve(s: IContainer, options?: ProviderOptions): T;
   abstract args(...deps: unknown[]): InjectionToken<T>;
   abstract argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T>;
   abstract lazy(): InjectionToken<T>;
+  abstract addTags(...tags: Tag[]): InjectionToken<T>;
+
+  hasTag(tag: Tag): boolean {
+    return this.tags.has(tag);
+  }
+
+  protected getTags(): Tag[] {
+    return [...this.tags];
+  }
 }
 
 export function isInjectionToken(target: unknown): target is InjectionToken {
