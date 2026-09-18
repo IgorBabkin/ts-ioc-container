@@ -1,3 +1,18 @@
+# 71.0.0 (2026-09-18)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    pass full args array to singleton cache keys (#173)
+    (757fe3c1d620483fda7e520612f4dfe9e247ffc3)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    pass full args array to singleton cache keys (#173)
+    (757fe3c1d620483fda7e520612f4dfe9e247ffc3)
+
+
 # 70.1.0 (2026-09-18)
 
   ### ✨ Features
@@ -350,6 +365,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
