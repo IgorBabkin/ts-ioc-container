@@ -250,19 +250,25 @@ explicit — annotate every parameter that should come from the container or the
 runtime args list.
 
 When args are forwarded into a constructor (via `token.args(...)`,
-`appendArgs(...)`, `appendArgsFn(...)`), the injector resolves any element that is an
-`InjectionToken` and passes everything else through as a literal. **Bare
-constructors are not auto-resolved** — wrap a class in `ClassToken` to opt into
-resolution.
+`appendArgs(...)`, `appendArgsFn(...)`, `resolve(key, { args })`), they arrive
+**as-is** — `resolveArgs` in `lib/injector/MetadataInjector.ts` and the
+`arg` / `args` / `argsFn` pickers never resolve an `InjectionToken` or a bare
+constructor found in the args list. Resolving is the call site's job, with
+`token.argsFn(...)`:
 
 ```typescript
-@register(bindTo(EntityManagerToken), singleton(MultiCache.fromFirstArg))
+@register(bindTo(EntityManagerToken), singleton((repo) => (repo as IRepository).name))
 class EntityManager {
-  constructor(@inject(args(0)) public repo: IRepository) {}
+  constructor(@inject(arg(0)) public repo: IRepository) {}
 }
-// UserRepositoryToken is an InjectionToken — auto-resolved before reaching @inject(args(0))
-EntityManagerToken.args(UserRepositoryToken).resolve(container);
+// resolve the repository where the token is specialized - EntityManager receives the instance
+EntityManagerToken.argsFn((scope) => [UserRepositoryToken.resolve(scope)]).resolve(container);
+// EntityManagerToken.args(UserRepositoryToken) would hand it the token object itself
 ```
+
+`argToToken(value)` (`lib/token/toToken.ts`, exported) is the consumer helper
+for "token → resolve it, literal → pass through": a custom `InjectFn` such as
+`(scope, { args = [] }) => argToToken(args[0]).resolve(scope)` accepts either.
 
 **Runtime args cascade through tokens.** Every container-backed token
 (`SingleToken`, `ClassToken`, `SingleAliasToken`, `GroupAliasToken`,

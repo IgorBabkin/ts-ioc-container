@@ -2,10 +2,10 @@ import { IInjector, InjectOptions, Injector } from './IInjector';
 import type { IContainer } from '../container/IContainer';
 import { type constructor, type Instance } from '../utils/basic';
 import { resolveConstructor } from '../metadata/target';
-import { getParamMeta, addParamMeta } from '../metadata/parameter';
+import { addParamMeta, getParamMeta } from '../metadata/parameter';
 import { InjectionToken } from '../token/InjectionToken';
 import { ProviderOptions } from '../provider/IProvider';
-import { argToToken, type Injectable, toMappedToken } from '../token/toToken';
+import { type Injectable, toMappedToken } from '../token/toToken';
 import { InjectFn } from '../hooks/hook';
 import { type MapFn } from '../utils/fp';
 
@@ -135,5 +135,5 @@ export const args: InjectFn<unknown[]> = (c, { args = [] }) => args;
 export const resolveArgs = (target: constructor<unknown> | Instance, methodName?: string) => {
   const tokens = getParamMeta(hookMetaKey(methodName), target) as InjectionToken[];
   return (scope: IContainer, { args = [], lazy }: ProviderOptions): unknown[] =>
-    tokens.map((fn) => fn.resolve(scope, { args: args.map(argToToken).map((t) => t.resolve(scope)), lazy }));
+    tokens.map((fn) => fn.resolve(scope, { args, lazy }));
 };

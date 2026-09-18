@@ -5,6 +5,7 @@ import {
   appendArgs,
   appendArgsFn,
   argsFn,
+  argToToken,
   Container,
   inject,
   register,
@@ -18,11 +19,11 @@ describe('inject helpers', () => {
   }
 
   describe('arg(index)', () => {
-    it('resolves InjectionToken args before reaching @inject(arg(...))', () => {
+    it('passes InjectionToken args through as-is - the call site resolves them', () => {
       const ValueToken = new SingleToken<string>('value');
 
       class Service {
-        constructor(@inject(arg(0)) public value: string) {}
+        constructor(@inject(arg(0)) public value: unknown) {}
       }
 
       const ServiceToken = new SingleToken<Service>('Service');
@@ -30,8 +31,25 @@ describe('inject helpers', () => {
         .addRegistration(R.fromValue('injected').bindTo(ValueToken))
         .addRegistration(R.fromClass(Service).bindTo(ServiceToken));
 
-      const instance = ServiceToken.args(ValueToken).resolve(container);
-      expect(instance.value).toBe('injected');
+      expect(ServiceToken.args(ValueToken).resolve(container).value).toBe(ValueToken);
+      expect(ServiceToken.argsFn((scope) => [ValueToken.resolve(scope)]).resolve(container).value).toBe('injected');
+    });
+
+    it('lets a custom InjectFn opt back into token resolution with argToToken', () => {
+      const ValueToken = new SingleToken<string>('value');
+
+      class Service {
+        constructor(
+          @inject((scope, { args = [] }) => argToToken(args[0]).resolve(scope)) public first: unknown,
+          @inject((scope, { args = [] }) => argToToken(args[1]).resolve(scope)) public second: unknown,
+        ) {}
+      }
+
+      const container = createContainer().addRegistration(R.fromValue('injected').bindTo(ValueToken));
+      const instance = container.resolve(Service, { args: [ValueToken, 'literal'] });
+
+      expect(instance.first).toBe('injected');
+      expect(instance.second).toBe('literal');
     });
 
     it('returns undefined for out-of-bounds index', () => {

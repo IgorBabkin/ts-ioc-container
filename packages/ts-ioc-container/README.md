@@ -1774,13 +1774,16 @@ Sometimes you want to bind some arguments to provider.
 - `provider(appendArgsFn((container) => [container.resolve(Logger), 'someValue']))`
 - `Provider.fromClass(Logger).pipe(appendArgs('someArgument'))`
 
-### Token as argument
+### Dependencies as arguments
 
-When you pass an `InjectionToken` via `token.args(...)`, the container resolves it before the value reaches the constructor. Bare constructors are **not** auto-resolved — wrap a class in `ClassToken` to opt into resolution.
+Args are passed to the constructor **as-is** — the library never resolves an `InjectionToken` (or a bare constructor) it finds in the args list. Resolve it at the call site with `argsFn`:
 
-- `ServiceToken.args(ValueToken)` — `ValueToken` is resolved from the container, its value is passed as arg
-- `ServiceToken.args(new ClassToken(SomeService))` — `SomeService` is constructed by the container
+- `ServiceToken.argsFn((scope) => [ValueToken.resolve(scope)])` — `ValueToken` is resolved from the container, its value is passed as arg
+- `ServiceToken.argsFn((scope) => [scope.resolve(SomeService)])` — `SomeService` is constructed by the container
 - `ServiceToken.args('literal')` — literal value passed directly
+- `ServiceToken.args(ValueToken)` — the token object itself is passed as arg
+
+`argToToken(value)` is the helper for a call site that wants "resolve tokens, pass literals through": it returns an `InjectionToken` as-is and wraps anything else in a `ConstantToken`, so `@inject((scope, { args = [] }) => argToToken(args[0]).resolve(scope))` accepts either.
 
 ### Positional arg injection with `arg(index)`, `args`, and `argsFn`
 
@@ -1788,7 +1791,7 @@ Constructor parameters that should pick up positional args from `ProviderOptions
 
 - `@inject(arg(0))` — resolves the first element of the `args` array passed at resolution time
 - `@inject(args)` — resolves the whole runtime `args` array
-- Works together with `token.args(...)` to pass typed dependencies through the args context
+- Works together with `token.args(...)` / `token.argsFn(...)` to pass typed dependencies through the args context
 
 `argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `arg(index)` is just a shortcut for matching by position: `arg(0)` is `argsFn((value, index) => index === 0)`. `args` is `(scope, options) => options.args`, i.e. it returns the runtime args array as-is. Every `InjectFn` receives `(scope, options)`, where `options.args` is the runtime args array.
 
@@ -2012,14 +2015,16 @@ describe('IProvider', function () {
     }
 
     // EntityManager is generic - it works with ANY repository.
-    // The repository is the first arg passed via `EntityManagerToken.args(...)`.
-    // `@inject(arg(0))` reads it; the container auto-resolves InjectionToken args
-    // before they reach the constructor.
+    // The repository is the first arg; `@inject(arg(0))` reads it. Args are
+    // passed through as-is, so the call site resolves the repository token
+    // itself with `argsFn` before it reaches the constructor.
     const EntityManagerToken = new SingleToken<EntityManager>('EntityManager');
+    const withRepository = (token: SingleToken<IRepository>) =>
+      EntityManagerToken.argsFn((scope) => [token.resolve(scope)]);
 
     @register(
       bindTo(EntityManagerToken),
-      singleton((arg1) => (arg1 as SingleToken).token), // Cache unique instance per repository type
+      singleton((repository) => (repository as IRepository).name), // Cache unique instance per repository type
     )
     class EntityManager {
       constructor(@inject(arg(0)) public repository: IRepository) {}
@@ -2028,11 +2033,11 @@ describe('IProvider', function () {
     class App {
       constructor(
         // Inject EntityManager configured for Users
-        @inject(EntityManagerToken.args(UserRepositoryToken))
+        @inject(withRepository(UserRepositoryToken))
         public userManager: EntityManager,
 
         // Inject EntityManager configured for Todos
-        @inject(EntityManagerToken.args(TodoRepositoryToken))
+        @inject(withRepository(TodoRepositoryToken))
         public todoManager: EntityManager,
       ) {}
     }
@@ -2056,14 +2061,14 @@ describe('IProvider', function () {
         .addRegistration(R.fromClass(TodoRepository));
 
       // Resolve user manager twice
-      const userManager1 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
-      const userManager2 = EntityManagerToken.args(UserRepositoryToken).resolve(root);
+      const userManager1 = withRepository(UserRepositoryToken).resolve(root);
+      const userManager2 = withRepository(UserRepositoryToken).resolve(root);
 
       // Should be same instance (cached)
       expect(userManager1).toBe(userManager2);
 
       // Resolve todo manager
-      const todoManager = EntityManagerToken.args(TodoRepositoryToken).resolve(root);
+      const todoManager = withRepository(TodoRepositoryToken).resolve(root);
 
       // Should be different from user manager
       expect(todoManager).not.toBe(userManager1);

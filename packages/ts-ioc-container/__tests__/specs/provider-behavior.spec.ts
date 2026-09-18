@@ -94,7 +94,7 @@ describe('Spec: provider behavior', () => {
     }
 
     class UsesTokenArg {
-      constructor(@inject(arg(0)) readonly config: RegionConfig) {}
+      constructor(@inject(arg(0)) readonly config: unknown) {}
     }
 
     const ConfigToken = new SingleToken<RegionConfig>('RegionConfig');
@@ -106,9 +106,11 @@ describe('Spec: provider behavior', () => {
 
     expect(container.resolve<Endpoint>('Endpoint').region).toBe('eu');
     expect(container.resolve<Endpoint>('Endpoint').service).toBe('billing');
-    expect(container.resolve<UsesTokenArg>('UsesTokenArg', { args: [ConfigToken] }).config).toBe(
-      container.resolve('RegionConfig'),
-    );
+    expect(container.resolve<UsesTokenArg>('UsesTokenArg', { args: [ConfigToken] }).config).toBe(ConfigToken);
+    expect(
+      new SingleToken<UsesTokenArg>('UsesTokenArg').argsFn((scope) => [ConfigToken.resolve(scope)]).resolve(container)
+        .config,
+    ).toBe(container.resolve('RegionConfig'));
 
     @register(appendArgs('fixed'))
     class FixedEndpoint {
