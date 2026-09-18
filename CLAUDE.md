@@ -247,9 +247,15 @@ All token classes accept `{ getArgsFn?, isLazy? }` as an optional second constru
 
 `inject(fn)` and `injectProp(fn)` take **exactly one argument**, an `InjectFn`:
 `(options: ProviderOptions) => T`. There is no `Injectable` union on them and no
-mapper rest parameters — a key is `({ scope }) => scope.resolve('Key')`, a token
-is `({ scope, args }) => Token.resolve(scope, { args })`, a mapped value is
-`pipe(fn, ...mappers)` (`pipe` is exported and returns an `InjectFn`).
+mapper rest parameters. `by(target)` (`lib/injector/MetadataInjector.ts`,
+exported) builds the usual one for a token, a `DependencyKey` or a class —
+`@inject(by(Token))`, `@inject(by('Key'))`, `@inject(by(Logger))` — as
+`({ scope, ...options }) => toToken(target).resolve(scope, options)`, so it
+forwards the runtime args (the cascade). A mapped value is
+`pipe(fn, ...mappers)` (`pipe` is exported and returns an `InjectFn`), e.g.
+`pipe(by(Config), (c) => c.apiUrl)`. Prefer `by(...)` over spelling the arrow
+out; write the arrow only when the site wants something `by` doesn't do (no
+args forwarded, the scope itself, a computed value).
 `resolveArgs(target)` stores those functions and calls each with the options it
 is given, so its resolver is `(options: ProviderOptions) => unknown[]`. `toToken`
 and `Injectable` remain, for `select.token(...)` and `toToken(...)` only;
@@ -299,9 +305,9 @@ for "token → resolve it, literal → pass through": a custom `InjectFn` such a
 `resolve` call to the provider; `token.args(...)` / `token.argsFn(...)` append
 *after* them. Since `resolveArgs` (`lib/injector/MetadataInjector.ts`) calls
 each `@inject` function with the args of the class being constructed, an
-`InjectFn` which hands them on — `({ scope, args }) => Token.resolve(scope, { args })`
-— cascades them into the dependency's provider, `scopeAccess` rule and
-`singleton()` cache key, while `({ scope }) => Token.resolve(scope)` does not;
+`InjectFn` which hands them on — `by(Token)` does — cascades them into the
+dependency's provider, `scopeAccess` rule and `singleton()` cache key, while
+`({ scope }) => Token.resolve(scope)` does not;
 the choice is written at the parameter. Positional pickers (`arg(0)`) on a
 specialized dependency resolved with the cascade therefore see the caller's
 args first — prefer `argsFn(predicate)` / `findOrFail(predicate)` there.

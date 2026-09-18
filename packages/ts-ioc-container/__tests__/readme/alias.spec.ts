@@ -8,6 +8,7 @@ import {
   Registration as R,
   scope,
   select as s,
+  by,
 } from '../../lib';
 
 /**
@@ -63,7 +64,7 @@ describe('alias', () => {
     // NotificationManager broadcasts to ALL registered channels
     class NotificationManager {
       constructor(
-        @inject(({ scope, args }) => s.alias(INotificationChannel).resolve(scope, { args }))
+        @inject(by(s.alias(INotificationChannel)))
         private channels: INotificationChannel[],
       ) {}
 

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { bindTo, Container, type IContainer, inject, register, Registration as R, select } from '../../lib';
+import { bindTo, Container, type IContainer, inject, register, Registration as R, select, by } from '../../lib';
 
 /**
  * User Management Domain - Basic Dependency Injection
@@ -34,9 +34,7 @@ describe('Basic usage', function () {
   it('should inject dependencies', function () {
     // AuthService depends on IUserRepository
     class AuthService {
-      constructor(
-        @inject(({ scope, args }) => scope.resolve('IUserRepository', { args })) private userRepo: IUserRepository,
-      ) {}
+      constructor(@inject(by('IUserRepository')) private userRepo: IUserRepository) {}
 
       authenticate(email: string): boolean {
         const user = this.userRepo.findByEmail(email);
@@ -60,9 +58,7 @@ describe('Basic usage', function () {
     const appContainer = new Container({ tags: ['application'] });
 
     class RequestHandler {
-      constructor(
-        @inject(({ scope, args }) => select.scope.current.resolve(scope, { args })) public requestScope: IContainer,
-      ) {}
+      constructor(@inject(by(select.scope.current)) public requestScope: IContainer) {}
 
       handleRequest(): string {
         // Access request-scoped dependencies

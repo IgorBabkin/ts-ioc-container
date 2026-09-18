@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { HookCollector, Container, hook, injectProp, pipe, Registration as R } from '../../lib';
+import { HookCollector, Container, hook, injectProp, pipe, Registration as R, by } from '../../lib';
 import { perform, runSync } from './runners';
 
 describe('injectProp(fn)', () => {
@@ -12,7 +12,7 @@ describe('injectProp(fn)', () => {
 
   it('assigns whatever the function returns', () => {
     class ViewModel {
-      @hook('onInit', injectProp(({ scope }) => scope.resolve('Greeting')))
+      @hook('onInit', injectProp(by('Greeting')))
       greeting!: string;
     }
 
@@ -27,7 +27,7 @@ describe('injectProp(fn)', () => {
     const exclaim = () => (value: string) => `${value}!`;
 
     class ViewModel {
-      @hook('onInit', injectProp(pipe(({ scope }) => scope.resolve<string>('Greeting'), trim(), upper(), exclaim())))
+      @hook('onInit', injectProp(pipe(by<string>('Greeting'), trim(), upper(), exclaim())))
       greeting!: string;
     }
 
@@ -42,15 +42,7 @@ describe('injectProp(fn)', () => {
     }
 
     class ViewModel {
-      @hook(
-        'onInit',
-        injectProp(
-          pipe(
-            ({ scope }) => scope.resolve(Config),
-            (config) => config.apiUrl,
-          ),
-        ),
-      )
+      @hook('onInit', injectProp(pipe(by(Config), (config) => config.apiUrl)))
       apiUrl!: string;
     }
 

@@ -9,6 +9,7 @@ import {
   Registration as R,
   SingleToken,
   singleton,
+  by,
 } from '../../lib';
 
 /**
@@ -161,11 +162,11 @@ describe('IProvider', function () {
     class App {
       constructor(
         // Inject EntityManager configured for Users
-        @inject(({ scope, args }) => withRepository(UserRepositoryToken).resolve(scope, { args }))
+        @inject(by(withRepository(UserRepositoryToken)))
         public userManager: EntityManager,
 
         // Inject EntityManager configured for Todos
-        @inject(({ scope, args }) => withRepository(TodoRepositoryToken).resolve(scope, { args }))
+        @inject(by(withRepository(TodoRepositoryToken)))
         public todoManager: EntityManager,
       ) {}
     }

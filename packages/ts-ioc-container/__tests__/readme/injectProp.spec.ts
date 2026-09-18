@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask } from '../../lib';
+import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask, by } from '../../lib';
 
 /**
  * UI Components - Property Injection
@@ -19,7 +19,7 @@ describe('inject property', () => {
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
-      @hook('onInit', injectProp(({ scope }) => scope.resolve('GreetingService')))
+      @hook('onInit', injectProp(by('GreetingService')))
       greetingService!: string;
 
       display(): string {
@@ -50,12 +50,9 @@ describe('inject property', () => {
     class UserViewModel {
       @hook(
         'onInit',
-        sequential(
-          injectProp(({ scope }) => scope.resolve('GreetingService')),
-          (context) => {
-            injectedValue = context.getProperty();
-          },
-        ),
+        sequential(injectProp(by('GreetingService')), (context) => {
+          injectedValue = context.getProperty();
+        }),
       )
       greetingService!: string;
     }

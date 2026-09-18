@@ -10,6 +10,7 @@ import {
   register,
   Registration as R,
   singleton,
+  by,
 } from '../../lib';
 
 /**
@@ -52,7 +53,7 @@ describe('lazy registerPipe', () => {
     // Analytics service - expensive, but only used occasionally
     @register(bindTo('AnalyticsService'), lazy(), singleton())
     class AnalyticsService {
-      constructor(@inject(({ scope, args }) => scope.resolve('DatabasePool', { args })) private db: DatabasePool) {
+      constructor(@inject(by('DatabasePool')) private db: DatabasePool) {
         initLog.push('AnalyticsService initialized');
       }
 
@@ -67,9 +68,7 @@ describe('lazy registerPipe', () => {
 
     // Application service - always used
     class AppService {
-      constructor(
-        @inject(({ scope, args }) => scope.resolve('AnalyticsService', { args })) public analytics: AnalyticsService,
-      ) {
+      constructor(@inject(by('AnalyticsService')) public analytics: AnalyticsService) {
         initLog.push('AppService initialized');
       }
 
@@ -166,8 +165,8 @@ describe('lazy registerPipe', () => {
     // Notification service - uses email and SMS, but maybe not both
     class NotificationService {
       constructor(
-        @inject(({ scope, args }) => scope.resolve('EmailService', { args })) public email: EmailService,
-        @inject(({ scope, args }) => scope.resolve('SmsService', { args })) public sms: SmsService,
+        @inject(by('EmailService')) public email: EmailService,
+        @inject(by('SmsService')) public sms: SmsService,
       ) {
         initLog.push('NotificationService initialized');
       }
@@ -259,7 +258,7 @@ describe('lazy registerPipe', () => {
     }
 
     class ApiService {
-      constructor(@inject(({ scope, args }) => scope.resolve('CacheService', { args })) private cache: CacheService) {
+      constructor(@inject(by('CacheService')) private cache: CacheService) {
         initLog.push('ApiService initialized');
       }
 
@@ -377,8 +376,8 @@ describe('lazy registerPipe', () => {
 
     class Application {
       constructor(
-        @inject(({ scope, args }) => scope.resolve('FeatureFlagService', { args })) private flags: FeatureFlagService,
-        @inject(({ scope, args }) => scope.resolve('PremiumFeature', { args })) private premium: PremiumFeature,
+        @inject(by('FeatureFlagService')) private flags: FeatureFlagService,
+        @inject(by('PremiumFeature')) private premium: PremiumFeature,
       ) {
         initLog.push('Application initialized');
       }

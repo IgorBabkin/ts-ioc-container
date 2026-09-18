@@ -20,6 +20,7 @@ import {
   SingleToken,
   toGroupAlias,
   toSingleAlias,
+  by,
 } from '../../lib';
 import { UnsupportedTokenTypeError } from '../../lib/errors/UnsupportedTokenTypeError';
 
@@ -107,7 +108,7 @@ describe('Spec: token-based injection', () => {
 
     class TenantService {
       constructor(
-        @inject(({ scope, args }) => TenantRepositoryToken.resolve(scope, { args }))
+        @inject(by(TenantRepositoryToken))
         readonly repository: TenantRepository,
       ) {}
     }

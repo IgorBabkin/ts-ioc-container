@@ -1,4 +1,4 @@
-import { arg, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
+import { by, arg, bindTo, Container, inject, register, Registration as R, SingleToken } from '../../lib';
 
 interface IConfig {
   apiUrl: string;
@@ -17,9 +17,7 @@ const IConfigKey = new SingleToken<IConfig>('IConfig');
 
 class App {
   constructor(
-    @inject(({ scope, args }) =>
-      IConfigKey.argsFn((scope) => [scope.resolve('API_URL'), 5000]).resolve(scope, { args }),
-    )
+    @inject(by(IConfigKey.argsFn((scope) => [scope.resolve('API_URL'), 5000])))
     public config: IConfig,
   ) {}
 }

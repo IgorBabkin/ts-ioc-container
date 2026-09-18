@@ -32,17 +32,24 @@ No `Injectable` union, no mapper rest parameters, no `toMappedToken`. The
 function is the contract:
 
 ```typescript
-@inject(({ scope }) => scope.resolve('Key'))                     // a key
-@inject(({ scope, args }) => Token.resolve(scope, { args }))     // a token, args forwarded
-@inject(({ scope }) => Token.resolve(scope))                     // a token, args not forwarded
-@inject(arg(0))                                                  // a runtime argument
-@inject(pipe(({ scope }) => scope.resolve<Config>('Config'), takeApiUrl(), requireHttps()))
+@inject(by(Token))                                   // a token, key or class - args forwarded
+@inject(by('Key'))
+@inject(by(Logger))
+@inject(arg(0))                                      // a runtime argument
+@inject(pipe(by(Config), takeApiUrl(), requireHttps()))
+@inject(({ scope }) => Token.resolve(scope))         // a token, args not forwarded
+@inject(({ scope }) => scope)                        // the scope itself
 ```
 
-Mapping is composition: `pipe(fn, ...mappers)` (already exported) returns an
-`InjectFn`, so it goes wherever one does. `resolveArgs` stores the functions and
-calls each with the options it is given. `toToken` and `Injectable` stay for
-`select.token(...)` and `toToken(...)`, which convert user input into tokens.
+`by(target)` is the `InjectFn` the old `Injectable` coercion produced, as a
+plain exported function:
+`({ scope, ...options }) => toToken(target).resolve(scope, options)`. It
+forwards the runtime args and the `lazy` flag, so `@inject(by(Token))` behaves
+exactly as `@inject(Token)` did — but it is one of several functions, not the
+decorator's hidden default. Mapping is composition: `pipe(fn, ...mappers)`
+(already exported) returns an `InjectFn`, so it goes wherever one does.
+`resolveArgs` stores the functions and calls each with the options it is given.
+`toToken` and `Injectable` stay: `by` and `select.token(...)` are built on them.
 
 **The scope travels inside the options.** `InjectOptions` is
 `{ scope: IContainer; args?: unknown[] }`; `ProviderOptions` adds `lazy?`.
@@ -72,10 +79,10 @@ scope is never repeated inside an object passed next to it.
 - One decorator argument, one shape: `@inject` reads as "call this with the
   context, inject the result". The ten overloads of `inject` and `injectProp`
   and the `toMappedToken` coercion are gone.
-- The runtime-args cascade is written at the parameter — `{ args }` forwarded or
-  not — instead of being implied by handing over a token. The library's
-  explicit-injection stance (nothing in the args list is ever resolved for the
-  caller) now applies to the decorator too.
+- The runtime-args cascade is written at the parameter — `by(Token)` forwards,
+  `({ scope }) => Token.resolve(scope)` does not — instead of being implied by
+  handing over a token. The library's explicit-injection stance (nothing in the
+  args list is ever resolved for the caller) now applies to the decorator too.
 - Every context callback destructures what it uses: `({ args = [] }) => args`,
   `({ scope }) => scope.resolve(...)`, `({ scope, ...options }) => scope.resolve(Target, options)`.
   No `_` placeholders for a scope the callback does not need.
@@ -85,24 +92,24 @@ scope is never repeated inside an object passed next to it.
 **Negative / trade-offs**
 
 - Breaking, with no shim: every `@inject(Token)`, `@inject('key')`,
-  `@inject(Class)` and `injectProp('key')` becomes a function, and every
+  `@inject(Class)` and `injectProp('key')` gains a `by(...)`, every
+  `@inject(x, ...mappers)` becomes `@inject(pipe(by(x), ...mappers))`, and every
   `(scope, options)` callback, custom injector and direct `provider.resolve` /
   `injector.resolve` call changes shape.
-- The shortest token injection grew from `@inject(Token)` to
-  `@inject(({ scope, args }) => Token.resolve(scope, { args }))`. This ADR is
-  the basis for what comes next, not the last word on the ergonomics; any
-  shorthand builds on the single-`InjectFn` contract rather than beside it.
+- Token injection is three characters longer — `by(` — and reads as a call
+  rather than a value. Any further shorthand builds on the single-`InjectFn`
+  contract, as `by` does, rather than beside it.
 - Type inference from a token's generic to the parameter now flows through the
   function's return type instead of the `Injectable<T>` overloads.
 
 ## References
 
-- `lib/injector/MetadataInjector.ts` — `inject`, `arg` / `args` / `argsFn`, `resolveArgs`
+- `lib/injector/MetadataInjector.ts` — `inject`, `by`, `arg` / `args` / `argsFn`, `resolveArgs`
 - `lib/hooks/injectProp.ts`, `lib/hooks/HookContext.ts` — `injectProp`, `setProperty`
 - `lib/injector/IInjector.ts` — `InjectOptions`, `IInjector.resolve`, `Injector.createInstance`
 - `lib/provider/IProvider.ts` — `ProviderOptions`, `ResolveOptions`, `ArgsFn`, `ResolveDependency`
 - `lib/utils/fp.ts` — `pipe`
-- `__tests__/specs/injector-strategies.spec.ts` — the single-function contract and `pipe` composition
+- `__tests__/specs/injector-strategies.spec.ts` — the single-function contract, `by`, and `pipe` composition
 - [ADR 0002 — Pluggable injector strategies](0002-pluggable-injectors.md)
 - [ADR 0005 — Token immutability](0005-token-immutability.md)
 - [ADR 0009 — Token taxonomy](0009-token-taxonomy.md)

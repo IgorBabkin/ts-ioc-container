@@ -1,4 +1,4 @@
-import { bindTo, Container, inject, register, Registration as R, select } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, select, by } from '../../lib';
 
 /**
  * User Management Domain - Instance Collection
@@ -18,7 +18,7 @@ describe('Instances', function () {
   it('should collect instances across scope hierarchy', () => {
     // App that needs access to all logger instances (e.g., for flushing)
     class App {
-      constructor(@inject(({ scope }) => select.instances().resolve(scope)) public loggers: Logger[]) {}
+      constructor(@inject(by(select.instances())) public loggers: Logger[]) {}
     }
 
     const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
@@ -40,7 +40,7 @@ describe('Instances', function () {
   it('should return only current scope instances when cascade is disabled', () => {
     // Only get instances from current scope, not parent scopes
     class App {
-      constructor(@inject(({ scope }) => select.instances().cascade(false).resolve(scope)) public loggers: Logger[]) {}
+      constructor(@inject(by(select.instances().cascade(false))) public loggers: Logger[]) {}
     }
 
     const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
@@ -59,7 +59,7 @@ describe('Instances', function () {
     const isLogger = (instance: unknown) => instance instanceof Logger;
 
     class App {
-      constructor(@inject(({ scope }) => select.instances(isLogger).resolve(scope)) public loggers: Logger[]) {}
+      constructor(@inject(by(select.instances(isLogger))) public loggers: Logger[]) {}
     }
 
     const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));

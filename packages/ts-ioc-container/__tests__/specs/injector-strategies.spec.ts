@@ -12,7 +12,9 @@ import {
   register,
   Registration as R,
   SimpleInjector,
+  SingleToken,
   toGroupAlias,
+  by,
 } from '../../lib';
 import type { ProviderOptions } from '../../lib/provider/IProvider';
 import type { constructor } from '../../lib/utils/basic';
@@ -25,7 +27,7 @@ describe('Spec: injector strategies', () => {
 
     class Controller {
       constructor(
-        @inject(({ scope, args }) => scope.resolve('Logger', { args })) readonly logger: Logger,
+        @inject(by('Logger')) readonly logger: Logger,
         @inject(arg(0)) readonly id: number,
         @inject(argsFn((value) => typeof value === 'string')) readonly tenant: string,
         @inject(args) readonly allArgs: unknown[],
@@ -67,6 +69,38 @@ describe('Spec: injector strategies', () => {
     expect(seen).toEqual([{ scope: container, args: ['request-1'] }]);
   });
 
+  it('builds the inject function for a token, a key or a class with by', () => {
+    class Logger {
+      constructor(@inject(arg(0)) readonly level: string = 'info') {}
+    }
+
+    const LoggerToken = new SingleToken<Logger>('Logger');
+
+    class Controller {
+      constructor(
+        @inject(by(LoggerToken)) readonly viaToken: Logger,
+        @inject(by('Logger')) readonly viaKey: Logger,
+        @inject(by(Logger)) readonly viaClass: Logger,
+      ) {}
+    }
+
+    const container = new Container()
+      .addRegistration(R.fromClass(Logger).bindTo(LoggerToken))
+      .addRegistration(R.fromClass(Controller));
+
+    const controller = container.resolve<Controller>('Controller', { args: ['debug'] });
+
+    expect(controller.viaToken).toBeInstanceOf(Logger);
+    expect(controller.viaKey).toBeInstanceOf(Logger);
+    expect(controller.viaClass).toBeInstanceOf(Logger);
+    // `by` forwards the runtime args of the class being constructed
+    expect([controller.viaToken.level, controller.viaKey.level, controller.viaClass.level]).toEqual([
+      'debug',
+      'debug',
+      'debug',
+    ]);
+  });
+
   it('maps an injected value by composing the inject function with pipe', () => {
     class Config {
       readonly apiUrl = 'https://api.com/';
@@ -76,13 +110,7 @@ describe('Spec: injector strategies', () => {
 
     class ApiClient {
       constructor(
-        @inject(
-          pipe(
-            ({ scope }) => scope.resolve(Config),
-            (config) => config.apiUrl,
-            stripTrailingSlash,
-          ),
-        )
+        @inject(pipe(by(Config), (config) => config.apiUrl, stripTrailingSlash))
         readonly apiUrl: string,
       ) {}
     }
@@ -99,7 +127,7 @@ describe('Spec: injector strategies', () => {
 
     class Controller {
       constructor(
-        @inject(({ scope, args }) => scope.resolve('Logger', { args })) readonly logger: Logger,
+        @inject(by('Logger')) readonly logger: Logger,
         readonly unannotated?: string,
       ) {}
     }

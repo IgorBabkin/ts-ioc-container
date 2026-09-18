@@ -13,6 +13,7 @@ import {
   toTask,
   type ExecutionContext,
   type HookAction,
+  by,
 } from '../../lib';
 
 const execute: HookFn = (ctx) => {
@@ -61,7 +62,7 @@ describe('onConstruct', function () {
       connectionString = '';
 
       @onConstruct(execute)
-      connect(@inject(({ scope, args }) => scope.resolve('ConnectionString', { args })) connectionString: string) {
+      connect(@inject(by('ConnectionString')) connectionString: string) {
         this.connectionString = connectionString;
         this.isConnected = true;
       }
@@ -139,9 +140,7 @@ describe('onConstruct', function () {
       }
 
       @onConstruct(executeAsync)
-      async connect(
-        @inject(({ scope, args }) => scope.resolve('ConnectionString', { args })) connectionString: string,
-      ) {
+      async connect(@inject(by('ConnectionString')) connectionString: string) {
         await Promise.resolve();
         this.connectionString = connectionString;
         this.isConnected = true;

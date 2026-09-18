@@ -8,6 +8,7 @@ import {
   Registration as R,
   singleton,
   SingleToken,
+  by,
 } from '../../lib';
 
 interface IUserRepository {
@@ -24,9 +25,7 @@ class UserRepository implements IUserRepository {
 }
 
 class UserService {
-  constructor(
-    @inject(({ scope, args }) => IUserRepositoryKey.resolve(scope, { args })) public repository: IUserRepository,
-  ) {}
+  constructor(@inject(by(IUserRepositoryKey)) public repository: IUserRepository) {}
 }
 
 describe('Token Runtime Arguments', function () {

@@ -28,7 +28,7 @@ export {
   type InjectorHook,
   Injector,
 } from './injector/IInjector';
-export { MetadataInjector, inject, arg, args, argsFn, resolveArgs } from './injector/MetadataInjector';
+export { MetadataInjector, inject, arg, args, argsFn, by, resolveArgs } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 

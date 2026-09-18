@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, inject, Registration as R, pipe } from '../../lib';
+import { Container, inject, Registration as R, pipe, by } from '../../lib';
 
 /**
  * Mapping injected values
@@ -29,9 +29,7 @@ describe('inject mappers', () => {
   it('should pipe the resolved dependency through every mapper', () => {
     class ApiClient {
       constructor(
-        @inject(
-          pipe(({ scope }) => scope.resolve<Config>('Config'), takeApiUrl(), stripTrailingSlash(), requireHttps()),
-        )
+        @inject(pipe(by<Config>('Config'), takeApiUrl(), stripTrailingSlash(), requireHttps()))
         readonly apiUrl: string,
       ) {}
     }
@@ -46,7 +44,7 @@ describe('inject mappers', () => {
   it('should throw from a mapper when the resolved value is not acceptable', () => {
     class ApiClient {
       constructor(
-        @inject(pipe(({ scope }) => scope.resolve<Config>('Config'), takeApiUrl(), requireHttps()))
+        @inject(pipe(by<Config>('Config'), takeApiUrl(), requireHttps()))
         readonly apiUrl: string,
       ) {}
     }

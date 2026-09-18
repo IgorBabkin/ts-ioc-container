@@ -17,6 +17,7 @@ import {
   register,
   Registration as R,
   sequential,
+  by,
 } from '../../lib';
 import { perform, runSequential, runSync } from './runners';
 
@@ -64,11 +65,7 @@ describe('hooks', () => {
       @hook('syncBefore', (ctx) => {
         ctx.invokeMethod();
       })
-      start(
-        @inject(arg(0)) firstArg: string,
-        @inject(({ scope, args }) => scope.resolve('suffix', { args })) suffix: string,
-        runtimeArg: string,
-      ) {
+      start(@inject(arg(0)) firstArg: string, @inject(by('suffix')) suffix: string, runtimeArg: string) {
         this.receivedArgs = [firstArg, suffix, runtimeArg];
       }
     }
@@ -94,10 +91,7 @@ describe('hooks', () => {
       @hook('syncBefore', (ctx) => {
         ctx.invokeMethod();
       })
-      start(
-        @inject(arg(0)) firstArg: string,
-        @inject(({ scope, args }) => scope.resolve('suffix', { args })) suffix: string,
-      ) {
+      start(@inject(arg(0)) firstArg: string, @inject(by('suffix')) suffix: string) {
         this.receivedArgs = [firstArg, suffix];
       }
     }
@@ -145,13 +139,13 @@ describe('hooks', () => {
       isStarted = false;
 
       @hook('onStart', executeAsync)
-      async initialize(@inject(({ scope, args }) => scope.resolve('TimeToSleep', { args })) timeToSleep: number) {
+      async initialize(@inject(by('TimeToSleep')) timeToSleep: number) {
         await sleep(timeToSleep);
         this.isStarted = true;
       }
 
       @hook('onStart', executeAsync)
-      async dispose(@inject(({ scope, args }) => scope.resolve('TimeToSleep', { args })) timeToSleep: number) {
+      async dispose(@inject(by('TimeToSleep')) timeToSleep: number) {
         await sleep(timeToSleep);
         this.isStarted = false;
       }
@@ -461,9 +455,7 @@ describe('hooks', () => {
     }
 
     class App {
-      constructor(
-        @inject(({ scope, args }) => PluginToken.lazy().resolve(scope, { args })) private readonly plugins: Plugin[],
-      ) {}
+      constructor(@inject(by(PluginToken.lazy())) private readonly plugins: Plugin[]) {}
 
       runPlugins(scope: Container) {
         this.plugins.forEach((plugin) => runOnPluginStart(plugin, { scope }));

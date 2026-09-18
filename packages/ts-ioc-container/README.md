@@ -114,7 +114,7 @@ bundlers tree-shake unused exports.
 ## Quickstart
 
 ```typescript
-import { bindTo, Container, inject, register, Registration as R, singleton, SingleToken } from 'ts-ioc-container';
+import { bindTo, Container, inject, register, Registration as R, singleton, SingleToken, by } from 'ts-ioc-container';
 
 interface ILogger {
   log(message: string): void;
@@ -130,7 +130,7 @@ class Logger implements ILogger {
 }
 
 class App {
-  constructor(@inject(({ scope, args }) => ILoggerToken.resolve(scope, { args })) private logger: ILogger) {}
+  constructor(@inject(by(ILoggerToken)) private logger: ILogger) {}
   start() {
     this.logger.log('hello');
   }
@@ -160,10 +160,10 @@ describe('Quickstart', function () {
 - Resolve by alias: `container.resolveByAlias('Alias')`
 - Current scope token: `select.scope.current`
 - Lazy token: `select.token('Service').lazy()`
-- Inject decorator: `@inject(({ scope }) => scope.resolve('Key'))` — the argument is always one `InjectFn`
-- Forward the runtime args to a dependency: `@inject(({ scope, args }) => Token.resolve(scope, { args }))`
-- Map an injected value: `@inject(pipe(({ scope }) => scope.resolve('Key'), sanitize(), validate()))`
-- Property inject: `@hook('onInit', injectProp(({ scope }) => scope.resolve('Key')))`
+- Inject decorator: `@inject(by(Token))` / `@inject(by('Key'))` / `@inject(by(Logger))` — the argument is always one `InjectFn`, `by(...)` builds the usual one
+- Custom inject function: `@inject(({ scope, args }) => ...)`
+- Map an injected value: `@inject(pipe(by('Key'), sanitize(), validate()))`
+- Property inject: `@hook('onInit', injectProp(by('Key')))`
 
 > [!TIP]
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
@@ -185,7 +185,7 @@ describe('Quickstart', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { bindTo, Container, type IContainer, inject, register, Registration as R, select } from 'ts-ioc-container';
+import { bindTo, Container, type IContainer, inject, register, Registration as R, select, by } from 'ts-ioc-container';
 
 /**
  * User Management Domain - Basic Dependency Injection
@@ -220,9 +220,7 @@ describe('Basic usage', function () {
   it('should inject dependencies', function () {
     // AuthService depends on IUserRepository
     class AuthService {
-      constructor(
-        @inject(({ scope, args }) => scope.resolve('IUserRepository', { args })) private userRepo: IUserRepository,
-      ) {}
+      constructor(@inject(by('IUserRepository')) private userRepo: IUserRepository) {}
 
       authenticate(email: string): boolean {
         const user = this.userRepo.findByEmail(email);
@@ -246,9 +244,7 @@ describe('Basic usage', function () {
     const appContainer = new Container({ tags: ['application'] });
 
     class RequestHandler {
-      constructor(
-        @inject(({ scope, args }) => select.scope.current.resolve(scope, { args })) public requestScope: IContainer,
-      ) {}
+      constructor(@inject(by(select.scope.current)) public requestScope: IContainer) {}
 
       handleRequest(): string {
         // Access request-scoped dependencies
@@ -291,6 +287,7 @@ import {
   scope,
   select,
   singleton,
+  by,
 } from 'ts-ioc-container';
 
 /**
@@ -351,7 +348,7 @@ describe('Scopes', function () {
     // RequestHandler can create a transaction scope for database operations
     class RequestHandler {
       constructor(
-        @inject(({ scope, args }) => select.scope.create({ tags: ['transaction'] }).resolve(scope, { args }))
+        @inject(by(select.scope.create({ tags: ['transaction'] })))
         public transactionScope: IContainer,
       ) {}
 
@@ -379,7 +376,7 @@ Sometimes you want to get all instances from container and its scopes. For examp
 - you can get instances from container and scope which were created by injector
 
 ```typescript
-import { bindTo, Container, inject, register, Registration as R, select } from 'ts-ioc-container';
+import { bindTo, Container, inject, register, Registration as R, select, by } from 'ts-ioc-container';
 
 /**
  * User Management Domain - Instance Collection
@@ -399,7 +396,7 @@ describe('Instances', function () {
   it('should collect instances across scope hierarchy', () => {
     // App that needs access to all logger instances (e.g., for flushing)
     class App {
-      constructor(@inject(({ scope }) => select.instances().resolve(scope)) public loggers: Logger[]) {}
+      constructor(@inject(by(select.instances())) public loggers: Logger[]) {}
     }
 
     const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
@@ -421,7 +418,7 @@ describe('Instances', function () {
   it('should return only current scope instances when cascade is disabled', () => {
     // Only get instances from current scope, not parent scopes
     class App {
-      constructor(@inject(({ scope }) => select.instances().cascade(false).resolve(scope)) public loggers: Logger[]) {}
+      constructor(@inject(by(select.instances().cascade(false))) public loggers: Logger[]) {}
     }
 
     const appContainer = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
@@ -440,7 +437,7 @@ describe('Instances', function () {
     const isLogger = (instance: unknown) => instance instanceof Logger;
 
     class App {
-      constructor(@inject(({ scope }) => select.instances(isLogger).resolve(scope)) public loggers: Logger[]) {}
+      constructor(@inject(by(select.instances(isLogger))) public loggers: Logger[]) {}
     }
 
     const container = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
@@ -577,7 +574,7 @@ Sometimes you want to create dependency only when somebody want to invoke it's m
 
 ```typescript
 import 'reflect-metadata';
-import { Container, inject, register, Registration as R, select as s, singleton } from 'ts-ioc-container';
+import { Container, inject, register, Registration as R, select as s, singleton, by } from 'ts-ioc-container';
 
 /**
  * User Management Domain - Lazy Loading
@@ -608,9 +605,7 @@ describe('lazy provider', () => {
 
   // EmailNotifier is expensive - establishes SMTP connection on construction
   class EmailNotifier {
-    constructor(
-      @inject(({ scope, args }) => scope.resolve('SmtpConnectionStatus', { args })) private smtp: SmtpConnectionStatus,
-    ) {
+    constructor(@inject(by('SmtpConnectionStatus')) private smtp: SmtpConnectionStatus) {
       // Simulate expensive SMTP connection
       this.smtp.connect();
     }
@@ -624,7 +619,7 @@ describe('lazy provider', () => {
   // But most login requests don't need email (only password reset does)
   class AuthService {
     constructor(
-      @inject(({ scope, args }) => s.token('EmailNotifier').lazy().resolve(scope, { args }))
+      @inject(by(s.token('EmailNotifier').lazy()))
       public emailNotifier: EmailNotifier,
     ) {}
 
@@ -733,6 +728,7 @@ import {
   register,
   Registration as R,
   singleton,
+  by,
 } from 'ts-ioc-container';
 
 /**
@@ -775,7 +771,7 @@ describe('lazy registerPipe', () => {
     // Analytics service - expensive, but only used occasionally
     @register(bindTo('AnalyticsService'), lazy(), singleton())
     class AnalyticsService {
-      constructor(@inject(({ scope, args }) => scope.resolve('DatabasePool', { args })) private db: DatabasePool) {
+      constructor(@inject(by('DatabasePool')) private db: DatabasePool) {
         initLog.push('AnalyticsService initialized');
       }
 
@@ -790,9 +786,7 @@ describe('lazy registerPipe', () => {
 
     // Application service - always used
     class AppService {
-      constructor(
-        @inject(({ scope, args }) => scope.resolve('AnalyticsService', { args })) public analytics: AnalyticsService,
-      ) {
+      constructor(@inject(by('AnalyticsService')) public analytics: AnalyticsService) {
         initLog.push('AppService initialized');
       }
 
@@ -889,8 +883,8 @@ describe('lazy registerPipe', () => {
     // Notification service - uses email and SMS, but maybe not both
     class NotificationService {
       constructor(
-        @inject(({ scope, args }) => scope.resolve('EmailService', { args })) public email: EmailService,
-        @inject(({ scope, args }) => scope.resolve('SmsService', { args })) public sms: SmsService,
+        @inject(by('EmailService')) public email: EmailService,
+        @inject(by('SmsService')) public sms: SmsService,
       ) {
         initLog.push('NotificationService initialized');
       }
@@ -982,7 +976,7 @@ describe('lazy registerPipe', () => {
     }
 
     class ApiService {
-      constructor(@inject(({ scope, args }) => scope.resolve('CacheService', { args })) private cache: CacheService) {
+      constructor(@inject(by('CacheService')) private cache: CacheService) {
         initLog.push('ApiService initialized');
       }
 
@@ -1100,8 +1094,8 @@ describe('lazy registerPipe', () => {
 
     class Application {
       constructor(
-        @inject(({ scope, args }) => scope.resolve('FeatureFlagService', { args })) private flags: FeatureFlagService,
-        @inject(({ scope, args }) => scope.resolve('PremiumFeature', { args })) private premium: PremiumFeature,
+        @inject(by('FeatureFlagService')) private flags: FeatureFlagService,
+        @inject(by('PremiumFeature')) private premium: PremiumFeature,
       ) {
         initLog.push('Application initialized');
       }
@@ -1162,14 +1156,20 @@ Also you can [inject property.](#inject-property)
 `@inject` takes exactly one argument, an `InjectFn`: `(options: ProviderOptions) => T`.
 It is called with the resolution context of the class being constructed — the
 `scope` it is built in and the runtime `args` it is built with — and whatever it
-returns is injected. There is no other form: a key is `({ scope }) =>
-scope.resolve('Key')`, a token is `({ scope, args }) => Token.resolve(scope, { args })`
-(forwarding the args is the call site's choice, see
-[runtime args flow through tokens](#runtime-args-flow-through-tokens)), a
-runtime argument is `arg(0)`, and the current scope is `({ scope }) => scope`.
+returns is injected. There is no other form, only functions which build one:
+
+- `by(target)` — resolves a token, a `DependencyKey` or a class from the scope,
+  forwarding the runtime args (see
+  [runtime args flow through tokens](#runtime-args-flow-through-tokens)):
+  `@inject(by(LoggerToken))`, `@inject(by('Logger'))`, `@inject(by(Logger))`.
+- `arg(index)` / `args` / `argsFn(predicate)` — pick from the runtime args.
+- `pipe(fn, ...mappers)` — map what another `InjectFn` returns.
+- Your own: `@inject(({ scope }) => scope)` injects the current scope,
+  `@inject(({ scope }) => Token.resolve(scope))` resolves a token *without*
+  the args.
 
 ```typescript
-import { bindTo, Container, inject, register, Registration as R } from 'ts-ioc-container';
+import { bindTo, Container, inject, register, Registration as R, by } from 'ts-ioc-container';
 
 /**
  * User Management Domain - Metadata Injection
@@ -1178,7 +1178,7 @@ import { bindTo, Container, inject, register, Registration as R } from 'ts-ioc-c
  * to automatically inject dependencies into constructor parameters.
  *
  * How it works:
- * 1. @inject(({ scope, args }) => scope.resolve('key', { args })) decorator marks a parameter for injection
+ * 1. @inject(by('key')) decorator marks a parameter for injection
  * 2. Container reads metadata at resolution time
  * 3. Dependencies are resolved and passed to constructor
  *
@@ -1193,10 +1193,10 @@ class Logger {
 
 class App {
   // @inject tells the container which dependency to resolve for this parameter
-  constructor(@inject(({ scope, args }) => scope.resolve('ILogger', { args })) private logger: Logger) {}
+  constructor(@inject(by('ILogger')) private logger: Logger) {}
 
   // Alternative: inject via function for dynamic resolution
-  // constructor(@inject(({ scope, args }) => scope.resolve('ILogger', { args })) private logger: ILogger) {}
+  // constructor(@inject(by('ILogger')) private logger: ILogger) {}
 
   getLoggerName(): string {
     return this.logger.name;
@@ -1224,18 +1224,18 @@ previous result, left to right, and the value the last one returns is what
 reaches the constructor parameter:
 
 ```typescript
-@inject(pipe(({ scope }) => scope.resolve<Config>('Config'), takeApiUrl(), stripTrailingSlash(), requireHttps()))
+@inject(pipe(by<Config>('Config'), takeApiUrl(), stripTrailingSlash(), requireHttps()))
 ```
 
 A mapper is a plain `(value) => value` function, so mappers compose into named,
 reusable steps (selecting a member, sanitizing, validating) and each step's
 parameter type is inferred from the previous one. `pipe(fn, ...mappers)` is
 itself an `InjectFn`, so it goes wherever one does — `@inject(...)`, a
-`FunctionToken`, or `injectProp(pipe(({ scope }) => scope.resolve('Config'), takeApiUrl()))`.
+`FunctionToken`, or `injectProp(pipe(by('Config'), takeApiUrl()))`.
 
 ```typescript
 import 'reflect-metadata';
-import { Container, inject, Registration as R, pipe } from 'ts-ioc-container';
+import { Container, inject, Registration as R, pipe, by } from 'ts-ioc-container';
 
 /**
  * Mapping injected values
@@ -1265,9 +1265,7 @@ describe('inject mappers', () => {
   it('should pipe the resolved dependency through every mapper', () => {
     class ApiClient {
       constructor(
-        @inject(
-          pipe(({ scope }) => scope.resolve<Config>('Config'), takeApiUrl(), stripTrailingSlash(), requireHttps()),
-        )
+        @inject(pipe(by<Config>('Config'), takeApiUrl(), stripTrailingSlash(), requireHttps()))
         readonly apiUrl: string,
       ) {}
     }
@@ -1282,7 +1280,7 @@ describe('inject mappers', () => {
   it('should throw from a mapper when the resolved value is not acceptable', () => {
     class ApiClient {
       constructor(
-        @inject(pipe(({ scope }) => scope.resolve<Config>('Config'), takeApiUrl(), requireHttps()))
+        @inject(pipe(by<Config>('Config'), takeApiUrl(), requireHttps()))
         readonly apiUrl: string,
       ) {}
     }
@@ -1834,7 +1832,7 @@ Constructor parameters that should pick up positional args from `ProviderOptions
 
 Every container-backed token (`SingleToken`, `ClassToken`, `SingleAliasToken`, `GroupAliasToken`, `FunctionToken`) forwards the `args` of its own `resolve` call to the provider, exactly like `container.resolve(key, { args })` does. `token.args(...)` and `token.argsFn(...)` **append after** the runtime args, so `token.args('x').resolve(container, { args: ['r'] })` hands the provider `['r', 'x']`.
 
-Every `@inject` function is called with the args of the class being constructed, so an `InjectFn` which hands them on — `({ scope, args }) => Token.resolve(scope, { args })` — **cascades** them into the injected dependency: they reach the dependency's provider, its `@inject(arg(index))` parameters, its `scopeAccess` rule and its `singleton()` cache key. One that does not — `({ scope }) => Token.resolve(scope)` — resolves the dependency with no args at all; which one a parameter wants is written at the parameter. The cascade is what lets a per-user `UserService` share a per-user `UserRepository` without passing the id along by hand:
+Every `@inject` function is called with the args of the class being constructed, so an `InjectFn` which hands them on — `by(Token)` does, being `({ scope, ...options }) => Token.resolve(scope, options)` — **cascades** them into the injected dependency: they reach the dependency's provider, its `@inject(arg(index))` parameters, its `scopeAccess` rule and its `singleton()` cache key. One that does not — `({ scope }) => Token.resolve(scope)` — resolves the dependency with no args at all; which one a parameter wants is written at the parameter. The cascade is what lets a per-user `UserService` share a per-user `UserRepository` without passing the id along by hand:
 
 ```typescript
 import {
@@ -1847,6 +1845,7 @@ import {
   Registration as R,
   singleton,
   SingleToken,
+  by,
 } from 'ts-ioc-container';
 
 interface IUserRepository {
@@ -1863,9 +1862,7 @@ class UserRepository implements IUserRepository {
 }
 
 class UserService {
-  constructor(
-    @inject(({ scope, args }) => IUserRepositoryKey.resolve(scope, { args })) public repository: IUserRepository,
-  ) {}
+  constructor(@inject(by(IUserRepositoryKey)) public repository: IUserRepository) {}
 }
 
 describe('Token Runtime Arguments', function () {
@@ -1916,6 +1913,7 @@ import {
   Registration as R,
   SingleToken,
   singleton,
+  by,
 } from 'ts-ioc-container';
 
 /**
@@ -2068,11 +2066,11 @@ describe('IProvider', function () {
     class App {
       constructor(
         // Inject EntityManager configured for Users
-        @inject(({ scope, args }) => withRepository(UserRepositoryToken).resolve(scope, { args }))
+        @inject(by(withRepository(UserRepositoryToken)))
         public userManager: EntityManager,
 
         // Inject EntityManager configured for Todos
-        @inject(({ scope, args }) => withRepository(TodoRepositoryToken).resolve(scope, { args }))
+        @inject(by(withRepository(TodoRepositoryToken)))
         public todoManager: EntityManager,
       ) {}
     }
@@ -2235,6 +2233,7 @@ import {
   Registration as R,
   scope,
   select as s,
+  by,
 } from 'ts-ioc-container';
 
 /**
@@ -2290,7 +2289,7 @@ describe('alias', () => {
     // NotificationManager broadcasts to ALL registered channels
     class NotificationManager {
       constructor(
-        @inject(({ scope, args }) => s.alias(INotificationChannel).resolve(scope, { args }))
+        @inject(by(s.alias(INotificationChannel)))
         private channels: INotificationChannel[],
       ) {}
 
@@ -2384,6 +2383,7 @@ import {
   Registration as R,
   select as s,
   singleton,
+  by,
 } from 'ts-ioc-container';
 
 /**
@@ -2429,7 +2429,7 @@ describe('Decorator Pattern', () => {
   class LoggingRepository implements IRepository {
     constructor(
       @inject(arg(0)) private repository: IRepository,
-      @inject(({ scope, args }) => s.token('Logger').lazy().resolve(scope, { args })) private logger: Logger,
+      @inject(by(s.token('Logger').lazy())) private logger: Logger,
     ) {}
 
     async save(item: Todo): Promise<void> {
@@ -2453,7 +2453,7 @@ describe('Decorator Pattern', () => {
   }
 
   class App {
-    constructor(@inject(({ scope, args }) => scope.resolve('IRepository', { args })) public repository: IRepository) {}
+    constructor(@inject(by('IRepository')) public repository: IRepository) {}
 
     async run() {
       await this.repository.save({ id: '1', text: 'Buy groceries' });
@@ -2711,6 +2711,7 @@ import {
   scope,
   select,
   singleton,
+  by,
 } from 'ts-ioc-container';
 
 /**
@@ -2771,7 +2772,7 @@ describe('Scopes', function () {
     // RequestHandler can create a transaction scope for database operations
     class RequestHandler {
       constructor(
-        @inject(({ scope, args }) => select.scope.create({ tags: ['transaction'] }).resolve(scope, { args }))
+        @inject(by(select.scope.create({ tags: ['transaction'] })))
         public transactionScope: IContainer,
       ) {}
 
@@ -3144,6 +3145,7 @@ import {
   toTask,
   type ExecutionContext,
   type HookAction,
+  by,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
@@ -3192,7 +3194,7 @@ describe('onConstruct', function () {
       connectionString = '';
 
       @onConstruct(execute)
-      connect(@inject(({ scope, args }) => scope.resolve('ConnectionString', { args })) connectionString: string) {
+      connect(@inject(by('ConnectionString')) connectionString: string) {
         this.connectionString = connectionString;
         this.isConnected = true;
       }
@@ -3270,9 +3272,7 @@ describe('onConstruct', function () {
       }
 
       @onConstruct(executeAsync)
-      async connect(
-        @inject(({ scope, args }) => scope.resolve('ConnectionString', { args })) connectionString: string,
-      ) {
+      async connect(@inject(by('ConnectionString')) connectionString: string) {
         await Promise.resolve();
         this.connectionString = connectionString;
         this.isConnected = true;
@@ -3343,6 +3343,7 @@ import {
   type ExecutionContext,
   type HookAction,
   type IContainerModule,
+  by,
 } from 'ts-ioc-container';
 
 const execute: HookFn = (ctx) => {
@@ -3392,7 +3393,7 @@ class LogsRepo {
 class Logger {
   private messages: string[] = [];
 
-  constructor(@inject(({ scope, args }) => scope.resolve('logsRepo', { args })) private logsRepo: LogsRepo) {}
+  constructor(@inject(by('logsRepo')) private logsRepo: LogsRepo) {}
 
   log(message: string): void {
     this.messages.push(message);
@@ -3427,7 +3428,7 @@ describe('onScopeDisposed', function () {
 
 ```typescript
 import 'reflect-metadata';
-import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask } from 'ts-ioc-container';
+import { Container, hook, HookCollector, injectProp, Registration, sequential, toTask, by } from 'ts-ioc-container';
 
 /**
  * UI Components - Property Injection
@@ -3447,7 +3448,7 @@ describe('inject property', () => {
 
     class UserViewModel {
       // Inject 'GreetingService' into 'greeting' property during 'onInit'
-      @hook('onInit', injectProp(({ scope }) => scope.resolve('GreetingService')))
+      @hook('onInit', injectProp(by('GreetingService')))
       greetingService!: string;
 
       display(): string {
@@ -3478,12 +3479,9 @@ describe('inject property', () => {
     class UserViewModel {
       @hook(
         'onInit',
-        sequential(
-          injectProp(({ scope }) => scope.resolve('GreetingService')),
-          (context) => {
-            injectedValue = context.getProperty();
-          },
-        ),
+        sequential(injectProp(by('GreetingService')), (context) => {
+          injectedValue = context.getProperty();
+        }),
       )
       greetingService!: string;
     }

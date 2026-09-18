@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import { Container, inject, ProxyRegistry, resolveArgs, Registration as R, SingleToken } from '../../lib';
+import { Container, inject, ProxyRegistry, resolveArgs, Registration as R, SingleToken, by } from '../../lib';
 
 const GreetingToken = new SingleToken<string>('greeting');
 
 class Service {
-  constructor(@inject(({ scope, args }) => GreetingToken.resolve(scope, { args })) public greeting: string) {}
+  constructor(@inject(by(GreetingToken)) public greeting: string) {}
 
-  greet(@inject(({ scope, args }) => GreetingToken.resolve(scope, { args })) other?: string) {
+  greet(@inject(by(GreetingToken)) other?: string) {
     return other;
   }
 }

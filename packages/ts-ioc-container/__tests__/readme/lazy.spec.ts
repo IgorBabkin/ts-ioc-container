@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, inject, register, Registration as R, select as s, singleton } from '../../lib';
+import { Container, inject, register, Registration as R, select as s, singleton, by } from '../../lib';
 
 /**
  * User Management Domain - Lazy Loading
@@ -30,9 +30,7 @@ describe('lazy provider', () => {
 
   // EmailNotifier is expensive - establishes SMTP connection on construction
   class EmailNotifier {
-    constructor(
-      @inject(({ scope, args }) => scope.resolve('SmtpConnectionStatus', { args })) private smtp: SmtpConnectionStatus,
-    ) {
+    constructor(@inject(by('SmtpConnectionStatus')) private smtp: SmtpConnectionStatus) {
       // Simulate expensive SMTP connection
       this.smtp.connect();
     }
@@ -46,7 +44,7 @@ describe('lazy provider', () => {
   // But most login requests don't need email (only password reset does)
   class AuthService {
     constructor(
-      @inject(({ scope, args }) => s.token('EmailNotifier').lazy().resolve(scope, { args }))
+      @inject(by(s.token('EmailNotifier').lazy()))
       public emailNotifier: EmailNotifier,
     ) {}
 

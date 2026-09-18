@@ -1,4 +1,4 @@
-import { bindTo, Container, inject, register, Registration as R, select } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, select, by } from '../../lib';
 
 /**
  * User Management Domain - Filtering Instances by Type
@@ -23,7 +23,7 @@ const isLogger = (instance: unknown) => instance instanceof Logger;
 
 class App {
   // Only inject instances that pass the isLogger predicate
-  constructor(@inject(({ scope }) => select.instances(isLogger).resolve(scope)) public loggers: Logger[]) {}
+  constructor(@inject(by(select.instances(isLogger))) public loggers: Logger[]) {}
 }
 
 describe('Filtering Instances', function () {

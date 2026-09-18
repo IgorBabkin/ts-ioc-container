@@ -1,4 +1,4 @@
-import { bindTo, Container, inject, register, Registration as R, SingleAliasToken, toSingleAlias } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, SingleAliasToken, toSingleAlias, by } from '../../lib';
 
 const ILoggerToken = new SingleAliasToken<ILogger>('ILogger');
 
@@ -21,7 +21,7 @@ class FileLogger implements ILogger {
 }
 
 class App {
-  constructor(@inject(({ scope, args }) => ILoggerToken.resolve(scope, { args })) public logger: ILogger) {}
+  constructor(@inject(by(ILoggerToken)) public logger: ILogger) {}
 
   run() {
     this.logger.log('Hello'); // Uses one of the registered loggers

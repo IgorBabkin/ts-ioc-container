@@ -1,4 +1,4 @@
-import { bindTo, Container, inject, register, Registration as R } from '../../lib';
+import { bindTo, Container, inject, register, Registration as R, by } from '../../lib';
 
 /**
  * User Management Domain - Metadata Injection
@@ -7,7 +7,7 @@ import { bindTo, Container, inject, register, Registration as R } from '../../li
  * to automatically inject dependencies into constructor parameters.
  *
  * How it works:
- * 1. @inject(({ scope, args }) => scope.resolve('key', { args })) decorator marks a parameter for injection
+ * 1. @inject(by('key')) decorator marks a parameter for injection
  * 2. Container reads metadata at resolution time
  * 3. Dependencies are resolved and passed to constructor
  *
@@ -22,10 +22,10 @@ class Logger {
 
 class App {
   // @inject tells the container which dependency to resolve for this parameter
-  constructor(@inject(({ scope, args }) => scope.resolve('ILogger', { args })) private logger: Logger) {}
+  constructor(@inject(by('ILogger')) private logger: Logger) {}
 
   // Alternative: inject via function for dynamic resolution
-  // constructor(@inject(({ scope, args }) => scope.resolve('ILogger', { args })) private logger: ILogger) {}
+  // constructor(@inject(by('ILogger')) private logger: ILogger) {}
 
   getLoggerName(): string {
     return this.logger.name;

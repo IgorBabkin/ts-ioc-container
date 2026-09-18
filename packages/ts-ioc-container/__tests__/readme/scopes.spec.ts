@@ -10,6 +10,7 @@ import {
   scope,
   select,
   singleton,
+  by,
 } from '../../lib';
 
 /**
@@ -70,7 +71,7 @@ describe('Scopes', function () {
     // RequestHandler can create a transaction scope for database operations
     class RequestHandler {
       constructor(
-        @inject(({ scope, args }) => select.scope.create({ tags: ['transaction'] }).resolve(scope, { args }))
+        @inject(by(select.scope.create({ tags: ['transaction'] })))
         public transactionScope: IContainer,
       ) {}
 

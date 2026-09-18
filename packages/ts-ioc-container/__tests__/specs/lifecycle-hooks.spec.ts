@@ -18,6 +18,7 @@ import {
   parallel,
   sequential,
   HookCollector,
+  by,
 } from '../../lib';
 import { OnConstructModule, OnDisposeModule, OnResolvedModule } from '../hooks/modules';
 import { perform, runSequential, runSync } from '../hooks/runners';
@@ -280,7 +281,7 @@ describe('Spec: lifecycle hooks', () => {
     }
 
     class Service {
-      @onConstruct(injectProp(({ scope }) => scope.resolve('Logger')))
+      @onConstruct(injectProp(by('Logger')))
       logger!: Logger;
     }
 
@@ -447,14 +448,14 @@ describe('Spec: lifecycle hooks', () => {
       calls: string[] = [];
 
       @hook('sync', invoke)
-      start(@inject(({ scope, args }) => scope.resolve('prefix', { args })) prefix: string): void {
+      start(@inject(by('prefix')) prefix: string): void {
         this.calls.push(`${prefix}:sync`);
       }
 
       @hook('async', async (context) => {
         context.invokeMethod();
       })
-      stop(@inject(({ scope, args }) => scope.resolve('prefix', { args })) prefix: string): void {
+      stop(@inject(by('prefix')) prefix: string): void {
         this.calls.push(`${prefix}:async`);
       }
     }

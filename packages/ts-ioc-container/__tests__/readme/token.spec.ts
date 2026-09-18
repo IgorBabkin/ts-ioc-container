@@ -1,4 +1,4 @@
-import { bindTo, SingleToken, Container, inject, register, Registration as R } from '../../lib';
+import { bindTo, SingleToken, Container, inject, register, Registration as R, by } from '../../lib';
 
 /**
  * User Management Domain - Type-Safe Tokens
@@ -30,7 +30,7 @@ class Logger implements ILogger {
 
 class App {
   // Token provides type safety - logger is guaranteed to be ILogger
-  constructor(@inject(({ scope, args }) => ILoggerToken.resolve(scope, { args })) public logger: ILogger) {}
+  constructor(@inject(by(ILoggerToken)) public logger: ILogger) {}
 }
 
 describe('SingleToken', function () {
