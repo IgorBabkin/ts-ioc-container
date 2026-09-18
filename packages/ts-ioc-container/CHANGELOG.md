@@ -1,3 +1,18 @@
+# 69.0.0 (2026-09-18)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    forward runtime args through tokens; stop resolving token args (#164)
+    (0510b2a4c63f9e3cb0d91c74ac10ae48709a56e0)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    forward runtime args through tokens; stop resolving token args (#164)
+    (0510b2a4c63f9e3cb0d91c74ac10ae48709a56e0)
+
+
 # 68.1.0 (2026-09-18)
 
   ### ✨ Features
@@ -293,6 +308,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
