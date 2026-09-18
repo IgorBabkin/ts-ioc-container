@@ -41,7 +41,7 @@ export const toToken = <T = any>(token: Injectable<T>): InjectionToken<T> => {
  * "resolve tokens, pass literals through" does so explicitly, e.g.
  * `@inject((scope, { args = [] }) => argToToken(args[0]).resolve(scope))`.
  */
-export const argToToken = (v: unknown): InjectionToken<unknown> => (isInjectionToken(v) ? v : new ConstantToken(v));
+export const argToToken = <T = unknown>(v: T): InjectionToken<T> => (isInjectionToken<T>(v) ? v : new ConstantToken(v));
 
 /**
  * Builds a token that resolves `token` and then pipes the resolved instance through `mappers`,
