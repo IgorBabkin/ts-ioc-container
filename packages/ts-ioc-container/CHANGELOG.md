@@ -1,3 +1,12 @@
+# 70.1.0 (2026-09-18)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    include tag methods in token detection (#169)
+    (54572ef2d056b23d6beca1bfc279d6d32b303410)
+
+
 # 70.0.0 (2026-09-18)
 
   ### 💥 BREAKING CHANGES
@@ -341,6 +350,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
