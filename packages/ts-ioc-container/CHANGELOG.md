@@ -1,3 +1,12 @@
+# 69.1.0 (2026-09-18)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    export isInjectionToken and forwardArgs (#165)
+    (ce92cf32c0ff320750f54d4c111da3e0c26fc574)
+
+
 # 69.0.0 (2026-09-18)
 
   ### 💥 BREAKING CHANGES
@@ -308,6 +317,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
