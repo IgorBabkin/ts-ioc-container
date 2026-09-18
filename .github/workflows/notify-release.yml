@@ -13,7 +13,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Check if email is configured
         id: check-config
@@ -27,7 +27,7 @@ jobs:
 
       - name: Send email notification
         if: steps.check-config.outputs.configured == 'true'
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v22
         with:
           server_address: ${{ vars.SMTP_SERVER }}
           server_port: ${{ vars.SMTP_PORT || '587' }}
