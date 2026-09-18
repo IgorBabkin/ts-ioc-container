@@ -43,4 +43,9 @@ describe('SingleToken', () => {
     expect(token.resolve(container, { args: ['r'] })).toBe('r');
     expect(token.args('a').resolve(container, { args: ['r'] })).toBe('r-a');
   });
+
+  it('should expose the underlying key via getKey()', () => {
+    const token = new SingleToken<string>('myKey');
+    expect(token.getKey()).toBe('myKey');
+  });
 });

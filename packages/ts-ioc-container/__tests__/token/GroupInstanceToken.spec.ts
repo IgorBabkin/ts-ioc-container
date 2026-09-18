@@ -29,11 +29,12 @@ describe('GroupInstanceToken', () => {
     expect(token.resolve(container)).toHaveLength(0);
   });
 
-  it('should throw MethodNotImplementedError on args, argsFn, and lazy', () => {
+  it('should throw MethodNotImplementedError on args, argsFn, lazy, and getKey', () => {
     const token = new GroupInstanceToken(() => true);
     expect(() => token.args('arg1')).toThrow(MethodNotImplementedError);
     expect(() => token.argsFn(() => [])).toThrow(MethodNotImplementedError);
     expect(() => token.lazy()).toThrow(MethodNotImplementedError);
+    expect(() => token.getKey()).toThrow(MethodNotImplementedError);
   });
 
   it('should support select method', () => {

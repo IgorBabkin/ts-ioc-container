@@ -49,4 +49,8 @@ export class ClassToken<T = any> extends InjectionToken<T> {
       isLazy: true,
     });
   }
+
+  getKey(): constructor<T> {
+    return this.target;
+  }
 }

@@ -49,4 +49,9 @@ describe('GroupAliasToken', () => {
     expect(token.resolve(container, { args: ['r'] })).toEqual(['r']);
     expect(token.args('a').resolve(container, { args: ['r'] })).toEqual(['r-a']);
   });
+
+  it('should expose the underlying alias via getKey()', () => {
+    const token = new GroupAliasToken<string>('myAlias');
+    expect(token.getKey()).toBe('myAlias');
+  });
 });

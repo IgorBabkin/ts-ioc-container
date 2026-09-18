@@ -1,7 +1,9 @@
-import type { IContainer } from '../container/IContainer';
+import type { DependencyKey, IContainer } from '../container/IContainer';
 import { forwardArgs, InjectionToken } from './InjectionToken';
 import { InjectFn } from '../hooks/hook';
 import { ArgsFn, ProviderOptions } from '../provider/IProvider';
+import { type constructor } from '../utils/basic';
+import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 
 export class FunctionToken<T = any> extends InjectionToken<T> {
   private readonly _getArgsFn: ArgsFn;
@@ -44,5 +46,12 @@ export class FunctionToken<T = any> extends InjectionToken<T> {
       getArgsFn: this._getArgsFn,
       isLazy: true,
     });
+  }
+
+  /**
+   * @throws {MethodNotImplementedError} always — a function token has no underlying key.
+   */
+  getKey(): DependencyKey | constructor<T> {
+    throw new MethodNotImplementedError('not implemented');
   }
 }
