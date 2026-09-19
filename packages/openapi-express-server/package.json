@@ -51,7 +51,7 @@
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "reflect-metadata": "^0.2.2",
-    "ts-ioc-container": "^68.0.0",
+    "ts-ioc-container": "^72.1.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
