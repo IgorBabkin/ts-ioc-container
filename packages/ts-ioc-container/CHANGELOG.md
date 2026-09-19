@@ -1,3 +1,12 @@
+# 72.1.0 (2026-09-19)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add createCompose{Class,Method,Parameter}Decorator (#176)
+    (e5ffbbd0a6559abac1dda1880c0c724c4c577693)
+
+
 # 72.0.0 (2026-09-18)
 
   ### 💥 BREAKING CHANGES
@@ -380,6 +389,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
