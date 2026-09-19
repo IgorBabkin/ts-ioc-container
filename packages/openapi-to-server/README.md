@@ -7,7 +7,7 @@ Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This pac
 - ✅ Generate TypeScript interfaces from OpenAPI 3.0 specifications
 - ✅ Support for both YAML and JSON OpenAPI files
 - ✅ Type-safe component schemas, routes, and operations
-- ✅ One `<Op>UseCase` interface per `operationId`
+- ✅ One `<Op>HttpRoute` interface per `operationId`
 - ✅ Server interface with dependency injection support
 - ✅ Request payload types (params, query, body)
 - ✅ Response types with HTTP status codes and headers
@@ -153,20 +153,20 @@ tags in the doc comment:
  * List all todos
  * @tags todos
  */
-export interface GetTodosUseCase extends UseCase<GetTodosPayload, GetTodosResponse> {}
+export interface GetTodosHttpRoute extends HttpRoute<GetTodosPayload, GetTodosResponse> {}
 
 /**
  * Create a new todo
  * @tags todos
  */
-export interface CreateTodoUseCase extends UseCase<CreateTodoPayload, CreateTodoResponse> {}
+export interface CreateTodoHttpRoute extends HttpRoute<CreateTodoPayload, CreateTodoResponse> {}
 ```
 
 **Server Interface** - For dependency injection, keyed by `operationId`:
 ```typescript
 export interface IServer {
-  getTodos: constructor<GetTodosUseCase>;
-  createTodo: constructor<CreateTodoUseCase>;
+  getTodos: constructor<GetTodosHttpRoute>;
+  createTodo: constructor<CreateTodoHttpRoute>;
 }
 ```
 
@@ -199,7 +199,7 @@ The package provides three render functions that return TypeScript source as a s
 #### `renderComponents(doc)`
 
 Generates TypeScript type definitions from `components.schemas`, the payload / response types and the
-`<Op>UseCase` interface of every operation, and the `Operations` / `RoutesPayloads` maps.
+`<Op>HttpRoute` interface of every operation, and the `Operations` / `RoutesPayloads` maps.
 
 **Parameters:**
 - `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
@@ -208,7 +208,7 @@ Generates TypeScript type definitions from `components.schemas`, the payload / r
 
 #### `renderServer(doc)`
 
-Generates the `IServer` interface for dependency injection: one `constructor<<Op>UseCase>` per operation,
+Generates the `IServer` interface for dependency injection: one `constructor<<Op>HttpRoute>` per operation,
 keyed by `operationId`.
 
 **Parameters:**
@@ -257,7 +257,7 @@ The package exports several utility types:
 
 ```typescript
 import { 
-  UseCase, 
+  HttpRoute, 
   HttpResponse, 
   HttpStatus, 
   RouteOptions,
@@ -265,7 +265,7 @@ import {
 } from '@ibabkin/openapi-to-server';
 ```
 
-- **`UseCase<Payload, Response>`**: `handle(payload, context): Promise<Response>` — what every generated `<Op>UseCase` extends
+- **`HttpRoute<Payload, Response>`**: `handle(payload, context): Promise<Response>` — what every generated `<Op>HttpRoute` extends
 - **`HttpResponse`**: Response interface with status, headers, and body
 - **`HttpStatus`**: Enum of HTTP status codes (OK, Created, NoContent, Found)
 - **`RouteOptions`**: Options for routes (tags)
@@ -289,7 +289,7 @@ The generated file contains two main sections:
 
 1. **Components Section**:
    - Type definitions from `components.schemas`
-   - `<Op>Payload`, `<Op>Response` and `<Op>UseCase` for every operation
+   - `<Op>Payload`, `<Op>Response` and `<Op>HttpRoute` for every operation
    - Operations type mapping
    - RoutesPayloads type mapping
    - RequestContext interface
@@ -304,11 +304,11 @@ Every operation is its own use case, named from its `operationId` with the first
 upper-cased and nothing else changed. The same `operationId`, verbatim, is the key in `IServer`,
 `Operations`, the Zod `PAYLOADS` map and the DI container:
 
-| `operationId` | Use case interface | `IServer` / DI key |
+| `operationId` | HttpRoute interface | `IServer` / DI key |
 | --- | --- | --- |
-| `getUser` | `GetUserUseCase` | `getUser` |
-| `get_user` | `Get_userUseCase` | `get_user` |
-| `GETUser` | `GETUserUseCase` | `GETUser` |
+| `getUser` | `GetUserHttpRoute` | `getUser` |
+| `get_user` | `Get_userHttpRoute` | `get_user` |
+| `GETUser` | `GETUserHttpRoute` | `GETUser` |
 
 Tags name nothing. They are listed in the use case's doc comment (`@tags`) and, at runtime,
 `@ibabkin/openapi-express-server` attaches them to the request scope so middleware and
@@ -335,15 +335,15 @@ components:
 The generated `IServer` interface is designed to work with dependency injection:
 
 ```typescript
-import { IServer, GetTodosUseCase, CreateTodoUseCase } from './server-interfaces';
+import { IServer, GetTodosHttpRoute, CreateTodoHttpRoute } from './server-interfaces';
 
-class GetTodos implements GetTodosUseCase {
+class GetTodos implements GetTodosHttpRoute {
   async handle(payload: GetTodosPayload, scope: IContainer): Promise<GetTodosResponse> {
     // Implementation
   }
 }
 
-class CreateTodo implements CreateTodoUseCase {
+class CreateTodo implements CreateTodoHttpRoute {
   async handle(payload: CreateTodoPayload, scope: IContainer): Promise<CreateTodoResponse> {
     // Implementation
   }

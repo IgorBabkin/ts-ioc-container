@@ -1,11 +1,11 @@
-import { UseCase, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
+import { HttpRoute, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
 
 // Components
 {{#each components.schemas}}
 export type {{@key}} = {{render_template 'JsonSchema.hbs' this}};
 {{/each}}
 
-// Use cases
+// Http routes
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
     {{{render_template 'ServerRoute.hbs' this}}}
@@ -16,7 +16,7 @@ export type {{@key}} = {{render_template 'JsonSchema.hbs' this}};
 export type Operations = {
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
-  {{operationId}}: {{use_case_name operationId}};
+  {{operationId}}: {{http_route_name operationId}};
   {{/each}}
 {{/each}}
 }

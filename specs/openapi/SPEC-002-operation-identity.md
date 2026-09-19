@@ -11,7 +11,7 @@ the `ApiClient` method and the runtime dispatch.
 
 | Consumer | Produced by | Uses `operationId` as |
 | --- | --- | --- |
-| Payload / response / use case types | `payload_name`, `response_name`, `use_case_name` helpers | `GetUserPayload`, `GetUserResponse`, `GetUserUseCase` |
+| Payload / response / use case types | `payload_name`, `response_name`, `http_route_name` helpers | `GetUserPayload`, `GetUserResponse`, `GetUserHttpRoute` |
 | `Operations`, `RoutesPayloads`, `IServer` maps | `Components.ts.hbs`, `IServer.ts.hbs` | object key |
 | `PAYLOADS` map | `Document.hbs` (`@ibabkin/openapi-to-zod`) | object key |
 | `ApiClient` method | `Client.hbs` | method name |
@@ -30,7 +30,7 @@ six agree character for character, so the validator, the use case and the genera
 operation are reachable from one string.
 
 **OP-2** — The type names derived from it are `<Capitalized>Payload`, `<Capitalized>Response` and
-`<Capitalized>UseCase`, where `<Capitalized>` upper-cases the **first character only** and leaves
+`<Capitalized>HttpRoute`, where `<Capitalized>` upper-cases the **first character only** and leaves
 the rest untouched: `getUser` → `GetUserPayload`, `get_user` → `Get_userPayload`, `GETUser` →
 `GETUserPayload`.
 
@@ -47,11 +47,11 @@ See the known divergence below — the generators do not skip it.
 
 ## Naming table
 
-| `operationId` | Payload type | Response type | Use case type | `IServer` / `PAYLOADS` / DI key |
+| `operationId` | Payload type | Response type | HttpRoute type | `IServer` / `PAYLOADS` / DI key |
 | --- | --- | --- | --- | --- |
-| `getUser` | `GetUserPayload` | `GetUserResponse` | `GetUserUseCase` | `getUser` |
-| `get_user` | `Get_userPayload` | `Get_userResponse` | `Get_userUseCase` | `get_user` |
-| `GETUser` | `GETUserPayload` | `GETUserResponse` | `GETUserUseCase` | `GETUser` |
+| `getUser` | `GetUserPayload` | `GetUserResponse` | `GetUserHttpRoute` | `getUser` |
+| `get_user` | `Get_userPayload` | `Get_userResponse` | `Get_userHttpRoute` | `get_user` |
+| `GETUser` | `GETUserPayload` | `GETUserResponse` | `GETUserHttpRoute` | `GETUser` |
 | `2fa` | `2faPayload` (does not parse — see OP-3) | … | … | `2fa` |
 
 ## Known divergence

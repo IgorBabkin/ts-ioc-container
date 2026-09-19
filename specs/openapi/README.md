@@ -57,7 +57,7 @@ adding its row.
 | [SPEC-004](./SPEC-004-http-methods.md) | HTTP method coverage | `HM` | all three | Which (path, method) pairs each stage of the pipeline looks at, and how the three hard-coded method lists differ |
 | [SPEC-005](./SPEC-005-url-construction.md) | URL construction and path parameters | `URL` | `openapi-to-server`, `openapi-express-server` | `createUrl` filling `{name}` in and `convertOpenAPIPathToExpress` rewriting it into a route that matches the result |
 | [SPEC-006](./SPEC-006-template-registry.md) | Shared Handlebars registry | `TR` | `openapi-to-server`, `openapi-to-zod` | The process-global template and helper namespaces that both generators precompile into |
-| [SPEC-007](./SPEC-007-use-case-per-operation.md) | Use case per operation | `UC` | `openapi-to-server`, `openapi-express-server` | One `<Op>UseCase` per `operationId`, `IServer` and the DI key keyed by it, and tags carried onto the request scope instead of naming anything |
+| [SPEC-007](./SPEC-007-use-case-per-operation.md) | Use case per operation | `UC` | `openapi-to-server`, `openapi-express-server` | One `<Op>HttpRoute` per `operationId`, `IServer` and the DI key keyed by it, and tags carried onto the request scope instead of naming anything |
 
 Each spec carries its own requirements, edge-case tables and the tests that assert them; this index
 does not repeat them, so there is one place to change when a requirement changes.

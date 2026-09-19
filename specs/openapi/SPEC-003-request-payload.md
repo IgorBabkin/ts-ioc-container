@@ -9,7 +9,7 @@ have to be the same object:
 
 | Producer | Artefact | Role |
 | --- | --- | --- |
-| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what `<Op>UseCase.handle()` receives |
+| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what `<Op>HttpRoute.handle()` receives |
 | `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ClientRoute.hbs`) | what `ApiClient.<op>()` accepts |
 | `@ibabkin/openapi-to-zod` | `PAYLOADS[<operationId>]` (`ValidationRoute.hbs`) | what turns an Express `Request` into that object at runtime |
 
@@ -51,7 +51,7 @@ everything else off the `Request`, so its result is assignable to `<Op>Payload`.
 requirement that makes the generated `handle(payload)` signature true at runtime.
 
 **RP-7** — The client payload type and the server payload type of one operation are the same
-shape, so a value built for `ApiClient.<op>()` satisfies `<Op>UseCase.handle()` and vice
+shape, so a value built for `ApiClient.<op>()` satisfies `<Op>HttpRoute.handle()` and vice
 versa. The client splits it back apart: `params` and `query` build the URL
 ([SPEC-005](./SPEC-005-url-construction.md)), `body` is sent as the request body, and `body` is
 sent **only** when the operation declares a `requestBody`.

@@ -2,7 +2,7 @@
 export interface IServer {
 {{#each paths as |path url|}}
   {{#each (get_methods_obj path)}}
-  {{operationId}}: constructor<{{use_case_name operationId}}>;
+  {{operationId}}: constructor<{{http_route_name operationId}}>;
   {{/each}}
 {{/each}}
 }

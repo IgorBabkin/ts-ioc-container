@@ -29,16 +29,16 @@ describe('SPEC-002 · operationId naming', () => {
 
     expect(components).toContain(`export type ${capitalized}Payload = {`);
     expect(components).toContain(`export interface ${capitalized}Response extends HttpResponse`);
-    expect(components).toContain(`export interface ${capitalized}UseCase extends UseCase<`);
+    expect(components).toContain(`export interface ${capitalized}HttpRoute extends HttpRoute<`);
   });
 
   // OP-1 — the same string keys the maps, IServer and the client method.
   it('uses the operationId verbatim as a key and as a method name', () => {
     const doc = specWithOperationIds('get_user');
 
-    expect(renderComponents(doc)).toContain('get_user: Get_userUseCase;');
+    expect(renderComponents(doc)).toContain('get_user: Get_userHttpRoute;');
     expect(renderComponents(doc)).toContain('get_user: Get_userPayload;');
-    expect(renderServer(doc)).toContain('get_user: constructor<Get_userUseCase>;');
+    expect(renderServer(doc)).toContain('get_user: constructor<Get_userHttpRoute>;');
     expect(renderClient(doc)).toContain('async get_user(data: Get_userPayload): Promise<Get_userResponse>');
   });
 
@@ -47,7 +47,7 @@ describe('SPEC-002 · operationId naming', () => {
     const components = renderComponents(specWithOperationIds('2fa'));
 
     expect(components).toContain('export type 2faPayload = {');
-    expect(components).toContain('export interface 2faUseCase extends UseCase<2faPayload, 2faResponse>');
+    expect(components).toContain('export interface 2faHttpRoute extends HttpRoute<2faPayload, 2faResponse>');
     expect(components).not.toContain('_2fa');
   });
 
@@ -56,6 +56,6 @@ describe('SPEC-002 · operationId naming', () => {
     const components = renderComponents(specWithOperationIds('dup', 'dup'));
 
     expect(components.match(/export type DupPayload = \{/g)).toHaveLength(2);
-    expect(components.match(/^ {2}dup: DupUseCase;$/gm)).toHaveLength(2);
+    expect(components.match(/^ {2}dup: DupHttpRoute;$/gm)).toHaveLength(2);
   });
 });
