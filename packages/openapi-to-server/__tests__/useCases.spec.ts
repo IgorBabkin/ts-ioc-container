@@ -18,7 +18,7 @@ describe('use cases', () => {
 
       const output = fs.readFileSync(outputFile, 'utf8');
       expect(output).toContain('export type Item');
-      expect(output).toContain('export interface GetItemsUseCase');
+      expect(output).toContain('export interface GetItemsHttpRoute');
       expect(output).toContain('export interface IServer');
       expect(fs.existsSync(path.join(outputDir, 'server', 'swagger.json'))).toBe(false);
     });

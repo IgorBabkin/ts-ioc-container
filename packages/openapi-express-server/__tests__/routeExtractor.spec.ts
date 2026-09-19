@@ -56,7 +56,7 @@ describe('SPEC-007 · extractRoutes', () => {
       const [route] = extractRoutes(doc);
       const capitalized = operationId.charAt(0).toUpperCase() + operationId.slice(1);
 
-      expect(renderServer(doc)).toContain(`${route.operationId}: constructor<${capitalized}UseCase>;`);
+      expect(renderServer(doc)).toContain(`${route.operationId}: constructor<${capitalized}HttpRoute>;`);
     },
   );
 });

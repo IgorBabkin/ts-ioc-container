@@ -23,27 +23,26 @@ function specWith(...ops: Op[]): OpenAPIV3.Document {
 }
 
 describe('SPEC-007 · use case per operation', () => {
-  // UC-2 — named from the operationId, extends the runtime UseCase with the operation's own types.
+  // UC-2 — named from the operationId, extends the runtime HttpRoute with the operation's own types.
   it.each([
     ['getUser', 'GetUser'],
     ['get_user', 'Get_user'],
     ['GETUser', 'GETUser'],
-  ])('renders %p as %pUseCase', (operationId, capitalized) => {
+  ])('renders %p as %pHttpRoute', (operationId, capitalized) => {
     const components = renderComponents(specWith({ operationId, tags: ['users'] }));
 
     expect(components).toContain(
-      `export interface ${capitalized}UseCase extends UseCase<${capitalized}Payload, ${capitalized}Response> {}`,
+      `export interface ${capitalized}HttpRoute extends HttpRoute<${capitalized}Payload, ${capitalized}Response> {}`,
     );
-    expect(components).toContain('import { UseCase, HttpResponse, HttpStatus, constructor }');
-    expect(components).not.toContain('Route<');
+    expect(components).toContain('import { HttpRoute, HttpResponse, HttpStatus, constructor }');
   });
 
   // UC-3 — IServer and Operations are keyed by the operationId verbatim.
   it('keys IServer and Operations by the operationId', () => {
     const doc = specWith({ operationId: 'get_user', tags: ['users'] });
 
-    expect(renderServer(doc)).toContain('get_user: constructor<Get_userUseCase>;');
-    expect(renderComponents(doc)).toContain('get_user: Get_userUseCase;');
+    expect(renderServer(doc)).toContain('get_user: constructor<Get_userHttpRoute>;');
+    expect(renderComponents(doc)).toContain('get_user: Get_userHttpRoute;');
   });
 
   // UC-1 — the tag groups nothing: two operations sharing a tag are two use cases and two
@@ -58,7 +57,7 @@ describe('SPEC-007 · use case per operation', () => {
     const server = renderServer(doc);
 
     for (const name of ['GetHealth', 'GetStatus', 'GetNodes']) {
-      expect(components.match(new RegExp(`export interface ${name}UseCase `, 'g'))).toHaveLength(1);
+      expect(components.match(new RegExp(`export interface ${name}HttpRoute `, 'g'))).toHaveLength(1);
     }
     expect(server.match(/constructor</g)).toHaveLength(3);
     expect(server).not.toContain('Network');
@@ -70,8 +69,10 @@ describe('SPEC-007 · use case per operation', () => {
   it('does not treat an untagged operation differently', () => {
     const doc = specWith({ operationId: 'ping' });
 
-    expect(renderComponents(doc)).toContain('export interface PingUseCase extends UseCase<PingPayload, PingResponse>');
-    expect(renderServer(doc)).toContain('ping: constructor<PingUseCase>;');
+    expect(renderComponents(doc)).toContain(
+      'export interface PingHttpRoute extends HttpRoute<PingPayload, PingResponse>',
+    );
+    expect(renderServer(doc)).toContain('ping: constructor<PingHttpRoute>;');
     expect(renderServer(doc)).not.toContain('Default');
   });
 
@@ -95,9 +96,9 @@ describe('SPEC-007 · use case per operation', () => {
     openapiToServer({ inputFile, outputFile });
 
     const output = fs.readFileSync(outputFile, 'utf8');
-    expect(output).toContain('export interface GetItemsUseCase extends UseCase<GetItemsPayload, GetItemsResponse>');
+    expect(output).toContain('export interface GetItemsHttpRoute extends HttpRoute<GetItemsPayload, GetItemsResponse>');
     expect(output).toContain('export interface IServer {');
-    expect(output).toContain('getItems: constructor<GetItemsUseCase>;');
+    expect(output).toContain('getItems: constructor<GetItemsHttpRoute>;');
     expect(output).not.toContain('Controller');
     expect(output.indexOf('export interface IServer')).toBeGreaterThan(output.indexOf('export type Operations'));
   });

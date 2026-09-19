@@ -1,4 +1,4 @@
-import { UseCase, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
+import { HttpRoute, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
 
 // Components
 export type Item = {
@@ -6,7 +6,7 @@ export type Item = {
   name: string;
 };
 
-// Use cases
+// Http routes
 export type CreateItemPayload = {
   body: Item;
 };
@@ -20,7 +20,7 @@ export interface CreateItemResponse extends HttpResponse {
 /**
  * @tags items
  */
-export interface CreateItemUseCase extends UseCase<CreateItemPayload, CreateItemResponse> {}
+export interface CreateItemHttpRoute extends HttpRoute<CreateItemPayload, CreateItemResponse> {}
 
 export type GetItemsPayload = {
   query: {
@@ -39,7 +39,7 @@ export interface GetItemsResponse extends HttpResponse {
 /**
  * @tags items
  */
-export interface GetItemsUseCase extends UseCase<GetItemsPayload, GetItemsResponse> {}
+export interface GetItemsHttpRoute extends HttpRoute<GetItemsPayload, GetItemsResponse> {}
 
 export type DeleteItemPayload = {
   params: {
@@ -56,7 +56,7 @@ export interface DeleteItemResponse extends HttpResponse {
 /**
  * @tags items
  */
-export interface DeleteItemUseCase extends UseCase<DeleteItemPayload, DeleteItemResponse> {}
+export interface DeleteItemHttpRoute extends HttpRoute<DeleteItemPayload, DeleteItemResponse> {}
 
 export type GetItemPayload = {
   params: {
@@ -75,14 +75,14 @@ export interface GetItemResponse extends HttpResponse {
 /**
  * @tags items
  */
-export interface GetItemUseCase extends UseCase<GetItemPayload, GetItemResponse> {}
+export interface GetItemHttpRoute extends HttpRoute<GetItemPayload, GetItemResponse> {}
 
 // Operations
 export type Operations = {
-  createItem: CreateItemUseCase;
-  getItems: GetItemsUseCase;
-  deleteItem: DeleteItemUseCase;
-  getItem: GetItemUseCase;
+  createItem: CreateItemHttpRoute;
+  getItems: GetItemsHttpRoute;
+  deleteItem: DeleteItemHttpRoute;
+  getItem: GetItemHttpRoute;
 };
 
 export type RoutesPayloads = {
@@ -99,8 +99,8 @@ export interface RequestContext {
 
 // Server Interface
 export interface IServer {
-  createItem: constructor<CreateItemUseCase>;
-  getItems: constructor<GetItemsUseCase>;
-  deleteItem: constructor<DeleteItemUseCase>;
-  getItem: constructor<GetItemUseCase>;
+  createItem: constructor<CreateItemHttpRoute>;
+  getItems: constructor<GetItemsHttpRoute>;
+  deleteItem: constructor<DeleteItemHttpRoute>;
+  getItem: constructor<GetItemHttpRoute>;
 }

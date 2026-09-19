@@ -24,7 +24,7 @@ describe('openapi-to-server-interface', () => {
 
       expect(fs.existsSync(outputFile)).toBe(true);
       expect(components).toContain('export type Item');
-      expect(components).toContain('import { UseCase, HttpResponse, HttpStatus, constructor }');
+      expect(components).toContain('import { HttpRoute, HttpResponse, HttpStatus, constructor }');
       expect(components).toMatchSnapshot();
     });
 
@@ -61,14 +61,16 @@ describe('openapi-to-server-interface', () => {
       const components = renderComponents(doc);
 
       expect(components).toContain(
-        'export interface GetItemsUseCase extends UseCase<GetItemsPayload, GetItemsResponse>',
+        'export interface GetItemsHttpRoute extends HttpRoute<GetItemsPayload, GetItemsResponse>',
       );
       expect(components).toContain(
-        'export interface CreateItemUseCase extends UseCase<CreateItemPayload, CreateItemResponse>',
+        'export interface CreateItemHttpRoute extends HttpRoute<CreateItemPayload, CreateItemResponse>',
       );
-      expect(components).toContain('export interface GetItemUseCase extends UseCase<GetItemPayload, GetItemResponse>');
       expect(components).toContain(
-        'export interface DeleteItemUseCase extends UseCase<DeleteItemPayload, DeleteItemResponse>',
+        'export interface GetItemHttpRoute extends HttpRoute<GetItemPayload, GetItemResponse>',
+      );
+      expect(components).toContain(
+        'export interface DeleteItemHttpRoute extends HttpRoute<DeleteItemPayload, DeleteItemResponse>',
       );
     });
   });
@@ -90,10 +92,10 @@ describe('openapi-to-server-interface', () => {
       const doc = loadYAML<OpenAPIV3.Document>(inputFile);
       const server = renderServer(doc);
 
-      expect(server).toContain('getItems: constructor<GetItemsUseCase>');
-      expect(server).toContain('createItem: constructor<CreateItemUseCase>');
-      expect(server).toContain('getItem: constructor<GetItemUseCase>');
-      expect(server).toContain('deleteItem: constructor<DeleteItemUseCase>');
+      expect(server).toContain('getItems: constructor<GetItemsHttpRoute>');
+      expect(server).toContain('createItem: constructor<CreateItemHttpRoute>');
+      expect(server).toContain('getItem: constructor<GetItemHttpRoute>');
+      expect(server).toContain('deleteItem: constructor<DeleteItemHttpRoute>');
     });
 
     it('should use constructor type helper', () => {
@@ -116,7 +118,7 @@ describe('openapi-to-server-interface', () => {
 
       expect(fs.existsSync(outputFile)).toBe(true);
       expect(output).toContain('export type Item');
-      expect(output).toContain('export interface GetItemsUseCase');
+      expect(output).toContain('export interface GetItemsHttpRoute');
       expect(output).toContain('export interface IServer');
     });
   });

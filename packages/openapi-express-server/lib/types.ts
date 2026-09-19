@@ -20,7 +20,7 @@ export interface RouteMetadata {
 
 export type ErrorHandler = (error: Error, req: Request, res: Response, next: NextFunction) => void;
 
-export interface UseCaseInstance {
+export interface HttpRouteInstance {
   handle(payload: any, context: IContainer): Promise<any>;
 }
 

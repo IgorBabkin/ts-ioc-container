@@ -83,8 +83,8 @@ Handlebars.registerHelper('object', function (...args: unknown[]) {
   return args.reduce((acc: any, [key, value]: any) => ({ ...acc, [key]: value }), {} as Record<string, string>);
 });
 
-Handlebars.registerHelper('use_case_name', function (operationId: string) {
-  return `${capitalize(operationId)}UseCase`;
+Handlebars.registerHelper('http_route_name', function (operationId: string) {
+  return `${capitalize(operationId)}HttpRoute`;
 });
 
 Handlebars.registerHelper('payload_name', function (operationId: string) {

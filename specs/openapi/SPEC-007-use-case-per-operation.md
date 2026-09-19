@@ -17,9 +17,9 @@ middleware and registrations be applied per domain rather than per operation.
 
 | Consumer | Produced by | Uses |
 | --- | --- | --- |
-| Use case interface | `ServerRoute.hbs` | `export interface GetUserUseCase extends UseCase<GetUserPayload, GetUserResponse> {}` |
-| `Operations` map | `Components.ts.hbs` | `getUser: GetUserUseCase` |
-| `IServer` property | `IServer.ts.hbs` | `getUser: constructor<GetUserUseCase>` |
+| HttpRoute interface | `ServerRoute.hbs` | `export interface GetUserHttpRoute extends HttpRoute<GetUserPayload, GetUserResponse> {}` |
+| `Operations` map | `Components.ts.hbs` | `getUser: GetUserHttpRoute` |
+| `IServer` property | `IServer.ts.hbs` | `getUser: constructor<GetUserHttpRoute>` |
 | DI lookup key | `extractRoutes` → `RouteMetadata.operationId` | `container.resolve('getUser')` |
 | Request scope tags | `containerMiddleware(appContainer, route.tags)` | `appContainer.createScope({ tags: ['request', ...route.tags] })` |
 
@@ -29,14 +29,14 @@ middleware and registrations be applied per domain rather than per operation.
 operations: two operations never share a generated interface, an `IServer` entry or a DI key,
 whatever their tags.
 
-**UC-2** — The use case interface is named `<Capitalized>UseCase`, where `<Capitalized>` is the
+**UC-2** — The use case interface is named `<Capitalized>HttpRoute`, where `<Capitalized>` is the
 `operationId` with its first character upper-cased and nothing else changed
-([OP-2](./SPEC-002-operation-identity.md)). It extends `UseCase<<Capitalized>Payload,
+([OP-2](./SPEC-002-operation-identity.md)). It extends `HttpRoute<<Capitalized>Payload,
 <Capitalized>Response>`, exported by `@ibabkin/openapi-to-server`, which declares a single member
 `handle(payload, context): Promise<Response>`.
 
 **UC-3** — `IServer` has one property per use case, keyed by the `operationId` **verbatim** and
-typed `constructor<<Capitalized>UseCase>`. `Operations` is keyed the same way and maps to the
+typed `constructor<<Capitalized>HttpRoute>`. `Operations` is keyed the same way and maps to the
 interface itself. Both are emitted in the order of
 [HM-4](./SPEC-004-http-methods.md), from the same method list as the payload and response types.
 
@@ -62,11 +62,11 @@ payload and response types they refer to.
 
 ## Naming table
 
-| `operationId` | Use case interface | `IServer` / `Operations` key | DI key |
+| `operationId` | HttpRoute interface | `IServer` / `Operations` key | DI key |
 | --- | --- | --- | --- |
-| `getUser` | `GetUserUseCase` | `getUser` | `getUser` |
-| `get_user` | `Get_userUseCase` | `get_user` | `get_user` |
-| `GETUser` | `GETUserUseCase` | `GETUser` | `GETUser` |
+| `getUser` | `GetUserHttpRoute` | `getUser` | `getUser` |
+| `get_user` | `Get_userHttpRoute` | `get_user` | `get_user` |
+| `GETUser` | `GETUserHttpRoute` | `GETUser` | `GETUser` |
 
 ## Tags table
 
@@ -80,7 +80,7 @@ payload and response types they refer to.
 
 | SPEC-001 | Here |
 | --- | --- |
-| `I<Tag>Controller` interface with one method per operation | one `<Op>UseCase` interface per operation (UC-1, UC-2) |
+| `I<Tag>Controller` interface with one method per operation | one `<Op>HttpRoute` interface per operation (UC-1, UC-2) |
 | `IServer` keyed by the normalised tag | `IServer` keyed by `operationId` (UC-3) |
 | `RouteMetadata.controllerName` / `.methodName` | `RouteMetadata.operationId` is the key (UC-4) |
 | `toIdentifier`, `@ibabkin/openapi-to-server/identifier` | removed; nothing is normalised (UC-5) |

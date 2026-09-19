@@ -32,8 +32,8 @@ describe('SPEC-004 · HTTP method coverage', () => {
     const operationId = `${method}Thing`;
 
     expect(types).toContain(`export type ${capitalize(operationId)}Payload = {`);
-    expect(types).toContain(`export interface ${capitalize(operationId)}UseCase extends UseCase<`);
-    expect(server).toContain(`${operationId}: constructor<${capitalize(operationId)}UseCase>;`);
+    expect(types).toContain(`export interface ${capitalize(operationId)}HttpRoute extends HttpRoute<`);
+    expect(server).toContain(`${operationId}: constructor<${capitalize(operationId)}HttpRoute>;`);
     expect(validators).toContain(`${operationId}: z.object(`);
     expect(renderClient(doc)).toContain(`async ${operationId}(`);
     expect(routes.map((route) => route.operationId)).toContain(operationId);
@@ -45,7 +45,7 @@ describe('SPEC-004 · HTTP method coverage', () => {
       const generated = ['put', 'delete', 'post', 'get'].includes(method);
 
       expect(types.includes(`${capitalize(method)}ThingPayload`)).toBe(generated);
-      expect(types.includes(`${capitalize(method)}ThingUseCase extends`)).toBe(generated);
+      expect(types.includes(`${capitalize(method)}ThingHttpRoute extends`)).toBe(generated);
       expect(server.includes(`${method}Thing: constructor<`)).toBe(generated);
       expect(validators.includes(`${method}Thing: z.object(`)).toBe(generated);
     }

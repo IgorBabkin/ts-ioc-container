@@ -1,19 +1,19 @@
 import { Express, NextFunction, Request, Response } from 'express';
 import { OpenAPIV3 } from 'openapi-types';
-import { arg, type IContainer, inject, select } from 'ts-ioc-container';
+import { arg, by, type IContainer, inject, select } from 'ts-ioc-container';
 import {
   containerMiddleware,
   convertOpenAPIPathToExpress,
   extractRoutes,
   getContainerOrFail,
   RouteMetadata,
-  UseCaseInstance,
+  HttpRouteInstance,
 } from '../lib';
 import { ZodObject } from 'zod';
 
 export class RouteBuilder {
   constructor(
-    @inject(select.scope.current) private readonly currentScope: IContainer,
+    @inject(by(select.scope.current)) private readonly currentScope: IContainer,
     @inject(arg(0)) private readonly spec: OpenAPIV3.Document,
     @inject(arg(1)) private readonly validators: Record<string, ZodObject>,
   ) {}
@@ -29,7 +29,7 @@ export class RouteBuilder {
   private registerRoute(app: Express, route: RouteMetadata): void {
     // The use case is registered under the operationId verbatim (SPEC-007 UC-4).
     if (!this.currentScope.hasRegistration(route.operationId)) {
-      console.warn(`Use case "${route.operationId}" not found`);
+      console.warn(`Http route "${route.operationId}" not found`);
       return;
     }
 
@@ -42,7 +42,7 @@ export class RouteBuilder {
     app[httpMethod](expressPath, requestScope, async (req: Request, res: Response, next: NextFunction) => {
       try {
         const container = getContainerOrFail(req);
-        const useCase = container.resolve<UseCaseInstance>(route.operationId);
+        const useCase = container.resolve<HttpRouteInstance>(route.operationId);
         const payload = this.findValidatorOrFail(route.operationId).parse(req);
         const result = await useCase.handle(payload, container);
         this.sendResponse(result, res);

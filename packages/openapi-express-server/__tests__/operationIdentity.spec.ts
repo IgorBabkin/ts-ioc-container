@@ -32,8 +32,8 @@ describe('SPEC-002 · operationId as the cross-package join key', () => {
     const [route] = extractRoutes(doc).filter((candidate) => candidate.operationId === operationId);
 
     expect(route.operationId).toBe(operationId);
-    expect(renderComponents(doc)).toContain(`${operationId}: ${capitalized}UseCase;`);
-    expect(renderServer(doc)).toContain(`${operationId}: constructor<${capitalized}UseCase>;`);
+    expect(renderComponents(doc)).toContain(`${operationId}: ${capitalized}HttpRoute;`);
+    expect(renderServer(doc)).toContain(`${operationId}: constructor<${capitalized}HttpRoute>;`);
     expect(renderClient(doc)).toContain(`async ${operationId}(data: ${capitalized}Payload)`);
     expect(renderValidators(doc)).toContain(`${operationId}: z.object(`);
   });
