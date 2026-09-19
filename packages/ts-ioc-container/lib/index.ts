@@ -132,7 +132,15 @@ export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanc
 
 // Metadata
 export { resolveConstructor } from './metadata/target';
-export { addClassMeta, getClassMeta, addClassLabel, getClassLabels, addClassTag, getClassTags } from './metadata/class';
+export {
+  addClassMeta,
+  getClassMeta,
+  addClassLabel,
+  getClassLabels,
+  addClassTag,
+  getClassTags,
+  createComposeClassDecorator,
+} from './metadata/class';
 export {
   addParamMeta,
   getParamMeta,
@@ -140,6 +148,7 @@ export {
   getParamLabels,
   addParamTag,
   getParamTags,
+  createComposeParameterDecorator,
 } from './metadata/parameter';
 export {
   addMethodMeta,
@@ -148,6 +157,7 @@ export {
   getMethodLabels,
   addMethodTag,
   getMethodTags,
+  createComposeMethodDecorator,
 } from './metadata/method';
 export { handleError, handleAsyncError, type HandleErrorParams } from './utils/errorHandler';
 export { runInOrder, runAtOnce, type Task } from './utils/task';

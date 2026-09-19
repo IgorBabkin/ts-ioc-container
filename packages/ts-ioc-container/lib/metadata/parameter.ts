@@ -30,3 +30,25 @@ export const getParamTags = (target: object, parameterIndex: number): Set<string
   const all = getParamMeta('tag', target);
   return (all[parameterIndex] as Set<string> | undefined) ?? new Set();
 };
+
+/**
+ * Applies several parameter decorators as one, so a stack repeated on many
+ * parameters can be given a name:
+ *
+ * ```typescript
+ * const fromConfig = <T>(key: string, map: MapFn<IConfig, T>) =>
+ *   createComposeParameterDecorator(inject(pipe(by(ConfigToken), map)), addParamLabel('config', key));
+ * ```
+ *
+ * Decorators are applied bottom-up, exactly as stacking them would be, so
+ * `@createComposeParameterDecorator(a, b)` behaves like `@a @b`. A parameter
+ * decorator returns nothing, so there is nothing to thread - each one is called
+ * with the same target, property key and parameter index.
+ */
+export const createComposeParameterDecorator =
+  (...decorators: ParameterDecorator[]): ParameterDecorator =>
+  (target, propertyKey, parameterIndex) => {
+    for (let i = decorators.length - 1; i >= 0; i--) {
+      decorators[i](target, propertyKey, parameterIndex);
+    }
+  };

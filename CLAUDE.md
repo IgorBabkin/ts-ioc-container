@@ -209,6 +209,31 @@ any new normalization in `toBindToken` / `toProviderFn` / `toRegistrationFn`
 
 Pipe order generally doesn't matter except for `decorate()`: it wraps the instance at the point it appears in the chain, so order relative to `lazy()` changes whether you decorate the proxy or the real instance.
 
+### Composed Decorators
+
+`createComposeClassDecorator(...decorators)` (`lib/metadata/class.ts`), with its
+`createComposeMethodDecorator` (`lib/metadata/method.ts`) and
+`createComposeParameterDecorator` (`lib/metadata/parameter.ts`) siblings, folds a
+decorator stack into one decorator, so a stack repeated across a layer can be
+given a name:
+
+```typescript
+const repository = <T>(token: SingleToken<T>, ...mappers: RegistrationMapper<T>[]) =>
+  createComposeClassDecorator(
+    register(IRepositoryToken, token, addMediator(token), ...mappers),
+    addClassMeta('injection-token', () => token),
+  );
+```
+
+They apply **bottom-up**, exactly as stacking would, so
+`@createComposeClassDecorator(a, b)` behaves like `@a @b` and moving a stack into
+one call never changes which decorator writes its metadata first (`@register`
+prepends its mappers, so this ordering is load-bearing). The class and method
+forms thread the return value — a replacement class or property descriptor — down
+the chain the way the runtime does, which is what lets wrapping decorators
+(`@once`, `@throttle`) compose; a parameter decorator returns nothing, so there is
+nothing to thread.
+
 ### Scope Access vs Scope Match Rules
 
 Two distinct concepts:
