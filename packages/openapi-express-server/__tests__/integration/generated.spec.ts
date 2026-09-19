@@ -57,22 +57,24 @@ describe('Generated Types Integration Test', () => {
     expect(content).toContain('export interface DeleteUserResponse');
 
     // Check for use case interfaces
-    expect(content).toContain('export interface GetUsersUseCase extends UseCase<GetUsersPayload, GetUsersResponse>');
     expect(content).toContain(
-      'export interface CreateUserUseCase extends UseCase<CreateUserPayload, CreateUserResponse>',
-    );
-    expect(content).toContain('export interface GetUserUseCase extends UseCase<GetUserPayload, GetUserResponse>');
-    expect(content).toContain(
-      'export interface UpdateUserUseCase extends UseCase<UpdateUserPayload, UpdateUserResponse>',
+      'export interface GetUsersHttpRoute extends HttpRoute<GetUsersPayload, GetUsersResponse>',
     );
     expect(content).toContain(
-      'export interface DeleteUserUseCase extends UseCase<DeleteUserPayload, DeleteUserResponse>',
+      'export interface CreateUserHttpRoute extends HttpRoute<CreateUserPayload, CreateUserResponse>',
+    );
+    expect(content).toContain('export interface GetUserHttpRoute extends HttpRoute<GetUserPayload, GetUserResponse>');
+    expect(content).toContain(
+      'export interface UpdateUserHttpRoute extends HttpRoute<UpdateUserPayload, UpdateUserResponse>',
+    );
+    expect(content).toContain(
+      'export interface DeleteUserHttpRoute extends HttpRoute<DeleteUserPayload, DeleteUserResponse>',
     );
 
     // Check for IServer interface
     expect(content).toContain('export interface IServer');
-    expect(content).toContain('getUsers: constructor<GetUsersUseCase>');
-    expect(content).toContain('deleteUser: constructor<DeleteUserUseCase>');
+    expect(content).toContain('getUsers: constructor<GetUsersHttpRoute>');
+    expect(content).toContain('deleteUser: constructor<DeleteUserHttpRoute>');
   });
 
   it('should generate Zod validators', () => {
@@ -127,8 +129,8 @@ const users = new Map<string, any>([
 
 let nextId = 3;
 
-// One use case per operation, each implementing the generated `<Op>UseCase`
-class GetUsersUseCase {
+// One use case per operation, each implementing the generated `<Op>HttpRoute`
+class GetUsersHttpRoute {
   async handle(payload: any) {
     let filteredUsers = Array.from(users.values());
 
@@ -152,7 +154,7 @@ class GetUsersUseCase {
   }
 }
 
-class CreateUserUseCase {
+class CreateUserHttpRoute {
   async handle(payload: any) {
     const id = `${nextId++}23e4567-e89b-12d3-a456-42661417400${nextId}`;
     const user = {
@@ -175,7 +177,7 @@ class CreateUserUseCase {
   }
 }
 
-class GetUserUseCase {
+class GetUserHttpRoute {
   async handle(payload: any) {
     const user = users.get(payload.params.id);
 
@@ -191,7 +193,7 @@ class GetUserUseCase {
   }
 }
 
-class UpdateUserUseCase {
+class UpdateUserHttpRoute {
   async handle(payload: any) {
     const user = users.get(payload.params.id);
 
@@ -216,7 +218,7 @@ class UpdateUserUseCase {
   }
 }
 
-class DeleteUserUseCase {
+class DeleteUserHttpRoute {
   async handle(payload: any) {
     const deleted = users.delete(payload.params.id);
 
@@ -252,11 +254,11 @@ describe('Integration Test with Generated Types and Validators', () => {
     validatorsModule = await import('./generated-validators' as any);
 
     const container = new Container({ tags: ['application'] });
-    container.addRegistration(Registration.fromClass(GetUsersUseCase).bindToKey('getUsers'));
-    container.addRegistration(Registration.fromClass(CreateUserUseCase).bindToKey('createUser'));
-    container.addRegistration(Registration.fromClass(GetUserUseCase).bindToKey('getUser'));
-    container.addRegistration(Registration.fromClass(UpdateUserUseCase).bindToKey('updateUser'));
-    container.addRegistration(Registration.fromClass(DeleteUserUseCase).bindToKey('deleteUser'));
+    container.addRegistration(Registration.fromClass(GetUsersHttpRoute).bindToKey('getUsers'));
+    container.addRegistration(Registration.fromClass(CreateUserHttpRoute).bindToKey('createUser'));
+    container.addRegistration(Registration.fromClass(GetUserHttpRoute).bindToKey('getUser'));
+    container.addRegistration(Registration.fromClass(UpdateUserHttpRoute).bindToKey('updateUser'));
+    container.addRegistration(Registration.fromClass(DeleteUserHttpRoute).bindToKey('deleteUser'));
 
     const routeBuilder = new RouteBuilder(container, doc, validatorsModule.PAYLOADS);
 

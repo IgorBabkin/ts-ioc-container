@@ -7,7 +7,7 @@ import {
   extractRoutes,
   getContainerOrFail,
   RouteMetadata,
-  UseCaseInstance,
+  HttpRouteInstance,
 } from '../lib';
 import { ZodObject } from 'zod';
 
@@ -29,7 +29,7 @@ export class RouteBuilder {
   private registerRoute(app: Express, route: RouteMetadata): void {
     // The use case is registered under the operationId verbatim (SPEC-007 UC-4).
     if (!this.currentScope.hasRegistration(route.operationId)) {
-      console.warn(`Use case "${route.operationId}" not found`);
+      console.warn(`Http route "${route.operationId}" not found`);
       return;
     }
 
@@ -42,7 +42,7 @@ export class RouteBuilder {
     app[httpMethod](expressPath, requestScope, async (req: Request, res: Response, next: NextFunction) => {
       try {
         const container = getContainerOrFail(req);
-        const useCase = container.resolve<UseCaseInstance>(route.operationId);
+        const useCase = container.resolve<HttpRouteInstance>(route.operationId);
         const payload = this.findValidatorOrFail(route.operationId).parse(req);
         const result = await useCase.handle(payload, container);
         this.sendResponse(result, res);

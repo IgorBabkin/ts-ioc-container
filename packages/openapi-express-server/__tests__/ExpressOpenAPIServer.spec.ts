@@ -15,7 +15,7 @@ enum HttpStatus {
 }
 
 // One use case per operation, each registered under its operationId.
-class GetItemsUseCase {
+class GetItemsHttpRoute {
   async handle() {
     return {
       status: HttpStatus.OK,
@@ -28,7 +28,7 @@ class GetItemsUseCase {
   }
 }
 
-class CreateItemUseCase {
+class CreateItemHttpRoute {
   async handle(payload: any) {
     return {
       status: HttpStatus.Created,
@@ -41,7 +41,7 @@ class CreateItemUseCase {
 }
 
 /** Echoes the tags of the request scope it was resolved from, so the test can see them. */
-class GetItemUseCase {
+class GetItemHttpRoute {
   async handle(payload: any, scope: IContainer) {
     const scopeTags = ['request', 'items', 'application', 'unrelated'].filter((tag) => scope.hasTag(tag));
 
@@ -53,7 +53,7 @@ class GetItemUseCase {
   }
 }
 
-class DeleteItemUseCase {
+class DeleteItemHttpRoute {
   async handle() {
     return {
       status: HttpStatus.NoContent,
@@ -85,10 +85,10 @@ describe('ExpressOpenAPIServer', () => {
     const container = new Container({ tags: ['application'] });
 
     // UC-4 — use cases are registered under the operationId verbatim.
-    container.addRegistration(Registration.fromClass(GetItemsUseCase).bindToKey('getItems'));
-    container.addRegistration(Registration.fromClass(CreateItemUseCase).bindToKey('createItem'));
-    container.addRegistration(Registration.fromClass(GetItemUseCase).bindToKey('getItem'));
-    container.addRegistration(Registration.fromClass(DeleteItemUseCase).bindToKey('deleteItem'));
+    container.addRegistration(Registration.fromClass(GetItemsHttpRoute).bindToKey('getItems'));
+    container.addRegistration(Registration.fromClass(CreateItemHttpRoute).bindToKey('createItem'));
+    container.addRegistration(Registration.fromClass(GetItemHttpRoute).bindToKey('getItem'));
+    container.addRegistration(Registration.fromClass(DeleteItemHttpRoute).bindToKey('deleteItem'));
 
     const spec = YAML.parse(fs.readFileSync(SWAGGER_PATH, 'utf8'));
     const routeBuilder = container.resolve(RouteBuilder, { args: [spec, VALIDATORS] });
