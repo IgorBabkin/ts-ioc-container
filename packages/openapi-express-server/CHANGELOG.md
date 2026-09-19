@@ -1,3 +1,31 @@
+# 3.0.0 (2026-09-19)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ibabkin/openapi-express-server:**
+    rename UseCaseInstance to HttpRouteInstance
+    (4e6fac3281552d0de827387ba37452bc08542de7)
+
+  ### ✨ Features
+
+    - **@ibabkin/openapi-express-server:**
+    rename UseCaseInstance to HttpRouteInstance
+    (4e6fac3281552d0de827387ba37452bc08542de7)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-express-server:**
+    upgrade ts-ioc-container
+    (7811f07f8652608fd86e42247f71124d3803f378)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    @ibabkin/openapi-to-server
+    to
+    4.0.0
+
+
 # 2.1.0 (2026-09-17)
 
   ### 📦 Dependencies
@@ -125,6 +153,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 
