@@ -4,9 +4,9 @@ import express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as YAML from 'yaml';
-import { Container, IContainer, Registration as R } from 'ts-ioc-container';
+import { Container, IContainer, register, Registration as R } from 'ts-ioc-container';
 import { z, ZodError } from 'zod';
-import { applyRoutes } from './agentRecipes/applyRoutes';
+import { AppService, IAppServiceToken, IExpressAppToken, IPayloadsToken } from './agentRecipes/AppService';
 
 const PACKAGES = ['openapi-express-server', 'openapi-to-server-interface', 'openapi-to-request-validator'];
 
@@ -48,20 +48,22 @@ describe('AGENTS.md', () => {
   describe('openapi-express-server recipe "Wire every operation"', () => {
     it('is the code this test runs', () => {
       const recipe = fs
-        .readFileSync(path.resolve(__dirname, 'agentRecipes/applyRoutes.ts'), 'utf8')
+        .readFileSync(path.resolve(__dirname, 'agentRecipes/AppService.ts'), 'utf8')
         .split('// region recipe\n')[1]
         .split('// endregion recipe')[0]
-        .replace('export function', 'function');
+        .replace(/^export /gm, '');
 
       expect(readGuide('openapi-express-server')).toContain(recipe);
     });
 
+    @register('getItem')
     class GetItem {
       async handle(payload: { params: { id: string } }, scope: IContainer) {
         return { status: 200, headers: { 'x-tags': String(scope.hasTag('items')) }, body: { id: payload.params.id } };
       }
     }
 
+    @register('deleteItem')
     class DeleteItem {
       async handle() {
         return { status: 204, headers: {} };
@@ -69,16 +71,24 @@ describe('AGENTS.md', () => {
     }
 
     const app = express();
-    const container = new Container({ tags: ['application'] })
-      .addRegistration(R.fromClass(GetItem).bindToKey('getItem'))
-      .addRegistration(R.fromClass(DeleteItem).bindToKey('deleteItem'));
-    const spec = YAML.parse(fs.readFileSync(path.resolve(__dirname, 'swagger.yaml'), 'utf8'));
-
     app.use(express.json());
-    applyRoutes(app, container, spec, {
-      getItem: z.object({ params: z.object({ id: z.string().min(2) }) }),
-      deleteItem: z.object({ params: z.object({ id: z.string() }) }),
-    });
+
+    const container = new Container({ tags: ['application'] })
+      .addRegistration(R.fromValue(app).bindTo(IExpressAppToken))
+      .addRegistration(
+        R.fromValue({
+          getItem: z.object({ params: z.object({ id: z.string().min(2) }) }),
+          deleteItem: z.object({ params: z.object({ id: z.string() }) }),
+        }).bindTo(IPayloadsToken),
+      )
+      .addRegistration(R.fromClass(GetItem))
+      .addRegistration(R.fromClass(DeleteItem))
+      .addRegistration(R.fromClass(AppService));
+
+    IAppServiceToken.resolve(container).applyRoutes(
+      YAML.parse(fs.readFileSync(path.resolve(__dirname, 'swagger.yaml'), 'utf8')),
+    );
+
     // Express recognises an error handler by its four parameters.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     app.use((error: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {

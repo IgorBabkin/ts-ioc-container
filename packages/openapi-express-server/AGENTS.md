@@ -26,11 +26,14 @@ Sibling packages, used together with this one:
 
 ### Wire every operation
 
+One application-scoped service registers one Express route per operation. It gets the Express app
+and the `PAYLOADS` map from the container, like everything else:
+
 ```typescript
 import 'reflect-metadata';
-import express, { type Express } from 'express';
+import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import type { OpenAPIV3 } from 'openapi-types';
-import { Container, Registration as R, type IContainer } from 'ts-ioc-container';
+import { by, Container, type IContainer, inject, register, Registration as R, scope, select, singleton, SingleToken } from 'ts-ioc-container';
 import { ZodError, type ZodType } from 'zod';
 import {
   containerMiddleware,
@@ -38,57 +41,96 @@ import {
   extractRoutes,
   getContainerOrFail,
   type HttpRouteInstance,
+  type RouteMetadata,
 } from '@ibabkin/openapi-express-server';
+
+const IExpressAppToken = new SingleToken<Express>('IExpressApp');
+const IPayloadsToken = new SingleToken<Record<string, ZodType>>('IPayloads');
+
+interface IAppService {
+  applyRoutes(doc: OpenAPIV3.Document): void;
+}
+const IAppServiceToken = new SingleToken<IAppService>('IAppService');
+
+@register(IAppServiceToken, scope((s) => s.hasTag('application')), singleton())
+class AppService implements IAppService {
+  constructor(
+    @inject(by(select.scope.current)) private readonly appScope: IContainer,
+    @inject(by(IExpressAppToken)) private readonly app: Express,
+    @inject(by(IPayloadsToken)) private readonly payloads: Record<string, ZodType>,
+  ) {}
+
+  applyRoutes(doc: OpenAPIV3.Document): void {
+    for (const route of extractRoutes(doc)) {
+      if (!this.appScope.hasRegistration(route.operationId)) continue; // not implemented yet
+      const method = route.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
+      const path = convertOpenAPIPathToExpress(route.path);
+      this.app[method](path, containerMiddleware(this.appScope, route.tags), (req, res, next) =>
+        this.handle(route, req, res, next),
+      );
+    }
+  }
+
+  private async handle(route: RouteMetadata, req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const requestScope = getContainerOrFail(req);
+      const useCase = requestScope.resolve<HttpRouteInstance>(route.operationId);
+      const payload = this.payloads[route.operationId].parse(req);
+      const { status = 200, headers = {}, body } = await useCase.handle(payload, requestScope);
+      res.status(status).set(headers);
+      if (body === undefined) res.end();
+      else res.json(body);
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+```
+
+Use cases are registered under their `operationId` with the same decorator:
+
+```typescript
+import type { GetUserHttpRoute, GetUserPayload, GetUserResponse } from './.generated/operations';
+
+@register('getUser')
+class GetUser implements GetUserHttpRoute {
+  async handle({ params }: GetUserPayload, requestScope: IContainer): Promise<GetUserResponse> {
+    // resolve request-scoped services from requestScope
+  }
+}
+```
+
+Composition root:
+
+```typescript
 import { PAYLOADS } from './.generated/validators';
 import spec from './.generated/swagger.json' with { type: 'json' };
 
-function applyRoutes(
-  app: Express,
-  container: IContainer,
-  doc: OpenAPIV3.Document,
-  validators: Record<string, ZodType>,
-) {
-  for (const route of extractRoutes(doc)) {
-    if (!container.hasRegistration(route.operationId)) continue; // not implemented yet
-    const method = route.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
-    const requestScope = containerMiddleware(container, route.tags);
-    app[method](convertOpenAPIPathToExpress(route.path), requestScope, async (req, res, next) => {
-      try {
-        const scope = getContainerOrFail(req);
-        const useCase = scope.resolve<HttpRouteInstance>(route.operationId);
-        const payload = validators[route.operationId].parse(req);
-        const { status = 200, headers = {}, body } = await useCase.handle(payload, scope);
-        res.status(status).set(headers);
-        if (body === undefined) res.end();
-        else res.json(body);
-      } catch (error) {
-        next(error);
-      }
-    });
-  }
-}
-
-const container = new Container({ tags: ['application'] })
-  .addRegistration(R.fromClass(GetUser).bindToKey('getUser'))
-  .addRegistration(R.fromClass(UpdateTodo).bindToKey('updateTodo'));
-
 const app = express();
 app.use(express.json());
-applyRoutes(app, container, spec as OpenAPIV3.Document, PAYLOADS);
-app.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+const container = new Container({ tags: ['application'] })
+  .addRegistration(R.fromValue(app).bindTo(IExpressAppToken))
+  .addRegistration(R.fromValue(PAYLOADS).bindTo(IPayloadsToken))
+  .addRegistration(R.fromClass(GetUser))
+  .addRegistration(R.fromClass(AppService));
+
+IAppServiceToken.resolve(container).applyRoutes(spec as OpenAPIV3.Document);
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(error instanceof ZodError ? 400 : 500).json({ error: error.message });
 });
 ```
 
-Register use cases **before** calling `applyRoutes`: it skips every operation that has nothing
+Register every use case **before** calling `applyRoutes`: it skips each operation that has nothing
 registered under its `operationId` at that moment.
 
 ### Request-scoped services
 
 ```typescript
-import { bindTo, register, scope, singleton } from 'ts-ioc-container';
+import { register, scope, singleton } from 'ts-ioc-container';
 
-@register(bindTo('ITransaction'), scope((s) => s.hasTag('request')), singleton())
+@register('ITransaction', scope((s) => s.hasTag('request')), singleton())
 class Transaction {}
 ```
 
@@ -99,7 +141,7 @@ OpenAPI tag to limit a registration to the operations carrying that tag.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `hasRegistration(operationId)` is `false` although it was registered | `container.register(key, provider)` is invisible to `hasRegistration` | Use `addRegistration(R.fromClass(X).bindToKey(operationId))` |
+| `hasRegistration(operationId)` is `false` although it was registered | `container.register(key, provider)` is invisible to `hasRegistration` | `@register(operationId)` on the class + `addRegistration(R.fromClass(X))` |
 | `DependencyNotFoundError` (`IOC_DEPENDENCY_NOT_FOUND`) for a use case | Key differs from the `operationId` (e.g. capitalised) | Use the `operationId` verbatim |
 | `@inject` params are `undefined` | `reflect-metadata` not imported first, or decorator options off | `import 'reflect-metadata'` first; `experimentalDecorators` + `emitDecoratorMetadata` |
 | `Container is not provided` | `getContainerOrFail(req)` ran on a route without `containerMiddleware` | Mount `containerMiddleware(container, route.tags)` on the route |
