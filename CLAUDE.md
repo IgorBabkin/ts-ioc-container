@@ -436,6 +436,31 @@ scope, or none, since they never trigger a release regardless of scope. `docs`
 releases only with a package scope: `docs(ts-ioc-container): ...` publishes a
 patch, `docs(adr): ...` does not.
 
+### README changes must trigger a bump
+
+A commit that changes a package's `README.md` (or its source,
+`packages/ts-ioc-container/.readme.hbs.md`) must release that package, so the
+README consumers read on npm matches the repo. Scope the commit to the exact
+package name **and** put an explicit bump tag from `release-monorepo-semantically`
+in the subject — `[patch]`, `[minor]` or `[major]` — so the release does not hinge
+on the commit type alone:
+
+```
+docs(ts-ioc-container): document scopeAccess rules [patch]
+chore(@ts-ioc-container/react): reword Scope example in README [patch]
+```
+
+- Use `[patch]` for a README-only change; use `[minor]` / `[major]` when the
+  commit also carries the matching API change.
+- The tag overrides the rule-based level for that commit and is stripped from
+  the subject, so it also works on otherwise non-release types (`chore`,
+  `refactor`). It still needs the package scope to match a package.
+- With squash merges the tag must be in the commit header that appears as a `* `
+  bullet in the squash body (see [Squash merges](#squash-merges)) — tags are
+  read per entry.
+- `[skip-bump]` is the opposite tag (suppress a release); never use it on a
+  README change.
+
 ### Special rules
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)
 
