@@ -1,4 +1,13 @@
 {
+  "report": {
+    "bumps": {
+      "patch": [
+        { "type": "fix", "scope": "<package>" },
+        { "type": "perf", "scope": "<package>" },
+        { "type": "docs", "scope": "<package>" }
+      ]
+    }
+  },
   "vcs": {
     "template": "packages/scripts/release/templates/release-commit-msg.hbs"
   },

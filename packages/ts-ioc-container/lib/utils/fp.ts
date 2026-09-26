@@ -1,6 +1,13 @@
+/** A one-argument transform. */
 export type MapFn<A, B = A> = (value: A) => B;
 
 // Overloads for fp function to support up to 10 transformations
+/**
+ * Composes functions left to right. With `by(...)` it maps an injected value.
+ *
+ * @example
+ * @inject(pipe(by(ConfigToken), (config) => config.apiUrl))
+ */
 export function pipe<A>(fn1: MapFn<A>): MapFn<A>;
 export function pipe<A, B>(fn1: MapFn<A, B>): MapFn<A, B>;
 export function pipe<A, B, C>(fn1: MapFn<A, B>, fn2: MapFn<B, C>): MapFn<A, C>;

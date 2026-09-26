@@ -15,12 +15,17 @@ import { type constructor, type Instance } from '../utils/basic';
 import { type IInjector } from '../injector/IInjector';
 import { type ITypedEvent } from '../utils/TypedEvent';
 
+/**
+ * Terminates the parent chain of every root {@link Container}: `resolve` throws
+ * `DependencyNotFoundError`, alias lookups return nothing, and every other
+ * method throws `MethodNotImplementedError`. You rarely use it directly.
+ */
 export class EmptyContainer implements IContainer {
   /**
    * @throws {MethodNotImplementedError} always — the empty container has no disposal state.
    */
   get isDisposed(): boolean {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.isDisposed is not implemented');
   }
 
   addInstance(instance: Instance) {}
@@ -45,49 +50,49 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot create scopes.
    */
   createScope(): IContainer {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.createScope is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container constructs nothing, so it has no injector.
    */
   getInjector(): IInjector {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.getInjector is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container holds no providers to resolve.
    */
   autoResolve(options?: AutoResolveOptions): this {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.autoResolve is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot be disposed.
    */
   dispose(): void {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.dispose is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold registrations.
    */
   register(key: DependencyKey, value: IProvider): this {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.register is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container has no tags.
    */
   hasTag(tag: Tag): boolean {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.hasTag is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container has no tags.
    */
   addTags(...tags: Tag[]): void {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.addTags is not implemented');
   }
 
   getRegistrations() {
@@ -104,21 +109,25 @@ export class EmptyContainer implements IContainer {
    * @throws {MethodNotImplementedError} always — the empty container cannot use modules.
    */
   useModule(module: IContainerModule): this {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.useModule is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold registrations.
    */
   addRegistration(registration: IRegistration): this {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.addRegistration is not implemented');
   }
 
   /**
    * @throws {DependencyNotFoundError} always — reaching the empty container means `key` was not found in any scope.
    */
   resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveOneOptions): T {
-    throw new DependencyNotFoundError(`Cannot find ${key.toString()}`);
+    throw new DependencyNotFoundError(
+      `Cannot find ${key.toString()}: no provider for this key in the resolving scope or any parent. ` +
+        'Check that it is registered, that its scope(...) rule matches this scope, that its scopeAccess(...) rule allows it, ' +
+        'and that it was registered before createScope() (existing child scopes are not updated).',
+    );
   }
 
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[] {
@@ -129,27 +138,29 @@ export class EmptyContainer implements IContainer {
    * @throws {DependencyNotFoundError} always — reaching the empty container means `alias` was not found in any scope.
    */
   resolveOneByAlias<T>(alias: DependencyKey, options?: ResolveOneOptions): T {
-    throw new DependencyNotFoundError(`Cannot find alias ${alias.toString()}`);
+    throw new DependencyNotFoundError(
+      `Cannot find alias ${alias.toString()}: no accessible registration carries this alias in the resolving scope or any parent.`,
+    );
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
   get scopeCreated(): ITypedEvent<[IContainer]> {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.scopeCreated is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
   get scopeDisposed(): ITypedEvent<[IContainer]> {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.scopeDisposed is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — the empty container cannot hold hooks.
    */
   get registered(): ITypedEvent<[IProvider, DependencyKey, IContainer]> {
-    throw new MethodNotImplementedError();
+    throw new MethodNotImplementedError('EmptyContainer.registered is not implemented');
   }
 }

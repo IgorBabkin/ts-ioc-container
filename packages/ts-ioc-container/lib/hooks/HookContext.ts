@@ -4,6 +4,11 @@ import { type Instance } from '../utils/basic';
 import { resolveArgs } from '../injector/MetadataInjector';
 import { type InjectFn } from './hook';
 
+/**
+ * What a hook receives: the `instance`, the `scope` and the decorated member's
+ * name. `invokeMethod({ args: resolveArgs() })` calls the member with its
+ * `@inject` parameters; `setProperty(fn)` assigns it (see `injectProp`).
+ */
 export interface IHookContext {
   instance: Instance;
   scope: IContainer;
@@ -22,6 +27,7 @@ export interface IHookContext {
   getInitialArgs(): unknown[];
 }
 
+/** The default {@link IHookContext}. */
 export class HookContext implements IHookContext {
   private initialArgs: unknown[] = [];
 
@@ -66,10 +72,13 @@ export class HookContext implements IHookContext {
   }
 }
 
+/** Builds the context a hook receives. */
 export type CreateHookExecutionContext = (Target: Instance, scope: IContainer, methodName?: string) => IHookContext;
+/** The default {@link CreateHookExecutionContext}: a {@link HookContext}. */
 export const createHookExecutionContext: CreateHookExecutionContext = (Target, scope, methodName = 'constructor') =>
   new HookContext(Target, scope, methodName);
 
+/** A {@link CreateHookExecutionContext} whose contexts start with `args` as initial args. */
 export const createHookContextFactory =
   ({ args = [] }: { args?: unknown[] } = {}): CreateHookExecutionContext =>
   (Target, scope, methodName) =>

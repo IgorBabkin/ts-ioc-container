@@ -1,7 +1,9 @@
 import { ContainerError } from './ContainerError';
 
+/** Thrown when a provider of a disposed scope is used. Code `IOC_PROVIDER_DISPOSED`. */
 export class ProviderDisposedError extends ContainerError {
   name = 'ProviderDisposedError';
+  readonly code = 'IOC_PROVIDER_DISPOSED';
 
   /**
    * @throws {ProviderDisposedError} when `isTrue` is falsy.

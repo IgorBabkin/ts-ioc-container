@@ -4,6 +4,20 @@ import { FunctionToken } from './token/FunctionToken';
 import { GroupInstanceToken, InstancePredicate } from './token/GroupInstanceToken';
 import { toToken } from './token/toToken';
 
+/**
+ * Shortcuts for common tokens.
+ *
+ * - `select.token(x)` - `toToken(x)`
+ * - `select.alias('Key')` - a {@link GroupAliasToken}
+ * - `select.instances(predicate)` - instances already created in the scope
+ * - `select.scope.current` - the resolving scope itself
+ * - `select.scope.create({ tags })` - a new child scope
+ *
+ * @example
+ * class Handler {
+ *   constructor(@inject(by(select.scope.current)) private scope: IContainer) {}
+ * }
+ */
 export const select = {
   alias: toGroupAlias,
 

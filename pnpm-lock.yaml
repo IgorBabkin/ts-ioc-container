@@ -51,8 +51,8 @@ importers:
         specifier: 3.9.7
         version: 3.9.7
       release-monorepo-semantically:
-        specifier: 1.9.4
-        version: 1.9.4
+        specifier: 1.12.1
+        version: 1.12.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -2115,10 +2115,6 @@ packages:
     resolution: {integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==}
     engines: {node: '>=18'}
 
-  minimatch@10.2.5:
-    resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
-    engines: {node: 18 || 20 || >=22}
-
   minimatch@10.2.6:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
     engines: {node: 18 || 20 || >=22}
@@ -2302,8 +2298,8 @@ packages:
   reflect-metadata@0.2.2:
     resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
-  release-monorepo-semantically@1.9.4:
-    resolution: {integrity: sha512-7MtechGk9ymH20Njry3eF1PijWW4KJuKYLi7Up9LSNFGVpG5Zd1xM463JnAut4RfHkcCcrsaDoGAHlumlU8zgg==}
+  release-monorepo-semantically@1.12.1:
+    resolution: {integrity: sha512-m+rEa3E3Z6xOcqhK4E1bFlcvF0kl9x1mSOzaePQ/20eepbgE2raFYeowkj9lxhHF6nQODVquubH56OyYi0IVdA==}
     engines: {node: '>=20.11'}
     hasBin: true
 
@@ -2534,8 +2530,8 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
-  ts-ioc-container@56.0.0:
-    resolution: {integrity: sha512-yti2q7u22mSpTTp3AEaoBVHhO1WVNmoYThKpgIf5FrsNLTfoNyrx0d8EMdCcIPEIHYheNcnRNJm6BAliZGF8MQ==}
+  ts-ioc-container@68.0.0:
+    resolution: {integrity: sha512-mDFrjPwryAE6JiJ89h9t3n7W98ha+YhicHrLJ8gbPFRaN72GZqYVwhHAw83CWK3/UUSXTBRpw4VL7XBwS6yKLQ==}
     engines: {node: '>= 18'}
     peerDependencies:
       reflect-metadata: ^0.2.0
@@ -3596,7 +3592,7 @@ snapshots:
       '@typescript-eslint/types': 8.59.1
       '@typescript-eslint/visitor-keys': 8.59.1
       debug: 4.4.3
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       semver: 7.7.4
       tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@5.8.3)
@@ -3652,7 +3648,7 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/coverage-v8@4.1.2)(jsdom@27.4.0)(vite@6.4.3(@types/node@26.2.0)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.5.2)(@vitest/coverage-v8@4.1.2)(jsdom@27.4.0)(vite@6.4.3(@types/node@25.5.2)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
 
   '@vitest/expect@4.1.11':
     dependencies:
@@ -4634,10 +4630,6 @@ snapshots:
 
   mimic-function@5.0.1: {}
 
-  minimatch@10.2.5:
-    dependencies:
-      brace-expansion: 5.0.9
-
   minimatch@10.2.6:
     dependencies:
       brace-expansion: 5.0.9
@@ -4802,13 +4794,13 @@ snapshots:
 
   reflect-metadata@0.2.2: {}
 
-  release-monorepo-semantically@1.9.4:
+  release-monorepo-semantically@1.12.1:
     dependencies:
       commander: 14.0.3
       glob: 10.5.0
       handlebars: 4.7.9
       reflect-metadata: 0.2.2
-      ts-ioc-container: 56.0.0(reflect-metadata@0.2.2)
+      ts-ioc-container: 68.0.0(reflect-metadata@0.2.2)
       zod: 4.4.3
 
   require-directory@2.1.1: {}
@@ -5031,7 +5023,7 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  ts-ioc-container@56.0.0(reflect-metadata@0.2.2):
+  ts-ioc-container@68.0.0(reflect-metadata@0.2.2):
     optionalDependencies:
       reflect-metadata: 0.2.2
 

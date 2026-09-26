@@ -7,7 +7,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://igorbabkin.github.io/ts-ioc-container",
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/react#readme",
   "license": "ISC",
   "sideEffects": false,
   "main": "cjm/index.js",
@@ -41,7 +41,9 @@
   "files": [
     "cjm/**/*",
     "esm/**/*",
-    "typings/**/*"
+    "typings/**/*",
+    "lib/**/*",
+    "AGENTS.md"
   ],
   "repository": {
     "type": "git",

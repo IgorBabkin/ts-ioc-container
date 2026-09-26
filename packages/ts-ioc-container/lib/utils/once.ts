@@ -3,6 +3,7 @@ type RepeatOptions = {
   args: unknown[];
 };
 
+/** Method decorator: runs the method once per instance and returns the cached result afterwards. */
 export const once =
   ({ onRepeat }: { onRepeat?: (options: RepeatOptions) => void } = {}): MethodDecorator =>
   (target, propertyKey, descriptor: PropertyDescriptor) => {

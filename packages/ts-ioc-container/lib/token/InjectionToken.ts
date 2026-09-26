@@ -9,6 +9,7 @@ import { Is } from '../utils/basic';
  */
 export const forwardArgs: ArgsFn = ({ args = [] }) => args;
 
+/** Base class of every token: something resolvable from a scope that can be specialized with args, lazy and tags. */
 export abstract class InjectionToken<T = any> {
   private readonly tags: Set<Tag>;
 
@@ -31,6 +32,7 @@ export abstract class InjectionToken<T = any> {
   }
 }
 
+/** Narrows `target` to an {@link InjectionToken}. */
 export function isInjectionToken<T = any>(target: unknown): target is InjectionToken<T> {
   return (
     Is.object(target) &&

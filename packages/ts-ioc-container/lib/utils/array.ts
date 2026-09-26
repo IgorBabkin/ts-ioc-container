@@ -21,7 +21,7 @@ export const findOrFail =
     const index = args.findIndex((arg) => predicate(arg as T));
 
     if (index === -1) {
-      throw new ArgumentNotFoundError();
+      throw new ArgumentNotFoundError(`No argument matches the predicate (received ${args.length} args).`);
     }
 
     return args[index] as T;

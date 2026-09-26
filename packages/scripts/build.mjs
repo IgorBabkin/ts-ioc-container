@@ -16,7 +16,11 @@ const postbuildExtensions = path.join(__dirname, 'postbuild-extensions.mjs');
 const FORMATS = {
   cjm: { outDir: 'cjm', tscArgs: ['--module', 'CommonJS'] },
   esm: { outDir: 'esm', tscArgs: [], postbuildArgs: ['--esm'] },
-  types: { outDir: 'typings', tscArgs: ['--emitDeclarationOnly', '--declaration'], postbuildArgs: [] },
+  types: {
+    outDir: 'typings',
+    tscArgs: ['--emitDeclarationOnly', '--declaration', '--declarationMap', '--removeComments', 'false'],
+    postbuildArgs: [],
+  },
 };
 
 const [, , format] = process.argv;
