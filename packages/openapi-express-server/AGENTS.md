@@ -98,7 +98,7 @@ const IAppServiceToken = new SingleToken<IAppService>('IAppService');
 
 @register(IAppServiceToken, scope((s) => s.hasTag('application')), singleton())
 class AppService implements IAppService {
-  private readonly app = express();
+  private readonly express = express();
   private readonly router = express.Router(); // filled by applyRoutes
 
   constructor(@inject(by(select.scope.current)) private readonly appScope: IContainer) {}
@@ -106,12 +106,12 @@ class AppService implements IAppService {
   // Modules: each runs once, in declaration order, right after construction.
   @onConstruct(execute())
   addJsonParsing(): void {
-    this.app.use(express.json());
+    this.express.use(express.json());
   }
 
   @onConstruct(execute())
   addRequestLogging(@inject(by(ILoggerToken)) logger: ILogger): void {
-    this.app.use((req, res, next) => {
+    this.express.use((req, res, next) => {
       logger.log(`${req.method} ${req.path}`);
       next();
     });
@@ -119,20 +119,20 @@ class AppService implements IAppService {
 
   @onConstruct(execute())
   addHealthCheck(): void {
-    this.app.get('/health', (req, res) => {
+    this.express.get('/health', (req, res) => {
       res.json({ status: 'ok' });
     });
   }
 
   @onConstruct(execute())
   addRouting(): void {
-    this.app.use(this.router);
+    this.express.use(this.router);
   }
 
   // Must stay last: Express hands an error only to error handlers registered after the failing middleware.
   @onConstruct(execute())
   addErrorHandling(): void {
-    this.app.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
+    this.express.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
       res.status(error instanceof ZodError ? 400 : 500).json({ error: error.message });
     });
   }
@@ -150,7 +150,7 @@ class AppService implements IAppService {
   }
 
   start(port: number): Server {
-    return this.app.listen(port);
+    return this.express.listen(port);
   }
 
   private async handle(
@@ -180,7 +180,7 @@ Add a concern by adding a method, not by editing `applyRoutes`:
 ```typescript
   @onConstruct(execute())
   addCors(@inject(by(ICorsOptionsToken)) options: CorsOptions): void {
-    this.app.use(cors(options)); // declare it above addRouting so it runs before the routes
+    this.express.use(cors(options)); // declare it above addRouting so it runs before the routes
   }
 ```
 
