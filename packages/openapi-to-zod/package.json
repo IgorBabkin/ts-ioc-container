@@ -24,7 +24,9 @@
     ".": {
       "import": "./esm/index.js",
       "types": "./esm/index.d.ts"
-    }
+    },
+    "./AGENTS.md": "./AGENTS.md",
+    "./package.json": "./package.json"
   },
   "module": "esm/index.js",
   "repository": {
@@ -39,7 +41,8 @@
   "files": [
     "bin/**/*",
     "esm/**/*",
-    "hbs/**/*"
+    "hbs/**/*",
+    "AGENTS.md"
   ],
   "bin": {
     "openapi-to-zod": "bin/openapi-to-zod.js"
