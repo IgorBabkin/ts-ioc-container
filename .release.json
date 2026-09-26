@@ -1,4 +1,5 @@
 {
+  "$schema": "./node_modules/release-monorepo-semantically/dist/release.schema.json",
   "report": {
     "bumps": {
       "patch": [

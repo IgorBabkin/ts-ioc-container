@@ -51,8 +51,8 @@ importers:
         specifier: 3.9.7
         version: 3.9.7
       release-monorepo-semantically:
-        specifier: 1.13.0
-        version: 1.13.0
+        specifier: 1.14.0
+        version: 1.14.0
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -2272,8 +2272,8 @@ packages:
   reflect-metadata@0.2.2:
     resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
-  release-monorepo-semantically@1.13.0:
-    resolution: {integrity: sha512-Byityvsviz+eK+HfQXnKP8PH4vwsM3aedGJjvsUmd0SB1F/cRlD5Cgqh9HUV0EmDMK81etJFmSJ4kqM3J6uzvw==}
+  release-monorepo-semantically@1.14.0:
+    resolution: {integrity: sha512-KSYFfVAQsUx6PAI2ejDF4kDzJSHKvuazbGx296hL8SdSQRMYimF4hVRrc2jEP9/OVPqxb+V+a9qmUS02fsrAVA==}
     engines: {node: '>=20.11'}
     hasBin: true
 
@@ -3622,7 +3622,7 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.5.2)(@vitest/coverage-v8@4.1.2)(jsdom@27.4.0)(vite@6.4.3(@types/node@25.5.2)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/coverage-v8@4.1.2)(jsdom@27.4.0)(vite@6.4.3(@types/node@26.2.0)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
 
   '@vitest/expect@4.1.11':
     dependencies:
@@ -4768,7 +4768,7 @@ snapshots:
 
   reflect-metadata@0.2.2: {}
 
-  release-monorepo-semantically@1.13.0:
+  release-monorepo-semantically@1.14.0:
     dependencies:
       commander: 14.0.3
       glob: 10.5.0
