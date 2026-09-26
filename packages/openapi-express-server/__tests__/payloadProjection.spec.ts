@@ -176,3 +176,104 @@ describe('SPEC-003 · the validator projects the request', () => {
     expect(PAYLOADS.dropThing.parse({ params: { id: '42' }, headers: { trace: 'abc' } })).toEqual({});
   });
 });
+
+describe('SPEC-003 · parameter coercion', () => {
+  const COERCION_VALIDATORS = path.resolve(GENERATED_DIR, 'coercion-validators.ts');
+
+  const coercionDoc: OpenAPIV3.Document = {
+    openapi: '3.0.0',
+    info: { title: 'coercion', version: '1.0.0' },
+    components: {
+      schemas: {
+        Settings: {
+          type: 'object',
+          required: ['enabled', 'tags'],
+          properties: { enabled: { type: 'boolean' }, tags: { type: 'array', items: { type: 'string' } } },
+        },
+      },
+    },
+    paths: {
+      '/flags/{enabled}': {
+        get: {
+          operationId: 'listFlags',
+          parameters: [
+            { name: 'enabled', in: 'path', required: true, schema: { type: 'boolean' } },
+            { name: 'dryRun', in: 'query', schema: { type: 'boolean' } },
+            { name: 'tag', in: 'query', schema: { type: 'array', items: { type: 'string' } } },
+            { name: 'switches', in: 'query', schema: { type: 'array', items: { type: 'boolean' } } },
+            { name: 'ids', in: 'query', schema: { type: 'array', items: { type: 'integer' } } },
+            { name: 'pair', in: 'query', schema: { type: 'array', minItems: 2, items: { type: 'string' } } },
+          ],
+          responses: { '200': { description: 'ok' } },
+        },
+        put: {
+          operationId: 'saveSettings',
+          requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Settings' } } } },
+          responses: { '200': { description: 'ok' } },
+        },
+      },
+    },
+  };
+
+  let PAYLOADS: Record<string, ZodObject>;
+
+  const parseQuery = (query: Record<string, unknown>) =>
+    PAYLOADS.listFlags.parse({ params: { enabled: 'true' }, query }).query;
+
+  beforeAll(async () => {
+    fs.mkdirSync(GENERATED_DIR, { recursive: true });
+    fs.writeFileSync(COERCION_VALIDATORS, renderValidators(coercionDoc));
+
+    PAYLOADS = (await import('./.generated/coercion-validators' as any)).PAYLOADS;
+  });
+
+  afterAll(() => {
+    fs.rmSync(GENERATED_DIR, { recursive: true, force: true });
+  });
+
+  // RP-9
+  it.each([
+    ['true', true],
+    ['false', false],
+    [true, true],
+    [false, false],
+  ])('parses the boolean parameter %p to %p', (input, expected) => {
+    expect(PAYLOADS.listFlags.parse({ params: { enabled: input }, query: { dryRun: input } })).toEqual({
+      params: { enabled: expected },
+      query: { dryRun: expected },
+    });
+  });
+
+  // RP-9
+  it.each([['yes'], ['1'], [''], ['TRUE']])('rejects the boolean parameter %p', (input) => {
+    expect(PAYLOADS.listFlags.safeParse({ params: { enabled: input }, query: {} }).success).toBe(false);
+    expect(PAYLOADS.listFlags.safeParse({ params: { enabled: 'true' }, query: { dryRun: input } }).success).toBe(false);
+  });
+
+  // RP-10
+  it('wraps a single array parameter value in an array', () => {
+    expect(parseQuery({ tag: 'a' })).toEqual({ tag: ['a'] });
+    expect(parseQuery({ tag: ['a', 'b'] })).toEqual({ tag: ['a', 'b'] });
+    expect(parseQuery({ tag: 'a,b' })).toEqual({ tag: ['a,b'] });
+    expect(parseQuery({})).toEqual({});
+  });
+
+  // RP-10 — items are coerced as parameters, constraints apply to the wrapped array.
+  it('coerces array parameter items and constrains the wrapped array', () => {
+    expect(parseQuery({ switches: ['true', 'false'] })).toEqual({ switches: [true, false] });
+    expect(parseQuery({ switches: 'true' })).toEqual({ switches: [true] });
+    expect(parseQuery({ ids: '3' })).toEqual({ ids: [3] });
+    expect(() => parseQuery({ switches: ['maybe'] })).toThrow();
+    expect(() => parseQuery({ pair: 'a' })).toThrow();
+    expect(parseQuery({ pair: ['a', 'b'] })).toEqual({ pair: ['a', 'b'] });
+  });
+
+  // RP-11 — a body is JSON, so it gets no parameter coercion.
+  it('does not coerce booleans or arrays in the body', () => {
+    expect(PAYLOADS.saveSettings.parse({ body: { enabled: true, tags: ['a'] } })).toEqual({
+      body: { enabled: true, tags: ['a'] },
+    });
+    expect(PAYLOADS.saveSettings.safeParse({ body: { enabled: 'true', tags: ['a'] } }).success).toBe(false);
+    expect(PAYLOADS.saveSettings.safeParse({ body: { enabled: true, tags: 'a' } }).success).toBe(false);
+  });
+});

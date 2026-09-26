@@ -10,6 +10,14 @@ const zNumber = (schema: z.ZodNumber) =>
     schema,
   );
 
+// Query and path parameters only (a JSON body carries real booleans and arrays): 'true'/'false' are booleans, and a
+// parameter given once is a string where an array is expected.
+const zBoolean = (schema: z.ZodBoolean) =>
+  z.preprocess((value) => (value === 'true' ? true : value === 'false' ? false : value), schema);
+
+const zArray = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((value) => (value === undefined || value === null || Array.isArray(value) ? value : [value]), schema);
+
 const zDate = z.preprocess((arg) => {
   if (typeof arg === 'string' || typeof arg === 'number') {
     return new Date(arg);

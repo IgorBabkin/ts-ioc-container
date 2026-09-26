@@ -9,7 +9,7 @@ Generates Zod validation schemas from OpenAPI 3.0 specifications. Automatically 
 - 🎯 **Type Safety**: Works seamlessly with TypeScript for end-to-end type safety
 - 📝 **OpenAPI 3.0 Support**: Full support for OpenAPI 3.0 specification
 - 🔄 **JSON & YAML**: Supports both JSON and YAML OpenAPI specifications
-- 🛠️ **Special Type Handling**: Automatic handling for numbers, dates, and optional fields
+- 🛠️ **Special Type Handling**: Automatic handling for numbers, dates, query/path booleans and arrays, and optional fields
 
 ## Installation
 
@@ -268,10 +268,35 @@ const zDate = z.preprocess((arg) => {
 }, z.date());
 ```
 
+### Booleans
+
+`type: boolean` renders as `z.boolean()`. For a query or path parameter it renders as `zBoolean(z.boolean())`, which
+parses the strings Express passes, `'true'` and `'false'`, and rejects any other string:
+
+```typescript
+const zBoolean = (schema: z.ZodBoolean) =>
+  z.preprocess((value) => (value === 'true' ? true : value === 'false' ? false : value), schema);
+```
+
+In a request body or a component schema a boolean stays strict: `"true"` is rejected.
+
 ### Arrays
 
 `minItems` / `maxItems` become `.min()` / `.max()`, `uniqueItems` adds a refinement comparing items by their JSON
 representation, and an array without `items` accepts `z.any()`.
+
+Express passes a query parameter given once (`?tag=a`) as a string and repeated (`?tag=a&tag=b`) as an array, so an
+array query or path parameter is wrapped in `zArray`, which turns a single value into a one-element array before the
+array constraints apply. Its inline `items` are coerced as parameters too (`?flag=true&flag=false` → `[true, false]`).
+Values are not split on commas — `style` / `explode` are not read. Arrays in a request body are not wrapped.
+
+```typescript
+const zArray = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((value) => (value === undefined || value === null || Array.isArray(value) ? value : [value]), schema);
+```
+
+Boolean and array coercion reads the parameter's inline schema only: a parameter whose `schema` is a `$ref` uses the
+shared component schema and is not coerced.
 
 ### Objects
 

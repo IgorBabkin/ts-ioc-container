@@ -70,6 +70,16 @@ Handlebars.registerHelper('is_nullable', function (schema: { type?: string | str
   return schema.nullable === true || (Array.isArray(schema.type) && schema.type.includes('null'));
 });
 
+// Query and path parameters arrive as strings (SPEC-003 RP-9, RP-10): flag a parameter's inline schema, and its inline
+// array items, so `ValidationJsonSchema.hbs` renders the coercing `zBoolean`/`zArray` for them and nowhere else.
+const PARAMETER = 'x-openapi-to-zod-parameter';
+type ParameterSchema = { items?: object; $ref?: string };
+const asParameter = (schema: ParameterSchema | undefined): object | undefined =>
+  schema && !schema.$ref
+    ? { ...schema, [PARAMETER]: true, ...(schema.items && { items: asParameter(schema.items as ParameterSchema) }) }
+    : schema;
+Handlebars.registerHelper('as_parameter', asParameter);
+
 // `exclusiveMinimum`/`exclusiveMaximum` are booleans modifying `minimum`/`maximum` in OpenAPI 3.0 and numbers in 3.1.
 Handlebars.registerHelper(
   'number_constraints',
