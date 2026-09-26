@@ -6,7 +6,7 @@ import type { Server } from 'http';
 import * as YAML from 'yaml';
 import { Container, IContainer, register, Registration as R } from 'ts-ioc-container';
 import { z } from 'zod';
-import { AppService, IAppServiceToken } from './agentRecipes/AppService';
+import { AppService, IAppServiceToken, ILoggerToken, OnConstructModule } from './agentRecipes/AppService';
 
 const PACKAGES = ['openapi-express-server', 'openapi-to-server-interface', 'openapi-to-request-validator'];
 
@@ -70,7 +70,10 @@ describe('AGENTS.md', () => {
       }
     }
 
+    const logged: string[] = [];
     const container = new Container({ tags: ['application'] })
+      .useModule(OnConstructModule)
+      .addRegistration(R.fromValue({ log: (message: string) => logged.push(message) }).bindTo(ILoggerToken))
       .addRegistration(R.fromClass(GetItem))
       .addRegistration(R.fromClass(DeleteItem))
       .addRegistration(R.fromClass(AppService));
@@ -87,6 +90,12 @@ describe('AGENTS.md', () => {
     });
     afterAll((done) => {
       app.close(done);
+    });
+
+    it('runs the @onConstruct modules: JSON parsing, request logging with an injected logger, health check', async () => {
+      await request(app).get('/health').expect(200, { status: 'ok' });
+
+      expect(logged).toContain('GET /health');
     });
 
     it('serves a registered operation from a request scope carrying its tags', async () => {

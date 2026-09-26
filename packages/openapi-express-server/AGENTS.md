@@ -26,16 +26,41 @@ Sibling packages, used together with this one:
 
 ### Wire every operation
 
-One application-scoped service owns the Express app: it registers one route per operation, puts
-the error handler after them, and starts the server. `applyRoutes` takes the document and the
-generated `PAYLOADS` validators; only the current scope is injected:
+One application-scoped service owns the Express app. Each concern is a small `add*` method run
+once right after construction by an `@onConstruct(execute())` hook; `execute()` resolves the
+method's `@inject` parameters, so a module can ask for its own dependencies (see
+`addRequestLogging`). Modules run in declaration order, which is Express middleware order:
+`addErrorHandling` must stay last. `applyRoutes` fills the router mounted by `addRouting`, one
+route per operation, with the generated `PAYLOADS` validators. Only the current scope is
+constructor-injected.
+
+`ts-ioc-container` ships no `onConstruct`: the recipe declares it with `hook(...)` and runs it
+from `OnConstructModule`, which the container must `useModule(...)`.
 
 ```typescript
 import 'reflect-metadata';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import type { Server } from 'http';
 import type { OpenAPIV3 } from 'openapi-types';
-import { by, Container, type IContainer, inject, register, Registration as R, scope, select, singleton, SingleToken } from 'ts-ioc-container';
+import {
+  by,
+  Container,
+  hook,
+  HookCollector,
+  type HookFn,
+  type HookType,
+  type IContainer,
+  type IContainerModule,
+  inject,
+  register,
+  Registration as R,
+  runInOrder,
+  scope,
+  select,
+  singleton,
+  SingleToken,
+  toTask,
+} from 'ts-ioc-container';
 import { ZodError, type ZodType } from 'zod';
 import {
   containerMiddleware,
@@ -46,6 +71,25 @@ import {
   type RouteMetadata,
 } from '@ibabkin/openapi-express-server';
 
+// ts-ioc-container ships no lifecycle hooks: declare `onConstruct` and run it after every construction.
+const onConstruct = (fn: HookType) => hook('onConstruct', fn);
+const execute = (): HookFn => (ctx) => {
+  ctx.invokeMethod({ args: ctx.resolveArgs() }); // `@inject` parameters of the method are resolved
+};
+
+const onConstructHooks = new HookCollector({ key: 'onConstruct' });
+const OnConstructModule: IContainerModule = {
+  applyTo: (container) =>
+    container.getInjector().onConstructed((instance, scope) => {
+      void runInOrder(onConstructHooks.getActions(instance, { scope }).map(toTask));
+    }),
+};
+
+interface ILogger {
+  log(message: string): void;
+}
+const ILoggerToken = new SingleToken<ILogger>('ILogger');
+
 interface IAppService {
   applyRoutes(doc: OpenAPIV3.Document, payloadValidators: Record<string, ZodType>): void;
   start(port: number): Server;
@@ -54,9 +98,44 @@ const IAppServiceToken = new SingleToken<IAppService>('IAppService');
 
 @register(IAppServiceToken, scope((s) => s.hasTag('application')), singleton())
 class AppService implements IAppService {
-  private readonly app = express().use(express.json());
+  private readonly app = express();
+  private readonly router = express.Router(); // filled by applyRoutes
 
   constructor(@inject(by(select.scope.current)) private readonly appScope: IContainer) {}
+
+  // Modules: each runs once, in declaration order, right after construction.
+  @onConstruct(execute())
+  addJsonParsing(): void {
+    this.app.use(express.json());
+  }
+
+  @onConstruct(execute())
+  addRequestLogging(@inject(by(ILoggerToken)) logger: ILogger): void {
+    this.app.use((req, res, next) => {
+      logger.log(`${req.method} ${req.path}`);
+      next();
+    });
+  }
+
+  @onConstruct(execute())
+  addHealthCheck(): void {
+    this.app.get('/health', (req, res) => {
+      res.json({ status: 'ok' });
+    });
+  }
+
+  @onConstruct(execute())
+  addRouting(): void {
+    this.app.use(this.router);
+  }
+
+  // Must stay last: Express hands an error only to error handlers registered after the failing middleware.
+  @onConstruct(execute())
+  addErrorHandling(): void {
+    this.app.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
+      res.status(error instanceof ZodError ? 400 : 500).json({ error: error.message });
+    });
+  }
 
   applyRoutes(doc: OpenAPIV3.Document, payloadValidators: Record<string, ZodType>): void {
     for (const route of extractRoutes(doc)) {
@@ -64,14 +143,10 @@ class AppService implements IAppService {
       const method = route.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
       const path = convertOpenAPIPathToExpress(route.path);
       const validator = payloadValidators[route.operationId];
-      this.app[method](path, containerMiddleware(this.appScope, route.tags), (req, res, next) =>
+      this.router[method](path, containerMiddleware(this.appScope, route.tags), (req, res, next) =>
         this.handle(route, validator, req, res, next),
       );
     }
-    // Express recognises an error handler by its four parameters, so it must come after the routes.
-    this.app.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
-      res.status(error instanceof ZodError ? 400 : 500).json({ error: error.message });
-    });
   }
 
   start(port: number): Server {
@@ -100,6 +175,15 @@ class AppService implements IAppService {
 }
 ```
 
+Add a concern by adding a method, not by editing `applyRoutes`:
+
+```typescript
+  @onConstruct(execute())
+  addCors(@inject(by(ICorsOptionsToken)) options: CorsOptions): void {
+    this.app.use(cors(options)); // declare it above addRouting so it runs before the routes
+  }
+```
+
 Use cases are registered under their `operationId` with the same decorator:
 
 ```typescript
@@ -120,6 +204,8 @@ import { PAYLOADS } from './.generated/validators';
 import spec from './.generated/swagger.json' with { type: 'json' };
 
 const container = new Container({ tags: ['application'] })
+  .useModule(OnConstructModule) // without it no add* module runs
+  .addRegistration(R.fromValue(console).bindTo(ILoggerToken))
   .addRegistration(R.fromClass(GetUser))
   .addRegistration(R.fromClass(AppService));
 
@@ -147,6 +233,8 @@ OpenAPI tag to limit a registration to the operations carrying that tag.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
+| An `add*` module never runs (no JSON parsing, no error handling) | `OnConstructModule` not applied, or `reflect-metadata` not imported first | `container.useModule(OnConstructModule)` |
+| An error returns Express's HTML 500 page | The error handler is registered before the failing route | Keep `addErrorHandling` the last `@onConstruct` method; routes go into the router `addRouting` mounts |
 | `hasRegistration(operationId)` is `false` although it was registered | `container.register(key, provider)` is invisible to `hasRegistration` | `@register(operationId)` on the class + `addRegistration(R.fromClass(X))` |
 | `DependencyNotFoundError` (`IOC_DEPENDENCY_NOT_FOUND`) for a use case | Key differs from the `operationId` (e.g. capitalised) | Use the `operationId` verbatim |
 | `@inject` params are `undefined` | `reflect-metadata` not imported first, or decorator options off | `import 'reflect-metadata'` first; `experimentalDecorators` + `emitDecoratorMetadata` |
