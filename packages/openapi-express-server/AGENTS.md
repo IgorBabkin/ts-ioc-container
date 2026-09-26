@@ -27,40 +27,30 @@ Sibling packages, used together with this one:
 ### Wire every operation
 
 One application-scoped service owns the Express app. Each concern is a small `add*` method run
-once right after construction by an `@onConstruct(execute())` hook; `execute()` resolves the
-method's `@inject` parameters, so a module can ask for its own dependencies (see
-`addRequestLogging`). Modules run in declaration order, which is Express middleware order:
-`addErrorHandling` must stay last. `applyRoutes` fills the router mounted by `addRouting`, one
-route per operation, with the generated `PAYLOADS` validators. Only the current scope is
-constructor-injected.
+once right after construction by an `@onConstruct(execute())` hook, so a module can ask for its
+own dependencies through `@inject` parameters (see `addRequestLogging`). Modules run in
+declaration order, which is Express middleware order: `addErrorHandling` must stay last.
+`applyRoutes` fills the router mounted by `addRouting`, one route per operation, with the
+generated `PAYLOADS` validators. Only the current scope is constructor-injected.
 
-`ts-ioc-container` ships no `onConstruct`: the recipe declares it with `hook(...)` and runs it
-from `OnConstructModule`, which the container must `useModule(...)`.
+**Requirements.** The recipe does not define lifecycle hooks; the application is expected to
+provide them already (here imported from `./lifecycle`):
+
+| Name | Contract |
+| --- | --- |
+| `onConstruct(fn: HookType)` | Method decorator declaring a hook under the `onConstruct` key: `hook('onConstruct', fn)` |
+| `execute(): HookFn` | Hook that calls the decorated method with its `@inject` parameters resolved: `ctx.invokeMethod({ args: ctx.resolveArgs() })` |
+| `OnConstructModule: IContainerModule` | Runs every `onConstruct` hook of each instance the injector constructs, in declaration order (`HookCollector` + `getInjector().onConstructed` + `runInOrder`) |
+
+`ts-ioc-container` ships none of them (see "Lifecycle hooks" in its `AGENTS.md`). If the
+application lacks them, add them there once rather than inside this service.
 
 ```typescript
 import 'reflect-metadata';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import type { Server } from 'http';
 import type { OpenAPIV3 } from 'openapi-types';
-import {
-  by,
-  Container,
-  hook,
-  HookCollector,
-  type HookFn,
-  type HookType,
-  type IContainer,
-  type IContainerModule,
-  inject,
-  register,
-  Registration as R,
-  runInOrder,
-  scope,
-  select,
-  singleton,
-  SingleToken,
-  toTask,
-} from 'ts-ioc-container';
+import { by, Container, type IContainer, inject, register, Registration as R, scope, select, singleton, SingleToken } from 'ts-ioc-container';
 import { ZodError, type ZodType } from 'zod';
 import {
   containerMiddleware,
@@ -70,20 +60,7 @@ import {
   type HttpRouteInstance,
   type RouteMetadata,
 } from '@ibabkin/openapi-express-server';
-
-// ts-ioc-container ships no lifecycle hooks: declare `onConstruct` and run it after every construction.
-const onConstruct = (fn: HookType) => hook('onConstruct', fn);
-const execute = (): HookFn => (ctx) => {
-  ctx.invokeMethod({ args: ctx.resolveArgs() }); // `@inject` parameters of the method are resolved
-};
-
-const onConstructHooks = new HookCollector({ key: 'onConstruct' });
-const OnConstructModule: IContainerModule = {
-  applyTo: (container) =>
-    container.getInjector().onConstructed((instance, scope) => {
-      void runInOrder(onConstructHooks.getActions(instance, { scope }).map(toTask));
-    }),
-};
+import { execute, onConstruct, OnConstructModule } from './lifecycle'; // provided by the application
 
 interface ILogger {
   log(message: string): void;
@@ -233,7 +210,7 @@ OpenAPI tag to limit a registration to the operations carrying that tag.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| An `add*` module never runs (no JSON parsing, no error handling) | `OnConstructModule` not applied, or `reflect-metadata` not imported first | `container.useModule(OnConstructModule)` |
+| An `add*` module never runs (no JSON parsing, no error handling) | The application's `OnConstructModule` not applied, or `reflect-metadata` not imported first | `container.useModule(OnConstructModule)` |
 | An error returns Express's HTML 500 page | The error handler is registered before the failing route | Keep `addErrorHandling` the last `@onConstruct` method; routes go into the router `addRouting` mounts |
 | `hasRegistration(operationId)` is `false` although it was registered | `container.register(key, provider)` is invisible to `hasRegistration` | `@register(operationId)` on the class + `addRegistration(R.fromClass(X))` |
 | `DependencyNotFoundError` (`IOC_DEPENDENCY_NOT_FOUND`) for a use case | Key differs from the `operationId` (e.g. capitalised) | Use the `operationId` verbatim |

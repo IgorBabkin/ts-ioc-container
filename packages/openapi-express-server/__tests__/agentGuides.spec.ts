@@ -6,7 +6,8 @@ import type { Server } from 'http';
 import * as YAML from 'yaml';
 import { Container, IContainer, register, Registration as R } from 'ts-ioc-container';
 import { z } from 'zod';
-import { AppService, IAppServiceToken, ILoggerToken, OnConstructModule } from './agentRecipes/AppService';
+import { AppService, IAppServiceToken, ILoggerToken } from './agentRecipes/AppService';
+import { OnConstructModule } from './agentRecipes/lifecycle';
 
 const PACKAGES = ['openapi-express-server', 'openapi-to-server-interface', 'openapi-to-request-validator'];
 

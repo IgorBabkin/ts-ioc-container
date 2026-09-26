@@ -1,23 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import type { Server } from 'http';
 import type { OpenAPIV3 } from 'openapi-types';
-import {
-  by,
-  hook,
-  HookCollector,
-  type HookFn,
-  type HookType,
-  type IContainer,
-  type IContainerModule,
-  inject,
-  register,
-  runInOrder,
-  scope,
-  select,
-  singleton,
-  SingleToken,
-  toTask,
-} from 'ts-ioc-container';
+import { by, type IContainer, inject, register, scope, select, singleton, SingleToken } from 'ts-ioc-container';
 import { ZodError, type ZodType } from 'zod';
 import {
   containerMiddleware,
@@ -27,23 +11,10 @@ import {
   type HttpRouteInstance,
   type RouteMetadata,
 } from '../../lib';
+import { execute, onConstruct } from './lifecycle';
 
 // Verbatim copy of the "Wire every operation" recipe in AGENTS.md; agentGuides.spec.ts keeps them identical.
 // region recipe
-// ts-ioc-container ships no lifecycle hooks: declare `onConstruct` and run it after every construction.
-export const onConstruct = (fn: HookType) => hook('onConstruct', fn);
-export const execute = (): HookFn => (ctx) => {
-  ctx.invokeMethod({ args: ctx.resolveArgs() }); // `@inject` parameters of the method are resolved
-};
-
-const onConstructHooks = new HookCollector({ key: 'onConstruct' });
-export const OnConstructModule: IContainerModule = {
-  applyTo: (container) =>
-    container.getInjector().onConstructed((instance, scope) => {
-      void runInOrder(onConstructHooks.getActions(instance, { scope }).map(toTask));
-    }),
-};
-
 export interface ILogger {
   log(message: string): void;
 }
