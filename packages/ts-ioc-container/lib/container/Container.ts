@@ -275,7 +275,9 @@ export class Container implements IContainer {
    */
   private validateContainer(): void {
     if (this.isDisposed) {
-      throw new ContainerDisposedError('Container is already disposed');
+      throw new ContainerDisposedError(
+        'Container is already disposed: a scope cannot be used after dispose(). Create a new scope.',
+      );
     }
   }
 
@@ -284,7 +286,9 @@ export class Container implements IContainer {
    */
   private findProviderByKeyOrFail<T>(key: DependencyKey): IProvider<T> {
     if (!this.providers.has(key)) {
-      throw new DependencyNotFoundError(`Provider ${key.toString()} does not exist`);
+      throw new DependencyNotFoundError(
+        `Provider ${key.toString()} does not exist: an alias points at a key with no provider in this scope.`,
+      );
     }
     return this.providers.get(key)!;
   }

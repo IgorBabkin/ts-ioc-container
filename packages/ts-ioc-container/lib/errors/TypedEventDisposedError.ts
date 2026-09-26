@@ -2,6 +2,7 @@ import { ContainerError } from './ContainerError';
 
 export class TypedEventDisposedError extends ContainerError {
   name = 'TypedEventDisposedError';
+  readonly code = 'IOC_EVENT_DISPOSED';
 
   /**
    * @throws {TypedEventDisposedError} when `isTrue` is falsy.

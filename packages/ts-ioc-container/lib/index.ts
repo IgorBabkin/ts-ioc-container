@@ -83,6 +83,7 @@ export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { ProviderDisposedError } from './errors/ProviderDisposedError';
+export { CannotApplySingletonTwiceError } from './errors/CannotApplySingletonTwiceError';
 export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwiceError';
 export { UnsupportedTokenTypeError } from './errors/UnsupportedTokenTypeError';
 export { TypedEventDisposedError } from './errors/TypedEventDisposedError';

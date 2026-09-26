@@ -68,6 +68,6 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
    * @throws {MethodNotImplementedError} always — a function token has no underlying key.
    */
   toString(): string {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('FunctionToken.toString is not implemented');
   }
 }

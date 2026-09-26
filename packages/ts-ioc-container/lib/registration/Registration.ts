@@ -83,7 +83,9 @@ export class Registration<T = any> implements IRegistration<T> {
     }
 
     if (!this.key) {
-      throw new DependencyMissingKeyError('No key provided for registration');
+      throw new DependencyMissingKeyError(
+        'No key provided for registration: bind it with @register(bindTo(...)) or .bindTo(...).',
+      );
     }
 
     const provider = this.mappers.reduce<IProvider<T>>((p, m) => m(p), this.createProvider());
@@ -95,7 +97,9 @@ export class Registration<T = any> implements IRegistration<T> {
    */
   getKeyOrFail(): DependencyKey {
     if (!this.key) {
-      throw new DependencyMissingKeyError('No key provided for registration');
+      throw new DependencyMissingKeyError(
+        'No key provided for registration: bind it with @register(bindTo(...)) or .bindTo(...).',
+      );
     }
     return this.key;
   }

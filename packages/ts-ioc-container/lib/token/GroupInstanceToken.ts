@@ -25,21 +25,21 @@ export class GroupInstanceToken extends InjectionToken<Instance[]> implements Se
    * @throws {MethodNotImplementedError} always — a group instance token cannot receive static args.
    */
   args(...deps: unknown[]): this {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('GroupInstanceToken.args is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — a group instance token cannot receive resolved args.
    */
   argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<Instance[]> {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('GroupInstanceToken.argsFn is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — a group instance token cannot be made lazy.
    */
   lazy(): InjectionToken<Instance[]> {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('GroupInstanceToken.lazy is not implemented');
   }
 
   cascade(isTrue: boolean): this {
@@ -59,6 +59,6 @@ export class GroupInstanceToken extends InjectionToken<Instance[]> implements Se
    * @throws {MethodNotImplementedError} always — a group instance token has no underlying key.
    */
   toString(): string {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('GroupInstanceToken.toString is not implemented');
   }
 }

@@ -19,21 +19,21 @@ export class ConstantToken<T = any> extends InjectionToken<T> implements Seriali
    * @throws {MethodNotImplementedError} always — a constant token cannot receive static args.
    */
   args(...deps: unknown[]): InjectionToken<T> {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('ConstantToken.args is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — a constant token cannot receive resolved args.
    */
   argsFn(getArgsFn: (s: IContainer) => unknown[]): InjectionToken<T> {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('ConstantToken.argsFn is not implemented');
   }
 
   /**
    * @throws {MethodNotImplementedError} always — a constant token cannot be made lazy.
    */
   lazy(): InjectionToken<T> {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('ConstantToken.lazy is not implemented');
   }
 
   addTags(...tags: string[]): ConstantToken<T> {
@@ -44,6 +44,6 @@ export class ConstantToken<T = any> extends InjectionToken<T> implements Seriali
    * @throws {MethodNotImplementedError} always — a constant token has no underlying key.
    */
   toString(): string {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('ConstantToken.toString is not implemented');
   }
 }

@@ -30,7 +30,9 @@ export const toToken = <T = any>(token: Injectable<T>): InjectionToken<T> => {
     return new FunctionToken(token as InjectFn<T>);
   }
 
-  throw new UnsupportedTokenTypeError(`Unknown token ${token}`);
+  throw new UnsupportedTokenTypeError(
+    `Unknown token ${token}: expected an InjectionToken, a DependencyKey (string | symbol), a class or a function.`,
+  );
 };
 
 /**

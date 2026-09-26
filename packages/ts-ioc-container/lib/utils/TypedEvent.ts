@@ -88,6 +88,9 @@ export class TypedEvent<TArgs extends unknown[] = []> implements ITypedEvent<TAr
    * @throws {TypedEventDisposedError} when the event has already been disposed.
    */
   private validate(): void {
-    TypedEventDisposedError.assert(!this.isDisposed, 'TypedEvent is already disposed');
+    TypedEventDisposedError.assert(
+      !this.isDisposed,
+      'TypedEvent is already disposed: its scope was disposed, so it accepts no new listeners.',
+    );
   }
 }
