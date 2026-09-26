@@ -356,6 +356,12 @@ const server: IServer = {
 };
 ```
 
+## For AI agents
+
+The package ships [`AGENTS.md`](./AGENTS.md), a compact guide for coding agents: what is generated and how it is named, the use case and client recipes, and the pitfalls. After
+installation it is at `node_modules/@ibabkin/openapi-to-server/AGENTS.md`. Point your agent at it from your own
+`AGENTS.md` or `CLAUDE.md`.
+
 ## Development
 
 ### Building
