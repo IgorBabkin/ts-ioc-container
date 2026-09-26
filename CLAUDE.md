@@ -134,7 +134,8 @@ cosmetic:
   Fixed upstream in `release-monorepo-semantically@1.9.4`, which never rewrites
   a `workspace:` specifier
   ([#8](https://github.com/IgorBabkin/release-monorepo-semantically/issues/8)).
-  Do not pin it back, and do not downgrade below 1.9.4.
+  Do not pin it back, and do not downgrade below 1.12 (the `docs` release rule in `.release.json` needs
+  its `bumps` config).
 - It also keeps the react tests honest. With a registry pin they ran against a
   *published* copy of the container, so they never exercised the change in the
   same commit — and the pin silently drifted behind.
@@ -380,11 +381,22 @@ Paths below are relative to `packages/ts-ioc-container/` unless stated otherwise
 ## Commit Message Conventions
 
 ### Types that prevent package releases (use these when no API change)
-`docs`, `test`, `ci`, `chore`, `refactor`, `style`
+`test`, `ci`, `chore`, `refactor`, `style` — and `docs` with any scope other
+than a package name
 
 ### Types that trigger releases
-`feat` → minor bump, `fix` / `perf` → patch bump, `BREAKING CHANGE` (or `!` after
-the type/scope) → major bump
+`feat` → minor bump, `fix` / `perf` / `docs` → patch bump, `BREAKING CHANGE` (or
+`!` after the type/scope) → major bump — each only when scoped to a package name
+(see below).
+
+`docs` releasing is this repo's choice, not the tool's default: the published
+tarball carries documentation consumers and AI agents read at the installed
+version (`README.md`, `AGENTS.md`, JSDoc in `typings/`), so a docs change to a
+package has to reach npm. It is configured by the `report.bumps.patch` matchers
+in the root `.release.json` (needs `release-monorepo-semantically` >= 1.12,
+where `bumps` replaces the defaults per level — keep the `fix` / `perf`
+matchers listed there). Repo-only docs (ADRs, `CLAUDE.md`, CI notes) use a
+free-form scope such as `docs(adr):` and do not release.
 
 ### Scope must be the exact package name
 
@@ -402,8 +414,10 @@ fix(@ts-ioc-container/react): correct Y
 A commit scoped to anything else (`feat(hooks): ...`, `fix(docs): ...`) —
 including the free-form, feature-area scopes this repo used historically —
 **will not trigger a release for either package.** Non-release types
-(`docs`, `test`, `ci`, `chore`, `refactor`, `style`) can still use a free-form
-scope, or none, since they never trigger a release regardless of scope.
+(`test`, `ci`, `chore`, `refactor`, `style`) can still use a free-form
+scope, or none, since they never trigger a release regardless of scope. `docs`
+releases only with a package scope: `docs(ts-ioc-container): ...` publishes a
+patch, `docs(adr): ...` does not.
 
 ### Special rules
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)
