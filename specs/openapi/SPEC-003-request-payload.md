@@ -62,6 +62,42 @@ for callers that do not generate validators. It is **not** interchangeable with 
 required members of the type. A route wired with `buildPayload` alone can hand a use case a
 payload its type says cannot occur.
 
+### Parameter coercion
+
+Express hands the validator `req.query` and `req.params` as strings: a query parameter given once
+is a `string`, given more than once a `string[]`, and a path parameter is always a `string`. A JSON
+body carries real booleans and arrays. The validator bridges the gap for parameters only, so that
+the parsed payload has the types `<Op>Payload` declares.
+
+**RP-9** — A parameter (`in: query` or `in: path`) whose schema is `type: boolean` parses the string
+`'true'` to `true` and the string `'false'` to `false`; a real boolean passes through unchanged and
+any other value is rejected. The generated file does this with a `zBoolean` helper, as it does for
+numbers with `zNumber`.
+
+**RP-10** — A parameter (`in: query` or `in: path`) whose schema is `type: array` parses a single
+value to a one-element array; an array passes through unchanged. The array's inline `items` are
+coerced as parameters too (RP-9 for booleans), and the array constraints (`minItems`, `maxItems`,
+`uniqueItems`) apply to the wrapped array. The generated file does this with a `zArray` helper.
+Values are not split: `style`/`explode` are not read, so `?tag=a,b` parses to `['a,b']`.
+
+**RP-11** — RP-9 and RP-10 apply to parameters only. Inside `body`, and in `components.schemas`, a
+`type: boolean` schema rejects the string `'true'` and a `type: array` schema rejects a lone value.
+(Numeric strings are the exception that predates this rule: `zNumber` accepts them everywhere.)
+
+| Source | Schema | Input | Parsed |
+| --- | --- | --- | --- |
+| `query` / `params` | `boolean` | `'true'` / `'false'` | `true` / `false` |
+| `query` / `params` | `boolean` | `'yes'`, `'1'`, `''` | rejected |
+| `query` / `params` | `boolean` | `true` | `true` |
+| `query` | `array` of `string` | `'a'` | `['a']` |
+| `query` | `array` of `string` | `['a', 'b']` | `['a', 'b']` |
+| `query` | `array` of `boolean` | `['true', 'false']` | `[true, false]` |
+| `query` | `array` of `integer` | `'3'` | `[3]` |
+| `query` | `array` with `minItems: 2` | `'a'` | rejected (`['a']` is too short) |
+| `query` | optional `array` | absent | absent |
+| `body` | `boolean` | `'true'` | rejected |
+| `body` | `array` | `'a'` | rejected |
+
 ## Known divergence
 
 **Path-item-level parameters are ignored.** OpenAPI allows `parameters` on the path item, shared by
@@ -74,6 +110,11 @@ operation needs has to be declared on the operation.
 `{ $ref: … }` entry does not have, so a referenced parameter is neither resolved nor reported — it
 simply disappears from the payload and from the validator.
 
+**Parameter coercion reads the parameter's inline schema only.** A parameter whose `schema` is a
+`$ref` renders as the referenced component constant, which is shared with bodies and therefore not
+coerced (RP-11); booleans under `enum`, `const` or a combinator (`oneOf`, `anyOf`, `allOf`) are not
+coerced either. Declare coerced parameter schemas inline as plain `type: boolean` / `type: array`.
+
 ## Tests
 
 | Requirement | Test |
@@ -82,4 +123,5 @@ simply disappears from the payload and from the validator.
 | RP-6 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | RP-7 | `packages/openapi-to-server-interface/__tests__/client.spec.ts`, `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | RP-8 | `packages/openapi-express-server/__tests__/utils.spec.ts` |
+| RP-9, RP-10, RP-11 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | Known divergence | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |

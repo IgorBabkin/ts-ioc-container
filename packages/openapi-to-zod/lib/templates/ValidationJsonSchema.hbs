@@ -13,7 +13,7 @@ z.literal({{json const}})
 {{~else if enum~}}
 {{#if (all_strings enum)}}z.enum({{json enum}}){{else}}z.union([{{#each enum}}z.literal({{json this}}){{#unless @last}}, {{/unless}}{{/each}}]){{/if}}
 {{~else if (is_equal (base_type this) "array")~}}
-z.array({{#if items}}{{render_template 'ValidationJsonSchema.hbs' items}}{{else}}z.any(){{/if}}){{#if (is_defined minItems)}}.min({{minItems}}){{/if}}{{#if (is_defined maxItems)}}.max({{maxItems}}){{/if}}{{#if uniqueItems}}.refine((items) => new Set(items.map((item) => JSON.stringify(item))).size === items.length, { message: 'Items must be unique' }){{/if}}
+{{#if [x-openapi-to-zod-parameter]}}zArray({{/if}}z.array({{#if items}}{{render_template 'ValidationJsonSchema.hbs' items}}{{else}}z.any(){{/if}}){{#if (is_defined minItems)}}.min({{minItems}}){{/if}}{{#if (is_defined maxItems)}}.max({{maxItems}}){{/if}}{{#if uniqueItems}}.refine((items) => new Set(items.map((item) => JSON.stringify(item))).size === items.length, { message: 'Items must be unique' }){{/if}}{{#if [x-openapi-to-zod-parameter]}}){{/if}}
 {{~else if (is_equal (base_type this) "object")~}}
 z.object({
 {{#each properties as |prop key|}}
@@ -25,7 +25,7 @@ zNumber(z.number(){{#if (is_equal (base_type this) "integer")}}.int(){{/if}}{{nu
 {{~else if (is_equal (base_type this) "string")~}}
 {{#if (is_equal format "date-time")}}zDate{{else}}z.string(){{#if (is_equal format "email")}}.email(){{/if}}{{#if (is_equal format "uuid")}}.uuid(){{/if}}{{#if (includes (array 'uri' 'url') format)}}.url(){{/if}}{{#if (is_equal format "date")}}.date(){{/if}}{{#if (is_defined minLength)}}.min({{minLength}}){{/if}}{{#if (is_defined maxLength)}}.max({{maxLength}}){{/if}}{{#if pattern}}.regex(new RegExp({{json pattern}})){{/if}}{{/if}}
 {{~else if (is_equal (base_type this) "boolean")~}}
-z.boolean()
+{{#if [x-openapi-to-zod-parameter]}}zBoolean(z.boolean()){{else}}z.boolean(){{/if}}
 {{~else if (is_equal (base_type this) "null")~}}
 z.null()
 {{~else~}}
