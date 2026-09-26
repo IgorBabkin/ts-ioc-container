@@ -23,7 +23,7 @@ export default {
         'feat', // New feature (triggers release)
         'fix', // Bug fix (triggers release)
         'perf', // Performance improvement (triggers release)
-        'docs', // Documentation only
+        'docs', // Documentation (patch release when scoped to a package)
         'test', // Test only
         'ci', // CI/CD only
         'chore', // Maintenance
@@ -43,7 +43,9 @@ export default {
         // release-monorepo-semantically (see CLAUDE.md > Release) matches a
         // commit to a package by comparing this scope against that package's
         // package.json `name` field exactly, so a feat/fix/perf commit must
-        // use one of these two to trigger a release for that package.
+        // use one of these two to trigger a release for that package. A docs
+        // commit with one of these scopes also releases (a patch, configured
+        // in .release.json); with any other scope it does not.
         'ts-ioc-container',
         '@ts-ioc-container/react',
 
@@ -66,6 +68,7 @@ export default {
         'deps', // Dependencies
         'config', // Configuration files
         'linter',
+        'adr', // Architecture decision records (repo-only docs, never released)
       ],
     ],
 
