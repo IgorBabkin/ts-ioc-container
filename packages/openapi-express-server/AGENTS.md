@@ -17,10 +17,11 @@ Sibling packages, used together with this one:
 
 - Every OpenAPI operation is one **use case**: a class with `handle(payload, scope)`, registered in
   the application container under its `operationId`, verbatim (`getUser`, not `GetUser`).
-- Every request gets a child scope tagged `['request', ...operation.tags]`, attached to
-  `req.container` and disposed when the response finishes or the connection closes.
-- Tags name nothing else. Use them to bind registrations or middleware to a domain:
-  `scope((s) => s.hasTag('admin'))`.
+- Every request gets a child scope of the application scope, tagged
+  `['request', ...operation.tags]`, and disposed when the request is done. The use case is resolved
+  from it and receives it as `handle`'s second argument.
+- Tags name nothing else. Use them to register dependencies per domain: a registration with
+  `scope((s) => s.hasTag('admin'))` is resolvable only in requests to operations tagged `admin`.
 
 ## Recipes
 
@@ -53,11 +54,10 @@ import type { OpenAPIV3 } from 'openapi-types';
 import { by, Container, type IContainer, inject, register, Registration as R, scope, select, singleton, SingleToken } from 'ts-ioc-container';
 import { ZodError, type ZodType } from 'zod';
 import {
-  containerMiddleware,
   convertOpenAPIPathToExpress,
   extractRoutes,
-  getContainerOrFail,
   type HttpRouteInstance,
+  REQUEST_SCOPE_TAG,
   type RouteMetadata,
 } from '@ibabkin/openapi-express-server';
 import { execute, onConstruct, OnConstructModule } from './lifecycle'; // provided by the application
@@ -120,9 +120,7 @@ class AppService implements IAppService {
       const method = route.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
       const path = convertOpenAPIPathToExpress(route.path);
       const validator = payloadValidators[route.operationId];
-      this.router[method](path, containerMiddleware(this.appScope, route.tags), (req, res, next) =>
-        this.handle(route, validator, req, res, next),
-      );
+      this.router[method](path, (req, res, next) => this.handle(route, validator, req, res, next));
     }
   }
 
@@ -137,8 +135,10 @@ class AppService implements IAppService {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
+    // One scope per request, tagged with the operation's tags: registrations bound to a tag
+    // (`scope((s) => s.hasTag('admin'))`) are visible to exactly the routes carrying it.
+    const requestScope = this.appScope.createScope({ tags: [REQUEST_SCOPE_TAG, ...route.tags] });
     try {
-      const requestScope = getContainerOrFail(req);
       const useCase = requestScope.resolve<HttpRouteInstance>(route.operationId);
       const payload = validator.parse(req);
       const { status = 200, headers = {}, body } = await useCase.handle(payload, requestScope);
@@ -147,6 +147,8 @@ class AppService implements IAppService {
       else res.json(body);
     } catch (error) {
       next(error);
+    } finally {
+      requestScope.dispose();
     }
   }
 }
@@ -194,17 +196,29 @@ appService.start(3000);
 Register every use case **before** calling `applyRoutes`: it skips each operation that has nothing
 registered under its `operationId` at that moment.
 
-### Request-scoped services
+### Dependencies per request and per route tag
 
 ```typescript
 import { register, scope, singleton } from 'ts-ioc-container';
 
+// one instance per request, disposed with the request scope
 @register('ITransaction', scope((s) => s.hasTag('request')), singleton())
 class Transaction {}
+
+// only for operations tagged `admin` in the OpenAPI document
+@register('IAuditLog', scope((s) => s.hasTag('admin')), singleton())
+class AuditLog {}
+
+@register('deleteUser') // tags: [admin]
+class DeleteUser implements DeleteUserHttpRoute {
+  async handle(payload: DeleteUserPayload, requestScope: IContainer): Promise<DeleteUserResponse> {
+    requestScope.resolve<AuditLog>('IAuditLog'); // DependencyNotFoundError in an operation without the tag
+  }
+}
 ```
 
-One instance per request, disposed with the request scope. Use `s.hasTag('<tag>')` with an
-OpenAPI tag to limit a registration to the operations carrying that tag.
+Add both to the application container (`addRegistration(R.fromClass(AuditLog))`): the scope
+rule decides which request scopes receive them.
 
 ## Pitfalls
 
@@ -215,7 +229,8 @@ OpenAPI tag to limit a registration to the operations carrying that tag.
 | `hasRegistration(operationId)` is `false` although it was registered | `container.register(key, provider)` is invisible to `hasRegistration` | `@register(operationId)` on the class + `addRegistration(R.fromClass(X))` |
 | `DependencyNotFoundError` (`IOC_DEPENDENCY_NOT_FOUND`) for a use case | Key differs from the `operationId` (e.g. capitalised) | Use the `operationId` verbatim |
 | `@inject` params are `undefined` | `reflect-metadata` not imported first, or decorator options off | `import 'reflect-metadata'` first; `experimentalDecorators` + `emitDecoratorMetadata` |
-| `Container is not provided` | `getContainerOrFail(req)` ran on a route without `containerMiddleware` | Mount `containerMiddleware(container, route.tags)` on the route |
+| `DependencyNotFoundError` for a tag-scoped dependency | The operation lacks that tag in the OpenAPI document, or it is resolved from the application scope | Tag the operation; resolve from the request scope passed to `handle` |
+| `Container is not provided` | `getContainerOrFail(req)` ran on a route without `containerMiddleware` | Mount `containerMiddleware(container, route.tags)` on the route, or create the scope yourself as in the recipe |
 | A `patch` route is registered but types/validator are missing | Generators only cover `get`, `post`, `put`, `delete`; `extractRoutes` also returns `patch`, `options`, `head` | Skip those methods, or use one of the four |
 | Operation without `operationId` never gets a route | `extractRoutes` skips it | Give every operation an `operationId` |
 | Payload has a `headers` member / is missing empty `params` | `buildPayload(req)` is not the validator projection | Use `PAYLOADS[operationId].parse(req)`; `buildPayload` only when you have no validators |
@@ -226,7 +241,7 @@ OpenAPI tag to limit a registration to the operations carrying that tag.
 | --- | --- |
 | `extractRoutes(doc)` | `RouteMetadata[]`: `{ path, method (upper-case), operationId, tags }` per operation with an `operationId` |
 | `convertOpenAPIPathToExpress(path)` | `/users/{id}` → `/users/:id` |
-| `containerMiddleware(container, tags = [])` | Per-request child scope tagged `['request', ...tags]` on `req.container`, disposed on finish/close |
+| `containerMiddleware(container, tags = [])` | Middleware alternative to the recipe's scope creation: per-request child scope tagged `['request', ...tags]` on `req.container`, disposed on finish/close |
 | `getContainerOrFail(req)` | `req.container` or throws `Container is not provided` |
 | `REQUEST_SCOPE_TAG` | `'request'` |
 | `buildPayload(req)` | `{ params?, query?, body?, headers? }` without validation |

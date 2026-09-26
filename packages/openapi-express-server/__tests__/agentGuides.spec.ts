@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { Server } from 'http';
 import * as YAML from 'yaml';
-import { Container, IContainer, register, Registration as R } from 'ts-ioc-container';
+import { Container, IContainer, register, Registration as R, scope, singleton } from 'ts-ioc-container';
 import { z } from 'zod';
 import { AppService, IAppServiceToken, ILoggerToken } from './agentRecipes/AppService';
 import { OnConstructModule } from './agentRecipes/lifecycle';
@@ -57,10 +57,19 @@ describe('AGENTS.md', () => {
       expect(readGuide('openapi-express-server')).toContain(recipe);
     });
 
+    // Registered per route tag: only request scopes of operations tagged `items` can resolve it.
+    @register('IItemsRepository', scope((s) => s.hasTag('items')), singleton())
+    class ItemsRepository {
+      find(id: string) {
+        return { id };
+      }
+    }
+
     @register('getItem')
     class GetItem {
-      async handle(payload: { params: { id: string } }, scope: IContainer) {
-        return { status: 200, headers: { 'x-tags': String(scope.hasTag('items')) }, body: { id: payload.params.id } };
+      async handle(payload: { params: { id: string } }, requestScope: IContainer) {
+        const item = requestScope.resolve<ItemsRepository>('IItemsRepository').find(payload.params.id);
+        return { status: 200, headers: { 'x-tags': String(requestScope.hasTag('items')) }, body: item };
       }
     }
 
@@ -75,6 +84,7 @@ describe('AGENTS.md', () => {
     const container = new Container({ tags: ['application'] })
       .useModule(OnConstructModule)
       .addRegistration(R.fromValue({ log: (message: string) => logged.push(message) }).bindTo(ILoggerToken))
+      .addRegistration(R.fromClass(ItemsRepository))
       .addRegistration(R.fromClass(GetItem))
       .addRegistration(R.fromClass(DeleteItem))
       .addRegistration(R.fromClass(AppService));
@@ -99,7 +109,7 @@ describe('AGENTS.md', () => {
       expect(logged).toContain('GET /health');
     });
 
-    it('serves a registered operation from a request scope carrying its tags', async () => {
+    it('serves an operation from a request scope carrying its tags, with tag-scoped dependencies', async () => {
       const response = await request(app).get('/items/42').expect(200);
 
       expect(response.body).toEqual({ id: '42' });

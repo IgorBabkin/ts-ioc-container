@@ -4,11 +4,10 @@ import type { OpenAPIV3 } from 'openapi-types';
 import { by, type IContainer, inject, register, scope, select, singleton, SingleToken } from 'ts-ioc-container';
 import { ZodError, type ZodType } from 'zod';
 import {
-  containerMiddleware,
   convertOpenAPIPathToExpress,
   extractRoutes,
-  getContainerOrFail,
   type HttpRouteInstance,
+  REQUEST_SCOPE_TAG,
   type RouteMetadata,
 } from '../../lib';
 import { execute, onConstruct } from './lifecycle';
@@ -73,9 +72,7 @@ export class AppService implements IAppService {
       const method = route.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
       const path = convertOpenAPIPathToExpress(route.path);
       const validator = payloadValidators[route.operationId];
-      this.router[method](path, containerMiddleware(this.appScope, route.tags), (req, res, next) =>
-        this.handle(route, validator, req, res, next),
-      );
+      this.router[method](path, (req, res, next) => this.handle(route, validator, req, res, next));
     }
   }
 
@@ -90,8 +87,10 @@ export class AppService implements IAppService {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
+    // One scope per request, tagged with the operation's tags: registrations bound to a tag
+    // (`scope((s) => s.hasTag('admin'))`) are visible to exactly the routes carrying it.
+    const requestScope = this.appScope.createScope({ tags: [REQUEST_SCOPE_TAG, ...route.tags] });
     try {
-      const requestScope = getContainerOrFail(req);
       const useCase = requestScope.resolve<HttpRouteInstance>(route.operationId);
       const payload = validator.parse(req);
       const { status = 200, headers = {}, body } = await useCase.handle(payload, requestScope);
@@ -100,6 +99,8 @@ export class AppService implements IAppService {
       else res.json(body);
     } catch (error) {
       next(error);
+    } finally {
+      requestScope.dispose();
     }
   }
 }
