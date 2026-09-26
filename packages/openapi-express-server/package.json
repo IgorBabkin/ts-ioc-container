@@ -23,7 +23,9 @@
     ".": {
       "types": "./esm/index.d.ts",
       "import": "./esm/index.js"
-    }
+    },
+    "./AGENTS.md": "./AGENTS.md",
+    "./package.json": "./package.json"
   },
   "module": "esm/index.js",
   "repository": {
@@ -35,7 +37,8 @@
     "test": "__tests__"
   },
   "files": [
-    "esm/**/*"
+    "esm/**/*",
+    "AGENTS.md"
   ],
   "scripts": {
     "build": "pnpm run clean && pnpm run build:ts",

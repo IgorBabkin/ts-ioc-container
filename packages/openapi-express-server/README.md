@@ -45,6 +45,12 @@ Each route mounts `containerMiddleware(container, route.tags)`, so every request
 validates `req` with the Zod schema for the same `operationId`, calls `useCase.handle(payload, scope)`, and writes
 `{ status, headers, body }` to the response.
 
+## For AI agents
+
+The package ships [`AGENTS.md`](./AGENTS.md), a compact guide for coding agents: the one-route-per-operation wiring recipe (exercised by `__tests__/agentGuides.spec.ts`), the request-scope model and the pitfalls. After
+installation it is at `node_modules/@ibabkin/openapi-express-server/AGENTS.md`. Point your agent at it from your own
+`AGENTS.md` or `CLAUDE.md`.
+
 ## Development
 
 ```bash
