@@ -134,8 +134,9 @@ cosmetic:
   Fixed upstream in `release-monorepo-semantically@1.9.4`, which never rewrites
   a `workspace:` specifier
   ([#8](https://github.com/IgorBabkin/release-monorepo-semantically/issues/8)).
-  Do not pin it back, and do not downgrade below 1.12 (the `docs` release rule in `.release.json` needs
-  its `bumps` config).
+  Do not pin it back, and do not downgrade below 1.13 (the `docs` release rule in `.release.json` needs
+  its `bumps` config, 1.12+, and squash merges need `report.squash`, 1.13+ — see
+  [Squash merges](#squash-merges)).
 - It also keeps the react tests honest. With a registry pin they ran against a
   *published* copy of the container, so they never exercised the change in the
   same commit — and the pin silently drifted behind.
@@ -154,6 +155,21 @@ fail to resolve `ts-ioc-container` at all. `publish.yml` is deliberately a
 single job (build → checks → tests → release): separate jobs each paid for a
 checkout and `pnpm install` and needed an artifact upload/download to hand the
 build output across, which roughly tripled the wall time of a push to `main`.
+
+### Squash merges
+
+PRs are squash-merged, and `report` reads commit **subjects** on `main` — so on
+its own it sees one commit per PR whose subject is the PR title. PR #180 was
+titled `Make the packages usable by AI coding agents`, so its `feat` / `fix` /
+`docs` commits released nothing (`report` logged `SKIP` for both packages).
+
+`"squash": "github"` under `report` in `.release.json` (1.13+) fixes that: a
+commit whose subject ends in `(#N)` — GitHub's default squash subject — is
+replaced by the headers its body lists as `* ` bullets, which is GitHub's
+default squash body. Each listed commit is then matched to its package and
+bump on its own, so one PR can release both packages. Keep GitHub's default
+squash message (don't rewrite the body when merging); a squash commit whose
+body lists no bullets falls back to its subject, the PR title.
 
 ### Known `release-monorepo-semantically` defects
 

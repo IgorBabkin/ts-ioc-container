@@ -46,7 +46,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "3.9.7",
-    "release-monorepo-semantically": "1.12.1",
+    "release-monorepo-semantically": "1.13.0",
     "tsx": "^4.21.0",
     "typescript": "5.8.3"
   },

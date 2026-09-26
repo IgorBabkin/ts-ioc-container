@@ -6,7 +6,8 @@
         { "type": "perf", "scope": "<package>" },
         { "type": "docs", "scope": "<package>" }
       ]
-    }
+    },
+    "squash": "github"
   },
   "vcs": {
     "template": "packages/scripts/release/templates/release-commit-msg.hbs"
