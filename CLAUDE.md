@@ -77,6 +77,8 @@ packages via the `workspaces` field in the root `package.json` (not
 scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
 or `feat(ts-ioc-container): ...`.
 
+The tool ships an agent guide at `node_modules/release-monorepo-semantically/llms.txt` (pipeline, release context format, config, and every `[CODE]` error with its fix) — read it before changing the pipeline or debugging a failed release. `.release.json` declares the JSON Schema the tool ships (`$schema`), so editors validate it.
+
 To preview a release locally without mutating anything, run the same steps by
 hand with `--dry-run` appended to each (see the tool's README "Usage" section);
 `report` always requires a clean working tree, dry-run or not.
@@ -134,7 +136,7 @@ cosmetic:
   Fixed upstream in `release-monorepo-semantically@1.9.4`, which never rewrites
   a `workspace:` specifier
   ([#8](https://github.com/IgorBabkin/release-monorepo-semantically/issues/8)).
-  Do not pin it back, and do not downgrade below 1.13 (the `docs` release rule in `.release.json` needs
+  Do not pin it back, and do not downgrade below 1.14 (`llms.txt` and the config schema are 1.14+; the `docs` release rule in `.release.json` needs
   its `bumps` config, 1.12+, and squash merges need `report.squash`, 1.13+ — see
   [Squash merges](#squash-merges)).
 - It also keeps the react tests honest. With a registry pin they ran against a
