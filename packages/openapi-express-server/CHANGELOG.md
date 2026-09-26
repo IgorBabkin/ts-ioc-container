@@ -1,3 +1,13 @@
+# 3.1.0 (2026-09-26)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    @ibabkin/openapi-to-zod
+    to
+    1.4.4
+
+
 # 3.0.0 (2026-09-19)
 
   ### 💥 BREAKING CHANGES
@@ -153,6 +163,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 

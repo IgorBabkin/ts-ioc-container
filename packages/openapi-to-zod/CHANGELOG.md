@@ -1,3 +1,12 @@
+# 1.4.4 (2026-09-26)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-to-zod:**
+    coerce boolean and array query parameters
+    (18c213158e7246ba8d789e9853a2f64f192710fe)
+
+
 # 1.4.3 (2026-09-17)
 
   ### 🐞 Bug Fixes
@@ -50,6 +59,7 @@
     - **@ibabkin/openapi-to-zod:**
     publish under the existing package name
     (8d522ae590718b67abc91308ece3976364013638)
+
 
 
 
