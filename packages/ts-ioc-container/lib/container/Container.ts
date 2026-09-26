@@ -22,6 +22,22 @@ import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
 import { type ITypedEvent, TypedEvent } from '../utils/TypedEvent';
 
+/**
+ * A dependency injection scope. Each container is a node in a parent chain:
+ * a key not found here (or denied by `scopeAccess`) is resolved from the parent,
+ * and the root's parent is an {@link EmptyContainer} that throws
+ * `DependencyNotFoundError`. Child scopes come from `createScope({ tags })`,
+ * which copies the matching registrations into the child at that moment.
+ *
+ * @example
+ * const app = new Container({ tags: ['application'] })
+ *   .addRegistration(Registration.fromClass(Logger))
+ *   .addRegistration(Registration.fromValue(config).bindTo('Config'));
+ *
+ * const request = app.createScope({ tags: ['request'] });
+ * const logger = ILoggerToken.resolve(request);
+ * request.dispose();
+ */
 export class Container implements IContainer {
   isDisposed = false;
   private parent: IContainer;

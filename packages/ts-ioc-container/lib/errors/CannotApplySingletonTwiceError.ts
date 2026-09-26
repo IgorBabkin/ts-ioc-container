@@ -1,5 +1,6 @@
 import { ContainerError } from './ContainerError';
 
+/** Thrown when `singleton()` is applied twice to one provider. Code `IOC_SINGLETON_APPLIED_TWICE`. */
 export class CannotApplySingletonTwiceError extends ContainerError {
   name = 'CannotApplySingletonTwiceError';
   readonly code = 'IOC_SINGLETON_APPLIED_TWICE';

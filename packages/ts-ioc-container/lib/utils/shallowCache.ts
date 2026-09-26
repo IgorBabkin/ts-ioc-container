@@ -1,3 +1,4 @@
+/** Method decorator: caches results per instance by the key `getKeyByArgs` returns. */
 export const shallowCache =
   (getKeyByArgs: (...args: unknown[]) => unknown): MethodDecorator =>
   (target, propertyKey, descriptor: PropertyDescriptor) => {

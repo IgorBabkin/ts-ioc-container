@@ -8,6 +8,7 @@ import { InjectFn } from '../hooks/hook';
 import { type constructor, Is } from '../utils/basic';
 import { ConstantToken } from './ConstantToken';
 
+/** Anything `toToken(...)` turns into a token: a token, a key, a class or an `InjectFn`. */
 export type Injectable<T = any> = InjectFn<T> | InjectionToken<T> | DependencyKey | constructor<T>;
 
 /**

@@ -14,6 +14,12 @@ import { type constructor, toString } from '../utils/basic';
 import { CannotApplySingletonTwiceError } from '../errors/CannotApplySingletonTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
+/**
+ * The factory behind a registration: creates or returns the dependency and
+ * applies the pipes (`singleton`, `lazy`, `decorate`, args and access rules).
+ * Usually created for you by {@link Registration}; use it directly only for
+ * low-level `container.register(key, provider)` calls.
+ */
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     return new Provider(({ scope, ...options }) => scope.resolve(Target, options));

@@ -5,6 +5,10 @@ import { BindToken } from './BindToken';
 import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { Serializable } from '../utils/basic';
 
+/**
+ * Like {@link GroupAliasToken}, but resolves exactly one dependency registered
+ * under the alias, and throws `DependencyNotFoundError` when there is none.
+ */
 export class SingleAliasToken<T = any> extends InjectionToken<T> implements BindToken<T>, Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;
@@ -76,4 +80,5 @@ export class SingleAliasToken<T = any> extends InjectionToken<T> implements Bind
   }
 }
 
+/** Creates a {@link SingleAliasToken} for `token`. */
 export const toSingleAlias = <T>(token: DependencyKey) => new SingleAliasToken<T>(token);

@@ -4,6 +4,23 @@ import { IRegistration } from '../registration/IRegistration';
 import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { Serializable } from '../utils/basic';
 
+/**
+ * A typed handle for one dependency key - the usual way to name a dependency.
+ * `args(...)`, `argsFn(...)` and `lazy()` return a new token and never change
+ * this one, so one token can be specialized per injection site.
+ *
+ * @example
+ * const ILoggerToken = new SingleToken<ILogger>('ILogger');
+ *
+ * @register(bindTo(ILoggerToken))
+ * class Logger implements ILogger {}
+ *
+ * class App {
+ *   constructor(@inject(by(ILoggerToken)) logger: ILogger) {}
+ * }
+ * ILoggerToken.resolve(scope);
+ * ILoggerToken.args('prefix').lazy().resolve(scope);
+ */
 export class SingleToken<T = any> extends InjectionToken<T> implements Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;

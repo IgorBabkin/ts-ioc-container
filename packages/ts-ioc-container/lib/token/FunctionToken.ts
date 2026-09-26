@@ -5,6 +5,12 @@ import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { Serializable } from '../utils/basic';
 
+/**
+ * A token that resolves by calling an `InjectFn` with the resolution context.
+ *
+ * @example
+ * const CurrentScope = new FunctionToken(({ scope }) => scope);
+ */
 export class FunctionToken<T = any> extends InjectionToken<T> implements Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;

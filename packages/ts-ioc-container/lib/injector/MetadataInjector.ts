@@ -8,6 +8,14 @@ import { type DependencyKey } from '../container/IContainer';
 import { type InjectionToken } from '../token/InjectionToken';
 import { toToken } from '../token/toToken';
 
+/**
+ * The default injector: builds a class by calling each constructor parameter's
+ * `@inject(...)` function. Parameters without `@inject` receive `undefined`.
+ * Needs `reflect-metadata` imported once at the entrypoint.
+ *
+ * @example
+ * const container = new Container({ injector: new MetadataInjector() });
+ */
 export class MetadataInjector extends Injector implements IInjector {
   protected createInstance<T>(Target: constructor<T>, { scope, args: deps = [] }: InjectOptions): T {
     const args = resolveArgs(Target)({ scope, args: deps });
@@ -25,6 +33,15 @@ const hookMetaKey = (methodName = 'constructor') => `inject:${methodName}`;
  * the whole contract: a token, key or class is resolved with {@link by}, a
  * runtime argument picked with {@link arg}, and a mapped value is
  * `pipe(fn, ...mappers)`.
+ *
+ * @example
+ * class App {
+ *   constructor(
+ *     @inject(by(ILoggerToken)) private logger: ILogger,
+ *     @inject(pipe(by(ConfigToken), (c) => c.apiUrl)) private apiUrl: string,
+ *     @inject(arg(0)) private tenantId: string,
+ *   ) {}
+ * }
  */
 export function inject<T>(fn: InjectFn<T>): ParameterDecorator {
   return (target, propertyKey, parameterIndex) => {
@@ -46,13 +63,28 @@ export const by = <T>(target: InjectionToken<T> | DependencyKey | constructor<T>
   return ({ scope, ...options }) => token.resolve(scope, options);
 };
 
+/**
+ * Injects the first runtime arg matching `predicate`, or `undefined`.
+ *
+ * @example
+ * constructor(@inject(argsFn((value) => typeof value === 'string')) readonly name: string) {}
+ */
 export const argsFn =
   <T = unknown>(predicate: (value: unknown, index: number) => boolean): InjectFn<T> =>
   ({ args = [] }): T =>
     args.find((value, index) => predicate(value, index)) as T;
 
+/**
+ * Injects the runtime arg at `index`, or `undefined`. Args arrive as passed:
+ * a token in the args list is not resolved.
+ *
+ * @example
+ * constructor(@inject(arg(0)) readonly baseUrl: string) {}
+ * // Token.args('https://api.example.com').resolve(scope)
+ */
 export const arg = <T = unknown>(index: number): InjectFn<T> => argsFn<T>((value, i) => i === index);
 
+/** Injects the whole runtime args array. */
 export const args: InjectFn<unknown[]> = ({ args = [] }) => args;
 
 /**

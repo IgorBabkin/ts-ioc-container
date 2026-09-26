@@ -15,6 +15,11 @@ import { type constructor, type Instance } from '../utils/basic';
 import { type IInjector } from '../injector/IInjector';
 import { type ITypedEvent } from '../utils/TypedEvent';
 
+/**
+ * Terminates the parent chain of every root {@link Container}: `resolve` throws
+ * `DependencyNotFoundError`, alias lookups return nothing, and every other
+ * method throws `MethodNotImplementedError`. You rarely use it directly.
+ */
 export class EmptyContainer implements IContainer {
   /**
    * @throws {MethodNotImplementedError} always — the empty container has no disposal state.

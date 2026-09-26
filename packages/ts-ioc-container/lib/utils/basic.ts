@@ -1,16 +1,22 @@
+/** A class that constructs `T`. */
 export type constructor<T> = new (...args: any[]) => T;
 
+/** Something with a meaningful `toString()`, e.g. a token used as a cache key. */
 export interface Serializable {
   toString(): string;
 }
 
-// Tags a structural type with a name, so `Instance` reads as its own type in signatures
-// and error messages instead of a bare `object`. The tag is optional on purpose: values
-// stay assignable without a cast, so callers pass a resolved instance directly.
+/**
+ * Tags a structural type with a name, so `Instance` reads as its own type in
+ * signatures and error messages instead of a bare `object`. The tag is optional
+ * on purpose: values stay assignable without a cast.
+ */
 export type Branded<TBrand extends string, T> = T & { readonly __brand?: TBrand };
 
-// What the container tracks and reflects on: the object a constructor produced.
-// Deliberately not a constructor signature — an instance is not its own constructor.
+/**
+ * What the container tracks and reflects on: the object a constructor produced.
+ * Deliberately not a constructor signature - an instance is not its own constructor.
+ */
 export type Instance = Branded<'Instance', object>;
 
 export const Is = {

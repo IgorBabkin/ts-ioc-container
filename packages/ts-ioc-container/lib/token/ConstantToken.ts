@@ -3,6 +3,7 @@ import { InjectionToken } from './InjectionToken';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { Serializable } from '../utils/basic';
 
+/** A token that always resolves to a fixed value. It takes no args and cannot be lazy. */
 export class ConstantToken<T = any> extends InjectionToken<T> implements Serializable {
   constructor(
     private readonly token: T,

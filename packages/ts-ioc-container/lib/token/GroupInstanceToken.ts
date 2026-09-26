@@ -4,8 +4,13 @@ import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 
 import { Instance, Serializable } from '../utils/basic';
 
+/** Selects instances for a {@link GroupInstanceToken}. */
 export type InstancePredicate = (dep: unknown) => boolean;
 
+/**
+ * Resolves the instances already created in a scope (and, by default, its
+ * child scopes) that match a predicate. Created by `select.instances(...)`.
+ */
 export class GroupInstanceToken extends InjectionToken<Instance[]> implements Serializable {
   private isCascade: boolean;
 
@@ -42,6 +47,7 @@ export class GroupInstanceToken extends InjectionToken<Instance[]> implements Se
     throw new MethodNotImplementedError('GroupInstanceToken.lazy is not implemented');
   }
 
+  /** Whether instances of child scopes are included (default `true`). */
   cascade(isTrue: boolean): this {
     this.isCascade = isTrue;
     return this;

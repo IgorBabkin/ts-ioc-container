@@ -1,3 +1,4 @@
+/** Method decorator: delays the call until `ms` passed without another call (per instance). */
 export const debounce =
   (ms: number): MethodDecorator =>
   (target, propertyKey, descriptor: PropertyDescriptor) => {

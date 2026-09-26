@@ -5,6 +5,18 @@ import { BindToken } from './BindToken';
 import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { Serializable } from '../utils/basic';
 
+/**
+ * A token for every dependency registered under an alias. As a `bindTo(...)`
+ * target it adds the alias; resolving returns all matches as an array.
+ *
+ * @example
+ * const IMiddlewareToken = toGroupAlias<IMiddleware>('IMiddleware');
+ *
+ * @register(bindTo(IMiddlewareToken))
+ * class Auth implements IMiddleware {}
+ *
+ * IMiddlewareToken.resolve(scope); // IMiddleware[]
+ */
 export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements BindToken<T>, Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;
@@ -76,4 +88,5 @@ export class GroupAliasToken<T = any> extends InjectionToken<T[]> implements Bin
   }
 }
 
+/** Creates a {@link GroupAliasToken} for `token`. */
 export const toGroupAlias = <T>(token: DependencyKey) => new GroupAliasToken<T>(token);

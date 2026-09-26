@@ -14,6 +14,22 @@ import {
 import { type MapFn, pipe } from '../utils/fp';
 import { type constructor, Is } from '../utils/basic';
 
+/**
+ * Builds registrations for `container.addRegistration(...)`. Usually imported as
+ * `Registration as R`.
+ *
+ * - `R.fromClass(Class)` - reads the class's `@register(...)` config; the key
+ *   defaults to the class name.
+ * - `R.fromValue(value).bindTo('Key')` - a constant.
+ * - `R.fromFn(({ scope, args }) => ...).bindTo('Key')` - a factory.
+ * - `R.fromKey('Other').bindTo('Key')` - an alias of another key.
+ *
+ * @example
+ * container
+ *   .addRegistration(R.fromClass(Logger))
+ *   .addRegistration(R.fromValue('https://api.example.com').bindTo('API_URL'))
+ *   .addRegistration(R.fromFn(({ scope }) => new Client(scope.resolve('API_URL'))).bindTo('Client'));
+ */
 export class Registration<T = any> implements IRegistration<T> {
   static fromClass<T>(Target: constructor<T>, { name }: { name?: string } = {}) {
     const transform = pipe(...getTransformers(Target));
