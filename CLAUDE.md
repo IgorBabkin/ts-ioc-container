@@ -148,7 +148,8 @@ consumers still receive an exact version. `peerDependencies` stays a range
 workspace link, so it imports that package's *build output*. Since the root
 lint / type-check / test scripts are recursive and therefore include react,
 `pnpm run build` must run *before* all of them — see the `Build` step ahead of
-the checks in both `pr-checks.yml` and `publish.yml`. Without it those steps
+the checks in both `pr-checks.yml` (install → build → type-check → test → lint →
+format check) and `publish.yml`. Without it those steps
 fail to resolve `ts-ioc-container` at all. `publish.yml` is deliberately a
 single job (build → checks → tests → release): separate jobs each paid for a
 checkout and `pnpm install` and needed an artifact upload/download to hand the

@@ -52,14 +52,14 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Lint
-        run: pnpm run lint
-
       - name: Type check
         run: pnpm run type-check
 
-      - name: Format check
-        run: pnpm run format:check
-
       - name: Test
         run: pnpm test --maxWorkers=2
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Format check
+        run: pnpm run format:check
