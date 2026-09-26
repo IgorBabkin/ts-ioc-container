@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import request from 'supertest';
-import express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import type { Server } from 'http';
 import * as YAML from 'yaml';
 import { Container, IContainer, register, Registration as R } from 'ts-ioc-container';
-import { z, ZodError } from 'zod';
-import { AppService, IAppServiceToken, IExpressAppToken, IPayloadsToken } from './agentRecipes/AppService';
+import { z } from 'zod';
+import { AppService, IAppServiceToken } from './agentRecipes/AppService';
 
 const PACKAGES = ['openapi-express-server', 'openapi-to-server-interface', 'openapi-to-request-validator'];
 
@@ -70,29 +70,23 @@ describe('AGENTS.md', () => {
       }
     }
 
-    const app = express();
-    app.use(express.json());
-
     const container = new Container({ tags: ['application'] })
-      .addRegistration(R.fromValue(app).bindTo(IExpressAppToken))
-      .addRegistration(
-        R.fromValue({
-          getItem: z.object({ params: z.object({ id: z.string().min(2) }) }),
-          deleteItem: z.object({ params: z.object({ id: z.string() }) }),
-        }).bindTo(IPayloadsToken),
-      )
       .addRegistration(R.fromClass(GetItem))
       .addRegistration(R.fromClass(DeleteItem))
       .addRegistration(R.fromClass(AppService));
 
-    IAppServiceToken.resolve(container).applyRoutes(
-      YAML.parse(fs.readFileSync(path.resolve(__dirname, 'swagger.yaml'), 'utf8')),
-    );
+    const appService = IAppServiceToken.resolve(container);
+    appService.applyRoutes(YAML.parse(fs.readFileSync(path.resolve(__dirname, 'swagger.yaml'), 'utf8')), {
+      getItem: z.object({ params: z.object({ id: z.string().min(2) }) }),
+      deleteItem: z.object({ params: z.object({ id: z.string() }) }),
+    });
 
-    // Express recognises an error handler by its four parameters.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    app.use((error: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-      res.status(error instanceof ZodError ? 400 : 500).json({ error: error.message });
+    let app: Server;
+    beforeAll(() => {
+      app = appService.start(0);
+    });
+    afterAll((done) => {
+      app.close(done);
     });
 
     it('serves a registered operation from a request scope carrying its tags', async () => {
