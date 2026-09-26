@@ -420,6 +420,22 @@ scope, or none, since they never trigger a release regardless of scope. `docs`
 releases only with a package scope: `docs(ts-ioc-container): ...` publishes a
 patch, `docs(adr): ...` does not.
 
+### Every commit reaches `main` — no squash merges
+
+`release-monorepo-semantically` reads only commit **subjects** on `main`
+(`git log --format="%H %s"`), so how a PR is merged decides what it releases.
+A squash merge leaves one commit whose subject is the PR title: PR #180 was
+titled `Make the packages usable by AI coding agents`, so its `feat` / `fix` /
+`docs` commits released nothing (`report` logged `SKIP` for both packages), and
+a single squash commit can carry only one type and one scope anyway.
+
+Squash merging is therefore disabled for this repository: PRs land with a merge
+commit (its `Merge pull request #…` subject is not a conventional commit, so it
+is ignored) or a rebase, and each commit is parsed on its own. That makes every
+commit message release-relevant, so the `commit-messages` job in
+`pr-checks.yml` runs `commitlint` over the PR's whole range — a release type
+without an exact package scope, or an unscoped commit, fails the PR.
+
 ### Special rules
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)
 
