@@ -7,3 +7,6 @@ dist/
 
 # Dependencies
 node_modules/
+
+# Written by `tic build`; `tic build --check` compares them byte for byte.
+*.generated.ts

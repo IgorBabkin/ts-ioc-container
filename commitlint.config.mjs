@@ -1,5 +1,5 @@
 const releaseTypes = new Set(['feat', 'fix', 'perf']);
-const packageScopes = new Set(['ts-ioc-container', '@ts-ioc-container/react']);
+const packageScopes = new Set(['ts-ioc-container', '@ts-ioc-container/react', '@ts-ioc-container/compiler']);
 
 export default {
   extends: ['@commitlint/config-conventional'],
@@ -43,11 +43,12 @@ export default {
         // release-monorepo-semantically (see CLAUDE.md > Release) matches a
         // commit to a package by comparing this scope against that package's
         // package.json `name` field exactly, so a feat/fix/perf commit must
-        // use one of these two to trigger a release for that package. A docs
+        // use one of these to trigger a release for that package. A docs
         // commit with one of these scopes also releases (a patch, configured
         // in .release.json); with any other scope it does not.
         'ts-ioc-container',
         '@ts-ioc-container/react',
+        '@ts-ioc-container/compiler',
 
         // Core library scopes
         'container',
@@ -58,6 +59,7 @@ export default {
         'token',
         'errors',
         'metadata',
+        'compiler', // @ts-ioc-container/compiler work that must not release
 
         // CI/CD scopes
         'github', // GitHub workflows
