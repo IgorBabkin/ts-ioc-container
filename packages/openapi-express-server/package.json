@@ -23,7 +23,9 @@
     ".": {
       "types": "./esm/index.d.ts",
       "import": "./esm/index.js"
-    }
+    },
+    "./AGENTS.md": "./AGENTS.md",
+    "./package.json": "./package.json"
   },
   "module": "esm/index.js",
   "repository": {
@@ -35,7 +37,8 @@
     "test": "__tests__"
   },
   "files": [
-    "esm/**/*"
+    "esm/**/*",
+    "AGENTS.md"
   ],
   "scripts": {
     "build": "pnpm run clean && pnpm run build:ts",
@@ -51,7 +54,7 @@
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "reflect-metadata": "^0.2.2",
-    "ts-ioc-container": "^72.1.0",
+    "ts-ioc-container": "^72.2.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

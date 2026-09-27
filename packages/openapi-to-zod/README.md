@@ -336,6 +336,12 @@ routeBuilder.applyTo(app);
 
 See `packages/openapi-express-server/__tests__/RouteBuilder.ts` for a reference implementation.
 
+## For AI agents
+
+The package ships [`AGENTS.md`](./AGENTS.md), a compact guide for coding agents: what is generated, what is coerced, and the pitfalls. After
+installation it is at `node_modules/@ibabkin/openapi-to-zod/AGENTS.md`. Point your agent at it from your own
+`AGENTS.md` or `CLAUDE.md`.
+
 ## Building from Source
 
 ```bash
