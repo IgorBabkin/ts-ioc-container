@@ -3,7 +3,7 @@
 **Bundles your dependencies into a single container module.** `tic build` scans
 your folders — by path or tsconfig alias — and generates one typed bundle that
 registers every class in them, ready for
-[`ts-ioc-container`](../ts-ioc-container):
+[`ts-ioc-container`](https://www.npmjs.com/package/ts-ioc-container):
 
 ```ts
 const container = new Container().useModule(new AppBundle());
