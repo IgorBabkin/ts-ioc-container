@@ -1,5 +1,5 @@
 const releaseTypes = new Set(['feat', 'fix', 'perf']);
-const packageScopes = new Set(['ts-ioc-container', '@ts-ioc-container/react', '@ts-ioc-container/compiler']);
+const packageScopes = new Set(['ts-ioc-container', '@ts-ioc-container/react', '@ts-ioc-container/bundler']);
 
 export default {
   extends: ['@commitlint/config-conventional'],
@@ -48,7 +48,7 @@ export default {
         // in .release.json); with any other scope it does not.
         'ts-ioc-container',
         '@ts-ioc-container/react',
-        '@ts-ioc-container/compiler',
+        '@ts-ioc-container/bundler',
 
         // Core library scopes
         'container',
@@ -59,7 +59,7 @@ export default {
         'token',
         'errors',
         'metadata',
-        'compiler', // @ts-ioc-container/compiler work that must not release
+        'bundler', // @ts-ioc-container/bundler work that must not release
 
         // CI/CD scopes
         'github', // GitHub workflows

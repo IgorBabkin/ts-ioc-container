@@ -1,10 +1,13 @@
-# AGENTS.md — @ts-ioc-container/compiler
+# AGENTS.md — @ts-ioc-container/bundler
 
-Build-time registration discovery for `ts-ioc-container` (ADR 0022). Ships the
-`tic` CLI; nothing here runs inside the container, and the core package is not
-changed by it.
+Bundles an application's dependencies into a single container module for
+`ts-ioc-container`: the `tic` CLI scans folders and generates a typed bundle
+(`useModule(new AppBundle())`). Discovery happens at build time (ADR 0022);
+nothing here runs inside the container, and the core package is not changed by
+it.
 
-- `tic build` reads `tic.config.json` (schema: `tic.schema.json`) and writes one
+- The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
+  same program). `tic build` reads `tic.config.json` (schema: `tic.schema.json`) and writes one
   bundle per `bundles[]` entry — a generated class, `export class AppBundle implements IContainerModule`, applied with `container.useModule(new AppBundle())`. `--check` writes nothing and exits 1
   when an output is stale — run it in CI.
 - A namespace is a folder: relative to the config file, or a tsconfig `paths`

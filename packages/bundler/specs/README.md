@@ -1,6 +1,6 @@
-# Specs — @ts-ioc-container/compiler
+# Specs — @ts-ioc-container/bundler
 
-Package-local epics for `@ts-ioc-container/compiler`. The spec-driven workflow,
+Package-local epics for `@ts-ioc-container/bundler`. The spec-driven workflow,
 style and traceability conventions of
 [`packages/ts-ioc-container/specs/`](../../ts-ioc-container/specs/README.md)
 apply here unchanged.

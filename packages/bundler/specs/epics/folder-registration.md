@@ -24,6 +24,8 @@ JSON file so that the build is reproducible and reviewable.
 
 Acceptance criteria:
 
+- The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
+  `bin` entries run the same program.
 - `tic build` reads `tic.config.json` from the working directory, or the file
   given with `--config <path>`.
 - Every relative path in the config resolves against the config file's
@@ -101,7 +103,7 @@ Acceptance criteria:
 
 ### Story: Configure which classes a file contributes
 
-As an application developer, I can define how the compiler picks the target
+As an application developer, I can define how the bundler picks the target
 classes out of a file so that a folder mixing services with helpers registers
 only what I mean it to.
 
@@ -173,5 +175,5 @@ Acceptance criteria:
 
 Non-goals of this epic: glob patterns as namespaces, per-namespace scope or
 binding rules, and registrations other than classes (`fromValue`, `fromFn`).
-The container itself is unchanged — discovery lives entirely in the compiler
+The container itself is unchanged — discovery lives entirely in the bundler
 package (ADR 0022).

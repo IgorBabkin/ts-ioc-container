@@ -22,22 +22,22 @@ responsibility on `Container`, which is already the largest class in the library
 ## Decision
 
 Discover registrations **at build time**, in a separate package,
-`@ts-ioc-container/compiler`, that ships the `tic` CLI.
+`@ts-ioc-container/bundler`, that ships the `tic` CLI.
 
 - `tic build` reads a JSON config (`tic.config.json`) listing bundles; each
   bundle names folders (relative paths or tsconfig aliases) and an output file.
-- The compiler parses sources with the TypeScript compiler API (syntax only, no
+- The bundler parses sources with the TypeScript compiler API (syntax only, no
   type checker) and emits a **bundle**: an ordinary TypeScript file with static
   imports, `Registration.fromClass(...)` per class, and a class implementing
   `IContainerModule` that applies them (`useModule(new AppBundle())`).
 - The output's shape is declared by a protocol: a Handlebars template in
-  `lib/protocols/`, precompiled at build time into `hbs/index.cjs` (the pattern
+  `lib/protocols/`, precompiled at build time into `tpl/index.cjs` (the pattern
   of the `@ibabkin/openapi-to-*` generators). Code only prepares the data it
   renders.
 - The generated code uses only the public `ts-ioc-container` API. The core
   package gains no code, no dependency and no new concept; `Container` is
   untouched.
-- `typescript` is a peer dependency of the compiler — every consumer already has
+- `typescript` is a peer dependency of the bundler — every consumer already has
   it, and its `tsconfig` parsing (including `extends`) is the reference
   implementation.
 
@@ -58,10 +58,10 @@ Discover registrations **at build time**, in a separate package,
   rule in the config (export kind, decorator names, name glob), not a type
   query, so a composed decorator is matched by its own name and has to be
   listed there.
-- The compiler is a new published package; its first npm publish has to be done
+- The bundler is a new published package; its first npm publish has to be done
   by hand, since trusted publishing (OIDC) cannot create a package.
 
 ## References
 
-- `packages/compiler/specs/epics/folder-registration.md`
-- `packages/compiler/lib/`
+- `packages/bundler/specs/epics/folder-registration.md`
+- `packages/bundler/lib/`

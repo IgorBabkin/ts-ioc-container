@@ -1,18 +1,19 @@
 {
-  "name": "@ts-ioc-container/compiler",
+  "name": "@ts-ioc-container/bundler",
   "version": "0.0.0",
-  "description": "Build-time companion for ts-ioc-container: the `tic` CLI scans folders (import paths, tsconfig aliases included) for classes and generates a typed container module that registers them.",
+  "description": "Bundles your dependencies into a single container module for ts-ioc-container: the `tic` CLI scans folders (by path or tsconfig alias) and generates one typed bundle that registers every class \u2014 `container.useModule(new AppBundle())`.",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/compiler#readme",
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/bundler#readme",
   "license": "ISC",
   "sideEffects": false,
   "main": "cjm/index.js",
   "types": "typings/index.d.ts",
   "bin": {
+    "ts-ioc-container": "cjm/bin.js",
     "tic": "cjm/bin.js"
   },
   "exports": {
@@ -28,7 +29,7 @@
     "ioc",
     "di",
     "codegen",
-    "compiler",
+    "bundler",
     "cli",
     "component-scan",
     "tsconfig-paths",
@@ -37,24 +38,26 @@
   "files": [
     "cjm/**/*",
     "typings/**/*",
-    "hbs/**/*",
+    "tpl/**/*",
     "lib/**/*",
+    "!lib/**/*.hbs",
     "tic.schema.json",
     "AGENTS.md"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IgorBabkin/ts-ioc-container",
-    "directory": "packages/compiler"
+    "directory": "packages/bundler"
   },
   "scripts": {
-    "build:hbs": "mkdir -p hbs && handlebars lib/protocols/*.hbs -f hbs/index.cjs -c handlebars",
+    "hbs:compile": "mkdir -p tpl && handlebars lib/protocols/*.hbs -f tpl/index.cjs -c handlebars",
     "build:cjm": "node ../scripts/build.mjs cjm",
     "build:types": "node ../scripts/build.mjs types",
-    "build": "pnpm run build:hbs && pnpm run build:cjm && pnpm run build:types",
-    "test": "pnpm run build:hbs && pnpm run build:cjm && vitest run",
-    "test:coverage": "pnpm run build:hbs && pnpm run build:cjm && vitest run --coverage --coverage.reporter=lcov",
-    "type-check": "pnpm run build:hbs && tsc --noEmit",
+    "build": "pnpm run hbs:compile && pnpm run build:cjm && pnpm run build:types",
+    "prepack": "pnpm run hbs:compile",
+    "test": "pnpm run hbs:compile && pnpm run build:cjm && vitest run",
+    "test:coverage": "pnpm run hbs:compile && pnpm run build:cjm && vitest run --coverage --coverage.reporter=lcov",
+    "type-check": "pnpm run hbs:compile && tsc --noEmit",
     "lint": "eslint lib/**/*.ts __tests__/**/*.ts",
     "lint:fix": "pnpm run lint --fix",
     "format": "prettier --write \"lib/**/*.ts\" \"__tests__/**/*.ts\"",

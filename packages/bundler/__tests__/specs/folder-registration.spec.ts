@@ -254,7 +254,7 @@ describe('Folder registration', () => {
   describe('Recipe: generate per environment (README)', () => {
     // The helper the README recipe ships: `*.<env>.ts` joins only that environment, the rest is shared.
     const forEnv = [
-      "const { byTags } = require('@ts-ioc-container/compiler');",
+      "const { byTags } = require('@ts-ioc-container/bundler');",
       "const ENVS = ['development', 'production', 'test'];",
       'module.exports = (env) => byTags((tags) => tags.filter((tag) => ENVS.includes(tag)).every((tag) => tag === env));',
     ].join('\n');
@@ -280,7 +280,7 @@ describe('Folder registration', () => {
         'tic/production.cjs': "module.exports = require('./for-env.cjs')('production');\n",
         'tic/development.cjs': "module.exports = require('./for-env.cjs')('development');\n",
         ...sources,
-      }).linkCompiler();
+      }).linkBundler();
 
       buildProject();
 
@@ -298,7 +298,7 @@ describe('Folder registration', () => {
           "module.exports = (context) => forEnv(process.env.TIC_ENV ?? 'development')(context);",
         ].join('\n'),
         ...sources,
-      }).linkCompiler();
+      }).linkBundler();
       const previous = process.env.TIC_ENV;
 
       try {

@@ -10,10 +10,11 @@ export interface CliIo {
 }
 
 const USAGE = [
-  'Usage: tic <command> [options]',
+  'Usage: ts-ioc-container <command> [options]',
+  '       tic is a shortcut for ts-ioc-container',
   '',
   'Commands:',
-  '  tic build [--config <path>] [--check]   generate the container bundles described by tic.config.json',
+  '  ts-ioc-container build [--config <path>] [--check]   generate the bundles described by tic.config.json',
   '',
   'Options:',
   '  -c, --config <path>   config file (default: tic.config.json)',

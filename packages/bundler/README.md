@@ -1,9 +1,18 @@
-# @ts-ioc-container/compiler
+# @ts-ioc-container/bundler
 
-Build-time companion for [`ts-ioc-container`](../ts-ioc-container). The `tic`
-CLI scans folders for classes and generates a **bundle** — a container module
-class that registers them — so adding a service means writing the class, not also editing a list of
-`addRegistration(...)` calls.
+**Bundles your dependencies into a single container module.** `tic build` scans
+your folders — by path or tsconfig alias — and generates one typed bundle that
+registers every class in them, ready for
+[`ts-ioc-container`](../ts-ioc-container):
+
+```ts
+const container = new Container().useModule(new AppBundle());
+```
+
+Adding a service means writing the class — no hand-maintained list of
+`addRegistration(...)` calls to keep in sync. The bundle is ordinary
+TypeScript, generated at build time, so it type-checks, bundles and tree-shakes
+like code you wrote yourself.
 
 In TypeScript a namespace is an import path, so folders are named the way
 imports are: relative to the config file (`./src/services`) or through a
@@ -12,8 +21,12 @@ imports are: relative to the config file (`./src/services`) or through a
 ## Install
 
 ```bash
-pnpm add -D @ts-ioc-container/compiler
+pnpm add -D @ts-ioc-container/bundler
 ```
+
+It installs the CLI as `ts-ioc-container`, with **`tic`** as a shortcut —
+`ts-ioc-container build` and `tic build` are the same command; the examples
+below use the shortcut.
 
 `typescript` (>= 5) is a peer dependency.
 
@@ -23,7 +36,7 @@ pnpm add -D @ts-ioc-container/compiler
 
 ```json
 {
-  "$schema": "./node_modules/@ts-ioc-container/compiler/tic.schema.json",
+  "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
   "bundles": [
     {
       "output": "src/di/app.bundle.ts",
@@ -84,7 +97,7 @@ applies to every bundle.
 
 ```ts
 // tic.include.ts
-import type { InclusionPredicate } from '@ts-ioc-container/compiler';
+import type { InclusionPredicate } from '@ts-ioc-container/bundler';
 
 const include: InclusionPredicate = ({ filename }) => !filename.includes('/legacy/');
 export default include;
@@ -115,7 +128,7 @@ type TagInclusionPredicate = (tags: string[], context: { filename: string }) => 
 
 ```ts
 // tic.include.ts
-import { byTags } from '@ts-ioc-container/compiler';
+import { byTags } from '@ts-ioc-container/bundler';
 
 export default byTags((tags) => !tags.includes('manual')); // Scheduler.manual.ts is never generated
 ```
@@ -143,7 +156,7 @@ carries must all be the wanted one, and a file without any is shared:
 
 ```js
 // tic/for-env.cjs
-const { byTags } = require('@ts-ioc-container/compiler');
+const { byTags } = require('@ts-ioc-container/bundler');
 const ENVS = ['development', 'production', 'test'];
 
 module.exports = (env) => byTags((tags) => tags.filter((tag) => ENVS.includes(tag)).every((tag) => tag === env));

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { run } from '../../lib';
 import { decorated, TempProject } from '../project';
 
@@ -61,8 +63,15 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     const io = new Io(project.root);
 
     expect(run(['--help'], io)).toBe(0);
-    expect(io.out.join('\n')).toContain('tic build [--config <path>] [--check]');
+    expect(io.out.join('\n')).toContain('ts-ioc-container build [--config <path>] [--check]');
+    expect(io.out.join('\n')).toContain('tic is a shortcut for ts-ioc-container');
     expect(run(['compile'], io)).toBe(1);
     expect(io.err).toContain('tic: unknown command "compile"');
+  });
+
+  it('installs as ts-ioc-container, with tic as a shortcut to the same program', () => {
+    const { bin } = JSON.parse(readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8'));
+
+    expect(bin).toEqual({ 'ts-ioc-container': 'cjm/bin.js', tic: 'cjm/bin.js' });
   });
 });

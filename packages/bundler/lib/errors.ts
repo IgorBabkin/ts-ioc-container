@@ -1,4 +1,4 @@
-/** Base class of every error the compiler raises on purpose; the CLI prints its message without a stack. */
+/** Base class of every error the bundler raises on purpose; the CLI prints its message without a stack. */
 export class TicError extends Error {
   name = 'TicError';
 }

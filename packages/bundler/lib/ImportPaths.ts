@@ -11,7 +11,7 @@ interface Alias {
 }
 
 const SOURCE_EXTENSION = /\.(tsx?|mts|cts)$/;
-/** tsconfig "No inputs were found": irrelevant here, the compiler scans its own folders. */
+/** tsconfig "No inputs were found": irrelevant here, the bundler scans its own folders. */
 const NO_INPUTS = 18003;
 
 const isDirectory = (dir: string) => existsSync(dir) && statSync(dir).isDirectory();
