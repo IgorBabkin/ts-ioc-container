@@ -37,6 +37,7 @@
   "files": [
     "cjm/**/*",
     "typings/**/*",
+    "hbs/**/*",
     "lib/**/*",
     "tic.schema.json",
     "AGENTS.md"
@@ -47,16 +48,20 @@
     "directory": "packages/compiler"
   },
   "scripts": {
+    "build:hbs": "mkdir -p hbs && handlebars lib/protocols/*.hbs -f hbs/index.cjs -c handlebars",
     "build:cjm": "node ../scripts/build.mjs cjm",
     "build:types": "node ../scripts/build.mjs types",
-    "build": "pnpm run build:cjm && pnpm run build:types",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage --coverage.reporter=lcov",
-    "type-check": "tsc --noEmit",
+    "build": "pnpm run build:hbs && pnpm run build:cjm && pnpm run build:types",
+    "test": "pnpm run build:hbs && vitest run",
+    "test:coverage": "pnpm run build:hbs && vitest run --coverage --coverage.reporter=lcov",
+    "type-check": "pnpm run build:hbs && tsc --noEmit",
     "lint": "eslint lib/**/*.ts __tests__/**/*.ts",
     "lint:fix": "pnpm run lint --fix",
     "format": "prettier --write \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
     "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\""
+  },
+  "dependencies": {
+    "handlebars": "^4.7.9"
   },
   "peerDependencies": {
     "typescript": ">=5"

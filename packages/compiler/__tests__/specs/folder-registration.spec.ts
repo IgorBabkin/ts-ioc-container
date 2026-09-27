@@ -322,6 +322,20 @@ describe('Folder registration', () => {
     });
   });
 
+  describe('Story: Generate a plain container module (protocol)', () => {
+    it('writes paths into the generated TypeScript verbatim, never HTML-escaped', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src/a&b']),
+        'src/a&b/Logger.ts': decorated('Logger'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import { Logger } from '../a&b/Logger';");
+      expect(generated()).not.toMatch(/&amp;|&#x27;|&quot;/);
+    });
+  });
+
   describe('Story: Keep generated modules in sync in CI', () => {
     it('reports a missing or outdated output as stale without writing it', () => {
       project = TempProject.create({

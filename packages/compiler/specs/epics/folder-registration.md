@@ -106,6 +106,10 @@ Acceptance criteria:
   suffixed local name; the binding key still comes from the class itself.
 - Applying the generated module with `container.useModule(...)` makes every
   discovered class resolvable, with its `@register(...)` config honoured.
+- The layout of the generated module is declared by a protocol — a Handlebars
+  template in `lib/protocols/` (`ContainerModule.ts.hbs`), precompiled at
+  build time — so the shape of the output is read in one place, not assembled
+  in code. Names and paths are written verbatim, never HTML-escaped.
 
 ### Story: Keep generated modules in sync in CI
 
