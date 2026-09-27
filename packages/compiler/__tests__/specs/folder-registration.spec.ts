@@ -1,4 +1,4 @@
-import { build, TicConfigError, NamespaceNotFoundError } from '../../lib';
+import { build, type InclusionContext, TicConfigError, NamespaceNotFoundError } from '../../lib';
 import { decorated, TempProject } from '../project';
 
 const module = (namespaces: unknown[], extra: object = {}) => ({
@@ -156,6 +156,163 @@ describe('Folder registration', () => {
 
       expect(generated()).toContain('Registration.fromClass(KeptSpec)');
       expect(generated()).not.toContain('Old');
+    });
+  });
+
+  describe('Story: Decide which files take part with a predicate', () => {
+    const files = {
+      'src/Kept.ts': decorated('Kept'),
+      'src/legacy/Old.ts': decorated('Old'),
+      'src/Kept.spec.ts': decorated('KeptSpec'),
+    };
+    const registered = () => [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
+
+    it.each([
+      ['tic.include.cjs', "module.exports = ({ filename }) => !filename.startsWith('src/legacy/');\n"],
+      ['tic.include.mjs', "export default ({ filename }) => !filename.startsWith('src/legacy/');\n"],
+      [
+        'tic.include.ts',
+        "export default ({ filename }: { filename: string }): boolean => !filename.startsWith('src/legacy/');\n",
+      ],
+    ])('applies %s next to the config by convention, without configuring it', (file, source) => {
+      project = TempProject.create({ 'tic.config.json': module(['./src']), [file]: source, ...files });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Kept']);
+    });
+
+    it('keeps every file the globs allow when there is no predicate', () => {
+      project = TempProject.create({ 'tic.config.json': module(['./src']), ...files });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Kept', 'Old']);
+    });
+
+    it('still applies exclude globs: a file must pass both', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src']),
+        'tic.include.cjs': 'module.exports = () => true;\n',
+        ...files,
+      });
+
+      buildProject();
+
+      expect(registered()).not.toContain('KeptSpec');
+    });
+
+    it('lets a module name its predicate file, overriding the conventional one', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { include: './tools/only-legacy.cjs' }),
+        'tic.include.cjs': 'module.exports = () => false;\n',
+        'tools/only-legacy.cjs': "module.exports = ({ filename }) => filename.startsWith('src/legacy/');\n",
+        ...files,
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Old']);
+    });
+
+    it('takes a predicate function in build(), overriding both, with filenames relative to the config', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { include: './missing.cjs' }),
+        'tic.include.cjs': 'module.exports = () => false;\n',
+        ...files,
+      });
+      const seen: InclusionContext[] = [];
+
+      build({
+        config: project.path('tic.config.json'),
+        include: (context) => {
+          seen.push(context);
+          return context.filename === 'src/legacy/Old.ts';
+        },
+      });
+
+      expect(registered()).toEqual(['Old']);
+      expect(seen.map((c) => c.filename).sort()).toEqual(['src/Kept.ts', 'src/legacy/Old.ts']);
+    });
+
+    it.each([
+      [{ include: './missing.cjs' }, {}, /predicate file not found: .*missing\.cjs/],
+      [
+        { include: './not-a-function.cjs' },
+        { 'not-a-function.cjs': 'module.exports = 42;\n' },
+        /not-a-function\.cjs.*function/,
+      ],
+      [{ include: '' }, {}, 'modules[0].include: expected a non-empty string'],
+    ])('fails naming the predicate file for %j', (extra, more, message) => {
+      project = TempProject.create({ 'tic.config.json': module(['./src'], extra), ...more, ...files });
+
+      expect(() => buildProject()).toThrow(TicConfigError);
+      expect(() => buildProject()).toThrow(message);
+    });
+  });
+
+  describe('Recipe: generate per environment (README)', () => {
+    // The helper the README recipe ships: `*.<env>.ts` joins only that environment, the rest is shared.
+    const forEnv = [
+      "const { byTags } = require('@ts-ioc-container/compiler');",
+      "const ENVS = ['development', 'production', 'test'];",
+      'module.exports = (env) => byTags((tags) => tags.filter((tag) => ENVS.includes(tag)).every((tag) => tag === env));',
+    ].join('\n');
+    const sources = {
+      'src/services/Shared.ts': decorated('Shared'),
+      'src/services/StripeGateway.production.ts': decorated('StripeGateway'),
+      'src/services/FakeGateway.development.ts': decorated('FakeGateway'),
+    };
+    const registeredIn = (file: string) =>
+      [...project.read(file).matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
+
+    it('one generated module per environment, picked at runtime', () => {
+      project = TempProject.create({
+        'tic.config.json': {
+          modules: ['production', 'development'].map((env) => ({
+            output: `src/di/app.${env}.generated.ts`,
+            name: 'AppModule',
+            namespaces: ['./src/services'],
+            include: `./tic/${env}.cjs`,
+          })),
+        },
+        'tic/for-env.cjs': forEnv,
+        'tic/production.cjs': "module.exports = require('./for-env.cjs')('production');\n",
+        'tic/development.cjs': "module.exports = require('./for-env.cjs')('development');\n",
+        ...sources,
+      }).linkCompiler();
+
+      buildProject();
+
+      expect(registeredIn('src/di/app.production.generated.ts')).toEqual(['Shared', 'StripeGateway']);
+      expect(registeredIn('src/di/app.development.generated.ts')).toEqual(['FakeGateway', 'Shared']);
+    });
+
+    it('one output, environment chosen when tic build runs (TIC_ENV)', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src/services']),
+        'tic/for-env.cjs': forEnv,
+        // Read TIC_ENV per call: a predicate file is loaded once per process.
+        'tic.include.cjs': [
+          "const forEnv = require('./tic/for-env.cjs');",
+          "module.exports = (context) => forEnv(process.env.TIC_ENV ?? 'development')(context);",
+        ].join('\n'),
+        ...sources,
+      }).linkCompiler();
+      const previous = process.env.TIC_ENV;
+
+      try {
+        process.env.TIC_ENV = 'production';
+        buildProject();
+        expect(registeredIn('src/di/container.generated.ts')).toEqual(['Shared', 'StripeGateway']);
+
+        delete process.env.TIC_ENV;
+        buildProject();
+        expect(registeredIn('src/di/container.generated.ts')).toEqual(['FakeGateway', 'Shared']);
+      } finally {
+        if (previous === undefined) delete process.env.TIC_ENV;
+        else process.env.TIC_ENV = previous;
+      }
     });
   });
 

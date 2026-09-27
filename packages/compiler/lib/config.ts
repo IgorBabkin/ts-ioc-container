@@ -44,6 +44,11 @@ export interface ModuleConfig {
   select?: ClassSelector;
   /** Globs, relative to the config file, of files never scanned. Replaces {@link DEFAULT_EXCLUDE} when given. */
   exclude?: string[];
+  /**
+   * A file exporting an `InclusionPredicate`, relative to the config file. Overrides the
+   * conventional `tic.include.*` next to the config.
+   */
+  include?: string;
 }
 
 /** The shape of `tic.config.json`. */
@@ -82,6 +87,8 @@ export interface ResolvedModule {
   namespaces: Required<NamespaceConfig>[];
   select: ResolvedSelector;
   exclude: string[];
+  /** Absolute path of the module's own predicate file, when it names one. */
+  include?: string;
 }
 
 type Json = Record<string, unknown>;
@@ -134,17 +141,19 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
  */
 function toModule(value: unknown, field: string, dir: string): ResolvedModule {
   if (!isObject(value)) return fail(field, 'an object');
-  const { output, name, namespaces, select, exclude } = value;
+  const { output, name, namespaces, select, exclude, include } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
   if (!Array.isArray(namespaces) || namespaces.length === 0) return fail(`${field}.namespaces`, 'a non-empty array');
   if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
+  if (include !== undefined && !isNonEmptyString(include)) return fail(`${field}.include`, 'a non-empty string');
   return {
     output: path.resolve(dir, output),
     name: name ?? DEFAULT_MODULE_NAME,
     namespaces: namespaces.map((ns, i) => toNamespace(ns, `${field}.namespaces[${i}]`)),
     select: toSelector(select, `${field}.select`),
     exclude: exclude ?? DEFAULT_EXCLUDE,
+    include: include === undefined ? undefined : path.resolve(dir, include),
   };
 }
 
