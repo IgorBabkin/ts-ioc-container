@@ -49,6 +49,11 @@ export interface BundleConfig {
    * conventional `tic.include.*` next to the config.
    */
   include?: string;
+  /**
+   * A file exporting an `ExportPredicate`, relative to the config file. Overrides the
+   * conventional `tic.exports.*` next to the config.
+   */
+  filterExports?: string;
 }
 
 /** The shape of `tic.config.json`. */
@@ -89,6 +94,8 @@ export interface ResolvedBundle {
   exclude: string[];
   /** Absolute path of the bundle's own predicate file, when it names one. */
   include?: string;
+  /** Absolute path of the bundle's own export predicate file, when it names one. */
+  filterExports?: string;
 }
 
 type Json = Record<string, unknown>;
@@ -141,12 +148,15 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
  */
 function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
   if (!isObject(value)) return fail(field, 'an object');
-  const { output, name, namespaces, select, exclude, include } = value;
+  const { output, name, namespaces, select, exclude, include, filterExports } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
   if (!Array.isArray(namespaces) || namespaces.length === 0) return fail(`${field}.namespaces`, 'a non-empty array');
   if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
   if (include !== undefined && !isNonEmptyString(include)) return fail(`${field}.include`, 'a non-empty string');
+  if (filterExports !== undefined && !isNonEmptyString(filterExports)) {
+    return fail(`${field}.filterExports`, 'a non-empty string');
+  }
   return {
     output: path.resolve(dir, output),
     name: name ?? DEFAULT_BUNDLE_NAME,
@@ -154,6 +164,7 @@ function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
     select: toSelector(select, `${field}.select`),
     exclude: exclude ?? DEFAULT_EXCLUDE,
     include: include === undefined ? undefined : path.resolve(dir, include),
+    filterExports: filterExports === undefined ? undefined : path.resolve(dir, filterExports),
   };
 }
 

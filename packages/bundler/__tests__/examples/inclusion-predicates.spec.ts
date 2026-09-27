@@ -1,4 +1,11 @@
-import { build, byTags, fileTags, type InclusionPredicate, type TagInclusionPredicate } from '../../lib';
+import {
+  build,
+  byTags,
+  type ExportPredicate,
+  fileTags,
+  type InclusionPredicate,
+  type TagInclusionPredicate,
+} from '../../lib';
 import { TempProject } from '../project';
 
 /**
@@ -89,6 +96,50 @@ describe('Examples: deciding which files take part', () => {
       buildWith(byTags((tags, { filename }) => !tags.includes('mock') || filename.startsWith('src/api/')));
 
       expect(registered()).toEqual(['Client']);
+    });
+  });
+
+  describe('ExportPredicate: a function of each parsed class', () => {
+    const filesWith = (files: Record<string, string>) =>
+      TempProject.create({
+        'tic.config.json': { bundles: [{ output: 'src/di/app.bundle.ts', namespaces: ['./src'] }] },
+        ...files,
+      });
+    const buildFiltering = (filterExports: ExportPredicate) =>
+      build({ config: project.path('tic.config.json'), filterExports });
+
+    it('drops test doubles by export name, even when they share a file with the real class', () => {
+      project = filesWith({ 'src/Mailer.ts': 'export class Mailer {}\nexport class MailerStub {}\n' });
+
+      buildFiltering(({ exportName }) => !/(Stub|Mock|Fake)$/.test(exportName));
+
+      expect(registered()).toEqual(['Mailer']);
+    });
+
+    it('requires a decorator combination select cannot express', () => {
+      project = filesWith({
+        'src/Jobs.ts': [
+          "import { register } from 'ts-ioc-container';",
+          "import { cron } from './cron';",
+          "@register() @cron('0 * * * *') export class ReportJob {}",
+          '@register() export class Worker {}',
+        ].join('\n'),
+      });
+
+      buildFiltering(({ decorators }) => decorators.includes('register') && decorators.includes('cron'));
+
+      expect(registered()).toEqual(['ReportJob']);
+    });
+
+    it('combines file tags with the class: production gateways only', () => {
+      project = filesWith({
+        'src/StripeGateway.production.ts': 'export class StripeGateway {}\nexport class StripeWebhook {}\n',
+        'src/FakeGateway.development.ts': 'export class FakeGateway {}\n',
+      });
+
+      buildFiltering(({ tags, className }) => tags.includes('production') && className.endsWith('Gateway'));
+
+      expect(registered()).toEqual(['StripeGateway']);
     });
   });
 

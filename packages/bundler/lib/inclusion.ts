@@ -1,7 +1,5 @@
-import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import path from 'node:path';
-import { TicConfigError } from './errors';
+import { conventionalNames, findConventionalFile, loadPredicateFile } from './predicateFile';
+import type { FilterPredicate } from './utils';
 
 /** What an {@link InclusionPredicate} decides on. */
 export interface InclusionContext {
@@ -18,7 +16,7 @@ export interface InclusionContext {
  * const include: InclusionPredicate = ({ filename }) => !filename.includes('/legacy/');
  * export default include;
  */
-export type InclusionPredicate = (context: InclusionContext) => boolean;
+export type InclusionPredicate = FilterPredicate<InclusionContext>;
 
 /**
  * An {@link InclusionPredicate} over a file's tags, the dot-separated parts of its name between
@@ -46,35 +44,18 @@ export function byTags(predicate: TagInclusionPredicate): InclusionPredicate {
 }
 
 /** Predicate files looked up next to the config, in this order, when no bundle names one. */
-export const INCLUSION_CONVENTION = [
-  'tic.include.cjs',
-  'tic.include.js',
-  'tic.include.mjs',
-  'tic.include.ts',
-  'tic.include.cts',
-  'tic.include.mts',
-];
+export const INCLUSION_CONVENTION = conventionalNames('tic.include');
 
-/** The conventional predicate file in `dir`, if there is one. */
+/** The conventional inclusion predicate file in `dir`, if there is one. */
 export function findConventionalPredicate(dir: string): string | undefined {
-  return INCLUSION_CONVENTION.map((name) => path.join(dir, name)).find((file) => existsSync(file));
+  return findConventionalFile(dir, 'tic.include');
 }
 
 /**
- * Loads a predicate file synchronously with `require` - `.cjs` / `.js`, ES bundles
- * (Node 22.12+) and `.ts` (Node with type stripping). Its default export, or
- * `bundle.exports` itself, is the predicate. Like any `require`d bundle it is loaded
- * once per process, so a predicate that depends on the environment should read it
- * when called, not when loaded.
+ * Loads an {@link InclusionPredicate} file (see `loadPredicateFile` for formats and caching).
  *
  * @throws {TicConfigError} when the file is missing or does not export a function.
  */
 export function loadInclusionPredicate(file: string): InclusionPredicate {
-  if (!existsSync(file)) throw new TicConfigError(`predicate file not found: ${file}`);
-  const loaded: unknown = createRequire(file)(file);
-  const predicate = typeof loaded === 'function' ? loaded : (loaded as { default?: unknown } | undefined)?.default;
-  if (typeof predicate !== 'function') {
-    throw new TicConfigError(`${file} must export an InclusionPredicate function (default export or bundle.exports)`);
-  }
-  return predicate as InclusionPredicate;
+  return loadPredicateFile<InclusionPredicate>(file, 'InclusionPredicate');
 }
