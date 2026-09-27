@@ -14,6 +14,12 @@ permissions:
 
 jobs:
   build:
-    uses: ./.github/workflows/build.yml
-    with:
-      upload-build-output: false  # nothing downstream consumes it on a PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build
+        uses: ./.github/actions/build
+        with:
+          upload-build-output: false  # nothing downstream consumes it on a PR

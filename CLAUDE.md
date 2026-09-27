@@ -161,22 +161,22 @@ consumers still receive an exact version. `peerDependencies` stays a range
 workspace link, so it imports that package's *build output*. Since the root
 lint / type-check / test scripts are recursive and therefore include react,
 `pnpm run build` must run *before* all of them — see the `Build` step ahead of
-the checks in `build.yml` (install → build → type-check → test → lint → format
-check → verify package contents). Without it those steps fail to resolve
-`ts-ioc-container` at all.
+the checks in the `build` composite action, `.github/actions/build/action.yml`
+(install → build → type-check → test → lint → format check → verify package
+contents). Without it those steps fail to resolve `ts-ioc-container` at all.
 
-`build.yml` is a reusable workflow (`workflow_call`) holding the single `build`
-job, which ends by uploading each package's build output (`cjm`, `esm`,
-`typings`, the bundler's `tpl`) as the `build-output` artifact (on by default; `pull-request.yml`
-passes `upload-build-output: false`). `pull-request.yml` is just that job;
-`publish.yml` runs it (with `coverage: true`) and then a `release` job that
-`needs: build` and downloads that artifact into `packages/` — it never rebuilds,
-so the release publishes exactly what was tested, and `release`
-re-runs `verify:package-contents` after the download so a broken hand-off fails
-before `pnpm publish`. `release` still pays for its own checkout and
-`pnpm install` — the release tooling lives in the workspace dependencies. Keep
-`build.yml` free of a `concurrency` block: a called workflow shares the caller's
-`github.workflow`, so its group would collide with the caller's.
+Both workflows have a plain `build` job — checkout, then that action.
+`pull-request.yml` is just that job; `publish.yml` runs it (with
+`coverage: true`) and then a `release` job that `needs: build`. `build` ends by
+uploading each package's build output (`cjm`, `esm`, `typings`, the bundler's
+`tpl`) as the `build-output` artifact (on by default; `pull-request.yml` passes
+`upload-build-output: false`), and `release` downloads it into `packages/` — it
+never rebuilds, so the release publishes exactly what was tested, and it re-runs
+`verify:package-contents` after the download so a broken hand-off fails before
+`pnpm publish`. `release` still pays for its own checkout and `pnpm install` —
+the release tooling lives in the workspace dependencies. Keep the build a
+composite action, not a reusable workflow (`workflow_call`): a job calling a
+workflow is shown as `build / build`.
 
 ### Squash merges
 
