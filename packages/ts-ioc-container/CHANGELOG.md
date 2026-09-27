@@ -1,3 +1,18 @@
+# 72.3.0 (2026-09-27)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    let tokens declare variantOf / primaryVariantOf / fallbackOf
+    (8dfcb5fdf2d85a7340c79b2435cdeafa549cf59f)
+    - **ts-ioc-container:**
+    make the fallback a required feature token constructor argument
+    (7b2c4a5d2caeea7a0d968e142cdcdd7b7400e6e3)
+    - **ts-ioc-container:**
+    add multi-variant and toggle feature tokens with mandatory fallback
+    (918c68733eb0381c850b6169e56695fa718766ce)
+
+
 # 72.2.0 (2026-09-26)
 
   ### ✨ Features
@@ -413,6 +428,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 

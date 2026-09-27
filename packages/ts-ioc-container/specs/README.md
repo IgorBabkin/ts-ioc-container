@@ -35,6 +35,7 @@ specs/
     dependency-resolution.md
     dependency-registration.md
     errors-and-boundaries.md
+    feature-flags.md
     injector-strategies.md
     lifecycle-hooks.md
     metadata-utilities.md
@@ -72,6 +73,7 @@ specs/
 | [Metadata utilities](epics/metadata-utilities.md)           | `__tests__/specs/metadata-utilities.spec.ts`      | Planned only when a story needs performance coverage                                                                                   | ADR 0008            |
 | [Container modules](epics/container-modules.md)             | `__tests__/specs/container-modules.spec.ts`       | Planned only when a story needs performance coverage                                                                                   | ADR 0007            |
 | [Errors and boundaries](epics/errors-and-boundaries.md)     | `__tests__/specs/errors-and-boundaries.spec.ts`   | Planned only when a story needs performance coverage                                                                                   | ADR 0001            |
+| [Feature flags](epics/feature-flags.md) | `__tests__/specs/feature-flags.spec.ts` | Planned only when a story needs performance coverage | ADR 0009, ADR 0021 |
 
 ## Style
 
