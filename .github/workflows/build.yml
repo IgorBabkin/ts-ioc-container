@@ -1,0 +1,95 @@
+name: build
+
+# Reusable: called by pull-request.yml (as the whole PR check) and by
+# publish.yml (as the gate ahead of the release job). No concurrency block
+# here — a called workflow shares its caller's `github.workflow`, so its own
+# group would collide with the caller's and cancel it.
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        description: Run tests with coverage and upload the report to Coveralls
+        type: boolean
+        default: false
+      upload-build-output:
+        description: Upload each package's build output (cjm, esm, typings, tpl) as the `build-output` artifact
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Cache pnpm store
+        uses: ./.github/actions/cache-pnpm-store
+
+      - name: Install dependencies
+        run: pnpm run ci
+
+      # Every root script below runs recursively across the workspace, so the
+      # build has to come first: @ts-ioc-container/react resolves
+      # ts-ioc-container through the workspace link and reads its build output.
+      - name: Build
+        run: pnpm run build
+
+      - name: Type check
+        run: pnpm run type-check
+
+      - name: Test
+        if: ${{ !inputs.coverage }}
+        run: pnpm test --maxWorkers=2
+
+      - name: Test with coverage
+        if: ${{ inputs.coverage }}
+        run: pnpm run test:coverage
+
+      - name: Upload coverage to Coveralls
+        if: ${{ inputs.coverage }}
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./packages/ts-ioc-container/coverage/lcov.info
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Format check
+        run: pnpm run format:check
+
+      - name: Verify package contents
+        run: pnpm run verify:package-contents
+
+      # The last step: `build` ends with each package's build output (cjm, esm,
+      # typings, tpl) as the `build-output` artifact, which the release job in
+      # publish.yml downloads and publishes. pull-request.yml turns it off.
+      - name: Upload build output
+        if: ${{ inputs.upload-build-output }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          # Stored relative to `packages/`, so download it back into `packages/`.
+          path: |
+            packages/*/cjm
+            packages/*/esm
+            packages/*/typings
+            packages/*/tpl
+          if-no-files-found: error
+          retention-days: 1
