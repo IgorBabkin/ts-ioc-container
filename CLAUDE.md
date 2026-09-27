@@ -77,6 +77,8 @@ packages via the `workspaces` field in the root `package.json` (not
 scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
 or `feat(ts-ioc-container): ...`.
 
+The tool ships an agent guide at `node_modules/release-monorepo-semantically/llms.txt` (pipeline, release context format, config, and every `[CODE]` error with its fix) — read it before changing the pipeline or debugging a failed release. `.release.json` declares the JSON Schema the tool ships (`$schema`), so editors validate it.
+
 To preview a release locally without mutating anything, run the same steps by
 hand with `--dry-run` appended to each (see the tool's README "Usage" section);
 `report` always requires a clean working tree, dry-run or not.
@@ -134,8 +136,9 @@ cosmetic:
   Fixed upstream in `release-monorepo-semantically@1.9.4`, which never rewrites
   a `workspace:` specifier
   ([#8](https://github.com/IgorBabkin/release-monorepo-semantically/issues/8)).
-  Do not pin it back, and do not downgrade below 1.12 (the `docs` release rule in `.release.json` needs
-  its `bumps` config).
+  Do not pin it back, and do not downgrade below 1.14 (`llms.txt` and the config schema are 1.14+; the `docs` release rule in `.release.json` needs
+  its `bumps` config, 1.12+, and squash merges need `report.squash`, 1.13+ — see
+  [Squash merges](#squash-merges)).
 - It also keeps the react tests honest. With a registry pin they ran against a
   *published* copy of the container, so they never exercised the change in the
   same commit — and the pin silently drifted behind.
@@ -154,6 +157,21 @@ fail to resolve `ts-ioc-container` at all. `publish.yml` is deliberately a
 single job (build → checks → tests → release): separate jobs each paid for a
 checkout and `pnpm install` and needed an artifact upload/download to hand the
 build output across, which roughly tripled the wall time of a push to `main`.
+
+### Squash merges
+
+PRs are squash-merged, and `report` reads commit **subjects** on `main` — so on
+its own it sees one commit per PR whose subject is the PR title. PR #180 was
+titled `Make the packages usable by AI coding agents`, so its `feat` / `fix` /
+`docs` commits released nothing (`report` logged `SKIP` for both packages).
+
+`"squash": "github"` under `report` in `.release.json` (1.13+) fixes that: a
+commit whose subject ends in `(#N)` — GitHub's default squash subject — is
+replaced by the headers its body lists as `* ` bullets, which is GitHub's
+default squash body. Each listed commit is then matched to its package and
+bump on its own, so one PR can release both packages. Keep GitHub's default
+squash message (don't rewrite the body when merging); a squash commit whose
+body lists no bullets falls back to its subject, the PR title.
 
 ### Known `release-monorepo-semantically` defects
 
@@ -419,6 +437,31 @@ including the free-form, feature-area scopes this repo used historically —
 scope, or none, since they never trigger a release regardless of scope. `docs`
 releases only with a package scope: `docs(ts-ioc-container): ...` publishes a
 patch, `docs(adr): ...` does not.
+
+### README changes must trigger a bump
+
+A commit that changes a package's `README.md` (or its source,
+`packages/ts-ioc-container/.readme.hbs.md`) must release that package, so the
+README consumers read on npm matches the repo. Scope the commit to the exact
+package name **and** put an explicit bump tag from `release-monorepo-semantically`
+in the subject — `[patch]`, `[minor]` or `[major]` — so the release does not hinge
+on the commit type alone:
+
+```
+docs(ts-ioc-container): document scopeAccess rules [patch]
+chore(@ts-ioc-container/react): reword Scope example in README [patch]
+```
+
+- Use `[patch]` for a README-only change; use `[minor]` / `[major]` when the
+  commit also carries the matching API change.
+- The tag overrides the rule-based level for that commit and is stripped from
+  the subject, so it also works on otherwise non-release types (`chore`,
+  `refactor`). It still needs the package scope to match a package.
+- With squash merges the tag must be in the commit header that appears as a `* `
+  bullet in the squash body (see [Squash merges](#squash-merges)) — tags are
+  read per entry.
+- `[skip-bump]` is the opposite tag (suppress a release); never use it on a
+  README change.
 
 ### Special rules
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)
