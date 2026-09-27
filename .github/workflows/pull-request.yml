@@ -1,4 +1,4 @@
-name: pull-request
+name: check-pr
 
 on:
   pull_request:
