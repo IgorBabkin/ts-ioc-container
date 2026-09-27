@@ -1,7 +1,7 @@
 {
   "name": "@ts-ioc-container/bundler",
-  "version": "0.0.0",
-  "description": "Bundles your dependencies into a single container module for ts-ioc-container: the `tic` CLI scans folders (by path or tsconfig alias) and generates one typed bundle that registers every class \u2014 `container.useModule(new AppBundle())`.",
+  "version": "0.1.0",
+  "description": "Bundles your dependencies into a single container module for ts-ioc-container: the `tic` CLI scans folders (by path or tsconfig alias) and generates one typed bundle that registers every class — `container.useModule(new AppBundle())`.",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
