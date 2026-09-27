@@ -1,4 +1,4 @@
-import { build, type InclusionContext, TicConfigError, NamespaceNotFoundError } from '../../lib';
+import { build, type ExportContext, type InclusionContext, TicConfigError, NamespaceNotFoundError } from '../../lib';
 import { decorated, TempProject } from '../project';
 
 const module = (namespaces: unknown[], extra: object = {}) => ({
@@ -313,6 +313,122 @@ describe('Folder registration', () => {
         if (previous === undefined) delete process.env.TIC_ENV;
         else process.env.TIC_ENV = previous;
       }
+    });
+  });
+
+  describe('Story: Filter classes right after parsing', () => {
+    const sources = {
+      'src/Services.ts': [
+        "import { register as reg } from 'ts-ioc-container';",
+        '@reg() export class UserService {}',
+        'export class UserServiceMock {}',
+        'class Hidden {}',
+        'export { Hidden as Listed };',
+      ].join('\n'),
+      'src/user-service.production.ts': 'export default class {}\n',
+    };
+    const registered = () => [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
+
+    it('hands the predicate one context per candidate class', () => {
+      project = TempProject.create({ 'tic.config.json': module(['./src']), ...sources });
+      const seen: ExportContext[] = [];
+
+      build({
+        config: project.path('tic.config.json'),
+        filterExports: (context) => {
+          seen.push(context);
+          return true;
+        },
+      });
+
+      expect(seen).toEqual([
+        {
+          filename: 'src/Services.ts',
+          exportName: 'UserService',
+          className: 'UserService',
+          isDefault: false,
+          decorators: ['register'],
+          tags: [],
+        },
+        {
+          filename: 'src/Services.ts',
+          exportName: 'UserServiceMock',
+          className: 'UserServiceMock',
+          isDefault: false,
+          decorators: [],
+          tags: [],
+        },
+        {
+          filename: 'src/Services.ts',
+          exportName: 'Listed',
+          className: 'Hidden',
+          isDefault: false,
+          decorators: [],
+          tags: [],
+        },
+        {
+          filename: 'src/user-service.production.ts',
+          exportName: 'default',
+          className: 'UserService',
+          isDefault: true,
+          decorators: [],
+          tags: ['production'],
+        },
+      ]);
+    });
+
+    it('applies tic.exports.cjs next to the config by convention', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src']),
+        'tic.exports.cjs': "module.exports = ({ exportName }) => !exportName.endsWith('Mock');\n",
+        ...sources,
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['UserService', 'Listed', 'UserService_2']);
+    });
+
+    it('runs after select: a class must pass both', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { select: { decorators: ['register'] } }),
+        'tic.exports.cjs': 'module.exports = () => true;\n',
+        ...sources,
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['UserService']);
+    });
+
+    it('lets a bundle name its predicate file, and build() override both', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { filterExports: './tools/defaults-only.cjs' }),
+        'tic.exports.cjs': 'module.exports = () => false;\n',
+        'tools/defaults-only.cjs': 'module.exports = ({ isDefault }) => isDefault;\n',
+        ...sources,
+      });
+
+      buildProject();
+      expect(registered()).toEqual(['UserService']);
+
+      build({ config: project.path('tic.config.json'), filterExports: ({ exportName }) => exportName === 'Listed' });
+      expect(registered()).toEqual(['Listed']);
+    });
+
+    it.each([
+      [{ filterExports: './missing.cjs' }, {}, /predicate file not found: .*missing\.cjs/],
+      [
+        { filterExports: './nope.cjs' },
+        { 'nope.cjs': 'module.exports = 42;\n' },
+        /nope\.cjs must export an ExportPredicate function/,
+      ],
+      [{ filterExports: '' }, {}, 'bundles[0].filterExports: expected a non-empty string'],
+    ])('fails naming the predicate file for %j', (extra, more, message) => {
+      project = TempProject.create({ 'tic.config.json': module(['./src'], extra), ...more, ...sources });
+
+      expect(() => buildProject()).toThrow(TicConfigError);
+      expect(() => buildProject()).toThrow(message);
     });
   });
 

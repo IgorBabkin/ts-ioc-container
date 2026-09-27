@@ -56,6 +56,7 @@ below use the shortcut.
 | `bundles[].namespaces`       | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
 | `bundles[].select`           | every exported class                      | Which classes of a file are registered — see [Selecting classes](#selecting-classes)          |
 | `bundles[].exclude`          | test files, `__tests__/`, `node_modules/` | Globs (relative to the config) never scanned; replaces the default                           |
+| `bundles[].filterExports`    | `tic.exports.*` next to the config        | File exporting an `ExportPredicate` — see [Filtering classes](#filtering-classes-after-parsing) |
 | `bundles[].include`          | `tic.include.*` next to the config        | File exporting an `InclusionPredicate` — see [Including files](#including-files-with-a-predicate) |
 
 ## Selecting classes
@@ -136,6 +137,40 @@ export default byTags((tags) => !tags.includes('manual')); // Scheduler.manual.t
 `byTags` returns an ordinary `InclusionPredicate`, so it goes anywhere one
 does. `fileTags(filename)` is exported too. More examples — folders, name
 conventions, environments, environment × region — run as tests in
+[`__tests__/examples/inclusion-predicates.spec.ts`](__tests__/examples/inclusion-predicates.spec.ts).
+
+## Filtering classes after parsing
+
+`include` decides on whole files before they are read. To decide class by
+class, right after a file is parsed, use an `ExportPredicate`. It runs on every
+exported, non-abstract class that passes `select`:
+
+```ts
+type FilterPredicate<Target> = (value: Target) => boolean;
+type ExportPredicate = FilterPredicate<ExportContext>;
+
+interface ExportContext {
+  filename: string;     // relative to the config: 'src/Mailer.ts'
+  exportName: string;   // 'default' for a default export
+  className: string;    // an anonymous default export is named after its file
+  isDefault: boolean;
+  decorators: string[]; // renamed imports resolved: `register as reg` -> 'register'
+  tags: string[];       // file-name tags, as byTags reads them
+}
+```
+
+```ts
+// tic.exports.ts, next to tic.config.json: picked up by convention
+import type { ExportPredicate } from '@ts-ioc-container/bundler';
+
+const filterExports: ExportPredicate = ({ exportName }) => !/(Stub|Mock|Fake)$/.test(exportName);
+export default filterExports;
+```
+
+It is found and loaded like an inclusion predicate: `build({ filterExports })`,
+else the bundle's `filterExports` file, else a `tic.exports.*` next to the
+config. Examples (test doubles sharing a file, decorator combinations, tags
+with class names) run as tests in
 [`__tests__/examples/inclusion-predicates.spec.ts`](__tests__/examples/inclusion-predicates.spec.ts).
 
 ## Recipe: generate per environment

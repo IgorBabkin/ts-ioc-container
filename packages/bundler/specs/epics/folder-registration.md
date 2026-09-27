@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **ADR:** [ADR 0022 - Registration discovery happens at build time, outside the container](../../../../adr/0022-build-time-registration-discovery.md)
-- **Public API:** `tic build`, `tic.config.json`, `build`, `loadConfig`, `InclusionPredicate`, `TagInclusionPredicate`, `byTags`, `fileTags`
+- **Public API:** `tic build`, `tic.config.json`, `build`, `loadConfig`, `InclusionPredicate`, `TagInclusionPredicate`, `byTags`, `fileTags`, `ExportPredicate`, `ExportContext`
 - **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts`
 
 ## Intent
@@ -100,6 +100,28 @@ Acceptance criteria:
   conventional `tic.include.*`.
 - `fileTags(filename)` is exported for predicates that need the tags elsewhere.
 - Usage examples run as tests (`__tests__/examples/`).
+
+### Story: Filter classes right after parsing
+
+As an application developer, I can decide class by class, in code, which parsed
+exports become registrations, so that rules the declarative `select` cannot
+express — naming schemes, decorator combinations, per-class environments — live
+in code.
+
+Acceptance criteria:
+
+- An `ExportPredicate` is `(context: ExportContext) => boolean`, called for
+  every exported, non-abstract class that passes `select`. A class becomes a
+  registration only when it returns `true`.
+- `ExportContext` carries `filename` (relative to the config, `/`-separated),
+  `exportName` (`'default'` for a default export), `className` (an anonymous
+  default export is named after its file), `isDefault`, `decorators` (names,
+  renamed imports resolved) and `tags` (the file-name tags `byTags` reads).
+- It is found like an `InclusionPredicate`: `build({ filterExports })`, else a
+  bundle's `filterExports` file, else a conventional
+  `tic.exports.{cjs,js,mjs,ts,cts,mts}` next to the config; loaded
+  synchronously, once per process. A missing file or a non-function export
+  fails the build naming the file.
 
 ### Story: Configure which classes a file contributes
 

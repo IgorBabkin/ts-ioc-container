@@ -10,6 +10,11 @@ export interface DiscoveredClass {
   exportName: string;
   /** The local name the generated bundle would like to import it under. */
   localName: string;
+  /** The declared class name; an anonymous default export is named after its file. */
+  className: string;
+  isDefault: boolean;
+  /** Names of the class's decorators, renamed imports resolved. */
+  decorators: string[];
 }
 
 const SOURCE_FILE = /\.(tsx?|mts|cts)$/;
@@ -43,11 +48,14 @@ function decoratorName(decorator: ts.Decorator, imports: Map<string, string>): s
   return undefined;
 }
 
-/** `user-service.ts` -> `UserService`: the import name of an anonymous default-exported class. */
+/**
+ * `user-service.ts` -> `UserService`: the import name of an anonymous default-exported class.
+ * File-name tags are not part of it: `user-service.production.ts` -> `UserService`.
+ */
 function nameFromFile(file: string): string {
   const words = path
     .basename(file)
-    .replace(SOURCE_FILE, '')
+    .split('.')[0]
     .split(/[^A-Za-z0-9_$]+/)
     .filter(Boolean);
   const name = words.map((w: string) => w[0].toUpperCase() + w.slice(1)).join('');
@@ -95,8 +103,8 @@ export function findClasses(
     }
   }
 
-  const decoratedWith = (node: ts.ClassDeclaration, names: string[]) =>
-    (ts.getDecorators(node) ?? []).some((d) => names.includes(decoratorName(d, imports) ?? ''));
+  const decoratorsOf = (node: ts.ClassDeclaration) =>
+    (ts.getDecorators(node) ?? []).map((d) => decoratorName(d, imports)).filter((n): n is string => !!n);
 
   return exported
     .map(({ node, local, exportName }) => ({ node: node ?? (local ? classes.get(local) : undefined), exportName }))
@@ -105,17 +113,21 @@ export function findClasses(
       node,
       exportName,
       className: node.name?.text ?? nameFromFile(file),
+      decorators: decoratorsOf(node),
     }))
-    .filter(({ node, exportName, className }) => {
+    .filter(({ node, exportName, className, decorators }) => {
       if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
       if (selector.export !== 'any' && (exportName === 'default') !== (selector.export === 'default')) return false;
-      if (selector.decorators && !decoratedWith(node, selector.decorators)) return false;
+      if (selector.decorators && !selector.decorators.some((name) => decorators.includes(name))) return false;
       return !selector.nameGlob || selector.nameGlob.test(className);
     })
     .sort((a, b) => a.node.pos - b.node.pos)
-    .map(({ exportName, className }) => ({
+    .map(({ exportName, className, decorators }) => ({
       file,
       exportName,
       localName: exportName === 'default' ? className : exportName,
+      className,
+      isDefault: exportName === 'default',
+      decorators,
     }));
 }

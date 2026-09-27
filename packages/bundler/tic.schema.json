@@ -121,6 +121,11 @@
             "type": "string",
             "minLength": 1,
             "description": "A file exporting an InclusionPredicate ((context: { filename }) => boolean), relative to this file. Overrides the conventional tic.include.* next to this file. A file takes part only when it matches no `exclude` glob and the predicate returns true."
+          },
+          "filterExports": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A file exporting an ExportPredicate ((context: { filename, exportName, className, isDefault, decorators, tags }) => boolean), relative to this file. Runs on every exported, non-abstract class that passes `select`, right after parsing. Overrides the conventional tic.exports.* next to this file."
           }
         }
       }

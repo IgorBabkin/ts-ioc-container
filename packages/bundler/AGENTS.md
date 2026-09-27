@@ -24,6 +24,10 @@ it.
   config. Predicate files are `require`d once per process — read env vars
   inside the predicate. README "Recipe: generate per environment" shows the
   per-environment setup.
+- Right after parsing, an `ExportPredicate` (`FilterPredicate<ExportContext>`:
+  filename, exportName, className, isDefault, decorators, tags) filters class by
+  class, after `select`; found via `build({ filterExports })`, a bundle's
+  `filterExports` file, or `tic.exports.*` next to the config.
 - Prefer `byTags((tags, context) => ...)` (a `TagInclusionPredicate`) over parsing
   file names: tags are the dot-parts between base name and extension
   (`Report.production.eu.ts` → `['production', 'eu']`). Usage examples:
