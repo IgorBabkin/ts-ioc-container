@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import type { Select } from './config';
+import type { ResolvedSelector } from './config';
 
 /** An exported class the generated module registers. */
 export interface DiscoveredClass {
@@ -10,11 +10,6 @@ export interface DiscoveredClass {
   exportName: string;
   /** The local name the generated module would like to import it under. */
   localName: string;
-}
-
-export interface ClassFilter {
-  select: Select;
-  decorators: string[];
 }
 
 const SOURCE_FILE = /\.(tsx?|mts|cts)$/;
@@ -60,10 +55,14 @@ function nameFromFile(file: string): string {
 }
 
 /**
- * The exported classes of one file that `filter` selects, in declaration order.
- * Syntax only: decorators are recognised by name, not by type.
+ * The exported, non-abstract classes of one file that `selector` selects, in
+ * declaration order. Syntax only: decorators are recognised by name, not by type.
  */
-export function findClasses(file: string, filter: ClassFilter, text = readFileSync(file, 'utf8')): DiscoveredClass[] {
+export function findClasses(
+  file: string,
+  selector: ResolvedSelector,
+  text = readFileSync(file, 'utf8'),
+): DiscoveredClass[] {
   const kind = file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, false, kind);
 
@@ -96,19 +95,27 @@ export function findClasses(file: string, filter: ClassFilter, text = readFileSy
     }
   }
 
-  const isSelected = (node: ts.ClassDeclaration) => {
-    if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
-    if (filter.select === 'exported') return true;
-    return (ts.getDecorators(node) ?? []).some((d) => filter.decorators.includes(decoratorName(d, imports) ?? ''));
-  };
+  const decoratedWith = (node: ts.ClassDeclaration, names: string[]) =>
+    (ts.getDecorators(node) ?? []).some((d) => names.includes(decoratorName(d, imports) ?? ''));
 
   return exported
     .map(({ node, local, exportName }) => ({ node: node ?? (local ? classes.get(local) : undefined), exportName }))
-    .filter((e): e is { node: ts.ClassDeclaration; exportName: string } => !!e.node && isSelected(e.node))
-    .sort((a, b) => a.node.pos - b.node.pos)
+    .filter((e): e is { node: ts.ClassDeclaration; exportName: string } => !!e.node)
     .map(({ node, exportName }) => ({
+      node,
+      exportName,
+      className: node.name?.text ?? nameFromFile(file),
+    }))
+    .filter(({ node, exportName, className }) => {
+      if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
+      if (selector.export !== 'any' && (exportName === 'default') !== (selector.export === 'default')) return false;
+      if (selector.decorators && !decoratedWith(node, selector.decorators)) return false;
+      return !selector.name || selector.name.test(className);
+    })
+    .sort((a, b) => a.node.pos - b.node.pos)
+    .map(({ exportName, className }) => ({
       file,
       exportName,
-      localName: exportName === 'default' ? (node.name?.text ?? nameFromFile(file)) : exportName,
+      localName: exportName === 'default' ? className : exportName,
     }));
 }

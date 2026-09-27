@@ -9,8 +9,9 @@ changed by it.
   when an output is stale — run it in CI.
 - A namespace is a folder: relative to the config file, or a tsconfig `paths`
   alias. Generated imports use the most specific alias, else a relative path.
-- Default selection is exported, non-abstract classes carrying `@register`
-  (by name). Composed decorators must be listed in `decorators`.
+- Default selection is every exported, non-abstract class. A module's
+  `select: { export, decorators, name }` narrows it; a class must meet every
+  criterion set. Decorators match by name, so composed ones must be listed.
 - Never edit a `*.generated.ts` by hand — change the classes or the config and
   rerun `tic build`.
 - Programmatic API: `build({ config, cwd, check })`, `run(argv, io)`,

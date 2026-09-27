@@ -78,7 +78,7 @@ function generate(config: ResolvedConfig, module: ResolvedModule, paths: ImportP
 
   const classes = [...files]
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-    .flatMap((file) => findClasses(file, module))
+    .flatMap((file) => findClasses(file, module.select))
     .map((cls) => ({ ...cls, specifier: paths.specifier(module.output, cls.file) }));
 
   const content = emitModule({

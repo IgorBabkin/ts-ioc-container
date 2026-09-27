@@ -41,9 +41,29 @@ pnpm add -D @ts-ioc-container/compiler
 | `modules[].output`           | —                                         | Generated file                                                                               |
 | `modules[].name`             | `ContainerModule`                         | Name of the exported `IContainerModule`                                                      |
 | `modules[].namespaces`       | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
-| `modules[].select`           | `decorated`                               | `decorated`: exported classes carrying one of `decorators`; `exported`: every exported class |
-| `modules[].decorators`       | `["register"]`                            | Decorator names that mark a registration — list your composed decorators here               |
+| `modules[].select`           | every exported class                      | Which classes of a file are registered — see [Selecting classes](#selecting-classes)          |
 | `modules[].exclude`          | test files, `__tests__/`, `node_modules/` | Globs (relative to the config) never scanned; replaces the default                           |
+
+## Selecting classes
+
+By default every exported, non-abstract class of a scanned file is registered.
+`select` narrows that; a class must meet every criterion that is set:
+
+```json
+"select": {
+  "export": "named",
+  "decorators": ["register", "repository"],
+  "name": "*Service"
+}
+```
+
+| Criterion    | Default | Meaning                                                                                                     |
+| ------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `export`     | `any`   | `any`, `named` or `default` — which exports count                                                           |
+| `decorators` | —       | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones |
+| `name`       | —       | Glob on the class name; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
+
+Abstract and non-exported classes are never registered.
 
 ## Build
 
@@ -76,6 +96,6 @@ const container = new Container().useModule(AppModule);
 Treat `*.generated.ts` as build output: add it to `.prettierignore` (and any
 other formatter's ignore list), since `--check` compares files byte for byte.
 
-Each class keeps its own `@register(...)` config (key, scope, singleton, …).
-Discovery is syntactic — a decorator is recognised by its name, also when
-imported under another name or used as `@ioc.register()`.
+Each class keeps its own `@register(...)` config (key, scope, singleton, …);
+an undecorated class is bound by its class name. Discovery is syntactic — no
+type checker runs.
