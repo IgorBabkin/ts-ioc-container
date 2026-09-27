@@ -69,7 +69,7 @@ Acceptance criteria:
 - `decorators` requires the class to carry one of the listed decorators,
   recognised by name — also when imported under another name or reached as a
   member (`@ioc.register(...)`). Composed decorators are listed like any other.
-- `name` is a glob (`*Service`) the class name must match; for an anonymous
+- `nameGlob` is a glob (`*Service`) the class name must match; for an anonymous
   default export the name is derived from the file name.
 - An invalid rule — including the removed string form (`"select": "decorated"`)
   — fails the build naming the offending field.

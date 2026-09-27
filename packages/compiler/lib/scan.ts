@@ -110,7 +110,7 @@ export function findClasses(
       if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
       if (selector.export !== 'any' && (exportName === 'default') !== (selector.export === 'default')) return false;
       if (selector.decorators && !decoratedWith(node, selector.decorators)) return false;
-      return !selector.name || selector.name.test(className);
+      return !selector.nameGlob || selector.nameGlob.test(className);
     })
     .sort((a, b) => a.node.pos - b.node.pos)
     .map(({ exportName, className }) => ({

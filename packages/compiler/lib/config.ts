@@ -17,14 +17,14 @@ export interface ClassSelector {
   /** The class must carry one of these decorators, recognised by name (`register`, or a composed one). */
   decorators?: string[];
   /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
-  name?: string;
+  nameGlob?: string;
 }
 
-/** A {@link ClassSelector} with its defaults filled in and its `name` glob compiled. */
+/** A {@link ClassSelector} with its defaults filled in and its `nameGlob` compiled. */
 export interface ResolvedSelector {
   export: ExportKind;
   decorators?: string[];
-  name?: RegExp;
+  nameGlob?: RegExp;
 }
 
 export interface NamespaceConfig {
@@ -108,7 +108,7 @@ function toNamespace(value: unknown, field: string): Required<NamespaceConfig> {
   return { path: value.path, recursive: value.recursive ?? true };
 }
 
-const SELECTOR_FIELDS = new Set(['export', 'decorators', 'name']);
+const SELECTOR_FIELDS = new Set(['export', 'decorators', 'nameGlob']);
 
 /**
  * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
@@ -118,15 +118,15 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
   if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { export: kind, decorators, name } = value;
+  const { export: kind, decorators, nameGlob } = value;
   if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
     return fail(`${field}.export`, '"any", "named" or "default"');
   }
   if (decorators !== undefined && !(isStringArray(decorators) && decorators.length > 0)) {
     return fail(`${field}.decorators`, 'a non-empty array of strings');
   }
-  if (name !== undefined && !isNonEmptyString(name)) return fail(`${field}.name`, 'a non-empty string');
-  return { export: kind ?? 'any', decorators, name: name === undefined ? undefined : globToRegExp(name) };
+  if (nameGlob !== undefined && !isNonEmptyString(nameGlob)) return fail(`${field}.nameGlob`, 'a non-empty string');
+  return { export: kind ?? 'any', decorators, nameGlob: nameGlob === undefined ? undefined : globToRegExp(nameGlob) };
 }
 
 /**

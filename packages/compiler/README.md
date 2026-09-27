@@ -53,7 +53,7 @@ By default every exported, non-abstract class of a scanned file is registered.
 "select": {
   "export": "named",
   "decorators": ["register", "repository"],
-  "name": "*Service"
+  "nameGlob": "*Service"
 }
 ```
 
@@ -61,7 +61,7 @@ By default every exported, non-abstract class of a scanned file is registered.
 | ------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
 | `export`     | `any`   | `any`, `named` or `default` — which exports count                                                           |
 | `decorators` | —       | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones |
-| `name`       | —       | Glob on the class name; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
+| `nameGlob`   | —       | Glob on the class name; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
 
 Abstract and non-exported classes are never registered.
 
