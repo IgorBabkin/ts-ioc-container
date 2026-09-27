@@ -50,8 +50,10 @@ Discover registrations **at build time**, in a separate package,
 
 - A build step: the generated file must be regenerated when a namespace gains or
   loses a class (`--check` detects forgetting it).
-- Discovery is syntactic: a class counts as decorated when a decorator's name is
-  listed in the config, so a custom composed decorator has to be listed there.
+- Discovery is syntactic: which classes a file contributes is a declarative
+  rule in the config (export kind, decorator names, name glob), not a type
+  query, so a composed decorator is matched by its own name and has to be
+  listed there.
 - The compiler is a new published package; its first npm publish has to be done
   by hand, since trusted publishing (OIDC) cannot create a package.
 

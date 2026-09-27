@@ -1,9 +1,31 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { TicConfigError } from './errors';
+import { globToRegExp } from './glob';
 
-/** Which exported classes of a namespace become registrations. */
-export type Select = 'decorated' | 'exported';
+/** Which exports of a file count: both kinds, only named exports, or only the default export. */
+export type ExportKind = 'any' | 'named' | 'default';
+
+/**
+ * How the compiler picks target classes out of a file. A class is selected when
+ * it is exported, not abstract, and meets every criterion set here; an empty
+ * rule selects every exported class.
+ */
+export interface ClassSelector {
+  /** Default `any`. */
+  export?: ExportKind;
+  /** The class must carry one of these decorators, recognised by name (`register`, or a composed one). */
+  decorators?: string[];
+  /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
+  name?: string;
+}
+
+/** A {@link ClassSelector} with its defaults filled in and its `name` glob compiled. */
+export interface ResolvedSelector {
+  export: ExportKind;
+  decorators?: string[];
+  name?: RegExp;
+}
 
 export interface NamespaceConfig {
   /** A folder relative to the config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
@@ -18,10 +40,8 @@ export interface ModuleConfig {
   /** Name of the exported `IContainerModule`. Default `ContainerModule`. */
   name?: string;
   namespaces: (string | NamespaceConfig)[];
-  /** Default `decorated`. */
-  select?: Select;
-  /** Decorator names that mark a class as a registration under `select: "decorated"`. Default `["register"]`. */
-  decorators?: string[];
+  /** Which classes of a scanned file are registered. Default: every exported class. */
+  select?: ClassSelector;
   /** Globs, relative to the config file, of files never scanned. Replaces {@link DEFAULT_EXCLUDE} when given. */
   exclude?: string[];
 }
@@ -38,7 +58,6 @@ export interface TicConfig {
 
 export const DEFAULT_CONFIG_FILE = 'tic.config.json';
 export const DEFAULT_MODULE_NAME = 'ContainerModule';
-export const DEFAULT_DECORATORS = ['register'];
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
   '**/*.test.ts',
@@ -61,8 +80,7 @@ export interface ResolvedModule {
   output: string;
   name: string;
   namespaces: Required<NamespaceConfig>[];
-  select: Select;
-  decorators: string[];
+  select: ResolvedSelector;
   exclude: string[];
 }
 
@@ -90,28 +108,42 @@ function toNamespace(value: unknown, field: string): Required<NamespaceConfig> {
   return { path: value.path, recursive: value.recursive ?? true };
 }
 
+const SELECTOR_FIELDS = new Set(['export', 'decorators', 'name']);
+
+/**
+ * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
+ */
+function toSelector(value: unknown, field: string): ResolvedSelector {
+  if (value === undefined) return { export: 'any' };
+  if (!isObject(value)) return fail(field, 'an object');
+  const unknown = Object.keys(value).find((key) => !SELECTOR_FIELDS.has(key));
+  if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
+  const { export: kind, decorators, name } = value;
+  if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
+    return fail(`${field}.export`, '"any", "named" or "default"');
+  }
+  if (decorators !== undefined && !(isStringArray(decorators) && decorators.length > 0)) {
+    return fail(`${field}.decorators`, 'a non-empty array of strings');
+  }
+  if (name !== undefined && !isNonEmptyString(name)) return fail(`${field}.name`, 'a non-empty string');
+  return { export: kind ?? 'any', decorators, name: name === undefined ? undefined : globToRegExp(name) };
+}
+
 /**
  * @throws {TicConfigError} when a module field is missing or has the wrong type.
  */
 function toModule(value: unknown, field: string, dir: string): ResolvedModule {
   if (!isObject(value)) return fail(field, 'an object');
-  const { output, name, namespaces, select, decorators, exclude } = value;
+  const { output, name, namespaces, select, exclude } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
   if (!Array.isArray(namespaces) || namespaces.length === 0) return fail(`${field}.namespaces`, 'a non-empty array');
-  if (select !== undefined && select !== 'decorated' && select !== 'exported') {
-    return fail(`${field}.select`, '"decorated" or "exported"');
-  }
-  if (decorators !== undefined && !(isStringArray(decorators) && decorators.length > 0)) {
-    return fail(`${field}.decorators`, 'a non-empty array of strings');
-  }
   if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
   return {
     output: path.resolve(dir, output),
     name: name ?? DEFAULT_MODULE_NAME,
     namespaces: namespaces.map((ns, i) => toNamespace(ns, `${field}.namespaces[${i}]`)),
-    select: select ?? 'decorated',
-    decorators: decorators ?? DEFAULT_DECORATORS,
+    select: toSelector(select, `${field}.select`),
     exclude: exclude ?? DEFAULT_EXCLUDE,
   };
 }

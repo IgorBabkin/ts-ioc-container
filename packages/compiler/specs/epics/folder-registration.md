@@ -43,11 +43,7 @@ Acceptance criteria:
 
 - A namespace is scanned recursively by default; `recursive: false` limits it to
   the folder itself.
-- By default (`select: "decorated"`) an exported class is registered when it
-  carries one of the module's `decorators` (default `["register"]`), including
-  when the decorator is imported under another name or reached as a member
-  (`@ioc.register(...)`).
-- `select: "exported"` registers every exported class.
+- By default every exported class is registered.
 - Abstract classes, non-exported classes, `.d.ts` files and files matching
   `exclude` (default: test files, `__tests__/`, `node_modules/`) are never
   registered. `exclude` globs are relative to the config file.
@@ -56,6 +52,27 @@ Acceptance criteria:
 - The generated file is never scanned, even when it lives inside a namespace.
 - Registrations are ordered by file path, then by declaration order, so the
   output is stable across machines.
+
+### Story: Configure which classes a file contributes
+
+As an application developer, I can define how the compiler picks the target
+classes out of a file so that a folder mixing services with helpers registers
+only what I mean it to.
+
+Acceptance criteria:
+
+- A module's `select` rule is an object; a class is selected when it is
+  exported, not abstract, and meets every criterion the rule sets. Omitting
+  `select` (or a criterion) applies no restriction beyond being exported.
+- `export` restricts which exports count: `"any"` (default), `"named"` or
+  `"default"`.
+- `decorators` requires the class to carry one of the listed decorators,
+  recognised by name — also when imported under another name or reached as a
+  member (`@ioc.register(...)`). Composed decorators are listed like any other.
+- `name` is a glob (`*Service`) the class name must match; for an anonymous
+  default export the name is derived from the file name.
+- An invalid rule — including the removed string form (`"select": "decorated"`)
+  — fails the build naming the offending field.
 
 ### Story: Address folders by tsconfig aliases
 

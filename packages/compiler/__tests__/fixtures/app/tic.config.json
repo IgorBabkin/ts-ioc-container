@@ -4,7 +4,15 @@
     {
       "output": "src/di/app.generated.ts",
       "name": "AppModule",
-      "namespaces": ["@app/services", "@app/infra"]
+      "namespaces": [
+        "@app/services",
+        "@app/infra"
+      ],
+      "select": {
+        "decorators": [
+          "register"
+        ]
+      }
     }
   ]
 }

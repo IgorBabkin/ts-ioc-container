@@ -48,7 +48,6 @@ describe('Folder registration', () => {
       [{ modules: [{ namespaces: ['./src'] }] }, 'modules[0].output: expected a non-empty string'],
       [{ modules: [{ output: 'a.ts', namespaces: [] }] }, 'modules[0].namespaces: expected a non-empty array'],
       [{ modules: [{ output: 'a.ts', namespaces: [{ recursive: true }] }] }, 'modules[0].namespaces[0].path'],
-      [{ modules: [{ output: 'a.ts', namespaces: ['./src'], select: 'all' }] }, 'modules[0].select'],
       [{ modules: [{ output: 'a.ts', namespaces: ['./src'], name: 'not valid' }] }, 'modules[0].name'],
     ])('rejects an invalid config %j naming the field', (config, message) => {
       project = TempProject.create({ 'tic.config.json': config });
@@ -98,49 +97,22 @@ describe('Folder registration', () => {
       expect(generated()).not.toContain('Hidden');
     });
 
-    it('skips undecorated, non-exported and abstract classes by default', () => {
+    it('registers every exported class by default, skipping non-exported and abstract ones', () => {
       project = TempProject.create({
         'tic.config.json': module(['./src']),
         'src/Classes.ts': [
           "import { register } from 'ts-ioc-container';",
           'export class Plain {}',
+          '@register() export class Decorated {}',
           '@register() class Private {}',
           '@register() export abstract class Base {}',
-          '@register() export class Kept {}',
         ].join('\n'),
       });
 
       buildProject();
 
-      expect(generated()).toContain('Registration.fromClass(Kept)');
-      expect(generated()).not.toMatch(/Plain|Private|Base/);
-    });
-
-    it('registers every exported class with select "exported"', () => {
-      project = TempProject.create({
-        'tic.config.json': module(['./src'], { select: 'exported' }),
-        'src/Classes.ts': 'export class Plain {}\nclass Private {}\nexport abstract class Base {}\n',
-      });
-
-      buildProject();
-
-      expect(generated()).toContain('Registration.fromClass(Plain)');
+      expect(generated()).toMatch(/fromClass\(Plain\)[\s\S]*fromClass\(Decorated\)/);
       expect(generated()).not.toMatch(/Private|Base/);
-    });
-
-    it('recognises configured decorators, renamed imports and member access', () => {
-      project = TempProject.create({
-        'tic.config.json': module(['./src'], { decorators: ['register', 'service'] }),
-        'src/Renamed.ts': "import { register as reg } from 'ts-ioc-container';\n@reg() export class Renamed {}\n",
-        'src/Member.ts': "import * as ioc from 'ts-ioc-container';\n@ioc.register() export class Member {}\n",
-        'src/Custom.ts': "import { service } from './service';\n@service export class Custom {}\n",
-        'src/Other.ts': "import { other } from './other';\n@other() export class Other {}\n",
-      });
-
-      buildProject();
-
-      expect(generated()).toMatch(/fromClass\(Custom\)[\s\S]*fromClass\(Member\)[\s\S]*fromClass\(Renamed\)/);
-      expect(generated()).not.toContain('Other');
     });
 
     it('imports classes exported by export lists and default exports under their exported name', () => {
@@ -184,6 +156,84 @@ describe('Folder registration', () => {
 
       expect(generated()).toContain('Registration.fromClass(KeptSpec)');
       expect(generated()).not.toContain('Old');
+    });
+  });
+
+  describe('Story: Configure which classes a file contributes', () => {
+    const classes = [
+      "import { register } from 'ts-ioc-container';",
+      'export class UserService {}',
+      '@register() export class AuthService {}',
+      'export class Helper {}',
+      '@register() export default class MainService {}',
+    ].join('\n');
+
+    const selected = (select: object) => {
+      project = TempProject.create({ 'tic.config.json': module(['./src'], { select }), 'src/Classes.ts': classes });
+      buildProject();
+      return [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
+    };
+
+    it('applies no restriction beyond being exported when the rule is empty', () => {
+      expect(selected({})).toEqual(['UserService', 'AuthService', 'Helper', 'MainService']);
+    });
+
+    it.each([
+      [{ export: 'named' }, ['UserService', 'AuthService', 'Helper']],
+      [{ export: 'default' }, ['MainService']],
+    ])('restricts exports with %j', (select, expected) => {
+      expect(selected(select)).toEqual(expected);
+    });
+
+    it('requires one of the listed decorators', () => {
+      expect(selected({ decorators: ['register'] })).toEqual(['AuthService', 'MainService']);
+    });
+
+    it('requires the class name to match a glob', () => {
+      expect(selected({ name: '*Service' })).toEqual(['UserService', 'AuthService', 'MainService']);
+    });
+
+    it('combines criteria: a class must meet every one', () => {
+      expect(selected({ export: 'named', decorators: ['register'], name: '*Service' })).toEqual(['AuthService']);
+    });
+
+    it('recognises decorators by name through renamed imports and member access', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { select: { decorators: ['register', 'service'] } }),
+        'src/Renamed.ts': "import { register as reg } from 'ts-ioc-container';\n@reg() export class Renamed {}\n",
+        'src/Member.ts': "import * as ioc from 'ts-ioc-container';\n@ioc.register() export class Member {}\n",
+        'src/Custom.ts': "import { service } from './service';\n@service export class Custom {}\n",
+        'src/Other.ts': "import { other } from './other';\n@other() export class Other {}\n",
+      });
+
+      buildProject();
+
+      expect(generated()).toMatch(/fromClass\(Custom\)[\s\S]*fromClass\(Member\)[\s\S]*fromClass\(Renamed\)/);
+      expect(generated()).not.toContain('Other');
+    });
+
+    it('matches the name of an anonymous default export by its file name', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { select: { name: '*Service' } }),
+        'src/user-service.ts': 'export default class {}\n',
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import UserService from '../user-service';");
+    });
+
+    it.each([
+      ['decorated', 'modules[0].select: expected an object'],
+      [{ export: 'all' }, 'modules[0].select.export: expected "any", "named" or "default"'],
+      [{ decorators: [] }, 'modules[0].select.decorators: expected a non-empty array of strings'],
+      [{ name: '' }, 'modules[0].select.name: expected a non-empty string'],
+      [{ exported: true }, 'modules[0].select.exported: unknown field'],
+    ])('rejects the rule %j naming the field', (select, message) => {
+      project = TempProject.create({ 'tic.config.json': module(['./src'], { select }) });
+
+      expect(() => buildProject()).toThrow(TicConfigError);
+      expect(() => buildProject()).toThrow(message);
     });
   });
 
