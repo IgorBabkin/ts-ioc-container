@@ -106,11 +106,16 @@ export const getTransformers = (Target: constructor<unknown>) =>
 
 /**
  * Class decorator that configures how `Registration.fromClass(Target)` registers
- * the class: binding keys, scope rules and provider pipes. A bare key or token
- * is shorthand for `bindTo(...)`. Without a key the class name is used.
+ * the class: binding keys, scope rules and provider pipes. Without a key the
+ * class name is used.
+ *
+ * Pass a key or a token directly - `@register(ILoggerToken)`, `@register('ILogger')`.
+ * It is bound exactly as `bindTo(...)` would bind it, so wrapping it in
+ * `bindTo(...)` here is redundant; `bindTo` is for the fluent
+ * `Registration...` chain.
  *
  * @example
- * @register(bindTo(ILoggerToken), scope((s) => s.hasTag('application')), singleton())
+ * @register(ILoggerToken, scope((s) => s.hasTag('application')), singleton())
  * class Logger implements ILogger {}
  *
  * container.addRegistration(Registration.fromClass(Logger));
@@ -125,9 +130,11 @@ export const register = (...mappers: RegistrationMapper[]) =>
  * Binds a registration to one or more keys or tokens. A `SingleToken` binds its
  * key; an alias token (`toSingleAlias`, `toGroupAlias`) adds an alias.
  *
+ * Inside `@register(...)` pass the token itself instead - `@register(ILoggerToken)`
+ * binds it the same way, so `@register(bindTo(ILoggerToken))` is redundant.
+ *
  * @example
- * @register(bindTo(ILoggerToken))
- * class Logger {}
+ * Registration.fromClass(Logger).bindTo(ILoggerToken);
  *
  * @example
  * Registration.fromValue(config).bindTo('Config');

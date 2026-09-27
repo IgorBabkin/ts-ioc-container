@@ -31,6 +31,7 @@ is left intact so the historical reasoning remains discoverable.
 | 0018 | [No hook modules: the container's events are the API](0018-no-hook-modules.md)                  | Accepted |
 | 0019 | [`@inject` takes one `InjectFn`; the scope travels inside the options](0019-inject-takes-one-function-scope-in-options.md) | Accepted |
 | 0020 | [Agent-readable package and deprecate-before-remove](0020-agent-readable-api-and-deprecation-policy.md) | Proposed |
+| 0021 | [Feature flags switch implementations, with a mandatory fallback](0021-feature-flags-with-mandatory-fallback.md) | Accepted |
 
 ## Adding a new ADR
 

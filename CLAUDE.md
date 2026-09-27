@@ -218,7 +218,7 @@ All `lib/`, `__tests__/`, and `__benchmarks__/` paths below are relative to
 **`ProviderPipe`** is an interface with two methods: `mapProvider` (transforms `IProvider`) and `mapRegistration` (transforms `IRegistration`). All exported pipe functions (`singleton()`, `lazy()`, `args()`, etc.) are `ProviderPipe` objects created via `registerPipe()`.
 
 - **`IRegistration.pipe()`** — accepts `ProviderMapper<T>` = a raw `MapFn<IProvider<T>>` or a `ProviderPipe` object (normalized by `toProviderFn`, which extracts `mapProvider`)
-- **`@register()`** — accepts `RegistrationMapper<T>` = a `MapFn<IRegistration<T>>` (`bindTo()`, `scope()`), a `ProviderPipe` object (calls `mapRegistration`), or a `Bindable` (`DependencyKey | BindToken`) as sugar for `bindTo(...)` (normalized by `toRegistrationFn`)
+- **`@register()`** — accepts `RegistrationMapper<T>` = a `MapFn<IRegistration<T>>` (`bindTo()`, `scope()`), a `ProviderPipe` object (calls `mapRegistration`), or a `Bindable` (`DependencyKey | BindToken`) as sugar for `bindTo(...)` (normalized by `toRegistrationFn`). Write `@register(Token)`, never `@register(bindTo(Token))` — the wrapper is redundant there
 
 `Bindable`, `ProviderMapper` and `RegistrationMapper` are the named unions for
 these argument lists — use them instead of respelling the union inline, and put
@@ -268,7 +268,11 @@ Workaround: register A for both scopes, or use `scopeAccess` for visibility cont
 
 ### Token Types
 
-`SingleToken`, `GroupAliasToken`, `SingleAliasToken`, `GroupInstanceToken`, `ClassToken`, `FunctionToken`, `ConstantToken` — all in `lib/token/`. Tokens define how a dependency key is resolved (single instance, group by alias, group by predicate, etc.).
+`SingleToken`, `GroupAliasToken`, `SingleAliasToken`, `GroupInstanceToken`, `ClassToken`, `FunctionToken`, `ConstantToken`, `MultiVariantFeatureToken`, `ToggleFeatureToken` — all in `lib/token/`. `SingleToken`, `SingleAliasToken` and `GroupAliasToken` extend `BindableToken`, which owns their shared state and modifiers — a subclass implements only `resolve` and `bindKey`. Tokens define how a dependency key is resolved (single instance, group by alias, group by predicate, etc.).
+
+### Feature Flags (ADR 0021)
+
+`MultiVariantFeatureToken<T, V>(flag)` switches implementations by what a flag serves, and **the implementations declare where they belong** on their own token: `BindableToken` (abstract base of `SingleToken`, `SingleAliasToken`, `GroupAliasToken`, holding their shared args/lazy/tags state) has `variantOf(feature, name)`, `primaryVariantOf(feature)` and `fallbackOf(feature)`, stored as aliases (`feature:<flag>:variant:<name>` / `:primary` / `:fallback`) that `bindTo` adds to the registration. Selection: served variant's implementation → (flag on) primary variant → fallback; a throwing client serves the fallback. **Every flag has a fallback**: resolving a feature with no `fallbackOf` registration in scope throws `DependencyNotFoundError` naming the flag. `ToggleFeatureToken extends MultiVariantFeatureToken<T, never>` is the on/off case — only a primary variant, evaluated with `isEnabled`; a subclass overrides only the protected `evaluate(flags, context)` → `{ enabled, variant? }`. `IContainer.hasAlias(alias)` is the non-throwing alias check this needs. The client (`IFeatureFlagsToken`, Unleash-shaped sync `IFeatureFlags`) and context (`IFeatureContextToken`) are resolved from the resolving scope on every resolution; missing either is `DependencyNotFoundError`. The library ships no vendor SDK.
 
 ### Token Immutability (One-Way Linked List)
 
@@ -384,7 +388,7 @@ Every function/method that can `throw` — directly, or indirectly via a method 
 Paths below are relative to `packages/ts-ioc-container/` unless stated otherwise.
 
 - **Edit source only**: `lib/` — never `cjm/`, `esm/`, `typings/` (build outputs)
-- **README.md is generated**: edit `.readme.hbs.md`, then run `pnpm run generate:docs`
+- **README.md is generated**: edit `.readme.hbs.md`, then run `pnpm run generate:docs`. The root `README.md` (GitHub landing page) is a copy of the core package README, made and staged by the pre-commit hook, which runs its `git add` from the repo root — never add a `git add` to a package script: inside a worktree the hook environment makes git treat the package directory as the repo root
 - **Tests mirror source**: `__tests__/` structure matches `lib/`
 - **All public APIs** exported from `lib/index.ts`
 

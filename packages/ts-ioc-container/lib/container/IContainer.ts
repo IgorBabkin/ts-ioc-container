@@ -99,6 +99,9 @@ export interface IContainer extends Tagged {
   /** Whether a provider is registered under `key` in this scope (parents are not checked). */
   hasRegistration(key: DependencyKey): boolean;
 
+  /** Whether a provider carrying `alias` is registered in this scope or a parent. Never throws for a missing alias. */
+  hasAlias(alias: DependencyKey): boolean;
+
   /**
    * Resolves a key, or constructs a class with the injector. Takes a key or a
    * class, not a token: for a token call `token.resolve(scope)`.
