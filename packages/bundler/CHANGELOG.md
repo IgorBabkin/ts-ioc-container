@@ -1,3 +1,19 @@
+# 0.2.0 (2026-09-27)
+
+  ### 📝 Other Changes
+
+    - **@ts-ioc-container/bundler:**
+    link ts-ioc-container by npm URL so it works on npm
+    (c7e219b0f7aac5be8a5684ddf5b3096cd75c581a)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    72.3.2
+
+
 # 0.1.0 (2026-09-27)
 
   ### ✨ Features
@@ -29,6 +45,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 

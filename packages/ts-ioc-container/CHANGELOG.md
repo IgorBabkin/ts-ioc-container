@@ -1,3 +1,12 @@
+# 72.3.2 (2026-09-27)
+
+  ### 📝 Other Changes
+
+    - **@ts-ioc-container/bundler:**
+    link ts-ioc-container by npm URL so it works on npm
+    (c7e219b0f7aac5be8a5684ddf5b3096cd75c581a)
+
+
 # 72.3.1 (2026-09-27)
 
   ### 📝 Other Changes
@@ -437,6 +446,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 

@@ -1,3 +1,19 @@
+# 0.40.0 (2026-09-27)
+
+  ### 📝 Other Changes
+
+    - **@ts-ioc-container/bundler:**
+    link ts-ioc-container by npm URL so it works on npm
+    (c7e219b0f7aac5be8a5684ddf5b3096cd75c581a)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    72.3.2
+
+
 # 0.39.0 (2026-09-27)
 
   ### 📝 Other Changes
@@ -431,6 +447,7 @@
     - **@ts-ioc-container/react:**
     add React adapter package (#106)
     (51f46c324437fc4416e99c80b6d61735ecef162a)
+
 
 
 
