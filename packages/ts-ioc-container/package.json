@@ -67,7 +67,7 @@
     "build:cjm": "node ../scripts/build.mjs cjm",
     "build:esm": "node ../scripts/build.mjs esm",
     "build:types": "node ../scripts/build.mjs types",
-    "generate:docs": "../scripts/generate-readme/generate-readme.ts && git add README.md",
+    "generate:docs": "../scripts/generate-readme/generate-readme.ts",
     "build": "pnpm run build:cjm && pnpm run build:esm && pnpm run build:types",
     "test": "vitest run",
     "test:spec": "vitest run __tests__/specs",
