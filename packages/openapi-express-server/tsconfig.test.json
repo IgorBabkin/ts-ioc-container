@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "node"],
+    "skipLibCheck": true
+  },
+  "include": ["__tests__/**/*", "lib/**/*"]
+}

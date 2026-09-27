@@ -1,0 +1,36 @@
+import {z} from 'zod';
+
+// Path and query parameters arrive as strings while JSON bodies carry real numbers: accept both.
+const zNumber = (schema: z.ZodNumber) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value)) ? Number(value) : value),
+    schema,
+  );
+
+// Query and path parameters only (a JSON body carries real booleans and arrays): 'true'/'false' are booleans, and a
+// parameter given once is a string where an array is expected.
+const zBoolean = (schema: z.ZodBoolean) =>
+  z.preprocess((value) => (value === 'true' ? true : value === 'false' ? false : value), schema);
+
+const zArray = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((value) => (value === undefined || value === null || Array.isArray(value) ? value : [value]), schema);
+
+const zDate = z.preprocess((arg) => {
+  if (typeof arg === 'string' || typeof arg === 'number') {
+    return new Date(arg);
+  }
+
+  return arg;
+}, z.date());
+
+{{#each components.schemas as |component componentName|}}
+export const {{componentName}} = {{{render_template 'ValidationJsonSchema.hbs' component}}};
+{{/each}}
+
+export const PAYLOADS = {
+{{#each paths as |path url|}}
+  {{#each (get_methods_obj path)}}
+    {{operationId}}: {{{render_template 'ValidationRoute.hbs' this}}},
+  {{/each}}
+{{/each}}
+};

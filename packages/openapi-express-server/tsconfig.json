@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./lib",
+    "lib": ["es2016"],
+    "types": ["node"],
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", "esm"]
+}
