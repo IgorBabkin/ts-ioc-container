@@ -13,13 +13,19 @@ permissions:
   contents: read
 
 jobs:
-  # The same build, static checks and tests a pull request runs (build.yml),
-  # plus coverage, and it hands the build output to the release job as an
+  # The same build, static checks and tests a pull request runs (the build
+  # action), plus coverage. It hands the build output to the release job as an
   # artifact so the release publishes exactly what was tested.
   build:
-    uses: ./.github/workflows/build.yml
-    with:
-      coverage: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build
+        uses: ./.github/actions/build
+        with:
+          coverage: true
 
   release:
     needs: build
