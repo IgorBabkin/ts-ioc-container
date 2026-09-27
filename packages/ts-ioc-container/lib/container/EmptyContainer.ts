@@ -103,6 +103,10 @@ export class EmptyContainer implements IContainer {
     return false;
   }
 
+  hasAlias(alias: DependencyKey): boolean {
+    return false;
+  }
+
   removeScope(): void {}
 
   /**

@@ -235,6 +235,10 @@ export class Container implements IContainer {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
   }
 
+  hasAlias(alias: DependencyKey): boolean {
+    return this.aliases.getKeysByAlias(alias).length > 0 || this.parent.hasAlias(alias);
+  }
+
   addInstance(instance: Instance) {
     this.instances.add(instance);
   }
