@@ -22,3 +22,8 @@ RELEASE_NOTIFICATION_SETUP.md
 reports
 
 tpl
+hbs
+*.tsbuildinfo
+
+# Written by the openapi-to-zod test suite for round-trip validation.
+packages/openapi-to-zod/__tests__/generated

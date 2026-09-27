@@ -60,6 +60,7 @@ export default {
         'errors',
         'metadata',
         'bundler', // @ts-ioc-container/bundler work that must not release
+        'openapi', // openapi-* package work that must not release (private until go-live)
 
         // CI/CD scopes
         'github', // GitHub workflows
