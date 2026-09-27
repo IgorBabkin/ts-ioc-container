@@ -10,7 +10,7 @@ inputs:
     description: Run tests with coverage and upload the report to Coveralls
     default: 'false'
   upload-build-output:
-    description: Upload each package's build output (cjm, esm, typings, tpl) as the `build-output` artifact
+    description: Upload each package's build output (cjm, esm, typings, tpl, hbs) as the `build-output` artifact
     default: 'true'
   github-token:
     description: Token for the Coveralls upload (composite actions cannot read secrets)
@@ -92,5 +92,6 @@ runs:
           packages/*/esm
           packages/*/typings
           packages/*/tpl
+          packages/*/hbs
         if-no-files-found: error
         retention-days: 1
