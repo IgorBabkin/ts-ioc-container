@@ -130,8 +130,12 @@ export { SingleToken } from './token/SingleToken';
 export { FunctionToken } from './token/FunctionToken';
 export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanceToken';
-export { MultiVariantFeatureToken, type FeatureTokenOptions } from './token/MultiVariantFeatureToken';
-export { ToggleFeatureToken } from './token/ToggleFeatureToken';
+export {
+  MultiVariantFeatureToken,
+  type FeatureTokenOptions,
+  type MultiVariantFeatureTokenContext,
+} from './token/MultiVariantFeatureToken';
+export { ToggleFeatureToken, type ToggleFeatureTokenContext } from './token/ToggleFeatureToken';
 
 // Feature flags
 export {
