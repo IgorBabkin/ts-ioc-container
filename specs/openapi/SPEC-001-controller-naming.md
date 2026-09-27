@@ -5,7 +5,7 @@ Status: **superseded** by [SPEC-007](./SPEC-007-use-case-per-operation.md) ([#18
 > There are no controllers any more. Every operation is its own use case, named from
 > `operationId`, and a tag names nothing — it is attached to the request scope instead. Every
 > requirement below is struck through; the IDs stay so that older commits and test names keep
-> resolving. `toIdentifier` and `@ibabkin/openapi-to-server/identifier` were removed with it.
+> resolving. `toIdentifier` and `@ts-ioc-container/openapi-to-server/identifier` were removed with it.
 
 ## Context
 
@@ -55,7 +55,7 @@ tag.~~
 
 ~~**CN-7** — `RouteMetadata.controllerName` is the same `<identifier>` the `IServer` key uses, so a
 controller registered under the generated key resolves at runtime. All three consumers share one
-implementation of `toIdentifier`, exported from `@ibabkin/openapi-to-server/identifier`.~~
+implementation of `toIdentifier`, exported from `@ts-ioc-container/openapi-to-server/identifier`.~~
 
 
 ~~**CN-8** — Two tags that normalise to the same identifier describe the same controller: their

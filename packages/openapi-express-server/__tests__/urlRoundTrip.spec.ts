@@ -1,4 +1,4 @@
-import { createUrl, renderClient } from '@ibabkin/openapi-to-server';
+import { createUrl, renderClient } from '@ts-ioc-container/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import express, { type Express, type Request, type Response } from 'express';
 import request from 'supertest';

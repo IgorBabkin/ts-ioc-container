@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { AppService, IAppServiceToken, ILoggerToken } from './agentRecipes/AppService';
 import { OnConstructModule } from './agentRecipes/lifecycle';
 
-const PACKAGES = ['openapi-express-server', 'openapi-to-server-interface', 'openapi-to-request-validator'];
+const PACKAGES = ['openapi-express-server', 'openapi-to-server', 'openapi-to-zod'];
 
 const packageDir = (dir: string) => path.resolve(__dirname, '../..', dir);
 const readGuide = (dir: string) => fs.readFileSync(path.join(packageDir(dir), 'AGENTS.md'), 'utf8');

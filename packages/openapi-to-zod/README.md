@@ -1,4 +1,4 @@
-# @ibabkin/openapi-to-zod
+# @ts-ioc-container/openapi-to-zod
 
 Generates Zod validation schemas from OpenAPI 3.0 specifications. Automatically creates type-safe request validators for path parameters, query parameters, and request bodies based on your OpenAPI spec.
 
@@ -14,9 +14,9 @@ Generates Zod validation schemas from OpenAPI 3.0 specifications. Automatically 
 ## Installation
 
 ```bash
-pnpm add @ibabkin/openapi-to-zod zod
+pnpm add @ts-ioc-container/openapi-to-zod zod
 # or
-npm install @ibabkin/openapi-to-zod zod
+npm install @ts-ioc-container/openapi-to-zod zod
 ```
 
 **Note:** `zod` is a peer dependency and must be installed separately.
@@ -82,7 +82,7 @@ openapi-to-zod --input src/swagger.yaml --output src/.generated/validators.ts
 Programmatically, writing straight to a file:
 
 ```typescript
-import { openapiToZod } from '@ibabkin/openapi-to-zod';
+import { openapiToZod } from '@ts-ioc-container/openapi-to-zod';
 
 openapiToZod({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/validators.ts' });
 ```
@@ -90,7 +90,7 @@ openapiToZod({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/valida
 Or render the code yourself:
 
 ```typescript
-import { renderValidators } from '@ibabkin/openapi-to-zod';
+import { renderValidators } from '@ts-ioc-container/openapi-to-zod';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import'; // or use js-yaml, json-loader, etc.
 import fs from 'fs';
@@ -180,7 +180,7 @@ Generates Zod validators code as a string from an OpenAPI document object.
 **Example:**
 
 ```typescript
-import { renderValidators } from '@ibabkin/openapi-to-zod';
+import { renderValidators } from '@ts-ioc-container/openapi-to-zod';
 import { OpenAPIV3 } from 'openapi-types';
 
 const doc: OpenAPIV3.Document = {
@@ -324,7 +324,7 @@ Object properties not listed in `required`, and parameters without `required: tr
 
 ## Integration with Express
 
-This package works seamlessly with `@ibabkin/openapi-express-server`. The generated `PAYLOADS` map is keyed by
+This package works seamlessly with `@ts-ioc-container/openapi-express-server`. The generated `PAYLOADS` map is keyed by
 `operationId`, so it can be handed straight to a route builder:
 
 ```typescript
@@ -339,7 +339,7 @@ See `packages/openapi-express-server/__tests__/RouteBuilder.ts` for a reference 
 ## For AI agents
 
 The package ships [`AGENTS.md`](./AGENTS.md), a compact guide for coding agents: what is generated, what is coerced, and the pitfalls. After
-installation it is at `node_modules/@ibabkin/openapi-to-zod/AGENTS.md`. Point your agent at it from your own
+installation it is at `node_modules/@ts-ioc-container/openapi-to-zod/AGENTS.md`. Point your agent at it from your own
 `AGENTS.md` or `CLAUDE.md`.
 
 ## Building from Source

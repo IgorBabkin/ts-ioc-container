@@ -38,7 +38,6 @@ Handlebars.registerHelper('some_parameters', function (list: { in: string }[], v
   return list.some((item) => item.in === value);
 });
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 Handlebars.registerHelper('get_value_by_key', function (context: object, pathString: string) {
   const keys = pathString.split('.');
   // @ts-ignore
@@ -117,10 +116,10 @@ Handlebars.registerHelper('get_methods', function (items: OpenAPIV3.PathsObject)
 
 Handlebars.registerHelper('get_methods_obj', function (item: OpenAPIV3.PathItemObject) {
   const output: Record<string, unknown> = {};
-  item.put && (output['put'] = item.put);
-  item.delete && (output['delete'] = item.delete);
-  item.post && (output['post'] = item.post);
-  item.get && (output['get'] = item.get);
+  if (item.put) output['put'] = item.put;
+  if (item.delete) output['delete'] = item.delete;
+  if (item.post) output['post'] = item.post;
+  if (item.get) output['get'] = item.get;
   return output;
 });
 

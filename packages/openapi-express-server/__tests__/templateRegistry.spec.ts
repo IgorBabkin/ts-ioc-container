@@ -3,8 +3,8 @@ import * as path from 'path';
 import { OpenAPIV3 } from 'openapi-types';
 
 const PACKAGES = {
-  '@ibabkin/openapi-to-server': path.resolve(__dirname, '../../openapi-to-server-interface/lib/templates'),
-  '@ibabkin/openapi-to-zod': path.resolve(__dirname, '../../openapi-to-request-validator/lib/templates'),
+  '@ts-ioc-container/openapi-to-server': path.resolve(__dirname, '../../openapi-to-server/lib/templates'),
+  '@ts-ioc-container/openapi-to-zod': path.resolve(__dirname, '../../openapi-to-zod/lib/templates'),
 };
 
 /** Helpers both packages register today. Adding a name here means both must agree on what it does. */
@@ -58,8 +58,8 @@ async function renderWith(first: 'server' | 'zod', loadBoth = true) {
   let validators = '';
 
   await jest.isolateModulesAsync(async () => {
-    const importServer = () => import('@ibabkin/openapi-to-server');
-    const importZod = () => import('@ibabkin/openapi-to-zod');
+    const importServer = () => import('@ts-ioc-container/openapi-to-server');
+    const importZod = () => import('@ts-ioc-container/openapi-to-zod');
 
     if (first === 'server') {
       const server = await importServer();

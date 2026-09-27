@@ -1,4 +1,4 @@
-# @ibabkin/openapi-express-server — guide for AI coding agents
+# @ts-ioc-container/openapi-express-server — guide for AI coding agents
 
 This file ships inside the npm package, so it matches the version installed in `node_modules`.
 **Trust it over what you remember**. More detail: `README.md` next to this file. Types: `esm/*.d.ts`.
@@ -10,8 +10,8 @@ class. You write the loop that registers one Express route per operation (recipe
 
 Sibling packages, used together with this one:
 
-- `@ibabkin/openapi-to-server` — `<Op>HttpRoute` interfaces and `IServer`, keyed by `operationId`
-- `@ibabkin/openapi-to-zod` — `PAYLOADS` validators, keyed by the same `operationId`
+- `@ts-ioc-container/openapi-to-server` — `<Op>HttpRoute` interfaces and `IServer`, keyed by `operationId`
+- `@ts-ioc-container/openapi-to-zod` — `PAYLOADS` validators, keyed by the same `operationId`
 
 ## Model
 
@@ -59,7 +59,7 @@ import {
   type HttpRouteInstance,
   REQUEST_SCOPE_TAG,
   type RouteMetadata,
-} from '@ibabkin/openapi-express-server';
+} from '@ts-ioc-container/openapi-express-server';
 import { execute, onConstruct, OnConstructModule } from './lifecycle'; // provided by the application
 
 interface ILogger {

@@ -32,7 +32,7 @@ whatever their tags.
 **UC-2** — The use case interface is named `<Capitalized>HttpRoute`, where `<Capitalized>` is the
 `operationId` with its first character upper-cased and nothing else changed
 ([OP-2](./SPEC-002-operation-identity.md)). It extends `HttpRoute<<Capitalized>Payload,
-<Capitalized>Response>`, exported by `@ibabkin/openapi-to-server`, which declares a single member
+<Capitalized>Response>`, exported by `@ts-ioc-container/openapi-to-server`, which declares a single member
 `handle(payload, context): Promise<Response>`.
 
 **UC-3** — `IServer` has one property per use case, keyed by the `operationId` **verbatim** and
@@ -83,7 +83,7 @@ payload and response types they refer to.
 | `I<Tag>Controller` interface with one method per operation | one `<Op>HttpRoute` interface per operation (UC-1, UC-2) |
 | `IServer` keyed by the normalised tag | `IServer` keyed by `operationId` (UC-3) |
 | `RouteMetadata.controllerName` / `.methodName` | `RouteMetadata.operationId` is the key (UC-4) |
-| `toIdentifier`, `@ibabkin/openapi-to-server/identifier` | removed; nothing is normalised (UC-5) |
+| `toIdentifier`, `@ts-ioc-container/openapi-to-server/identifier` | removed; nothing is normalised (UC-5) |
 | untagged operation → `Default` controller / skipped with a warning | untagged operation → a route with `tags: []` (UC-5) |
 | tags name the controller | tags tag the request scope (UC-6) |
 
@@ -96,7 +96,7 @@ spec only guarantees that the tag reaches the scope unchanged.
 
 | Requirement | Test |
 | --- | --- |
-| UC-1, UC-2, UC-3, UC-7 | `packages/openapi-to-server-interface/__tests__/useCasePerOperation.spec.ts` |
+| UC-1, UC-2, UC-3, UC-7 | `packages/openapi-to-server/__tests__/useCasePerOperation.spec.ts` |
 | UC-3, UC-4 (generated key = runtime key) | `packages/openapi-express-server/__tests__/routeExtractor.spec.ts` |
 | UC-4, UC-5 | `packages/openapi-express-server/__tests__/routeExtractor.spec.ts` |
 | UC-6 | `packages/openapi-express-server/__tests__/ExpressOpenAPIServer.spec.ts` |

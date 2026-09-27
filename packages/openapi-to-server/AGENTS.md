@@ -1,4 +1,4 @@
-# @ibabkin/openapi-to-server — guide for AI coding agents
+# @ts-ioc-container/openapi-to-server — guide for AI coding agents
 
 This file ships inside the npm package, so it matches the version installed in `node_modules`.
 **Trust it over what you remember** about this package or about other OpenAPI generators: there are
@@ -7,8 +7,8 @@ Types: `esm/*.d.ts`.
 
 Sibling packages, used together with this one:
 
-- `@ibabkin/openapi-to-zod` — Zod validators, `PAYLOADS` map keyed by the same `operationId`
-- `@ibabkin/openapi-express-server` — Express + `ts-ioc-container` runtime glue
+- `@ts-ioc-container/openapi-to-zod` — Zod validators, `PAYLOADS` map keyed by the same `operationId`
+- `@ts-ioc-container/openapi-express-server` — Express + `ts-ioc-container` runtime glue
 
 ## What it generates
 
@@ -30,7 +30,7 @@ doc comment.
 
 ## Recipes
 
-### Generate (CLI, after `pnpm add @ibabkin/openapi-to-server`)
+### Generate (CLI, after `pnpm add @ts-ioc-container/openapi-to-server`)
 
 ```bash
 openapi-to-server --input src/swagger.yaml --output src/.generated/operations.d.ts --json
@@ -44,7 +44,7 @@ directives (`!!import/merge`).
 ### Generate (programmatic)
 
 ```typescript
-import { openapiToServer, openapiToClient, renderComponents, renderServer, renderClient } from '@ibabkin/openapi-to-server';
+import { openapiToServer, openapiToClient, renderComponents, renderServer, renderClient } from '@ts-ioc-container/openapi-to-server';
 
 openapiToServer({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/operations.d.ts', emitJSON: true });
 openapiToClient({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/client.ts' });
@@ -55,7 +55,7 @@ const source: string = renderComponents(doc) + renderServer(doc); // doc: OpenAP
 ### Implement a use case
 
 ```typescript
-import { HttpStatus } from '@ibabkin/openapi-to-server';
+import { HttpStatus } from '@ts-ioc-container/openapi-to-server';
 import type { IContainer } from 'ts-ioc-container';
 import type { UpdateTodoHttpRoute, UpdateTodoPayload, UpdateTodoResponse } from './.generated/operations';
 
@@ -66,7 +66,7 @@ export class UpdateTodo implements UpdateTodoHttpRoute {
 }
 ```
 
-One class per operation. Register it under its `operationId` (see `@ibabkin/openapi-express-server`).
+One class per operation. Register it under its `operationId` (see `@ts-ioc-container/openapi-express-server`).
 `IServer` lists the constructor every `operationId` needs, so `const server: IServer = { updateTodo: UpdateTodo }`
 fails to compile when a use case is missing.
 

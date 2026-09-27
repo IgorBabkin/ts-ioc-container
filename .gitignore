@@ -22,3 +22,8 @@ RELEASE_NOTIFICATION_SETUP.md
 reports
 
 tpl
+
+# openapi-* packages: precompiled Handlebars templates, test output, tsc state
+hbs/
+.generated/
+*.tsbuildinfo

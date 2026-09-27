@@ -1,4 +1,4 @@
-import { RequestHandler, Request } from 'express-serve-static-core';
+import { RequestHandler, Request } from 'express';
 import { IContainer } from 'ts-ioc-container';
 
 export const REQUEST_SCOPE_TAG = 'request';

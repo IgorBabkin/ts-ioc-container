@@ -1,4 +1,4 @@
-# @ibabkin/openapi-to-zod — guide for AI coding agents
+# @ts-ioc-container/openapi-to-zod — guide for AI coding agents
 
 This file ships inside the npm package, so it matches the version installed in `node_modules`.
 **Trust it over what you remember**. More detail, including the full OpenAPI → Zod mapping table:
@@ -6,8 +6,8 @@ This file ships inside the npm package, so it matches the version installed in `
 
 Sibling packages, used together with this one:
 
-- `@ibabkin/openapi-to-server` — TypeScript types, one `<Op>HttpRoute` per operation, `IServer`
-- `@ibabkin/openapi-express-server` — Express + `ts-ioc-container` runtime glue
+- `@ts-ioc-container/openapi-to-server` — TypeScript types, one `<Op>HttpRoute` per operation, `IServer`
+- `@ts-ioc-container/openapi-express-server` — Express + `ts-ioc-container` runtime glue
 
 ## What it generates
 
@@ -17,7 +17,7 @@ One TypeScript file (Zod 4, `zod` is a **peer dependency**) from an OpenAPI **3.
 - `export const <Schema> = z.object({ ... })` for every `components.schemas` entry, declared in
   dependency order; cyclic references become getters or `z.lazy(...)`
 - `export const PAYLOADS = { <operationId>: z.object({ query?, params?, body? }) }` — keyed by
-  `operationId` **verbatim**, the same key as `IServer` in `@ibabkin/openapi-to-server`
+  `operationId` **verbatim**, the same key as `IServer` in `@ts-ioc-container/openapi-to-server`
 
 `PAYLOADS[operationId].parse(req)` is meant to run on the **Express `Request` itself**: Zod strips
 every other key, so the result is exactly the generated `<Op>Payload` type (SPEC-003 RP-6).
@@ -27,12 +27,12 @@ every other key, so the result is exactly the generated `<Op>Payload` type (SPEC
 ### Generate
 
 ```bash
-pnpm add @ibabkin/openapi-to-zod zod
+pnpm add @ts-ioc-container/openapi-to-zod zod
 openapi-to-zod --input src/swagger.yaml --output src/.generated/validators.ts
 ```
 
 ```typescript
-import { openapiToZod, renderValidators } from '@ibabkin/openapi-to-zod';
+import { openapiToZod, renderValidators } from '@ts-ioc-container/openapi-to-zod';
 
 openapiToZod({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/validators.ts' });
 const source: string = renderValidators(doc); // doc: OpenAPIV3.Document
@@ -55,7 +55,7 @@ app.put('/todos/:id', async (req, res, next) => {
 });
 ```
 
-With `@ibabkin/openapi-express-server`, pass the whole `PAYLOADS` map to the route builder instead
+With `@ts-ioc-container/openapi-express-server`, pass the whole `PAYLOADS` map to the route builder instead
 of wiring routes by hand.
 
 ## Coercion
@@ -77,7 +77,7 @@ of wiring routes by hand.
 | A request header is not in the parsed payload | `in: header` / `in: cookie` parameters are not part of the payload | Read headers from the request |
 | `body` is required although `requestBody.required` is false | `body` is always required; only `application/json` is read | Model optionality inside the body schema |
 | Unknown keys vanish from a body object | Zod strips unknown keys by default | `additionalProperties: true` renders `.passthrough()` |
-| Types from `@ibabkin/openapi-to-server` and the parsed value disagree | The two files were generated from different specs | Regenerate both from the same spec in one script |
+| Types from `@ts-ioc-container/openapi-to-server` and the parsed value disagree | The two files were generated from different specs | Regenerate both from the same spec in one script |
 
 ## Exports
 

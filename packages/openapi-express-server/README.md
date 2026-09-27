@@ -1,8 +1,8 @@
-# @ibabkin/openapi-express-server
+# @ts-ioc-container/openapi-express-server
 
 Express.js building blocks for wiring routes from an OpenAPI spec to use cases resolved from a
 [`ts-ioc-container`](https://github.com/IgorBabkin/ts-ioc-container) scope. Pairs with
-`@ibabkin/openapi-to-server` (one `<Op>HttpRoute` interface per operation) and `@ibabkin/openapi-to-zod`
+`@ts-ioc-container/openapi-to-server` (one `<Op>HttpRoute` interface per operation) and `@ts-ioc-container/openapi-to-zod`
 (Zod payload validators).
 
 ## Exports
@@ -48,7 +48,7 @@ validates `req` with the Zod schema for the same `operationId`, calls `useCase.h
 ## For AI agents
 
 The package ships [`AGENTS.md`](./AGENTS.md), a compact guide for coding agents: the one-route-per-operation wiring recipe (exercised by `__tests__/agentGuides.spec.ts`), the request-scope model and the pitfalls. After
-installation it is at `node_modules/@ibabkin/openapi-express-server/AGENTS.md`. Point your agent at it from your own
+installation it is at `node_modules/@ts-ioc-container/openapi-express-server/AGENTS.md`. Point your agent at it from your own
 `AGENTS.md` or `CLAUDE.md`.
 
 ## Development

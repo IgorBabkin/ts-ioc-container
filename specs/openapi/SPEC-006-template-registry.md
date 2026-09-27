@@ -36,8 +36,8 @@ packages register today are `array`, `capitalize`, `excludes`, `filter_parameter
 these names must pick a new name instead.
 
 **TR-5** — Consequently, loading both packages — in either order — does not change what either one
-renders. A document rendered by `@ibabkin/openapi-to-zod` alone and by
-`@ibabkin/openapi-to-zod` alongside `@ibabkin/openapi-to-server` produces byte-identical output,
+renders. A document rendered by `@ts-ioc-container/openapi-to-zod` alone and by
+`@ts-ioc-container/openapi-to-zod` alongside `@ts-ioc-container/openapi-to-server` produces byte-identical output,
 and the same holds the other way round.
 
 **TR-6** — `render_template` returns a `Handlebars.SafeString`: generated output is TypeScript, not
@@ -56,5 +56,5 @@ rather than commented.
 
 | Requirement | Test |
 | --- | --- |
-| TR-1, TR-3, TR-6 | `packages/openapi-to-server-interface/__tests__/templateRegistry.spec.ts` |
+| TR-1, TR-3, TR-6 | `packages/openapi-to-server/__tests__/templateRegistry.spec.ts` |
 | TR-2, TR-4, TR-5 | `packages/openapi-express-server/__tests__/templateRegistry.spec.ts` |

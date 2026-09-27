@@ -9,9 +9,9 @@ have to be the same object:
 
 | Producer | Artefact | Role |
 | --- | --- | --- |
-| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what `<Op>HttpRoute.handle()` receives |
-| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ClientRoute.hbs`) | what `ApiClient.<op>()` accepts |
-| `@ibabkin/openapi-to-zod` | `PAYLOADS[<operationId>]` (`ValidationRoute.hbs`) | what turns an Express `Request` into that object at runtime |
+| `@ts-ioc-container/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what `<Op>HttpRoute.handle()` receives |
+| `@ts-ioc-container/openapi-to-server` | `<Op>Payload` type (`ClientRoute.hbs`) | what `ApiClient.<op>()` accepts |
+| `@ts-ioc-container/openapi-to-zod` | `PAYLOADS[<operationId>]` (`ValidationRoute.hbs`) | what turns an Express `Request` into that object at runtime |
 
 The runtime never constructs the payload from the type — it parses the Express `Request` with the
 Zod schema and hands the result to the use case (`validators[operationId].parse(req)` in the
@@ -56,7 +56,7 @@ versa. The client splits it back apart: `params` and `query` build the URL
 ([SPEC-005](./SPEC-005-url-construction.md)), `body` is sent as the request body, and `body` is
 sent **only** when the operation declares a `requestBody`.
 
-**RP-8** — `buildPayload(req)` (`@ibabkin/openapi-express-server`) is a validator-free projection
+**RP-8** — `buildPayload(req)` (`@ts-ioc-container/openapi-express-server`) is a validator-free projection
 for callers that do not generate validators. It is **not** interchangeable with RP-6: it adds a
 `headers` member, and it omits `params`/`query` when they are empty, where RP-2 makes them
 required members of the type. A route wired with `buildPayload` alone can hand a use case a
@@ -121,7 +121,7 @@ coerced either. Declare coerced parameter schemas inline as plain `type: boolean
 | --- | --- |
 | RP-1, RP-2, RP-3, RP-4, RP-5 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | RP-6 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
-| RP-7 | `packages/openapi-to-server-interface/__tests__/client.spec.ts`, `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
+| RP-7 | `packages/openapi-to-server/__tests__/client.spec.ts`, `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | RP-8 | `packages/openapi-express-server/__tests__/utils.spec.ts` |
 | RP-9, RP-10, RP-11 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | Known divergence | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |

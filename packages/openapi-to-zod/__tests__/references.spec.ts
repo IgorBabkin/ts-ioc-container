@@ -25,7 +25,7 @@ describe('schema references', () => {
     validators = renderValidators(doc);
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
     fs.writeFileSync(outputFile, validators);
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     generated = require(outputFile);
   });
 

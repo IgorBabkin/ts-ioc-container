@@ -1,4 +1,4 @@
-# @ibabkin/openapi-to-server
+# @ts-ioc-container/openapi-to-server
 
 Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This package converts OpenAPI/Swagger specs into type-safe TypeScript interfaces for server implementations: component types, one use case interface per operation, and the `IServer` contract that lists them.
 
@@ -18,9 +18,9 @@ Generates TypeScript server interfaces from OpenAPI 3.0 specifications. This pac
 ## Installation
 
 ```bash
-pnpm add @ibabkin/openapi-to-server
+pnpm add @ts-ioc-container/openapi-to-server
 # or
-npm install @ibabkin/openapi-to-server
+npm install @ts-ioc-container/openapi-to-server
 ```
 
 ## Quick Start
@@ -104,7 +104,7 @@ openapi-to-client --input src/swagger.yaml --output src/.generated/client.ts
 The same is available programmatically:
 
 ```typescript
-import { openapiToServer, openapiToClient } from '@ibabkin/openapi-to-server';
+import { openapiToServer, openapiToClient } from '@ts-ioc-container/openapi-to-server';
 
 openapiToServer({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/operations.d.ts', emitJSON: true });
 openapiToClient({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/client.ts' });
@@ -113,7 +113,7 @@ openapiToClient({ inputFile: 'src/swagger.yaml', outputFile: 'src/.generated/cli
 Or render the individual parts yourself:
 
 ```typescript
-import { renderComponents, renderServer } from '@ibabkin/openapi-to-server';
+import { renderComponents, renderServer } from '@ts-ioc-container/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import'; // or use js-yaml, json-loader, etc.
 import fs from 'fs';
@@ -219,7 +219,7 @@ keyed by `operationId`.
 #### `renderClient(doc)`
 
 Generates component types, payload/response types and an Axios-based `ApiClient` class. The generated file imports
-`createUrl` from this package at runtime, so `@ibabkin/openapi-to-server` must be a regular dependency of the consumer.
+`createUrl` from this package at runtime, so `@ts-ioc-container/openapi-to-server` must be a regular dependency of the consumer.
 
 **Parameters:**
 - `doc: OpenAPIV3.Document` - OpenAPI 3.0 document object
@@ -237,7 +237,7 @@ const todos = await api.getTodos({ query: { limit: 10 } });
 #### Example
 
 ```typescript
-import { renderComponents, renderServer } from '@ibabkin/openapi-to-server';
+import { renderComponents, renderServer } from '@ts-ioc-container/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { read } from 'yaml-import';
 import fs from 'fs';
@@ -262,7 +262,7 @@ import {
   HttpStatus, 
   RouteOptions,
   constructor 
-} from '@ibabkin/openapi-to-server';
+} from '@ts-ioc-container/openapi-to-server';
 ```
 
 - **`HttpRoute<Payload, Response>`**: `handle(payload, context): Promise<Response>` — what every generated `<Op>HttpRoute` extends
@@ -276,7 +276,7 @@ import {
 Used by the generated client, but useful on their own:
 
 ```typescript
-import { createUrl, addPathParams, addQueryParams, Payload } from '@ibabkin/openapi-to-server';
+import { createUrl, addPathParams, addQueryParams, Payload } from '@ts-ioc-container/openapi-to-server';
 
 createUrl('/users/{id}', { params: { id: 1 }, query: { expand: 'posts' } }); // '/users/1?expand=posts'
 ```
@@ -311,10 +311,10 @@ upper-cased and nothing else changed. The same `operationId`, verbatim, is the k
 | `GETUser` | `GETUserHttpRoute` | `GETUser` |
 
 Tags name nothing. They are listed in the use case's doc comment (`@tags`) and, at runtime,
-`@ibabkin/openapi-express-server` attaches them to the request scope so middleware and
+`@ts-ioc-container/openapi-express-server` attaches them to the request scope so middleware and
 registrations can be bound per domain.
 
-See [SPEC-007](../../specs/SPEC-007-use-case-per-operation.md) for the full rules.
+See [SPEC-007](../../specs/openapi/SPEC-007-use-case-per-operation.md) for the full rules.
 
 ## YAML Import Support
 
@@ -359,7 +359,7 @@ const server: IServer = {
 ## For AI agents
 
 The package ships [`AGENTS.md`](./AGENTS.md), a compact guide for coding agents: what is generated and how it is named, the use case and client recipes, and the pitfalls. After
-installation it is at `node_modules/@ibabkin/openapi-to-server/AGENTS.md`. Point your agent at it from your own
+installation it is at `node_modules/@ts-ioc-container/openapi-to-server/AGENTS.md`. Point your agent at it from your own
 `AGENTS.md` or `CLAUDE.md`.
 
 ## Development
@@ -384,8 +384,8 @@ npm run watch
 
 ## Related Packages
 
-- [`@ibabkin/openapi-to-zod`](../openapi-to-request-validator): Generate Zod validation schemas from OpenAPI specs
-- [`@ibabkin/openapi-express-server`](../openapi-express-server): Express.js server implementation using generated interfaces
+- [`@ts-ioc-container/openapi-to-zod`](../openapi-to-zod): Generate Zod validation schemas from OpenAPI specs
+- [`@ts-ioc-container/openapi-express-server`](../openapi-express-server): Express.js server implementation using generated interfaces
 
 ## License
 

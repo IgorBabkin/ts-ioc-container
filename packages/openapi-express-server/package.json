@@ -1,5 +1,5 @@
 {
-  "name": "@ibabkin/openapi-express-server",
+  "name": "@ts-ioc-container/openapi-express-server",
   "version": "3.2.0",
   "publishConfig": {
     "access": "public",
@@ -14,7 +14,7 @@
     "typescript"
   ],
   "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://github.com/IgorBabkin/openapi-to-server/tree/master/packages/openapi-express-server",
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/openapi-express-server#readme",
   "license": "ISC",
   "type": "module",
   "main": "esm/index.js",
@@ -30,7 +30,8 @@
   "module": "esm/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IgorBabkin/openapi-to-server.git"
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container",
+    "directory": "packages/openapi-express-server"
   },
   "directories": {
     "lib": "lib",
@@ -47,19 +48,25 @@
     "test:watch": "jest --coverage --watch",
     "clean": "rimraf esm *.tsbuildinfo",
     "watch": "nodemon --watch lib --exec 'pnpm run compile'",
-    "build:ts": "tsc -p tsconfig.prod.json"
+    "build:ts": "tsc -p tsconfig.prod.json",
+    "test:coverage": "jest --coverage --coverageReporters=lcov",
+    "type-check": "tsc -p tsconfig.test.json --noEmit",
+    "lint": "eslint \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
+    "lint:fix": "pnpm run lint --fix",
+    "format": "prettier --write \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
+    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\""
   },
   "dependencies": {
-    "@ibabkin/openapi-to-zod": "workspace:*",
+    "@ts-ioc-container/openapi-to-zod": "workspace:*",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "reflect-metadata": "^0.2.2",
-    "ts-ioc-container": "^72.2.0",
+    "ts-ioc-container": "workspace:^",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@ibabkin/openapi-to-server": "workspace:*",
     "@jest/test-sequencer": "29.7.0",
+    "@ts-ioc-container/openapi-to-server": "workspace:*",
     "@types/express": "^4.17.21",
     "@types/jest": "29.5.14",
     "@types/js-yaml": "^4.0.5",
@@ -71,6 +78,11 @@
     "supertest": "^6.3.3",
     "ts-jest": "29.4.12",
     "tsx": "^4.23.13",
-    "typescript": "5.7.3"
+    "typescript": "5.8.3",
+    "yaml": "^2.8.3",
+    "yaml-import": "^2.0.0"
+  },
+  "engines": {
+    "node": ">= 18"
   }
 }

@@ -1,4 +1,4 @@
-import { renderServer } from '@ibabkin/openapi-to-server';
+import { renderServer } from '@ts-ioc-container/openapi-to-server';
 import { OpenAPIV3 } from 'openapi-types';
 import { extractRoutes } from '../lib';
 

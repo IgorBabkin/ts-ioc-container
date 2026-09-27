@@ -13,9 +13,29 @@ Uses **pnpm** workspaces:
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
 - `packages/bundler`: `@ts-ioc-container/bundler` — bundles an application's dependencies into a single container module, discovered at build time (ADR 0022). Ships the `tic` CLI: `tic build` reads `tic.config.json` and generates **bundles** — `*.bundle.ts` files exporting a container module class (`useModule(new AppBundle())`) — from folders (relative paths or tsconfig `paths` aliases). Generated files are declared by **protocols** — Handlebars templates in `packages/bundler/lib/protocols/`, precompiled by `hbs:compile` into the gitignored `tpl/index.cjs`, which registers them in the process-global `Handlebars.templates` under their file basename (so keep basenames unique, and interpolate with `{{{ }}}` — output is TypeScript, not HTML); `emit.ts` only prepares the data. `hbs:compile` runs before `build`, `test` and `type-check`, and on publish (`prepack`); the tarball ships only the compiled `tpl/`, never the `.hbs` sources. CJS-only (it is a Node tool); `typescript` is a peer dependency. It never touches the core package — generated code uses only the public `Registration` / `IContainerModule` API
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
+- `packages/openapi-to-server`: `@ts-ioc-container/openapi-to-server` — renders TypeScript types, one `<Op>HttpRoute` interface per operation, an `IServer` interface keyed by `operationId` and an Axios `ApiClient` from an OpenAPI 3 document; ships the `openapi-to-server` / `openapi-to-client` CLIs and the `createUrl` runtime helper the generated client imports
+- `packages/openapi-to-zod`: `@ts-ioc-container/openapi-to-zod` — renders Zod schemas and a `PAYLOADS` map (keyed by `operationId`) that validates an Express `Request`; ships the `openapi-to-zod` CLI
+- `packages/openapi-express-server`: `@ts-ioc-container/openapi-express-server` — Express glue for the generated interfaces (`extractRoutes`, `buildPayload`, `containerMiddleware`, which opens a ts-ioc-container request scope)
+- `specs/openapi/`: specs shared by the three `openapi-*` packages (see its `README.md`); tests cite them by ID (`SPEC-007 UC-4`)
 - `adr/`: architecture decision records (plain markdown, not built or published)
 
-`ts-ioc-container`, `@ts-ioc-container/react` and `@ts-ioc-container/bundler` are released independently by
+The three `openapi-*` packages were imported, with their history, from
+[`IgorBabkin/openapi-to-server`](https://github.com/IgorBabkin/openapi-to-server),
+where they were published as `@ibabkin/openapi-to-server`, `@ibabkin/openapi-to-zod`
+and `@ibabkin/openapi-express-server` (their `CHANGELOG.md`s still use those names;
+the `@ibabkin/<pkg>@<version>` tags stay in the old repo). They differ from the rest
+of the workspace: ESM-only (`"type": "module"`, `tsc -p tsconfig.prod.json` into
+`esm/`), tested with **Jest** (`ts-jest`, not vitest), and their Handlebars
+templates (`lib/templates/*.hbs`) are precompiled by `build:hbs` into the gitignored
+`hbs/index.cjs`, which the tarball ships — so CI uploads `packages/*/hbs` with the
+rest of the build output. Relative imports in `lib/` need explicit `.js`
+extensions (Jest maps them back to `.ts`). `openapi-express-server`'s Jest config
+maps the two generator packages to their `lib/` sources, so its tests need their
+`hbs/` but not their `esm/`. Generated code imports `@ts-ioc-container/openapi-to-server`
+at runtime, so a change to generated shapes or runtime exports is breaking for consumers.
+
+`ts-ioc-container`, `@ts-ioc-container/react`, `@ts-ioc-container/bundler` and the three
+`@ts-ioc-container/openapi-*` packages are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
@@ -24,6 +44,13 @@ and never released.
 must be published by hand (see [npm authentication](#npm-authentication-trusted-publishing--oidc))
 and given a trusted publisher before a `feat(@ts-ioc-container/bundler)` commit
 reaches `main` — otherwise that release fails mid-pipeline with `ENEEDAUTH`.
+
+The same holds for `@ts-ioc-container/openapi-to-server`,
+`@ts-ioc-container/openapi-to-zod` and `@ts-ioc-container/openapi-express-server`:
+they have never been published under this scope. Publish each by hand once
+(`openapi-to-server` and `openapi-to-zod` before `openapi-express-server`, which
+depends on them) and give it a trusted publisher before a release-triggering
+commit scoped to it reaches `main`.
 
 `*.bundle.ts` files (e.g. the bundler's e2e fixture) are `tic build` output:
 they are in `.prettierignore` and must not be edited or formatted by hand —
@@ -50,8 +77,8 @@ root scripts the same way instead of proxying a single package with
 `pnpm --filter <package-name> run <script>` at the call site.
 
 Because they are recursive, a root script only covers a package that declares
-the matching script name — that's why `lint:fix` and `format` exist in all three
-packages, while `generate:docs`, `test:spec`, `bench:spec` and
+the matching script name — that's why `lint`, `lint:fix`, `format`,
+`format:check`, `type-check` and `test:coverage` exist in every package, while `generate:docs`, `test:spec`, `bench:spec` and
 `type-check:watch` (core-only) effectively still target the core package. The
 `*:react` scripts remain as a shortcut for running just the react package.
 
@@ -156,6 +183,12 @@ cosmetic:
 `pnpm publish` substitutes the real version into the published tarball, so
 consumers still receive an exact version. `peerDependencies` stays a range
 (`>=56`) and is never rewritten.
+
+`@ts-ioc-container/openapi-express-server` is the exception: it needs
+`ts-ioc-container` at runtime, as a regular `dependency`, so it declares
+`"workspace:^"` — published as `^<current version>`, not an exact pin, so a
+consumer's own `ts-ioc-container` can dedupe with it (the request scope it
+creates must come from the consumer's container).
 
 **Consequence for CI ordering:** react resolves the container through the
 workspace link, so it imports that package's *build output*. Since the root
@@ -446,8 +479,11 @@ free-form scope such as `docs(adr):` and do not release.
 `release-monorepo-semantically` (see [Release](#release)) matches a commit to a
 package by comparing the commit's parenthetical **scope** against that
 package's `name` field **exactly** — not a substring, not a free-form label.
-A release-triggering commit must scope to `ts-ioc-container` or
-`@ts-ioc-container/react`:
+A release-triggering commit must scope to one of the package names —
+`ts-ioc-container`, `@ts-ioc-container/react`, `@ts-ioc-container/bundler`,
+`@ts-ioc-container/openapi-to-server`, `@ts-ioc-container/openapi-to-zod` or
+`@ts-ioc-container/openapi-express-server` (the list is also in
+`commitlint.config.mjs`); use the `openapi` scope for non-release work on them:
 
 ```
 feat(ts-ioc-container): add X

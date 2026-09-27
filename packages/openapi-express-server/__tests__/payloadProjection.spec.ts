@@ -1,5 +1,5 @@
-import { renderClient, renderComponents } from '@ibabkin/openapi-to-server';
-import { renderValidators } from '@ibabkin/openapi-to-zod';
+import { renderClient, renderComponents } from '@ts-ioc-container/openapi-to-server';
+import { renderValidators } from '@ts-ioc-container/openapi-to-zod';
 import { OpenAPIV3 } from 'openapi-types';
 import * as fs from 'fs';
 import * as path from 'path';

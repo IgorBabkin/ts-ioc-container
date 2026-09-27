@@ -12,8 +12,8 @@ never registered, and the failure is a 404 with nothing in it to point at the ca
 
 | Direction | Produced by | Result |
 | --- | --- | --- |
-| Client | `createUrl` (`@ibabkin/openapi-to-server`), called by `ApiClient` | `/users/42/posts/7?expand=author` |
-| Server | `convertOpenAPIPathToExpress` (`@ibabkin/openapi-express-server`) | `/users/:id/posts/:postId` |
+| Client | `createUrl` (`@ts-ioc-container/openapi-to-server`), called by `ApiClient` | `/users/42/posts/7?expand=author` |
+| Server | `convertOpenAPIPathToExpress` (`@ts-ioc-container/openapi-express-server`) | `/users/:id/posts/:postId` |
 
 ## Requirements
 
@@ -63,7 +63,7 @@ parameters are not supported by the generated client.
 
 | Requirement | Test |
 | --- | --- |
-| URL-2, URL-3, URL-4 | `packages/openapi-to-server-interface/__tests__/query.spec.ts` |
+| URL-2, URL-3, URL-4 | `packages/openapi-to-server/__tests__/query.spec.ts` |
 | URL-1 | `packages/openapi-express-server/__tests__/urlRoundTrip.spec.ts` |
 | URL-5 | `packages/openapi-express-server/__tests__/utils.spec.ts` |
 | URL-6 | `packages/openapi-express-server/__tests__/urlRoundTrip.spec.ts` |

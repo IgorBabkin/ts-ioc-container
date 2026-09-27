@@ -1,4 +1,4 @@
-import { HttpRoute, HttpResponse, HttpStatus, constructor } from '@ibabkin/openapi-to-server';
+import { HttpRoute, HttpResponse, HttpStatus, constructor } from '@ts-ioc-container/openapi-to-server';
 
 // Components
 export type Item = {

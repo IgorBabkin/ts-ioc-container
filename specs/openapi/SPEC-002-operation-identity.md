@@ -13,7 +13,7 @@ the `ApiClient` method and the runtime dispatch.
 | --- | --- | --- |
 | Payload / response / use case types | `payload_name`, `response_name`, `http_route_name` helpers | `GetUserPayload`, `GetUserResponse`, `GetUserHttpRoute` |
 | `Operations`, `RoutesPayloads`, `IServer` maps | `Components.ts.hbs`, `IServer.ts.hbs` | object key |
-| `PAYLOADS` map | `Document.hbs` (`@ibabkin/openapi-to-zod`) | object key |
+| `PAYLOADS` map | `Document.hbs` (`@ts-ioc-container/openapi-to-zod`) | object key |
 | `ApiClient` method | `Client.hbs` | method name |
 | `RouteMetadata.operationId` | `extractRoutes` | the DI key the runtime resolves the use case under |
 
@@ -80,5 +80,5 @@ requires the document to carry one.
 | Requirement | Test |
 | --- | --- |
 | OP-1 | `packages/openapi-express-server/__tests__/operationIdentity.spec.ts` |
-| OP-2, OP-3, OP-4 | `packages/openapi-to-server-interface/__tests__/operationId.spec.ts` |
+| OP-2, OP-3, OP-4 | `packages/openapi-to-server/__tests__/operationId.spec.ts` |
 | OP-5, known divergence | `packages/openapi-express-server/__tests__/operationIdentity.spec.ts` |

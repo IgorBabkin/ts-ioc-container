@@ -1,5 +1,5 @@
 {
-  "name": "@ibabkin/openapi-to-zod",
+  "name": "@ts-ioc-container/openapi-to-zod",
   "version": "1.5.0",
   "publishConfig": {
     "access": "public",
@@ -15,7 +15,7 @@
     "typescript"
   ],
   "author": "ibabkin <igba14@gmail.com>",
-  "homepage": "https://github.com/IgorBabkin/openapi-to-server/tree/master/packages/openapi-to-request-validator",
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/openapi-to-zod#readme",
   "license": "ISC",
   "type": "module",
   "main": "esm/index.js",
@@ -31,7 +31,8 @@
   "module": "esm/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IgorBabkin/openapi-to-server.git"
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container",
+    "directory": "packages/openapi-to-zod"
   },
   "sideEffects": true,
   "directories": {
@@ -54,7 +55,13 @@
     "clean": "rimraf esm *.tsbuildinfo",
     "watch": "nodemon --watch lib --exec 'pnpm run build'",
     "build:ts": "tsc -p tsconfig.prod.json --outDir esm",
-    "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars"
+    "build:hbs": "make-dir hbs && handlebars lib/templates/*.hbs -f hbs/index.cjs -c handlebars",
+    "test:coverage": "pnpm run build:hbs && make-dir .generated && jest --coverage --coverageReporters=lcov",
+    "type-check": "pnpm run build:hbs && tsc -p tsconfig.test.json --noEmit",
+    "lint": "eslint \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
+    "lint:fix": "pnpm run lint --fix",
+    "format": "prettier --write \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
+    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\""
   },
   "dependencies": {
     "handlebars": "^4.7.9",
@@ -70,10 +77,13 @@
     "nodemon": "^2.0.22",
     "rimraf": "3.0.2",
     "ts-jest": "29.4.12",
-    "typescript": "5.7.3",
+    "typescript": "5.8.3",
     "zod": "^4.6.5"
   },
   "peerDependencies": {
     "zod": "^4.0.0"
+  },
+  "engines": {
+    "node": ">= 18"
   }
 }

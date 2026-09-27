@@ -1,4 +1,4 @@
-import { renderComponents, renderServer } from '@ibabkin/openapi-to-server';
+import { renderComponents, renderServer } from '@ts-ioc-container/openapi-to-server';
 import { read } from 'yaml-import';
 import { OpenAPIV3 } from 'openapi-types';
 import fs from 'fs';

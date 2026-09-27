@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { renderComponents, renderServer } from '@ibabkin/openapi-to-server';
-import { renderValidators } from '@ibabkin/openapi-to-zod';
+import { renderComponents, renderServer } from '@ts-ioc-container/openapi-to-server';
+import { renderValidators } from '@ts-ioc-container/openapi-to-zod';
 import * as path from 'path';
 import * as fs from 'fs';
 import request from 'supertest';
