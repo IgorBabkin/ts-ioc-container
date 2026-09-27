@@ -11,13 +11,23 @@ is never published (`private: true`, no `name` collision with the library).
 Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
+- `packages/compiler`: `@ts-ioc-container/compiler` — build-time registration discovery (ADR 0022). Ships the `tic` CLI: `tic build` reads `tic.config.json` and generates `*.generated.ts` container modules from folders (relative paths or tsconfig `paths` aliases). CJS-only (it is a Node tool); `typescript` is a peer dependency. It never touches the core package — generated code uses only the public `Registration` / `IContainerModule` API
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `adr/`: architecture decision records (plain markdown, not built or published)
 
-Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
+`ts-ioc-container`, `@ts-ioc-container/react` and `@ts-ioc-container/compiler` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
+
+`@ts-ioc-container/compiler` has **never been published**, so its first release
+must be published by hand (see [npm authentication](#npm-authentication-trusted-publishing--oidc))
+and given a trusted publisher before a `feat(@ts-ioc-container/compiler)` commit
+reaches `main` — otherwise that release fails mid-pipeline with `ENEEDAUTH`.
+
+`*.generated.ts` files (e.g. the compiler's e2e fixture) are `tic build` output:
+they are in `.prettierignore` and must not be edited or formatted by hand —
+rerun `tic build` instead.
 
 `@ts-ioc-container/react` is **scoped**, so publishing it requires ownership of
 the `ts-ioc-container` npm org and `publishConfig.access: "public"` (scoped

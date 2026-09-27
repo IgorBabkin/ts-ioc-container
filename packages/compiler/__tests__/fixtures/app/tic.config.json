@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../tic.schema.json",
+  "modules": [
+    {
+      "output": "src/di/app.generated.ts",
+      "name": "AppModule",
+      "namespaces": ["@app/services", "@app/infra"]
+    }
+  ]
+}

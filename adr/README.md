@@ -32,6 +32,7 @@ is left intact so the historical reasoning remains discoverable.
 | 0019 | [`@inject` takes one `InjectFn`; the scope travels inside the options](0019-inject-takes-one-function-scope-in-options.md) | Accepted |
 | 0020 | [Agent-readable package and deprecate-before-remove](0020-agent-readable-api-and-deprecation-policy.md) | Proposed |
 | 0021 | [Feature flags switch implementations, with a mandatory fallback](0021-feature-flags-with-mandatory-fallback.md) | Accepted |
+| 0022 | [Registration discovery happens at build time, outside the container](0022-build-time-registration-discovery.md) | Proposed |
 
 ## Adding a new ADR
 
