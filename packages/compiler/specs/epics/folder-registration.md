@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **ADR:** [ADR 0022 - Registration discovery happens at build time, outside the container](../../../../adr/0022-build-time-registration-discovery.md)
-- **Public API:** `tic build`, `tic.config.json`, `build`, `loadConfig`
+- **Public API:** `tic build`, `tic.config.json`, `build`, `loadConfig`, `InclusionPredicate`, `TagInclusionPredicate`, `byTags`, `fileTags`
 - **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/generated-module.spec.ts`, `__tests__/specs/cli.spec.ts`
 
 ## Intent
@@ -52,6 +52,52 @@ Acceptance criteria:
 - The generated file is never scanned, even when it lives inside a namespace.
 - Registrations are ordered by file path, then by declaration order, so the
   output is stable across machines.
+
+### Story: Decide which files take part with a predicate
+
+As an application developer, I can exclude files from code generation with a
+function of my own — by convention, without configuring anything — so that
+rules globs cannot express (naming schemes, folder conventions, allow-lists)
+live in code.
+
+Acceptance criteria:
+
+- An `InclusionPredicate` is `(context: { filename: string }) => boolean`;
+  `filename` is the file's path relative to the config file, `/`-separated
+  (`src/services/Logger.ts`). A file takes part only when it matches no
+  `exclude` glob **and** the predicate returns `true`.
+- Implicit, by convention: a `tic.include.{cjs,js,mjs,ts,cts,mts}` file next to
+  the config applies to every module; its default export (or `module.exports`)
+  is the predicate. Without one, no predicate applies.
+- Declarative: a module's `include` names a predicate file explicitly (relative
+  to the config file) and overrides the conventional one.
+- Programmatic: `build({ include })` takes the predicate itself and overrides
+  both.
+- The predicate is loaded synchronously (`require`), so `build` stays
+  synchronous. Like any `require`d module it is loaded once per process; a
+  predicate that depends on the environment reads it when called.
+- The README's "generate per environment" recipe is executable: both of its
+  variants run as tests.
+- A predicate file that is missing or does not export a function fails the
+  build with a message naming the file.
+
+### Story: Decide by filename tags
+
+As an application developer, I can write a predicate over a file's tags instead
+of parsing its name myself, so that conventions such as
+`StripeGateway.production.ts` read as what they mean.
+
+Acceptance criteria:
+
+- A file's tags are the dot-separated parts of its name between the base name
+  and the extension: `Shared.ts` → `[]`, `StripeGateway.production.ts` →
+  `['production']`, `Report.production.eu.ts` → `['production', 'eu']`.
+- A `TagInclusionPredicate` is `(tags: string[], context: { filename }) =>
+  boolean`; `byTags(predicate)` wraps it into an `InclusionPredicate`, so it is
+  used anywhere one is — `build({ include })`, a module's `include` file, or the
+  conventional `tic.include.*`.
+- `fileTags(filename)` is exported for predicates that need the tags elsewhere.
+- Usage examples run as tests (`__tests__/examples/`).
 
 ### Story: Configure which classes a file contributes
 

@@ -16,6 +16,16 @@ export {
   type ResolvedModule,
 } from './config';
 export { ImportPaths } from './ImportPaths';
+export {
+  type InclusionPredicate,
+  type InclusionContext,
+  type TagInclusionPredicate,
+  byTags,
+  fileTags,
+  INCLUSION_CONVENTION,
+  findConventionalPredicate,
+  loadInclusionPredicate,
+} from './inclusion';
 export { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
 export { emitModule, type EmitInput } from './emit';
 export { globToRegExp } from './glob';

@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -19,6 +19,16 @@ export class TempProject {
   write(file: string, content: string | object): void {
     mkdirSync(path.dirname(this.path(file)), { recursive: true });
     writeFileSync(this.path(file), typeof content === 'string' ? content : JSON.stringify(content, null, 2));
+  }
+
+  /**
+   * Installs this compiler package into the project's node_modules as a symlink, so predicate files
+   * can `require('@ts-ioc-container/compiler')` as a consumer's would. Needs the package's `cjm` build.
+   */
+  linkCompiler(): this {
+    mkdirSync(this.path('node_modules/@ts-ioc-container'), { recursive: true });
+    symlinkSync(path.resolve(__dirname, '..'), this.path('node_modules/@ts-ioc-container/compiler'), 'dir');
+    return this;
   }
 
   read(file: string): string {
