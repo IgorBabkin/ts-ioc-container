@@ -60,7 +60,7 @@ importers:
         specifier: 5.8.3
         version: 5.8.3
 
-  packages/compiler:
+  packages/bundler:
     dependencies:
       handlebars:
         specifier: ^4.7.9
@@ -3754,7 +3754,7 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.5.2)(@vitest/coverage-v8@4.1.2)(jsdom@27.4.0)(vite@6.4.3(@types/node@25.5.2)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/coverage-v8@4.1.2)(jsdom@27.4.0)(vite@6.4.3(@types/node@26.2.0)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
 
   '@vitest/expect@4.1.11':
     dependencies:

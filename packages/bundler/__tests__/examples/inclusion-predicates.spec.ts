@@ -97,7 +97,7 @@ describe('Examples: deciding which files take part', () => {
       [
         'tic.include.ts',
         [
-          "import { byTags } from '@ts-ioc-container/compiler';",
+          "import { byTags } from '@ts-ioc-container/bundler';",
           '',
           "export default byTags((tags: string[]) => !tags.includes('manual'));",
         ],
@@ -105,13 +105,13 @@ describe('Examples: deciding which files take part', () => {
       [
         'tic.include.cjs',
         [
-          "const { byTags } = require('@ts-ioc-container/compiler');",
+          "const { byTags } = require('@ts-ioc-container/bundler');",
           '',
           "module.exports = byTags((tags) => !tags.includes('manual'));",
         ],
       ],
     ])('%s', (file, lines) => {
-      project = projectWith('src/Mailer.ts', 'src/Scheduler.manual.ts').linkCompiler();
+      project = projectWith('src/Mailer.ts', 'src/Scheduler.manual.ts').linkBundler();
       project.write(file, lines.join('\n'));
 
       build({ config: project.path('tic.config.json') });

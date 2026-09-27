@@ -7,7 +7,7 @@ import { globToRegExp } from './glob';
 export type ExportKind = 'any' | 'named' | 'default';
 
 /**
- * How the compiler picks target classes out of a file. A class is selected when
+ * How the bundler picks target classes out of a file. A class is selected when
  * it is exported, not abstract, and meets every criterion set here; an empty
  * rule selects every exported class.
  */

@@ -40,7 +40,7 @@ export function fileTags(filename: string): string[] {
     .slice(1, -1);
 }
 
-/** Wraps a {@link TagInclusionPredicate} into the {@link InclusionPredicate} the compiler calls. */
+/** Wraps a {@link TagInclusionPredicate} into the {@link InclusionPredicate} the bundler calls. */
 export function byTags(predicate: TagInclusionPredicate): InclusionPredicate {
   return (context) => predicate(fileTags(context.filename), context);
 }
