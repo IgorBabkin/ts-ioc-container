@@ -1,0 +1,5 @@
+# Prettier reads .prettierignore from the working directory, and package scripts run here.
+# Written by this package's own test suites.
+__tests__/generated/
+.generated/
+hbs/

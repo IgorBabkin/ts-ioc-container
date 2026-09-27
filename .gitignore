@@ -22,3 +22,6 @@ RELEASE_NOTIFICATION_SETUP.md
 reports
 
 tpl
+hbs
+*.tsbuildinfo
+packages/*/__tests__/generated

@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renderValidators should generate Zod validators from OpenAPI spec 1`] = `
+"import {z} from 'zod';
+
+// Path and query parameters arrive as strings while JSON bodies carry real numbers: accept both.
+const zNumber = (schema: z.ZodNumber) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value)) ? Number(value) : value),
+    schema,
+  );
+
+// Query and path parameters only (a JSON body carries real booleans and arrays): 'true'/'false' are booleans, and a
+// parameter given once is a string where an array is expected.
+const zBoolean = (schema: z.ZodBoolean) =>
+  z.preprocess((value) => (value === 'true' ? true : value === 'false' ? false : value), schema);
+
+const zArray = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((value) => (value === undefined || value === null || Array.isArray(value) ? value : [value]), schema);
+
+const zDate = z.preprocess((arg) => {
+  if (typeof arg === 'string' || typeof arg === 'number') {
+    return new Date(arg);
+  }
+
+  return arg;
+}, z.date());
+
+export const Manufacturer = z.object({
+  name: z.string(),
+  homePage: z.string().url().optional(),
+  phone: z.string().optional(),
+});
+export const InventoryItem = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  releaseDate: zDate,
+  manufacturer: Manufacturer,
+});
+
+export const PAYLOADS = {
+    deleteInventory: z.object({
+      params: z.object({
+  id: z.string(),
+})
+,
+})
+,
+    addInventory: z.object({
+    body: InventoryItem,
+})
+,
+    searchInventory: z.object({
+      query: z.object({
+  searchString: z.string().optional(),
+  skip: zNumber(z.number().int().gte(0)).optional(),
+  limit: zNumber(z.number().int().gte(0).lte(50)).optional(),
+})
+,
+})
+,
+};
+"
+`;
