@@ -1,0 +1,25 @@
+name: check-pr
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build
+        uses: ./.github/actions/build
+        with:
+          upload-build-output: false  # nothing downstream consumes it on a PR

@@ -26,7 +26,7 @@ Vitest is the test runner. Add public behavior coverage in `__tests__/specs/` wh
 
 ## Commit & Pull Request Guidelines
 
-Commits follow conventional commits with a required lowercase scope, for example `feat(container): add hasRegistration` or `test(token): cover alias resolution`. Valid scopes include `container`, `provider`, `registration`, `injector`, `hooks`, `token`, `errors`, `config`, `github`, and `release`. Keep subjects under 100 characters. PRs should include a clear summary, linked issue if applicable, and notes on tests run.
+Commits follow conventional commits. A release-triggering commit (`feat`, `fix`, `perf`, `docs`, or `!`) must be scoped to the exact package name, e.g. `feat(ts-ioc-container): add hasRegistration` or `fix(@ts-ioc-container/react): ...`; any other scope releases nothing. Non-release types (`test`, `ci`, `chore`, `refactor`, `style`) may use a free-form scope, e.g. `test(token): cover alias resolution`. Keep subjects under 100 characters. Releases are cut by `release-monorepo-semantically`; its agent guide (pipeline, release context, config, error codes) is at `node_modules/release-monorepo-semantically/llms.txt`, and `.release.json` validates against the schema it ships. PRs should include a clear summary, linked issue if applicable, and notes on tests run.
 
 ## Documentation & Generated Files
 

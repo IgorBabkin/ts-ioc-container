@@ -293,6 +293,20 @@ describe('Spec: React adapter', () => {
       expect(() => withSilencedConsole(() => render(<Probe />))).toThrowError(OutOfScopeError);
     });
 
+    it('carries a stable code and says how to fix it', () => {
+      const Probe = () => {
+        useScopeOrFail();
+        return null;
+      };
+
+      expect(() => withSilencedConsole(() => render(<Probe />))).toThrowError(
+        expect.objectContaining({
+          code: 'IOC_OUT_OF_SCOPE',
+          message: expect.stringContaining('<ScopeContext.Provider value={container}>'),
+        }),
+      );
+    });
+
     it('fails useResolveOrFail with OutOfScopeError when no scope is above it', () => {
       const Probe = () => {
         useResolveOrFail(IGreeterToken);

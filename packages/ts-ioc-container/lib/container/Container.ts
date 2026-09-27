@@ -22,6 +22,22 @@ import { constructor, Instance, Is } from '../utils/basic';
 import { Filter as F } from '../utils/array';
 import { type ITypedEvent, TypedEvent } from '../utils/TypedEvent';
 
+/**
+ * A dependency injection scope. Each container is a node in a parent chain:
+ * a key not found here (or denied by `scopeAccess`) is resolved from the parent,
+ * and the root's parent is an {@link EmptyContainer} that throws
+ * `DependencyNotFoundError`. Child scopes come from `createScope({ tags })`,
+ * which copies the matching registrations into the child at that moment.
+ *
+ * @example
+ * const app = new Container({ tags: ['application'] })
+ *   .addRegistration(Registration.fromClass(Logger))
+ *   .addRegistration(Registration.fromValue(config).bindTo('Config'));
+ *
+ * const request = app.createScope({ tags: ['request'] });
+ * const logger = ILoggerToken.resolve(request);
+ * request.dispose();
+ */
 export class Container implements IContainer {
   isDisposed = false;
   private parent: IContainer;
@@ -219,6 +235,10 @@ export class Container implements IContainer {
     return this.registrations.some((r) => r.getKeyOrFail() === key) || this.parent.hasRegistration(key);
   }
 
+  hasAlias(alias: DependencyKey): boolean {
+    return this.aliases.getKeysByAlias(alias).length > 0 || this.parent.hasAlias(alias);
+  }
+
   addInstance(instance: Instance) {
     this.instances.add(instance);
   }
@@ -275,7 +295,9 @@ export class Container implements IContainer {
    */
   private validateContainer(): void {
     if (this.isDisposed) {
-      throw new ContainerDisposedError('Container is already disposed');
+      throw new ContainerDisposedError(
+        'Container is already disposed: a scope cannot be used after dispose(). Create a new scope.',
+      );
     }
   }
 
@@ -284,7 +306,9 @@ export class Container implements IContainer {
    */
   private findProviderByKeyOrFail<T>(key: DependencyKey): IProvider<T> {
     if (!this.providers.has(key)) {
-      throw new DependencyNotFoundError(`Provider ${key.toString()} does not exist`);
+      throw new DependencyNotFoundError(
+        `Provider ${key.toString()} does not exist: an alias points at a key with no provider in this scope.`,
+      );
     }
     return this.providers.get(key)!;
   }

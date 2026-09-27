@@ -5,6 +5,12 @@ import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 import { MethodNotImplementedError } from '../errors/MethodNotImplementedError';
 import { Serializable } from '../utils/basic';
 
+/**
+ * A token that resolves by calling an `InjectFn` with the resolution context.
+ *
+ * @example
+ * const CurrentScope = new FunctionToken(({ scope }) => scope);
+ */
 export class FunctionToken<T = any> extends InjectionToken<T> implements Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;
@@ -68,6 +74,6 @@ export class FunctionToken<T = any> extends InjectionToken<T> implements Seriali
    * @throws {MethodNotImplementedError} always — a function token has no underlying key.
    */
   toString(): string {
-    throw new MethodNotImplementedError('not implemented');
+    throw new MethodNotImplementedError('FunctionToken.toString is not implemented');
   }
 }

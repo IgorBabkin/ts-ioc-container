@@ -1,0 +1,40 @@
+export { build, type BuildOptions, type BuildResult, type OutputResult, type OutputStatus } from './build';
+export { run, type CliIo } from './cli';
+export {
+  loadConfig,
+  resolveConfig,
+  DEFAULT_CONFIG_FILE,
+  DEFAULT_EXCLUDE,
+  DEFAULT_BUNDLE_NAME,
+  type TicConfig,
+  type BundleConfig,
+  type NamespaceConfig,
+  type ClassSelector,
+  type ExportKind,
+  type ResolvedSelector,
+  type ResolvedConfig,
+  type ResolvedBundle,
+} from './config';
+export { ImportPaths } from './ImportPaths';
+export { type FilterPredicate } from './utils';
+export {
+  type ExportPredicate,
+  type ExportContext,
+  EXPORTS_CONVENTION,
+  findConventionalExportPredicate,
+  loadExportPredicate,
+} from './exportPredicate';
+export {
+  type InclusionPredicate,
+  type InclusionContext,
+  type TagInclusionPredicate,
+  byTags,
+  fileTags,
+  INCLUSION_CONVENTION,
+  findConventionalPredicate,
+  loadInclusionPredicate,
+} from './inclusion';
+export { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
+export { emitBundle, type EmitInput } from './emit';
+export { globToRegExp } from './glob';
+export { TicError, TicConfigError, NamespaceNotFoundError } from './errors';

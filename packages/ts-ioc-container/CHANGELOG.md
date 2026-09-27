@@ -1,3 +1,69 @@
+# 72.3.2 (2026-09-27)
+
+  ### 📝 Other Changes
+
+    - **@ts-ioc-container/bundler:**
+    link ts-ioc-container by npm URL so it works on npm
+    (c7e219b0f7aac5be8a5684ddf5b3096cd75c581a)
+
+
+# 72.3.1 (2026-09-27)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    add environment-based registration recipe
+    (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
+
+# 72.3.0 (2026-09-27)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    let tokens declare variantOf / primaryVariantOf / fallbackOf
+    (8dfcb5fdf2d85a7340c79b2435cdeafa549cf59f)
+    - **ts-ioc-container:**
+    make the fallback a required feature token constructor argument
+    (7b2c4a5d2caeea7a0d968e142cdcdd7b7400e6e3)
+    - **ts-ioc-container:**
+    add multi-variant and toggle feature tokens with mandatory fallback
+    (918c68733eb0381c850b6169e56695fa718766ce)
+
+
+# 72.2.0 (2026-09-26)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add stable error codes and actionable messages
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+  ### 🐞 Bug Fixes
+
+    - **ts-ioc-container:**
+    ship JSDoc, declaration maps and source in the package
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    add AGENTS.md guide for AI coding agents
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+    - **ts-ioc-container:**
+    document the public API with JSDoc and examples
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+
+# 72.1.0 (2026-09-19)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add createCompose{Class,Method,Parameter}Decorator (#176)
+    (e5ffbbd0a6559abac1dda1880c0c724c4c577693)
+
+
 # 72.0.0 (2026-09-18)
 
   ### 💥 BREAKING CHANGES
@@ -380,6 +446,11 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
+
+
+
+
 
 
 

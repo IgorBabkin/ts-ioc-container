@@ -6,6 +6,7 @@ import { memoize } from '../utils/memoize';
 import { getHooks, hasHooks, type HookFn, toHookFn } from './hook';
 import { createHookExecutionContext, type CreateHookExecutionContext, type IHookContext } from './HookContext';
 
+/** Transforms each hook context before it is handed to its hook. */
 export type MapHookExecutionContext = (context: IHookContext) => IHookContext;
 
 /**
@@ -33,6 +34,7 @@ export type HookCollectorOptions = {
 /** What one collection runs in: the scope, plus any per-call overrides of the collector's options. */
 export type HookCollectionContext = ExecutionContext & HookCollectorOptions;
 
+/** Options of `new HookCollector(...)`. */
 export type HookCollectorProps = HookCollectorOptions & {
   /** The hook key this collector reads: `onConstruct`, `onScopeDisposed`, `onResolved`, or a custom one. */
   key: string | symbol;

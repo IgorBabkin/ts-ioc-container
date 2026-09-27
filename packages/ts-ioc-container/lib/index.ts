@@ -83,6 +83,7 @@ export { DependencyMissingKeyError } from './errors/DependencyMissingKeyError';
 export { MethodNotImplementedError } from './errors/MethodNotImplementedError';
 export { ContainerDisposedError } from './errors/ContainerDisposedError';
 export { ProviderDisposedError } from './errors/ProviderDisposedError';
+export { CannotApplySingletonTwiceError } from './errors/CannotApplySingletonTwiceError';
 export { CannonSingletonApplyTwiceError } from './errors/CannonSingletonApplyTwiceError';
 export { UnsupportedTokenTypeError } from './errors/UnsupportedTokenTypeError';
 export { TypedEventDisposedError } from './errors/TypedEventDisposedError';
@@ -125,14 +126,38 @@ export { type Injectable, toToken, argToToken } from './token/toToken';
 export { GroupAliasToken, toGroupAlias } from './token/GroupAliasToken';
 export { SingleAliasToken, toSingleAlias } from './token/SingleAliasToken';
 export { ClassToken } from './token/ClassToken';
+export { BindableToken, type BindableTokenOptions } from './token/BindableToken';
 export { SingleToken } from './token/SingleToken';
 export { FunctionToken } from './token/FunctionToken';
 export { ConstantToken } from './token/ConstantToken';
 export { type InstancePredicate, GroupInstanceToken } from './token/GroupInstanceToken';
+export {
+  MultiVariantFeatureToken,
+  type FeatureTokenOptions,
+  type FeatureEvaluation,
+} from './token/MultiVariantFeatureToken';
+export { ToggleFeatureToken } from './token/ToggleFeatureToken';
+
+// Feature flags
+export {
+  type IFeatureFlags,
+  type FeatureContext,
+  type FeatureVariant,
+  IFeatureFlagsToken,
+  IFeatureContextToken,
+} from './feature/IFeatureFlags';
 
 // Metadata
 export { resolveConstructor } from './metadata/target';
-export { addClassMeta, getClassMeta, addClassLabel, getClassLabels, addClassTag, getClassTags } from './metadata/class';
+export {
+  addClassMeta,
+  getClassMeta,
+  addClassLabel,
+  getClassLabels,
+  addClassTag,
+  getClassTags,
+  createComposeClassDecorator,
+} from './metadata/class';
 export {
   addParamMeta,
   getParamMeta,
@@ -140,6 +165,7 @@ export {
   getParamLabels,
   addParamTag,
   getParamTags,
+  createComposeParameterDecorator,
 } from './metadata/parameter';
 export {
   addMethodMeta,
@@ -148,6 +174,7 @@ export {
   getMethodLabels,
   addMethodTag,
   getMethodTags,
+  createComposeMethodDecorator,
 } from './metadata/method';
 export { handleError, handleAsyncError, type HandleErrorParams } from './utils/errorHandler';
 export { runInOrder, runAtOnce, type Task } from './utils/task';

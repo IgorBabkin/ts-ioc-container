@@ -11,13 +11,23 @@ is never published (`private: true`, no `name` collision with the library).
 Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
+- `packages/bundler`: `@ts-ioc-container/bundler` — bundles an application's dependencies into a single container module, discovered at build time (ADR 0022). Ships the `tic` CLI: `tic build` reads `tic.config.json` and generates **bundles** — `*.bundle.ts` files exporting a container module class (`useModule(new AppBundle())`) — from folders (relative paths or tsconfig `paths` aliases). Generated files are declared by **protocols** — Handlebars templates in `packages/bundler/lib/protocols/`, precompiled by `hbs:compile` into the gitignored `tpl/index.cjs`, which registers them in the process-global `Handlebars.templates` under their file basename (so keep basenames unique, and interpolate with `{{{ }}}` — output is TypeScript, not HTML); `emit.ts` only prepares the data. `hbs:compile` runs before `build`, `test` and `type-check`, and on publish (`prepack`); the tarball ships only the compiled `tpl/`, never the `.hbs` sources. CJS-only (it is a Node tool); `typescript` is a peer dependency. It never touches the core package — generated code uses only the public `Registration` / `IContainerModule` API
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `adr/`: architecture decision records (plain markdown, not built or published)
 
-Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
+`ts-ioc-container`, `@ts-ioc-container/react` and `@ts-ioc-container/bundler` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
+
+`@ts-ioc-container/bundler` has **never been published**, so its first release
+must be published by hand (see [npm authentication](#npm-authentication-trusted-publishing--oidc))
+and given a trusted publisher before a `feat(@ts-ioc-container/bundler)` commit
+reaches `main` — otherwise that release fails mid-pipeline with `ENEEDAUTH`.
+
+`*.bundle.ts` files (e.g. the bundler's e2e fixture) are `tic build` output:
+they are in `.prettierignore` and must not be edited or formatted by hand —
+rerun `tic build` instead.
 
 `@ts-ioc-container/react` is **scoped**, so publishing it requires ownership of
 the `ts-ioc-container` npm org and `publishConfig.access: "public"` (scoped
@@ -77,6 +87,8 @@ packages via the `workspaces` field in the root `package.json` (not
 scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
 or `feat(ts-ioc-container): ...`.
 
+The tool ships an agent guide at `node_modules/release-monorepo-semantically/llms.txt` (pipeline, release context format, config, and every `[CODE]` error with its fix) — read it before changing the pipeline or debugging a failed release. `.release.json` declares the JSON Schema the tool ships (`$schema`), so editors validate it.
+
 To preview a release locally without mutating anything, run the same steps by
 hand with `--dry-run` appended to each (see the tool's README "Usage" section);
 `report` always requires a clean working tree, dry-run or not.
@@ -134,7 +146,9 @@ cosmetic:
   Fixed upstream in `release-monorepo-semantically@1.9.4`, which never rewrites
   a `workspace:` specifier
   ([#8](https://github.com/IgorBabkin/release-monorepo-semantically/issues/8)).
-  Do not pin it back, and do not downgrade below 1.9.4.
+  Do not pin it back, and do not downgrade below 1.14 (`llms.txt` and the config schema are 1.14+; the `docs` release rule in `.release.json` needs
+  its `bumps` config, 1.12+, and squash merges need `report.squash`, 1.13+ — see
+  [Squash merges](#squash-merges)).
 - It also keeps the react tests honest. With a registry pin they ran against a
   *published* copy of the container, so they never exercised the change in the
   same commit — and the pin silently drifted behind.
@@ -147,11 +161,37 @@ consumers still receive an exact version. `peerDependencies` stays a range
 workspace link, so it imports that package's *build output*. Since the root
 lint / type-check / test scripts are recursive and therefore include react,
 `pnpm run build` must run *before* all of them — see the `Build` step ahead of
-the checks in both `pr-checks.yml` and `publish.yml`. Without it those steps
-fail to resolve `ts-ioc-container` at all. `publish.yml` is deliberately a
-single job (build → checks → tests → release): separate jobs each paid for a
-checkout and `pnpm install` and needed an artifact upload/download to hand the
-build output across, which roughly tripled the wall time of a push to `main`.
+the checks in the `build` composite action, `.github/actions/build/action.yml`
+(install → build → type-check → test → lint → format check → verify package
+contents). Without it those steps fail to resolve `ts-ioc-container` at all.
+
+Both workflows have a plain `build` job — checkout, then that action.
+`pull-request.yml` is just that job; `publish.yml` runs it (with
+`coverage: true`) and then a `release` job that `needs: build`. `build` ends by
+uploading each package's build output (`cjm`, `esm`, `typings`, the bundler's
+`tpl`) as the `build-output` artifact (on by default; `pull-request.yml` passes
+`upload-build-output: false`), and `release` downloads it into `packages/` — it
+never rebuilds, so the release publishes exactly what was tested, and it re-runs
+`verify:package-contents` after the download so a broken hand-off fails before
+`pnpm publish`. `release` still pays for its own checkout and `pnpm install` —
+the release tooling lives in the workspace dependencies. Keep the build a
+composite action, not a reusable workflow (`workflow_call`): a job calling a
+workflow is shown as `build / build`.
+
+### Squash merges
+
+PRs are squash-merged, and `report` reads commit **subjects** on `main` — so on
+its own it sees one commit per PR whose subject is the PR title. PR #180 was
+titled `Make the packages usable by AI coding agents`, so its `feat` / `fix` /
+`docs` commits released nothing (`report` logged `SKIP` for both packages).
+
+`"squash": "github"` under `report` in `.release.json` (1.13+) fixes that: a
+commit whose subject ends in `(#N)` — GitHub's default squash subject — is
+replaced by the headers its body lists as `* ` bullets, which is GitHub's
+default squash body. Each listed commit is then matched to its package and
+bump on its own, so one PR can release both packages. Keep GitHub's default
+squash message (don't rewrite the body when merging); a squash commit whose
+body lists no bullets falls back to its subject, the PR title.
 
 ### Known `release-monorepo-semantically` defects
 
@@ -198,7 +238,7 @@ All `lib/`, `__tests__/`, and `__benchmarks__/` paths below are relative to
 **`ProviderPipe`** is an interface with two methods: `mapProvider` (transforms `IProvider`) and `mapRegistration` (transforms `IRegistration`). All exported pipe functions (`singleton()`, `lazy()`, `args()`, etc.) are `ProviderPipe` objects created via `registerPipe()`.
 
 - **`IRegistration.pipe()`** — accepts `ProviderMapper<T>` = a raw `MapFn<IProvider<T>>` or a `ProviderPipe` object (normalized by `toProviderFn`, which extracts `mapProvider`)
-- **`@register()`** — accepts `RegistrationMapper<T>` = a `MapFn<IRegistration<T>>` (`bindTo()`, `scope()`), a `ProviderPipe` object (calls `mapRegistration`), or a `Bindable` (`DependencyKey | BindToken`) as sugar for `bindTo(...)` (normalized by `toRegistrationFn`)
+- **`@register()`** — accepts `RegistrationMapper<T>` = a `MapFn<IRegistration<T>>` (`bindTo()`, `scope()`), a `ProviderPipe` object (calls `mapRegistration`), or a `Bindable` (`DependencyKey | BindToken`) as sugar for `bindTo(...)` (normalized by `toRegistrationFn`). Write `@register(Token)`, never `@register(bindTo(Token))` — the wrapper is redundant there
 
 `Bindable`, `ProviderMapper` and `RegistrationMapper` are the named unions for
 these argument lists — use them instead of respelling the union inline, and put
@@ -208,6 +248,31 @@ any new normalization in `toBindToken` / `toProviderFn` / `toRegistrationFn`
 `scope()` and `bindTo()` are **not** `ProviderPipe` — they only work at registration level.
 
 Pipe order generally doesn't matter except for `decorate()`: it wraps the instance at the point it appears in the chain, so order relative to `lazy()` changes whether you decorate the proxy or the real instance.
+
+### Composed Decorators
+
+`createComposeClassDecorator(...decorators)` (`lib/metadata/class.ts`), with its
+`createComposeMethodDecorator` (`lib/metadata/method.ts`) and
+`createComposeParameterDecorator` (`lib/metadata/parameter.ts`) siblings, folds a
+decorator stack into one decorator, so a stack repeated across a layer can be
+given a name:
+
+```typescript
+const repository = <T>(token: SingleToken<T>, ...mappers: RegistrationMapper<T>[]) =>
+  createComposeClassDecorator(
+    register(IRepositoryToken, token, addMediator(token), ...mappers),
+    addClassMeta('injection-token', () => token),
+  );
+```
+
+They apply **bottom-up**, exactly as stacking would, so
+`@createComposeClassDecorator(a, b)` behaves like `@a @b` and moving a stack into
+one call never changes which decorator writes its metadata first (`@register`
+prepends its mappers, so this ordering is load-bearing). The class and method
+forms thread the return value — a replacement class or property descriptor — down
+the chain the way the runtime does, which is what lets wrapping decorators
+(`@once`, `@throttle`) compose; a parameter decorator returns nothing, so there is
+nothing to thread.
 
 ### Scope Access vs Scope Match Rules
 
@@ -223,7 +288,11 @@ Workaround: register A for both scopes, or use `scopeAccess` for visibility cont
 
 ### Token Types
 
-`SingleToken`, `GroupAliasToken`, `SingleAliasToken`, `GroupInstanceToken`, `ClassToken`, `FunctionToken`, `ConstantToken` — all in `lib/token/`. Tokens define how a dependency key is resolved (single instance, group by alias, group by predicate, etc.).
+`SingleToken`, `GroupAliasToken`, `SingleAliasToken`, `GroupInstanceToken`, `ClassToken`, `FunctionToken`, `ConstantToken`, `MultiVariantFeatureToken`, `ToggleFeatureToken` — all in `lib/token/`. `SingleToken`, `SingleAliasToken` and `GroupAliasToken` extend `BindableToken`, which owns their shared state and modifiers — a subclass implements only `resolve` and `bindKey`. Tokens define how a dependency key is resolved (single instance, group by alias, group by predicate, etc.).
+
+### Feature Flags (ADR 0021)
+
+`MultiVariantFeatureToken<T, V>(flag)` switches implementations by what a flag serves, and **the implementations declare where they belong** on their own token: `BindableToken` (abstract base of `SingleToken`, `SingleAliasToken`, `GroupAliasToken`, holding their shared args/lazy/tags state) has `variantOf(feature, name)`, `primaryVariantOf(feature)` and `fallbackOf(feature)`, stored as aliases (`feature:<flag>:variant:<name>` / `:primary` / `:fallback`) that `bindTo` adds to the registration. Selection: served variant's implementation → (flag on) primary variant → fallback; a throwing client serves the fallback. **Every flag has a fallback**: resolving a feature with no `fallbackOf` registration in scope throws `DependencyNotFoundError` naming the flag. `ToggleFeatureToken extends MultiVariantFeatureToken<T, never>` is the on/off case — only a primary variant, evaluated with `isEnabled`; a subclass overrides only the protected `evaluate(flags, context)` → `{ enabled, variant? }`. `IContainer.hasAlias(alias)` is the non-throwing alias check this needs. The client (`IFeatureFlagsToken`, Unleash-shaped sync `IFeatureFlags`) and context (`IFeatureContextToken`) are resolved from the resolving scope on every resolution; missing either is `DependencyNotFoundError`. The library ships no vendor SDK.
 
 ### Token Immutability (One-Way Linked List)
 
@@ -339,7 +408,7 @@ Every function/method that can `throw` — directly, or indirectly via a method 
 Paths below are relative to `packages/ts-ioc-container/` unless stated otherwise.
 
 - **Edit source only**: `lib/` — never `cjm/`, `esm/`, `typings/` (build outputs)
-- **README.md is generated**: edit `.readme.hbs.md`, then run `pnpm run generate:docs`
+- **README.md is generated**: edit `.readme.hbs.md`, then run `pnpm run generate:docs`. The root `README.md` (GitHub landing page) is a copy of the core package README, made and staged by the pre-commit hook, which runs its `git add` from the repo root — never add a `git add` to a package script: inside a worktree the hook environment makes git treat the package directory as the repo root
 - **Tests mirror source**: `__tests__/` structure matches `lib/`
 - **All public APIs** exported from `lib/index.ts`
 
@@ -355,11 +424,22 @@ Paths below are relative to `packages/ts-ioc-container/` unless stated otherwise
 ## Commit Message Conventions
 
 ### Types that prevent package releases (use these when no API change)
-`docs`, `test`, `ci`, `chore`, `refactor`, `style`
+`test`, `ci`, `chore`, `refactor`, `style` — and `docs` with any scope other
+than a package name
 
 ### Types that trigger releases
-`feat` → minor bump, `fix` / `perf` → patch bump, `BREAKING CHANGE` (or `!` after
-the type/scope) → major bump
+`feat` → minor bump, `fix` / `perf` / `docs` → patch bump, `BREAKING CHANGE` (or
+`!` after the type/scope) → major bump — each only when scoped to a package name
+(see below).
+
+`docs` releasing is this repo's choice, not the tool's default: the published
+tarball carries documentation consumers and AI agents read at the installed
+version (`README.md`, `AGENTS.md`, JSDoc in `typings/`), so a docs change to a
+package has to reach npm. It is configured by the `report.bumps.patch` matchers
+in the root `.release.json` (needs `release-monorepo-semantically` >= 1.12,
+where `bumps` replaces the defaults per level — keep the `fix` / `perf`
+matchers listed there). Repo-only docs (ADRs, `CLAUDE.md`, CI notes) use a
+free-form scope such as `docs(adr):` and do not release.
 
 ### Scope must be the exact package name
 
@@ -377,8 +457,35 @@ fix(@ts-ioc-container/react): correct Y
 A commit scoped to anything else (`feat(hooks): ...`, `fix(docs): ...`) —
 including the free-form, feature-area scopes this repo used historically —
 **will not trigger a release for either package.** Non-release types
-(`docs`, `test`, `ci`, `chore`, `refactor`, `style`) can still use a free-form
-scope, or none, since they never trigger a release regardless of scope.
+(`test`, `ci`, `chore`, `refactor`, `style`) can still use a free-form
+scope, or none, since they never trigger a release regardless of scope. `docs`
+releases only with a package scope: `docs(ts-ioc-container): ...` publishes a
+patch, `docs(adr): ...` does not.
+
+### README changes must trigger a bump
+
+A commit that changes a package's `README.md` (or its source,
+`packages/ts-ioc-container/.readme.hbs.md`) must release that package, so the
+README consumers read on npm matches the repo. Scope the commit to the exact
+package name **and** put an explicit bump tag from `release-monorepo-semantically`
+in the subject — `[patch]`, `[minor]` or `[major]` — so the release does not hinge
+on the commit type alone:
+
+```
+docs(ts-ioc-container): document scopeAccess rules [patch]
+chore(@ts-ioc-container/react): reword Scope example in README [patch]
+```
+
+- Use `[patch]` for a README-only change; use `[minor]` / `[major]` when the
+  commit also carries the matching API change.
+- The tag overrides the rule-based level for that commit and is stripped from
+  the subject, so it also works on otherwise non-release types (`chore`,
+  `refactor`). It still needs the package scope to match a package.
+- With squash merges the tag must be in the commit header that appears as a `* `
+  bullet in the squash body (see [Squash merges](#squash-merges)) — tags are
+  read per entry.
+- `[skip-bump]` is the opposite tag (suppress a release); never use it on a
+  README change.
 
 ### Special rules
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)

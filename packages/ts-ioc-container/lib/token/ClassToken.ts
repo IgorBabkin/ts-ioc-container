@@ -3,6 +3,7 @@ import { forwardArgs, InjectionToken } from './InjectionToken';
 import { type constructor, Serializable } from '../utils/basic';
 import { ArgsFn, ResolveOptions } from '../provider/IProvider';
 
+/** A token for a class: resolves it through the scope's injector. `toToken(Class)` creates one. */
 export class ClassToken<T = any> extends InjectionToken<T> implements Serializable {
   private readonly _getArgsFn: ArgsFn;
   private readonly _isLazy: boolean;

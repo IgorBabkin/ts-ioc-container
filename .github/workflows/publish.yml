@@ -10,28 +10,36 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  id-token: write  # Required for OIDC
-  contents: write  # Required for creating releases and tags
-  issues: write    # Required for creating issue comments
-  pull-requests: write  # Required for creating PR comments
-  packages: write  # Required for publishing to GitHub Packages
+  contents: read
 
 jobs:
-  # One job, start to finish: build, static checks, tests, then the release
-  # pipeline. Splitting these into build → test → release jobs cost a
-  # checkout + pnpm install per job and an artifact upload/download to hand
-  # the build output across, which roughly tripled the wall time of a push
-  # to main. The steps run in the same order as before.
-  #
-  # Every root script below runs recursively across the workspace, so the
-  # build has to come first: @ts-ioc-container/react resolves
-  # ts-ioc-container through the workspace link and reads its build output.
+  # The same build, static checks and tests a pull request runs (the build
+  # action), plus coverage. It hands the build output to the release job as an
+  # artifact so the release publishes exactly what was tested.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build
+        uses: ./.github/actions/build
+        with:
+          coverage: true
+
   release:
+    needs: build
     environment:
       name: production
       url: https://www.npmjs.com/package/ts-ioc-container
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: write  # Required for creating releases and tags
+      issues: write    # Required for creating issue comments
+      pull-requests: write  # Required for creating PR comments
+      packages: write  # Required for publishing to GitHub Packages
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -47,7 +55,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
         # OIDC authentication is automatically used when:
-        # 1. permissions.id-token: write is set (see top of file)
+        # 1. permissions.id-token: write is set (see the job's permissions)
         # 2. npm 11.5.1+ is installed (next step)
         # 3. Trusted Publishing is configured in npm account settings
 
@@ -62,32 +70,19 @@ jobs:
           npm install -g npm@11
           npm --version
 
+      # Still needed: the release tooling and `pnpm publish` come from the
+      # workspace's dependencies.
       - name: Install dependencies
         run: pnpm run ci
 
-      - name: Build
-        run: pnpm run build
-
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Type check
-        run: pnpm run type-check
-
-      - name: Format check
-        run: pnpm run format:check
-
-      - name: Test with coverage
-        run: pnpm run test:coverage
-        env:
-          NODE_ENV: test
-
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
+      - name: Download build output
+        uses: actions/download-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./packages/ts-ioc-container/coverage/lcov.info
+          name: build-output
+          path: packages
 
+      # Guards the artifact hand-off: a tarball missing its build output must
+      # fail here, not reach npm.
       - name: Verify package contents
         run: pnpm run verify:package-contents
 

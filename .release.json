@@ -1,4 +1,15 @@
 {
+  "$schema": "./node_modules/release-monorepo-semantically/dist/release.schema.json",
+  "report": {
+    "bumps": {
+      "patch": [
+        { "type": "fix", "scope": "<package>" },
+        { "type": "perf", "scope": "<package>" },
+        { "type": "docs", "scope": "<package>" }
+      ]
+    },
+    "squash": "github"
+  },
   "vcs": {
     "template": "packages/scripts/release/templates/release-commit-msg.hbs"
   },

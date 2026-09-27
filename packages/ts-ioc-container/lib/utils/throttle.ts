@@ -1,3 +1,4 @@
+/** Method decorator: ignores calls within `ms` of the last accepted one (per instance). */
 export const throttle =
   (ms: number): MethodDecorator =>
   (target, propertyKey, descriptor: PropertyDescriptor) => {

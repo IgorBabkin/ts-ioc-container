@@ -11,9 +11,15 @@ import {
 } from './IProvider';
 import type { DependencyKey } from '../container/IContainer';
 import { type constructor, toString } from '../utils/basic';
-import { CannonSingletonApplyTwiceError } from '../errors/CannonSingletonApplyTwiceError';
+import { CannotApplySingletonTwiceError } from '../errors/CannotApplySingletonTwiceError';
 import { ProviderDisposedError } from '../errors/ProviderDisposedError';
 
+/**
+ * The factory behind a registration: creates or returns the dependency and
+ * applies the pipes (`singleton`, `lazy`, `decorate`, args and access rules).
+ * Usually created for you by {@link Registration}; use it directly only for
+ * low-level `container.register(key, provider)` calls.
+ */
 export class Provider<T = any> implements IProvider<T> {
   static fromClass<T>(Target: constructor<T>): IProvider<T> {
     return new Provider(({ scope, ...options }) => scope.resolve(Target, options));
@@ -44,7 +50,10 @@ export class Provider<T = any> implements IProvider<T> {
    * @throws {unknown} rethrows whatever an `onResolved` hook threw.
    */
   resolve(options: ProviderOptions): T {
-    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
+    ProviderDisposedError.assert(
+      !this.isDisposed,
+      'Provider is already disposed: its scope was disposed. Resolve from a live scope.',
+    );
 
     if (!this.getKey) {
       return this.resolveDep(options);
@@ -99,7 +108,10 @@ export class Provider<T = any> implements IProvider<T> {
    * @throws {ProviderDisposedError} when the provider has already been disposed.
    */
   isAutoResolvable(): boolean {
-    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
+    ProviderDisposedError.assert(
+      !this.isDisposed,
+      'Provider is already disposed: its scope was disposed. Resolve from a live scope.',
+    );
 
     return this.isAutoResolve;
   }
@@ -113,16 +125,22 @@ export class Provider<T = any> implements IProvider<T> {
    * @throws {ProviderDisposedError} when the provider has already been disposed.
    */
   hasAccess(options: ScopeAccessOptions): boolean {
-    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
+    ProviderDisposedError.assert(
+      !this.isDisposed,
+      'Provider is already disposed: its scope was disposed. Resolve from a live scope.',
+    );
 
     return this.accessRules.reduce((acc, rule) => rule(options, acc), true);
   }
 
   /**
-   * @throws {CannonSingletonApplyTwiceError} when the provider is already configured as a singleton.
+   * @throws {CannotApplySingletonTwiceError} when the provider is already configured as a singleton.
    */
   singleton(getCacheKey: GetCacheKey = () => '1'): this {
-    CannonSingletonApplyTwiceError.assert(!this.getKey, 'Provider is already singleton');
+    CannotApplySingletonTwiceError.assert(
+      !this.getKey,
+      'Provider is already singleton: singleton() was applied twice to the same provider. Remove the duplicate singleton().',
+    );
     this.getKey = getCacheKey;
     return this;
   }
@@ -140,7 +158,10 @@ export class Provider<T = any> implements IProvider<T> {
    * @throws {ProviderDisposedError} when the provider has already been disposed.
    */
   dispose(): void {
-    ProviderDisposedError.assert(!this.isDisposed, 'Provider is already disposed');
+    ProviderDisposedError.assert(
+      !this.isDisposed,
+      'Provider is already disposed: its scope was disposed. Resolve from a live scope.',
+    );
     this.isDisposed = true;
     this.isAutoResolve = false;
     this.getKey = undefined;

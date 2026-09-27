@@ -1,2 +1,7 @@
-npm run generate:docs
+# Stage from the repo root on purpose: in a git worktree, git exports GIT_DIR to
+# hooks without GIT_WORK_TREE, so a `git add` run from a package directory treats
+# that directory as the repo root and stages the file under the wrong path.
+pnpm run generate:docs
+cp packages/ts-ioc-container/README.md README.md
+git add README.md packages/ts-ioc-container/README.md
 lint-staged

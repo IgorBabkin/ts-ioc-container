@@ -1,5 +1,6 @@
 import { resolveConstructor } from './target';
 
+/** Decorator that writes parameter metadata under `key`; `mapFn` receives the previous value. */
 export const addParamMeta =
   (key: string | symbol, mapFn: (prev: unknown) => unknown): ParameterDecorator =>
   (target, _, parameterIndex) => {
@@ -7,26 +8,53 @@ export const addParamMeta =
     metadata[parameterIndex] = mapFn(metadata[parameterIndex]);
     Reflect.defineMetadata(key, metadata, target);
   };
+/** Reads parameter metadata written by `addParamMeta`. */
 export const getParamMeta = (key: string | symbol, target: object): unknown[] => {
   return (Reflect.getOwnMetadata(key, resolveConstructor(target)) as unknown[]) ?? [];
 };
 
+/** Decorator that attaches a `key` -> `label` pair to a parameter. */
 export const addParamLabel = (key: string, label: string) =>
   addParamMeta('label', (prev: unknown) => {
     const map = (prev as Map<string, string> | undefined) ?? new Map<string, string>();
     return map.set(key, label);
   });
+/** Reads the labels written by `addParamLabel`. */
 export const getParamLabels = (target: object, parameterIndex: number): Map<string, string> => {
   const all = getParamMeta('label', target);
   return (all[parameterIndex] as Map<string, string> | undefined) ?? new Map();
 };
 
+/** Decorator that attaches a tag to a parameter. */
 export const addParamTag = (tag: string) =>
   addParamMeta('tag', (prev: unknown) => {
     const set = (prev as Set<string> | undefined) ?? new Set<string>();
     return set.add(tag);
   });
+/** Reads the tags written by `addParamTag`. */
 export const getParamTags = (target: object, parameterIndex: number): Set<string> => {
   const all = getParamMeta('tag', target);
   return (all[parameterIndex] as Set<string> | undefined) ?? new Set();
 };
+
+/**
+ * Applies several parameter decorators as one, so a stack repeated on many
+ * parameters can be given a name:
+ *
+ * ```typescript
+ * const fromConfig = <T>(key: string, map: MapFn<IConfig, T>) =>
+ *   createComposeParameterDecorator(inject(pipe(by(ConfigToken), map)), addParamLabel('config', key));
+ * ```
+ *
+ * Decorators are applied bottom-up, exactly as stacking them would be, so
+ * `@createComposeParameterDecorator(a, b)` behaves like `@a @b`. A parameter
+ * decorator returns nothing, so there is nothing to thread - each one is called
+ * with the same target, property key and parameter index.
+ */
+export const createComposeParameterDecorator =
+  (...decorators: ParameterDecorator[]): ParameterDecorator =>
+  (target, propertyKey, parameterIndex) => {
+    for (let i = decorators.length - 1; i >= 0; i--) {
+      decorators[i](target, propertyKey, parameterIndex);
+    }
+  };

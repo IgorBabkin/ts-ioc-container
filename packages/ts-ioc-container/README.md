@@ -52,6 +52,9 @@ provider pipelines, aliases, and custom injector strategies.
 - [Registration](#registration) `@register`
   - [Token](#token) `bindTo`
   - [Scope](#scope) `scope`
+  - [Environment-based registration](#environment-based-registration) `Env`
+  - [Composing decorators](#composing-decorators) `createComposeClassDecorator`
+  - [Feature flags](#feature-flags) `MultiVariantFeatureToken` `ToggleFeatureToken`
 - [Module](#module)
 - [Hook](#hook) `@hook`
   - [Hook domains](#hook-domains) `ScopeHook` `InjectorHook` `ProviderHook`
@@ -164,6 +167,7 @@ describe('Quickstart', function () {
 - Custom inject function: `@inject(({ scope, args }) => ...)`
 - Map an injected value: `@inject(pipe(by('Key'), sanitize(), validate()))`
 - Property inject: `@hook('onInit', injectProp(by('Key')))`
+- Name a decorator stack: `const repository = (token) => createComposeClassDecorator(register(token, singleton()), addClassMeta('injection-token', () => token))`
 
 > [!TIP]
 > For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
@@ -2788,6 +2792,338 @@ describe('Scopes', function () {
     expect(handler.transactionScope).not.toBe(appContainer);
     expect(handler.transactionScope.hasTag('transaction')).toBe(true);
     expect(handler.executeInTransaction()).toBe(true);
+  });
+});
+
+```
+
+### Environment-based registration
+
+Picking an implementation by deployment environment (`prod` / `dev` / `test`)
+needs no dedicated API - it is the same `scope()` mechanism as above: tag the
+container with its env and scope each implementation to the env it belongs to.
+Multiple registrations share the same key; only the one whose scope rule
+matches the container's tag registers there.
+
+```typescript
+import { bindTo, Container, register, Registration as R, scope, SingleToken } from 'ts-ioc-container';
+
+/**
+ * Environment-based Registration
+ *
+ * An app often needs a different implementation per deployment environment -
+ * a real payment gateway in production, a stub in tests, a verbose one in dev.
+ * This is a plain application of `scope()`: tag the container with its env and
+ * scope each implementation to the env tag it belongs to. No dedicated API is
+ * needed - the same `ScopeMatchRule` mechanism used for `request` / `transaction`
+ * scopes applies here too.
+ */
+type Env = 'prod' | 'dev' | 'test';
+
+interface IPaymentGateway {
+  charge(amount: number): string;
+}
+
+const PaymentGatewayToken = new SingleToken<IPaymentGateway>('IPaymentGateway');
+
+@register(bindTo(PaymentGatewayToken), scope((c) => c.hasTag('prod')))
+class StripeGateway implements IPaymentGateway {
+  charge(amount: number): string {
+    return `charged $${amount} via Stripe`;
+  }
+}
+
+@register(bindTo(PaymentGatewayToken), scope((c) => c.hasTag('dev')))
+class LoggingGateway implements IPaymentGateway {
+  charge(amount: number): string {
+    return `[dev] would charge $${amount}`;
+  }
+}
+
+@register(bindTo(PaymentGatewayToken), scope((c) => c.hasTag('test')))
+class FakeGateway implements IPaymentGateway {
+  charge(amount: number): string {
+    return `faked charge of $${amount}`;
+  }
+}
+
+const createContainerForEnv = (env: Env) =>
+  new Container({ tags: [env] })
+    .addRegistration(R.fromClass(StripeGateway))
+    .addRegistration(R.fromClass(LoggingGateway))
+    .addRegistration(R.fromClass(FakeGateway));
+
+describe('Environment-based registration', function () {
+  it('should resolve the implementation whose scope tag matches the container env', function () {
+    expect(PaymentGatewayToken.resolve(createContainerForEnv('prod'))).toBeInstanceOf(StripeGateway);
+    expect(PaymentGatewayToken.resolve(createContainerForEnv('dev'))).toBeInstanceOf(LoggingGateway);
+    expect(PaymentGatewayToken.resolve(createContainerForEnv('test'))).toBeInstanceOf(FakeGateway);
+  });
+
+  it('should behave like the environment it was resolved for', function () {
+    const gateway = PaymentGatewayToken.resolve(createContainerForEnv('test'));
+
+    expect(gateway.charge(10)).toBe('faked charge of $10');
+  });
+});
+
+```
+
+### Composing decorators
+
+A decorator stack repeated on every class of a layer is worth a name.
+`createComposeClassDecorator(...decorators)` gives it one: it returns a single
+`ClassDecorator` which applies the stack **bottom-up, exactly as stacking would**,
+so `@createComposeClassDecorator(a, b)` behaves like `@a @b`. A decorator which
+returns a replacement class hands it to the next one, the way the runtime threads
+a stack.
+
+`createComposeMethodDecorator` and `createComposeParameterDecorator` do the same
+for methods and constructor parameters. The method form threads the property
+descriptor, so wrapping decorators (`@once`, `@throttle`, ...) compose too.
+
+```typescript
+import {
+  addClassMeta,
+  Container,
+  createComposeClassDecorator,
+  createComposeParameterDecorator,
+  getClassMeta,
+  inject,
+  by,
+  addParamLabel,
+  getParamLabels,
+  register,
+  Registration as R,
+  scope,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
+
+/**
+ * A decorator stack repeated on every class of a layer is worth a name.
+ * `createComposeClassDecorator` (and its `createComposeMethodDecorator` /
+ * `createComposeParameterDecorator` siblings) turns one into a single decorator,
+ * applied bottom-up exactly as stacking would.
+ */
+describe('composing decorators', () => {
+  const INJECTION_TOKEN = 'injection-token';
+
+  // Every repository binds to its own token, is an application-scoped singleton,
+  // and remembers the token it was registered under.
+  const repository = <T>(token: SingleToken<T>) =>
+    createComposeClassDecorator(
+      register(
+        token,
+        scope((s) => s.hasTag('application')),
+        singleton(),
+      ),
+      addClassMeta(INJECTION_TOKEN, () => token),
+    );
+
+  it('should apply the whole stack the composed decorator stands for', () => {
+    const UserRepositoryToken = new SingleToken<UserRepository>('IUserRepository');
+
+    @repository(UserRepositoryToken)
+    class UserRepository {
+      findById(id: string) {
+        return { id };
+      }
+    }
+
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(UserRepository));
+
+    expect(UserRepositoryToken.resolve(app)).toBeInstanceOf(UserRepository);
+    // singleton() applied, so the same instance comes back
+    expect(UserRepositoryToken.resolve(app)).toBe(UserRepositoryToken.resolve(app));
+    // and the class still carries the metadata written beside the registration
+    expect(getClassMeta(UserRepository, INJECTION_TOKEN)).toBe(UserRepositoryToken);
+  });
+
+  it('should compose parameter decorators the same way', () => {
+    const ConfigToken = new SingleToken<{ apiUrl: string }>('IConfig');
+
+    // @inject plus a label describing where the value came from
+    const fromConfig = createComposeParameterDecorator(inject(by(ConfigToken)), addParamLabel('source', 'config'));
+
+    class ApiClient {
+      constructor(@fromConfig public config: { apiUrl: string }) {}
+    }
+
+    const app = new Container({ tags: ['application'] }).addRegistration(
+      R.fromValue({ apiUrl: 'https://api.example.com' }).bindTo(ConfigToken),
+    );
+
+    expect(app.resolve(ApiClient).config.apiUrl).toBe('https://api.example.com');
+    expect(getParamLabels(ApiClient, 0).get('source')).toBe('config');
+  });
+});
+
+```
+
+### Feature flags
+
+Feature tokens let a feature flag choose which implementation is injected, so
+consumers depend on one type and never see the flag. The implementations
+decide where they belong - each one's own token declares its role:
+
+- `token.variantOf(Feature, 'blue')` - used while the flag serves the variant `blue` (`getVariant`)
+- `token.primaryVariantOf(Feature)` - used while the flag is on and no named variant implementation matches
+- `token.fallbackOf(Feature)` - used otherwise: the flag is off, serves nothing implemented, or its client throws
+
+**Every flag has a fallback**: resolving a feature without one registered is a
+`DependencyNotFoundError`, whatever the flag serves. `MultiVariantFeatureToken<T, V>`
+is the general case; `ToggleFeatureToken<T>` is its on/off case - no named
+variants, only a primary one (`isEnabled`). Each implementation stays
+injectable through its own token.
+
+The flag client comes from `IFeatureFlagsToken` and the context it evaluates
+for from `IFeatureContextToken`, both resolved from the resolving scope on every
+resolution - register the context in your `request` scope. A missing client or
+context is a `DependencyNotFoundError`, never a silent fallback.
+
+`IFeatureFlags` is shaped after Unleash (`isEnabled(name, context)`,
+`getVariant(name, context)`), so an Unleash client is registered as is:
+`R.fromValue(unleash).bindTo(IFeatureFlagsToken)`. Resolution is synchronous;
+wrap an asynchronous client (e.g. the OpenFeature server SDK) in an adapter
+that evaluates ahead of time. `Feature.lazy()` defers the evaluation to first use.
+
+```typescript
+import 'reflect-metadata';
+import {
+  by,
+  Container,
+  type FeatureContext,
+  type FeatureVariant,
+  type IFeatureFlags,
+  IFeatureContextToken,
+  IFeatureFlagsToken,
+  inject,
+  MultiVariantFeatureToken,
+  register,
+  Registration as R,
+  SingleToken,
+  ToggleFeatureToken,
+} from 'ts-ioc-container';
+
+/**
+ * Checkout Domain - Feature Flags
+ *
+ * A flag chooses which implementation is injected; the consumer depends on one
+ * type and never sees the flag. The implementations decide where they belong:
+ * each one's own token declares it
+ *
+ * - `.variantOf(feature, name)` - used while the flag serves the variant `name`;
+ * - `.primaryVariantOf(feature)` - used while the flag is on and no named
+ *   variant implementation matches (the "on" side of a toggle);
+ * - `.fallbackOf(feature)` - used otherwise. Every flag has one.
+ *
+ * `ToggleFeatureToken` is the on/off case of `MultiVariantFeatureToken`: no
+ * named variants, only a primary one.
+ *
+ * The flag client is any object with `isEnabled(name, context)` and
+ * `getVariant(name, context)` - an Unleash client works as is:
+ *   container.addRegistration(R.fromValue(unleash).bindTo(IFeatureFlagsToken));
+ */
+
+// Toggle: new checkout on / off
+interface IPaymentGateway {
+  pay(amount: number): string;
+}
+
+const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout');
+
+// Each implementation's own token declares where it belongs
+@register(new SingleToken<IPaymentGateway>('LegacyGateway').fallbackOf(PaymentGatewayToken))
+class LegacyGateway implements IPaymentGateway {
+  pay(amount: number) {
+    return `legacy charged ${amount}`;
+  }
+}
+
+@register(new SingleToken<IPaymentGateway>('StripeGateway').primaryVariantOf(PaymentGatewayToken))
+class StripeGateway implements IPaymentGateway {
+  pay(amount: number) {
+    return `stripe charged ${amount}`;
+  }
+}
+
+// Multi-variant: A/B/n experiment on the checkout button
+interface ICheckoutButton {
+  render(): string;
+}
+
+const CheckoutButtonToken = new MultiVariantFeatureToken<ICheckoutButton, 'blue' | 'green'>('checkout-button');
+
+@register(new SingleToken<ICheckoutButton>('GreyButton').fallbackOf(CheckoutButtonToken))
+class GreyButton implements ICheckoutButton {
+  render() {
+    return 'grey button';
+  }
+}
+
+@register(new SingleToken<ICheckoutButton>('BlueButton').variantOf(CheckoutButtonToken, 'blue'))
+class BlueButton implements ICheckoutButton {
+  render() {
+    return 'blue button';
+  }
+}
+
+@register(new SingleToken<ICheckoutButton>('GreenButton').variantOf(CheckoutButtonToken, 'green'))
+class GreenButton implements ICheckoutButton {
+  render() {
+    return 'green button';
+  }
+}
+
+class CheckoutPage {
+  constructor(
+    @inject(by(PaymentGatewayToken)) private readonly gateway: IPaymentGateway,
+    @inject(by(CheckoutButtonToken)) private readonly button: ICheckoutButton,
+  ) {}
+
+  render(amount: number) {
+    return `${this.button.render()}, ${this.gateway.pay(amount)}`;
+  }
+}
+
+// Stands in for an Unleash client
+class InMemoryFlags implements IFeatureFlags {
+  isEnabled(name: string, context?: FeatureContext) {
+    return name === 'new-checkout' && context?.userId === 'beta-tester';
+  }
+
+  getVariant(name: string, context?: FeatureContext): FeatureVariant {
+    const bucket = { 'beta-tester': 'green', 'user-1': 'blue' }[context?.userId ?? ''];
+    return name === 'checkout-button' && bucket
+      ? { name: bucket, enabled: true }
+      : { name: 'disabled', enabled: false };
+  }
+}
+
+describe('Feature flags', () => {
+  const app = new Container({ tags: ['application'] })
+    .addRegistration(R.fromValue(new InMemoryFlags()).bindTo(IFeatureFlagsToken))
+    .addRegistration(R.fromClass(LegacyGateway))
+    .addRegistration(R.fromClass(GreyButton))
+    .addRegistration(R.fromClass(StripeGateway))
+    .addRegistration(R.fromClass(BlueButton))
+    .addRegistration(R.fromClass(GreenButton));
+
+  // The context is per request: each request evaluates the flags for its own user
+  const handleRequest = (userId: string) => {
+    const request = app.createScope({ tags: ['request'] });
+    request.addRegistration(R.fromValue({ userId }).bindTo(IFeatureContextToken));
+    return request.resolve(CheckoutPage).render(42);
+  };
+
+  it('serves each user the implementations their flags select', () => {
+    expect(handleRequest('beta-tester')).toBe('green button, stripe charged 42');
+    expect(handleRequest('user-1')).toBe('blue button, legacy charged 42');
+  });
+
+  it('serves the fallbacks to everyone else', () => {
+    expect(handleRequest('regular-user')).toBe('grey button, legacy charged 42');
   });
 });
 

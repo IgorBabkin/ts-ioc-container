@@ -1,79 +1,28 @@
-import { DependencyKey, IContainer } from '../container/IContainer';
-import { forwardArgs, InjectionToken } from './InjectionToken';
-import { IRegistration } from '../registration/IRegistration';
-import { BindToken } from './BindToken';
-import { ArgsFn, ResolveOptions } from '../provider/IProvider';
-import { Serializable } from '../utils/basic';
+import { type DependencyKey, type IContainer } from '../container/IContainer';
+import { BindableToken } from './BindableToken';
+import { type IRegistration } from '../registration/IRegistration';
+import { type ResolveOptions } from '../provider/IProvider';
 
-export class SingleAliasToken<T = any> extends InjectionToken<T> implements BindToken<T>, Serializable {
-  private readonly _getArgsFn: ArgsFn;
-  private readonly _isLazy: boolean;
-
-  constructor(
-    readonly token: DependencyKey,
-    {
-      getArgsFn = forwardArgs,
-      isLazy = false,
-      tags = [],
-    }: { getArgsFn?: ArgsFn; isLazy?: boolean; tags?: string[] } = {},
-  ) {
-    super(tags);
-    this._getArgsFn = getArgsFn;
-    this._isLazy = isLazy;
-  }
-
+/**
+ * Like {@link GroupAliasToken}, but resolves exactly one dependency registered
+ * under the alias, and throws `DependencyNotFoundError` when there is none.
+ */
+export class SingleAliasToken<T = any> extends BindableToken<T> {
   select<R>(fn: (target: T) => R) {
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, { args = [], lazy }: ResolveOptions = {}): T {
-    return s.resolveOneByAlias(this.token, {
-      args: this._getArgsFn({ scope: s, args }),
-      lazy: this._isLazy || lazy,
-    });
+  /**
+   * @throws {DependencyNotFoundError} when no accessible registration carries the alias.
+   */
+  resolve(s: IContainer, options?: ResolveOptions): T {
+    return s.resolveOneByAlias(this.token, this.toResolveOptions(s, options));
   }
 
-  bindTo(r: IRegistration<T>) {
+  protected bindKey(r: IRegistration<T>) {
     r.bindToAlias(this.token);
-  }
-
-  args(...newArgs: unknown[]) {
-    const parentFn = this._getArgsFn;
-    return new SingleAliasToken<T>(this.token, {
-      getArgsFn: (options) => [...parentFn(options), ...newArgs],
-      isLazy: this._isLazy,
-      tags: this.getTags(),
-    });
-  }
-
-  argsFn(fn: (s: IContainer) => unknown[]) {
-    const parentFn = this._getArgsFn;
-    return new SingleAliasToken<T>(this.token, {
-      getArgsFn: (options) => [...parentFn(options), ...fn(options.scope)],
-      isLazy: this._isLazy,
-      tags: this.getTags(),
-    });
-  }
-
-  lazy() {
-    return new SingleAliasToken<T>(this.token, {
-      getArgsFn: this._getArgsFn,
-      isLazy: true,
-      tags: this.getTags(),
-    });
-  }
-
-  addTags(...tags: string[]): SingleAliasToken<T> {
-    return new SingleAliasToken<T>(this.token, {
-      getArgsFn: this._getArgsFn,
-      isLazy: this._isLazy,
-      tags: [...this.getTags(), ...tags],
-    });
-  }
-
-  toString(): string {
-    return this.token.toString();
   }
 }
 
+/** Creates a {@link SingleAliasToken} for `token`. */
 export const toSingleAlias = <T>(token: DependencyKey) => new SingleAliasToken<T>(token);

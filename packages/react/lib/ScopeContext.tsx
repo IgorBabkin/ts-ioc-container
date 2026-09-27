@@ -18,7 +18,9 @@ export function useScope(): IContainer | null {
 export function useScopeOrFail(): IContainer {
   const container = useScope();
   if (!container) {
-    throw new OutOfScopeError('useScopeOrFail must be called inside ScopeContext.Provider');
+    throw new OutOfScopeError(
+      'useScopeOrFail must be called inside ScopeContext.Provider: wrap the tree in <ScopeContext.Provider value={container}>.',
+    );
   }
   return container;
 }

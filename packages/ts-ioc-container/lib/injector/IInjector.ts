@@ -24,6 +24,7 @@ export type InjectOptions = WithScope & Partial<WithArgs>;
  */
 export type InjectorHook = (instance: Instance, scope: IContainer) => void;
 
+/** Builds instances of classes for a scope. Shared by a container and every scope created from it. */
 export interface IInjector {
   resolve<T>(Target: constructor<T>, options: ProviderOptions): T;
 
@@ -38,10 +39,16 @@ export interface IInjectorModule {
   applyTo(injector: IInjector): void;
 }
 
+/** Something that resolves a value from a scope. */
 export interface IInjectFnResolver<T> {
   resolve(s: IContainer, options?: ResolveOneOptions): T;
 }
 
+/**
+ * Base class of the bundled injectors: tracks the instance in the scope, runs
+ * `onConstructed` hooks and handles `lazy`. Subclass it and implement
+ * `createInstance` for a custom injection strategy.
+ */
 export abstract class Injector {
   private readonly onConstructedHookList: InjectorHook[] = [];
 
