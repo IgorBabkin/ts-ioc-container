@@ -34,10 +34,10 @@ export interface NamespaceConfig {
   recursive?: boolean;
 }
 
-export interface ModuleConfig {
+export interface BundleConfig {
   /** The generated file, relative to the config file. */
   output: string;
-  /** Name of the exported `IContainerModule`. Default `ContainerModule`. */
+  /** Name of the generated class, an `IContainerModule`. Default `Bundle`. */
   name?: string;
   namespaces: (string | NamespaceConfig)[];
   /** Which classes of a scanned file are registered. Default: every exported class. */
@@ -58,11 +58,11 @@ export interface TicConfig {
   tsconfig?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
-  modules: ModuleConfig[];
+  bundles: BundleConfig[];
 }
 
 export const DEFAULT_CONFIG_FILE = 'tic.config.json';
-export const DEFAULT_MODULE_NAME = 'ContainerModule';
+export const DEFAULT_BUNDLE_NAME = 'Bundle';
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
   '**/*.test.ts',
@@ -78,16 +78,16 @@ export interface ResolvedConfig {
   dir: string;
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
-  modules: ResolvedModule[];
+  bundles: ResolvedBundle[];
 }
 
-export interface ResolvedModule {
+export interface ResolvedBundle {
   output: string;
   name: string;
   namespaces: Required<NamespaceConfig>[];
   select: ResolvedSelector;
   exclude: string[];
-  /** Absolute path of the module's own predicate file, when it names one. */
+  /** Absolute path of the bundle's own predicate file, when it names one. */
   include?: string;
 }
 
@@ -137,9 +137,9 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
 }
 
 /**
- * @throws {TicConfigError} when a module field is missing or has the wrong type.
+ * @throws {TicConfigError} when a bundle field is missing or has the wrong type.
  */
-function toModule(value: unknown, field: string, dir: string): ResolvedModule {
+function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
   if (!isObject(value)) return fail(field, 'an object');
   const { output, name, namespaces, select, exclude, include } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
@@ -149,7 +149,7 @@ function toModule(value: unknown, field: string, dir: string): ResolvedModule {
   if (include !== undefined && !isNonEmptyString(include)) return fail(`${field}.include`, 'a non-empty string');
   return {
     output: path.resolve(dir, output),
-    name: name ?? DEFAULT_MODULE_NAME,
+    name: name ?? DEFAULT_BUNDLE_NAME,
     namespaces: namespaces.map((ns, i) => toNamespace(ns, `${field}.namespaces[${i}]`)),
     select: toSelector(select, `${field}.select`),
     exclude: exclude ?? DEFAULT_EXCLUDE,
@@ -165,16 +165,16 @@ function toModule(value: unknown, field: string, dir: string): ResolvedModule {
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const dir = path.dirname(file);
   if (!isObject(content)) return fail('config', 'a JSON object');
-  const { tsconfig, importExtension, modules } = content;
+  const { tsconfig, importExtension, bundles } = content;
   if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('tsconfig', 'a non-empty string');
   if (importExtension !== undefined && typeof importExtension !== 'string') return fail('importExtension', 'a string');
-  if (!Array.isArray(modules) || modules.length === 0) return fail('modules', 'a non-empty array');
+  if (!Array.isArray(bundles) || bundles.length === 0) return fail('bundles', 'a non-empty array');
   return {
     file,
     dir,
     tsconfig: { file: path.resolve(dir, tsconfig ?? 'tsconfig.json'), required: tsconfig !== undefined },
     importExtension,
-    modules: modules.map((m, i) => toModule(m, `modules[${i}]`, dir)),
+    bundles: bundles.map((m, i) => toBundle(m, `bundles[${i}]`, dir)),
   };
 }
 

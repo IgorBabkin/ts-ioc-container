@@ -2,7 +2,7 @@ import { renderProtocol } from './render';
 import type { DiscoveredClass } from './scan';
 
 export interface EmitInput {
-  /** Name of the exported `IContainerModule`. */
+  /** Name of the generated class. */
   name: string;
   /** Shown in the header: where the output came from. */
   configPath: string;
@@ -13,11 +13,11 @@ export interface EmitInput {
 const RUNTIME_IMPORTS = ['IContainer', 'IContainerModule', 'IRegistration', 'Registration'];
 
 /**
- * Renders the generated module — static imports, `registrations`, and the module applying them —
- * from its protocol, `protocols/ContainerModule.ts.hbs`. This function only prepares the data: unique local
+ * Renders the generated bundle — static imports, `registrations`, and the bundle applying them —
+ * from its protocol, `protocols/Bundle.ts.hbs`. This function only prepares the data: unique local
  * names, and one import per file in file order.
  */
-export function emitModule({ name, configPath, namespaces, classes }: EmitInput): string {
+export function emitBundle({ name, configPath, namespaces, classes }: EmitInput): string {
   const taken = new Set([...RUNTIME_IMPORTS, 'registrations', name]);
   const uniqueName = (wanted: string) => {
     let candidate = wanted;
@@ -37,7 +37,7 @@ export function emitModule({ name, configPath, namespaces, classes }: EmitInput)
     return binding;
   });
 
-  return renderProtocol('ContainerModule.ts.hbs', {
+  return renderProtocol('Bundle.ts.hbs', {
     configPath,
     namespaces,
     name,

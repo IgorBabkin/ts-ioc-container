@@ -3,12 +3,12 @@ import path from 'node:path';
 import * as ts from 'typescript';
 import type { ResolvedSelector } from './config';
 
-/** An exported class the generated module registers. */
+/** An exported class the generated bundle registers. */
 export interface DiscoveredClass {
   file: string;
   /** The name it is exported under; `default` for a default export. */
   exportName: string;
-  /** The local name the generated module would like to import it under. */
+  /** The local name the generated bundle would like to import it under. */
   localName: string;
 }
 

@@ -8,7 +8,7 @@ import Handlebars from 'handlebars';
 Handlebars.registerHelper('join', (items: string[], separator: string) => items.join(separator));
 
 /**
- * Renders a precompiled protocol, looked up by its file basename (`ContainerModule.ts.hbs`).
+ * Renders a precompiled protocol, looked up by its file basename (`Bundle.ts.hbs`).
  *
  * @throws {Error} when no protocol is registered under `name`.
  */

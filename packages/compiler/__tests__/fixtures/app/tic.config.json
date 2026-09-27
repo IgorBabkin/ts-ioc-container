@@ -1,9 +1,9 @@
 {
   "$schema": "../../../tic.schema.json",
-  "modules": [
+  "bundles": [
     {
-      "output": "src/di/app.generated.ts",
-      "name": "AppModule",
+      "output": "src/di/app.bundle.ts",
+      "name": "AppBundle",
       "namespaces": [
         "@app/services",
         "@app/infra"

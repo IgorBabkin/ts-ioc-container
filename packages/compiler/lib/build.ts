@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { DEFAULT_CONFIG_FILE, loadConfig, type ResolvedConfig, type ResolvedModule } from './config';
-import { emitModule } from './emit';
+import { DEFAULT_CONFIG_FILE, loadConfig, type ResolvedConfig, type ResolvedBundle } from './config';
+import { emitBundle } from './emit';
 import { globToRegExp, toPosix } from './glob';
 import { ImportPaths } from './ImportPaths';
 import { findConventionalPredicate, type InclusionPredicate, loadInclusionPredicate } from './inclusion';
@@ -24,7 +24,8 @@ export type OutputStatus = 'written' | 'unchanged' | 'stale';
 export interface OutputResult {
   /** Absolute path of the generated file. */
   file: string;
-  module: string;
+  /** Name of the generated class. */
+  bundle: string;
   status: OutputStatus;
   registrations: number;
   content: string;
@@ -37,7 +38,7 @@ export interface BuildResult {
 }
 
 /**
- * Generates one module per config entry. Every module is generated before any
+ * Generates one bundle per config entry. Every bundle is generated before any
  * file is written, so a failing namespace leaves the previous outputs intact.
  *
  * @throws {TicConfigError} when the config, the tsconfig or a predicate file it names is missing or invalid.
@@ -52,26 +53,26 @@ export function build({
   const resolved = loadConfig(path.resolve(cwd, config));
   const paths = ImportPaths.load(resolved.tsconfig, resolved.importExtension);
   const predicateFor = inclusionResolver(resolved, include);
-  const generated = resolved.modules.map((module) => generate(resolved, module, paths, predicateFor(module)));
+  const generated = resolved.bundles.map((bundle) => generate(resolved, bundle, paths, predicateFor(bundle)));
 
-  const outputs = generated.map(({ module, content, registrations }): OutputResult => {
-    const current = existsSync(module.output) ? readFileSync(module.output, 'utf8') : undefined;
+  const outputs = generated.map(({ bundle, content, registrations }): OutputResult => {
+    const current = existsSync(bundle.output) ? readFileSync(bundle.output, 'utf8') : undefined;
     const status: OutputStatus = current === content ? 'unchanged' : check ? 'stale' : 'written';
     if (status === 'written') {
-      mkdirSync(path.dirname(module.output), { recursive: true });
-      writeFileSync(module.output, content);
+      mkdirSync(path.dirname(bundle.output), { recursive: true });
+      writeFileSync(bundle.output, content);
     }
-    return { file: module.output, module: module.name, status, registrations, content };
+    return { file: bundle.output, bundle: bundle.name, status, registrations, content };
   });
   return { config: resolved.file, outputs };
 }
 
 /**
- * Which predicate a module uses: the one passed to `build`, else the module's `include` file, else
+ * Which predicate a bundle uses: the one passed to `build`, else the bundle's `include` file, else
  * the conventional `tic.include.*` next to the config, else none. Each file is loaded once, and only
- * when a module needs it.
+ * when a bundle needs it.
  *
- * @throws {TicConfigError} when a predicate file a module needs is missing or does not export a function.
+ * @throws {TicConfigError} when a predicate file a bundle needs is missing or does not export a function.
  */
 function inclusionResolver(config: ResolvedConfig, override?: InclusionPredicate) {
   const conventional = findConventionalPredicate(config.dir);
@@ -80,9 +81,9 @@ function inclusionResolver(config: ResolvedConfig, override?: InclusionPredicate
     if (!loaded.has(file)) loaded.set(file, loadInclusionPredicate(file));
     return loaded.get(file)!;
   };
-  return (module: ResolvedModule): InclusionPredicate | undefined => {
+  return (bundle: ResolvedBundle): InclusionPredicate | undefined => {
     if (override) return override;
-    const file = module.include ?? conventional;
+    const file = bundle.include ?? conventional;
     return file === undefined ? undefined : load(file);
   };
 }
@@ -90,9 +91,9 @@ function inclusionResolver(config: ResolvedConfig, override?: InclusionPredicate
 /**
  * @throws {NamespaceNotFoundError} when a namespace is neither a folder nor a tsconfig paths alias of one.
  */
-function generate(config: ResolvedConfig, module: ResolvedModule, paths: ImportPaths, include?: InclusionPredicate) {
-  const outputs = new Set(config.modules.map((m) => m.output));
-  const excludes = module.exclude.map(globToRegExp);
+function generate(config: ResolvedConfig, bundle: ResolvedBundle, paths: ImportPaths, include?: InclusionPredicate) {
+  const outputs = new Set(config.bundles.map((m) => m.output));
+  const excludes = bundle.exclude.map(globToRegExp);
   const isExcluded = (file: string) => {
     if (outputs.has(file)) return true;
     const filename = toPosix(path.relative(config.dir, file));
@@ -100,21 +101,21 @@ function generate(config: ResolvedConfig, module: ResolvedModule, paths: ImportP
   };
 
   const files = new Set<string>();
-  for (const namespace of module.namespaces) {
+  for (const namespace of bundle.namespaces) {
     const dir = paths.resolveNamespace(namespace.path, config.dir);
     for (const file of listSourceFiles(dir, namespace.recursive, isExcluded)) files.add(file);
   }
 
   const classes = [...files]
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-    .flatMap((file) => findClasses(file, module.select))
-    .map((cls) => ({ ...cls, specifier: paths.specifier(module.output, cls.file) }));
+    .flatMap((file) => findClasses(file, bundle.select))
+    .map((cls) => ({ ...cls, specifier: paths.specifier(bundle.output, cls.file) }));
 
-  const content = emitModule({
-    name: module.name,
-    configPath: toPosix(path.relative(path.dirname(module.output), config.file)),
-    namespaces: module.namespaces.map((ns) => ns.path),
+  const content = emitBundle({
+    name: bundle.name,
+    configPath: toPosix(path.relative(path.dirname(bundle.output), config.file)),
+    namespaces: bundle.namespaces.map((ns) => ns.path),
     classes,
   });
-  return { module, content, registrations: classes.length };
+  return { bundle, content, registrations: classes.length };
 }

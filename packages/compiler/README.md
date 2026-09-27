@@ -1,8 +1,8 @@
 # @ts-ioc-container/compiler
 
 Build-time companion for [`ts-ioc-container`](../ts-ioc-container). The `tic`
-CLI scans folders for classes and generates a container module that registers
-them — so adding a service means writing the class, not also editing a list of
+CLI scans folders for classes and generates a **bundle** — a container module
+class that registers them — so adding a service means writing the class, not also editing a list of
 `addRegistration(...)` calls.
 
 In TypeScript a namespace is an import path, so folders are named the way
@@ -24,10 +24,10 @@ pnpm add -D @ts-ioc-container/compiler
 ```json
 {
   "$schema": "./node_modules/@ts-ioc-container/compiler/tic.schema.json",
-  "modules": [
+  "bundles": [
     {
-      "output": "src/di/app.generated.ts",
-      "name": "AppModule",
+      "output": "src/di/app.bundle.ts",
+      "name": "AppBundle",
       "namespaces": ["@app/services", { "path": "./src/infra", "recursive": false }]
     }
   ]
@@ -38,12 +38,12 @@ pnpm add -D @ts-ioc-container/compiler
 | ---------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `tsconfig`                   | `tsconfig.json` (may be absent)           | Source of `paths` aliases and of the import extension                                        |
 | `importExtension`            | `.js` under node16/nodenext, else none    | Extension of generated imports                                                               |
-| `modules[].output`           | —                                         | Generated file                                                                               |
-| `modules[].name`             | `ContainerModule`                         | Name of the exported `IContainerModule`                                                      |
-| `modules[].namespaces`       | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
-| `modules[].select`           | every exported class                      | Which classes of a file are registered — see [Selecting classes](#selecting-classes)          |
-| `modules[].exclude`          | test files, `__tests__/`, `node_modules/` | Globs (relative to the config) never scanned; replaces the default                           |
-| `modules[].include`          | `tic.include.*` next to the config        | File exporting an `InclusionPredicate` — see [Including files](#including-files-with-a-predicate) |
+| `bundles[].output`           | —                                         | The bundle file (convention: `*.bundle.ts`)                                                  |
+| `bundles[].name`             | `Bundle`                                  | Name of the generated class, an `IContainerModule`                                           |
+| `bundles[].namespaces`       | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
+| `bundles[].select`           | every exported class                      | Which classes of a file are registered — see [Selecting classes](#selecting-classes)          |
+| `bundles[].exclude`          | test files, `__tests__/`, `node_modules/` | Globs (relative to the config) never scanned; replaces the default                           |
+| `bundles[].include`          | `tic.include.*` next to the config        | File exporting an `InclusionPredicate` — see [Including files](#including-files-with-a-predicate) |
 
 ## Selecting classes
 
@@ -80,7 +80,7 @@ glob **and** the predicate returns `true`.
 
 By convention there is nothing to configure: put a `tic.include.ts` (or `.cjs`,
 `.js`, `.mjs`, `.cts`, `.mts`) next to `tic.config.json` and its default export
-applies to every module.
+applies to every bundle.
 
 ```ts
 // tic.include.ts
@@ -92,9 +92,9 @@ export default include;
 
 | Where the predicate comes from       | Applies to    | Wins over                      |
 | ------------------------------------ | ------------- | ------------------------------ |
-| `build({ include })` (programmatic)  | every module  | everything                     |
-| `modules[].include: "./path/file"`   | that module   | the conventional file          |
-| `tic.include.*` next to the config   | every module  | — (used when nothing is named) |
+| `build({ include })` (programmatic)  | every bundle  | everything                     |
+| `bundles[].include: "./path/file"`   | that bundle   | the conventional file          |
+| `tic.include.*` next to the config   | every bundle  | — (used when nothing is named) |
 
 Predicate files are loaded synchronously with `require`: `.cjs` / `.js`
 everywhere, `.mjs` on Node 22.12+, `.ts` on Node versions that strip types
@@ -149,24 +149,23 @@ const ENVS = ['development', 'production', 'test'];
 module.exports = (env) => byTags((tags) => tags.filter((tag) => ENVS.includes(tag)).every((tag) => tag === env));
 ```
 
-### A. One generated module per environment (recommended)
+### A. One bundle per environment (recommended)
 
-Every environment is generated and committed; the app picks one at startup.
-The files don't depend on who ran `tic build`, so `tic build --check` stays
-stable in CI.
+Every environment gets its own bundle, and both are committed. The files don't
+depend on who ran `tic build`, so `tic build --check` stays stable in CI.
 
 ```json
 {
-  "modules": [
+  "bundles": [
     {
-      "output": "src/di/app.production.generated.ts",
-      "name": "AppModule",
+      "output": "src/di/app.production.bundle.ts",
+      "name": "AppBundle",
       "namespaces": ["@app/services"],
       "include": "./tic/production.cjs"
     },
     {
-      "output": "src/di/app.development.generated.ts",
-      "name": "AppModule",
+      "output": "src/di/app.development.bundle.ts",
+      "name": "AppBundle",
       "namespaces": ["@app/services"],
       "include": "./tic/development.cjs"
     }
@@ -181,24 +180,54 @@ module.exports = require('./for-env.cjs')('production');
 module.exports = require('./for-env.cjs')('development');
 ```
 
-```ts
-// src/di/container.ts
-import { AppModule as ProductionModule } from './app.production.generated';
-import { AppModule as DevelopmentModule } from './app.development.generated';
+To keep development code out of the production build, the production entry
+point must import **only** the production bundle — a bundler includes what is
+imported, and a registration keeps its class alive, so nothing can be dropped
+after the fact. Give each environment its own entry:
 
-export const container = new Container().useModule(
-  process.env.NODE_ENV === 'production' ? ProductionModule : DevelopmentModule,
-);
+```ts
+// src/main.production.ts — production build entry
+import { Container } from 'ts-ioc-container';
+import { AppBundle } from './di/app.production.bundle';
+
+export const container = new Container().useModule(new AppBundle());
 ```
 
-Both modules are imported statically, so a bundle contains both. If
-development code must not ship, pick the module with a dynamic `import()`, or
-let your bundler replace `process.env.NODE_ENV` so the unused branch is
-dropped.
+```ts
+// src/main.development.ts — development entry
+import { Container } from 'ts-ioc-container';
+import { AppBundle } from './di/app.development.bundle';
+
+export const container = new Container().useModule(new AppBundle());
+```
+
+With a single entry, pick the bundle with a dynamic `import()`: the bundler
+splits each into its own chunk and only the chosen one is loaded — the other
+chunk is still emitted, just never fetched.
+
+```ts
+const { AppBundle } =
+  process.env.NODE_ENV === 'production'
+    ? await import('./di/app.production.bundle')
+    : await import('./di/app.development.bundle');
+```
+
+| How the app picks the bundle                                     | Development classes in the production build |
+| ---------------------------------------------------------------- | ------------------------------------------- |
+| One entry per environment, importing its own bundle              | ✅ none                                     |
+| Recipe B below — only the production bundle exists at build time | ✅ none                                     |
+| Dynamic `import()` of the bundle                                 | ⚠️ emitted as a separate chunk, never loaded |
+| Static imports of both bundles plus a runtime condition          | ❌ both bundles, in full                    |
+
+Don't rely on the bundler dropping a statically imported bundle behind
+`process.env.NODE_ENV === 'production'`: the classes it imports run decorators
+at load time, which bundlers treat as side effects and keep.
 
 ### B. One output, environment chosen when `tic build` runs
 
-For pipelines that generate at deploy time instead of committing the output:
+The smallest production build: only the production bundle ever exists while it
+is built. For pipelines that generate at deploy time instead of committing the
+output:
 
 ```js
 // tic.include.cjs — picked up by convention
@@ -221,30 +250,36 @@ generated with.
 ```bash
 tic build                 # tic.config.json in the working directory
 tic build -c path/to/tic.config.json
-tic build --check         # CI: write nothing, exit 1 if a generated module is out of date
+tic build --check         # CI: write nothing, exit 1 if a bundle is out of date
 ```
 
 The output is plain TypeScript over the public `ts-ioc-container` API:
 
 ```ts
+// src/di/app.bundle.ts
 // Generated by `tic build` from ../../tic.config.json. Do not edit by hand.
+// Namespaces: @app/services, @app/infra
 import { type IContainer, type IContainerModule, type IRegistration, Registration } from 'ts-ioc-container';
 import { MemoryLogger } from '@app/infra/logging/MemoryLogger';
 import { Greeter } from '@app/services/Greeter';
 
 export const registrations: IRegistration[] = [
-  Registration.fromClass(Greeter),
   Registration.fromClass(MemoryLogger),
+  Registration.fromClass(Greeter),
 ];
 
-export const AppModule: IContainerModule = { applyTo(container) { /* addRegistration each */ } };
+export class AppBundle implements IContainerModule {
+  applyTo(container: IContainer): void {
+    for (const registration of registrations) container.addRegistration(registration);
+  }
+}
 ```
 
 ```ts
-const container = new Container().useModule(AppModule);
+const container = new Container().useModule(new AppBundle());
 ```
 
-Treat `*.generated.ts` as build output: add it to `.prettierignore` (and any
+Treat `*.bundle.ts` as build output: add it to `.prettierignore` (and any
 other formatter's ignore list), since `--check` compares files byte for byte.
 
 Each class keeps its own `@register(...)` config (key, scope, singleton, …);

@@ -45,7 +45,7 @@ export function byTags(predicate: TagInclusionPredicate): InclusionPredicate {
   return (context) => predicate(fileTags(context.filename), context);
 }
 
-/** Predicate files looked up next to the config, in this order, when no module names one. */
+/** Predicate files looked up next to the config, in this order, when no bundle names one. */
 export const INCLUSION_CONVENTION = [
   'tic.include.cjs',
   'tic.include.js',
@@ -61,9 +61,9 @@ export function findConventionalPredicate(dir: string): string | undefined {
 }
 
 /**
- * Loads a predicate file synchronously with `require` - `.cjs` / `.js`, ES modules
+ * Loads a predicate file synchronously with `require` - `.cjs` / `.js`, ES bundles
  * (Node 22.12+) and `.ts` (Node with type stripping). Its default export, or
- * `module.exports` itself, is the predicate. Like any `require`d module it is loaded
+ * `bundle.exports` itself, is the predicate. Like any `require`d bundle it is loaded
  * once per process, so a predicate that depends on the environment should read it
  * when called, not when loaded.
  *
@@ -74,7 +74,7 @@ export function loadInclusionPredicate(file: string): InclusionPredicate {
   const loaded: unknown = createRequire(file)(file);
   const predicate = typeof loaded === 'function' ? loaded : (loaded as { default?: unknown } | undefined)?.default;
   if (typeof predicate !== 'function') {
-    throw new TicConfigError(`${file} must export an InclusionPredicate function (default export or module.exports)`);
+    throw new TicConfigError(`${file} must export an InclusionPredicate function (default export or bundle.exports)`);
   }
   return predicate as InclusionPredicate;
 }

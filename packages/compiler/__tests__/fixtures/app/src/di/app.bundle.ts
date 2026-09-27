@@ -9,8 +9,8 @@ export const registrations: IRegistration[] = [
   Registration.fromClass(Greeter),
 ];
 
-export const AppModule: IContainerModule = {
+export class AppBundle implements IContainerModule {
   applyTo(container: IContainer): void {
     for (const registration of registrations) container.addRegistration(registration);
-  },
-};
+  }
+}
