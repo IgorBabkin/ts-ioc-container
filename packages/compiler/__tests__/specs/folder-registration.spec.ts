@@ -2,7 +2,7 @@ import { build, type InclusionContext, TicConfigError, NamespaceNotFoundError } 
 import { decorated, TempProject } from '../project';
 
 const module = (namespaces: unknown[], extra: object = {}) => ({
-  modules: [{ output: 'src/di/container.generated.ts', namespaces, ...extra }],
+  bundles: [{ output: 'src/di/container.bundle.ts', namespaces, ...extra }],
 });
 
 describe('Folder registration', () => {
@@ -10,7 +10,7 @@ describe('Folder registration', () => {
 
   afterEach(() => project?.dispose());
 
-  const generated = () => project.read('src/di/container.generated.ts');
+  const generated = () => project.read('src/di/container.bundle.ts');
   const buildProject = (options: { check?: boolean } = {}) =>
     build({ config: project.path('tic.config.json'), ...options });
 
@@ -26,12 +26,12 @@ describe('Folder registration', () => {
       expect(generated()).toContain("import { Logger } from '../services/Logger';");
     });
 
-    it('exports the module under its configured name, ContainerModule by default', () => {
+    it('exports the bundle class under its configured name, Bundle by default', () => {
       project = TempProject.create({
         'tic.config.json': {
-          modules: [
-            { output: 'src/di/a.generated.ts', namespaces: ['./src/services'] },
-            { output: 'src/di/b.generated.ts', namespaces: ['./src/services'], name: 'ServicesModule' },
+          bundles: [
+            { output: 'src/di/a.bundle.ts', namespaces: ['./src/services'] },
+            { output: 'src/di/b.bundle.ts', namespaces: ['./src/services'], name: 'ServicesBundle' },
           ],
         },
         'src/services/Logger.ts': decorated('Logger'),
@@ -39,16 +39,16 @@ describe('Folder registration', () => {
 
       buildProject();
 
-      expect(project.read('src/di/a.generated.ts')).toContain('export const ContainerModule: IContainerModule');
-      expect(project.read('src/di/b.generated.ts')).toContain('export const ServicesModule: IContainerModule');
+      expect(project.read('src/di/a.bundle.ts')).toContain('export class Bundle implements IContainerModule');
+      expect(project.read('src/di/b.bundle.ts')).toContain('export class ServicesBundle implements IContainerModule');
     });
 
     it.each([
-      [{}, 'modules: expected a non-empty array'],
-      [{ modules: [{ namespaces: ['./src'] }] }, 'modules[0].output: expected a non-empty string'],
-      [{ modules: [{ output: 'a.ts', namespaces: [] }] }, 'modules[0].namespaces: expected a non-empty array'],
-      [{ modules: [{ output: 'a.ts', namespaces: [{ recursive: true }] }] }, 'modules[0].namespaces[0].path'],
-      [{ modules: [{ output: 'a.ts', namespaces: ['./src'], name: 'not valid' }] }, 'modules[0].name'],
+      [{}, 'bundles: expected a non-empty array'],
+      [{ bundles: [{ namespaces: ['./src'] }] }, 'bundles[0].output: expected a non-empty string'],
+      [{ bundles: [{ output: 'a.ts', namespaces: [] }] }, 'bundles[0].namespaces: expected a non-empty array'],
+      [{ bundles: [{ output: 'a.ts', namespaces: [{ recursive: true }] }] }, 'bundles[0].namespaces[0].path'],
+      [{ bundles: [{ output: 'a.ts', namespaces: ['./src'], name: 'not valid' }] }, 'bundles[0].name'],
     ])('rejects an invalid config %j naming the field', (config, message) => {
       project = TempProject.create({ 'tic.config.json': config });
 
@@ -136,7 +136,7 @@ describe('Folder registration', () => {
         'src/Kept.spec.ts': decorated('KeptSpec'),
         'src/__tests__/Helper.ts': decorated('Helper'),
         'src/types.d.ts': 'export declare class Declared {}',
-        'src/di/container.generated.ts': decorated('Stale'),
+        'src/di/container.bundle.ts': decorated('Stale'),
       });
 
       buildProject();
@@ -242,7 +242,7 @@ describe('Folder registration', () => {
         { 'not-a-function.cjs': 'module.exports = 42;\n' },
         /not-a-function\.cjs.*function/,
       ],
-      [{ include: '' }, {}, 'modules[0].include: expected a non-empty string'],
+      [{ include: '' }, {}, 'bundles[0].include: expected a non-empty string'],
     ])('fails naming the predicate file for %j', (extra, more, message) => {
       project = TempProject.create({ 'tic.config.json': module(['./src'], extra), ...more, ...files });
 
@@ -266,12 +266,12 @@ describe('Folder registration', () => {
     const registeredIn = (file: string) =>
       [...project.read(file).matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
 
-    it('one generated module per environment, picked at runtime', () => {
+    it('one bundle per environment, picked at runtime', () => {
       project = TempProject.create({
         'tic.config.json': {
-          modules: ['production', 'development'].map((env) => ({
-            output: `src/di/app.${env}.generated.ts`,
-            name: 'AppModule',
+          bundles: ['production', 'development'].map((env) => ({
+            output: `src/di/app.${env}.bundle.ts`,
+            name: 'AppBundle',
             namespaces: ['./src/services'],
             include: `./tic/${env}.cjs`,
           })),
@@ -284,8 +284,8 @@ describe('Folder registration', () => {
 
       buildProject();
 
-      expect(registeredIn('src/di/app.production.generated.ts')).toEqual(['Shared', 'StripeGateway']);
-      expect(registeredIn('src/di/app.development.generated.ts')).toEqual(['FakeGateway', 'Shared']);
+      expect(registeredIn('src/di/app.production.bundle.ts')).toEqual(['Shared', 'StripeGateway']);
+      expect(registeredIn('src/di/app.development.bundle.ts')).toEqual(['FakeGateway', 'Shared']);
     });
 
     it('one output, environment chosen when tic build runs (TIC_ENV)', () => {
@@ -304,11 +304,11 @@ describe('Folder registration', () => {
       try {
         process.env.TIC_ENV = 'production';
         buildProject();
-        expect(registeredIn('src/di/container.generated.ts')).toEqual(['Shared', 'StripeGateway']);
+        expect(registeredIn('src/di/container.bundle.ts')).toEqual(['Shared', 'StripeGateway']);
 
         delete process.env.TIC_ENV;
         buildProject();
-        expect(registeredIn('src/di/container.generated.ts')).toEqual(['FakeGateway', 'Shared']);
+        expect(registeredIn('src/di/container.bundle.ts')).toEqual(['FakeGateway', 'Shared']);
       } finally {
         if (previous === undefined) delete process.env.TIC_ENV;
         else process.env.TIC_ENV = previous;
@@ -381,11 +381,11 @@ describe('Folder registration', () => {
     });
 
     it.each([
-      ['decorated', 'modules[0].select: expected an object'],
-      [{ export: 'all' }, 'modules[0].select.export: expected "any", "named" or "default"'],
-      [{ decorators: [] }, 'modules[0].select.decorators: expected a non-empty array of strings'],
-      [{ nameGlob: '' }, 'modules[0].select.nameGlob: expected a non-empty string'],
-      [{ exported: true }, 'modules[0].select.exported: unknown field'],
+      ['decorated', 'bundles[0].select: expected an object'],
+      [{ export: 'all' }, 'bundles[0].select.export: expected "any", "named" or "default"'],
+      [{ decorators: [] }, 'bundles[0].select.decorators: expected a non-empty array of strings'],
+      [{ nameGlob: '' }, 'bundles[0].select.nameGlob: expected a non-empty string'],
+      [{ exported: true }, 'bundles[0].select.exported: unknown field'],
     ])('rejects the rule %j naming the field', (select, message) => {
       project = TempProject.create({ 'tic.config.json': module(['./src'], { select }) });
 
@@ -493,7 +493,7 @@ describe('Folder registration', () => {
     });
   });
 
-  describe('Story: Keep generated modules in sync in CI', () => {
+  describe('Story: Keep bundles in sync in CI', () => {
     it('reports a missing or outdated output as stale without writing it', () => {
       project = TempProject.create({
         'tic.config.json': module(['./src/services']),

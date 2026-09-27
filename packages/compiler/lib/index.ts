@@ -5,15 +5,15 @@ export {
   resolveConfig,
   DEFAULT_CONFIG_FILE,
   DEFAULT_EXCLUDE,
-  DEFAULT_MODULE_NAME,
+  DEFAULT_BUNDLE_NAME,
   type TicConfig,
-  type ModuleConfig,
+  type BundleConfig,
   type NamespaceConfig,
   type ClassSelector,
   type ExportKind,
   type ResolvedSelector,
   type ResolvedConfig,
-  type ResolvedModule,
+  type ResolvedBundle,
 } from './config';
 export { ImportPaths } from './ImportPaths';
 export {
@@ -27,6 +27,6 @@ export {
   loadInclusionPredicate,
 } from './inclusion';
 export { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
-export { emitModule, type EmitInput } from './emit';
+export { emitBundle, type EmitInput } from './emit';
 export { globToRegExp } from './glob';
 export { TicError, TicConfigError, NamespaceNotFoundError } from './errors';

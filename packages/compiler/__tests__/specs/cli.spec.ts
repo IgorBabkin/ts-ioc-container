@@ -16,9 +16,9 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   beforeEach(() => {
     project = TempProject.create({
-      'tic.config.json': { modules: [{ output: 'src/di/container.generated.ts', namespaces: ['./src/services'] }] },
+      'tic.config.json': { bundles: [{ output: 'src/di/container.bundle.ts', namespaces: ['./src/services'] }] },
       'src/services/Logger.ts': decorated('Logger'),
-      'other/tic.config.json': { modules: [{ output: 'out.generated.ts', namespaces: ['../src/services'] }] },
+      'other/tic.config.json': { bundles: [{ output: 'out.bundle.ts', namespaces: ['../src/services'] }] },
     });
   });
 
@@ -28,15 +28,15 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
-    expect(io.out).toEqual(['wrote     src/di/container.generated.ts (1 registration)']);
-    expect(project.read('src/di/container.generated.ts')).toContain('Registration.fromClass(Logger)');
+    expect(io.out).toEqual(['wrote     src/di/container.bundle.ts (1 registration)']);
+    expect(project.read('src/di/container.bundle.ts')).toContain('Registration.fromClass(Logger)');
   });
 
   it('builds the config passed with --config, reporting paths relative to the working directory', () => {
     const io = new Io(project.root);
 
     expect(run(['build', '--config', 'other/tic.config.json'], io)).toBe(0);
-    expect(io.out).toEqual(['wrote     other/out.generated.ts (1 registration)']);
+    expect(io.out).toEqual(['wrote     other/out.bundle.ts (1 registration)']);
   });
 
   it('fails --check with a hint when an output is stale, and passes once it is current', () => {
@@ -50,11 +50,11 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('reports a config error on stderr', () => {
-    project.write('tic.config.json', { modules: [] });
+    project.write('tic.config.json', { bundles: [] });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(1);
-    expect(io.err).toEqual(['tic: modules: expected a non-empty array']);
+    expect(io.err).toEqual(['tic: bundles: expected a non-empty array']);
   });
 
   it('prints usage for --help and rejects an unknown command', () => {

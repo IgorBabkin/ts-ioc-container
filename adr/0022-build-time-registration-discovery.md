@@ -24,12 +24,12 @@ responsibility on `Container`, which is already the largest class in the library
 Discover registrations **at build time**, in a separate package,
 `@ts-ioc-container/compiler`, that ships the `tic` CLI.
 
-- `tic build` reads a JSON config (`tic.config.json`) listing modules; each
-  module names folders (relative paths or tsconfig aliases) and an output file.
+- `tic build` reads a JSON config (`tic.config.json`) listing bundles; each
+  bundle names folders (relative paths or tsconfig aliases) and an output file.
 - The compiler parses sources with the TypeScript compiler API (syntax only, no
-  type checker) and emits an ordinary TypeScript module: static imports,
-  `Registration.fromClass(...)` per class, and an `IContainerModule` applying
-  them.
+  type checker) and emits a **bundle**: an ordinary TypeScript file with static
+  imports, `Registration.fromClass(...)` per class, and a class implementing
+  `IContainerModule` that applies them (`useModule(new AppBundle())`).
 - The output's shape is declared by a protocol: a Handlebars template in
   `lib/protocols/`, precompiled at build time into `hbs/index.cjs` (the pattern
   of the `@ibabkin/openapi-to-*` generators). Code only prepares the data it
@@ -45,7 +45,7 @@ Discover registrations **at build time**, in a separate package,
 
 **Positive**
 
-- Generated modules are type-checked, bundled and tree-shaken like hand-written
+- Generated bundles are type-checked, bundled and tree-shaken like hand-written
   code, and work wherever the container works.
 - The core package stays dependency-free (ADR 0008) and its surface unchanged.
 - The output is reviewable in diffs; `tic build --check` keeps it honest in CI.

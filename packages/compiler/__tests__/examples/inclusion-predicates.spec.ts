@@ -13,12 +13,12 @@ describe('Examples: deciding which files take part', () => {
   /** A project with one class per file, all named after their file. */
   const projectWith = (...files: string[]) =>
     TempProject.create({
-      'tic.config.json': { modules: [{ output: 'src/di/app.generated.ts', namespaces: ['./src'] }] },
+      'tic.config.json': { bundles: [{ output: 'src/di/app.bundle.ts', namespaces: ['./src'] }] },
       ...Object.fromEntries(files.map((file) => [file, `export class ${file.replace(/^.*\/|\..*$/g, '')} {}\n`])),
     });
 
   const registered = () =>
-    [...project.read('src/di/app.generated.ts').matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
+    [...project.read('src/di/app.bundle.ts').matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
 
   const buildWith = (include: InclusionPredicate) => build({ config: project.path('tic.config.json'), include });
 

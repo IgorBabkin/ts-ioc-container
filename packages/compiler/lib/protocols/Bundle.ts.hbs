@@ -15,8 +15,8 @@ export const registrations: IRegistration[] = [
 export const registrations: IRegistration[] = [];
 {{/if}}
 
-export const {{{name}}}: IContainerModule = {
+export class {{{name}}} implements IContainerModule {
   applyTo(container: IContainer): void {
     for (const registration of registrations) container.addRegistration(registration);
-  },
-};
+  }
+}

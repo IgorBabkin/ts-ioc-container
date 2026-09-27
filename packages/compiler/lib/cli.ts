@@ -13,11 +13,11 @@ const USAGE = [
   'Usage: tic <command> [options]',
   '',
   'Commands:',
-  '  tic build [--config <path>] [--check]   generate the container modules described by tic.config.json',
+  '  tic build [--config <path>] [--check]   generate the container bundles described by tic.config.json',
   '',
   'Options:',
   '  -c, --config <path>   config file (default: tic.config.json)',
-  '  --check               write nothing; exit 1 when a generated module is out of date',
+  '  --check               write nothing; exit 1 when a generated bundle is out of date',
   '  -h, --help            show this help',
   '  -v, --version         show the version',
 ].join('\n');
@@ -75,7 +75,7 @@ export function run(
     }
     const stale = outputs.filter((o) => o.status === 'stale').length;
     if (stale > 0) {
-      io.stderr(`tic: ${stale} generated module${stale === 1 ? ' is' : 's are'} out of date — run \`tic build\``);
+      io.stderr(`tic: ${stale} generated bundle${stale === 1 ? ' is' : 's are'} out of date — run \`tic build\``);
       return 1;
     }
     return 0;

@@ -7,7 +7,7 @@
 - [AGENTS.md (core)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/ts-ioc-container/AGENTS.md): setup, recipes, pitfalls, removed APIs, error codes
 - [README (core)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/ts-ioc-container/README.md): full documentation with executable examples
 - [AGENTS.md (react)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/react/AGENTS.md): React bindings
-- [AGENTS.md (compiler)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/compiler/AGENTS.md): `tic build` — generates container modules from folders / tsconfig aliases
+- [AGENTS.md (compiler)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/compiler/AGENTS.md): `tic build` — generates container bundles (module classes) from folders / tsconfig aliases
 
 ## Optional
 

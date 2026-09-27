@@ -7,4 +7,4 @@ apply here unchanged.
 
 | Spec                                                | Acceptance tests                                                                                              | Related ADRs |
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------ |
-| [Folder registration](epics/folder-registration.md) | `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/generated-module.spec.ts`, `__tests__/specs/cli.spec.ts` | ADR 0022     |
+| [Folder registration](epics/folder-registration.md) | `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts` | ADR 0022     |

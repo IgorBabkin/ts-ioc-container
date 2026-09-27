@@ -3,7 +3,7 @@
 - **Status:** Proposed
 - **ADR:** [ADR 0022 - Registration discovery happens at build time, outside the container](../../../../adr/0022-build-time-registration-discovery.md)
 - **Public API:** `tic build`, `tic.config.json`, `build`, `loadConfig`, `InclusionPredicate`, `TagInclusionPredicate`, `byTags`, `fileTags`
-- **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/generated-module.spec.ts`, `__tests__/specs/cli.spec.ts`
+- **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts`
 
 ## Intent
 
@@ -19,7 +19,7 @@ way an import is: a path relative to the config file (`./src/services`) or a
 
 ### Story: Describe the container in a config file
 
-As an application developer, I can describe generated container modules in one
+As an application developer, I can describe generated bundles in one
 JSON file so that the build is reproducible and reviewable.
 
 Acceptance criteria:
@@ -28,16 +28,16 @@ Acceptance criteria:
   given with `--config <path>`.
 - Every relative path in the config resolves against the config file's
   directory, not the working directory.
-- The config lists `modules`; each module has an `output` file and at least one
-  namespace, and may name the exported module (`name`, default
-  `ContainerModule`).
+- The config lists `bundles`; each bundle has an `output` file (by convention
+  `*.bundle.ts`) and at least one namespace, and may name the generated class
+  (`name`, default `Bundle`).
 - An invalid config fails the build with a message naming the offending field;
   nothing is written.
 
 ### Story: Register the classes of a folder
 
 As an application developer, I can list a folder as a namespace so that its
-classes become registrations of the generated module.
+classes become registrations of the generated bundle.
 
 Acceptance criteria:
 
@@ -67,9 +67,9 @@ Acceptance criteria:
   (`src/services/Logger.ts`). A file takes part only when it matches no
   `exclude` glob **and** the predicate returns `true`.
 - Implicit, by convention: a `tic.include.{cjs,js,mjs,ts,cts,mts}` file next to
-  the config applies to every module; its default export (or `module.exports`)
+  the config applies to every bundle; its default export (or `module.exports`)
   is the predicate. Without one, no predicate applies.
-- Declarative: a module's `include` names a predicate file explicitly (relative
+- Declarative: a bundle's `include` names a predicate file explicitly (relative
   to the config file) and overrides the conventional one.
 - Programmatic: `build({ include })` takes the predicate itself and overrides
   both.
@@ -94,7 +94,7 @@ Acceptance criteria:
   `['production']`, `Report.production.eu.ts` → `['production', 'eu']`.
 - A `TagInclusionPredicate` is `(tags: string[], context: { filename }) =>
   boolean`; `byTags(predicate)` wraps it into an `InclusionPredicate`, so it is
-  used anywhere one is — `build({ include })`, a module's `include` file, or the
+  used anywhere one is — `build({ include })`, a bundle's `include` file, or the
   conventional `tic.include.*`.
 - `fileTags(filename)` is exported for predicates that need the tags elsewhere.
 - Usage examples run as tests (`__tests__/examples/`).
@@ -107,7 +107,7 @@ only what I mean it to.
 
 Acceptance criteria:
 
-- A module's `select` rule is an object; a class is selected when it is
+- A bundle's `select` rule is an object; a class is selected when it is
   exported, not abstract, and meets every criterion the rule sets. Omitting
   `select` (or a criterion) applies no restriction beyond being exported.
 - `export` restricts which exports count: `"any"` (default), `"named"` or
@@ -138,7 +138,7 @@ Acceptance criteria:
 - Under `moduleResolution` `node16` / `nodenext` imports carry a `.js`
   extension; `importExtension` in the config overrides the inferred one.
 
-### Story: Generate a plain container module
+### Story: Generate a bundle: a plain container module class
 
 As an application developer, I receive ordinary TypeScript that uses only the
 public `ts-ioc-container` API, so that the result type-checks, bundles and
@@ -146,20 +146,21 @@ tree-shakes like hand-written code.
 
 Acceptance criteria:
 
-- The output exports `registrations` (`Registration.fromClass(...)` per class)
-  and a module (`IContainerModule`) that adds them to a container.
+- The bundle exports `registrations` (`Registration.fromClass(...)` per class)
+  and a class implementing `IContainerModule` that adds them to a container:
+  `container.useModule(new AppBundle())`.
 - Two classes with the same name are both imported, the later one under a
   suffixed local name; the binding key still comes from the class itself.
-- Applying the generated module with `container.useModule(...)` makes every
+- Applying the bundle with `container.useModule(new AppBundle())` makes every
   discovered class resolvable, with its `@register(...)` config honoured.
-- The layout of the generated module is declared by a protocol — a Handlebars
-  template in `lib/protocols/` (`ContainerModule.ts.hbs`), precompiled at
+- The layout of the bundle is declared by a protocol — a Handlebars
+  template in `lib/protocols/` (`Bundle.ts.hbs`), precompiled at
   build time — so the shape of the output is read in one place, not assembled
   in code. Names and paths are written verbatim, never HTML-escaped.
 
-### Story: Keep generated modules in sync in CI
+### Story: Keep bundles in sync in CI
 
-As a maintainer, I can verify that generated modules are current without
+As a maintainer, I can verify that bundles are current without
 rewriting them so that CI catches a forgotten `tic build`.
 
 Acceptance criteria:
