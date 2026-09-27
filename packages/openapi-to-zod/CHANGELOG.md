@@ -1,3 +1,12 @@
+# 1.5.0 (2026-09-27)
+
+  ### ✨ Features
+
+    - **@ibabkin/openapi-to-zod:**
+    ship AGENTS.md guide for AI coding agents
+    (c98dfc63b2a451223be6dafc3fda9355b3d70c04)
+
+
 # 1.4.4 (2026-09-26)
 
   ### 🐞 Bug Fixes
@@ -59,6 +68,7 @@
     - **@ibabkin/openapi-to-zod:**
     publish under the existing package name
     (8d522ae590718b67abc91308ece3976364013638)
+
 
 
 

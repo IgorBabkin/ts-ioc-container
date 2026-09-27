@@ -1,3 +1,29 @@
+# 3.2.0 (2026-09-27)
+
+  ### ✨ Features
+
+    - **@ibabkin/openapi-express-server:**
+    ship AGENTS.md guide for AI coding agents
+    (0a676839f1cd1eea3c1c230f9fdaa489e6f89fcf)
+
+  ### 🐞 Bug Fixes
+
+    - **@ibabkin/openapi-express-server:**
+    upgrade ts-ioc-container to 72.2.0
+    (95f413cb3543cc228f0c4b7dafdc010e64f1c82f)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    @ibabkin/openapi-to-server
+    to
+    4.1.0
+    - 📦 update
+    @ibabkin/openapi-to-zod
+    to
+    1.5.0
+
+
 # 3.1.0 (2026-09-26)
 
   ### 📦 Dependencies
@@ -163,6 +189,7 @@
     @ibabkin/openapi-to-zod
     to
     1.4.0
+
 
 
 

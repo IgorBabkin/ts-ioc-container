@@ -1,3 +1,12 @@
+# 4.1.0 (2026-09-27)
+
+  ### ✨ Features
+
+    - **@ibabkin/openapi-to-server:**
+    ship AGENTS.md guide for AI coding agents
+    (4c9cdcad6dc697c93db6e236bc5441a9ee8bc01b)
+
+
 # 4.0.0 (2026-09-19)
 
   ### 💥 BREAKING CHANGES
@@ -80,6 +89,7 @@
     - **@ibabkin/openapi-to-server:**
     publish under the existing package name
     (8e6973ced01f7d64dfae65da2e204e24d674c9a8)
+
 
 
 
