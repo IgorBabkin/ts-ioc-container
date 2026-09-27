@@ -190,11 +190,11 @@ describe('Folder registration', () => {
     });
 
     it('requires the class name to match a glob', () => {
-      expect(selected({ name: '*Service' })).toEqual(['UserService', 'AuthService', 'MainService']);
+      expect(selected({ nameGlob: '*Service' })).toEqual(['UserService', 'AuthService', 'MainService']);
     });
 
     it('combines criteria: a class must meet every one', () => {
-      expect(selected({ export: 'named', decorators: ['register'], name: '*Service' })).toEqual(['AuthService']);
+      expect(selected({ export: 'named', decorators: ['register'], nameGlob: '*Service' })).toEqual(['AuthService']);
     });
 
     it('recognises decorators by name through renamed imports and member access', () => {
@@ -214,7 +214,7 @@ describe('Folder registration', () => {
 
     it('matches the name of an anonymous default export by its file name', () => {
       project = TempProject.create({
-        'tic.config.json': module(['./src'], { select: { name: '*Service' } }),
+        'tic.config.json': module(['./src'], { select: { nameGlob: '*Service' } }),
         'src/user-service.ts': 'export default class {}\n',
       });
 
@@ -227,7 +227,7 @@ describe('Folder registration', () => {
       ['decorated', 'modules[0].select: expected an object'],
       [{ export: 'all' }, 'modules[0].select.export: expected "any", "named" or "default"'],
       [{ decorators: [] }, 'modules[0].select.decorators: expected a non-empty array of strings'],
-      [{ name: '' }, 'modules[0].select.name: expected a non-empty string'],
+      [{ nameGlob: '' }, 'modules[0].select.nameGlob: expected a non-empty string'],
       [{ exported: true }, 'modules[0].select.exported: unknown field'],
     ])('rejects the rule %j naming the field', (select, message) => {
       project = TempProject.create({ 'tic.config.json': module(['./src'], { select }) });

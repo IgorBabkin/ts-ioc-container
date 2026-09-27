@@ -95,7 +95,7 @@
                 },
                 "description": "The class must carry one of these decorators, recognised by name (e.g. \"register\", or a composed decorator)."
               },
-              "name": {
+              "nameGlob": {
                 "type": "string",
                 "minLength": 1,
                 "description": "Glob the class name must match, e.g. \"*Service\". An anonymous default export is named after its file."

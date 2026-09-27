@@ -10,7 +10,7 @@ changed by it.
 - A namespace is a folder: relative to the config file, or a tsconfig `paths`
   alias. Generated imports use the most specific alias, else a relative path.
 - Default selection is every exported, non-abstract class. A module's
-  `select: { export, decorators, name }` narrows it; a class must meet every
+  `select: { export, decorators, nameGlob }` narrows it; a class must meet every
   criterion set. Decorators match by name, so composed ones must be listed.
 - Never edit a `*.generated.ts` by hand — change the classes or the config and
   rerun `tic build`.
