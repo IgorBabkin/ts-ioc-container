@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0009 - Token taxonomy](../../docs/adr/0009-token-taxonomy.md)
-- **Public API:** `InjectionToken`, `SingleToken`, `ClassToken`, `FunctionToken`, `ConstantToken`, `SingleAliasToken`, `GroupAliasToken`, `GroupInstanceToken`, `MultiVariantFeatureToken`, `ToggleFeatureToken`, `toToken`, `toSingleAlias`, `toGroupAlias`, `select`
+- **Public API:** `InjectionToken`, `SingleToken`, `ClassToken`, `FunctionToken`, `ConstantToken`, `SingleAliasToken`, `GroupAliasToken`, `GroupInstanceToken`, `BindableToken`, `MultiVariantFeatureToken`, `ToggleFeatureToken`, `toToken`, `toSingleAlias`, `toGroupAlias`, `select`
 - **Executable spec:** `__tests__/specs/token-based-injection.spec.ts`
 
 ## Intent

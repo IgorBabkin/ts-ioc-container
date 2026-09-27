@@ -31,28 +31,36 @@ requests, variants postponed) was considered and rejected for this library:
 
 ## Decision
 
-**`MultiVariantFeatureToken<T, V>(flag, { fallback })` is a new token shape**
-(ADR 0009) and the general case. The fallback is **part of the token**: the
-second constructor argument is a context whose `fallback` is a required
-`Injectable` (class, key, token or `InjectFn`), so a token without a fallback
-does not compile. `token.variant(name)` returns a `SingleToken` on a derived key
-(`flag:name`); implementations register under it with
-`@register(token.variant(name))`. `resolve` asks the flag client which variant
-it serves (`getVariant`) and resolves that variant's implementation when one is
-registered, the fallback otherwise, with the same scope and args. A throwing
-flag client serves the fallback. `V` narrows the accepted variant names.
+**`MultiVariantFeatureToken<T, V>(flag)` is a new token shape** (ADR 0009) and
+the general case. **The implementations decide where they belong**, not the
+feature: `BindableToken`, the new base of every token a registration can be
+bound to (`SingleToken`, `SingleAliasToken`, `GroupAliasToken`), declares a
+membership with
 
-The flag name is the token's only identifier: nothing is registered under it,
-so it needs no separate dependency key. A fallback given as a key or token
-resolves through its own registration and keeps its provider pipes.
+- `variantOf(feature, name)` - the implementation of the variant `name`
+  (`name` is checked against `V`);
+- `primaryVariantOf(feature)` - the implementation while the flag is on and no
+  named variant implementation matches;
+- `fallbackOf(feature)` - the fallback.
 
-**`ToggleFeatureToken<T>(flag, { fallback })` extends it as the on/off case**: its only variant is
-`enabled` (`token.enabled()` is `token.variant('enabled')`), and it evaluates
-with `isEnabled` instead of `getVariant`. How the served variant is determined
-is the one protected method a subclass overrides (`evaluate(flags, context)`);
-the fallback, the context, the args cascade and laziness are shared. Modifiers
-construct the receiver's own class with the same fallback, so a specialized
-toggle is still a toggle.
+`bindTo` binds the token's own key or alias and adds one alias per membership
+(`feature:<flag>:variant:<name>`, `:primary`, `:fallback`), so membership
+follows scope rules like any alias. `resolve` evaluates the flag and resolves,
+through the alias, the served variant's implementation, else (while the flag
+is on) the primary variant, else the fallback; a throwing client serves the
+fallback. `IContainer.hasAlias` answers "is there one?" without throwing.
+
+**A flag always has a fallback.** Resolving a feature without a fallback in the
+resolving scope or a parent throws `DependencyNotFoundError` naming the flag,
+whatever the flag serves - a misconfiguration surfaces on the first
+resolution, not on the day the flag is switched off. (An earlier iteration made
+the fallback a required constructor argument; it moved to `fallbackOf` so that
+every role is declared the same way, by the implementation.)
+
+**`ToggleFeatureToken<T>(flag)` extends it as the on/off case**: no named
+variants (`V = never`), only a primary one, evaluated with `isEnabled` instead
+of `getVariant`. How a flag is read is the one protected method a subclass
+overrides (`evaluate(flags, context)`, returning `{ enabled, variant? }`).
 
 **The flag client and context are ordinary dependencies.** `IFeatureFlagsToken`
 and `IFeatureContextToken` are resolved from the resolving scope on every
@@ -66,20 +74,25 @@ satisfies it structurally and the library keeps zero runtime dependencies
 SDK) are adapted by the application.
 
 The tokens keep the token contract: runtime args cascade (`forwardArgs`),
-`args` / `argsFn` / `lazy` / `addTags` return new tokens (ADR 0005), and `lazy()`
-defers the flag evaluation itself to first member access.
+`args` / `argsFn` / `lazy` / `addTags` return new tokens of the same kind with
+the same memberships (ADR 0005), and `lazy()` defers the flag evaluation itself
+to first member access. `BindableToken` also removes the state and modifier
+code the three bindable tokens used to duplicate.
 
 ## Consequences
 
-- A/B/n experiments and rollouts are declared the same way; adding a variant is
-  registering one more class.
-- The fallback cannot be forgotten: it is a required constructor argument.
-- Rollout clean-up is deleting a class: after 100% replace the feature token
-  with a plain token for the survivor; a kill switch is turning the flag off.
-- A variant without an implementation is not an error - the fallback is served.
-  That is the intent (a variant may be added remotely before the code ships),
-  but a mistyped variant name on the flag service also silently falls back.
-- Injecting a concrete implementation class bypasses the flag. Nothing
-  prevents it; flag-aware consumers inject the token.
+- An implementation keeps its own token: it can be injected directly (tests,
+  admin tooling) and can serve several features.
+- A/B/n experiments, rollouts and kill switches are declared the same way;
+  adding a variant is registering one more class.
+- Rollout clean-up is deleting a class: after 100% drop the fallback and the
+  feature token, and inject the survivor's own token.
+- A variant without an implementation is not an error - the primary variant or
+  the fallback is served. That is the intent (a variant may be added remotely
+  before the code ships), but a mistyped variant name on the flag service also
+  silently falls back.
+- Two implementations claiming the same role are not detected: the first
+  registered wins.
+- Injecting an implementation's own token bypasses the flag - by design.
 - A singleton consumer keeps the implementation it received; per-user flags
   belong in request-scoped consumers or behind `token.lazy()`.

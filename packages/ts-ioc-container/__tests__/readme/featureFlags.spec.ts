@@ -11,6 +11,7 @@ import {
   MultiVariantFeatureToken,
   register,
   Registration as R,
+  SingleToken,
   ToggleFeatureToken,
 } from '../../lib';
 
@@ -18,13 +19,16 @@ import {
  * Checkout Domain - Feature Flags
  *
  * A flag chooses which implementation is injected; the consumer depends on one
- * type and never sees the flag. Every flag has a fallback, given when the token
- * is created. It is served whenever the flag serves nothing, serves a variant
- * with no implementation, or the flag client fails.
+ * type and never sees the flag. The implementations decide where they belong:
+ * each one's own token declares it
  *
- * `MultiVariantFeatureToken` binds one implementation per variant with
- * `token.variant(name)`; `ToggleFeatureToken` is its on/off case, with the
- * single variant `token.enabled()`.
+ * - `.variantOf(feature, name)` - used while the flag serves the variant `name`;
+ * - `.primaryVariantOf(feature)` - used while the flag is on and no named
+ *   variant implementation matches (the "on" side of a toggle);
+ * - `.fallbackOf(feature)` - used otherwise. Every flag has one.
+ *
+ * `ToggleFeatureToken` is the on/off case of `MultiVariantFeatureToken`: no
+ * named variants, only a primary one.
  *
  * The flag client is any object with `isEnabled(name, context)` and
  * `getVariant(name, context)` - an Unleash client works as is:
@@ -36,16 +40,17 @@ interface IPaymentGateway {
   pay(amount: number): string;
 }
 
+const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout');
+
+// Each implementation's own token declares where it belongs
+@register(new SingleToken<IPaymentGateway>('LegacyGateway').fallbackOf(PaymentGatewayToken))
 class LegacyGateway implements IPaymentGateway {
   pay(amount: number) {
     return `legacy charged ${amount}`;
   }
 }
 
-// The fallback is part of the token - it cannot be created without one
-const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout', { fallback: LegacyGateway });
-
-@register(PaymentGatewayToken.enabled())
+@register(new SingleToken<IPaymentGateway>('StripeGateway').primaryVariantOf(PaymentGatewayToken))
 class StripeGateway implements IPaymentGateway {
   pay(amount: number) {
     return `stripe charged ${amount}`;
@@ -57,24 +62,23 @@ interface ICheckoutButton {
   render(): string;
 }
 
+const CheckoutButtonToken = new MultiVariantFeatureToken<ICheckoutButton, 'blue' | 'green'>('checkout-button');
+
+@register(new SingleToken<ICheckoutButton>('GreyButton').fallbackOf(CheckoutButtonToken))
 class GreyButton implements ICheckoutButton {
   render() {
     return 'grey button';
   }
 }
 
-const CheckoutButtonToken = new MultiVariantFeatureToken<ICheckoutButton, 'blue' | 'green'>('checkout-button', {
-  fallback: GreyButton,
-});
-
-@register(CheckoutButtonToken.variant('blue'))
+@register(new SingleToken<ICheckoutButton>('BlueButton').variantOf(CheckoutButtonToken, 'blue'))
 class BlueButton implements ICheckoutButton {
   render() {
     return 'blue button';
   }
 }
 
-@register(CheckoutButtonToken.variant('green'))
+@register(new SingleToken<ICheckoutButton>('GreenButton').variantOf(CheckoutButtonToken, 'green'))
 class GreenButton implements ICheckoutButton {
   render() {
     return 'green button';
@@ -109,6 +113,8 @@ class InMemoryFlags implements IFeatureFlags {
 describe('Feature flags', () => {
   const app = new Container({ tags: ['application'] })
     .addRegistration(R.fromValue(new InMemoryFlags()).bindTo(IFeatureFlagsToken))
+    .addRegistration(R.fromClass(LegacyGateway))
+    .addRegistration(R.fromClass(GreyButton))
     .addRegistration(R.fromClass(StripeGateway))
     .addRegistration(R.fromClass(BlueButton))
     .addRegistration(R.fromClass(GreenButton));

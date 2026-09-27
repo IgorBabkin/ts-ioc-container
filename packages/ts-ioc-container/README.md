@@ -2891,23 +2891,21 @@ describe('composing decorators', () => {
 ### Feature flags
 
 Feature tokens let a feature flag choose which implementation is injected, so
-consumers depend on one type and never see the flag. **Every flag has a
-fallback**, and it is part of the token: the second constructor argument is
-`{ fallback }`, so a token without one does not compile.
+consumers depend on one type and never see the flag. The implementations
+decide where they belong - each one's own token declares its role:
 
-`MultiVariantFeatureToken<T, V>` is the general case - one implementation per
-variant the flag serves. `ToggleFeatureToken<T>` extends it as the on/off case:
-a flag with the single variant `enabled`.
+- `token.variantOf(Feature, 'blue')` - used while the flag serves the variant `blue` (`getVariant`)
+- `token.primaryVariantOf(Feature)` - used while the flag is on and no named variant implementation matches
+- `token.fallbackOf(Feature)` - used otherwise: the flag is off, serves nothing implemented, or its client throws
 
-- `new ToggleFeatureToken<T>('new-checkout', { fallback: LegacyGateway })` - the
-  fallback is any `Injectable`: a class, a key, a token or an `InjectFn`
-- `@register(Token.variant('blue'))` - served while the flag serves variant `blue` (`getVariant`)
-- `@register(Toggle.enabled())` - served while the toggle is on (`isEnabled`)
+**Every flag has a fallback**: resolving a feature without one registered is a
+`DependencyNotFoundError`, whatever the flag serves. `MultiVariantFeatureToken<T, V>`
+is the general case; `ToggleFeatureToken<T>` is its on/off case - no named
+variants, only a primary one (`isEnabled`). Each implementation stays
+injectable through its own token.
 
-The fallback is served whenever the flag serves nothing, serves a variant with
-no implementation, or the flag client throws. The client comes from
-`IFeatureFlagsToken` and the context it evaluates for from
-`IFeatureContextToken`, both resolved from the resolving scope on every
+The flag client comes from `IFeatureFlagsToken` and the context it evaluates
+for from `IFeatureContextToken`, both resolved from the resolving scope on every
 resolution - register the context in your `request` scope. A missing client or
 context is a `DependencyNotFoundError`, never a silent fallback.
 
@@ -2915,7 +2913,7 @@ context is a `DependencyNotFoundError`, never a silent fallback.
 `getVariant(name, context)`), so an Unleash client is registered as is:
 `R.fromValue(unleash).bindTo(IFeatureFlagsToken)`. Resolution is synchronous;
 wrap an asynchronous client (e.g. the OpenFeature server SDK) in an adapter
-that evaluates ahead of time. `Token.lazy()` defers the evaluation to first use.
+that evaluates ahead of time. `Feature.lazy()` defers the evaluation to first use.
 
 ```typescript
 import 'reflect-metadata';
@@ -2931,6 +2929,7 @@ import {
   MultiVariantFeatureToken,
   register,
   Registration as R,
+  SingleToken,
   ToggleFeatureToken,
 } from 'ts-ioc-container';
 
@@ -2938,13 +2937,16 @@ import {
  * Checkout Domain - Feature Flags
  *
  * A flag chooses which implementation is injected; the consumer depends on one
- * type and never sees the flag. Every flag has a fallback, given when the token
- * is created. It is served whenever the flag serves nothing, serves a variant
- * with no implementation, or the flag client fails.
+ * type and never sees the flag. The implementations decide where they belong:
+ * each one's own token declares it
  *
- * `MultiVariantFeatureToken` binds one implementation per variant with
- * `token.variant(name)`; `ToggleFeatureToken` is its on/off case, with the
- * single variant `token.enabled()`.
+ * - `.variantOf(feature, name)` - used while the flag serves the variant `name`;
+ * - `.primaryVariantOf(feature)` - used while the flag is on and no named
+ *   variant implementation matches (the "on" side of a toggle);
+ * - `.fallbackOf(feature)` - used otherwise. Every flag has one.
+ *
+ * `ToggleFeatureToken` is the on/off case of `MultiVariantFeatureToken`: no
+ * named variants, only a primary one.
  *
  * The flag client is any object with `isEnabled(name, context)` and
  * `getVariant(name, context)` - an Unleash client works as is:
@@ -2956,16 +2958,17 @@ interface IPaymentGateway {
   pay(amount: number): string;
 }
 
+const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout');
+
+// Each implementation's own token declares where it belongs
+@register(new SingleToken<IPaymentGateway>('LegacyGateway').fallbackOf(PaymentGatewayToken))
 class LegacyGateway implements IPaymentGateway {
   pay(amount: number) {
     return `legacy charged ${amount}`;
   }
 }
 
-// The fallback is part of the token - it cannot be created without one
-const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout', { fallback: LegacyGateway });
-
-@register(PaymentGatewayToken.enabled())
+@register(new SingleToken<IPaymentGateway>('StripeGateway').primaryVariantOf(PaymentGatewayToken))
 class StripeGateway implements IPaymentGateway {
   pay(amount: number) {
     return `stripe charged ${amount}`;
@@ -2977,24 +2980,23 @@ interface ICheckoutButton {
   render(): string;
 }
 
+const CheckoutButtonToken = new MultiVariantFeatureToken<ICheckoutButton, 'blue' | 'green'>('checkout-button');
+
+@register(new SingleToken<ICheckoutButton>('GreyButton').fallbackOf(CheckoutButtonToken))
 class GreyButton implements ICheckoutButton {
   render() {
     return 'grey button';
   }
 }
 
-const CheckoutButtonToken = new MultiVariantFeatureToken<ICheckoutButton, 'blue' | 'green'>('checkout-button', {
-  fallback: GreyButton,
-});
-
-@register(CheckoutButtonToken.variant('blue'))
+@register(new SingleToken<ICheckoutButton>('BlueButton').variantOf(CheckoutButtonToken, 'blue'))
 class BlueButton implements ICheckoutButton {
   render() {
     return 'blue button';
   }
 }
 
-@register(CheckoutButtonToken.variant('green'))
+@register(new SingleToken<ICheckoutButton>('GreenButton').variantOf(CheckoutButtonToken, 'green'))
 class GreenButton implements ICheckoutButton {
   render() {
     return 'green button';
@@ -3029,6 +3031,8 @@ class InMemoryFlags implements IFeatureFlags {
 describe('Feature flags', () => {
   const app = new Container({ tags: ['application'] })
     .addRegistration(R.fromValue(new InMemoryFlags()).bindTo(IFeatureFlagsToken))
+    .addRegistration(R.fromClass(LegacyGateway))
+    .addRegistration(R.fromClass(GreyButton))
     .addRegistration(R.fromClass(StripeGateway))
     .addRegistration(R.fromClass(BlueButton))
     .addRegistration(R.fromClass(GreenButton));

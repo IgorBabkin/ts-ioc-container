@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0021 - Feature flags switch implementations, with a mandatory fallback](../../../../adr/0021-feature-flags-with-mandatory-fallback.md)
-- **Public API:** `MultiVariantFeatureToken`, `MultiVariantFeatureTokenContext`, `ToggleFeatureToken`, `ToggleFeatureTokenContext`, `FeatureTokenOptions`, `IFeatureFlags`, `IFeatureFlagsToken`, `FeatureContext`, `IFeatureContextToken`, `FeatureVariant`
+- **Public API:** `MultiVariantFeatureToken`, `ToggleFeatureToken`, `FeatureEvaluation`, `FeatureTokenOptions`, `BindableToken.variantOf` / `primaryVariantOf` / `fallbackOf`, `IContainer.hasAlias`, `IFeatureFlags`, `IFeatureFlagsToken`, `FeatureContext`, `IFeatureContextToken`, `FeatureVariant`
 - **Executable spec:** `__tests__/specs/feature-flags.spec.ts`
 
 ## Intent
@@ -14,51 +14,61 @@ implementation.
 
 ## Stories
 
+### Story: Implementations declare where they belong
+
+As a library user, I declare on each implementation's own token which feature
+it serves and in which role, so that the feature token needs to know nothing
+about its implementations and each implementation keeps its own identity.
+
+Acceptance criteria:
+
+- `token.variantOf(feature, name)` makes the dependency bound to `token` the
+  implementation of the variant `name`; `name` must be one of the feature's
+  variant names (checked by the type checker).
+- `token.primaryVariantOf(feature)` makes it the primary variant: used while
+  the flag is on and no named variant implementation matches.
+- `token.fallbackOf(feature)` makes it the fallback.
+- Every bindable token (`SingleToken`, `SingleAliasToken`, `GroupAliasToken`)
+  supports them; the declarations are kept by `args` / `argsFn` / `lazy` /
+  `addTags` and never change the original token.
+- An implementation stays resolvable through its own token, keeps its provider
+  pipes (e.g. `singleton()`), and can serve several features.
+
 ### Story: A multi-variant flag picks one implementation per served variant
 
-As a library user, I create the feature token with its fallback and register
-one implementation per variant with `@register(Token.variant(name))`, so that
-A/B/n experiments and rollouts are declared the same way and the fallback is
-the baseline the variants overlay.
+As a library user, I can run A/B/n experiments and rollouts the same way.
 
 Acceptance criteria:
 
-- The implementation registered with `@register(Token.variant(name))` is
-  injected while the flag client's `getVariant` serves an enabled variant `name`.
-- The fallback is injected when no variant is served, when the served variant
-  has no registered implementation, or when the flag client throws.
-- The token's variant names can be narrowed by a type parameter.
+- While the flag client's `getVariant` serves an enabled variant with a
+  registered implementation, that implementation is injected.
+- Otherwise, while the flag is on, the primary variant is injected when one is
+  registered.
+- Otherwise - the flag is off, nothing served is implemented, or the flag
+  client throws - the fallback is injected.
 
-### Story: The fallback is part of the token
+### Story: A flag always has a fallback
 
-As a library user, I cannot create a feature token without a fallback, so that
-"a flag always has a fallback" is enforced by the type checker rather than by
-convention.
-
-Acceptance criteria:
-
-- The second constructor argument is a context `{ fallback: Injectable }`,
-  and `fallback` is required.
-- The fallback may be a class, a key, a token or an `InjectFn`; a key or token
-  resolves through its own registration, keeping its provider pipes (e.g.
-  `singleton()`).
-- The fallback is resolved with the same scope and args as the selected
-  variant would be.
-
-### Story: A toggle is the single-variant case
-
-As a library user, I can declare an on/off flag without naming variants, and
-it behaves exactly like a multi-variant flag with one variant.
+As a library user, I cannot resolve a feature without a fallback, so a flag
+never leaves a consumer without an implementation by accident.
 
 Acceptance criteria:
 
-- `ToggleFeatureToken(flag, { fallback })` is a `MultiVariantFeatureToken`
-  whose only variant is `enabled`; `Token.enabled()` is `Token.variant('enabled')`, and other variant
-  names are rejected by the type checker.
-- It evaluates with the client's `isEnabled`; the enabled implementation is
-  injected while the flag is on, the fallback otherwise.
-- The fallback is injected when the flag is on but no enabled implementation
-  is registered, or when the flag client throws.
+- Resolving a feature token with no fallback registered in the resolving scope
+  or a parent throws `DependencyNotFoundError` naming the flag, whatever the
+  flag serves.
+
+### Story: A toggle is the case with only a primary variant
+
+As a library user, I can declare an on/off flag without naming variants.
+
+Acceptance criteria:
+
+- `ToggleFeatureToken` is a `MultiVariantFeatureToken` with no named variants;
+  `variantOf(toggle, ...)` is rejected by the type checker.
+- It evaluates with the client's `isEnabled`: the primary variant is injected
+  while the flag is on, the fallback otherwise, when the primary variant is not
+  registered, or when the client throws.
 
 ### Story: Flags are evaluated per resolution context
 
@@ -73,11 +83,9 @@ Acceptance criteria:
 - Two request scopes with different contexts can receive different
   implementations from the same feature token.
 - A missing flag client or context is a configuration error
-  (`DependencyNotFoundError`), not a silent fallback - so a flag is never
-  evaluated for the wrong (e.g. anonymous) context by accident.
+  (`DependencyNotFoundError`), not a silent fallback.
 - The flag is evaluated on every resolution; caching is the consumer's choice.
-- An Unleash client instance satisfies `IFeatureFlags` structurally; no
-  adapter is needed.
+- An Unleash client instance satisfies `IFeatureFlags` structurally.
 
 ### Story: Tokens stay tokens
 
@@ -89,17 +97,18 @@ Acceptance criteria:
   after them.
 - `lazy()` defers both the flag evaluation and the construction to first
   member access.
-- Modifiers return new tokens of the same kind, with the same fallback, and
-  leave the original unchanged.
+- Modifiers return new tokens of the same kind and leave the original
+  unchanged.
 
 ## Notes
 
-- Non-goal: evaluating asynchronous clients (OpenFeature server SDK). Resolution
-  is synchronous; such a client is wrapped in an adapter which evaluates ahead
-  of time (e.g. when the request scope is created) and answers synchronously.
-- Non-goal: preventing a consumer from injecting a concrete implementation
-  class directly; that bypasses the flag on purpose.
+- Membership is stored as aliases on the registration
+  (`feature:<flag>:variant:<name>`, `feature:<flag>:primary`,
+  `feature:<flag>:fallback`), so it follows scope rules like any alias.
+  `IContainer.hasAlias` checks one without throwing.
+- Two implementations claiming the same role: the first registered wins, as
+  with any single-alias lookup.
+- Non-goal: evaluating asynchronous clients (OpenFeature server SDK); wrap such
+  a client in an adapter which evaluates ahead of time.
 - A new flag kind subclasses `MultiVariantFeatureToken` and overrides only
-  `evaluate(flags, context)` - how the served variant is determined.
-- A singleton consumer holding a flagged dependency keeps the implementation it
-  received; inject the feature token lazily or resolve it per request.
+  `evaluate(flags, context)`.
