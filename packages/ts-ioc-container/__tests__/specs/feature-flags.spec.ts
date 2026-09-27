@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { It, Mock, Times } from 'moq.ts';
 import {
   arg,
-  bindTo,
   by,
   Container,
   DependencyNotFoundError,
@@ -16,6 +15,8 @@ import {
   MultiVariantFeatureToken,
   register,
   Registration as R,
+  singleton,
+  SingleToken,
   ToggleFeatureToken,
 } from '../../lib';
 
@@ -42,50 +43,43 @@ interface IButton {
   readonly color: string;
 }
 
-const CheckoutButtonToken = new MultiVariantFeatureToken<IButton, 'blue' | 'green'>(
-  'ICheckoutButton',
-  'checkout-button',
-);
-
-@register(bindTo(CheckoutButtonToken))
 class GreyButton implements IButton {
   readonly color = 'grey';
 }
 
-@register(bindTo(CheckoutButtonToken.variant('blue')))
+const CheckoutButtonToken = new MultiVariantFeatureToken<IButton, 'blue' | 'green'>('checkout-button', {
+  fallback: GreyButton,
+});
+
+@register(CheckoutButtonToken.variant('blue'))
 class BlueButton implements IButton {
   readonly color = 'blue';
 }
 
-@register(bindTo(CheckoutButtonToken.variant('green')))
+@register(CheckoutButtonToken.variant('green'))
 class GreenButton implements IButton {
   readonly color = 'green';
 }
 
 const withButtons = (c: IContainer) =>
-  c
-    .addRegistration(R.fromClass(GreyButton))
-    .addRegistration(R.fromClass(BlueButton))
-    .addRegistration(R.fromClass(GreenButton));
+  c.addRegistration(R.fromClass(BlueButton)).addRegistration(R.fromClass(GreenButton));
 
 interface IPaymentGateway {
   readonly name: string;
 }
 
-const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('IPaymentGateway', 'new-checkout');
-
-@register(bindTo(PaymentGatewayToken))
 class LegacyGateway implements IPaymentGateway {
   readonly name = 'legacy';
 }
 
-@register(bindTo(PaymentGatewayToken.enabled()))
+const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout', { fallback: LegacyGateway });
+
+@register(PaymentGatewayToken.enabled())
 class StripeGateway implements IPaymentGateway {
   readonly name = 'stripe';
 }
 
-const withGateways = (c: IContainer) =>
-  c.addRegistration(R.fromClass(LegacyGateway)).addRegistration(R.fromClass(StripeGateway));
+const withGateways = (c: IContainer) => c.addRegistration(R.fromClass(StripeGateway));
 
 describe('Spec: feature flags', () => {
   describe('a multi-variant flag picks one implementation per served variant', () => {
@@ -117,12 +111,6 @@ describe('Spec: feature flags', () => {
       expect(CheckoutButtonToken.resolve(app).color).toBe('grey');
     });
 
-    it('resolves the fallback through the plain key', () => {
-      const app = withButtons(createApp(serving(() => ({ name: 'blue', enabled: true }))));
-
-      expect(app.resolve<IButton>('ICheckoutButton').color).toBe('grey');
-    });
-
     it('keeps the consumer unaware of the flag', () => {
       class CheckoutPage {
         constructor(@inject(by(CheckoutButtonToken)) readonly button: IButton) {}
@@ -130,6 +118,32 @@ describe('Spec: feature flags', () => {
       const app = withButtons(createApp(serving(() => ({ name: 'blue', enabled: true }))));
 
       expect(app.resolve(CheckoutPage).button.color).toBe('blue');
+    });
+  });
+
+  describe('the fallback is part of the token', () => {
+    it('accepts a registered token as the fallback, keeping its provider pipes', () => {
+      const SharedGatewayToken = new SingleToken<IPaymentGateway>('SharedGateway');
+
+      @register(SharedGatewayToken, singleton())
+      class SharedGateway implements IPaymentGateway {
+        readonly name = 'shared';
+      }
+
+      const Token = new ToggleFeatureToken<IPaymentGateway>('new-checkout', { fallback: SharedGatewayToken });
+      const app = createApp(toggledBy(() => false)).addRegistration(R.fromClass(SharedGateway));
+
+      expect(Token.resolve(app).name).toBe('shared');
+      expect(Token.resolve(app)).toBe(Token.resolve(app));
+    });
+
+    it('accepts a key or a function as the fallback', () => {
+      const ByKey = new ToggleFeatureToken<string>('limits', { fallback: 'DefaultLimit' });
+      const ByFn = new ToggleFeatureToken<string>('limits', { fallback: () => 'computed' });
+      const app = createApp(toggledBy(() => false)).addRegistration(R.fromValue('from key').bindTo('DefaultLimit'));
+
+      expect(ByKey.resolve(app)).toBe('from key');
+      expect(ByFn.resolve(app)).toBe('computed');
     });
   });
 
@@ -152,7 +166,7 @@ describe('Spec: feature flags', () => {
     });
 
     it('injects the fallback when the flag is on but no enabled implementation is registered', () => {
-      const app = createApp(toggledBy(() => true)).addRegistration(R.fromClass(LegacyGateway));
+      const app = createApp(toggledBy(() => true));
 
       expect(PaymentGatewayToken.resolve(app).name).toBe('legacy');
     });
@@ -169,14 +183,14 @@ describe('Spec: feature flags', () => {
   });
 
   describe('flags are evaluated per resolution context', () => {
-    const CurrentUserToken = 'CurrentUserId';
+    const CurrentUserToken = new SingleToken<string>('CurrentUserId');
 
     const createAppWithRequestContext = (flags: IFeatureFlags) =>
       withGateways(
         new Container({ tags: ['application'] })
           .addRegistration(R.fromValue(flags).bindTo(IFeatureFlagsToken))
           .addRegistration(
-            R.fromFn(({ scope }) => ({ userId: scope.resolve<string>(CurrentUserToken) }))
+            R.fromFn(({ scope }) => ({ userId: CurrentUserToken.resolve(scope) }))
               .bindTo(IFeatureContextToken)
               .when((s) => s.hasTag('request')),
           ),
@@ -202,9 +216,7 @@ describe('Spec: feature flags', () => {
     });
 
     it('rejects resolving without a flag client', () => {
-      const app = new Container()
-        .addRegistration(R.fromValue({}).bindTo(IFeatureContextToken))
-        .addRegistration(R.fromClass(LegacyGateway));
+      const app = new Container().addRegistration(R.fromValue({}).bindTo(IFeatureContextToken));
 
       expect(() => PaymentGatewayToken.resolve(app)).toThrow(DependencyNotFoundError);
     });
@@ -247,9 +259,6 @@ describe('Spec: feature flags', () => {
   });
 
   describe('tokens stay tokens', () => {
-    const GreeterToken = new ToggleFeatureToken<{ greet(): string }>('IGreeter', 'friendly-greeting');
-
-    @register(bindTo(GreeterToken))
     class PlainGreeter {
       constructor(@inject(arg(0)) private readonly name: string) {}
       greet() {
@@ -257,7 +266,9 @@ describe('Spec: feature flags', () => {
       }
     }
 
-    @register(bindTo(GreeterToken.enabled()))
+    const GreeterToken = new ToggleFeatureToken<{ greet(): string }>('friendly-greeting', { fallback: PlainGreeter });
+
+    @register(GreeterToken.enabled())
     class FriendlyGreeter {
       constructor(@inject(arg(0)) private readonly name: string) {}
       greet() {
@@ -265,20 +276,22 @@ describe('Spec: feature flags', () => {
       }
     }
 
-    const createGreeters = (flags: IFeatureFlags) =>
-      createApp(flags).addRegistration(R.fromClass(PlainGreeter)).addRegistration(R.fromClass(FriendlyGreeter));
+    const createGreeters = (flags: IFeatureFlags) => createApp(flags).addRegistration(R.fromClass(FriendlyGreeter));
 
     it('forwards runtime args and appends token args to the selected implementation', () => {
-      const app = createGreeters(toggledBy(() => true));
+      const on = createGreeters(toggledBy(() => true));
+      const off = createGreeters(toggledBy(() => false));
 
-      expect(GreeterToken.resolve(app, { args: ['Ann'] }).greet()).toBe('Hi there, Ann!');
-      expect(GreeterToken.args('Bob').resolve(app).greet()).toBe('Hi there, Bob!');
+      expect(GreeterToken.resolve(on, { args: ['Ann'] }).greet()).toBe('Hi there, Ann!');
+      expect(GreeterToken.args('Bob').resolve(on).greet()).toBe('Hi there, Bob!');
+      expect(GreeterToken.args('Bob').resolve(off).greet()).toBe('Hello, Bob');
     });
 
-    it('keeps the token kind across modifiers', () => {
+    it('keeps the token kind and the fallback across modifiers', () => {
       const specialized = GreeterToken.args('Bob').lazy().addTags('x');
 
       expect(specialized).toBeInstanceOf(ToggleFeatureToken);
+      expect(specialized.context).toBe(GreeterToken.context);
       expect(specialized.enabled().toString()).toBe(GreeterToken.enabled().toString());
     });
 

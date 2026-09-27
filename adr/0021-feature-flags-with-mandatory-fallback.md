@@ -31,20 +31,28 @@ requests, variants postponed) was considered and rejected for this library:
 
 ## Decision
 
-**`MultiVariantFeatureToken<T, V>(key, flag)` is a new token shape** (ADR 0009)
-and the general case. The fallback is the implementation bound to the token
-itself, under the plain key. `token.variant(name)` returns a `SingleToken` on a
-derived key (`key@flag:name`) that overlays it. `resolve` asks the flag client
-which variant it serves (`getVariant`) and resolves that variant's
-implementation when one is registered, the fallback otherwise. A throwing flag
-client serves the fallback. `V` narrows the accepted variant names.
+**`MultiVariantFeatureToken<T, V>(flag, { fallback })` is a new token shape**
+(ADR 0009) and the general case. The fallback is **part of the token**: the
+second constructor argument is a context whose `fallback` is a required
+`Injectable` (class, key, token or `InjectFn`), so a token without a fallback
+does not compile. `token.variant(name)` returns a `SingleToken` on a derived key
+(`flag:name`); implementations register under it with
+`@register(token.variant(name))`. `resolve` asks the flag client which variant
+it serves (`getVariant`) and resolves that variant's implementation when one is
+registered, the fallback otherwise, with the same scope and args. A throwing
+flag client serves the fallback. `V` narrows the accepted variant names.
 
-**`ToggleFeatureToken<T>` extends it as the on/off case**: its only variant is
+The flag name is the token's only identifier: nothing is registered under it,
+so it needs no separate dependency key. A fallback given as a key or token
+resolves through its own registration and keeps its provider pipes.
+
+**`ToggleFeatureToken<T>(flag, { fallback })` extends it as the on/off case**: its only variant is
 `enabled` (`token.enabled()` is `token.variant('enabled')`), and it evaluates
 with `isEnabled` instead of `getVariant`. How the served variant is determined
 is the one protected method a subclass overrides (`evaluate(flags, context)`);
 the fallback, the context, the args cascade and laziness are shared. Modifiers
-construct the receiver's own class, so a specialized toggle is still a toggle.
+construct the receiver's own class with the same fallback, so a specialized
+toggle is still a toggle.
 
 **The flag client and context are ordinary dependencies.** `IFeatureFlagsToken`
 and `IFeatureContextToken` are resolved from the resolving scope on every
@@ -65,12 +73,13 @@ defers the flag evaluation itself to first member access.
 
 - A/B/n experiments and rollouts are declared the same way; adding a variant is
   registering one more class.
-- Rollout clean-up is deleting a class: after 100% remove the fallback and bind
-  the survivor to the token; a kill switch is turning the flag off.
+- The fallback cannot be forgotten: it is a required constructor argument.
+- Rollout clean-up is deleting a class: after 100% replace the feature token
+  with a plain token for the survivor; a kill switch is turning the flag off.
 - A variant without an implementation is not an error - the fallback is served.
   That is the intent (a variant may be added remotely before the code ships),
   but a mistyped variant name on the flag service also silently falls back.
-- Resolving the plain key, or injecting a concrete class, bypasses the flag.
-  Nothing prevents it; flag-aware consumers inject the token.
+- Injecting a concrete implementation class bypasses the flag. Nothing
+  prevents it; flag-aware consumers inject the token.
 - A singleton consumer keeps the implementation it received; per-user flags
   belong in request-scoped consumers or behind `token.lazy()`.

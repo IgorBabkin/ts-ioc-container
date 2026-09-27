@@ -1,8 +1,15 @@
-import { MultiVariantFeatureToken } from './MultiVariantFeatureToken';
+import {
+  type FeatureTokenOptions,
+  MultiVariantFeatureToken,
+  type MultiVariantFeatureTokenContext,
+} from './MultiVariantFeatureToken';
 import { type SingleToken } from './SingleToken';
 import { type FeatureContext, type IFeatureFlags } from '../feature/IFeatureFlags';
 
 const ENABLED = 'enabled';
+
+/** What a toggle falls back to while it is off. Required: a flag always has a fallback. */
+export type ToggleFeatureTokenContext<T = any> = MultiVariantFeatureTokenContext<T>;
 
 /**
  * The on/off case of {@link MultiVariantFeatureToken}: a flag with a single
@@ -10,12 +17,9 @@ const ENABLED = 'enabled';
  * fallback, the context, args and laziness - is the multi-variant token's.
  *
  * @example
- * const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('IPaymentGateway', 'new-checkout');
+ * const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout', { fallback: LegacyGateway });
  *
- * @register(bindTo(PaymentGatewayToken))
- * class LegacyGateway implements IPaymentGateway {}
- *
- * @register(bindTo(PaymentGatewayToken.enabled()))
+ * @register(PaymentGatewayToken.enabled())
  * class StripeGateway implements IPaymentGateway {}
  *
  * class Checkout {
@@ -23,7 +27,11 @@ const ENABLED = 'enabled';
  * }
  */
 export class ToggleFeatureToken<T = any> extends MultiVariantFeatureToken<T, typeof ENABLED> {
-  /** The implementation used while the flag is enabled. Bind it with `bindTo(token.enabled())`. */
+  constructor(flag: string, context: ToggleFeatureTokenContext<T>, options?: FeatureTokenOptions) {
+    super(flag, context, options);
+  }
+
+  /** The implementation used while the flag is enabled. Register it with `@register(token.enabled())`. */
   enabled(): SingleToken<T> {
     return this.variant(ENABLED);
   }

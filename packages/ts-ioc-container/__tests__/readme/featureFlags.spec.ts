@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-  bindTo,
   by,
   Container,
   type FeatureContext,
@@ -19,9 +18,9 @@ import {
  * Checkout Domain - Feature Flags
  *
  * A flag chooses which implementation is injected; the consumer depends on one
- * type and never sees the flag. Every flag has a fallback: the implementation
- * bound to the token itself. It is served whenever the flag serves nothing,
- * serves a variant with no implementation, or the flag client fails.
+ * type and never sees the flag. Every flag has a fallback, given when the token
+ * is created. It is served whenever the flag serves nothing, serves a variant
+ * with no implementation, or the flag client fails.
  *
  * `MultiVariantFeatureToken` binds one implementation per variant with
  * `token.variant(name)`; `ToggleFeatureToken` is its on/off case, with the
@@ -37,16 +36,16 @@ interface IPaymentGateway {
   pay(amount: number): string;
 }
 
-const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('IPaymentGateway', 'new-checkout');
-
-@register(bindTo(PaymentGatewayToken)) // fallback
 class LegacyGateway implements IPaymentGateway {
   pay(amount: number) {
     return `legacy charged ${amount}`;
   }
 }
 
-@register(bindTo(PaymentGatewayToken.enabled()))
+// The fallback is part of the token - it cannot be created without one
+const PaymentGatewayToken = new ToggleFeatureToken<IPaymentGateway>('new-checkout', { fallback: LegacyGateway });
+
+@register(PaymentGatewayToken.enabled())
 class StripeGateway implements IPaymentGateway {
   pay(amount: number) {
     return `stripe charged ${amount}`;
@@ -58,26 +57,24 @@ interface ICheckoutButton {
   render(): string;
 }
 
-const CheckoutButtonToken = new MultiVariantFeatureToken<ICheckoutButton, 'blue' | 'green'>(
-  'ICheckoutButton',
-  'checkout-button',
-);
-
-@register(bindTo(CheckoutButtonToken)) // fallback
 class GreyButton implements ICheckoutButton {
   render() {
     return 'grey button';
   }
 }
 
-@register(bindTo(CheckoutButtonToken.variant('blue')))
+const CheckoutButtonToken = new MultiVariantFeatureToken<ICheckoutButton, 'blue' | 'green'>('checkout-button', {
+  fallback: GreyButton,
+});
+
+@register(CheckoutButtonToken.variant('blue'))
 class BlueButton implements ICheckoutButton {
   render() {
     return 'blue button';
   }
 }
 
-@register(bindTo(CheckoutButtonToken.variant('green')))
+@register(CheckoutButtonToken.variant('green'))
 class GreenButton implements ICheckoutButton {
   render() {
     return 'green button';
@@ -112,9 +109,7 @@ class InMemoryFlags implements IFeatureFlags {
 describe('Feature flags', () => {
   const app = new Container({ tags: ['application'] })
     .addRegistration(R.fromValue(new InMemoryFlags()).bindTo(IFeatureFlagsToken))
-    .addRegistration(R.fromClass(LegacyGateway))
     .addRegistration(R.fromClass(StripeGateway))
-    .addRegistration(R.fromClass(GreyButton))
     .addRegistration(R.fromClass(BlueButton))
     .addRegistration(R.fromClass(GreenButton));
 

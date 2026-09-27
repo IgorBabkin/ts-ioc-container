@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0021 - Feature flags switch implementations, with a mandatory fallback](../../../../adr/0021-feature-flags-with-mandatory-fallback.md)
-- **Public API:** `MultiVariantFeatureToken`, `ToggleFeatureToken`, `FeatureTokenOptions`, `IFeatureFlags`, `IFeatureFlagsToken`, `FeatureContext`, `IFeatureContextToken`, `FeatureVariant`
+- **Public API:** `MultiVariantFeatureToken`, `MultiVariantFeatureTokenContext`, `ToggleFeatureToken`, `ToggleFeatureTokenContext`, `FeatureTokenOptions`, `IFeatureFlags`, `IFeatureFlagsToken`, `FeatureContext`, `IFeatureContextToken`, `FeatureVariant`
 - **Executable spec:** `__tests__/specs/feature-flags.spec.ts`
 
 ## Intent
@@ -16,20 +16,34 @@ implementation.
 
 ### Story: A multi-variant flag picks one implementation per served variant
 
-As a library user, I register a fallback under the feature token itself and one
-implementation per variant next to it, so that A/B/n experiments and rollouts
-are declared the same way and the fallback is the baseline the variants overlay.
+As a library user, I create the feature token with its fallback and register
+one implementation per variant with `@register(Token.variant(name))`, so that
+A/B/n experiments and rollouts are declared the same way and the fallback is
+the baseline the variants overlay.
 
 Acceptance criteria:
 
-- An implementation bound with `bindTo(Token)` (or `@register(Token)`) is the
-  fallback; it lives under the token's own key.
-- An implementation bound with `Token.variant(name)` is injected while the
-  flag client's `getVariant` serves an enabled variant `name`.
+- The implementation registered with `@register(Token.variant(name))` is
+  injected while the flag client's `getVariant` serves an enabled variant `name`.
 - The fallback is injected when no variant is served, when the served variant
   has no registered implementation, or when the flag client throws.
-- Resolving the plain key (not the token) always yields the fallback.
 - The token's variant names can be narrowed by a type parameter.
+
+### Story: The fallback is part of the token
+
+As a library user, I cannot create a feature token without a fallback, so that
+"a flag always has a fallback" is enforced by the type checker rather than by
+convention.
+
+Acceptance criteria:
+
+- The second constructor argument is a context `{ fallback: Injectable }`,
+  and `fallback` is required.
+- The fallback may be a class, a key, a token or an `InjectFn`; a key or token
+  resolves through its own registration, keeping its provider pipes (e.g.
+  `singleton()`).
+- The fallback is resolved with the same scope and args as the selected
+  variant would be.
 
 ### Story: A toggle is the single-variant case
 
@@ -38,8 +52,8 @@ it behaves exactly like a multi-variant flag with one variant.
 
 Acceptance criteria:
 
-- `ToggleFeatureToken` is a `MultiVariantFeatureToken` whose only variant is
-  `enabled`; `Token.enabled()` is `Token.variant('enabled')`, and other variant
+- `ToggleFeatureToken(flag, { fallback })` is a `MultiVariantFeatureToken`
+  whose only variant is `enabled`; `Token.enabled()` is `Token.variant('enabled')`, and other variant
   names are rejected by the type checker.
 - It evaluates with the client's `isEnabled`; the enabled implementation is
   injected while the flag is on, the fallback otherwise.
@@ -75,8 +89,8 @@ Acceptance criteria:
   after them.
 - `lazy()` defers both the flag evaluation and the construction to first
   member access.
-- Modifiers return new tokens of the same kind and leave the original
-  unchanged.
+- Modifiers return new tokens of the same kind, with the same fallback, and
+  leave the original unchanged.
 
 ## Notes
 
