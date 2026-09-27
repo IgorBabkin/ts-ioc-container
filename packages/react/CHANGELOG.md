@@ -1,3 +1,25 @@
+# 0.37.0 (2026-09-26)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/react:**
+    add error code to OutOfScopeError and ship source
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+  ### 📝 Other Changes
+
+    - **@ts-ioc-container/react:**
+    add AGENTS.md guide for AI coding agents
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    72.2.0
+
+
 # 0.36.0 (2026-09-19)
 
   ### 📦 Dependencies
@@ -371,6 +393,7 @@
     - **@ts-ioc-container/react:**
     add React adapter package (#106)
     (51f46c324437fc4416e99c80b6d61735ecef162a)
+
 
 
 

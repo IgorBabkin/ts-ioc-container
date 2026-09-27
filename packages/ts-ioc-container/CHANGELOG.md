@@ -1,3 +1,27 @@
+# 72.2.0 (2026-09-26)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add stable error codes and actionable messages
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+  ### 🐞 Bug Fixes
+
+    - **ts-ioc-container:**
+    ship JSDoc, declaration maps and source in the package
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    add AGENTS.md guide for AI coding agents
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+    - **ts-ioc-container:**
+    document the public API with JSDoc and examples
+    (ab367a0cd6463e16c1686d9fe28b2020376e78a4)
+
+
 # 72.1.0 (2026-09-19)
 
   ### ✨ Features
@@ -389,6 +413,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
