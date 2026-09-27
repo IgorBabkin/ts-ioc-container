@@ -30,6 +30,10 @@ Discover registrations **at build time**, in a separate package,
   type checker) and emits an ordinary TypeScript module: static imports,
   `Registration.fromClass(...)` per class, and an `IContainerModule` applying
   them.
+- The output's shape is declared by a protocol: a Handlebars template in
+  `lib/protocols/`, precompiled at build time into `hbs/index.cjs` (the pattern
+  of the `@ibabkin/openapi-to-*` generators). Code only prepares the data it
+  renders.
 - The generated code uses only the public `ts-ioc-container` API. The core
   package gains no code, no dependency and no new concept; `Container` is
   untouched.
