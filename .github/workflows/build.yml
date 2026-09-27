@@ -1,4 +1,4 @@
-name: build
+name: pull-request
 
 # Reusable: called by pull-request.yml (as the whole PR check) and by
 # publish.yml (as the gate ahead of the release job). No concurrency block
