@@ -268,7 +268,11 @@ Workaround: register A for both scopes, or use `scopeAccess` for visibility cont
 
 ### Token Types
 
-`SingleToken`, `GroupAliasToken`, `SingleAliasToken`, `GroupInstanceToken`, `ClassToken`, `FunctionToken`, `ConstantToken` — all in `lib/token/`. Tokens define how a dependency key is resolved (single instance, group by alias, group by predicate, etc.).
+`SingleToken`, `GroupAliasToken`, `SingleAliasToken`, `GroupInstanceToken`, `ClassToken`, `FunctionToken`, `ConstantToken`, `MultiVariantFeatureToken`, `ToggleFeatureToken` — all in `lib/token/`. Tokens define how a dependency key is resolved (single instance, group by alias, group by predicate, etc.).
+
+### Feature Flags (ADR 0021)
+
+`MultiVariantFeatureToken<T, V>(key, flag)` switches implementations by the variant a flag serves, and **every flag has a fallback**: the implementation bound to the token itself (the plain key) is the baseline; `token.variant(name)` binds overlays under derived keys (`key@flag:name`). `ToggleFeatureToken extends MultiVariantFeatureToken` is the on/off case — single variant `enabled` (`token.enabled()`), evaluated with `isEnabled` instead of `getVariant`. A subclass overrides only the protected `evaluate(flags, context)`; modifiers construct the receiver's own class. The served variant's implementation is used when registered, else the fallback; a throwing client serves the fallback. The client (`IFeatureFlagsToken`, Unleash-shaped sync `IFeatureFlags`) and context (`IFeatureContextToken`) are resolved from the resolving scope on every resolution; missing either is `DependencyNotFoundError`, never a silent fallback. The library ships no vendor SDK — an Unleash client fits `IFeatureFlags` structurally.
 
 ### Token Immutability (One-Way Linked List)
 
