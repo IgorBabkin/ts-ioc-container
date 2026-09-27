@@ -38,9 +38,8 @@
   "files": [
     "cjm/**/*",
     "typings/**/*",
+    "!typings/**/*.d.ts.map",
     "tpl/**/*",
-    "lib/**/*",
-    "!lib/**/*.hbs",
     "tic.schema.json",
     "AGENTS.md"
   ],
