@@ -34,9 +34,11 @@ imported from `@ibabkin/openapi-*` and first published by hand under their new
 names (OIDC cannot create a package). Once their trusted publishers are
 configured in npm, releases go through OIDC like the rest of the workspace.
 
-`*.bundle.ts` files (e.g. the bundler's e2e fixture) are `tic build` output:
-they are in `.prettierignore` and must not be edited or formatted by hand —
-rerun `tic build` instead.
+`*.bundle.ts` files and generated group files (`*.generated.ts`, e.g. the
+bundler's e2e fixture) are `tic build` output: they are in `.prettierignore`
+(the root one and `packages/bundler/.prettierignore`, since prettier reads the
+working directory's) and must not be edited or formatted by hand — rerun
+`tic build` instead.
 
 `@ts-ioc-container/react` is **scoped**, so publishing it requires ownership of
 the `ts-ioc-container` npm org and `publishConfig.access: "public"` (scoped

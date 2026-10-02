@@ -8,5 +8,6 @@ dist/
 # Dependencies
 node_modules/
 
-# Written by `tic build`; `tic build --check` compares them byte for byte.
+# Written by `tic build` (bundles and groups); `tic build --check` compares them byte for byte.
 *.bundle.ts
+*.generated.ts
