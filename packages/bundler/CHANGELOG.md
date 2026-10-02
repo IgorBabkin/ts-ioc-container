@@ -1,3 +1,12 @@
+# 1.1.0 (2026-10-02)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    add additionalExclude and warn when exclude drops defaults
+    (b4f43d7cd2d2b54be370538176958c1e81853b73)
+
+
 # 1.0.0 (2026-10-02)
 
   ### 💥 BREAKING CHANGES
@@ -67,6 +76,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
