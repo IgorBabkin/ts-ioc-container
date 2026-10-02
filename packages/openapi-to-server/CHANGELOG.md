@@ -1,3 +1,18 @@
+# 5.0.0 (2026-10-02)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    add byArgs InjectFn and rename findOrFail to findArgOrFail
+    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add byArgs InjectFn and rename findOrFail to findArgOrFail
+    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
+
+
 # 4.1.0 (2026-09-27)
 
   ### ✨ Features
@@ -89,6 +104,7 @@
     - **@ibabkin/openapi-to-server:**
     publish under the existing package name
     (8e6973ced01f7d64dfae65da2e204e24d674c9a8)
+
 
 
 

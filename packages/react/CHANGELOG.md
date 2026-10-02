@@ -1,3 +1,25 @@
+# 1.0.0 (2026-10-02)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    add byArgs InjectFn and rename findOrFail to findArgOrFail
+    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add byArgs InjectFn and rename findOrFail to findArgOrFail
+    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    73.0.0
+
+
 # 0.40.0 (2026-09-27)
 
   ### 📝 Other Changes
@@ -447,6 +469,7 @@
     - **@ts-ioc-container/react:**
     add React adapter package (#106)
     (51f46c324437fc4416e99c80b6d61735ecef162a)
+
 
 
 
