@@ -83,3 +83,5 @@ such as "the providers map is cleared".
 
 Use BDD-style wording in tests, but keep the implementation loop TDD-friendly:
 write the failing scenario, make it pass, then refactor.
+
+Keep specs short enough to read in one sitting.
