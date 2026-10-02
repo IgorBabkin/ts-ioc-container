@@ -11,13 +11,23 @@ is never published (`private: true`, no `name` collision with the library).
 Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
+- `packages/bundler`: `@ts-ioc-container/bundler` — bundles an application's dependencies into a single container module, discovered at build time (ADR 0022). Ships the `tic` CLI: `tic build` reads `tic.config.json` and generates **bundles** — `*.bundle.ts` files exporting a container module class (`useModule(new AppBundle())`) — from folders (relative paths or tsconfig `paths` aliases). Generated files are declared by **protocols** — Handlebars templates in `packages/bundler/lib/protocols/`, precompiled by `hbs:compile` into the gitignored `tpl/index.cjs`, which registers them in the process-global `Handlebars.templates` under their file basename (so keep basenames unique, and interpolate with `{{{ }}}` — output is TypeScript, not HTML); `emit.ts` only prepares the data. `hbs:compile` runs before `build`, `test` and `type-check`, and on publish (`prepack`); the tarball ships only the compiled `tpl/`, never the `.hbs` sources. CJS-only (it is a Node tool); `typescript` is a peer dependency. It never touches the core package — generated code uses only the public `Registration` / `IContainerModule` API
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `adr/`: architecture decision records (plain markdown, not built or published)
 
-Both `ts-ioc-container` and `@ts-ioc-container/react` are released independently by
+`ts-ioc-container`, `@ts-ioc-container/react` and `@ts-ioc-container/bundler` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
+
+`@ts-ioc-container/bundler` has **never been published**, so its first release
+must be published by hand (see [npm authentication](#npm-authentication-trusted-publishing--oidc))
+and given a trusted publisher before a `feat(@ts-ioc-container/bundler)` commit
+reaches `main` — otherwise that release fails mid-pipeline with `ENEEDAUTH`.
+
+`*.bundle.ts` files (e.g. the bundler's e2e fixture) are `tic build` output:
+they are in `.prettierignore` and must not be edited or formatted by hand —
+rerun `tic build` instead.
 
 `@ts-ioc-container/react` is **scoped**, so publishing it requires ownership of
 the `ts-ioc-container` npm org and `publishConfig.access: "public"` (scoped
@@ -151,12 +161,22 @@ consumers still receive an exact version. `peerDependencies` stays a range
 workspace link, so it imports that package's *build output*. Since the root
 lint / type-check / test scripts are recursive and therefore include react,
 `pnpm run build` must run *before* all of them — see the `Build` step ahead of
-the checks in both `pr-checks.yml` (install → build → type-check → test → lint →
-format check) and `publish.yml`. Without it those steps
-fail to resolve `ts-ioc-container` at all. `publish.yml` is deliberately a
-single job (build → checks → tests → release): separate jobs each paid for a
-checkout and `pnpm install` and needed an artifact upload/download to hand the
-build output across, which roughly tripled the wall time of a push to `main`.
+the checks in the `build` composite action, `.github/actions/build/action.yml`
+(install → build → type-check → test → lint → format check → verify package
+contents). Without it those steps fail to resolve `ts-ioc-container` at all.
+
+Both workflows have a plain `build` job — checkout, then that action.
+`pull-request.yml` is just that job; `publish.yml` runs it (with
+`coverage: true`) and then a `release` job that `needs: build`. `build` ends by
+uploading each package's build output (`cjm`, `esm`, `typings`, the bundler's
+`tpl`) as the `build-output` artifact (on by default; `pull-request.yml` passes
+`upload-build-output: false`), and `release` downloads it into `packages/` — it
+never rebuilds, so the release publishes exactly what was tested, and it re-runs
+`verify:package-contents` after the download so a broken hand-off fails before
+`pnpm publish`. `release` still pays for its own checkout and `pnpm install` —
+the release tooling lives in the workspace dependencies. Keep the build a
+composite action, not a reusable workflow (`workflow_call`): a job calling a
+workflow is shown as `build / build`.
 
 ### Squash merges
 

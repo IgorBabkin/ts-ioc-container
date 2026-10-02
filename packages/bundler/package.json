@@ -1,0 +1,83 @@
+{
+  "name": "@ts-ioc-container/bundler",
+  "version": "0.2.0",
+  "description": "Bundles your dependencies into a single container module for ts-ioc-container: the `tic` CLI scans folders (by path or tsconfig alias) and generates one typed bundle that registers every class — `container.useModule(new AppBundle())`.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "ibabkin <igba14@gmail.com>",
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/bundler#readme",
+  "license": "ISC",
+  "sideEffects": false,
+  "main": "cjm/index.js",
+  "types": "typings/index.d.ts",
+  "bin": {
+    "ts-ioc-container": "cjm/bin.js",
+    "tic": "cjm/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./typings/index.d.ts",
+      "default": "./cjm/index.js"
+    },
+    "./tic.schema.json": "./tic.schema.json",
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "dependency-injection",
+    "ioc",
+    "di",
+    "codegen",
+    "bundler",
+    "cli",
+    "component-scan",
+    "tsconfig-paths",
+    "ts-ioc-container"
+  ],
+  "files": [
+    "cjm/**/*",
+    "typings/**/*",
+    "!typings/**/*.d.ts.map",
+    "tpl/**/*",
+    "tic.schema.json",
+    "AGENTS.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container",
+    "directory": "packages/bundler"
+  },
+  "scripts": {
+    "hbs:compile": "mkdir -p tpl && handlebars lib/protocols/*.hbs -f tpl/index.cjs -c handlebars",
+    "build:cjm": "node ../scripts/build.mjs cjm",
+    "build:types": "node ../scripts/build.mjs types",
+    "build": "pnpm run hbs:compile && pnpm run build:cjm && pnpm run build:types",
+    "prepack": "pnpm run hbs:compile",
+    "test": "pnpm run hbs:compile && pnpm run build:cjm && vitest run",
+    "test:coverage": "pnpm run hbs:compile && pnpm run build:cjm && vitest run --coverage --coverage.reporter=lcov",
+    "type-check": "pnpm run hbs:compile && tsc --noEmit",
+    "lint": "eslint lib/**/*.ts __tests__/**/*.ts",
+    "lint:fix": "pnpm run lint --fix",
+    "format": "prettier --write \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
+    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\""
+  },
+  "dependencies": {
+    "handlebars": "^4.7.9"
+  },
+  "peerDependencies": {
+    "typescript": ">=5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "@vitest/coverage-v8": "^4.1.2",
+    "reflect-metadata": "^0.2.2",
+    "ts-ioc-container": "workspace:*",
+    "typescript": "5.8.3",
+    "unplugin-swc": "^1.6.0",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../tic.schema.json",
+  "bundles": [
+    {
+      "output": "src/di/app.bundle.ts",
+      "name": "AppBundle",
+      "namespaces": [
+        "@app/services",
+        "@app/infra"
+      ],
+      "select": {
+        "decorators": [
+          "register"
+        ]
+      }
+    }
+  ]
+}

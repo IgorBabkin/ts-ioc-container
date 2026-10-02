@@ -1,0 +1,5 @@
+z.object({
+{{#each this}}
+  {{name}}: {{render_template 'ValidationJsonSchema.hbs' (as_parameter schema)~}}{{#unless this.required}}.optional(){{/unless}},
+{{/each}}
+})

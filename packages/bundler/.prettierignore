@@ -1,0 +1,3 @@
+# Prettier reads .prettierignore from the working directory, and package scripts run here.
+# Written by `tic build`; `tic build --check` compares them byte for byte.
+*.bundle.ts

@@ -1,0 +1,5 @@
+{
+{{#each this}}
+  {{name}}{{#unless this.required}}?{{/unless}}: {{render_template 'JsonSchema.hbs' schema}},
+{{/each}}
+}
