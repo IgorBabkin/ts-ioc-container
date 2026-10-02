@@ -1,3 +1,24 @@
+# 73.0.0 (2026-10-02)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    add byArgs InjectFn and rename findOrFail to findArgOrFail
+    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add byArgs InjectFn and rename findOrFail to findArgOrFail
+    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    note specs should stay short
+    (034f05655792f2b5887651cd2652a5676b986b75)
+
+
 # 72.3.2 (2026-09-27)
 
   ### 📝 Other Changes
@@ -446,6 +467,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
