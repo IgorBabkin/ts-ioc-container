@@ -1,3 +1,70 @@
+# 2.0.0 (2026-10-02)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    name is the bundle name; class and output follow it
+    (3527401018421b86762e269367fe49a2f9f91eb0)
+    - **@ts-ioc-container/bundler:**
+    zero config from tsconfig.json, @register by default
+    (6f0bc9e0737bd733bb07161a2236dc799d1bbcb5)
+    - **@ts-ioc-container/bundler:**
+    one bundle per *.bundle.json, extending a tsconfig
+    (ad9ef945eedab330da6d2154097c1ebb307969c3)
+    - **@ts-ioc-container/bundler:**
+    rename tsconfig to extends
+    (0d77054d8a855a59cc2d78ed2ba0a288b9144e58)
+    - **@ts-ioc-container/bundler:**
+    rename class name globs to name / excludeName
+    (e56cba7c0a380ac0c741dd59922ff51f6ce24503)
+    - **@ts-ioc-container/bundler:**
+    move paths into the files rule
+    (ec0273566c7d62c3d87a42de80d39cbf1ee67ee4)
+    - **@ts-ioc-container/bundler:**
+    select files before parsing, classes after
+    (cf4c3eff889465c3aec40836f156f564168f8293)
+    - **@ts-ioc-container/bundler:**
+    simplify the bundle config
+    (072ade6d1ad2d926677820aad65ce2004d003ee5)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    support YAML configs
+    (6d7dd0fe3f43c0fda508812c7af87865401919cd)
+    - **@ts-ioc-container/bundler:**
+    name is the bundle name; class and output follow it
+    (3527401018421b86762e269367fe49a2f9f91eb0)
+    - **@ts-ioc-container/bundler:**
+    zero config from tsconfig.json, @register by default
+    (6f0bc9e0737bd733bb07161a2236dc799d1bbcb5)
+    - **@ts-ioc-container/bundler:**
+    one bundle per *.bundle.json, extending a tsconfig
+    (ad9ef945eedab330da6d2154097c1ebb307969c3)
+    - **@ts-ioc-container/bundler:**
+    rename tsconfig to extends
+    (0d77054d8a855a59cc2d78ed2ba0a288b9144e58)
+    - **@ts-ioc-container/bundler:**
+    rename class name globs to name / excludeName
+    (e56cba7c0a380ac0c741dd59922ff51f6ce24503)
+    - **@ts-ioc-container/bundler:**
+    move paths into the files rule
+    (ec0273566c7d62c3d87a42de80d39cbf1ee67ee4)
+    - **@ts-ioc-container/bundler:**
+    select files before parsing, classes after
+    (cf4c3eff889465c3aec40836f156f564168f8293)
+    - **@ts-ioc-container/bundler:**
+    simplify the bundle config
+    (072ade6d1ad2d926677820aad65ce2004d003ee5)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    74.0.0
+
+
 # 1.5.0 (2026-10-02)
 
   ### ✨ Features
@@ -113,6 +180,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
