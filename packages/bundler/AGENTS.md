@@ -7,40 +7,24 @@ nothing here runs inside the container, and the core package is not changed by
 it.
 
 - The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
-  same program). `tic build` reads `tic.config.json` (schema: `tic.schema.json`) and writes one
+  same program). `tic build` reads `.bundles.json` (schema: `tic.schema.json`) and writes one
   bundle per `bundles[]` entry — a generated class, `export class AppBundle implements IContainerModule`, applied with `container.useModule(new AppBundle())`. `--check` writes nothing and exits 1
   when an output is stale — run it in CI.
-- A namespace is a folder: relative to the config file, or a tsconfig `paths`
-  alias. Generated imports use the most specific alias, else a relative path.
-- Default selection is every exported, non-abstract class. A module's
-  `select: { export, decorators, nameGlob, excludeClasses, excludeNameGlob, excludeAliases }`
+- Each bundle scans its `paths`: folders relative to the config file, or tsconfig
+  `paths` aliases. Generated imports use the most specific alias, else a relative path.
+- Default selection is every exported, non-abstract class. A bundle's
+  `select: { export, decorators, nameGlob, excludeClasses, excludeNameGlob }`
   narrows it; positive criteria must all hold and then `excludeClasses` (exact
-  names), `excludeNameGlob` (glob) and `excludeAliases` (tsconfig `paths` aliases
-  the file resolves through, e.g. `services` for `@services/*`) drop classes.
+  names) and `excludeNameGlob` (glob) drop classes.
   Decorators match by name, so composed ones must be listed. The build warns when
   two selected classes pass the same plain-identifier first decorator argument (a
   same-token heuristic), unless a decorator they share has differing arguments
   (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
 - Never edit a `*.bundle.ts` by hand — change the classes or the config and
   rerun `tic build`.
-- Files take part when they match no `exclude` glob **and** an
-  `InclusionPredicate` (`({ filename }) => boolean`, filename relative to the
-  config) returns true. The predicate comes from `build({ include })`, else the
-  bundle's `include` file, else a conventional `tic.include.*` next to the
-  config. Predicate files are `require`d once per process — read env vars
-  inside the predicate. README "Recipe: generate per environment" shows the
-  per-environment setup.
-- Right after parsing, an `ExportPredicate` (`FilterPredicate<ExportContext>`:
-  filename, exportName, className, isDefault, decorators, tags) filters class by
-  class, after `select`; found via `build({ filterExports })`, a bundle's
-  `filterExports` file, or `tic.exports.*` next to the config.
-- Prefer `byTags((tags, context) => ...)` (a `TagInclusionPredicate`) over parsing
-  file names: tags are the dot-parts between base name and extension
-  (`Report.production.eu.ts` → `['production', 'eu']`). Usage examples:
-  `__tests__/examples/inclusion-predicates.spec.ts`.
-- For a lean production build, the production entry must import only the
-  production bundle (README "One bundle per environment"); statically importing
-  both bundles ships both.
+- Files take part when they match no `exclude` glob. A non-empty `exclude`
+  replaces the defaults (test files, `__tests__/`, `node_modules/`) and the
+  build warns if it drops one. Unknown config fields are errors.
 - Programmatic API: `build({ config, cwd, check })`, `run(argv, io)`,
   `loadConfig(file)`; errors are `TicConfigError` / `NamespaceNotFoundError`
   (both `TicError`).

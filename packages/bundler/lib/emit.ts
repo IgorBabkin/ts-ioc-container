@@ -6,7 +6,7 @@ export interface EmitInput {
   name: string;
   /** Shown in the header: where the output came from. */
   configPath: string;
-  namespaces: string[];
+  paths: string[];
   classes: (DiscoveredClass & { specifier: string })[];
 }
 
@@ -17,7 +17,7 @@ const RUNTIME_IMPORTS = ['IContainer', 'IContainerModule', 'IRegistration', 'Reg
  * from its protocol, `protocols/Bundle.ts.hbs`. This function only prepares the data: unique local
  * names, and one import per file in file order.
  */
-export function emitBundle({ name, configPath, namespaces, classes }: EmitInput): string {
+export function emitBundle({ name, configPath, paths, classes }: EmitInput): string {
   const taken = new Set([...RUNTIME_IMPORTS, 'registrations', name]);
   const uniqueName = (wanted: string) => {
     let candidate = wanted;
@@ -39,7 +39,7 @@ export function emitBundle({ name, configPath, namespaces, classes }: EmitInput)
 
   return renderProtocol('Bundle.ts.hbs', {
     configPath,
-    namespaces,
+    paths,
     name,
     imports: [...byFile.values()],
     registrations: bindings,

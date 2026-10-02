@@ -8,7 +8,7 @@ export {
   DEFAULT_BUNDLE_NAME,
   type TicConfig,
   type BundleConfig,
-  type NamespaceConfig,
+  type PathConfig,
   type ClassSelector,
   type ExportKind,
   type ResolvedSelector,
@@ -16,24 +16,6 @@ export {
   type ResolvedBundle,
 } from './config';
 export { ImportPaths } from './ImportPaths';
-export { type FilterPredicate } from './utils';
-export {
-  type ExportPredicate,
-  type ExportContext,
-  EXPORTS_CONVENTION,
-  findConventionalExportPredicate,
-  loadExportPredicate,
-} from './exportPredicate';
-export {
-  type InclusionPredicate,
-  type InclusionContext,
-  type TagInclusionPredicate,
-  byTags,
-  fileTags,
-  INCLUSION_CONVENTION,
-  findConventionalPredicate,
-  loadInclusionPredicate,
-} from './inclusion';
 export { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
 export { emitBundle, type EmitInput } from './emit';
 export { globToRegExp } from './glob';

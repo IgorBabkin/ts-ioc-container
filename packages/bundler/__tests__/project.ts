@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -25,12 +25,6 @@ export class TempProject {
    * Installs this bundler package into the project's node_modules as a symlink, so predicate files
    * can `require('@ts-ioc-container/bundler')` as a consumer's would. Needs the package's `cjm` build.
    */
-  linkBundler(): this {
-    mkdirSync(this.path('node_modules/@ts-ioc-container'), { recursive: true });
-    symlinkSync(path.resolve(__dirname, '..'), this.path('node_modules/@ts-ioc-container/bundler'), 'dir');
-    return this;
-  }
-
   read(file: string): string {
     return readFileSync(this.path(file), 'utf8');
   }

@@ -4,7 +4,7 @@
     {
       "output": "src/di/app.bundle.ts",
       "name": "AppBundle",
-      "namespaces": [
+      "paths": [
         "@app/services",
         "@app/infra"
       ],

@@ -18,15 +18,15 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   beforeEach(() => {
     project = TempProject.create({
-      'tic.config.json': { bundles: [{ output: 'src/di/container.bundle.ts', namespaces: ['./src/services'] }] },
+      '.bundles.json': { bundles: [{ output: 'src/di/container.bundle.ts', paths: ['./src/services'] }] },
       'src/services/Logger.ts': decorated('Logger'),
-      'other/tic.config.json': { bundles: [{ output: 'out.bundle.ts', namespaces: ['../src/services'] }] },
+      'other/.bundles.json': { bundles: [{ output: 'out.bundle.ts', paths: ['../src/services'] }] },
     });
   });
 
   afterEach(() => project.dispose());
 
-  it('builds tic.config.json from the working directory', () => {
+  it('builds .bundles.json from the working directory', () => {
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
@@ -37,7 +37,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   it('builds the config passed with --config, reporting paths relative to the working directory', () => {
     const io = new Io(project.root);
 
-    expect(run(['build', '--config', 'other/tic.config.json'], io)).toBe(0);
+    expect(run(['build', '--config', 'other/.bundles.json'], io)).toBe(0);
     expect(io.out).toEqual(['wrote     other/out.bundle.ts (1 registration)']);
   });
 
@@ -52,7 +52,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('reports a config error on stderr', () => {
-    project.write('tic.config.json', { bundles: [] });
+    project.write('.bundles.json', { bundles: [] });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(1);
@@ -60,8 +60,8 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('prints a warning when a non-empty exclude drops the default test globs', () => {
-    project.write('tic.config.json', {
-      bundles: [{ output: 'src/di/container.bundle.ts', namespaces: ['./src/services'], exclude: ['legacy/**'] }],
+    project.write('.bundles.json', {
+      bundles: [{ output: 'src/di/container.bundle.ts', paths: ['./src/services'], exclude: ['legacy/**'] }],
     });
     const io = new Io(project.root);
 

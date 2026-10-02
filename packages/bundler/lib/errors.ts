@@ -3,7 +3,7 @@ export class TicError extends Error {
   name = 'TicError';
 }
 
-/** The config file is missing, is not JSON, or does not match the `tic.config.json` shape. */
+/** The config file is missing, is not JSON, or does not match the `.bundles.json` shape. */
 export class TicConfigError extends TicError {
   name = 'TicConfigError';
 }
