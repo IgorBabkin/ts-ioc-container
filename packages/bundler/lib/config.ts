@@ -18,13 +18,22 @@ export interface ClassSelector {
   decorators?: string[];
   /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
   nameGlob?: string;
+  /**
+   * Class names to drop after selection, e.g. one test double sitting next to the
+   * real registration in the same file. Unlike `filterExports` this needs no file.
+   */
+  excludeClasses?: string[];
+  /** A glob the class name must NOT match, e.g. `*Mock`. An anonymous default export is named after its file. */
+  excludeNameGlob?: string;
 }
 
-/** A {@link ClassSelector} with its defaults filled in and its `nameGlob` compiled. */
+/** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedSelector {
   export: ExportKind;
   decorators?: string[];
   nameGlob?: RegExp;
+  excludeClasses?: string[];
+  excludeNameGlob?: RegExp;
 }
 
 export interface NamespaceConfig {
@@ -131,7 +140,7 @@ function toNamespace(value: unknown, field: string): Required<NamespaceConfig> {
   return { path: value.path, recursive: value.recursive ?? true };
 }
 
-const SELECTOR_FIELDS = new Set(['export', 'decorators', 'nameGlob']);
+const SELECTOR_FIELDS = new Set(['export', 'decorators', 'nameGlob', 'excludeClasses', 'excludeNameGlob']);
 
 /**
  * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
@@ -141,7 +150,7 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
   if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { export: kind, decorators, nameGlob } = value;
+  const { export: kind, decorators, nameGlob, excludeClasses, excludeNameGlob } = value;
   if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
     return fail(`${field}.export`, '"any", "named" or "default"');
   }
@@ -149,7 +158,19 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
     return fail(`${field}.decorators`, 'a non-empty array of strings');
   }
   if (nameGlob !== undefined && !isNonEmptyString(nameGlob)) return fail(`${field}.nameGlob`, 'a non-empty string');
-  return { export: kind ?? 'any', decorators, nameGlob: nameGlob === undefined ? undefined : globToRegExp(nameGlob) };
+  if (excludeClasses !== undefined && !(isStringArray(excludeClasses) && excludeClasses.length > 0)) {
+    return fail(`${field}.excludeClasses`, 'a non-empty array of strings');
+  }
+  if (excludeNameGlob !== undefined && !isNonEmptyString(excludeNameGlob)) {
+    return fail(`${field}.excludeNameGlob`, 'a non-empty string');
+  }
+  return {
+    export: kind ?? 'any',
+    decorators,
+    nameGlob: nameGlob === undefined ? undefined : globToRegExp(nameGlob),
+    excludeClasses,
+    excludeNameGlob: excludeNameGlob === undefined ? undefined : globToRegExp(excludeNameGlob),
+  };
 }
 
 /**

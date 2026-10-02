@@ -561,17 +561,72 @@ describe('Folder registration', () => {
       expect(generated()).toContain("import UserService from '../user-service';");
     });
 
+    it('drops classes by exact name with excludeClasses', () => {
+      expect(selected({ excludeClasses: ['Helper', 'AuthService'] })).toEqual(['UserService', 'MainService']);
+    });
+
+    it('drops classes whose name matches excludeNameGlob', () => {
+      expect(selected({ excludeNameGlob: '*Service' })).toEqual(['Helper']);
+    });
+
+    it('applies exclusions after the positive criteria', () => {
+      expect(selected({ decorators: ['register'], excludeClasses: ['MainService'] })).toEqual(['AuthService']);
+    });
+
     it.each([
       ['decorated', 'bundles[0].select: expected an object'],
       [{ export: 'all' }, 'bundles[0].select.export: expected "any", "named" or "default"'],
       [{ decorators: [] }, 'bundles[0].select.decorators: expected a non-empty array of strings'],
       [{ nameGlob: '' }, 'bundles[0].select.nameGlob: expected a non-empty string'],
+      [{ excludeClasses: [] }, 'bundles[0].select.excludeClasses: expected a non-empty array of strings'],
+      [{ excludeNameGlob: '' }, 'bundles[0].select.excludeNameGlob: expected a non-empty string'],
       [{ exported: true }, 'bundles[0].select.exported: unknown field'],
     ])('rejects the rule %j naming the field', (select, message) => {
       project = TempProject.create({ 'tic.config.json': module(['./src'], { select }) });
 
       expect(() => buildProject()).toThrow(TicConfigError);
       expect(() => buildProject()).toThrow(message);
+    });
+  });
+
+  describe('Story: Warn about two classes binding the same token', () => {
+    const repo = (name: string, token = 'IDashboardRepositoryToken') =>
+      `import { repository } from 'ts-ioc-container';\n@repository(${token})\nexport class ${name} {}\n`;
+
+    it('warns when two selected classes pass the same decorator identifier', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src']),
+        'src/HttpDashboardRepository.ts': repo('HttpDashboardRepository'),
+        'src/MockDashboardRepository.ts': repo('MockDashboardRepository'),
+      });
+
+      const { warnings } = buildProject();
+
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('bundles[0]');
+      expect(warnings[0]).toContain('IDashboardRepositoryToken');
+      expect(warnings[0]).toContain('HttpDashboardRepository, MockDashboardRepository');
+    });
+
+    it('does not warn once one colliding class is excluded', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { select: { excludeClasses: ['MockDashboardRepository'] } }),
+        'src/HttpDashboardRepository.ts': repo('HttpDashboardRepository'),
+        'src/MockDashboardRepository.ts': repo('MockDashboardRepository'),
+      });
+
+      expect(buildProject().warnings).toEqual([]);
+      expect(generated()).not.toContain('MockDashboardRepository');
+    });
+
+    it('ignores decorators whose first argument is not a plain identifier', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src']),
+        'src/A.ts': decorated('A'),
+        'src/B.ts': decorated('B'),
+      });
+
+      expect(buildProject().warnings).toEqual([]);
     });
   });
 

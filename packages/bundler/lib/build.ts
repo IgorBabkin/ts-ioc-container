@@ -6,7 +6,7 @@ import { globToRegExp, toPosix } from './glob';
 import { ImportPaths } from './ImportPaths';
 import { type ExportPredicate, findConventionalExportPredicate, loadExportPredicate } from './exportPredicate';
 import { fileTags, findConventionalPredicate, type InclusionPredicate, loadInclusionPredicate } from './inclusion';
-import { findClasses, listSourceFiles } from './scan';
+import { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
 
 export interface BuildOptions {
   /** Path of `tic.config.json`, relative to `cwd`. Default `tic.config.json`. */
@@ -38,7 +38,11 @@ export interface BuildResult {
   /** Absolute path of the config that was built. */
   config: string;
   outputs: OutputResult[];
-  /** Non-fatal problems found while resolving the config, e.g. an `exclude` that drops a default test glob. */
+  /**
+   * Non-fatal problems found while building, e.g. an `exclude` that drops a default
+   * test glob or two selected classes passing the same decorator token. Each warning
+   * names the bundle field it belongs to.
+   */
   warnings: string[];
 }
 
@@ -70,8 +74,11 @@ export function build({
     fileOf: (bundle) => bundle.filterExports,
     load: loadExportPredicate,
   });
-  const generated = resolved.bundles.map((bundle) =>
-    generate(resolved, bundle, paths, { include: includeFor(bundle), filterExports: filterExportsFor(bundle) }),
+  const generated = resolved.bundles.map((bundle, i) =>
+    generate(resolved, bundle, `bundles[${i}]`, paths, {
+      include: includeFor(bundle),
+      filterExports: filterExportsFor(bundle),
+    }),
   );
 
   const outputs = generated.map(({ bundle, content, registrations }): OutputResult => {
@@ -83,7 +90,11 @@ export function build({
     }
     return { file: bundle.output, bundle: bundle.name, status, registrations, content };
   });
-  return { config: resolved.file, outputs, warnings: resolved.warnings };
+  return {
+    config: resolved.file,
+    outputs,
+    warnings: [...resolved.warnings, ...generated.flatMap((g) => g.warnings)],
+  };
 }
 
 /**
@@ -120,6 +131,7 @@ function predicateResolver<P>({
 function generate(
   config: ResolvedConfig,
   bundle: ResolvedBundle,
+  field: string,
   paths: ImportPaths,
   { include, filterExports }: { include?: InclusionPredicate; filterExports?: ExportPredicate },
 ) {
@@ -155,5 +167,30 @@ function generate(
     namespaces: bundle.namespaces.map((ns) => ns.path),
     classes,
   });
-  return { bundle, content, registrations: classes.length };
+  return { bundle, content, registrations: classes.length, warnings: tokenCollisions(classes, field) };
+}
+
+/**
+ * A heuristic for "two selected classes bind the same token": when the decorator's
+ * first argument is a plain identifier, equal identifiers are almost always the same
+ * token, and registration is last-wins, so one silently replaces the other. Purely
+ * syntactic — aliased imports and computed keys are not resolved.
+ */
+function tokenCollisions(classes: DiscoveredClass[], field: string): string[] {
+  const owners = new Map<string, string[]>();
+  for (const { className, tokens } of classes) {
+    for (const token of tokens) {
+      const names = owners.get(token) ?? [];
+      if (!names.includes(className)) names.push(className);
+      owners.set(token, names);
+    }
+  }
+  return [...owners]
+    .filter(([, names]) => names.length > 1)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(
+      ([token, names]) =>
+        `${field}: decorator token "${token}" is passed by ${names.join(', ')}; ` +
+        `registration is last-wins, exclude one with select.excludeClasses`,
+    );
 }

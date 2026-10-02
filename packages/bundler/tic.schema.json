@@ -99,6 +99,20 @@
                 "type": "string",
                 "minLength": 1,
                 "description": "Glob the class name must match, e.g. \"*Service\". An anonymous default export is named after its file."
+              },
+              "excludeClasses": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Class names to drop after selection, e.g. one test double sitting next to the real registration in the same file."
+              },
+              "excludeNameGlob": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Glob the class name must NOT match, e.g. \"*Mock\". An anonymous default export is named after its file."
               }
             }
           },
