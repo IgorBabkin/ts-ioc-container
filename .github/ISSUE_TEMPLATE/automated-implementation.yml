@@ -1,0 +1,37 @@
+name: Automated implementation request
+description: Request a change and explicitly authorize Copilot to prepare a draft pull request
+title: "[AI] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem should the change solve?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe the desired behavior and relevant context.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: List concrete outcomes that will make this request complete.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: checkboxes
+    id: authorization
+    attributes:
+      label: Automated implementation
+      description: Copilot will use this issue as untrusted input and may open a draft pull request. A maintainer must review and merge it.
+      options:
+        - label: I authorize GitHub Copilot to implement this issue and open a draft pull request.
+          required: true
