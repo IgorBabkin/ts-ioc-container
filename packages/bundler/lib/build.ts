@@ -88,7 +88,7 @@ function generate(config: ResolvedConfig, bundle: ResolvedBundle, field: string,
   };
 
   const files = new Set<string>();
-  for (const entry of bundle.paths) {
+  for (const entry of bundle.files.paths) {
     const dir = paths.resolveNamespace(entry.path, config.dir);
     for (const file of listSourceFiles(dir, entry.recursive, isExcluded)) files.add(file);
   }
@@ -101,7 +101,7 @@ function generate(config: ResolvedConfig, bundle: ResolvedBundle, field: string,
   const content = emitBundle({
     name: bundle.name,
     configPath: toPosix(path.relative(path.dirname(bundle.output), config.file)),
-    paths: bundle.paths.map((entry) => entry.path),
+    paths: bundle.files.paths.map((entry) => entry.path),
     classes,
   });
   return { bundle, content, registrations: classes.length, warnings: tokenCollisions(classes, field) };

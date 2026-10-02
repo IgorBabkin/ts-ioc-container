@@ -18,9 +18,9 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   beforeEach(() => {
     project = TempProject.create({
-      '.bundles.json': { bundles: [{ output: 'src/di/container.bundle.ts', paths: ['./src/services'] }] },
+      '.bundles.json': { bundles: [{ output: 'src/di/container.bundle.ts', files: { paths: ['./src/services'] } }] },
       'src/services/Logger.ts': decorated('Logger'),
-      'other/.bundles.json': { bundles: [{ output: 'out.bundle.ts', paths: ['../src/services'] }] },
+      'other/.bundles.json': { bundles: [{ output: 'out.bundle.ts', files: { paths: ['../src/services'] } }] },
     });
   });
 
@@ -61,7 +61,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   it('prints a warning when a non-empty exclude drops the default test globs', () => {
     project.write('.bundles.json', {
-      bundles: [{ output: 'src/di/container.bundle.ts', paths: ['./src/services'], files: { exclude: ['legacy/**'] } }],
+      bundles: [{ output: 'src/di/container.bundle.ts', files: { paths: ['./src/services'], exclude: ['legacy/**'] } }],
     });
     const io = new Io(project.root);
 

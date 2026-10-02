@@ -30,14 +30,14 @@ Acceptance criteria:
 - Every relative path in the config resolves against the config file's
   directory, not the working directory.
 - The config lists `bundles`; each bundle has an `output` file (by convention
-  `*.bundle.ts`) and at least one entry in `paths`, and may name the generated
+  `*.bundle.ts`) and a `files` rule with at least one entry in `paths`, and may name the generated
   class (`name`, default `Bundle`) and carry `tags`.
 - An invalid config — including an unknown bundle field — fails the build with a
   message naming the offending field; nothing is written.
 
 ### Story: Register the classes of a folder
 
-As an application developer, I can list a folder in a bundle's `paths` so that
+As an application developer, I can list a folder in a bundle's `files.paths` so that
 its classes become registrations of the generated bundle.
 
 Acceptance criteria:
@@ -61,8 +61,9 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- Selection runs in two stages: a bundle's `files` rule decides by path alone
-  which files are read and parsed; its `classes` rule then picks classes out of
+- Selection runs in two stages: a bundle's `files` rule — the folders in
+  `paths` and the `include` / `exclude` globs within them — decides by path
+  alone which files are read and parsed; its `classes` rule then picks classes out of
   the parsed files.
 - `files.include` is a non-empty list of globs; a file is parsed only when it
   matches one of them. Omitted, every source file qualifies.

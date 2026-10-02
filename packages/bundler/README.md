@@ -40,7 +40,9 @@ below use the shortcut.
     {
       "output": "src/di/app.bundle.ts",
       "name": "AppBundle",
-      "paths": ["@app/services", { "path": "./src/infra", "recursive": false }]
+      "files": {
+        "paths": ["@app/services", { "path": "./src/infra", "recursive": false }]
+      }
     }
   ]
 }
@@ -53,8 +55,7 @@ below use the shortcut.
 | `bundles[].output`           | —                                         | The bundle file (convention: `*.bundle.ts`)                                                  |
 | `bundles[].name`             | `Bundle`                                  | Name of the generated class, an `IContainerModule`                                           |
 | `bundles[].tags`             | `[]`                                      | Tags associated with the bundle                                                              |
-| `bundles[].paths`            | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
-| `bundles[].files`            | every source file but tests               | Which files are parsed, by path — see [Selecting files](#selecting-files)                    |
+| `bundles[].files`            | —                                         | Folders to scan and which of their files are parsed — see [Selecting files](#selecting-files) |
 | `bundles[].classes`          | every exported class                      | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)  |
 
 An unknown field is an error, so a misspelled or removed option never goes
@@ -75,19 +76,26 @@ bundler never reads anything else:
 ```json
 {
   "output": "src/di/app.bundle.ts",
-  "paths": ["@app/services"],
-  "files": { "include": ["**/*.service.ts", "**/*.repository.ts"] },
+  "files": {
+    "paths": ["@app/services"],
+    "include": ["**/*.service.ts", "**/*.repository.ts"]
+  },
   "classes": { "decorators": ["register"] }
 }
 ```
 
 ## Selecting files
 
-Globs are relative to the config file and `/`-separated; `**` spans folders.
-A file is parsed when it matches **one of** `include` and **none of** `exclude`.
+`paths` are the folders a bundle's files come from: relative to the config file
+(`./src/services`) or tsconfig `paths` aliases (`@app/services`), scanned
+recursively unless an entry says `{ "path": "...", "recursive": false }`.
+Within them, a file is parsed when it matches **one of** `include` and **none
+of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
+spans folders.
 
 | Rule      | Default                                   | Meaning                                                    |
 | --------- | ----------------------------------------- | ---------------------------------------------------------- |
+| `paths`   | — (required)                              | Folders to scan                                            |
 | `include` | every source file                         | Globs a file must match one of, e.g. `"**/*.service.ts"`   |
 | `exclude` | test files, `__tests__/`, `node_modules/` | Globs of files never read; replaces the default when given |
 

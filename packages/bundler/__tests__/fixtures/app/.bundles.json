@@ -4,10 +4,12 @@
     {
       "output": "src/di/app.bundle.ts",
       "name": "AppBundle",
-      "paths": [
-        "@app/services",
-        "@app/infra"
-      ],
+      "files": {
+        "paths": [
+          "@app/services",
+          "@app/infra"
+        ]
+      },
       "classes": {
         "decorators": [
           "register"

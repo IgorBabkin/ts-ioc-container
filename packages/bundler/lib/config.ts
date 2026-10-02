@@ -4,13 +4,15 @@ import { TicConfigError } from './errors';
 import { globToRegExp } from './glob';
 
 /**
- * Which files of a bundle's `paths` are read and parsed: the first, cheap stage
- * of selection, decided by path alone. Globs are relative to the config file and
- * `/`-separated. A file is parsed when it matches one of `include` and none of
- * `exclude`; with a file naming convention (`*.service.ts`), `include` keeps the
- * bundler from reading anything else.
+ * Which files a bundle reads and parses: the first, cheap stage of selection,
+ * decided by path alone. `paths` are the folders the files come from; within them
+ * a file is parsed when it matches one of `include` and none of `exclude`. Globs
+ * are relative to the config file and `/`-separated. With a file naming convention
+ * (`*.service.ts`), `include` keeps the bundler from reading anything else.
  */
 export interface FileSelector {
+  /** Folders to scan: relative to the config file, or tsconfig `paths` aliases. */
+  paths: (string | PathConfig)[];
   /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
   include?: string[];
   /** Globs of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
@@ -19,6 +21,7 @@ export interface FileSelector {
 
 /** A {@link FileSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedFileSelector {
+  paths: Required<PathConfig>[];
   include?: RegExp[];
   exclude: RegExp[];
 }
@@ -71,9 +74,8 @@ export interface BundleConfig {
   name?: string;
   /** Tags associated with the bundle. */
   tags?: string[];
-  paths: (string | PathConfig)[];
-  /** Which files are parsed. Default: every source file except {@link DEFAULT_EXCLUDE}. */
-  files?: FileSelector;
+  /** Which files are parsed: the folders in `paths`, minus test files unless `exclude` says otherwise. */
+  files: FileSelector;
   /** Which classes of a parsed file are registered. Default: every exported class. */
   classes?: ClassSelector;
 }
@@ -114,7 +116,6 @@ export interface ResolvedBundle {
   output: string;
   name: string;
   tags: string[];
-  paths: Required<PathConfig>[];
   files: ResolvedFileSelector;
   classes: ResolvedClassSelector;
 }
@@ -143,22 +144,23 @@ function toPath(value: unknown, field: string): Required<PathConfig> {
   return { path: value.path, recursive: value.recursive ?? true };
 }
 
-const FILE_SELECTOR_FIELDS = new Set(['include', 'exclude']);
+const FILE_SELECTOR_FIELDS = new Set(['paths', 'include', 'exclude']);
 
 /**
- * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
+ * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field is missing or has the wrong type.
  */
 function toFileSelector(value: unknown, field: string): ResolvedFileSelector {
-  if (value === undefined) return { exclude: DEFAULT_EXCLUDE.map(globToRegExp) };
-  if (!isObject(value)) return fail(field, 'an object');
+  if (!isObject(value)) return fail(field, 'an object with "paths"');
   const unknown = Object.keys(value).find((key) => !FILE_SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { include, exclude } = value;
+  const { paths, include, exclude } = value;
+  if (!Array.isArray(paths) || paths.length === 0) return fail(`${field}.paths`, 'a non-empty array');
   if (include !== undefined && !(isStringArray(include) && include.length > 0)) {
     return fail(`${field}.include`, 'a non-empty array of strings');
   }
   if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
   return {
+    paths: paths.map((entry, i) => toPath(entry, `${field}.paths[${i}]`)),
     include: include?.map(globToRegExp),
     exclude: (exclude ?? DEFAULT_EXCLUDE).map(globToRegExp),
   };
@@ -197,7 +199,7 @@ function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
   };
 }
 
-const BUNDLE_FIELDS = new Set(['output', 'name', 'tags', 'paths', 'files', 'classes']);
+const BUNDLE_FIELDS = new Set(['output', 'name', 'tags', 'files', 'classes']);
 
 /**
  * @throws {TicConfigError} when a bundle field is unknown, missing or has the wrong type.
@@ -206,16 +208,14 @@ function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
   if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !BUNDLE_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { output, name, tags, paths, files, classes } = value;
+  const { output, name, tags, files, classes } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
   if (tags !== undefined && !isStringArray(tags)) return fail(`${field}.tags`, 'an array of strings');
-  if (!Array.isArray(paths) || paths.length === 0) return fail(`${field}.paths`, 'a non-empty array');
   return {
     output: path.resolve(dir, output),
     name: name ?? DEFAULT_BUNDLE_NAME,
     tags: tags ?? [],
-    paths: paths.map((entry, i) => toPath(entry, `${field}.paths[${i}]`)),
     files: toFileSelector(files, `${field}.files`),
     classes: toClassSelector(classes, `${field}.classes`),
   };

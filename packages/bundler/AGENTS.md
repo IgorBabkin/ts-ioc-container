@@ -10,10 +10,11 @@ it.
   same program). `tic build` reads `.bundles.json` (schema: `tic.schema.json`) and writes one
   bundle per `bundles[]` entry — a generated class, `export class AppBundle implements IContainerModule`, applied with `container.useModule(new AppBundle())`. `--check` writes nothing and exits 1
   when an output is stale — run it in CI.
-- Each bundle scans its `paths`: folders relative to the config file, or tsconfig
-  `paths` aliases. Generated imports use the most specific alias, else a relative path.
-- Selection has two stages. `files: { include, exclude }` decides by path
-  (globs relative to the config) which files are read and parsed at all: a file
+- Selection has two stages. `files: { paths, include, exclude }` decides by path
+  which files are read and parsed at all. `paths` (required) are the folders
+  scanned: relative to the config file, or tsconfig `paths` aliases; generated
+  imports use the most specific alias, else a relative path. Within them (globs
+  relative to the config) a file
   must match one of `include` (default: all) and none of `exclude` (default:
   test files, `__tests__/`, `node_modules/`; a non-empty list replaces it, and
   the build warns if it drops a default). With file naming conventions,

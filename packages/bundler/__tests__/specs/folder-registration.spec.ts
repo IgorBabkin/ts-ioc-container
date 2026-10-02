@@ -2,8 +2,8 @@ import { build, DEFAULT_EXCLUDE, loadConfig, TicConfigError, NamespaceNotFoundEr
 import { symlinkSync } from 'node:fs';
 import { decorated, TempProject } from '../project';
 
-const module = (paths: unknown[], extra: object = {}) => ({
-  bundles: [{ output: 'src/di/container.bundle.ts', paths, ...extra }],
+const module = (paths: unknown[], { files, ...extra }: { files?: object; [field: string]: unknown } = {}) => ({
+  bundles: [{ output: 'src/di/container.bundle.ts', files: { paths, ...files }, ...extra }],
 });
 
 describe('Folder registration', () => {
@@ -31,8 +31,8 @@ describe('Folder registration', () => {
       project = TempProject.create({
         '.bundles.json': {
           bundles: [
-            { output: 'src/di/a.bundle.ts', paths: ['./src/services'] },
-            { output: 'src/di/b.bundle.ts', paths: ['./src/services'], name: 'ServicesBundle' },
+            { output: 'src/di/a.bundle.ts', files: { paths: ['./src/services'] } },
+            { output: 'src/di/b.bundle.ts', files: { paths: ['./src/services'] }, name: 'ServicesBundle' },
           ],
         },
         'src/services/Logger.ts': decorated('Logger'),
@@ -62,15 +62,19 @@ describe('Folder registration', () => {
 
     it.each([
       [{}, 'bundles: expected a non-empty array'],
-      [{ bundles: [{ paths: ['./src'] }] }, 'bundles[0].output: expected a non-empty string'],
-      [{ bundles: [{ output: 'a.ts', paths: [] }] }, 'bundles[0].paths: expected a non-empty array'],
-      [{ bundles: [{ output: 'a.ts', paths: [{ recursive: true }] }] }, 'bundles[0].paths[0].path'],
-      [{ bundles: [{ output: 'a.ts', paths: ['./src'], name: 'not valid' }] }, 'bundles[0].name'],
-      [{ bundles: [{ output: 'a.ts', paths: ['./src'], tags: [1] }] }, 'bundles[0].tags'],
+      [{ bundles: [{ files: { paths: ['./src'] } }] }, 'bundles[0].output: expected a non-empty string'],
+      [{ bundles: [{ output: 'a.ts' }] }, 'bundles[0].files: expected an object with "paths"'],
+      [{ bundles: [{ output: 'a.ts', files: 'src/**' }] }, 'bundles[0].files: expected an object with "paths"'],
+      [{ bundles: [{ output: 'a.ts', files: {} }] }, 'bundles[0].files.paths: expected a non-empty array'],
+      [{ bundles: [{ output: 'a.ts', files: { paths: [] } }] }, 'bundles[0].files.paths: expected a non-empty array'],
+      [{ bundles: [{ output: 'a.ts', files: { paths: [{ recursive: true }] } }] }, 'bundles[0].files.paths[0].path'],
+      [{ bundles: [{ output: 'a.ts', files: { paths: ['./src'] }, name: 'not valid' }] }, 'bundles[0].name'],
+      [{ bundles: [{ output: 'a.ts', files: { paths: ['./src'] }, tags: [1] }] }, 'bundles[0].tags'],
+      [{ bundles: [{ output: 'a.ts', paths: ['./src'] }] }, 'bundles[0].paths: unknown field'],
       [{ bundles: [{ output: 'a.ts', namespaces: ['./src'] }] }, 'bundles[0].namespaces: unknown field'],
-      [{ bundles: [{ output: 'a.ts', paths: ['./src'], include: './x.cjs' }] }, 'bundles[0].include: unknown field'],
-      [{ bundles: [{ output: 'a.ts', paths: ['./src'], select: {} }] }, 'bundles[0].select: unknown field'],
-      [{ bundles: [{ output: 'a.ts', paths: ['./src'], exclude: [] }] }, 'bundles[0].exclude: unknown field'],
+      [{ bundles: [{ ...module(['./src']).bundles[0], include: './x.cjs' }] }, 'bundles[0].include: unknown field'],
+      [{ bundles: [{ ...module(['./src']).bundles[0], select: {} }] }, 'bundles[0].select: unknown field'],
+      [{ bundles: [{ ...module(['./src']).bundles[0], exclude: [] }] }, 'bundles[0].exclude: unknown field'],
     ])('rejects an invalid config %j naming the field', (config, message) => {
       project = TempProject.create({ '.bundles.json': config });
 
@@ -282,7 +286,6 @@ describe('Folder registration', () => {
     });
 
     it.each([
-      ['src/**', 'bundles[0].files: expected an object'],
       [{ include: [] }, 'bundles[0].files.include: expected a non-empty array of strings'],
       [{ include: [''] }, 'bundles[0].files.include: expected a non-empty array of strings'],
       [{ exclude: 'src/**' }, 'bundles[0].files.exclude: expected an array of strings'],
