@@ -22,7 +22,9 @@ it.
   bundle's file set, and its `paths` aliases and module resolution shape the
   generated imports (most specific alias, else a relative path). `output`
   defaults to `<root>/<name>.bundle.ts`: root = tsconfig `rootDir`, else the
-  common folder of its files; name from `<name>.bundle.json`, else `app`.
+  common folder of its files. `name` defaults to the config's stem
+  (`production.bundle.json` → `production`), else `base`; the class is
+  `toClassName(name)` — `ProductionBundle`, `BaseBundle`.
 - Selection has two stages. `files: { paths, include, exclude }` decides by path
   which files are read and parsed at all. `paths` override the tsconfig's file
   set with folders (relative to the config, or tsconfig aliases); required when

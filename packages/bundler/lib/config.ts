@@ -84,12 +84,16 @@ export interface BundleConfig {
   $schema?: string;
   /**
    * The generated file, relative to the config file. Default `<root>/<name>.bundle.ts`:
-   * `<root>` is the tsconfig's `rootDir`, else the common folder of the files it compiles;
-   * `<name>` comes from the config file (`production.bundle.json` -> `production`), or is
-   * {@link DEFAULT_OUTPUT_STEM}. Required when there is no tsconfig to extend.
+   * `<root>` is the tsconfig's `rootDir`, else the common folder of the files it compiles.
+   * Required when there is no tsconfig to extend.
    */
   output?: string;
-  /** Name of the generated class, an `IContainerModule`. Default `Bundle`. */
+  /**
+   * The bundle's name: letters, digits, `-` and `_`, starting with a letter. Default: the
+   * config file's stem (`production.bundle.json` -> `production`), else {@link DEFAULT_BUNDLE_NAME}.
+   * It names the default output (`production.bundle.ts`) and the generated class,
+   * an `IContainerModule` (`ProductionBundle`, see {@link toClassName}).
+   */
   name?: string;
   /** Tags associated with the bundle. */
   tags?: string[];
@@ -110,11 +114,10 @@ export interface BundleConfig {
 /** A config file is named `<name>.bundle.json`, e.g. `app.bundle.json`, `production.bundle.json`. */
 export const CONFIG_FILE_SUFFIX = '.bundle.json';
 export const DEFAULT_EXTENDS = './tsconfig.json';
-export const DEFAULT_BUNDLE_NAME = 'Bundle';
+/** The bundle name when the config file gives none, e.g. building from `tsconfig.json` alone. */
+export const DEFAULT_BUNDLE_NAME = 'base';
 /** What `classes.decorators` requires when omitted: the library's own `@register`. */
 export const DEFAULT_DECORATORS = ['register'];
-/** The output name stem when the config file gives none, e.g. building from `tsconfig.json` alone. */
-export const DEFAULT_OUTPUT_STEM = 'app';
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
   '**/*.test.ts',
@@ -131,9 +134,10 @@ export interface ResolvedConfig {
   dir: string;
   /** `undefined`: derived from the tsconfig at build time (see {@link BundleConfig.output}). */
   output?: string;
-  /** The output name stem: `production` for `production.bundle.json`. */
-  stem: string;
+  /** The bundle name: `production` for `production.bundle.json`. */
   name: string;
+  /** The generated class: `ProductionBundle`. */
+  className: string;
   tags: string[];
   /** The extended tsconfig; `required` when the config names it, so it must exist. */
   tsconfig: { file: string; required: boolean };
@@ -150,7 +154,7 @@ const isObject = (value: unknown): value is Json =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
 const isStringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every(isNonEmptyString);
-const isIdentifier = (value: unknown): value is string => typeof value === 'string' && /^[A-Za-z_$][\w$]*$/.test(value);
+const isBundleName = (value: unknown): value is string => typeof value === 'string' && /^[A-Za-z][\w-]*$/.test(value);
 
 const fail = (field: string, expected: string): never => {
   throw new TicConfigError(`${field}: expected ${expected}`);
@@ -256,7 +260,10 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   if (unknown) throw new TicConfigError(`${unknown}: unknown field`);
   const { output, name, tags, extends: tsconfig, importExtension, files, classes } = content;
   if (output !== undefined && !isNonEmptyString(output)) return fail('output', 'a non-empty string');
-  if (name !== undefined && !isIdentifier(name)) return fail('name', 'a valid identifier');
+  if (name !== undefined && !isBundleName(name)) {
+    return fail('name', 'letters, digits, "-" or "_", starting with a letter');
+  }
+  const bundleName = name ?? configStem(file) ?? DEFAULT_BUNDLE_NAME;
   if (tags !== undefined && !isStringArray(tags)) return fail('tags', 'an array of strings');
   if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('extends', 'a non-empty string');
   if (importExtension !== undefined && typeof importExtension !== 'string') return fail('importExtension', 'a string');
@@ -264,8 +271,8 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     file,
     dir,
     output: output === undefined ? undefined : path.resolve(dir, output),
-    stem: configStem(file),
-    name: name ?? DEFAULT_BUNDLE_NAME,
+    name: bundleName,
+    className: toClassName(bundleName),
     tags: tags ?? [],
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
     importExtension,
@@ -275,11 +282,17 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   };
 }
 
-/** `production.bundle.json` -> `production`; any other file name -> {@link DEFAULT_OUTPUT_STEM}. */
-function configStem(file: string): string {
+/** `production.bundle.json` -> `production`; `undefined` for any other file name, e.g. `tsconfig.json`. */
+function configStem(file: string): string | undefined {
   const base = path.basename(file);
   const stem = base.endsWith(CONFIG_FILE_SUFFIX) ? base.slice(0, -CONFIG_FILE_SUFFIX.length) : '';
-  return stem || DEFAULT_OUTPUT_STEM;
+  return isBundleName(stem) ? stem : undefined;
+}
+
+/** The generated class for a bundle name: `production` -> `ProductionBundle`, `my-app_v2` -> `MyAppV2Bundle`. */
+export function toClassName(name: string): string {
+  const words = name.split(/[-_]+/).filter(Boolean);
+  return `${words.map((word) => word[0].toUpperCase() + word.slice(1)).join('')}Bundle`;
 }
 
 /**

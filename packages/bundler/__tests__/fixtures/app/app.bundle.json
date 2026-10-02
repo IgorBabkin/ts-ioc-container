@@ -1,7 +1,7 @@
 {
   "$schema": "../../../tic.schema.json",
   "output": "src/di/app.bundle.ts",
-  "name": "AppBundle",
+  "name": "app",
   "files": {
     "paths": [
       "@app/services",

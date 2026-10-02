@@ -27,12 +27,15 @@ Acceptance criteria:
   `bin` entries run the same program.
 - One config file describes one bundle and is named `<name>.bundle.json`. Its
   fields are flat and all optional: `output` (by convention `*.bundle.ts`),
-  `name` (default `Bundle`), `tags`, `extends`, `importExtension`, `files` and
+  `name`, `tags`, `extends`, `importExtension`, `files` and
   `classes`.
+- `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
+  letter — and defaults to the config file's stem (`production.bundle.json` →
+  `production`), else `base`. The generated class is named after it:
+  `ProductionBundle`, `BaseBundle`, `my-app` → `MyAppBundle`.
 - `output` defaults to `<root>/<name>.bundle.ts`: `<root>` is the tsconfig's
-  `rootDir`, else the common folder of the files it compiles; `<name>` comes
-  from the config file name, else `app`. Without a tsconfig, `output` is
-  required.
+  `rootDir`, else the common folder of the files it compiles. Without a
+  tsconfig, `output` is required.
 - `tic build` works on the package it is invoked in: the nearest folder with a
   `package.json`, from the working directory up — the project root, or the
   package in a monorepo; never a workspace root above it.

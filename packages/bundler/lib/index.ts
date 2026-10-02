@@ -17,7 +17,7 @@ export {
   DEFAULT_EXCLUDE,
   DEFAULT_BUNDLE_NAME,
   DEFAULT_DECORATORS,
-  DEFAULT_OUTPUT_STEM,
+  toClassName,
   type BundleConfig,
   type PathConfig,
   type ClassSelector,

@@ -67,7 +67,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     const io = new Io(project.path('zero'));
 
     expect(run(['build'], io)).toBe(0);
-    expect(io.out).toEqual(['wrote     src/app.bundle.ts (1 registration)']);
+    expect(io.out).toEqual(['wrote     src/base.bundle.ts (1 registration)']);
   });
 
   describe('in a monorepo: the package it is invoked in', () => {
@@ -86,8 +86,8 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
       const io = new Io(project.path('repo/packages/a/src/services'));
 
       expect(run(['build'], io)).toBe(0);
-      expect(io.out).toEqual(['wrote     ../app.bundle.ts (1 registration)']);
-      expect(project.read('repo/packages/a/src/app.bundle.ts')).toContain('Registration.fromClass(Logger)');
+      expect(io.out).toEqual(['wrote     ../base.bundle.ts (1 registration)']);
+      expect(project.read('repo/packages/a/src/base.bundle.ts')).toContain('Registration.fromClass(Logger)');
     });
 
     it("builds the package's *.bundle.json, even when invoked in a sub-folder", () => {

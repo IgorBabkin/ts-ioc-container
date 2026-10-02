@@ -67,7 +67,7 @@ export function build({ config, cwd = process.cwd(), check = false }: BuildOptio
   }
   return {
     config: resolved.file,
-    output: { file: output, bundle: resolved.name, status, registrations, content },
+    output: { file: output, bundle: resolved.className, status, registrations, content },
     warnings: [...resolved.warnings, ...warnings],
   };
 }
@@ -78,7 +78,7 @@ export function build({ config, cwd = process.cwd(), check = false }: BuildOptio
  */
 function generate(config: ResolvedConfig) {
   const { importPaths: paths, fileNames, rootDir } = loadTsconfig(config.tsconfig, config.importExtension);
-  const output = config.output ?? (rootDir && path.join(rootDir, `${config.stem}.bundle.ts`));
+  const output = config.output ?? (rootDir && path.join(rootDir, `${config.name}.bundle.ts`));
   if (output === undefined) throw new TicConfigError('output: required when there is no tsconfig to extend');
   const relative = (file: string) => toPosix(path.relative(config.dir, file));
   const { include, exclude } = config.files;
@@ -115,7 +115,7 @@ function generate(config: ResolvedConfig) {
     .map((cls) => ({ ...cls, specifier: paths.specifier(output, cls.file) }));
 
   const content = emitBundle({
-    name: config.name,
+    name: config.className,
     configPath: toPosix(path.relative(path.dirname(output), config.file)),
     paths: config.files.paths?.map((entry) => entry.path),
     tsconfigPath: toPosix(path.relative(path.dirname(output), config.tsconfig.file)),

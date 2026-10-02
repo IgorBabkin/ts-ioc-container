@@ -12,13 +12,12 @@
     "output": {
       "type": "string",
       "minLength": 1,
-      "description": "The bundle file (convention: *.bundle.ts). Default `<root>/<name>.bundle.ts`: <root> is the tsconfig's rootDir, else the common folder of the files it compiles; <name> comes from this file's name (production.bundle.json → production). Required when there is no tsconfig to extend."
+      "description": "The bundle file (convention: *.bundle.ts). Default `<root>/<name>.bundle.ts`: <root> is the tsconfig's rootDir, else the common folder of the files it compiles. Required when there is no tsconfig to extend."
     },
     "name": {
       "type": "string",
-      "pattern": "^[A-Za-z_$][\\w$]*$",
-      "default": "Bundle",
-      "description": "Name of the generated class, an IContainerModule."
+      "pattern": "^[A-Za-z][\\w-]*$",
+      "description": "The bundle's name: letters, digits, \"-\" and \"_\", starting with a letter. Default: this file's stem (production.bundle.json → production), else \"base\". It names the default output (production.bundle.ts) and the generated IContainerModule class (ProductionBundle)."
     },
     "tags": {
       "type": "array",
