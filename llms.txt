@@ -1,6 +1,6 @@
 # ts-ioc-container
 
-> TypeScript dependency injection container: scoped lifecycles, decorators (`@register`, `@inject`, `@hook`), typed tokens, lazy dependencies, provider pipes. Plus React bindings in `@ts-ioc-container/react` and the `tic` build-time bundler in `@ts-ioc-container/bundler`. The API changes between majors: prefer the `AGENTS.md` shipped in the installed package (`node_modules/ts-ioc-container/AGENTS.md`) over memory.
+> TypeScript dependency injection container: scoped lifecycles, decorators (`@register`, `@inject`, `@hook`), typed tokens, lazy dependencies, provider pipes. Plus React bindings in `@ts-ioc-container/react`, the `tic` build-time bundler in `@ts-ioc-container/bundler`, and OpenAPI code generation in `@ts-ioc-container/openapi-to-server` and `@ts-ioc-container/openapi-to-zod`. The API changes between majors: prefer the `AGENTS.md` shipped in the installed package (`node_modules/ts-ioc-container/AGENTS.md`) over memory.
 
 ## Docs
 
@@ -8,6 +8,8 @@
 - [README (core)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/ts-ioc-container/README.md): full documentation with executable examples
 - [AGENTS.md (react)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/react/AGENTS.md): React bindings
 - [AGENTS.md (bundler)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/bundler/AGENTS.md): `tic build` — bundles your dependencies into a single container module, from folders / tsconfig aliases
+- [AGENTS.md (openapi-to-server)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/openapi-to-server/AGENTS.md): TypeScript server interfaces from OpenAPI 3.0 specs
+- [AGENTS.md (openapi-to-zod)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/openapi-to-zod/AGENTS.md): Zod validation schemas from OpenAPI 3.0 specs
 
 ## Optional
 

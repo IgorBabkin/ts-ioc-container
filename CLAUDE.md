@@ -12,10 +12,14 @@ Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
 - `packages/bundler`: `@ts-ioc-container/bundler` — bundles an application's dependencies into a single container module, discovered at build time (ADR 0022). Ships the `tic` CLI: `tic build` reads `tic.config.json` and generates **bundles** — `*.bundle.ts` files exporting a container module class (`useModule(new AppBundle())`) — from folders (relative paths or tsconfig `paths` aliases). Generated files are declared by **protocols** — Handlebars templates in `packages/bundler/lib/protocols/`, precompiled by `hbs:compile` into the gitignored `tpl/index.cjs`, which registers them in the process-global `Handlebars.templates` under their file basename (so keep basenames unique, and interpolate with `{{{ }}}` — output is TypeScript, not HTML); `emit.ts` only prepares the data. `hbs:compile` runs before `build`, `test` and `type-check`, and on publish (`prepack`); the tarball ships only the compiled `tpl/`, never the `.hbs` sources. CJS-only (it is a Node tool); `typescript` is a peer dependency. It never touches the core package — generated code uses only the public `Registration` / `IContainerModule` API
+- `packages/openapi-to-server`: `@ts-ioc-container/openapi-to-server` — generates TypeScript server interfaces from OpenAPI 3.0 specs, plus `openapi-to-server` / `openapi-to-client` CLIs
+- `packages/openapi-to-zod`: `@ts-ioc-container/openapi-to-zod` — generates Zod validation schemas from OpenAPI 3.0 specs, plus the `openapi-to-zod` CLI
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `adr/`: architecture decision records (plain markdown, not built or published)
 
-`ts-ioc-container`, `@ts-ioc-container/react` and `@ts-ioc-container/bundler` are released independently by
+`ts-ioc-container`, `@ts-ioc-container/react`, `@ts-ioc-container/bundler`,
+`@ts-ioc-container/openapi-to-server` and `@ts-ioc-container/openapi-to-zod` are
+released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
@@ -24,6 +28,11 @@ and never released.
 must be published by hand (see [npm authentication](#npm-authentication-trusted-publishing--oidc))
 and given a trusted publisher before a `feat(@ts-ioc-container/bundler)` commit
 reaches `main` — otherwise that release fails mid-pipeline with `ENEEDAUTH`.
+
+`@ts-ioc-container/openapi-to-server` and `@ts-ioc-container/openapi-to-zod` were
+imported from `@ibabkin/openapi-*` and first published by hand under their new
+names (OIDC cannot create a package). Once their trusted publishers are
+configured in npm, releases go through OIDC like the rest of the workspace.
 
 `*.bundle.ts` files (e.g. the bundler's e2e fixture) are `tic build` output:
 they are in `.prettierignore` and must not be edited or formatted by hand —
@@ -78,7 +87,7 @@ pnpm exec vitest -t "test name pattern"                # Run tests matching patt
 
 ## Release
 
-Both packages are released by `release-monorepo-semantically`, driven directly
+All public packages are released by `release-monorepo-semantically`, driven directly
 by a sequence of `pnpm exec monorepo-semantic-release <step> --context "$RELEASE_CONTEXT"`
 steps in `.github/workflows/publish.yml` — one workflow step per pipeline step,
 matching the tool's own README usage example (no wrapper script). It discovers
