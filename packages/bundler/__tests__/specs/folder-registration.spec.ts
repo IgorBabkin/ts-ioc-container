@@ -3,6 +3,7 @@ import {
   DEFAULT_EXCLUDE,
   type ExportContext,
   type InclusionContext,
+  loadConfig,
   TicConfigError,
   NamespaceNotFoundError,
 } from '../../lib';
@@ -50,12 +51,21 @@ describe('Folder registration', () => {
       expect(project.read('src/di/b.bundle.ts')).toContain('export class ServicesBundle implements IContainerModule');
     });
 
+    it('accepts and preserves bundle tags from config', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src/services'], { tags: ['test'] }),
+      });
+
+      expect(loadConfig(project.path('tic.config.json')).bundles[0].tags).toEqual(['test']);
+    });
+
     it.each([
       [{}, 'bundles: expected a non-empty array'],
       [{ bundles: [{ namespaces: ['./src'] }] }, 'bundles[0].output: expected a non-empty string'],
       [{ bundles: [{ output: 'a.ts', namespaces: [] }] }, 'bundles[0].namespaces: expected a non-empty array'],
       [{ bundles: [{ output: 'a.ts', namespaces: [{ recursive: true }] }] }, 'bundles[0].namespaces[0].path'],
       [{ bundles: [{ output: 'a.ts', namespaces: ['./src'], name: 'not valid' }] }, 'bundles[0].name'],
+      [{ bundles: [{ output: 'a.ts', namespaces: ['./src'], tags: [1] }] }, 'bundles[0].tags'],
     ])('rejects an invalid config %j naming the field', (config, message) => {
       project = TempProject.create({ 'tic.config.json': config });
 
