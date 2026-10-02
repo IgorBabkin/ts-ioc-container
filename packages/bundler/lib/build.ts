@@ -38,6 +38,8 @@ export interface BuildResult {
   /** Absolute path of the config that was built. */
   config: string;
   outputs: OutputResult[];
+  /** Non-fatal problems found while resolving the config, e.g. an `exclude` that drops a default test glob. */
+  warnings: string[];
 }
 
 /**
@@ -81,7 +83,7 @@ export function build({
     }
     return { file: bundle.output, bundle: bundle.name, status, registrations, content };
   });
-  return { config: resolved.file, outputs };
+  return { config: resolved.file, outputs, warnings: resolved.warnings };
 }
 
 /**

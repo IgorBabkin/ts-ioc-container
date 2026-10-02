@@ -45,6 +45,12 @@ export interface BundleConfig {
   /** Globs, relative to the config file, of files never scanned. Replaces {@link DEFAULT_EXCLUDE} when given. */
   exclude?: string[];
   /**
+   * Globs, relative to the config file, of files never scanned, added on top of
+   * `exclude` (or {@link DEFAULT_EXCLUDE} when `exclude` is omitted). Use this to
+   * add one exclusion without restating the defaults.
+   */
+  additionalExclude?: string[];
+  /**
    * A file exporting an `InclusionPredicate`, relative to the config file. Overrides the
    * conventional `tic.include.*` next to the config.
    */
@@ -84,6 +90,8 @@ export interface ResolvedConfig {
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
   bundles: ResolvedBundle[];
+  /** Non-fatal problems found while resolving, e.g. an `exclude` that drops a default test glob. */
+  warnings: string[];
 }
 
 export interface ResolvedBundle {
@@ -91,6 +99,7 @@ export interface ResolvedBundle {
   name: string;
   namespaces: Required<NamespaceConfig>[];
   select: ResolvedSelector;
+  /** The effective list: the configured `exclude` (or the defaults) followed by `additionalExclude`. */
   exclude: string[];
   /** Absolute path of the bundle's own predicate file, when it names one. */
   include?: string;
@@ -148,11 +157,14 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
  */
 function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
   if (!isObject(value)) return fail(field, 'an object');
-  const { output, name, namespaces, select, exclude, include, filterExports } = value;
+  const { output, name, namespaces, select, exclude, additionalExclude, include, filterExports } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
   if (!Array.isArray(namespaces) || namespaces.length === 0) return fail(`${field}.namespaces`, 'a non-empty array');
   if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
+  if (additionalExclude !== undefined && !isStringArray(additionalExclude)) {
+    return fail(`${field}.additionalExclude`, 'an array of strings');
+  }
   if (include !== undefined && !isNonEmptyString(include)) return fail(`${field}.include`, 'a non-empty string');
   if (filterExports !== undefined && !isNonEmptyString(filterExports)) {
     return fail(`${field}.filterExports`, 'a non-empty string');
@@ -162,10 +174,28 @@ function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
     name: name ?? DEFAULT_BUNDLE_NAME,
     namespaces: namespaces.map((ns, i) => toNamespace(ns, `${field}.namespaces[${i}]`)),
     select: toSelector(select, `${field}.select`),
-    exclude: exclude ?? DEFAULT_EXCLUDE,
+    exclude: [...(exclude ?? DEFAULT_EXCLUDE), ...(additionalExclude ?? [])],
     include: include === undefined ? undefined : path.resolve(dir, include),
     filterExports: filterExports === undefined ? undefined : path.resolve(dir, filterExports),
   };
+}
+
+/**
+ * Warns when an explicit, non-empty `exclude` omits one of the {@link DEFAULT_EXCLUDE}
+ * globs, since that silently drops test files (or `node_modules`) from the scan.
+ * An empty `exclude` is a deliberate opt-out and does not warn; `additionalExclude`
+ * is the additive companion that keeps the defaults.
+ */
+function excludeWarnings(value: unknown, field: string): string[] {
+  if (!isObject(value)) return [];
+  const exclude = value.exclude;
+  if (!isStringArray(exclude) || exclude.length === 0) return [];
+  const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
+  if (missing.length === 0) return [];
+  return [
+    `${field}.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
+      `add them back or use ${field}.additionalExclude`,
+  ];
 }
 
 /**
@@ -186,6 +216,7 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     tsconfig: { file: path.resolve(dir, tsconfig ?? 'tsconfig.json'), required: tsconfig !== undefined },
     importExtension,
     bundles: bundles.map((m, i) => toBundle(m, `bundles[${i}]`, dir)),
+    warnings: bundles.flatMap((m, i) => excludeWarnings(m, `bundles[${i}]`)),
   };
 }
 

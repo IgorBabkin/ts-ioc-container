@@ -59,6 +59,17 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     expect(io.err).toEqual(['tic: bundles: expected a non-empty array']);
   });
 
+  it('prints a warning when a non-empty exclude drops the default test globs', () => {
+    project.write('tic.config.json', {
+      bundles: [{ output: 'src/di/container.bundle.ts', namespaces: ['./src/services'], exclude: ['legacy/**'] }],
+    });
+    const io = new Io(project.root);
+
+    expect(run(['build'], io)).toBe(0);
+    expect(io.err.join('\n')).toContain('tic: warning: bundles[0].exclude');
+    expect(io.err.join('\n')).toContain('**/*.spec.ts');
+  });
+
   it('prints usage for --help and rejects an unknown command', () => {
     const io = new Io(project.root);
 

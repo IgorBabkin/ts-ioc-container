@@ -70,7 +70,8 @@ export function run(
       return 1;
     }
     const { config, check } = parseBuildArgs(rest);
-    const { outputs } = build({ config, check, cwd: io.cwd });
+    const { outputs, warnings } = build({ config, check, cwd: io.cwd });
+    for (const warning of warnings) io.stderr(`tic: warning: ${warning}`);
     for (const { status, file, registrations } of outputs) {
       io.stdout(`${VERB[status].padEnd(10)}${path.relative(io.cwd, file)} (${plural(registrations)})`);
     }

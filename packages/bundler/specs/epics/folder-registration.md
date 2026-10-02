@@ -49,6 +49,12 @@ Acceptance criteria:
 - Abstract classes, non-exported classes, `.d.ts` files and files matching
   `exclude` (default: test files, `__tests__/`, `node_modules/`) are never
   registered. `exclude` globs are relative to the config file.
+- A non-empty `exclude` replaces the defaults; `additionalExclude` adds globs on
+  top of `exclude` (or the defaults when `exclude` is omitted), so one extra
+  exclusion does not mean restating the test-file defaults. An explicit
+  `exclude: []` still scans tests deliberately. When a non-empty `exclude` omits
+  a default glob, the build reports a warning (the escape hatch stays: `[]`
+  warns for nothing).
 - A class exported by `export { X }`, `export { X as Y }` or `export default` is
   registered and imported under its exported name.
 - The generated file is never scanned, even when it lives inside a namespace.

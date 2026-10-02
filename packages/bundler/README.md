@@ -56,8 +56,31 @@ below use the shortcut.
 | `bundles[].namespaces`       | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
 | `bundles[].select`           | every exported class                      | Which classes of a file are registered — see [Selecting classes](#selecting-classes)          |
 | `bundles[].exclude`          | test files, `__tests__/`, `node_modules/` | Globs (relative to the config) never scanned; replaces the default                           |
+| `bundles[].additionalExclude`| —                                         | Globs never scanned, added on top of `exclude` (or the defaults) — see [Excluding files](#excluding-files) |
 | `bundles[].filterExports`    | `tic.exports.*` next to the config        | File exporting an `ExportPredicate` — see [Filtering classes](#filtering-classes-after-parsing) |
 | `bundles[].include`          | `tic.include.*` next to the config        | File exporting an `InclusionPredicate` — see [Including files](#including-files-with-a-predicate) |
+
+## Excluding files
+
+By default test files, `__tests__/` and `node_modules/` are never scanned. To
+add one exclusion without restating those defaults, use `additionalExclude`:
+
+```json
+{
+  "bundles": [
+    {
+      "output": "src/di/app.bundle.ts",
+      "namespaces": ["@app/services"],
+      "additionalExclude": ["frontend/api/generated/**", "**/Mock*.ts"]
+    }
+  ]
+}
+```
+
+A non-empty `exclude` replaces the defaults; if it omits a default glob the
+build warns, since test classes usually carry the same `@register` decorators as
+production ones. `exclude: []` deliberately scans everything, including tests —
+combine it with `include` when only some tests should join.
 
 ## Selecting classes
 

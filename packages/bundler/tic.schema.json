@@ -115,7 +115,14 @@
               "**/__tests__/**",
               "**/node_modules/**"
             ],
-            "description": "Globs, relative to this file, of files never scanned. Replaces the default when given."
+            "description": "Globs, relative to this file, of files never scanned. Replaces the default when given; prefer additionalExclude to add one exclusion without restating the defaults. A non-empty list that omits a default glob makes `tic build` warn."
+          },
+          "additionalExclude": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Globs, relative to this file, of files never scanned, added on top of `exclude` (or the default excludes when `exclude` is omitted)."
           },
           "include": {
             "type": "string",

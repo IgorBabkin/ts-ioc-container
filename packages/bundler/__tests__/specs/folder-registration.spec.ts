@@ -1,4 +1,11 @@
-import { build, type ExportContext, type InclusionContext, TicConfigError, NamespaceNotFoundError } from '../../lib';
+import {
+  build,
+  DEFAULT_EXCLUDE,
+  type ExportContext,
+  type InclusionContext,
+  TicConfigError,
+  NamespaceNotFoundError,
+} from '../../lib';
 import { decorated, TempProject } from '../project';
 
 const module = (namespaces: unknown[], extra: object = {}) => ({
@@ -156,6 +163,64 @@ describe('Folder registration', () => {
 
       expect(generated()).toContain('Registration.fromClass(KeptSpec)');
       expect(generated()).not.toContain('Old');
+    });
+
+    it('adds additionalExclude globs on top of the default test excludes', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { additionalExclude: ['src/legacy/**'] }),
+        'src/legacy/Old.ts': decorated('Old'),
+        'src/Kept.ts': decorated('Kept'),
+        'src/Kept.spec.ts': decorated('KeptSpec'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain('Registration.fromClass(Kept)');
+      expect(generated()).not.toMatch(/fromClass\((Old|KeptSpec)\)/);
+    });
+
+    it('adds additionalExclude globs on top of an explicit exclude', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], {
+          exclude: ['src/legacy/**'],
+          additionalExclude: ['src/generated/**'],
+        }),
+        'src/legacy/Old.ts': decorated('Old'),
+        'src/generated/Gen.ts': decorated('Gen'),
+        'src/Kept.spec.ts': decorated('KeptSpec'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain('Registration.fromClass(KeptSpec)');
+      expect(generated()).not.toMatch(/fromClass\((Old|Gen)\)/);
+    });
+
+    it('warns when a non-empty exclude drops the default test globs', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src'], { exclude: ['src/legacy/**'] }),
+        'src/legacy/Old.ts': decorated('Old'),
+      });
+
+      const { warnings } = buildProject();
+
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('bundles[0].exclude');
+      expect(warnings[0]).toContain('**/*.spec.ts');
+      expect(warnings[0]).toContain('additionalExclude');
+    });
+
+    it('does not warn for additionalExclude, a complete exclude, or an explicit empty exclude', () => {
+      const cases = [{ additionalExclude: ['src/legacy/**'] }, { exclude: [...DEFAULT_EXCLUDE] }, { exclude: [] }];
+
+      for (const extra of cases) {
+        project = TempProject.create({
+          'tic.config.json': module(['./src'], extra),
+          'src/Kept.ts': decorated('Kept'),
+        });
+
+        expect(buildProject().warnings).toEqual([]);
+      }
     });
   });
 
