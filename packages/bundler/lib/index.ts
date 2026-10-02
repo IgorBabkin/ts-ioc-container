@@ -1,40 +1,35 @@
-export { build, type BuildOptions, type BuildResult, type OutputResult, type OutputStatus } from './build';
+export {
+  build,
+  TSCONFIG_FILE,
+  type BuildOptions,
+  type BuildResult,
+  type OutputResult,
+  type OutputStatus,
+} from './build';
 export { run, type CliIo } from './cli';
 export {
   loadConfig,
   resolveConfig,
-  DEFAULT_CONFIG_FILE,
+  CONFIG_FILE_SUFFIXES,
+  findConfigFiles,
+  findPackageRoot,
+  DEFAULT_EXTENDS,
   DEFAULT_EXCLUDE,
   DEFAULT_BUNDLE_NAME,
-  type TicConfig,
+  DEFAULT_DECORATORS,
+  toClassName,
   type BundleConfig,
-  type NamespaceConfig,
+  type PathConfig,
   type ClassSelector,
   type ExportKind,
-  type ResolvedSelector,
+  type ResolvedClassSelector,
+  type FileSelector,
+  type ResolvedFileSelector,
   type ResolvedConfig,
-  type ResolvedBundle,
 } from './config';
 export { ImportPaths } from './ImportPaths';
-export { type FilterPredicate } from './utils';
-export {
-  type ExportPredicate,
-  type ExportContext,
-  EXPORTS_CONVENTION,
-  findConventionalExportPredicate,
-  loadExportPredicate,
-} from './exportPredicate';
-export {
-  type InclusionPredicate,
-  type InclusionContext,
-  type TagInclusionPredicate,
-  byTags,
-  fileTags,
-  INCLUSION_CONVENTION,
-  findConventionalPredicate,
-  loadInclusionPredicate,
-} from './inclusion';
-export { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
-export { emitBundle, type EmitInput } from './emit';
+export { loadTsconfig, type ExtendedTsconfig } from './tsconfig';
+export { findClasses, isSourceFile, listSourceFiles, type DiscoveredClass } from './scan';
+export { emitBundle, GENERATED_HEADER, type EmitInput } from './emit';
 export { globToRegExp } from './glob';
 export { TicError, TicConfigError, NamespaceNotFoundError } from './errors';

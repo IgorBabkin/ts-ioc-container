@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import type { ResolvedSelector } from './config';
+import type { ResolvedClassSelector } from './config';
 
 /** An exported class the generated bundle registers. */
 export interface DiscoveredClass {
@@ -32,6 +32,9 @@ export interface DiscoveredClass {
 const SOURCE_FILE = /\.(tsx?|mts|cts)$/;
 const DECLARATION_FILE = /\.d\.[mc]?tsx?$/;
 
+/** A TypeScript source file the bundler may parse: not a declaration file. */
+export const isSourceFile = (file: string): boolean => SOURCE_FILE.test(file) && !DECLARATION_FILE.test(file);
+
 /** Source files of `dir`, sorted by path so the generated output is stable across machines. */
 export function listSourceFiles(dir: string, recursive: boolean, isExcluded: (file: string) => boolean): string[] {
   const files: string[] = [];
@@ -40,7 +43,7 @@ export function listSourceFiles(dir: string, recursive: boolean, isExcluded: (fi
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
         if (recursive && entry.name !== 'node_modules') walk(full);
-      } else if (SOURCE_FILE.test(entry.name) && !DECLARATION_FILE.test(entry.name) && !isExcluded(full)) {
+      } else if (isSourceFile(entry.name) && !isExcluded(full)) {
         files.push(full);
       }
     }
@@ -80,7 +83,7 @@ function nameFromFile(file: string): string {
  */
 export function findClasses(
   file: string,
-  selector: ResolvedSelector,
+  selector: ResolvedClassSelector,
   text = readFileSync(file, 'utf8'),
 ): DiscoveredClass[] {
   const kind = file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
@@ -149,9 +152,9 @@ export function findClasses(
       if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
       if (selector.export !== 'any' && (exportName === 'default') !== (selector.export === 'default')) return false;
       if (selector.decorators && !selector.decorators.some((name) => decorators.includes(name))) return false;
-      if (selector.nameGlob && !selector.nameGlob.test(className)) return false;
+      if (selector.name && !selector.name.test(className)) return false;
       if (selector.excludeClasses?.includes(className)) return false;
-      if (selector.excludeNameGlob?.test(className)) return false;
+      if (selector.excludeName?.test(className)) return false;
       return true;
     })
     .sort((a, b) => a.node.pos - b.node.pos)

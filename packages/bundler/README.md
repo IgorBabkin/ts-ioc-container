@@ -1,8 +1,8 @@
 # @ts-ioc-container/bundler
 
 **Bundles your dependencies into a single container module.** `tic build` scans
-your folders — by path or tsconfig alias — and generates one typed bundle that
-registers every class in them, ready for
+what your tsconfig compiles — or the folders you name, by path or tsconfig alias —
+and generates one typed bundle that registers every class in them, ready for
 [`ts-ioc-container`](https://www.npmjs.com/package/ts-ioc-container):
 
 ```ts
@@ -14,9 +14,8 @@ Adding a service means writing the class — no hand-maintained list of
 TypeScript, generated at build time, so it type-checks, bundles and tree-shakes
 like code you wrote yourself.
 
-In TypeScript a namespace is an import path, so folders are named the way
-imports are: relative to the config file (`./src/services`) or through a
-`tsconfig.json` `paths` alias (`@app/services`).
+A bundle is configured like a tsconfig that `extends` yours: by default it
+takes the files your tsconfig compiles, and narrows or overrides them.
 
 ## Install
 
@@ -30,112 +29,203 @@ below use the shortcut.
 
 `typescript` (>= 5) is a peer dependency.
 
+## Zero config
+
+With a `tsconfig.json`, there is nothing to configure:
+
+```bash
+tic build
+```
+
+```text
+wrote     src/base.bundle.ts (12 registrations)
+```
+
+The bundle registers every exported class decorated with `@register` among the
+files your `tsconfig.json` compiles, test files excluded, and lands at the root
+of those sources — `rootDir`, else their common folder (`src/`), so `tsc`
+compiles it too. It exports `BaseBundle`:
+
+```ts
+import { BaseBundle } from './base.bundle';
+
+const container = new Container().useModule(new BaseBundle());
+```
+
+`tic build` works on the package it is invoked in: it walks up from the working
+directory to the nearest `package.json` — the project root, or in a monorepo
+the package — and uses the `tsconfig.json` there. It never falls back to a
+workspace root's tsconfig.
+
 ## Configure
 
-`tic.config.json`, next to your `tsconfig.json`:
+To change a default, add a config file next to your `tsconfig.json`. One config
+file describes one bundle and is named `<name>.bundle.json` — `app.bundle.json`:
 
 ```json
 {
   "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
-  "bundles": [
-    {
-      "output": "src/di/app.bundle.ts",
-      "name": "AppBundle",
-      "namespaces": ["@app/services", { "path": "./src/infra", "recursive": false }]
-    }
-  ]
+  "output": "src/di/app.bundle.ts"
 }
 ```
 
-| Field                        | Default                                   | Meaning                                                                                      |
-| ---------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `tsconfig`                   | `tsconfig.json` (may be absent)           | Source of `paths` aliases and of the import extension                                        |
-| `importExtension`            | `.js` under node16/nodenext, else none    | Extension of generated imports                                                               |
-| `bundles[].output`           | —                                         | The bundle file (convention: `*.bundle.ts`)                                                  |
-| `bundles[].name`             | `Bundle`                                  | Name of the generated class, an `IContainerModule`                                           |
-| `bundles[].namespaces`       | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
-| `bundles[].select`           | every exported class                      | Which classes of a file are registered — see [Selecting classes](#selecting-classes)          |
-| `bundles[].exclude`          | test files, `__tests__/`, `node_modules/` | Globs (relative to the config) never scanned; replaces the default                           |
-| `bundles[].additionalExclude`| —                                         | Globs never scanned, added on top of `exclude` (or the defaults) — see [Excluding files](#excluding-files) |
-| `bundles[].filterExports`    | `tic.exports.*` next to the config        | File exporting an `ExportPredicate` — see [Filtering classes](#filtering-classes-after-parsing) |
-| `bundles[].include`          | `tic.include.*` next to the config        | File exporting an `InclusionPredicate` — see [Including files](#including-files-with-a-predicate) |
+or, in YAML, `<name>.bundle.yaml` / `<name>.bundle.yml` — same fields, same schema:
 
-## Excluding files
+```yaml
+# yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
+output: src/di/app.bundle.ts
+files:
+  include: ['**/*.service.ts']
+```
 
-By default test files, `__tests__/` and `node_modules/` are never scanned. To
-add one exclusion without restating those defaults, use `additionalExclude`:
+An empty YAML file is a bundle with every setting at its default. Describing
+one bundle in two formats (`app.bundle.json` and `app.bundle.yaml`) is an error.
+
+Every field is optional; `{}` is the zero-config bundle.
+
+| Field             | Default                                | Meaning                                                                                       |
+| ----------------- | -------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `output`          | `<root>/<name>.bundle.ts`              | The bundle file; `<root>` as in [Zero config](#zero-config). Required without a tsconfig     |
+| `name`            | the config's stem, else `base`         | The bundle's name (`production.bundle.json` → `production`): names the default output and the class, `ProductionBundle` |
+| `tags`            | `[]`                                   | Tags associated with the bundle                                                               |
+| `extends`         | `./tsconfig.json` (may be absent)      | The tsconfig to build on: its file set, `paths` aliases and import extension; one named here must exist |
+| `importExtension` | `.js` under node16/nodenext, else none | Extension of generated imports                                                                |
+| `files`           | what the tsconfig compiles, no tests   | Which files are parsed — see [Selecting files](#selecting-files)                              |
+| `classes`         | exported classes with `@register`      | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)   |
+
+An unknown field is an error, so a misspelled or removed option never goes
+unnoticed.
+
+## Several bundles
+
+Need more than one bundle — per environment, per app? Add a config per bundle.
+`tic build` builds every `*.bundle.json`, `*.bundle.yaml` and `*.bundle.yml` at
+the package root:
+
+```text
+production.bundle.json    → src/di/production.bundle.ts
+development.bundle.json   → src/di/development.bundle.ts
+test.bundle.json          → src/di/test.bundle.ts
+```
+
+Each one can extend its own tsconfig and select its own files:
+
+```jsonc
+// production.bundle.json
+{
+  "extends": "./tsconfig.production.json",
+  "files": { "exclude": ["**/*.development.ts", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "**/node_modules/**"] }
+}
+```
+
+It writes `src/production.bundle.ts`, exporting `ProductionBundle`.
+
+A bundle generated by one config is never registered by another, even when it
+sits in a folder the other scans.
+
+## Selection in two stages
+
+A bundle picks its registrations in two stages:
+
+1. **`files`** — decided by path alone, before anything is read. Only files that
+   pass are parsed.
+2. **`classes`** — decided per class, on the files stage 1 let through.
+
+Parsing is where the time goes, so when your project names files by convention
+(`user.service.ts`, `user.repository.ts`), say so in `files.include` and the
+bundler never reads anything else:
 
 ```json
 {
-  "bundles": [
-    {
-      "output": "src/di/app.bundle.ts",
-      "namespaces": ["@app/services"],
-      "additionalExclude": ["frontend/api/generated/**", "**/Mock*.ts"]
-    }
+  "output": "src/di/app.bundle.ts",
+  "files": {
+    "paths": ["@app/services"],
+    "include": ["**/*.service.ts", "**/*.repository.ts"]
+  },
+  "classes": { "decorators": ["register"] }
+}
+```
+
+## Selecting files
+
+The candidates are the files the extended tsconfig compiles (its `files` /
+`include` / `exclude`, following its own `extends`). `paths` overrides that set
+the way a child tsconfig's `include` overrides its parent's: the bundle then scans
+those folders instead — relative to the config file (`./src/services`) or tsconfig
+`paths` aliases (`@app/services`), recursively unless an entry says
+`{ "path": "...", "recursive": false }`. Without a tsconfig, `paths` is required.
+
+A candidate is parsed when it matches **one of** `include` and **none of**
+`exclude`. Globs are relative to the config file and `/`-separated; `**` spans
+folders.
+
+| Rule      | Default                                   | Meaning                                                    |
+| --------- | ----------------------------------------- | ---------------------------------------------------------- |
+| `paths`   | what the tsconfig compiles                | Folders to scan instead                                    |
+| `include` | every source file                         | Globs a file must match one of, e.g. `"**/*.service.ts"`   |
+| `exclude` | test files, `__tests__/`, `node_modules/` | Globs of files never read; replaces the default when given |
+
+A non-empty `exclude` replaces the defaults, so restate the ones you still want:
+
+```json
+"files": {
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "**/node_modules/**",
+    "frontend/api/generated/**"
   ]
 }
 ```
 
-A non-empty `exclude` replaces the defaults; if it omits a default glob the
-build warns, since test classes usually carry the same `@register` decorators as
-production ones. `exclude: []` deliberately scans everything, including tests —
-combine it with `include` when only some tests should join.
+If it omits a default glob the build warns, since test classes usually carry
+the same `@register` decorators as production ones. `"exclude": []` deliberately
+parses everything, including tests. Giving only `include` keeps the default
+`exclude`, so `**/*.service.ts` still skips `user.service.spec.ts`.
 
 ## Selecting classes
 
-By default every exported, non-abstract class of a scanned file is registered.
-`select` narrows that; a class must meet every criterion that is set:
+By default every exported, non-abstract class of a parsed file that carries
+`@register` is registered. `classes` changes that; a class must meet every
+criterion that is set:
 
 ```json
-"select": {
+"classes": {
   "export": "named",
   "decorators": ["register", "repository"],
-  "nameGlob": "*Service"
+  "name": "*Service"
 }
 ```
 
 | Criterion          | Default | Meaning                                                                                                     |
 | ------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
 | `export`           | `any`   | `any`, `named` or `default` — which exports count                                                           |
-| `decorators`       | —       | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones |
-| `nameGlob`         | —       | Glob on the class name; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
+| `decorators`       | `["register"]` | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none |
+| `name`         | —       | Glob the class name must match, e.g. `"*Service"`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
 | `excludeClasses`   | —       | Class names to drop, e.g. `["MockDashboardRepository"]`                                                     |
-| `excludeNameGlob`  | —       | Glob the class name must **not** match, e.g. `"*Mock"`                                                      |
-| `excludeAliases`   | —       | tsconfig `paths` aliases to drop, e.g. `["services"]` for a `services/*` or `@services/*` alias             |
+| `excludeName`  | —       | Glob the class name must **not** match, e.g. `"*Mock"`                                                      |
 
 Abstract and non-exported classes are never registered.
 
 ### Excluding a single class
 
 When a real implementation and a test-only stand-in are both decorated and both
-bind the same token, registration is last-wins and the stand-in silently wins. A
-`tic.exports.*` predicate works, but forces a hand-maintained name list in code;
-`excludeClasses` and `excludeNameGlob` drop a class right in the config:
+bind the same token, registration is last-wins and the stand-in silently wins.
+`excludeClasses` and `excludeName` drop a class right in the config:
 
 ```json
-"select": {
+"classes": {
   "decorators": ["repository", "service"],
   "excludeClasses": ["MockDashboardRepository"],
-  "excludeNameGlob": "*Fake"
+  "excludeName": "*Fake"
 }
 ```
 
 Both apply after every other criterion, so they can be combined with
-`decorators` and `nameGlob` freely. Reach for `filterExports` when the rule
-needs more than the class name.
-
-`excludeAliases` drops classes by the tsconfig `paths` alias their file resolves
-through — handy for excluding a whole namespace without naming its classes:
-
-```json
-"select": {
-  "excludeAliases": ["services"]
-}
-```
-
-An entry matches a `paths` pattern such as `services/*` or `@services/*`; a
-leading `@` and a trailing `/*` may be omitted.
+`decorators` and `name` freely.
 
 As a safety net, the build warns when two selected classes pass the same
 plain-identifier first argument to a decorator — usually the binding token, as in
@@ -143,9 +233,9 @@ plain-identifier first argument to a decorator — usually the binding token, as
 are not resolved), so it can only be a heuristic:
 
 ```text
-tic: warning: bundles[0]: decorator token "IDashboardRepositoryToken" is passed by
+tic: warning: app.bundle.json: decorator token "IDashboardRepositoryToken" is passed by
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
-exclude one with select.excludeClasses
+exclude one with classes.excludeClasses
 ```
 
 Classes that are scope-gated are not last-wins, so they do not warn: when the
@@ -153,224 +243,11 @@ colliding classes share a decorator called with different arguments, e.g.
 `@perPage('stations')` vs `@perPage('sessions')`, each scope registers its own
 class and nothing is lost.
 
-## Including files with a predicate
-
-When globs aren't enough, decide in code which files take part:
-
-```ts
-type InclusionPredicate = (context: { filename: string }) => boolean;
-```
-
-`filename` is the path relative to the config file, `/`-separated
-(`src/services/Logger.ts`). A file takes part only when it matches no `exclude`
-glob **and** the predicate returns `true`.
-
-By convention there is nothing to configure: put a `tic.include.ts` (or `.cjs`,
-`.js`, `.mjs`, `.cts`, `.mts`) next to `tic.config.json` and its default export
-applies to every bundle.
-
-```ts
-// tic.include.ts
-import type { InclusionPredicate } from '@ts-ioc-container/bundler';
-
-const include: InclusionPredicate = ({ filename }) => !filename.includes('/legacy/');
-export default include;
-```
-
-| Where the predicate comes from       | Applies to    | Wins over                      |
-| ------------------------------------ | ------------- | ------------------------------ |
-| `build({ include })` (programmatic)  | every bundle  | everything                     |
-| `bundles[].include: "./path/file"`   | that bundle   | the conventional file          |
-| `tic.include.*` next to the config   | every bundle  | — (used when nothing is named) |
-
-Predicate files are loaded synchronously with `require`: `.cjs` / `.js`
-everywhere, `.mjs` on Node 22.12+, `.ts` on Node versions that strip types
-(22.18+, 23.6+). Like any `require`d module a file is loaded **once per
-process**, so read environment variables inside the predicate, not at the top
-of the file.
-
-### Tags: `TagInclusionPredicate`
-
-A file's **tags** are the dot-separated parts of its name between the base name
-and the extension — `StripeGateway.production.ts` → `['production']`,
-`Report.production.eu.ts` → `['production', 'eu']`, `Shared.ts` → `[]`. Write
-a predicate over them and wrap it with `byTags`:
-
-```ts
-type TagInclusionPredicate = (tags: string[], context: { filename: string }) => boolean;
-```
-
-```ts
-// tic.include.ts
-import { byTags } from '@ts-ioc-container/bundler';
-
-export default byTags((tags) => !tags.includes('manual')); // Scheduler.manual.ts is never generated
-```
-
-`byTags` returns an ordinary `InclusionPredicate`, so it goes anywhere one
-does. `fileTags(filename)` is exported too. More examples — folders, name
-conventions, environments, environment × region — run as tests in
-[`__tests__/examples/inclusion-predicates.spec.ts`](__tests__/examples/inclusion-predicates.spec.ts).
-
-## Filtering classes after parsing
-
-`include` decides on whole files before they are read. To decide class by
-class, right after a file is parsed, use an `ExportPredicate`. It runs on every
-exported, non-abstract class that passes `select`:
-
-```ts
-type FilterPredicate<Target> = (value: Target) => boolean;
-type ExportPredicate = FilterPredicate<ExportContext>;
-
-interface ExportContext {
-  filename: string;     // relative to the config: 'src/Mailer.ts'
-  exportName: string;   // 'default' for a default export
-  className: string;    // an anonymous default export is named after its file
-  isDefault: boolean;
-  decorators: string[]; // renamed imports resolved: `register as reg` -> 'register'
-  tags: string[];       // file-name tags, as byTags reads them
-}
-```
-
-```ts
-// tic.exports.ts, next to tic.config.json: picked up by convention
-import type { ExportPredicate } from '@ts-ioc-container/bundler';
-
-const filterExports: ExportPredicate = ({ exportName }) => !/(Stub|Mock|Fake)$/.test(exportName);
-export default filterExports;
-```
-
-It is found and loaded like an inclusion predicate: `build({ filterExports })`,
-else the bundle's `filterExports` file, else a `tic.exports.*` next to the
-config. Examples (test doubles sharing a file, decorator combinations, tags
-with class names) run as tests in
-[`__tests__/examples/inclusion-predicates.spec.ts`](__tests__/examples/inclusion-predicates.spec.ts).
-
-## Recipe: generate per environment
-
-Keep environment-specific implementations side by side, named by convention:
-`*.production.ts` joins only production, `*.development.ts` only development,
-and every other file is shared.
-
-```text
-src/services/
-├── Shared.ts                        → every environment
-├── StripeGateway.production.ts      → production only
-└── FakeGateway.development.ts       → development only
-```
-
-One helper turns the convention into a predicate — the environment tags a file
-carries must all be the wanted one, and a file without any is shared:
-
-```js
-// tic/for-env.cjs
-const { byTags } = require('@ts-ioc-container/bundler');
-const ENVS = ['development', 'production', 'test'];
-
-module.exports = (env) => byTags((tags) => tags.filter((tag) => ENVS.includes(tag)).every((tag) => tag === env));
-```
-
-### A. One bundle per environment (recommended)
-
-Every environment gets its own bundle, and both are committed. The files don't
-depend on who ran `tic build`, so `tic build --check` stays stable in CI.
-
-```json
-{
-  "bundles": [
-    {
-      "output": "src/di/app.production.bundle.ts",
-      "name": "AppBundle",
-      "namespaces": ["@app/services"],
-      "include": "./tic/production.cjs"
-    },
-    {
-      "output": "src/di/app.development.bundle.ts",
-      "name": "AppBundle",
-      "namespaces": ["@app/services"],
-      "include": "./tic/development.cjs"
-    }
-  ]
-}
-```
-
-```js
-// tic/production.cjs
-module.exports = require('./for-env.cjs')('production');
-// tic/development.cjs
-module.exports = require('./for-env.cjs')('development');
-```
-
-To keep development code out of the production build, the production entry
-point must import **only** the production bundle — a bundler includes what is
-imported, and a registration keeps its class alive, so nothing can be dropped
-after the fact. Give each environment its own entry:
-
-```ts
-// src/main.production.ts — production build entry
-import { Container } from 'ts-ioc-container';
-import { AppBundle } from './di/app.production.bundle';
-
-export const container = new Container().useModule(new AppBundle());
-```
-
-```ts
-// src/main.development.ts — development entry
-import { Container } from 'ts-ioc-container';
-import { AppBundle } from './di/app.development.bundle';
-
-export const container = new Container().useModule(new AppBundle());
-```
-
-With a single entry, pick the bundle with a dynamic `import()`: the bundler
-splits each into its own chunk and only the chosen one is loaded — the other
-chunk is still emitted, just never fetched.
-
-```ts
-const { AppBundle } =
-  process.env.NODE_ENV === 'production'
-    ? await import('./di/app.production.bundle')
-    : await import('./di/app.development.bundle');
-```
-
-| How the app picks the bundle                                     | Development classes in the production build |
-| ---------------------------------------------------------------- | ------------------------------------------- |
-| One entry per environment, importing its own bundle              | ✅ none                                     |
-| Recipe B below — only the production bundle exists at build time | ✅ none                                     |
-| Dynamic `import()` of the bundle                                 | ⚠️ emitted as a separate chunk, never loaded |
-| Static imports of both bundles plus a runtime condition          | ❌ both bundles, in full                    |
-
-Don't rely on the bundler dropping a statically imported bundle behind
-`process.env.NODE_ENV === 'production'`: the classes it imports run decorators
-at load time, which bundlers treat as side effects and keep.
-
-### B. One output, environment chosen when `tic build` runs
-
-The smallest production build: only the production bundle ever exists while it
-is built. For pipelines that generate at deploy time instead of committing the
-output:
-
-```js
-// tic.include.cjs — picked up by convention
-const forEnv = require('./tic/for-env.cjs');
-
-// Read TIC_ENV per call: the file is loaded once per process.
-module.exports = (context) => forEnv(process.env.TIC_ENV ?? 'development')(context);
-```
-
-```bash
-TIC_ENV=production tic build
-```
-
-The output now depends on `TIC_ENV`. Either don't commit it (generate it in
-every pipeline), or run `tic build --check` with the same `TIC_ENV` it was
-generated with.
-
 ## Build
 
 ```bash
-tic build                 # tic.config.json in the working directory
-tic build -c path/to/tic.config.json
+tic build                 # every *.bundle.{json,yaml,yml} of this package, else its tsconfig.json
+tic build -c app.bundle.json -c admin/admin.bundle.json   # only these
 tic build --check         # CI: write nothing, exit 1 if a bundle is out of date
 ```
 
@@ -378,8 +255,8 @@ The output is plain TypeScript over the public `ts-ioc-container` API:
 
 ```ts
 // src/di/app.bundle.ts
-// Generated by `tic build` from ../../tic.config.json. Do not edit by hand.
-// Namespaces: @app/services, @app/infra
+// Generated by `tic build` from ../../app.bundle.json. Do not edit by hand.
+// Paths: @app/services, @app/infra
 import { type IContainer, type IContainerModule, type IRegistration, Registration } from 'ts-ioc-container';
 import { MemoryLogger } from '@app/infra/logging/MemoryLogger';
 import { Greeter } from '@app/services/Greeter';

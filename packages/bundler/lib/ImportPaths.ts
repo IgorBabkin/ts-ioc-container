@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import { NamespaceNotFoundError, TicConfigError } from './errors';
+import { NamespaceNotFoundError } from './errors';
 import { toPosix } from './glob';
 
 interface Alias {
@@ -11,8 +11,6 @@ interface Alias {
 }
 
 const SOURCE_EXTENSION = /\.(tsx?|mts|cts)$/;
-/** tsconfig "No inputs were found": irrelevant here, the bundler scans its own folders. */
-const NO_INPUTS = 18003;
 
 const isDirectory = (dir: string) => existsSync(dir) && statSync(dir).isDirectory();
 const isRelative = (spec: string) => spec.startsWith('.') || path.isAbsolute(spec);
@@ -29,27 +27,13 @@ function splitWildcard(pattern: string): [string, string] | undefined {
  */
 export class ImportPaths {
   /**
-   * Reads `paths` (following `extends`) and the extension imports need under the
-   * tsconfig's `moduleResolution`; `importExtension` overrides the latter.
-   *
-   * @throws {TicConfigError} when a required tsconfig is missing or cannot be parsed.
+   * From a parsed tsconfig's options: its `paths` aliases, and the extension imports need
+   * under its `moduleResolution`; `importExtension` overrides the latter.
    */
-  static load(tsconfig: { file: string; required: boolean }, importExtension?: string): ImportPaths {
-    if (!existsSync(tsconfig.file)) {
-      if (tsconfig.required) throw new TicConfigError(`tsconfig not found: ${tsconfig.file}`);
-      return new ImportPaths([], importExtension ?? '');
-    }
-
-    const { config, error } = ts.readConfigFile(tsconfig.file, ts.sys.readFile);
-    const parsed = ts.parseJsonConfigFileContent(config, ts.sys, path.dirname(tsconfig.file), undefined, tsconfig.file);
-    const [fatal] = [error, ...parsed.errors].filter((d): d is ts.Diagnostic => !!d && d.code !== NO_INPUTS);
-    if (fatal) {
-      throw new TicConfigError(`${tsconfig.file}: ${ts.flattenDiagnosticMessageText(fatal.messageText, '\n')}`);
-    }
-
-    const { paths = {}, baseUrl, pathsBasePath, moduleResolution } = parsed.options;
+  static fromOptions(options: ts.CompilerOptions, tsconfigFile: string, importExtension?: string): ImportPaths {
+    const { paths = {}, baseUrl, pathsBasePath, moduleResolution } = options;
     // Without baseUrl, paths resolve against the tsconfig that declared them (which `extends` may make another file).
-    const base = baseUrl ?? (typeof pathsBasePath === 'string' ? pathsBasePath : path.dirname(tsconfig.file));
+    const base = baseUrl ?? (typeof pathsBasePath === 'string' ? pathsBasePath : path.dirname(tsconfigFile));
     const aliases = Object.entries(paths).map(([pattern, targets]) => ({
       pattern,
       targets: targets.map((target) => toPosix(path.resolve(base, target))),
@@ -93,20 +77,8 @@ export class ImportPaths {
     return `${relative.startsWith('.') ? relative : `./${relative}`}${this.extension}`;
   }
 
-  /**
-   * The tsconfig `paths` alias `file` is covered by, normalized to its name
-   * (`@app/services/*` -> `app/services`), or `undefined` when no alias covers it.
-   * Used to drop classes by alias (`select.excludeAliases`).
-   */
-  aliasName(file: string): string | undefined {
-    const target = toPosix(file);
-    const bare = target.replace(SOURCE_EXTENSION, '');
-    const best = this.bestAlias(target, bare);
-    return best && normalizeAliasName(best.pattern);
-  }
-
-  private bestAlias(target: string, bare: string): { spec: string; score: number; pattern: string } | undefined {
-    let best: { spec: string; score: number; pattern: string } | undefined;
+  private bestAlias(target: string, bare: string): { spec: string; score: number } | undefined {
+    let best: { spec: string; score: number } | undefined;
     for (const { pattern, targets } of this.aliases) {
       for (const aliasTarget of targets) {
         const match = this.matchAlias(pattern, aliasTarget, target, bare);
@@ -132,18 +104,13 @@ export class ImportPaths {
     const wildcard = splitWildcard(aliasTarget);
     if (!wildcard) {
       const exact = aliasTarget === file || aliasTarget.replace(SOURCE_EXTENSION, '') === bare;
-      return exact && !splitWildcard(pattern) ? { spec: pattern, score: Infinity, pattern } : undefined;
+      return exact && !splitWildcard(pattern) ? { spec: pattern, score: Infinity } : undefined;
     }
     const [prefix, suffix] = wildcard;
     if (!bare.startsWith(prefix) || !bare.endsWith(suffix) || bare.length < prefix.length + suffix.length) {
       return undefined;
     }
     const captured = bare.slice(prefix.length, bare.length - suffix.length);
-    return { spec: `${pattern.replace('*', captured)}${this.extension}`, score: prefix.length, pattern };
+    return { spec: `${pattern.replace('*', captured)}${this.extension}`, score: prefix.length };
   }
-}
-
-/** The name of a `paths` alias: `@app/services/*` and `@app/services` both become `app/services`. */
-export function normalizeAliasName(pattern: string): string {
-  return pattern.replace(/^@/, '').replace(/\/?\*$/, '');
 }

@@ -1,97 +1,130 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import { TicConfigError } from './errors';
 import { globToRegExp } from './glob';
+
+/**
+ * Which files a bundle reads and parses: the first, cheap stage of selection,
+ * decided by path alone. The candidates are what the extended tsconfig compiles,
+ * or the folders in `paths` when given — they override the tsconfig's file set,
+ * as a child tsconfig's `include` overrides its parent's. A candidate is parsed
+ * when it matches one of `include` and none of `exclude`. Globs are relative to
+ * the config file and `/`-separated. With a file naming convention
+ * (`*.service.ts`), `include` keeps the bundler from reading anything else.
+ */
+export interface FileSelector {
+  /**
+   * Folders to scan instead of the tsconfig's file set: relative to the config file,
+   * or tsconfig `paths` aliases. Required when there is no tsconfig to extend.
+   */
+  paths?: (string | PathConfig)[];
+  /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
+  include?: string[];
+  /** Globs of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
+  exclude?: string[];
+}
+
+/** A {@link FileSelector} with its defaults filled in and its globs compiled. */
+export interface ResolvedFileSelector {
+  /** `undefined`: the extended tsconfig's file set. */
+  paths?: Required<PathConfig>[];
+  include?: RegExp[];
+  exclude: RegExp[];
+}
 
 /** Which exports of a file count: both kinds, only named exports, or only the default export. */
 export type ExportKind = 'any' | 'named' | 'default';
 
 /**
- * How the bundler picks target classes out of a file. A class is selected when
+ * Which classes of a parsed file are registered: the second stage of selection,
+ * run on the files {@link FileSelector} let through. A class is selected when
  * it is exported, not abstract, and meets every criterion set here; an empty
  * rule selects every exported class.
  */
 export interface ClassSelector {
   /** Default `any`. */
   export?: ExportKind;
-  /** The class must carry one of these decorators, recognised by name (`register`, or a composed one). */
+  /**
+   * The class must carry one of these decorators, recognised by name (`register`, or a
+   * composed one). Default {@link DEFAULT_DECORATORS}; `[]` requires none.
+   */
   decorators?: string[];
   /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
-  nameGlob?: string;
+  name?: string;
   /**
    * Class names to drop after selection, e.g. one test double sitting next to the
-   * real registration in the same file. Unlike `filterExports` this needs no file.
+   * real registration in the same file.
    */
   excludeClasses?: string[];
   /** A glob the class name must NOT match, e.g. `*Mock`. An anonymous default export is named after its file. */
-  excludeNameGlob?: string;
-  /**
-   * tsconfig `paths` aliases to drop after selection: a class whose file resolves
-   * through one of these aliases is dropped, e.g. `["services"]` for a `services/*`
-   * (or `@services/*`) alias. Names may omit a leading `@` and a trailing `/*`.
-   */
-  excludeAliases?: string[];
+  excludeName?: string;
 }
 
 /** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
-export interface ResolvedSelector {
+export interface ResolvedClassSelector {
   export: ExportKind;
   decorators?: string[];
-  nameGlob?: RegExp;
+  name?: RegExp;
   excludeClasses?: string[];
-  excludeNameGlob?: RegExp;
-  excludeAliases?: string[];
+  excludeName?: RegExp;
 }
 
-export interface NamespaceConfig {
+export interface PathConfig {
   /** A folder relative to the config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
   path: string;
   /** Scan sub-folders too. Default `true`. */
   recursive?: boolean;
 }
 
+/**
+ * The shape of `*.bundle.json`: one bundle, built on one tsconfig. A project that
+ * needs several bundles keeps one config file per bundle.
+ */
 export interface BundleConfig {
-  /** The generated file, relative to the config file. */
-  output: string;
-  /** Name of the generated class, an `IContainerModule`. Default `Bundle`. */
+  $schema?: string;
+  /**
+   * The generated file, relative to the config file. Default `<root>/<name>.bundle.ts`:
+   * `<root>` is the tsconfig's `rootDir`, else the common folder of the files it compiles.
+   * Required when there is no tsconfig to extend.
+   */
+  output?: string;
+  /**
+   * The bundle's name: letters, digits, `-` and `_`, starting with a letter. Default: the
+   * config file's stem (`production.bundle.json` -> `production`), else {@link DEFAULT_BUNDLE_NAME}.
+   * It names the default output (`production.bundle.ts`) and the generated class,
+   * an `IContainerModule` (`ProductionBundle`, see {@link toClassName}).
+   */
   name?: string;
   /** Tags associated with the bundle. */
   tags?: string[];
-  namespaces: (string | NamespaceConfig)[];
-  /** Which classes of a scanned file are registered. Default: every exported class. */
-  select?: ClassSelector;
-  /** Globs, relative to the config file, of files never scanned. Replaces {@link DEFAULT_EXCLUDE} when given. */
-  exclude?: string[];
   /**
-   * Globs, relative to the config file, of files never scanned, added on top of
-   * `exclude` (or {@link DEFAULT_EXCLUDE} when `exclude` is omitted). Use this to
-   * add one exclusion without restating the defaults.
+   * The tsconfig the bundle builds on, like a tsconfig's own `extends`: the source of
+   * its file set, `paths` aliases and import extension. Relative to the config file.
+   * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
-  additionalExclude?: string[];
-  /**
-   * A file exporting an `InclusionPredicate`, relative to the config file. Overrides the
-   * conventional `tic.include.*` next to the config.
-   */
-  include?: string;
-  /**
-   * A file exporting an `ExportPredicate`, relative to the config file. Overrides the
-   * conventional `tic.exports.*` next to the config.
-   */
-  filterExports?: string;
-}
-
-/** The shape of `tic.config.json`. */
-export interface TicConfig {
-  $schema?: string;
-  /** Relative to the config file. Default `tsconfig.json`, which may be absent. */
-  tsconfig?: string;
+  extends?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
-  bundles: BundleConfig[];
+  /** Which files are parsed. Default: what the tsconfig compiles, minus {@link DEFAULT_EXCLUDE}. */
+  files?: FileSelector;
+  /** Which classes of a parsed file are registered. Default: every exported class. */
+  classes?: ClassSelector;
 }
 
-export const DEFAULT_CONFIG_FILE = 'tic.config.json';
-export const DEFAULT_BUNDLE_NAME = 'Bundle';
+/**
+ * A config file is named `<name>.bundle.json`, `<name>.bundle.yaml` or `<name>.bundle.yml`,
+ * e.g. `app.bundle.json`, `production.bundle.yaml`. Every format has the same shape.
+ */
+export const CONFIG_FILE_SUFFIXES = ['.bundle.json', '.bundle.yaml', '.bundle.yml'];
+
+/** The config suffix `file` ends with, if any. */
+const configSuffix = (file: string) => CONFIG_FILE_SUFFIXES.find((suffix) => file.endsWith(suffix));
+export const DEFAULT_EXTENDS = './tsconfig.json';
+/** The bundle name when the config file gives none, e.g. building from `tsconfig.json` alone. */
+export const DEFAULT_BUNDLE_NAME = 'base';
+/** What `classes.decorators` requires when omitted: the library's own `@register`. */
+export const DEFAULT_DECORATORS = ['register'];
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
   '**/*.test.ts',
@@ -101,29 +134,25 @@ export const DEFAULT_EXCLUDE = [
   '**/node_modules/**',
 ];
 
-/** A config whose defaults are filled in and whose paths are absolute. */
+/** A {@link BundleConfig} whose defaults are filled in and whose paths are absolute. */
 export interface ResolvedConfig {
+  /** The config file itself. */
   file: string;
   dir: string;
+  /** `undefined`: derived from the tsconfig at build time (see {@link BundleConfig.output}). */
+  output?: string;
+  /** The bundle name: `production` for `production.bundle.json`. */
+  name: string;
+  /** The generated class: `ProductionBundle`. */
+  className: string;
+  tags: string[];
+  /** The extended tsconfig; `required` when the config names it, so it must exist. */
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
-  bundles: ResolvedBundle[];
-  /** Non-fatal problems found while resolving, e.g. an `exclude` that drops a default test glob. */
+  files: ResolvedFileSelector;
+  classes: ResolvedClassSelector;
+  /** Non-fatal problems found while resolving, e.g. a `files.exclude` that drops a default test glob. */
   warnings: string[];
-}
-
-export interface ResolvedBundle {
-  output: string;
-  name: string;
-  tags: string[];
-  namespaces: Required<NamespaceConfig>[];
-  select: ResolvedSelector;
-  /** The effective list: the configured `exclude` (or the defaults) followed by `additionalExclude`. */
-  exclude: string[];
-  /** Absolute path of the bundle's own predicate file, when it names one. */
-  include?: string;
-  /** Absolute path of the bundle's own export predicate file, when it names one. */
-  filterExports?: string;
 }
 
 type Json = Record<string, unknown>;
@@ -132,16 +161,16 @@ const isObject = (value: unknown): value is Json =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
 const isStringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every(isNonEmptyString);
-const isIdentifier = (value: unknown): value is string => typeof value === 'string' && /^[A-Za-z_$][\w$]*$/.test(value);
+const isBundleName = (value: unknown): value is string => typeof value === 'string' && /^[A-Za-z][\w-]*$/.test(value);
 
 const fail = (field: string, expected: string): never => {
   throw new TicConfigError(`${field}: expected ${expected}`);
 };
 
 /**
- * @throws {TicConfigError} when a namespace entry is neither a non-empty string nor an object with a `path`.
+ * @throws {TicConfigError} when a path entry is neither a non-empty string nor an object with a `path`.
  */
-function toNamespace(value: unknown, field: string): Required<NamespaceConfig> {
+function toPath(value: unknown, field: string): Required<PathConfig> {
   if (isNonEmptyString(value)) return { path: value, recursive: true };
   if (!isObject(value)) return fail(field, 'a string or an object with "path"');
   if (!isNonEmptyString(value.path)) return fail(`${field}.path`, 'a non-empty string');
@@ -150,132 +179,183 @@ function toNamespace(value: unknown, field: string): Required<NamespaceConfig> {
   return { path: value.path, recursive: value.recursive ?? true };
 }
 
-const SELECTOR_FIELDS = new Set([
-  'export',
-  'decorators',
-  'nameGlob',
-  'excludeClasses',
-  'excludeNameGlob',
-  'excludeAliases',
-]);
+const FILE_SELECTOR_FIELDS = new Set(['paths', 'include', 'exclude']);
 
 /**
  * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
  */
-function toSelector(value: unknown, field: string): ResolvedSelector {
-  if (value === undefined) return { export: 'any' };
+function toFileSelector(value: unknown, field: string): ResolvedFileSelector {
+  if (value === undefined) return { exclude: DEFAULT_EXCLUDE.map(globToRegExp) };
   if (!isObject(value)) return fail(field, 'an object');
-  const unknown = Object.keys(value).find((key) => !SELECTOR_FIELDS.has(key));
+  const unknown = Object.keys(value).find((key) => !FILE_SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { export: kind, decorators, nameGlob, excludeClasses, excludeNameGlob, excludeAliases } = value;
+  const { paths, include, exclude } = value;
+  if (paths !== undefined && !(Array.isArray(paths) && paths.length > 0)) {
+    return fail(`${field}.paths`, 'a non-empty array');
+  }
+  if (include !== undefined && !(isStringArray(include) && include.length > 0)) {
+    return fail(`${field}.include`, 'a non-empty array of strings');
+  }
+  if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
+  return {
+    paths: paths?.map((entry, i) => toPath(entry, `${field}.paths[${i}]`)),
+    include: include?.map(globToRegExp),
+    exclude: (exclude ?? DEFAULT_EXCLUDE).map(globToRegExp),
+  };
+}
+
+const CLASS_SELECTOR_FIELDS = new Set(['export', 'decorators', 'name', 'excludeClasses', 'excludeName']);
+
+/**
+ * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
+ */
+function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
+  if (value === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
+  if (!isObject(value)) return fail(field, 'an object');
+  const unknown = Object.keys(value).find((key) => !CLASS_SELECTOR_FIELDS.has(key));
+  if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
+  const { export: kind, decorators, name, excludeClasses, excludeName } = value;
   if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
     return fail(`${field}.export`, '"any", "named" or "default"');
   }
-  if (decorators !== undefined && !(isStringArray(decorators) && decorators.length > 0)) {
-    return fail(`${field}.decorators`, 'a non-empty array of strings');
-  }
-  if (nameGlob !== undefined && !isNonEmptyString(nameGlob)) return fail(`${field}.nameGlob`, 'a non-empty string');
+  if (decorators !== undefined && !isStringArray(decorators)) return fail(`${field}.decorators`, 'an array of strings');
+  if (name !== undefined && !isNonEmptyString(name)) return fail(`${field}.name`, 'a non-empty string');
   if (excludeClasses !== undefined && !(isStringArray(excludeClasses) && excludeClasses.length > 0)) {
     return fail(`${field}.excludeClasses`, 'a non-empty array of strings');
   }
-  if (excludeNameGlob !== undefined && !isNonEmptyString(excludeNameGlob)) {
-    return fail(`${field}.excludeNameGlob`, 'a non-empty string');
-  }
-  if (excludeAliases !== undefined && !(isStringArray(excludeAliases) && excludeAliases.length > 0)) {
-    return fail(`${field}.excludeAliases`, 'a non-empty array of strings');
+  if (excludeName !== undefined && !isNonEmptyString(excludeName)) {
+    return fail(`${field}.excludeName`, 'a non-empty string');
   }
   return {
     export: kind ?? 'any',
-    decorators,
-    nameGlob: nameGlob === undefined ? undefined : globToRegExp(nameGlob),
+    // `[]` is the explicit opt-out: no decorator required.
+    decorators: decorators === undefined ? DEFAULT_DECORATORS : decorators.length > 0 ? decorators : undefined,
+    name: name === undefined ? undefined : globToRegExp(name),
     excludeClasses,
-    excludeNameGlob: excludeNameGlob === undefined ? undefined : globToRegExp(excludeNameGlob),
-    excludeAliases,
+    excludeName: excludeName === undefined ? undefined : globToRegExp(excludeName),
   };
 }
 
 /**
- * @throws {TicConfigError} when a bundle field is missing or has the wrong type.
- */
-function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
-  if (!isObject(value)) return fail(field, 'an object');
-  const { output, name, tags, namespaces, select, exclude, additionalExclude, include, filterExports } = value;
-  if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
-  if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
-  if (tags !== undefined && !isStringArray(tags)) return fail(`${field}.tags`, 'an array of strings');
-  if (!Array.isArray(namespaces) || namespaces.length === 0) return fail(`${field}.namespaces`, 'a non-empty array');
-  if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
-  if (additionalExclude !== undefined && !isStringArray(additionalExclude)) {
-    return fail(`${field}.additionalExclude`, 'an array of strings');
-  }
-  if (include !== undefined && !isNonEmptyString(include)) return fail(`${field}.include`, 'a non-empty string');
-  if (filterExports !== undefined && !isNonEmptyString(filterExports)) {
-    return fail(`${field}.filterExports`, 'a non-empty string');
-  }
-  return {
-    output: path.resolve(dir, output),
-    name: name ?? DEFAULT_BUNDLE_NAME,
-    tags: tags ?? [],
-    namespaces: namespaces.map((ns, i) => toNamespace(ns, `${field}.namespaces[${i}]`)),
-    select: toSelector(select, `${field}.select`),
-    exclude: [...(exclude ?? DEFAULT_EXCLUDE), ...(additionalExclude ?? [])],
-    include: include === undefined ? undefined : path.resolve(dir, include),
-    filterExports: filterExports === undefined ? undefined : path.resolve(dir, filterExports),
-  };
-}
-
-/**
- * Warns when an explicit, non-empty `exclude` omits one of the {@link DEFAULT_EXCLUDE}
+ * Warns when an explicit, non-empty `files.exclude` omits one of the {@link DEFAULT_EXCLUDE}
  * globs, since that silently drops test files (or `node_modules`) from the scan.
- * An empty `exclude` is a deliberate opt-out and does not warn; `additionalExclude`
- * is the additive companion that keeps the defaults.
+ * An empty `exclude` is a deliberate opt-out and does not warn.
  */
-function excludeWarnings(value: unknown, field: string): string[] {
-  if (!isObject(value)) return [];
-  const exclude = value.exclude;
+function excludeWarnings(files: unknown): string[] {
+  if (!isObject(files)) return [];
+  const exclude = files.exclude;
   if (!isStringArray(exclude) || exclude.length === 0) return [];
   const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
   if (missing.length === 0) return [];
   return [
-    `${field}.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
-      `add them back or use ${field}.additionalExclude`,
+    `files.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
+      `add them back`,
   ];
 }
 
+const CONFIG_FIELDS = new Set(['$schema', 'output', 'name', 'tags', 'extends', 'importExtension', 'files', 'classes']);
+
 /**
- * Validates parsed `tic.config.json` content and resolves its paths against `file`'s directory.
+ * Validates parsed `*.bundle.json` content and resolves its paths against `file`'s directory.
  *
  * @throws {TicConfigError} when the content does not match the config shape; the message names the field.
  */
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const dir = path.dirname(file);
-  if (!isObject(content)) return fail('config', 'a JSON object');
-  const { tsconfig, importExtension, bundles } = content;
-  if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('tsconfig', 'a non-empty string');
+  if (!isObject(content)) return fail('config', 'an object');
+  const unknown = Object.keys(content).find((key) => !CONFIG_FIELDS.has(key));
+  if (unknown) throw new TicConfigError(`${unknown}: unknown field`);
+  const { output, name, tags, extends: tsconfig, importExtension, files, classes } = content;
+  if (output !== undefined && !isNonEmptyString(output)) return fail('output', 'a non-empty string');
+  if (name !== undefined && !isBundleName(name)) {
+    return fail('name', 'letters, digits, "-" or "_", starting with a letter');
+  }
+  const bundleName = name ?? configStem(file) ?? DEFAULT_BUNDLE_NAME;
+  if (tags !== undefined && !isStringArray(tags)) return fail('tags', 'an array of strings');
+  if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('extends', 'a non-empty string');
   if (importExtension !== undefined && typeof importExtension !== 'string') return fail('importExtension', 'a string');
-  if (!Array.isArray(bundles) || bundles.length === 0) return fail('bundles', 'a non-empty array');
   return {
     file,
     dir,
-    tsconfig: { file: path.resolve(dir, tsconfig ?? 'tsconfig.json'), required: tsconfig !== undefined },
+    output: output === undefined ? undefined : path.resolve(dir, output),
+    name: bundleName,
+    className: toClassName(bundleName),
+    tags: tags ?? [],
+    tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
     importExtension,
-    bundles: bundles.map((m, i) => toBundle(m, `bundles[${i}]`, dir)),
-    warnings: bundles.flatMap((m, i) => excludeWarnings(m, `bundles[${i}]`)),
+    files: toFileSelector(files, 'files'),
+    classes: toClassSelector(classes, 'classes'),
+    warnings: excludeWarnings(files),
   };
 }
 
+/** `production.bundle.yaml` -> `production`; `undefined` for any other file name, e.g. `tsconfig.json`. */
+function configStem(file: string): string | undefined {
+  const base = path.basename(file);
+  const suffix = configSuffix(base);
+  const stem = suffix ? base.slice(0, -suffix.length) : '';
+  return isBundleName(stem) ? stem : undefined;
+}
+
+/** The generated class for a bundle name: `production` -> `ProductionBundle`, `my-app_v2` -> `MyAppV2Bundle`. */
+export function toClassName(name: string): string {
+  const words = name.split(/[-_]+/).filter(Boolean);
+  return `${words.map((word) => word[0].toUpperCase() + word.slice(1)).join('')}Bundle`;
+}
+
 /**
- * Reads and validates a `tic.config.json`.
+ * The root of the package `dir` belongs to: the nearest folder, `dir` or above, with a
+ * `package.json` — the project root in a single-package project, the package in a
+ * monorepo. `dir` itself when no folder above has one.
+ */
+export function findPackageRoot(dir: string): string {
+  const start = path.resolve(dir);
+  for (let current = start; ; current = path.dirname(current)) {
+    if (existsSync(path.join(current, 'package.json'))) return current;
+    if (path.dirname(current) === current) return start;
+  }
+}
+
+/**
+ * The `*.bundle.{json,yaml,yml}` configs in `dir` (not its sub-folders), sorted by name.
  *
- * @throws {TicConfigError} when the file is missing, is not valid JSON, or does not match the config shape.
+ * @throws {TicConfigError} when one bundle is described in two formats, e.g. `app.bundle.json` and `app.bundle.yaml`.
+ */
+export function findConfigFiles(dir: string): string[] {
+  const files = readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && configSuffix(entry.name) !== undefined)
+    .map((entry) => entry.name)
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  const byStem = new Map<string, string>();
+  for (const file of files) {
+    const stem = file.slice(0, -configSuffix(file)!.length);
+    const other = byStem.get(stem);
+    if (other) throw new TicConfigError(`${other} and ${file} describe the same bundle; keep one`);
+    byStem.set(stem, file);
+  }
+  return files.map((file) => path.join(dir, file));
+}
+
+/**
+ * Parses a config by its extension: YAML for `.yaml` / `.yml` (an empty file is `{}`), JSON otherwise.
+ *
+ * @throws {TicConfigError} when the text is not valid in its format.
+ */
+function parseConfig(file: string, text: string): unknown {
+  const yaml = file.endsWith('.yaml') || file.endsWith('.yml');
+  try {
+    return yaml ? (parseYaml(text) ?? {}) : JSON.parse(text);
+  } catch (e) {
+    throw new TicConfigError(`${file} is not valid ${yaml ? 'YAML' : 'JSON'}: ${(e as Error).message}`);
+  }
+}
+
+/**
+ * Reads and validates a `*.bundle.json`, `*.bundle.yaml` or `*.bundle.yml`.
+ *
+ * @throws {TicConfigError} when the file is missing, cannot be parsed, or does not match the config shape.
  */
 export function loadConfig(file: string): ResolvedConfig {
   if (!existsSync(file)) throw new TicConfigError(`config file not found: ${file}`);
-  let content: unknown;
-  try {
-    content = JSON.parse(readFileSync(file, 'utf8'));
-  } catch (e) {
-    throw new TicConfigError(`${file} is not valid JSON: ${(e as Error).message}`);
-  }
-  return resolveConfig(content, file);
+  return resolveConfig(parseConfig(file, readFileSync(file, 'utf8')), file);
 }

@@ -65,6 +65,9 @@ importers:
       handlebars:
         specifier: ^4.7.9
         version: 4.7.9
+      yaml:
+        specifier: ^2.8.3
+        version: 2.8.3
     devDependencies:
       '@types/node':
         specifier: ^25.5.2
