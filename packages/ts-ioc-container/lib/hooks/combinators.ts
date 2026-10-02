@@ -49,3 +49,21 @@ export const oncePerInstance = (execute: HookType): HookFn => {
     return fn(context);
   };
 };
+
+/**
+ * Calls the decorated member with its `@inject`-resolved args. Returns the
+ * member's result only when it is a promise, so a sync member stays sync.
+ */
+export const invoke: HookFn = (context) => {
+  const result = context.invokeMethod({ args: context.resolveArgs() });
+  return result instanceof Promise ? (result as Promise<void>) : undefined;
+};
+
+/**
+ * Runs `hook` only when `predicate` holds for the hook's scope:
+ * `@hook('onConstruct', when((scope) => scope.hasTag('request'), invoke))`.
+ */
+export const when = (predicate: (scope: IContainer) => boolean, hook: HookType): HookFn => {
+  const fn = toHookFn(hook);
+  return (context) => (predicate(context.scope) ? fn(context) : undefined);
+};

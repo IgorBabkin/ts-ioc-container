@@ -109,7 +109,7 @@ export {
   type IHookContext,
 } from './hooks/HookContext';
 export { injectProp } from './hooks/injectProp';
-export { sequential, parallel, oncePerInstance, type ResolvedObjectHook } from './hooks/combinators';
+export { sequential, parallel, oncePerInstance, invoke, when, type ResolvedObjectHook } from './hooks/combinators';
 export {
   HookCollector,
   toTask,
