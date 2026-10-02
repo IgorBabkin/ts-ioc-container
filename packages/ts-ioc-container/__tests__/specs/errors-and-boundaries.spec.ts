@@ -18,7 +18,7 @@ import {
   TypedEvent,
   TypedEventDisposedError,
   UnsupportedTokenTypeError,
-  findOrFail,
+  findArgOrFail,
 } from '../../lib';
 import { perform, runSync } from '../hooks/runners';
 import { toToken } from '../../lib/token/toToken';
@@ -39,7 +39,7 @@ describe('Spec: errors and boundaries', () => {
   });
 
   it('fails clearly for missing arguments', () => {
-    const findUserId = findOrFail((value): value is string => typeof value === 'string');
+    const findUserId = findArgOrFail((value): value is string => typeof value === 'string');
 
     expect(findUserId([42, 'user-1'])).toBe('user-1');
     expect(() => findUserId([42])).toThrowError(ArgumentNotFoundError);
@@ -113,7 +113,7 @@ describe('Spec: errors and boundaries', () => {
     expect(() => container.resolve('MissingService')).toThrowError(ContainerError);
     expect(() => toToken({} as never)).toThrowError(ContainerError);
     expect(() => new ConstantToken('value').args('ignored')).toThrowError(ContainerError);
-    expect(() => findOrFail(() => false)()).toThrowError(ContainerError);
+    expect(() => findArgOrFail(() => false)()).toThrowError(ContainerError);
   });
 
   it('terminates parent lookup at the empty container boundary', () => {

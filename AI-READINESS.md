@@ -34,7 +34,7 @@ Paths are relative to `packages/ts-ioc-container/` unless stated otherwise.
 - [x] Stable `code` on `ContainerError` and every subclass, documented in `AGENTS.md`
 - [x] `DependencyNotFoundError` lists the likely causes (not registered,
       `scope(...)`, `scopeAccess(...)`, registered after `createScope()`)
-- [x] `ArgumentNotFoundError` from `findOrFail` has a message
+- [x] `ArgumentNotFoundError` from `findArgOrFail` has a message
 - [x] `MethodNotImplementedError`: all 22 sites name the class and method
 - [x] `UnsupportedTokenTypeError` lists the supported inputs
 - [x] `ContainerDisposedError`, `ProviderDisposedError`, `TypedEventDisposedError`,

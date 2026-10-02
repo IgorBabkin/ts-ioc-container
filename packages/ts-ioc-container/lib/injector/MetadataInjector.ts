@@ -84,6 +84,23 @@ export const argsFn =
  */
 export const arg = <T = unknown>(index: number): InjectFn<T> => argsFn<T>((value, i) => i === index);
 
+/**
+ * Resolves, in the current scope, the token `pick` finds among the runtime args -
+ * for a class whose dependency is chosen by the caller passing its token as an arg.
+ * The token is resolved without args. Pairs with {@link findArgOrFail}.
+ *
+ * @example
+ * constructor(@inject(byArgs(findArgOrFail(isRepositoryToken))) readonly repository: IRepository) {}
+ * // IEntityManagerToken.resolve(scope, { args: [IUserRepositoryToken] })
+ *
+ * @throws {ArgumentNotFoundError} when `pick` is `findArgOrFail(...)` and no arg matches.
+ * @throws {DependencyNotFoundError} when the picked token is not registered in the scope chain.
+ */
+export const byArgs =
+  <T>(pick: (args: unknown[]) => InjectionToken<T>): InjectFn<T> =>
+  ({ scope, args = [] }) =>
+    pick(args).resolve(scope);
+
 /** Injects the whole runtime args array. */
 export const args: InjectFn<unknown[]> = ({ args = [] }) => args;
 

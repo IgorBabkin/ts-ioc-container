@@ -1167,6 +1167,7 @@ returns is injected. There is no other form, only functions which build one:
   [runtime args flow through tokens](#runtime-args-flow-through-tokens)):
   `@inject(by(LoggerToken))`, `@inject(by('Logger'))`, `@inject(by(Logger))`.
 - `arg(index)` / `args` / `argsFn(predicate)` — pick from the runtime args.
+- `byArgs(pick)` — resolve the token `pick` finds among the runtime args.
 - `pipe(fn, ...mappers)` — map what another `InjectFn` returns.
 - Your own: `@inject(({ scope }) => scope)` injects the current scope,
   `@inject(({ scope }) => Token.resolve(scope))` resolves a token *without*
@@ -1820,6 +1821,78 @@ Args are passed to the constructor **as-is** — the library never resolves an `
 
 `argToToken(value)` is the helper for a call site that wants "resolve tokens, pass literals through": it returns an `InjectionToken` as-is and wraps anything else in a `ConstantToken`, so `@inject(({ scope, args = [] }) => argToToken(args[0]).resolve(scope))` accepts either.
 
+`byArgs(pick)` is the `InjectFn` for a class whose dependency is **chosen by the caller**: the caller passes the dependency's token as a runtime arg, `pick` finds it in the args list, and `byArgs` resolves it in the current scope (without args). It pairs with `findArgOrFail`, which throws `ArgumentNotFoundError` when no arg matches — and the same picker keys the `singleton()`, so there is one instance per chosen dependency:
+
+```typescript
+import {
+  ArgumentNotFoundError,
+  byArgs,
+  Container,
+  findArgOrFail,
+  inject,
+  type InjectionToken,
+  register,
+  Registration as R,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
+
+interface IRepository {
+  name: string;
+}
+
+// a repository token carries its own marker, so it can be found among the runtime args
+class RepositoryToken<T extends IRepository> extends SingleToken<T> {}
+const isRepositoryToken = (value: unknown): value is InjectionToken<IRepository> => value instanceof RepositoryToken;
+const repositoryTokenOf = findArgOrFail<InjectionToken<IRepository>>(isRepositoryToken);
+
+const IUserRepositoryToken = new RepositoryToken<IRepository>('IUserRepository');
+const IOrderRepositoryToken = new RepositoryToken<IRepository>('IOrderRepository');
+const IEntityManagerToken = new SingleToken<EntityManager>('IEntityManager');
+
+@register(IUserRepositoryToken)
+class UserRepository implements IRepository {
+  name = 'users';
+}
+
+@register(IOrderRepositoryToken)
+class OrderRepository implements IRepository {
+  name = 'orders';
+}
+
+// the caller chooses the repository; one entity manager per repository token
+@register(IEntityManagerToken, singleton(repositoryTokenOf))
+class EntityManager {
+  constructor(@inject(byArgs(repositoryTokenOf)) readonly repository: IRepository) {}
+}
+
+describe('byArgs', function () {
+  const createContainer = () =>
+    new Container()
+      .addRegistration(R.fromClass(UserRepository))
+      .addRegistration(R.fromClass(OrderRepository))
+      .addRegistration(R.fromClass(EntityManager));
+
+  it('should resolve the token the caller passes as a runtime arg', function () {
+    const container = createContainer();
+
+    const users = IEntityManagerToken.resolve(container, { args: [IUserRepositoryToken] });
+    const orders = IEntityManagerToken.resolve(container, { args: [IOrderRepositoryToken] });
+
+    expect(users.repository.name).toBe('users');
+    expect(orders.repository.name).toBe('orders');
+    expect(IEntityManagerToken.resolve(container, { args: [IUserRepositoryToken] })).toBe(users);
+  });
+
+  it('should throw when no runtime arg matches', function () {
+    const container = createContainer();
+
+    expect(() => IEntityManagerToken.resolve(container, { args: ['not a token'] })).toThrow(ArgumentNotFoundError);
+  });
+});
+
+```
+
 ### Positional arg injection with `arg(index)`, `args`, and `argsFn`
 
 Constructor parameters that should pick up positional args from `ProviderOptions` must be annotated with `@inject(arg(index))`. Parameters without `@inject` resolve to `undefined`.
@@ -1830,7 +1903,7 @@ Constructor parameters that should pick up positional args from `ProviderOptions
 
 `argsFn(predicate)` is the general form: it iterates the runtime `args` array and returns the **first argument matching** `predicate(value, index)` — think `args.find(predicate)`. `arg(index)` is just a shortcut for matching by position: `arg(0)` is `argsFn((value, index) => index === 0)`. `args` is `({ args }) => args`, i.e. it returns the runtime args array as-is. Every `InjectFn` receives one `ProviderOptions` object — `{ scope, args, lazy }` — where `args` is the runtime args array.
 
-`findOrFail(predicate)` is the strict counterpart for `singleton()` cache keys — `singleton(findOrFail(isUserId))` keys a per-argument singleton, for example. It receives the full runtime `args` array, returns the first argument matching `predicate(value)`, and throws `ArgumentNotFoundError` when none does, instead of silently handing out `undefined`.
+`findArgOrFail(predicate)` is the strict counterpart for `singleton()` cache keys — `singleton(findArgOrFail(isUserId))` keys a per-argument singleton, for example. It receives the full runtime `args` array, returns the first argument matching `predicate(value)`, and throws `ArgumentNotFoundError` when none does, instead of silently handing out `undefined`.
 
 ### Runtime args flow through tokens
 
@@ -1843,7 +1916,7 @@ import {
   arg,
   bindTo,
   Container,
-  findOrFail,
+  findArgOrFail,
   inject,
   register,
   Registration as R,
@@ -1860,7 +1933,7 @@ const IUserRepositoryKey = new SingleToken<IUserRepository>('IUserRepository');
 const isUserId = (value: unknown): value is string => typeof value === 'string';
 
 // one repository per user id - the id is the singleton cache key
-@register(bindTo(IUserRepositoryKey), singleton(findOrFail<string>(isUserId)))
+@register(bindTo(IUserRepositoryKey), singleton(findArgOrFail<string>(isUserId)))
 class UserRepository implements IUserRepository {
   constructor(@inject(arg(0)) public userId: string) {}
 }
@@ -1892,7 +1965,7 @@ describe('Token Runtime Arguments', function () {
 ```
 
 > [!IMPORTANT]
-> Runtime args come first. A dependency that reads `@inject(arg(0))` sees the *caller's* first runtime arg whenever the caller was resolved with args, even if its token was specialized with `token.args(...)`. Pick args by shape (`argsFn(predicate)`, `findOrFail(predicate)`) rather than by position when a class can be resolved with runtime args and its dependencies are specialized with `token.args(...)`.
+> Runtime args come first. A dependency that reads `@inject(arg(0))` sees the *caller's* first runtime arg whenever the caller was resolved with args, even if its token was specialized with `token.args(...)`. Pick args by shape (`argsFn(predicate)`, `findArgOrFail(predicate)`) rather than by position when a class can be resolved with runtime args and its dependencies are specialized with `token.args(...)`.
 
 ### Immutable token chaining
 

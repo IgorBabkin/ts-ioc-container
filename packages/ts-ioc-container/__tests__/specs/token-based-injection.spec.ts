@@ -6,7 +6,7 @@ import {
   ClassToken,
   ConstantToken,
   Container,
-  findOrFail,
+  findArgOrFail,
   FunctionToken,
   GroupAliasToken,
   GroupInstanceToken,
@@ -116,7 +116,7 @@ describe('Spec: token-based injection', () => {
     const container = new Container().addRegistration(
       R.fromClass(TenantRepository)
         .bindTo(TenantRepositoryToken)
-        .pipe(singleton(findOrFail<string>((value) => typeof value === 'string'))),
+        .pipe(singleton(findArgOrFail<string>((value) => typeof value === 'string'))),
     );
 
     const first = container.resolve(TenantService, { args: ['tenant-a'] });

@@ -2,7 +2,7 @@ import {
   arg,
   bindTo,
   Container,
-  findOrFail,
+  findArgOrFail,
   inject,
   register,
   Registration as R,
@@ -19,7 +19,7 @@ const IUserRepositoryKey = new SingleToken<IUserRepository>('IUserRepository');
 const isUserId = (value: unknown): value is string => typeof value === 'string';
 
 // one repository per user id - the id is the singleton cache key
-@register(bindTo(IUserRepositoryKey), singleton(findOrFail<string>(isUserId)))
+@register(bindTo(IUserRepositoryKey), singleton(findArgOrFail<string>(isUserId)))
 class UserRepository implements IUserRepository {
   constructor(@inject(arg(0)) public userId: string) {}
 }
