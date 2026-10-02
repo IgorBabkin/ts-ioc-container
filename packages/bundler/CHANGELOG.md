@@ -1,3 +1,12 @@
+# 1.2.0 (2026-10-02)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    exclude classes by name in select
+    (eb57f8e3a6575858a6b8e758b7d3834be56c1b4c)
+
+
 # 1.1.0 (2026-10-02)
 
   ### ✨ Features
@@ -76,6 +85,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
