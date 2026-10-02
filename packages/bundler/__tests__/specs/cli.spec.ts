@@ -70,6 +70,18 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     expect(io.err.join('\n')).toContain('**/*.spec.ts');
   });
 
+  it('prints a warning when two classes pass the same decorator token', () => {
+    const source = (name: string) =>
+      `import { register } from 'ts-ioc-container';\n@register(Token)\nexport class ${name} {}\n`;
+    project.write('src/services/A.ts', source('A'));
+    project.write('src/services/B.ts', source('B'));
+    const io = new Io(project.root);
+
+    expect(run(['build'], io)).toBe(0);
+    expect(io.err.join('\n')).toContain('tic: warning: bundles[0]');
+    expect(io.err.join('\n')).toContain('Token');
+  });
+
   it('prints usage for --help and rejects an unknown command', () => {
     const io = new Io(project.root);
 

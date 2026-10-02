@@ -15,6 +15,12 @@ export interface DiscoveredClass {
   isDefault: boolean;
   /** Names of the class's decorators, renamed imports resolved. */
   decorators: string[];
+  /**
+   * Plain-identifier first arguments of the class's decorators, e.g. the token in
+   * `@repository(Token)`; an empty array when a decorator takes none. Syntax only:
+   * used to warn when two classes pass the same identifier.
+   */
+  tokens: string[];
 }
 
 const SOURCE_FILE = /\.(tsx?|mts|cts)$/;
@@ -106,6 +112,14 @@ export function findClasses(
   const decoratorsOf = (node: ts.ClassDeclaration) =>
     (ts.getDecorators(node) ?? []).map((d) => decoratorName(d, imports)).filter((n): n is string => !!n);
 
+  // A decorator's first argument, when it is a plain identifier, is usually the binding token:
+  // `@repository(IDashboardRepositoryToken, singleton())`.
+  const tokensOf = (node: ts.ClassDeclaration) =>
+    (ts.getDecorators(node) ?? [])
+      .map((d) => (ts.isCallExpression(d.expression) ? d.expression.arguments[0] : undefined))
+      .filter((arg): arg is ts.Identifier => !!arg && ts.isIdentifier(arg))
+      .map((arg) => arg.text);
+
   return exported
     .map(({ node, local, exportName }) => ({ node: node ?? (local ? classes.get(local) : undefined), exportName }))
     .filter((e): e is { node: ts.ClassDeclaration; exportName: string } => !!e.node)
@@ -114,20 +128,25 @@ export function findClasses(
       exportName,
       className: node.name?.text ?? nameFromFile(file),
       decorators: decoratorsOf(node),
+      tokens: tokensOf(node),
     }))
     .filter(({ node, exportName, className, decorators }) => {
       if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
       if (selector.export !== 'any' && (exportName === 'default') !== (selector.export === 'default')) return false;
       if (selector.decorators && !selector.decorators.some((name) => decorators.includes(name))) return false;
-      return !selector.nameGlob || selector.nameGlob.test(className);
+      if (selector.nameGlob && !selector.nameGlob.test(className)) return false;
+      if (selector.excludeClasses?.includes(className)) return false;
+      if (selector.excludeNameGlob?.test(className)) return false;
+      return true;
     })
     .sort((a, b) => a.node.pos - b.node.pos)
-    .map(({ exportName, className, decorators }) => ({
+    .map(({ exportName, className, decorators, tokens }) => ({
       file,
       exportName,
       localName: exportName === 'default' ? className : exportName,
       className,
       isDefault: exportName === 'default',
       decorators,
+      tokens,
     }));
 }

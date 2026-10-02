@@ -147,6 +147,13 @@ Acceptance criteria:
   member (`@ioc.register(...)`). Composed decorators are listed like any other.
 - `nameGlob` is a glob (`*Service`) the class name must match; for an anonymous
   default export the name is derived from the file name.
+- `excludeClasses` drops classes by exact name and `excludeNameGlob` drops classes
+  whose name matches a glob; both apply after every other criterion, so one test
+  double among real registrations needs no `filterExports` file.
+- The build warns, per bundle, when two selected classes pass the same
+  plain-identifier first argument to a decorator (a same-token heuristic, since
+  registration is last-wins); the warning suggests `select.excludeClasses`.
+  Aliased imports are not resolved — the check is syntactic.
 - An invalid rule — including the removed string form (`"select": "decorated"`)
   — fails the build naming the offending field.
 
