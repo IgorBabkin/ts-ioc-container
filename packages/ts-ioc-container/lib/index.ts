@@ -28,7 +28,7 @@ export {
   type InjectorHook,
   Injector,
 } from './injector/IInjector';
-export { MetadataInjector, inject, arg, args, argsFn, by, resolveArgs } from './injector/MetadataInjector';
+export { MetadataInjector, inject, arg, args, argsFn, by, byArgs, resolveArgs } from './injector/MetadataInjector';
 export { SimpleInjector } from './injector/SimpleInjector';
 export { ProxyInjector } from './injector/ProxyInjector';
 
@@ -192,6 +192,6 @@ export { type ExecutionContext } from './ExecutionContext';
 // Utils
 export { select } from './select';
 export { pipe, type MapFn } from './utils/fp';
-export { findOrFail, type Predicate } from './utils/array';
+export { findArgOrFail, type Predicate } from './utils/array';
 export { ProxyRegistry, unwrapProxy, type IProxyRegistry } from './utils/ProxyRegistry';
 export { type Branded, type constructor, type Instance, type Serializable, Is, isSerializable } from './utils/basic';

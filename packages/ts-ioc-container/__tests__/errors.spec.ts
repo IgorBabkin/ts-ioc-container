@@ -10,7 +10,7 @@ import {
   DependencyMissingKeyError,
   DependencyNotFoundError,
   EmptyContainer,
-  findOrFail,
+  findArgOrFail,
   MethodNotImplementedError,
   Provider,
   ProviderDisposedError,
@@ -87,7 +87,7 @@ describe('errors', () => {
   });
 
   it('explains an argument that matches nothing', () => {
-    expect(() => findOrFail((arg) => arg === 'x')(['a', 'b'])).toThrowError(
+    expect(() => findArgOrFail((arg) => arg === 'x')(['a', 'b'])).toThrowError(
       'No argument matches the predicate (received 2 args).',
     );
   });

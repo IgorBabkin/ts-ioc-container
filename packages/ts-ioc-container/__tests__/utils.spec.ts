@@ -1,4 +1,4 @@
-import { ArgumentNotFoundError, findOrFail, getConstructorChain, isSerializable, pipe, SingleToken } from '../lib';
+import { ArgumentNotFoundError, findArgOrFail, getConstructorChain, isSerializable, pipe, SingleToken } from '../lib';
 import { ProxyRegistry, unwrapProxy } from '../lib/utils/ProxyRegistry';
 import { toString } from '../lib/utils/basic';
 
@@ -94,17 +94,17 @@ describe('fp', () => {
   });
 });
 
-describe('findOrFail', () => {
+describe('findArgOrFail', () => {
   const isString = (value: unknown): value is string => typeof value === 'string';
 
   it('should return the first argument matching the predicate', () => {
-    const findString = findOrFail(isString);
+    const findString = findArgOrFail(isString);
 
     expect(findString([1, 'first', 'second'])).toBe('first');
   });
 
   it('should throw ArgumentNotFoundError when no argument matches', () => {
-    const findString = findOrFail(isString);
+    const findString = findArgOrFail(isString);
 
     expect(() => findString([1, 2])).toThrowError(ArgumentNotFoundError);
     expect(() => findString()).toThrowError(ArgumentNotFoundError);

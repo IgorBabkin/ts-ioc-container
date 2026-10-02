@@ -15,7 +15,7 @@ export const Filter = {
  *
  * @throws {ArgumentNotFoundError} when no argument matches `predicate`
  */
-export const findOrFail =
+export const findArgOrFail =
   <T>(predicate: Predicate<T>) =>
   (args: unknown[] = []): T => {
     const index = args.findIndex((arg) => predicate(arg as T));

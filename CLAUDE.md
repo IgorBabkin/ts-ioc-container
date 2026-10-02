@@ -368,6 +368,10 @@ EntityManagerToken.argsFn((scope) => [UserRepositoryToken.resolve(scope)]).resol
 `argToToken(value)` (`lib/token/toToken.ts`, exported) is the consumer helper
 for "token → resolve it, literal → pass through": a custom `InjectFn` such as
 `({ scope, args = [] }) => argToToken(args[0]).resolve(scope)` accepts either.
+`byArgs(pick)` (`lib/injector/MetadataInjector.ts`, exported) is the
+"caller chooses the dependency" form: `({ scope, args = [] }) => pick(args).resolve(scope)`,
+usually `@inject(byArgs(findArgOrFail(isRepositoryToken)))` — the token is resolved
+without args.
 
 **Runtime args cascade through tokens.** Every container-backed token
 (`SingleToken`, `ClassToken`, `SingleAliasToken`, `GroupAliasToken`,
@@ -381,7 +385,7 @@ dependency's provider, `scopeAccess` rule and `singleton()` cache key, while
 `({ scope }) => Token.resolve(scope)` does not;
 the choice is written at the parameter. Positional pickers (`arg(0)`) on a
 specialized dependency resolved with the cascade therefore see the caller's
-args first — prefer `argsFn(predicate)` / `findOrFail(predicate)` there.
+args first — prefer `argsFn(predicate)` / `findArgOrFail(predicate)` there.
 
 ### Hooks
 

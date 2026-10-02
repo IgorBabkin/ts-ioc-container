@@ -174,6 +174,6 @@ All errors extend `ContainerError` and carry a stable `code`:
 | `IOC_EVENT_DISPOSED` | `TypedEventDisposedError` | Subscribing to an event of a disposed scope |
 | `IOC_SINGLETON_APPLIED_TWICE` | `CannotApplySingletonTwiceError` | `singleton()` appears twice in one registration |
 | `IOC_UNSUPPORTED_TOKEN_TYPE` | `UnsupportedTokenTypeError` | `toToken(...)` got a value that is not a key, class or token |
-| `IOC_ARGUMENT_NOT_FOUND` | `ArgumentNotFoundError` | `findOrFail` / `argsFn` predicate matched nothing |
+| `IOC_ARGUMENT_NOT_FOUND` | `ArgumentNotFoundError` | `findArgOrFail` / `argsFn` predicate matched nothing |
 | `IOC_CONTAINER_NOT_FOUND` | `ContainerNotFoundError` | No container is associated with the target |
 | `IOC_METHOD_NOT_IMPLEMENTED` | `MethodNotImplementedError` | Called a method the object does not support (e.g. on `EmptyContainer`) |
