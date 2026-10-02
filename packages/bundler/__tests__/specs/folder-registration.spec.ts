@@ -580,6 +580,7 @@ describe('Folder registration', () => {
       [{ nameGlob: '' }, 'bundles[0].select.nameGlob: expected a non-empty string'],
       [{ excludeClasses: [] }, 'bundles[0].select.excludeClasses: expected a non-empty array of strings'],
       [{ excludeNameGlob: '' }, 'bundles[0].select.excludeNameGlob: expected a non-empty string'],
+      [{ excludeAliases: [] }, 'bundles[0].select.excludeAliases: expected a non-empty array of strings'],
       [{ exported: true }, 'bundles[0].select.exported: unknown field'],
     ])('rejects the rule %j naming the field', (select, message) => {
       project = TempProject.create({ 'tic.config.json': module(['./src'], { select }) });
@@ -627,6 +628,34 @@ describe('Folder registration', () => {
       });
 
       expect(buildProject().warnings).toEqual([]);
+    });
+
+    it('does not warn when a shared decorator scopes the colliding classes apart', () => {
+      const scoped = (name: string, page: string) =>
+        `import { repository } from 'ts-ioc-container';\n` +
+        `import { perPage } from './scope';\n` +
+        `@repository(IFilterChipsToken)\n@perPage('${page}')\nexport class ${name} {}\n`;
+      project = TempProject.create({
+        'tic.config.json': module(['./src']),
+        'src/StationFilterChips.ts': scoped('StationFilterChips', 'stations'),
+        'src/SessionFilterChips.ts': scoped('SessionFilterChips', 'sessions'),
+      });
+
+      expect(buildProject().warnings).toEqual([]);
+    });
+
+    it('still warns when the shared decorator has the same argument', () => {
+      const scoped = (name: string) =>
+        `import { repository } from 'ts-ioc-container';\n` +
+        `import { perPage } from './scope';\n` +
+        `@repository(IFilterChipsToken)\n@perPage('stations')\nexport class ${name} {}\n`;
+      project = TempProject.create({
+        'tic.config.json': module(['./src']),
+        'src/A.ts': scoped('A'),
+        'src/B.ts': scoped('B'),
+      });
+
+      expect(buildProject().warnings).toHaveLength(1);
     });
   });
 
@@ -696,6 +725,55 @@ describe('Folder registration', () => {
       buildProject();
 
       expect(generated()).toContain("import { Logger } from '../services/Logger';");
+    });
+
+    it('drops classes whose file resolves through an excluded paths alias', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['@services', '@controllers'], { select: { excludeAliases: ['services'] } }),
+        'tsconfig.json': tsconfig({
+          baseUrl: '.',
+          paths: { '@services/*': ['./src/services/*'], '@controllers/*': ['./src/controllers/*'] },
+        }),
+        'src/services/Logger.ts': decorated('Logger'),
+        'src/controllers/Home.ts': decorated('Home'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain('Home');
+      expect(generated()).not.toContain('Logger');
+    });
+
+    it('matches an alias written with a leading @ and a trailing /*', () => {
+      const scoped = { select: { excludeAliases: ['@services/*'] } };
+      project = TempProject.create({
+        'tic.config.json': module(['services', '@controllers'], scoped),
+        'tsconfig.json': tsconfig({
+          baseUrl: '.',
+          paths: { 'services/*': ['./src/services/*'], '@controllers/*': ['./src/controllers/*'] },
+        }),
+        'src/services/Logger.ts': decorated('Logger'),
+        'src/controllers/Home.ts': decorated('Home'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain('Home');
+      expect(generated()).not.toContain('Logger');
+    });
+
+    it('keeps classes no alias covers', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['@services', './lib'], { select: { excludeAliases: ['services'] } }),
+        'tsconfig.json': tsconfig({ baseUrl: '.', paths: { '@services/*': ['./src/services/*'] } }),
+        'src/services/Logger.ts': decorated('Logger'),
+        'lib/External.ts': decorated('External'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain('External');
+      expect(generated()).not.toContain('Logger');
     });
   });
 

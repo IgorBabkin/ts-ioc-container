@@ -25,6 +25,12 @@ export interface ClassSelector {
   excludeClasses?: string[];
   /** A glob the class name must NOT match, e.g. `*Mock`. An anonymous default export is named after its file. */
   excludeNameGlob?: string;
+  /**
+   * tsconfig `paths` aliases to drop after selection: a class whose file resolves
+   * through one of these aliases is dropped, e.g. `["services"]` for a `services/*`
+   * (or `@services/*`) alias. Names may omit a leading `@` and a trailing `/*`.
+   */
+  excludeAliases?: string[];
 }
 
 /** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
@@ -34,6 +40,7 @@ export interface ResolvedSelector {
   nameGlob?: RegExp;
   excludeClasses?: string[];
   excludeNameGlob?: RegExp;
+  excludeAliases?: string[];
 }
 
 export interface NamespaceConfig {
@@ -140,7 +147,14 @@ function toNamespace(value: unknown, field: string): Required<NamespaceConfig> {
   return { path: value.path, recursive: value.recursive ?? true };
 }
 
-const SELECTOR_FIELDS = new Set(['export', 'decorators', 'nameGlob', 'excludeClasses', 'excludeNameGlob']);
+const SELECTOR_FIELDS = new Set([
+  'export',
+  'decorators',
+  'nameGlob',
+  'excludeClasses',
+  'excludeNameGlob',
+  'excludeAliases',
+]);
 
 /**
  * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
@@ -150,7 +164,7 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
   if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { export: kind, decorators, nameGlob, excludeClasses, excludeNameGlob } = value;
+  const { export: kind, decorators, nameGlob, excludeClasses, excludeNameGlob, excludeAliases } = value;
   if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
     return fail(`${field}.export`, '"any", "named" or "default"');
   }
@@ -164,12 +178,16 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
   if (excludeNameGlob !== undefined && !isNonEmptyString(excludeNameGlob)) {
     return fail(`${field}.excludeNameGlob`, 'a non-empty string');
   }
+  if (excludeAliases !== undefined && !(isStringArray(excludeAliases) && excludeAliases.length > 0)) {
+    return fail(`${field}.excludeAliases`, 'a non-empty array of strings');
+  }
   return {
     export: kind ?? 'any',
     decorators,
     nameGlob: nameGlob === undefined ? undefined : globToRegExp(nameGlob),
     excludeClasses,
     excludeNameGlob: excludeNameGlob === undefined ? undefined : globToRegExp(excludeNameGlob),
+    excludeAliases,
   };
 }
 

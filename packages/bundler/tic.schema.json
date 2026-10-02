@@ -113,6 +113,15 @@
                 "type": "string",
                 "minLength": 1,
                 "description": "Glob the class name must NOT match, e.g. \"*Mock\". An anonymous default export is named after its file."
+              },
+              "excludeAliases": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "tsconfig paths aliases to drop after selection, e.g. [\"services\"] for a `services/*` (or `@services/*`) alias. A class whose file resolves through one of these aliases is dropped. Names may omit a leading `@` and a trailing `/*`."
               }
             }
           },
