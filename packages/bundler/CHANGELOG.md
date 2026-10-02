@@ -1,25 +1,3 @@
-# 1.0.0 (2026-10-02)
-
-  ### 💥 BREAKING CHANGES
-
-    - **ts-ioc-container:**
-    add byArgs InjectFn and rename findOrFail to findArgOrFail
-    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
-
-  ### ✨ Features
-
-    - **ts-ioc-container:**
-    add byArgs InjectFn and rename findOrFail to findArgOrFail
-    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
-
-  ### 📦 Dependencies
-
-    - 📦 update
-    ts-ioc-container
-    to
-    73.0.0
-
-
 # 0.2.0 (2026-09-27)
 
   ### 📝 Other Changes
@@ -67,7 +45,6 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
-
 
 
 

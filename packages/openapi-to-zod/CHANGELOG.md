@@ -1,18 +1,3 @@
-# 2.0.0 (2026-10-02)
-
-  ### 💥 BREAKING CHANGES
-
-    - **ts-ioc-container:**
-    add byArgs InjectFn and rename findOrFail to findArgOrFail
-    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
-
-  ### ✨ Features
-
-    - **ts-ioc-container:**
-    add byArgs InjectFn and rename findOrFail to findArgOrFail
-    (d3505bfc562264df567e0bdad01bcd2fccb6046c)
-
-
 # 1.5.0 (2026-09-27)
 
   ### ✨ Features
@@ -83,7 +68,6 @@
     - **@ibabkin/openapi-to-zod:**
     publish under the existing package name
     (8d522ae590718b67abc91308ece3976364013638)
-
 
 
 
