@@ -1,3 +1,12 @@
+# 2.1.0 (2026-10-02)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    build the tic CLI on ts-ioc-container
+    (341496294c68b82eee30213d581e0692df8038ef)
+
+
 # 2.0.0 (2026-10-02)
 
   ### 💥 BREAKING CHANGES
@@ -180,6 +189,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
