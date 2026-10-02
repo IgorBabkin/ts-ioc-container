@@ -1,3 +1,12 @@
+# 1.5.0 (2026-10-02)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    support bundle config tags
+    (fe595213d65201506047949c9136aaf4f57d0f07)
+
+
 # 1.4.0 (2026-10-02)
 
   ### 📦 Dependencies
@@ -104,6 +113,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
