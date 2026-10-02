@@ -3,7 +3,7 @@
 - **Status:** Proposed
 - **ADR:** [ADR 0022 - Registration discovery happens at build time, outside the container](../../../../adr/0022-build-time-registration-discovery.md)
 - **Public API:** `tic build`, `tic.config.json`, `build`, `loadConfig`, `InclusionPredicate`, `TagInclusionPredicate`, `byTags`, `fileTags`, `ExportPredicate`, `ExportContext`
-- **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts`
+- **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/bundle-groups.spec.ts`, `__tests__/specs/cli.spec.ts`
 
 ## Intent
 
@@ -201,6 +201,36 @@ Acceptance criteria:
   template in `lib/protocols/` (`Bundle.ts.hbs`), precompiled at
   build time — so the shape of the output is read in one place, not assembled
   in code. Names and paths are written verbatim, never HTML-escaped.
+
+### Story: Compose bundles into groups
+
+As an application developer, I can tag bundles and generate a group that
+applies every bundle carrying a tag, so that an environment (or any other
+slice of the app) is assembled from shared and specific bundles in one
+`useModule(...)` call instead of a hand-maintained list.
+
+Acceptance criteria:
+
+- A bundle may carry `tags`, an array of strings; untagged bundles join no
+  group.
+- The config may list `groups`; each group has a `name` (the generated class,
+  a valid identifier), an `output` file and `bundleTags`, a non-empty array of
+  strings. `{name}` in `output` is replaced by the group's name, so
+  `./{name}.generated.ts` writes `AppGroupProduction.generated.ts`.
+- A group applies every bundle carrying **at least one** of its `bundleTags`,
+  in config order — registration is last-wins, so the order of `bundles` in
+  the config decides which bundle overrides another.
+- The group file exports `bundles`, one instance per member bundle, and a
+  class implementing `IContainerModule` that applies each with `useModule`:
+  `container.useModule(new AppGroupProduction())`. It imports each bundle
+  class from its output file, through the most specific tsconfig alias like any
+  other generated import; two bundles sharing a class name are both imported,
+  the later one under a suffixed local name.
+- A group whose `bundleTags` match no bundle fails the build naming the field;
+  so does an invalid group field. Two bundles or groups writing the same file
+  fail the build naming the later one. Nothing is written.
+- A group's output is never scanned, and `tic build --check` covers it like a
+  bundle. Its layout is declared by a protocol, `Group.ts.hbs`.
 
 ### Story: Keep bundles in sync in CI
 

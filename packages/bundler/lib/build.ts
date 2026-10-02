@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_CONFIG_FILE, loadConfig, type ResolvedConfig, type ResolvedBundle } from './config';
-import { emitBundle } from './emit';
+import { emitBundle, emitGroup } from './emit';
 import { globToRegExp, toPosix } from './glob';
 import { ImportPaths, normalizeAliasName } from './ImportPaths';
 import { type ExportPredicate, findConventionalExportPredicate, loadExportPredicate } from './exportPredicate';
@@ -25,11 +25,14 @@ export interface BuildOptions {
 export type OutputStatus = 'written' | 'unchanged' | 'stale';
 
 export interface OutputResult {
+  /** A bundle registers classes; a group applies the bundles carrying its tags. */
+  kind: 'bundle' | 'group';
   /** Absolute path of the generated file. */
   file: string;
   /** Name of the generated class. */
   bundle: string;
   status: OutputStatus;
+  /** For a group, the registrations of all its member bundles. */
   registrations: number;
   content: string;
 }
@@ -47,8 +50,8 @@ export interface BuildResult {
 }
 
 /**
- * Generates one bundle per config entry. Every bundle is generated before any
- * file is written, so a failing namespace leaves the previous outputs intact.
+ * Generates one bundle per `bundles` entry and one group per `groups` entry. Everything is
+ * generated before any file is written, so a failing namespace leaves the previous outputs intact.
  *
  * @throws {TicConfigError} when the config, the tsconfig or a predicate file it names is missing or invalid.
  * @throws {NamespaceNotFoundError} when a namespace is neither a folder nor a tsconfig paths alias of one.
@@ -81,14 +84,39 @@ export function build({
     }),
   );
 
-  const outputs = generated.map(({ bundle, content, registrations }): OutputResult => {
-    const current = existsSync(bundle.output) ? readFileSync(bundle.output, 'utf8') : undefined;
+  const groups = resolved.groups.map((group) => ({
+    kind: 'group' as const,
+    file: group.output,
+    name: group.name,
+    registrations: group.bundles.reduce((sum, i) => sum + generated[i].registrations, 0),
+    content: emitGroup({
+      name: group.name,
+      configPath: toPosix(path.relative(path.dirname(group.output), resolved.file)),
+      bundleTags: group.bundleTags,
+      bundles: group.bundles.map((i) => ({
+        name: resolved.bundles[i].name,
+        specifier: paths.specifier(group.output, resolved.bundles[i].output),
+      })),
+    }),
+  }));
+
+  const outputs = [
+    ...generated.map(({ bundle, content, registrations }) => ({
+      kind: 'bundle' as const,
+      file: bundle.output,
+      name: bundle.name,
+      registrations,
+      content,
+    })),
+    ...groups,
+  ].map(({ kind, file, name, registrations, content }): OutputResult => {
+    const current = existsSync(file) ? readFileSync(file, 'utf8') : undefined;
     const status: OutputStatus = current === content ? 'unchanged' : check ? 'stale' : 'written';
     if (status === 'written') {
-      mkdirSync(path.dirname(bundle.output), { recursive: true });
-      writeFileSync(bundle.output, content);
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, content);
     }
-    return { file: bundle.output, bundle: bundle.name, status, registrations, content };
+    return { kind, file, bundle: name, status, registrations, content };
   });
   return {
     config: resolved.file,
@@ -136,7 +164,7 @@ function generate(
   { include, filterExports }: { include?: InclusionPredicate; filterExports?: ExportPredicate },
 ) {
   const relative = (file: string) => toPosix(path.relative(config.dir, file));
-  const outputs = new Set(config.bundles.map((m) => m.output));
+  const outputs = new Set([...config.bundles, ...config.groups].map((m) => m.output));
   const excludes = bundle.exclude.map(globToRegExp);
   const isExcluded = (file: string) => {
     if (outputs.has(file)) return true;

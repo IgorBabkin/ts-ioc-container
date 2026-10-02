@@ -8,6 +8,8 @@ export {
   DEFAULT_BUNDLE_NAME,
   type TicConfig,
   type BundleConfig,
+  type GroupConfig,
+  type ResolvedGroup,
   type NamespaceConfig,
   type ClassSelector,
   type ExportKind,
@@ -35,6 +37,6 @@ export {
   loadInclusionPredicate,
 } from './inclusion';
 export { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
-export { emitBundle, type EmitInput } from './emit';
+export { emitBundle, emitGroup, type EmitInput, type EmitGroupInput } from './emit';
 export { globToRegExp } from './glob';
 export { TicError, TicConfigError, NamespaceNotFoundError } from './errors';

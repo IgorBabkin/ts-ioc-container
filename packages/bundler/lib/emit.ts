@@ -10,7 +10,38 @@ export interface EmitInput {
   classes: (DiscoveredClass & { specifier: string })[];
 }
 
+export interface EmitGroupInput {
+  /** Name of the generated class. */
+  name: string;
+  /** Shown in the header: where the output came from. */
+  configPath: string;
+  bundleTags: string[];
+  /** The member bundles, in the order they are applied: class name and import specifier. */
+  bundles: { name: string; specifier: string }[];
+}
+
 const RUNTIME_IMPORTS = ['IContainer', 'IContainerModule', 'IRegistration', 'Registration'];
+
+/**
+ * Renders a group — imports of its member bundles, `bundles`, and the module applying them — from its
+ * protocol, `protocols/Group.ts.hbs`. Bundles sharing a class name get suffixed local names.
+ */
+export function emitGroup({ name, configPath, bundleTags, bundles }: EmitGroupInput): string {
+  const taken = new Set(['IContainer', 'IContainerModule', 'bundles', name]);
+  const imports = bundles.map(({ name: exported, specifier }) => {
+    let binding = exported;
+    for (let n = 2; taken.has(binding); n++) binding = `${exported}_${n}`;
+    taken.add(binding);
+    return { binding, specifier, named: binding === exported ? binding : `${exported} as ${binding}` };
+  });
+  return renderProtocol('Group.ts.hbs', {
+    configPath,
+    bundleTags,
+    name,
+    imports,
+    bindings: imports.map((i) => i.binding),
+  });
+}
 
 /**
  * Renders the generated bundle — static imports, `registrations`, and the bundle applying them —

@@ -21,7 +21,11 @@ it.
   two selected classes pass the same plain-identifier first decorator argument (a
   same-token heuristic), unless a decorator they share has differing arguments
   (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
-- Never edit a `*.bundle.ts` by hand — change the classes or the config and
+- `groups[]` (`{ name, output, bundleTags }`) generate container modules that
+  `useModule` every bundle whose `tags` include one of `bundleTags`, in config
+  order (last-wins). `{name}` in `output` is replaced by the group's name. A
+  group matching no bundle, or two outputs writing the same file, fails the build.
+- Never edit a `*.bundle.ts` (or a generated group file) by hand — change the classes or the config and
   rerun `tic build`.
 - Files take part when they match no `exclude` glob **and** an
   `InclusionPredicate` (`({ filename }) => boolean`, filename relative to the

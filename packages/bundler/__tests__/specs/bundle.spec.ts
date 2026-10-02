@@ -3,6 +3,7 @@ import * as ts from 'typescript';
 import { Container, DependencyNotFoundError } from 'ts-ioc-container';
 import { build } from '../../lib';
 import { AppBundle, registrations } from '../fixtures/app/src/di/app.bundle';
+import { AppGroup } from '../fixtures/app/src/di/AppGroup.generated';
 import { Greeter } from '@app/services/Greeter';
 import { ILoggerToken } from '@app/infra/logging/ILogger';
 
@@ -12,7 +13,7 @@ describe('Story: Generate a bundle: a plain container module class', () => {
   it('is current: tic build --check finds nothing to regenerate', () => {
     const result = build({ config: path.join(fixture, 'tic.config.json'), check: true });
 
-    expect(result.outputs.map((o) => o.status)).toEqual(['unchanged']);
+    expect(result.outputs.map((o) => o.status)).toEqual(['unchanged', 'unchanged']);
   });
 
   it('type-checks inside the consumer project, aliases included', () => {
@@ -35,5 +36,15 @@ describe('Story: Generate a bundle: a plain container module class', () => {
     expect(ILoggerToken.resolve(container).messages).toEqual(['Hello, Ada!']);
     expect(registrations).toHaveLength(2);
     expect(() => container.resolve('Formatter')).toThrow(DependencyNotFoundError);
+  });
+});
+
+describe('Story: Compose bundles into groups', () => {
+  it('applies its member bundles, so their classes resolve', () => {
+    const container = new Container().useModule(new AppGroup());
+
+    container.resolve(Greeter).greet('Ada');
+
+    expect(ILoggerToken.resolve(container).messages).toEqual(['Hello, Ada!']);
   });
 });

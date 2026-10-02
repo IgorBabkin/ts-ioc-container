@@ -48,7 +48,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "Tags associated with the bundle."
+            "description": "Tags of the bundle; a group applies every bundle carrying one of its bundleTags."
           },
           "namespaces": {
             "type": "array",
@@ -164,6 +164,40 @@
             "type": "string",
             "minLength": 1,
             "description": "A file exporting an ExportPredicate ((context: { filename, exportName, className, isDefault, decorators, tags }) => boolean), relative to this file. Runs on every exported, non-abstract class that passes `select`, right after parsing. Overrides the conventional tic.exports.* next to this file."
+          }
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Generated container modules, each applying every bundle that carries at least one of its bundleTags, in config order.",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "output",
+          "bundleTags"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_$][\\w$]*$",
+            "description": "Name of the generated class, an IContainerModule."
+          },
+          "output": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The group file, relative to this file. `{name}` is replaced by the group's name, e.g. \"./{name}.generated.ts\"."
+          },
+          "bundleTags": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "A bundle joins the group when its `tags` include at least one of these. A group no bundle joins fails the build."
           }
         }
       }

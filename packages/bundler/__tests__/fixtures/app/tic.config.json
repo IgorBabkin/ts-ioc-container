@@ -4,15 +4,18 @@
     {
       "output": "src/di/app.bundle.ts",
       "name": "AppBundle",
-      "namespaces": [
-        "@app/services",
-        "@app/infra"
-      ],
+      "namespaces": ["@app/services", "@app/infra"],
       "select": {
-        "decorators": [
-          "register"
-        ]
-      }
+        "decorators": ["register"]
+      },
+      "tags": ["app"]
+    }
+  ],
+  "groups": [
+    {
+      "name": "AppGroup",
+      "output": "src/di/{name}.generated.ts",
+      "bundleTags": ["app"]
     }
   ]
 }

@@ -88,6 +88,17 @@ export interface TicConfig {
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
   bundles: BundleConfig[];
+  groups?: GroupConfig[];
+}
+
+/** A generated container module applying every bundle that carries one of `bundleTags`. */
+export interface GroupConfig {
+  /** Name of the generated class, an `IContainerModule`. */
+  name: string;
+  /** The generated file, relative to the config file; `{name}` is replaced by the group's name. */
+  output: string;
+  /** A bundle joins the group when it carries at least one of these tags. */
+  bundleTags: string[];
 }
 
 export const DEFAULT_CONFIG_FILE = 'tic.config.json';
@@ -108,8 +119,18 @@ export interface ResolvedConfig {
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
   bundles: ResolvedBundle[];
+  groups: ResolvedGroup[];
   /** Non-fatal problems found while resolving, e.g. an `exclude` that drops a default test glob. */
   warnings: string[];
+}
+
+export interface ResolvedGroup {
+  /** Absolute path, `{name}` already replaced. */
+  output: string;
+  name: string;
+  bundleTags: string[];
+  /** Indexes into {@link ResolvedConfig.bundles} of the member bundles, in config order. */
+  bundles: number[];
 }
 
 export interface ResolvedBundle {
@@ -243,6 +264,38 @@ function excludeWarnings(value: unknown, field: string): string[] {
 }
 
 /**
+ * @throws {TicConfigError} when a group field is missing or has the wrong type, or its tags match no bundle.
+ */
+function toGroup(value: unknown, field: string, dir: string, bundles: ResolvedBundle[]): ResolvedGroup {
+  if (!isObject(value)) return fail(field, 'an object');
+  const { name, output, bundleTags } = value;
+  if (!isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
+  if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
+  if (!(isStringArray(bundleTags) && bundleTags.length > 0)) {
+    return fail(`${field}.bundleTags`, 'a non-empty array of strings');
+  }
+  const members = bundles.flatMap((bundle, i) => (bundle.tags.some((tag) => bundleTags.includes(tag)) ? [i] : []));
+  if (members.length === 0) {
+    throw new TicConfigError(
+      `${field}.bundleTags: no bundle is tagged ${bundleTags.map((tag) => `"${tag}"`).join(' or ')}`,
+    );
+  }
+  return { output: path.resolve(dir, output.split('{name}').join(name)), name, bundleTags, bundles: members };
+}
+
+/**
+ * @throws {TicConfigError} when two bundles or groups write the same file; names the later one.
+ */
+function assertDistinctOutputs(entries: [field: string, output: string][]): void {
+  const owners = new Map<string, string>();
+  for (const [field, output] of entries) {
+    const owner = owners.get(output);
+    if (owner !== undefined) throw new TicConfigError(`${field}.output: also written by ${owner}`);
+    owners.set(output, field);
+  }
+}
+
+/**
  * Validates parsed `tic.config.json` content and resolves its paths against `file`'s directory.
  *
  * @throws {TicConfigError} when the content does not match the config shape; the message names the field.
@@ -250,16 +303,24 @@ function excludeWarnings(value: unknown, field: string): string[] {
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const dir = path.dirname(file);
   if (!isObject(content)) return fail('config', 'a JSON object');
-  const { tsconfig, importExtension, bundles } = content;
+  const { tsconfig, importExtension, bundles, groups } = content;
   if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('tsconfig', 'a non-empty string');
   if (importExtension !== undefined && typeof importExtension !== 'string') return fail('importExtension', 'a string');
   if (!Array.isArray(bundles) || bundles.length === 0) return fail('bundles', 'a non-empty array');
+  if (groups !== undefined && !Array.isArray(groups)) return fail('groups', 'an array');
+  const resolvedBundles = bundles.map((m, i) => toBundle(m, `bundles[${i}]`, dir));
+  const resolvedGroups = (groups ?? []).map((g, i) => toGroup(g, `groups[${i}]`, dir, resolvedBundles));
+  assertDistinctOutputs([
+    ...resolvedBundles.map((b, i): [string, string] => [`bundles[${i}]`, b.output]),
+    ...resolvedGroups.map((g, i): [string, string] => [`groups[${i}]`, g.output]),
+  ]);
   return {
     file,
     dir,
     tsconfig: { file: path.resolve(dir, tsconfig ?? 'tsconfig.json'), required: tsconfig !== undefined },
     importExtension,
-    bundles: bundles.map((m, i) => toBundle(m, `bundles[${i}]`, dir)),
+    bundles: resolvedBundles,
+    groups: resolvedGroups,
     warnings: bundles.flatMap((m, i) => excludeWarnings(m, `bundles[${i}]`)),
   };
 }
