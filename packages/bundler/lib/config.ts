@@ -55,6 +55,8 @@ export interface BundleConfig {
   output: string;
   /** Name of the generated class, an `IContainerModule`. Default `Bundle`. */
   name?: string;
+  /** Tags associated with the bundle. */
+  tags?: string[];
   namespaces: (string | NamespaceConfig)[];
   /** Which classes of a scanned file are registered. Default: every exported class. */
   select?: ClassSelector;
@@ -113,6 +115,7 @@ export interface ResolvedConfig {
 export interface ResolvedBundle {
   output: string;
   name: string;
+  tags: string[];
   namespaces: Required<NamespaceConfig>[];
   select: ResolvedSelector;
   /** The effective list: the configured `exclude` (or the defaults) followed by `additionalExclude`. */
@@ -196,9 +199,10 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
  */
 function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
   if (!isObject(value)) return fail(field, 'an object');
-  const { output, name, namespaces, select, exclude, additionalExclude, include, filterExports } = value;
+  const { output, name, tags, namespaces, select, exclude, additionalExclude, include, filterExports } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
+  if (tags !== undefined && !isStringArray(tags)) return fail(`${field}.tags`, 'an array of strings');
   if (!Array.isArray(namespaces) || namespaces.length === 0) return fail(`${field}.namespaces`, 'a non-empty array');
   if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
   if (additionalExclude !== undefined && !isStringArray(additionalExclude)) {
@@ -211,6 +215,7 @@ function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
   return {
     output: path.resolve(dir, output),
     name: name ?? DEFAULT_BUNDLE_NAME,
+    tags: tags ?? [],
     namespaces: namespaces.map((ns, i) => toNamespace(ns, `${field}.namespaces[${i}]`)),
     select: toSelector(select, `${field}.select`),
     exclude: [...(exclude ?? DEFAULT_EXCLUDE), ...(additionalExclude ?? [])],
