@@ -102,6 +102,7 @@ By default every exported, non-abstract class of a scanned file is registered.
 | `nameGlob`         | —       | Glob on the class name; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
 | `excludeClasses`   | —       | Class names to drop, e.g. `["MockDashboardRepository"]`                                                     |
 | `excludeNameGlob`  | —       | Glob the class name must **not** match, e.g. `"*Mock"`                                                      |
+| `excludeAliases`   | —       | tsconfig `paths` aliases to drop, e.g. `["services"]` for a `services/*` or `@services/*` alias             |
 
 Abstract and non-exported classes are never registered.
 
@@ -124,6 +125,18 @@ Both apply after every other criterion, so they can be combined with
 `decorators` and `nameGlob` freely. Reach for `filterExports` when the rule
 needs more than the class name.
 
+`excludeAliases` drops classes by the tsconfig `paths` alias their file resolves
+through — handy for excluding a whole namespace without naming its classes:
+
+```json
+"select": {
+  "excludeAliases": ["services"]
+}
+```
+
+An entry matches a `paths` pattern such as `services/*` or `@services/*`; a
+leading `@` and a trailing `/*` may be omitted.
+
 As a safety net, the build warns when two selected classes pass the same
 plain-identifier first argument to a decorator — usually the binding token, as in
 `@repository(IDashboardRepositoryToken)`. The check is syntactic (aliased imports
@@ -134,6 +147,11 @@ tic: warning: bundles[0]: decorator token "IDashboardRepositoryToken" is passed 
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
 exclude one with select.excludeClasses
 ```
+
+Classes that are scope-gated are not last-wins, so they do not warn: when the
+colliding classes share a decorator called with different arguments, e.g.
+`@perPage('stations')` vs `@perPage('sessions')`, each scope registers its own
+class and nothing is lost.
 
 ## Including files with a predicate
 

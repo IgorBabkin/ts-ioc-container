@@ -13,11 +13,14 @@ it.
 - A namespace is a folder: relative to the config file, or a tsconfig `paths`
   alias. Generated imports use the most specific alias, else a relative path.
 - Default selection is every exported, non-abstract class. A module's
-  `select: { export, decorators, nameGlob, excludeClasses, excludeNameGlob }`
+  `select: { export, decorators, nameGlob, excludeClasses, excludeNameGlob, excludeAliases }`
   narrows it; positive criteria must all hold and then `excludeClasses` (exact
-  names) and `excludeNameGlob` (glob) drop classes. Decorators match by name, so
-  composed ones must be listed. The build warns when two selected classes pass the
-  same plain-identifier first decorator argument (a same-token heuristic).
+  names), `excludeNameGlob` (glob) and `excludeAliases` (tsconfig `paths` aliases
+  the file resolves through, e.g. `services` for `@services/*`) drop classes.
+  Decorators match by name, so composed ones must be listed. The build warns when
+  two selected classes pass the same plain-identifier first decorator argument (a
+  same-token heuristic), unless a decorator they share has differing arguments
+  (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
 - Never edit a `*.bundle.ts` by hand — change the classes or the config and
   rerun `tic build`.
 - Files take part when they match no `exclude` glob **and** an

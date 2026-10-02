@@ -21,6 +21,12 @@ export interface DiscoveredClass {
    * used to warn when two classes pass the same identifier.
    */
   tokens: string[];
+  /**
+   * Each class decorator's name and the source text of its arguments, e.g.
+   * `perPage` with `["'stations'"]`. Syntax only: lets the token-collision check
+   * tell scope-gated classes (`@perPage('a')` vs `@perPage('b')`) apart.
+   */
+  decoratorCalls: { name: string; args: string[] }[];
 }
 
 const SOURCE_FILE = /\.(tsx?|mts|cts)$/;
@@ -112,6 +118,14 @@ export function findClasses(
   const decoratorsOf = (node: ts.ClassDeclaration) =>
     (ts.getDecorators(node) ?? []).map((d) => decoratorName(d, imports)).filter((n): n is string => !!n);
 
+  const decoratorCallsOf = (node: ts.ClassDeclaration): { name: string; args: string[] }[] =>
+    (ts.getDecorators(node) ?? []).flatMap((d) => {
+      const name = decoratorName(d, imports);
+      if (!name) return [];
+      const args = ts.isCallExpression(d.expression) ? d.expression.arguments.map((arg) => arg.getText(source)) : [];
+      return [{ name, args }];
+    });
+
   // A decorator's first argument, when it is a plain identifier, is usually the binding token:
   // `@repository(IDashboardRepositoryToken, singleton())`.
   const tokensOf = (node: ts.ClassDeclaration) =>
@@ -128,6 +142,7 @@ export function findClasses(
       exportName,
       className: node.name?.text ?? nameFromFile(file),
       decorators: decoratorsOf(node),
+      decoratorCalls: decoratorCallsOf(node),
       tokens: tokensOf(node),
     }))
     .filter(({ node, exportName, className, decorators }) => {
@@ -140,13 +155,14 @@ export function findClasses(
       return true;
     })
     .sort((a, b) => a.node.pos - b.node.pos)
-    .map(({ exportName, className, decorators, tokens }) => ({
+    .map(({ exportName, className, decorators, decoratorCalls, tokens }) => ({
       file,
       exportName,
       localName: exportName === 'default' ? className : exportName,
       className,
       isDefault: exportName === 'default',
       decorators,
+      decoratorCalls,
       tokens,
     }));
 }

@@ -150,10 +150,17 @@ Acceptance criteria:
 - `excludeClasses` drops classes by exact name and `excludeNameGlob` drops classes
   whose name matches a glob; both apply after every other criterion, so one test
   double among real registrations needs no `filterExports` file.
+- `excludeAliases` drops classes whose file resolves through a named tsconfig
+  `paths` alias, e.g. `["services"]` matches a `services/*` or `@services/*`
+  alias; entries may omit a leading `@` and a trailing `/*`. Classes no alias
+  covers are kept.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
   registration is last-wins); the warning suggests `select.excludeClasses`.
-  Aliased imports are not resolved — the check is syntactic.
+  Aliased imports are not resolved — the check is syntactic. It does not warn
+  when the colliding classes are distinguished by a decorator they share called
+  with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):
+  those registrations are scope-gated, not last-wins.
 - An invalid rule — including the removed string form (`"select": "decorated"`)
   — fails the build naming the offending field.
 

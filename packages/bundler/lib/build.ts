@@ -3,7 +3,7 @@ import path from 'node:path';
 import { DEFAULT_CONFIG_FILE, loadConfig, type ResolvedConfig, type ResolvedBundle } from './config';
 import { emitBundle } from './emit';
 import { globToRegExp, toPosix } from './glob';
-import { ImportPaths } from './ImportPaths';
+import { ImportPaths, normalizeAliasName } from './ImportPaths';
 import { type ExportPredicate, findConventionalExportPredicate, loadExportPredicate } from './exportPredicate';
 import { fileTags, findConventionalPredicate, type InclusionPredicate, loadInclusionPredicate } from './inclusion';
 import { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
@@ -150,10 +150,18 @@ function generate(
     for (const file of listSourceFiles(dir, namespace.recursive, isExcluded)) files.add(file);
   }
 
+  const excludedAliases = new Set((bundle.select.excludeAliases ?? []).map(normalizeAliasName));
+  const isAliasExcluded = (file: string) => {
+    if (excludedAliases.size === 0) return false;
+    const alias = paths.aliasName(file);
+    return alias !== undefined && excludedAliases.has(alias);
+  };
+
   const classes = [...files]
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     .flatMap((file) => findClasses(file, bundle.select))
     .filter((cls) => {
+      if (isAliasExcluded(cls.file)) return false;
       if (!filterExports) return true;
       const filename = relative(cls.file);
       const { exportName, className, isDefault, decorators } = cls;
@@ -175,22 +183,44 @@ function generate(
  * first argument is a plain identifier, equal identifiers are almost always the same
  * token, and registration is last-wins, so one silently replaces the other. Purely
  * syntactic — aliased imports and computed keys are not resolved.
+ *
+ * Scope-gated classes (`@perPage('stations')`, `@perPage('sessions')`) share the
+ * token but are not last-wins: the classes are distinguished by a decorator they
+ * share called with different arguments, so each scope registers its own. Those
+ * groups are not warned about.
  */
 function tokenCollisions(classes: DiscoveredClass[], field: string): string[] {
-  const owners = new Map<string, string[]>();
-  for (const { className, tokens } of classes) {
-    for (const token of tokens) {
-      const names = owners.get(token) ?? [];
-      if (!names.includes(className)) names.push(className);
-      owners.set(token, names);
+  const owners = new Map<string, DiscoveredClass[]>();
+  for (const cls of classes) {
+    for (const token of cls.tokens) {
+      const group = owners.get(token) ?? [];
+      if (!group.some((owner) => owner.className === cls.className)) group.push(cls);
+      owners.set(token, group);
     }
   }
   return [...owners]
-    .filter(([, names]) => names.length > 1)
+    .filter(([, group]) => group.length > 1 && !scopeDisjoint(group))
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(
-      ([token, names]) =>
+    .map(([token, group]) => {
+      const names = group.map((cls) => cls.className);
+      return (
         `${field}: decorator token "${token}" is passed by ${names.join(', ')}; ` +
-        `registration is last-wins, exclude one with select.excludeClasses`,
-    );
+        `registration is last-wins, exclude one with select.excludeClasses`
+      );
+    });
+}
+
+/**
+ * Whether a decorator shared by every class in a colliding group is called with
+ * different arguments, e.g. `@perPage('stations')` vs `@perPage('sessions')`. Such
+ * classes are scope-gated, not last-wins. Purely syntactic.
+ */
+function scopeDisjoint(group: DiscoveredClass[]): boolean {
+  const [first, ...rest] = group;
+  return first.decoratorCalls.some(({ name, args }) =>
+    rest.every((cls) => {
+      const same = cls.decoratorCalls.find((call) => call.name === name);
+      return same !== undefined && same.args.join('\u0000') !== args.join('\u0000');
+    }),
+  );
 }

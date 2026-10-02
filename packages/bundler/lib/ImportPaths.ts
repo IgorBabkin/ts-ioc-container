@@ -86,17 +86,34 @@ export class ImportPaths {
   specifier(fromFile: string, toFile: string): string {
     const target = toPosix(toFile);
     const bare = target.replace(SOURCE_EXTENSION, '');
-    let best: { spec: string; score: number } | undefined;
+    const best = this.bestAlias(target, bare);
+    if (best) return best.spec;
+
+    const relative = toPosix(path.relative(path.dirname(fromFile), bare));
+    return `${relative.startsWith('.') ? relative : `./${relative}`}${this.extension}`;
+  }
+
+  /**
+   * The tsconfig `paths` alias `file` is covered by, normalized to its name
+   * (`@app/services/*` -> `app/services`), or `undefined` when no alias covers it.
+   * Used to drop classes by alias (`select.excludeAliases`).
+   */
+  aliasName(file: string): string | undefined {
+    const target = toPosix(file);
+    const bare = target.replace(SOURCE_EXTENSION, '');
+    const best = this.bestAlias(target, bare);
+    return best && normalizeAliasName(best.pattern);
+  }
+
+  private bestAlias(target: string, bare: string): { spec: string; score: number; pattern: string } | undefined {
+    let best: { spec: string; score: number; pattern: string } | undefined;
     for (const { pattern, targets } of this.aliases) {
       for (const aliasTarget of targets) {
         const match = this.matchAlias(pattern, aliasTarget, target, bare);
         if (match && (!best || match.score > best.score)) best = match;
       }
     }
-    if (best) return best.spec;
-
-    const relative = toPosix(path.relative(path.dirname(fromFile), bare));
-    return `${relative.startsWith('.') ? relative : `./${relative}`}${this.extension}`;
+    return best;
   }
 
   private aliasTargets(spec: string): string[] {
@@ -115,13 +132,18 @@ export class ImportPaths {
     const wildcard = splitWildcard(aliasTarget);
     if (!wildcard) {
       const exact = aliasTarget === file || aliasTarget.replace(SOURCE_EXTENSION, '') === bare;
-      return exact && !splitWildcard(pattern) ? { spec: pattern, score: Infinity } : undefined;
+      return exact && !splitWildcard(pattern) ? { spec: pattern, score: Infinity, pattern } : undefined;
     }
     const [prefix, suffix] = wildcard;
     if (!bare.startsWith(prefix) || !bare.endsWith(suffix) || bare.length < prefix.length + suffix.length) {
       return undefined;
     }
     const captured = bare.slice(prefix.length, bare.length - suffix.length);
-    return { spec: `${pattern.replace('*', captured)}${this.extension}`, score: prefix.length };
+    return { spec: `${pattern.replace('*', captured)}${this.extension}`, score: prefix.length, pattern };
   }
+}
+
+/** The name of a `paths` alias: `@app/services/*` and `@app/services` both become `app/services`. */
+export function normalizeAliasName(pattern: string): string {
+  return pattern.replace(/^@/, '').replace(/\/?\*$/, '');
 }
