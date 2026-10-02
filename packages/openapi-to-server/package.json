@@ -1,7 +1,6 @@
 {
   "name": "@ts-ioc-container/openapi-to-server",
   "version": "4.1.0",
-  "private": true,
   "description": "Generates TypeScript server interfaces from OpenAPI specifications",
   "keywords": [
     "openapi",

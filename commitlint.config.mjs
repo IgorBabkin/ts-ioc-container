@@ -1,5 +1,11 @@
 const releaseTypes = new Set(['feat', 'fix', 'perf']);
-const packageScopes = new Set(['ts-ioc-container', '@ts-ioc-container/react', '@ts-ioc-container/bundler']);
+const packageScopes = new Set([
+  'ts-ioc-container',
+  '@ts-ioc-container/react',
+  '@ts-ioc-container/bundler',
+  '@ts-ioc-container/openapi-to-server',
+  '@ts-ioc-container/openapi-to-zod',
+]);
 
 export default {
   extends: ['@commitlint/config-conventional'],
@@ -49,6 +55,8 @@ export default {
         'ts-ioc-container',
         '@ts-ioc-container/react',
         '@ts-ioc-container/bundler',
+        '@ts-ioc-container/openapi-to-server',
+        '@ts-ioc-container/openapi-to-zod',
 
         // Core library scopes
         'container',
@@ -60,7 +68,7 @@ export default {
         'errors',
         'metadata',
         'bundler', // @ts-ioc-container/bundler work that must not release
-        'openapi', // openapi-* package work that must not release (private until go-live)
+        'openapi', // openapi-* package work that must not release
 
         // CI/CD scopes
         'github', // GitHub workflows
