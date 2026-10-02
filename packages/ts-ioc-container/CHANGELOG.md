@@ -1,3 +1,12 @@
+# 73.1.0 (2026-10-02)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    add invoke hook and when() combinator
+    (4e216c967d04040035f4b90525f9908e93d18733)
+
+
 # 73.0.0 (2026-10-02)
 
   ### 💥 BREAKING CHANGES
@@ -467,6 +476,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
