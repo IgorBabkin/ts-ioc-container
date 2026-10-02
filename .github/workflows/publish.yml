@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+  # Repair path: publishes any package version that is missing from the
+  # registry without running a release (skip-existing, unlike the release
+  # pipeline's engine). Must live in this workflow so npm's trusted publisher,
+  # which is bound to publish.yml + the production environment, accepts it.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -115,3 +120,51 @@ jobs:
           # The step reads GITHUB_TOKEN, not GH_TOKEN — it sets GH_TOKEN itself
           # when it shells out to `gh`. GITHUB_REPOSITORY is provided by Actions.
           GITHUB_TOKEN: ${{ github.token }}
+
+  # Repair job (manual `workflow_dispatch`): publishes any package version that
+  # is on disk but not yet on npm, skipping the ones already there. The release
+  # engine's publish step cannot do this — it re-publishes already-released
+  # versions and aborts on the first failure — so this is the path to finish a
+  # release that failed partway through. Same environment as `release` so npm's
+  # trusted publisher (bound to publish.yml + production) accepts the OIDC token.
+  publish-missing:
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    environment:
+      name: production
+      url: https://www.npmjs.com/package/ts-ioc-container
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js with OIDC
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Ensure npm 11.5.1 or later for OIDC
+        run: |
+          npm install -g npm@11
+          npm --version
+
+      - name: Install dependencies
+        run: pnpm run ci
+
+      - name: Download build output
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: packages
+
+      - name: Verify package contents
+        run: pnpm run verify:package-contents
+
+      - name: Publish versions missing from npm
+        run: pnpm run publish:missing
