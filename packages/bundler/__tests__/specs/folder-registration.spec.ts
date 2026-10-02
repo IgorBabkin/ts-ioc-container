@@ -59,6 +59,14 @@ describe('Folder registration', () => {
       expect(loadConfig(project.path('tic.config.json')).bundles[0].tags).toEqual(['test']);
     });
 
+    it('defaults omitted bundle tags to an empty array', () => {
+      project = TempProject.create({
+        'tic.config.json': module(['./src/services']),
+      });
+
+      expect(loadConfig(project.path('tic.config.json')).bundles[0].tags).toEqual([]);
+    });
+
     it.each([
       [{}, 'bundles: expected a non-empty array'],
       [{ bundles: [{ namespaces: ['./src'] }] }, 'bundles[0].output: expected a non-empty string'],
