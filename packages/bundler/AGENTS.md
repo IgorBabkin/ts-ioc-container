@@ -7,11 +7,12 @@ nothing here runs inside the container, and the core package is not changed by
 it.
 
 - The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
-  same program). One config file describes one bundle: `<name>.bundle.json`
+  same program). One config file describes one bundle: `<name>.bundle.json`, or the same in
+  YAML as `<name>.bundle.yaml` / `.yml` (an empty YAML file = all defaults)
   (schema: `tic.schema.json`), flat — `output`, `name`, `tags`, `extends`,
   `importExtension`, `files`, `classes`, all optional. `tic build` works on
   the package it is invoked in (nearest `package.json` up from the working
-  directory; never a workspace root): it builds every `*.bundle.json` there
+  directory; never a workspace root): it builds every `*.bundle.{json,yaml,yml}` there
   (or the ones named with repeatable `-c`), else — zero config — one bundle
   from that package's `tsconfig.json` with every default. Each writes one class — `export class AppBundle implements IContainerModule`,
   applied with `container.useModule(new AppBundle())`. Several bundles (e.g.

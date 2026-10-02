@@ -69,6 +69,18 @@ file describes one bundle and is named `<name>.bundle.json` — `app.bundle.json
 }
 ```
 
+or, in YAML, `<name>.bundle.yaml` / `<name>.bundle.yml` — same fields, same schema:
+
+```yaml
+# yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
+output: src/di/app.bundle.ts
+files:
+  include: ['**/*.service.ts']
+```
+
+An empty YAML file is a bundle with every setting at its default. Describing
+one bundle in two formats (`app.bundle.json` and `app.bundle.yaml`) is an error.
+
 Every field is optional; `{}` is the zero-config bundle.
 
 | Field             | Default                                | Meaning                                                                                       |
@@ -87,7 +99,8 @@ unnoticed.
 ## Several bundles
 
 Need more than one bundle — per environment, per app? Add a config per bundle.
-`tic build` builds every `*.bundle.json` at the package root:
+`tic build` builds every `*.bundle.json`, `*.bundle.yaml` and `*.bundle.yml` at
+the package root:
 
 ```text
 production.bundle.json    → src/di/production.bundle.ts
@@ -233,7 +246,7 @@ class and nothing is lost.
 ## Build
 
 ```bash
-tic build                 # every *.bundle.json of this package, else its tsconfig.json
+tic build                 # every *.bundle.{json,yaml,yml} of this package, else its tsconfig.json
 tic build -c app.bundle.json -c admin/admin.bundle.json   # only these
 tic build --check         # CI: write nothing, exit 1 if a bundle is out of date
 ```

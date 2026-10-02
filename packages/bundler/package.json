@@ -63,7 +63,8 @@
     "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\""
   },
   "dependencies": {
-    "handlebars": "^4.7.9"
+    "handlebars": "^4.7.9",
+    "yaml": "^2.8.3"
   },
   "peerDependencies": {
     "typescript": ">=5"

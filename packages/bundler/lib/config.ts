@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import { TicConfigError } from './errors';
 import { globToRegExp } from './glob';
 
@@ -111,8 +112,14 @@ export interface BundleConfig {
   classes?: ClassSelector;
 }
 
-/** A config file is named `<name>.bundle.json`, e.g. `app.bundle.json`, `production.bundle.json`. */
-export const CONFIG_FILE_SUFFIX = '.bundle.json';
+/**
+ * A config file is named `<name>.bundle.json`, `<name>.bundle.yaml` or `<name>.bundle.yml`,
+ * e.g. `app.bundle.json`, `production.bundle.yaml`. Every format has the same shape.
+ */
+export const CONFIG_FILE_SUFFIXES = ['.bundle.json', '.bundle.yaml', '.bundle.yml'];
+
+/** The config suffix `file` ends with, if any. */
+const configSuffix = (file: string) => CONFIG_FILE_SUFFIXES.find((suffix) => file.endsWith(suffix));
 export const DEFAULT_EXTENDS = './tsconfig.json';
 /** The bundle name when the config file gives none, e.g. building from `tsconfig.json` alone. */
 export const DEFAULT_BUNDLE_NAME = 'base';
@@ -255,7 +262,7 @@ const CONFIG_FIELDS = new Set(['$schema', 'output', 'name', 'tags', 'extends', '
  */
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const dir = path.dirname(file);
-  if (!isObject(content)) return fail('config', 'a JSON object');
+  if (!isObject(content)) return fail('config', 'an object');
   const unknown = Object.keys(content).find((key) => !CONFIG_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${unknown}: unknown field`);
   const { output, name, tags, extends: tsconfig, importExtension, files, classes } = content;
@@ -282,10 +289,11 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   };
 }
 
-/** `production.bundle.json` -> `production`; `undefined` for any other file name, e.g. `tsconfig.json`. */
+/** `production.bundle.yaml` -> `production`; `undefined` for any other file name, e.g. `tsconfig.json`. */
 function configStem(file: string): string | undefined {
   const base = path.basename(file);
-  const stem = base.endsWith(CONFIG_FILE_SUFFIX) ? base.slice(0, -CONFIG_FILE_SUFFIX.length) : '';
+  const suffix = configSuffix(base);
+  const stem = suffix ? base.slice(0, -suffix.length) : '';
   return isBundleName(stem) ? stem : undefined;
 }
 
@@ -308,26 +316,46 @@ export function findPackageRoot(dir: string): string {
   }
 }
 
-/** The `*.bundle.json` configs in `dir` (not its sub-folders), sorted by name. */
+/**
+ * The `*.bundle.{json,yaml,yml}` configs in `dir` (not its sub-folders), sorted by name.
+ *
+ * @throws {TicConfigError} when one bundle is described in two formats, e.g. `app.bundle.json` and `app.bundle.yaml`.
+ */
 export function findConfigFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(CONFIG_FILE_SUFFIX))
-    .map((entry) => path.join(dir, entry.name))
+  const files = readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && configSuffix(entry.name) !== undefined)
+    .map((entry) => entry.name)
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  const byStem = new Map<string, string>();
+  for (const file of files) {
+    const stem = file.slice(0, -configSuffix(file)!.length);
+    const other = byStem.get(stem);
+    if (other) throw new TicConfigError(`${other} and ${file} describe the same bundle; keep one`);
+    byStem.set(stem, file);
+  }
+  return files.map((file) => path.join(dir, file));
 }
 
 /**
- * Reads and validates a `*.bundle.json`.
+ * Parses a config by its extension: YAML for `.yaml` / `.yml` (an empty file is `{}`), JSON otherwise.
  *
- * @throws {TicConfigError} when the file is missing, is not valid JSON, or does not match the config shape.
+ * @throws {TicConfigError} when the text is not valid in its format.
+ */
+function parseConfig(file: string, text: string): unknown {
+  const yaml = file.endsWith('.yaml') || file.endsWith('.yml');
+  try {
+    return yaml ? (parseYaml(text) ?? {}) : JSON.parse(text);
+  } catch (e) {
+    throw new TicConfigError(`${file} is not valid ${yaml ? 'YAML' : 'JSON'}: ${(e as Error).message}`);
+  }
+}
+
+/**
+ * Reads and validates a `*.bundle.json`, `*.bundle.yaml` or `*.bundle.yml`.
+ *
+ * @throws {TicConfigError} when the file is missing, cannot be parsed, or does not match the config shape.
  */
 export function loadConfig(file: string): ResolvedConfig {
   if (!existsSync(file)) throw new TicConfigError(`config file not found: ${file}`);
-  let content: unknown;
-  try {
-    content = JSON.parse(readFileSync(file, 'utf8'));
-  } catch (e) {
-    throw new TicConfigError(`${file} is not valid JSON: ${(e as Error).message}`);
-  }
-  return resolveConfig(content, file);
+  return resolveConfig(parseConfig(file, readFileSync(file, 'utf8')), file);
 }

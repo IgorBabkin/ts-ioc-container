@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **ADR:** [ADR 0022 - Registration discovery happens at build time, outside the container](../../../../adr/0022-build-time-registration-discovery.md)
-- **Public API:** `tic build`, `*.bundle.json`, `build`, `loadConfig`, `findConfigFiles`
+- **Public API:** `tic build`, `*.bundle.{json,yaml,yml}`, `build`, `loadConfig`, `findConfigFiles`
 - **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts`
 
 ## Intent
@@ -25,7 +25,10 @@ Acceptance criteria:
 
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
-- One config file describes one bundle and is named `<name>.bundle.json`. Its
+- One config file describes one bundle and is named `<name>.bundle.json`, or
+  `<name>.bundle.yaml` / `<name>.bundle.yml` in YAML — same fields, same
+  schema; an empty YAML file is every setting at its default. One bundle
+  described in two formats fails the build naming both files. Its
   fields are flat and all optional: `output` (by convention `*.bundle.ts`),
   `name`, `tags`, `extends`, `importExtension`, `files` and
   `classes`.
@@ -39,10 +42,10 @@ Acceptance criteria:
 - `tic build` works on the package it is invoked in: the nearest folder with a
   `package.json`, from the working directory up — the project root, or the
   package in a monorepo; never a workspace root above it.
-- There it builds every `*.bundle.json`, in name order; `--config <path>`
+- There it builds every `*.bundle.{json,yaml,yml}`, in name order; `--config <path>`
   (repeatable, relative to the working directory) builds only the named
   configs.
-- Zero config: with no `*.bundle.json`, `tic build` (and `build()` without a
+- Zero config: with no config file, `tic build` (and `build()` without a
   config) builds one bundle from the package's `tsconfig.json`, every setting
   at its default. With neither, it fails with a hint naming the package.
 - Several bundles — `production.bundle.json`, `development.bundle.json`,

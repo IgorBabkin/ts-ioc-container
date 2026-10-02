@@ -15,11 +15,11 @@ const USAGE = [
   '       tic is a shortcut for ts-ioc-container',
   '',
   'Commands:',
-  '  ts-ioc-container build [--config <path>]... [--check]   generate one bundle per *.bundle.json config',
+  '  ts-ioc-container build [--config <path>]... [--check]   generate one bundle per *.bundle.{json,yaml,yml} config',
   '                                                          (none: one bundle from tsconfig.json, all defaults)',
   '',
   'Options:',
-  '  -c, --config <path>   build only this config; repeatable (default: every *.bundle.json in the working directory, else tsconfig.json)',
+  '  -c, --config <path>   build only this config; repeatable (default: every *.bundle.{json,yaml,yml} of the package, else tsconfig.json)',
   '  --check               write nothing; exit 1 when a generated bundle is out of date',
   '  -h, --help            show this help',
   '  -v, --version         show the version',
@@ -66,7 +66,7 @@ function configsToBuild(named: string[], cwd: string): (string | undefined)[] {
   const found = findConfigFiles(root);
   if (found.length > 0) return found;
   if (existsSync(path.join(root, TSCONFIG_FILE))) return [undefined];
-  throw new TicConfigError(`no *.bundle.json or ${TSCONFIG_FILE} in ${root}; name a config with --config`);
+  throw new TicConfigError(`no *.bundle.{json,yaml,yml} or ${TSCONFIG_FILE} in ${root}; name a config with --config`);
 }
 
 /** Runs the `tic` CLI and returns its exit code; output goes through `io`. */

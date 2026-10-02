@@ -10,7 +10,7 @@ export { run, type CliIo } from './cli';
 export {
   loadConfig,
   resolveConfig,
-  CONFIG_FILE_SUFFIX,
+  CONFIG_FILE_SUFFIXES,
   findConfigFiles,
   findPackageRoot,
   DEFAULT_EXTENDS,

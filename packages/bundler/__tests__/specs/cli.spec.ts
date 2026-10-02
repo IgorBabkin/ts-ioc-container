@@ -40,6 +40,27 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     expect(project.read('src/di/container.bundle.ts')).toContain('Registration.fromClass(Logger)');
   });
 
+  it('builds *.bundle.yaml and *.bundle.yml configs alongside *.bundle.json, in name order', () => {
+    project.write('production.bundle.yaml', 'output: src/di/production.bundle.ts\nfiles:\n  paths: [./src]\n');
+    project.write('development.bundle.yml', 'output: src/di/development.bundle.ts\nfiles:\n  paths: [./src]\n');
+    const io = new Io(project.root);
+
+    expect(run(['build'], io)).toBe(0);
+    expect(io.out).toEqual([
+      'wrote     src/di/container.bundle.ts (1 registration)',
+      'wrote     src/di/development.bundle.ts (1 registration)',
+      'wrote     src/di/production.bundle.ts (1 registration)',
+    ]);
+  });
+
+  it('fails when one bundle is described in two formats', () => {
+    project.write('app.bundle.yaml', 'output: src/di/other.bundle.ts\n');
+    const io = new Io(project.root);
+
+    expect(run(['build'], io)).toBe(1);
+    expect(io.err.join('\n')).toContain('app.bundle.json and app.bundle.yaml describe the same bundle');
+  });
+
   it('never registers a bundle another config generated', () => {
     project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', files: { paths: ['./src'] } });
     const io = new Io(project.root);
@@ -102,7 +123,9 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
       const io = new Io(project.path('repo/packages/b/src'));
 
       expect(run(['build'], io)).toBe(1);
-      expect(io.err.join('\n')).toContain(`no *.bundle.json or tsconfig.json in ${project.path('repo/packages/b')};`);
+      expect(io.err.join('\n')).toContain(
+        `no *.bundle.{json,yaml,yml} or tsconfig.json in ${project.path('repo/packages/b')};`,
+      );
     });
   });
 
@@ -110,7 +133,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     const io = new Io(project.path('src'));
 
     expect(run(['build'], io)).toBe(1);
-    expect(io.err.join('\n')).toContain('no *.bundle.json or tsconfig.json');
+    expect(io.err.join('\n')).toContain('no *.bundle.{json,yaml,yml} or tsconfig.json');
   });
 
   it('fails --check with a hint when an output is stale, and passes once it is current', () => {
