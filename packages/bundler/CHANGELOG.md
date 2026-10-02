@@ -1,3 +1,12 @@
+# 1.3.0 (2026-10-02)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    scope-aware token warnings and alias excludes
+    (2bb9a8394683f3161778fa4a6ed20feae74a24c4)
+
+
 # 1.2.0 (2026-10-02)
 
   ### ✨ Features
@@ -85,6 +94,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
