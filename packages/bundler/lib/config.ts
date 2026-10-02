@@ -44,7 +44,10 @@ export type ExportKind = 'any' | 'named' | 'default';
 export interface ClassSelector {
   /** Default `any`. */
   export?: ExportKind;
-  /** The class must carry one of these decorators, recognised by name (`register`, or a composed one). */
+  /**
+   * The class must carry one of these decorators, recognised by name (`register`, or a
+   * composed one). Default {@link DEFAULT_DECORATORS}; `[]` requires none.
+   */
   decorators?: string[];
   /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
   name?: string;
@@ -79,8 +82,13 @@ export interface PathConfig {
  */
 export interface BundleConfig {
   $schema?: string;
-  /** The generated file, relative to the config file. */
-  output: string;
+  /**
+   * The generated file, relative to the config file. Default `<root>/<name>.bundle.ts`:
+   * `<root>` is the tsconfig's `rootDir`, else the common folder of the files it compiles;
+   * `<name>` comes from the config file (`production.bundle.json` -> `production`), or is
+   * {@link DEFAULT_OUTPUT_STEM}. Required when there is no tsconfig to extend.
+   */
+  output?: string;
   /** Name of the generated class, an `IContainerModule`. Default `Bundle`. */
   name?: string;
   /** Tags associated with the bundle. */
@@ -103,6 +111,10 @@ export interface BundleConfig {
 export const CONFIG_FILE_SUFFIX = '.bundle.json';
 export const DEFAULT_EXTENDS = './tsconfig.json';
 export const DEFAULT_BUNDLE_NAME = 'Bundle';
+/** What `classes.decorators` requires when omitted: the library's own `@register`. */
+export const DEFAULT_DECORATORS = ['register'];
+/** The output name stem when the config file gives none, e.g. building from `tsconfig.json` alone. */
+export const DEFAULT_OUTPUT_STEM = 'app';
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
   '**/*.test.ts',
@@ -117,7 +129,10 @@ export interface ResolvedConfig {
   /** The config file itself. */
   file: string;
   dir: string;
-  output: string;
+  /** `undefined`: derived from the tsconfig at build time (see {@link BundleConfig.output}). */
+  output?: string;
+  /** The output name stem: `production` for `production.bundle.json`. */
+  stem: string;
   name: string;
   tags: string[];
   /** The extended tsconfig; `required` when the config names it, so it must exist. */
@@ -184,7 +199,7 @@ const CLASS_SELECTOR_FIELDS = new Set(['export', 'decorators', 'name', 'excludeC
  * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
  */
 function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
-  if (value === undefined) return { export: 'any' };
+  if (value === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
   if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !CLASS_SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
@@ -192,9 +207,7 @@ function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
   if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
     return fail(`${field}.export`, '"any", "named" or "default"');
   }
-  if (decorators !== undefined && !(isStringArray(decorators) && decorators.length > 0)) {
-    return fail(`${field}.decorators`, 'a non-empty array of strings');
-  }
+  if (decorators !== undefined && !isStringArray(decorators)) return fail(`${field}.decorators`, 'an array of strings');
   if (name !== undefined && !isNonEmptyString(name)) return fail(`${field}.name`, 'a non-empty string');
   if (excludeClasses !== undefined && !(isStringArray(excludeClasses) && excludeClasses.length > 0)) {
     return fail(`${field}.excludeClasses`, 'a non-empty array of strings');
@@ -204,7 +217,8 @@ function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
   }
   return {
     export: kind ?? 'any',
-    decorators,
+    // `[]` is the explicit opt-out: no decorator required.
+    decorators: decorators === undefined ? DEFAULT_DECORATORS : decorators.length > 0 ? decorators : undefined,
     name: name === undefined ? undefined : globToRegExp(name),
     excludeClasses,
     excludeName: excludeName === undefined ? undefined : globToRegExp(excludeName),
@@ -241,7 +255,7 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const unknown = Object.keys(content).find((key) => !CONFIG_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${unknown}: unknown field`);
   const { output, name, tags, extends: tsconfig, importExtension, files, classes } = content;
-  if (!isNonEmptyString(output)) return fail('output', 'a non-empty string');
+  if (output !== undefined && !isNonEmptyString(output)) return fail('output', 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail('name', 'a valid identifier');
   if (tags !== undefined && !isStringArray(tags)) return fail('tags', 'an array of strings');
   if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('extends', 'a non-empty string');
@@ -249,7 +263,8 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   return {
     file,
     dir,
-    output: path.resolve(dir, output),
+    output: output === undefined ? undefined : path.resolve(dir, output),
+    stem: configStem(file),
     name: name ?? DEFAULT_BUNDLE_NAME,
     tags: tags ?? [],
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
@@ -258,6 +273,26 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     classes: toClassSelector(classes, 'classes'),
     warnings: excludeWarnings(files),
   };
+}
+
+/** `production.bundle.json` -> `production`; any other file name -> {@link DEFAULT_OUTPUT_STEM}. */
+function configStem(file: string): string {
+  const base = path.basename(file);
+  const stem = base.endsWith(CONFIG_FILE_SUFFIX) ? base.slice(0, -CONFIG_FILE_SUFFIX.length) : '';
+  return stem || DEFAULT_OUTPUT_STEM;
+}
+
+/**
+ * The root of the package `dir` belongs to: the nearest folder, `dir` or above, with a
+ * `package.json` — the project root in a single-package project, the package in a
+ * monorepo. `dir` itself when no folder above has one.
+ */
+export function findPackageRoot(dir: string): string {
+  const start = path.resolve(dir);
+  for (let current = start; ; current = path.dirname(current)) {
+    if (existsSync(path.join(current, 'package.json'))) return current;
+    if (path.dirname(current) === current) return start;
+  }
 }
 
 /** The `*.bundle.json` configs in `dir` (not its sub-folders), sorted by name. */

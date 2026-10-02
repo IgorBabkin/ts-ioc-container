@@ -26,12 +26,22 @@ Acceptance criteria:
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
 - One config file describes one bundle and is named `<name>.bundle.json`. Its
-  fields are flat: an `output` file (by convention `*.bundle.ts`), and
-  optionally `name` (default `Bundle`), `tags`, `extends`, `importExtension`,
-  `files` and `classes`.
-- `tic build` builds every `*.bundle.json` in the working directory, in name
-  order; `--config <path>` (repeatable) builds only the named configs. A
-  working directory with no `*.bundle.json` fails with a hint.
+  fields are flat and all optional: `output` (by convention `*.bundle.ts`),
+  `name` (default `Bundle`), `tags`, `extends`, `importExtension`, `files` and
+  `classes`.
+- `output` defaults to `<root>/<name>.bundle.ts`: `<root>` is the tsconfig's
+  `rootDir`, else the common folder of the files it compiles; `<name>` comes
+  from the config file name, else `app`. Without a tsconfig, `output` is
+  required.
+- `tic build` works on the package it is invoked in: the nearest folder with a
+  `package.json`, from the working directory up — the project root, or the
+  package in a monorepo; never a workspace root above it.
+- There it builds every `*.bundle.json`, in name order; `--config <path>`
+  (repeatable, relative to the working directory) builds only the named
+  configs.
+- Zero config: with no `*.bundle.json`, `tic build` (and `build()` without a
+  config) builds one bundle from the package's `tsconfig.json`, every setting
+  at its default. With neither, it fails with a hint naming the package.
 - Several bundles — `production.bundle.json`, `development.bundle.json`,
   `test.bundle.json` — are several configs; a bundle one config generated is
   never registered by another.
@@ -110,7 +120,9 @@ Acceptance criteria:
 
 - A bundle's `classes` rule is an object; a class is selected when it is
   exported, not abstract, and meets every criterion the rule sets. Omitting
-  `classes` (or a criterion) applies no restriction beyond being exported.
+  a criterion applies no restriction, except `decorators`.
+- `decorators` defaults to `["register"]`: by default only classes decorated
+  with `@register` are registered. `"decorators": []` requires none.
 - `export` restricts which exports count: `"any"` (default), `"named"` or
   `"default"`.
 - `decorators` requires the class to carry one of the listed decorators,

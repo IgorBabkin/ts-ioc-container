@@ -29,10 +29,32 @@ below use the shortcut.
 
 `typescript` (>= 5) is a peer dependency.
 
+## Zero config
+
+With a `tsconfig.json`, there is nothing to configure:
+
+```bash
+tic build
+```
+
+```text
+wrote     src/app.bundle.ts (12 registrations)
+```
+
+The bundle registers every exported class decorated with `@register` among the
+files your `tsconfig.json` compiles, test files excluded, and lands at the root
+of those sources — `rootDir`, else their common folder (`src/`), so `tsc`
+compiles it too.
+
+`tic build` works on the package it is invoked in: it walks up from the working
+directory to the nearest `package.json` — the project root, or in a monorepo
+the package — and uses the `tsconfig.json` there. It never falls back to a
+workspace root's tsconfig.
+
 ## Configure
 
-One config file describes one bundle. Name it `<name>.bundle.json`, next to
-your `tsconfig.json` — `app.bundle.json`:
+To change a default, add a config file next to your `tsconfig.json`. One config
+file describes one bundle and is named `<name>.bundle.json` — `app.bundle.json`:
 
 ```json
 {
@@ -42,18 +64,17 @@ your `tsconfig.json` — `app.bundle.json`:
 }
 ```
 
-That is a complete config: the bundle registers every exported class of the
-files `./tsconfig.json` compiles, test files excluded.
+Every field is optional; `{}` is the zero-config bundle.
 
 | Field             | Default                                | Meaning                                                                                       |
 | ----------------- | -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `output`          | —                                      | The bundle file (convention: `*.bundle.ts`)                                                   |
+| `output`          | `<root>/<name>.bundle.ts`              | The bundle file; `<root>` as in [Zero config](#zero-config), `<name>` from the config file (`production.bundle.json` → `production`). Required without a tsconfig |
 | `name`            | `Bundle`                               | Name of the generated class, an `IContainerModule`                                            |
 | `tags`            | `[]`                                   | Tags associated with the bundle                                                               |
 | `extends`         | `./tsconfig.json` (may be absent)      | The tsconfig to build on: its file set, `paths` aliases and import extension; one named here must exist |
 | `importExtension` | `.js` under node16/nodenext, else none | Extension of generated imports                                                                |
 | `files`           | what the tsconfig compiles, no tests   | Which files are parsed — see [Selecting files](#selecting-files)                              |
-| `classes`         | every exported class                   | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)   |
+| `classes`         | exported classes with `@register`      | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)   |
 
 An unknown field is an error, so a misspelled or removed option never goes
 unnoticed.
@@ -61,7 +82,7 @@ unnoticed.
 ## Several bundles
 
 Need more than one bundle — per environment, per app? Add a config per bundle.
-`tic build` builds every `*.bundle.json` in the working directory:
+`tic build` builds every `*.bundle.json` at the package root:
 
 ```text
 production.bundle.json    → src/di/production.bundle.ts
@@ -149,8 +170,9 @@ parses everything, including tests. Giving only `include` keeps the default
 
 ## Selecting classes
 
-By default every exported, non-abstract class of a parsed file is registered.
-`classes` narrows that; a class must meet every criterion that is set:
+By default every exported, non-abstract class of a parsed file that carries
+`@register` is registered. `classes` changes that; a class must meet every
+criterion that is set:
 
 ```json
 "classes": {
@@ -163,7 +185,7 @@ By default every exported, non-abstract class of a parsed file is registered.
 | Criterion          | Default | Meaning                                                                                                     |
 | ------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
 | `export`           | `any`   | `any`, `named` or `default` — which exports count                                                           |
-| `decorators`       | —       | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones |
+| `decorators`       | `["register"]` | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none |
 | `name`         | —       | Glob the class name must match, e.g. `"*Service"`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
 | `excludeClasses`   | —       | Class names to drop, e.g. `["MockDashboardRepository"]`                                                     |
 | `excludeName`  | —       | Glob the class name must **not** match, e.g. `"*Mock"`                                                      |
@@ -206,7 +228,7 @@ class and nothing is lost.
 ## Build
 
 ```bash
-tic build                 # every *.bundle.json in the working directory
+tic build                 # every *.bundle.json of this package, else its tsconfig.json
 tic build -c app.bundle.json -c admin/admin.bundle.json   # only these
 tic build --check         # CI: write nothing, exit 1 if a bundle is out of date
 ```

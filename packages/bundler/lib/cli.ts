@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { build, type OutputStatus } from './build';
-import { findConfigFiles } from './config';
+import { build, type OutputStatus, TSCONFIG_FILE } from './build';
+import { findConfigFiles, findPackageRoot } from './config';
 import { TicConfigError, TicError } from './errors';
 
 export interface CliIo {
@@ -16,9 +16,10 @@ const USAGE = [
   '',
   'Commands:',
   '  ts-ioc-container build [--config <path>]... [--check]   generate one bundle per *.bundle.json config',
+  '                                                          (none: one bundle from tsconfig.json, all defaults)',
   '',
   'Options:',
-  '  -c, --config <path>   build only this config; repeatable (default: every *.bundle.json in the working directory)',
+  '  -c, --config <path>   build only this config; repeatable (default: every *.bundle.json in the working directory, else tsconfig.json)',
   '  --check               write nothing; exit 1 when a generated bundle is out of date',
   '  -h, --help            show this help',
   '  -v, --version         show the version',
@@ -53,15 +54,19 @@ function parseBuildArgs(args: string[]) {
 }
 
 /**
- * The configs to build: the ones named, else every `*.bundle.json` in `cwd`.
+ * The configs to build: the ones named (relative to `cwd`), else every `*.bundle.json` at the
+ * root of the package `cwd` is in, else `undefined` — one build from that package's
+ * `tsconfig.json` with default settings. Never looks past the package into a workspace root.
  *
- * @throws {TicConfigError} when none is named and `cwd` has no `*.bundle.json`.
+ * @throws {TicConfigError} when none is named and the package has neither a `*.bundle.json` nor a `tsconfig.json`.
  */
-function configsToBuild(named: string[], cwd: string): string[] {
+function configsToBuild(named: string[], cwd: string): (string | undefined)[] {
   if (named.length > 0) return named.map((config) => path.resolve(cwd, config));
-  const found = findConfigFiles(cwd);
-  if (found.length === 0) throw new TicConfigError(`no *.bundle.json in ${cwd}; name a config with --config`);
-  return found;
+  const root = findPackageRoot(cwd);
+  const found = findConfigFiles(root);
+  if (found.length > 0) return found;
+  if (existsSync(path.join(root, TSCONFIG_FILE))) return [undefined];
+  throw new TicConfigError(`no *.bundle.json or ${TSCONFIG_FILE} in ${root}; name a config with --config`);
 }
 
 /** Runs the `tic` CLI and returns its exit code; output goes through `io`. */
@@ -86,7 +91,7 @@ export function run(
     const { configs, check } = parseBuildArgs(rest);
     let stale = 0;
     for (const config of configsToBuild(configs, io.cwd)) {
-      const name = path.relative(io.cwd, config);
+      const name = config === undefined ? TSCONFIG_FILE : path.relative(io.cwd, config);
       try {
         const { output, warnings } = build({ config, check, cwd: io.cwd });
         for (const warning of warnings) io.stderr(`tic: warning: ${name}: ${warning}`);

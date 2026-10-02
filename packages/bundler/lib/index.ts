@@ -1,13 +1,23 @@
-export { build, type BuildOptions, type BuildResult, type OutputResult, type OutputStatus } from './build';
+export {
+  build,
+  TSCONFIG_FILE,
+  type BuildOptions,
+  type BuildResult,
+  type OutputResult,
+  type OutputStatus,
+} from './build';
 export { run, type CliIo } from './cli';
 export {
   loadConfig,
   resolveConfig,
   CONFIG_FILE_SUFFIX,
   findConfigFiles,
+  findPackageRoot,
   DEFAULT_EXTENDS,
   DEFAULT_EXCLUDE,
   DEFAULT_BUNDLE_NAME,
+  DEFAULT_DECORATORS,
+  DEFAULT_OUTPUT_STEM,
   type BundleConfig,
   type PathConfig,
   type ClassSelector,
