@@ -1,0 +1,127 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`openapi-to-server renderComponents should generate component types from OpenAPI spec 1`] = `
+"import { HttpRoute, HttpResponse, HttpStatus, constructor } from '@ts-ioc-container/openapi-to-server';
+
+// Components
+export type Item = {
+id: string  ;
+name: string  ;
+}
+;
+
+// Http routes
+    export type CreateItemPayload = {
+    body: Item
+};
+
+export interface CreateItemResponse extends HttpResponse {
+  status: HttpStatus.Created;
+
+  headers: {
+  };
+
+}
+
+/**
+ * @tags items
+ */
+export interface CreateItemHttpRoute extends HttpRoute<CreateItemPayload, CreateItemResponse> {}
+
+    export type GetItemsPayload = {
+    query: {
+  limit?: number
+  ,
+}
+
+};
+
+export interface GetItemsResponse extends HttpResponse {
+  status: HttpStatus.OK;
+
+  headers: {
+  };
+
+  body:     Item[]
+;
+}
+
+/**
+ * @tags items
+ */
+export interface GetItemsHttpRoute extends HttpRoute<GetItemsPayload, GetItemsResponse> {}
+
+    export type DeleteItemPayload = {
+    params: {
+  id: string  ,
+}
+
+};
+
+export interface DeleteItemResponse extends HttpResponse {
+  status: HttpStatus.NoContent;
+
+  headers: {
+  };
+
+}
+
+/**
+ * @tags items
+ */
+export interface DeleteItemHttpRoute extends HttpRoute<DeleteItemPayload, DeleteItemResponse> {}
+
+    export type GetItemPayload = {
+    params: {
+  id: string  ,
+}
+
+};
+
+export interface GetItemResponse extends HttpResponse {
+  status: HttpStatus.OK;
+
+  headers: {
+  };
+
+  body: Item;
+}
+
+/**
+ * @tags items
+ */
+export interface GetItemHttpRoute extends HttpRoute<GetItemPayload, GetItemResponse> {}
+
+
+// Operations
+export type Operations = {
+  createItem: CreateItemHttpRoute;
+  getItems: GetItemsHttpRoute;
+  deleteItem: DeleteItemHttpRoute;
+  getItem: GetItemHttpRoute;
+}
+
+export type RoutesPayloads = {
+  createItem: CreateItemPayload;
+  getItems: GetItemsPayload;
+  deleteItem: DeleteItemPayload;
+  getItem: GetItemPayload;
+}
+
+// Context
+export interface RequestContext {
+  getUrl<Key extends keyof RoutesPayloads>(key: Key, payload: RoutesPayloads[Key]): string;
+}
+"
+`;
+
+exports[`openapi-to-server renderServer should generate IServer interface from OpenAPI spec 1`] = `
+"// Server Interface
+export interface IServer {
+  createItem: constructor<CreateItemHttpRoute>;
+  getItems: constructor<GetItemsHttpRoute>;
+  deleteItem: constructor<DeleteItemHttpRoute>;
+  getItem: constructor<GetItemHttpRoute>;
+}
+"
+`;

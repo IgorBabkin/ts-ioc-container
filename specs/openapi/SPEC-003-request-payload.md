@@ -9,8 +9,8 @@ have to be the same object:
 
 | Producer | Artefact | Role |
 | --- | --- | --- |
-| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what `<Op>HttpRoute.handle()` receives |
-| `@ibabkin/openapi-to-server` | `<Op>Payload` type (`ClientRoute.hbs`) | what `ApiClient.<op>()` accepts |
+| `@ts-ioc-container/openapi-to-server` | `<Op>Payload` type (`ServerRoute.hbs`) | what `<Op>HttpRoute.handle()` receives |
+| `@ts-ioc-container/openapi-to-server` | `<Op>Payload` type (`ClientRoute.hbs`) | what `ApiClient.<op>()` accepts |
 | `@ts-ioc-container/openapi-to-zod` | `PAYLOADS[<operationId>]` (`ValidationRoute.hbs`) | what turns an Express `Request` into that object at runtime |
 
 The runtime never constructs the payload from the type — it parses the Express `Request` with the
@@ -121,7 +121,7 @@ coerced either. Declare coerced parameter schemas inline as plain `type: boolean
 | --- | --- |
 | RP-1, RP-2, RP-3, RP-4, RP-5 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | RP-6 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
-| RP-7 | `packages/openapi-to-server-interface/__tests__/client.spec.ts`, `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
+| RP-7 | `packages/openapi-to-server/__tests__/client.spec.ts`, `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | RP-8 | `packages/openapi-express-server/__tests__/utils.spec.ts` |
 | RP-9, RP-10, RP-11 | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
 | Known divergence | `packages/openapi-express-server/__tests__/payloadProjection.spec.ts` |
