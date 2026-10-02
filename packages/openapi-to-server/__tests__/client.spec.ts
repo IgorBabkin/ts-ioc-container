@@ -13,7 +13,7 @@ describe('renderClient', () => {
   });
 
   it('should generate an axios based ApiClient', () => {
-    expect(client).toContain("import { createUrl } from '@ts-ioc-container/openapi-to-server';");
+    expect(client).toContain("import { createUrl } from '@ts-ioc-container/openapi-to-server/runtime';");
     expect(client).toContain('export class ApiClient');
     expect(client).toMatchSnapshot();
   });

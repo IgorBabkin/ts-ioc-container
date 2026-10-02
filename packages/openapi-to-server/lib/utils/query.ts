@@ -23,6 +23,6 @@ export function addQueryParams(url: string, query: Query): string {
   return queryStr ? `${url}?${queryStr}` : url;
 }
 
-export const createUrl = (pattern: string, { params = {}, query = {} }: Partial<Payload>): string => {
+export const createUrl = (pattern: string, { params = {}, query = {} }: Partial<Payload> = {}): string => {
   return addQueryParams(addPathParams(pattern, params ?? {}), query ?? {});
 };
