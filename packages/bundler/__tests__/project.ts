@@ -21,10 +21,6 @@ export class TempProject {
     writeFileSync(this.path(file), typeof content === 'string' ? content : JSON.stringify(content, null, 2));
   }
 
-  /**
-   * Installs this bundler package into the project's node_modules as a symlink, so predicate files
-   * can `require('@ts-ioc-container/bundler')` as a consumer's would. Needs the package's `cjm` build.
-   */
   read(file: string): string {
     return readFileSync(this.path(file), 'utf8');
   }

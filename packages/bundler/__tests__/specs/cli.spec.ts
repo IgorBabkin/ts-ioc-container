@@ -61,12 +61,12 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   it('prints a warning when a non-empty exclude drops the default test globs', () => {
     project.write('.bundles.json', {
-      bundles: [{ output: 'src/di/container.bundle.ts', paths: ['./src/services'], exclude: ['legacy/**'] }],
+      bundles: [{ output: 'src/di/container.bundle.ts', paths: ['./src/services'], files: { exclude: ['legacy/**'] } }],
     });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
-    expect(io.err.join('\n')).toContain('tic: warning: bundles[0].exclude');
+    expect(io.err.join('\n')).toContain('tic: warning: bundles[0].files.exclude');
     expect(io.err.join('\n')).toContain('**/*.spec.ts');
   });
 

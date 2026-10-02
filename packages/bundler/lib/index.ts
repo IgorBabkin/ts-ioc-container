@@ -11,7 +11,9 @@ export {
   type PathConfig,
   type ClassSelector,
   type ExportKind,
-  type ResolvedSelector,
+  type ResolvedClassSelector,
+  type FileSelector,
+  type ResolvedFileSelector,
   type ResolvedConfig,
   type ResolvedBundle,
 } from './config';

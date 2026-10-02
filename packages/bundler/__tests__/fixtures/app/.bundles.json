@@ -8,7 +8,7 @@
         "@app/services",
         "@app/infra"
       ],
-      "select": {
+      "classes": {
         "decorators": [
           "register"
         ]

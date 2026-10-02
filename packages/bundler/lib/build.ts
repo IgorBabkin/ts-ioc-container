@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_CONFIG_FILE, loadConfig, type ResolvedConfig, type ResolvedBundle } from './config';
 import { emitBundle } from './emit';
-import { globToRegExp, toPosix } from './glob';
+import { toPosix } from './glob';
 import { ImportPaths } from './ImportPaths';
 import { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
 
@@ -33,7 +33,7 @@ export interface BuildResult {
   config: string;
   outputs: OutputResult[];
   /**
-   * Non-fatal problems found while building, e.g. an `exclude` that drops a default
+   * Non-fatal problems found while building, e.g. a `files.exclude` that drops a default
    * test glob or two selected classes passing the same decorator token. Each warning
    * names the bundle field it belongs to.
    */
@@ -78,11 +78,13 @@ export function build({
 function generate(config: ResolvedConfig, bundle: ResolvedBundle, field: string, paths: ImportPaths) {
   const relative = (file: string) => toPosix(path.relative(config.dir, file));
   const outputs = new Set(config.bundles.map((m) => m.output));
-  const excludes = bundle.exclude.map(globToRegExp);
+  const { include, exclude } = bundle.files;
+  // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
   const isExcluded = (file: string) => {
     if (outputs.has(file)) return true;
     const filename = relative(file);
-    return excludes.some((glob) => glob.test(filename));
+    if (include && !include.some((glob) => glob.test(filename))) return true;
+    return exclude.some((glob) => glob.test(filename));
   };
 
   const files = new Set<string>();
@@ -93,7 +95,7 @@ function generate(config: ResolvedConfig, bundle: ResolvedBundle, field: string,
 
   const classes = [...files]
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-    .flatMap((file) => findClasses(file, bundle.select))
+    .flatMap((file) => findClasses(file, bundle.classes))
     .map((cls) => ({ ...cls, specifier: paths.specifier(bundle.output, cls.file) }));
 
   const content = emitBundle({
@@ -132,7 +134,7 @@ function tokenCollisions(classes: DiscoveredClass[], field: string): string[] {
       const names = group.map((cls) => cls.className);
       return (
         `${field}: decorator token "${token}" is passed by ${names.join(', ')}; ` +
-        `registration is last-wins, exclude one with select.excludeClasses`
+        `registration is last-wins, exclude one with classes.excludeClasses`
       );
     });
 }

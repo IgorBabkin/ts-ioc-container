@@ -3,11 +3,32 @@ import path from 'node:path';
 import { TicConfigError } from './errors';
 import { globToRegExp } from './glob';
 
+/**
+ * Which files of a bundle's `paths` are read and parsed: the first, cheap stage
+ * of selection, decided by path alone. Globs are relative to the config file and
+ * `/`-separated. A file is parsed when it matches one of `include` and none of
+ * `exclude`; with a file naming convention (`*.service.ts`), `include` keeps the
+ * bundler from reading anything else.
+ */
+export interface FileSelector {
+  /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
+  include?: string[];
+  /** Globs of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
+  exclude?: string[];
+}
+
+/** A {@link FileSelector} with its defaults filled in and its globs compiled. */
+export interface ResolvedFileSelector {
+  include?: RegExp[];
+  exclude: RegExp[];
+}
+
 /** Which exports of a file count: both kinds, only named exports, or only the default export. */
 export type ExportKind = 'any' | 'named' | 'default';
 
 /**
- * How the bundler picks target classes out of a file. A class is selected when
+ * Which classes of a parsed file are registered: the second stage of selection,
+ * run on the files {@link FileSelector} let through. A class is selected when
  * it is exported, not abstract, and meets every criterion set here; an empty
  * rule selects every exported class.
  */
@@ -28,7 +49,7 @@ export interface ClassSelector {
 }
 
 /** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
-export interface ResolvedSelector {
+export interface ResolvedClassSelector {
   export: ExportKind;
   decorators?: string[];
   nameGlob?: RegExp;
@@ -51,10 +72,10 @@ export interface BundleConfig {
   /** Tags associated with the bundle. */
   tags?: string[];
   paths: (string | PathConfig)[];
-  /** Which classes of a scanned file are registered. Default: every exported class. */
-  select?: ClassSelector;
-  /** Globs, relative to the config file, of files never scanned. Replaces {@link DEFAULT_EXCLUDE} when given. */
-  exclude?: string[];
+  /** Which files are parsed. Default: every source file except {@link DEFAULT_EXCLUDE}. */
+  files?: FileSelector;
+  /** Which classes of a parsed file are registered. Default: every exported class. */
+  classes?: ClassSelector;
 }
 
 /** The shape of `.bundles.json`. */
@@ -85,7 +106,7 @@ export interface ResolvedConfig {
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
   bundles: ResolvedBundle[];
-  /** Non-fatal problems found while resolving, e.g. an `exclude` that drops a default test glob. */
+  /** Non-fatal problems found while resolving, e.g. a `files.exclude` that drops a default test glob. */
   warnings: string[];
 }
 
@@ -94,9 +115,8 @@ export interface ResolvedBundle {
   name: string;
   tags: string[];
   paths: Required<PathConfig>[];
-  select: ResolvedSelector;
-  /** The configured `exclude`, or {@link DEFAULT_EXCLUDE}. */
-  exclude: string[];
+  files: ResolvedFileSelector;
+  classes: ResolvedClassSelector;
 }
 
 type Json = Record<string, unknown>;
@@ -123,15 +143,36 @@ function toPath(value: unknown, field: string): Required<PathConfig> {
   return { path: value.path, recursive: value.recursive ?? true };
 }
 
-const SELECTOR_FIELDS = new Set(['export', 'decorators', 'nameGlob', 'excludeClasses', 'excludeNameGlob']);
+const FILE_SELECTOR_FIELDS = new Set(['include', 'exclude']);
 
 /**
  * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
  */
-function toSelector(value: unknown, field: string): ResolvedSelector {
+function toFileSelector(value: unknown, field: string): ResolvedFileSelector {
+  if (value === undefined) return { exclude: DEFAULT_EXCLUDE.map(globToRegExp) };
+  if (!isObject(value)) return fail(field, 'an object');
+  const unknown = Object.keys(value).find((key) => !FILE_SELECTOR_FIELDS.has(key));
+  if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
+  const { include, exclude } = value;
+  if (include !== undefined && !(isStringArray(include) && include.length > 0)) {
+    return fail(`${field}.include`, 'a non-empty array of strings');
+  }
+  if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
+  return {
+    include: include?.map(globToRegExp),
+    exclude: (exclude ?? DEFAULT_EXCLUDE).map(globToRegExp),
+  };
+}
+
+const CLASS_SELECTOR_FIELDS = new Set(['export', 'decorators', 'nameGlob', 'excludeClasses', 'excludeNameGlob']);
+
+/**
+ * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
+ */
+function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
   if (value === undefined) return { export: 'any' };
   if (!isObject(value)) return fail(field, 'an object');
-  const unknown = Object.keys(value).find((key) => !SELECTOR_FIELDS.has(key));
+  const unknown = Object.keys(value).find((key) => !CLASS_SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
   const { export: kind, decorators, nameGlob, excludeClasses, excludeNameGlob } = value;
   if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
@@ -156,7 +197,7 @@ function toSelector(value: unknown, field: string): ResolvedSelector {
   };
 }
 
-const BUNDLE_FIELDS = new Set(['output', 'name', 'tags', 'paths', 'select', 'exclude']);
+const BUNDLE_FIELDS = new Set(['output', 'name', 'tags', 'paths', 'files', 'classes']);
 
 /**
  * @throws {TicConfigError} when a bundle field is unknown, missing or has the wrong type.
@@ -165,35 +206,34 @@ function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
   if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !BUNDLE_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { output, name, tags, paths, select, exclude } = value;
+  const { output, name, tags, paths, files, classes } = value;
   if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
   if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
   if (tags !== undefined && !isStringArray(tags)) return fail(`${field}.tags`, 'an array of strings');
   if (!Array.isArray(paths) || paths.length === 0) return fail(`${field}.paths`, 'a non-empty array');
-  if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
   return {
     output: path.resolve(dir, output),
     name: name ?? DEFAULT_BUNDLE_NAME,
     tags: tags ?? [],
     paths: paths.map((entry, i) => toPath(entry, `${field}.paths[${i}]`)),
-    select: toSelector(select, `${field}.select`),
-    exclude: exclude ?? DEFAULT_EXCLUDE,
+    files: toFileSelector(files, `${field}.files`),
+    classes: toClassSelector(classes, `${field}.classes`),
   };
 }
 
 /**
- * Warns when an explicit, non-empty `exclude` omits one of the {@link DEFAULT_EXCLUDE}
+ * Warns when an explicit, non-empty `files.exclude` omits one of the {@link DEFAULT_EXCLUDE}
  * globs, since that silently drops test files (or `node_modules`) from the scan.
  * An empty `exclude` is a deliberate opt-out and does not warn.
  */
 function excludeWarnings(value: unknown, field: string): string[] {
-  if (!isObject(value)) return [];
-  const exclude = value.exclude;
+  if (!isObject(value) || !isObject(value.files)) return [];
+  const exclude = value.files.exclude;
   if (!isStringArray(exclude) || exclude.length === 0) return [];
   const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
   if (missing.length === 0) return [];
   return [
-    `${field}.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
+    `${field}.files.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
       `add them back`,
   ];
 }

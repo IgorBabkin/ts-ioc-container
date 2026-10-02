@@ -54,48 +54,71 @@ below use the shortcut.
 | `bundles[].name`             | `Bundle`                                  | Name of the generated class, an `IContainerModule`                                           |
 | `bundles[].tags`             | `[]`                                      | Tags associated with the bundle                                                              |
 | `bundles[].paths`            | —                                         | Folders to scan; `{ path, recursive }` to stop at the folder itself                          |
-| `bundles[].select`           | every exported class                      | Which classes of a file are registered — see [Selecting classes](#selecting-classes)          |
-| `bundles[].exclude`          | test files, `__tests__/`, `node_modules/` | Globs (relative to the config) never scanned; replaces the default                           |
+| `bundles[].files`            | every source file but tests               | Which files are parsed, by path — see [Selecting files](#selecting-files)                    |
+| `bundles[].classes`          | every exported class                      | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)  |
 
 An unknown field is an error, so a misspelled or removed option never goes
 unnoticed.
 
-## Excluding files
+## Selection in two stages
 
-By default test files, `__tests__/` and `node_modules/` are never scanned. A
-non-empty `exclude` replaces the defaults, so restate the ones you still want:
+A bundle picks its registrations in two stages:
+
+1. **`files`** — decided by path alone, before anything is read. Only files that
+   pass are parsed.
+2. **`classes`** — decided per class, on the files stage 1 let through.
+
+Parsing is where the time goes, so when your project names files by convention
+(`user.service.ts`, `user.repository.ts`), say so in `files.include` and the
+bundler never reads anything else:
 
 ```json
 {
-  "bundles": [
-    {
-      "output": "src/di/app.bundle.ts",
-      "paths": ["@app/services"],
-      "exclude": [
-        "**/*.spec.ts",
-        "**/*.test.ts",
-        "**/*.spec.tsx",
-        "**/*.test.tsx",
-        "**/__tests__/**",
-        "**/node_modules/**",
-        "frontend/api/generated/**"
-      ]
-    }
+  "output": "src/di/app.bundle.ts",
+  "paths": ["@app/services"],
+  "files": { "include": ["**/*.service.ts", "**/*.repository.ts"] },
+  "classes": { "decorators": ["register"] }
+}
+```
+
+## Selecting files
+
+Globs are relative to the config file and `/`-separated; `**` spans folders.
+A file is parsed when it matches **one of** `include` and **none of** `exclude`.
+
+| Rule      | Default                                   | Meaning                                                    |
+| --------- | ----------------------------------------- | ---------------------------------------------------------- |
+| `include` | every source file                         | Globs a file must match one of, e.g. `"**/*.service.ts"`   |
+| `exclude` | test files, `__tests__/`, `node_modules/` | Globs of files never read; replaces the default when given |
+
+A non-empty `exclude` replaces the defaults, so restate the ones you still want:
+
+```json
+"files": {
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "**/node_modules/**",
+    "frontend/api/generated/**"
   ]
 }
 ```
 
 If it omits a default glob the build warns, since test classes usually carry
-the same `@register` decorators as production ones. `exclude: []` deliberately
-scans everything, including tests.
+the same `@register` decorators as production ones. `"exclude": []` deliberately
+parses everything, including tests. Giving only `include` keeps the default
+`exclude`, so `**/*.service.ts` still skips `user.service.spec.ts`.
 
 ## Selecting classes
 
-By default every exported, non-abstract class of a scanned file is registered.
-`select` narrows that; a class must meet every criterion that is set:
+By default every exported, non-abstract class of a parsed file is registered.
+`classes` narrows that; a class must meet every criterion that is set:
 
 ```json
-"select": {
+"classes": {
   "export": "named",
   "decorators": ["register", "repository"],
   "nameGlob": "*Service"
@@ -119,7 +142,7 @@ bind the same token, registration is last-wins and the stand-in silently wins.
 `excludeClasses` and `excludeNameGlob` drop a class right in the config:
 
 ```json
-"select": {
+"classes": {
   "decorators": ["repository", "service"],
   "excludeClasses": ["MockDashboardRepository"],
   "excludeNameGlob": "*Fake"
@@ -137,7 +160,7 @@ are not resolved), so it can only be a heuristic:
 ```text
 tic: warning: bundles[0]: decorator token "IDashboardRepositoryToken" is passed by
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
-exclude one with select.excludeClasses
+exclude one with classes.excludeClasses
 ```
 
 Classes that are scope-gated are not last-wins, so they do not warn: when the

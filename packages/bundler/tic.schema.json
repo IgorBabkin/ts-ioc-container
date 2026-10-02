@@ -80,10 +80,41 @@
               ]
             }
           },
-          "select": {
+          "files": {
             "type": "object",
             "additionalProperties": false,
-            "description": "How target classes are picked out of a file. A class is selected when it is exported, not abstract, and meets every criterion set here; omit it to register every exported class.",
+            "description": "Which files of `paths` are read and parsed — decided by path alone, before parsing. Globs are relative to this file. A file is parsed when it matches one of `include` and none of `exclude`; with a file naming convention, `include` keeps every other file unread.",
+            "properties": {
+              "include": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Globs a file must match one of, e.g. [\"**/*.service.ts\", \"**/*.repository.ts\"]. Default: every source file."
+              },
+              "exclude": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [
+                  "**/*.spec.ts",
+                  "**/*.test.ts",
+                  "**/*.spec.tsx",
+                  "**/*.test.tsx",
+                  "**/__tests__/**",
+                  "**/node_modules/**"
+                ],
+                "description": "Globs of files never read. Replaces the default when given. A non-empty list that omits a default glob makes `tic build` warn."
+              }
+            }
+          },
+          "classes": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Which classes of a parsed file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; omit it to register every exported class.",
             "properties": {
               "export": {
                 "enum": [
@@ -123,21 +154,6 @@
                 "description": "Glob the class name must NOT match, e.g. \"*Mock\". An anonymous default export is named after its file."
               }
             }
-          },
-          "exclude": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "default": [
-              "**/*.spec.ts",
-              "**/*.test.ts",
-              "**/*.spec.tsx",
-              "**/*.test.tsx",
-              "**/__tests__/**",
-              "**/node_modules/**"
-            ],
-            "description": "Globs, relative to this file, of files never scanned. Replaces the default when given. A non-empty list that omits a default glob makes `tic build` warn."
           }
         }
       }

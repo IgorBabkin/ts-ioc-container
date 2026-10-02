@@ -45,18 +45,36 @@ Acceptance criteria:
 - A path is scanned recursively by default; `recursive: false` limits it to
   the folder itself.
 - By default every exported class is registered.
-- Abstract classes, non-exported classes, `.d.ts` files and files matching
-  `exclude` (default: test files, `__tests__/`, `node_modules/`) are never
-  registered. `exclude` globs are relative to the config file.
-- A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
-  scans tests deliberately. When a non-empty `exclude` omits
-  a default glob, the build reports a warning (the escape hatch stays: `[]`
-  warns for nothing).
+- Abstract classes, non-exported classes and `.d.ts` files are never
+  registered.
 - A class exported by `export { X }`, `export { X as Y }` or `export default` is
   registered and imported under its exported name.
 - The generated file is never scanned, even when it lives inside a scanned path.
 - Registrations are ordered by file path, then by declaration order, so the
   output is stable across machines.
+
+### Story: Select files by name before parsing
+
+As an application developer whose project names files by convention
+(`user.service.ts`), I can tell the bundler which files to parse, so that it
+never reads the rest and bundling stays fast as the project grows.
+
+Acceptance criteria:
+
+- Selection runs in two stages: a bundle's `files` rule decides by path alone
+  which files are read and parsed; its `classes` rule then picks classes out of
+  the parsed files.
+- `files.include` is a non-empty list of globs; a file is parsed only when it
+  matches one of them. Omitted, every source file qualifies.
+- A file outside `include` is never read.
+- `files.exclude` lists globs of files never read (default: test files,
+  `__tests__/`, `node_modules/`) and wins over `include`. Giving only `include`
+  keeps the default `exclude`.
+- Globs are relative to the config file and `/`-separated.
+- A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
+  parses tests deliberately. When a non-empty `exclude` omits a default glob,
+  the build reports a warning (the escape hatch stays: `[]` warns for nothing).
+- An invalid rule fails the build naming the offending field.
 
 ### Story: Configure which classes a file contributes
 
@@ -66,9 +84,9 @@ only what I mean it to.
 
 Acceptance criteria:
 
-- A bundle's `select` rule is an object; a class is selected when it is
+- A bundle's `classes` rule is an object; a class is selected when it is
   exported, not abstract, and meets every criterion the rule sets. Omitting
-  `select` (or a criterion) applies no restriction beyond being exported.
+  `classes` (or a criterion) applies no restriction beyond being exported.
 - `export` restricts which exports count: `"any"` (default), `"named"` or
   `"default"`.
 - `decorators` requires the class to carry one of the listed decorators,
@@ -80,13 +98,13 @@ Acceptance criteria:
   whose name matches a glob; both apply after every other criterion.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
-  registration is last-wins); the warning suggests `select.excludeClasses`.
+  registration is last-wins); the warning suggests `classes.excludeClasses`.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):
   those registrations are scope-gated, not last-wins.
-- An invalid rule — including the removed string form (`"select": "decorated"`)
-  — fails the build naming the offending field.
+- An invalid rule — including a string (`"classes": "decorated"`) — fails the
+  build naming the offending field.
 
 ### Story: Address folders by tsconfig aliases
 

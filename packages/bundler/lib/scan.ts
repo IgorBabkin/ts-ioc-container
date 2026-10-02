@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import type { ResolvedSelector } from './config';
+import type { ResolvedClassSelector } from './config';
 
 /** An exported class the generated bundle registers. */
 export interface DiscoveredClass {
@@ -80,7 +80,7 @@ function nameFromFile(file: string): string {
  */
 export function findClasses(
   file: string,
-  selector: ResolvedSelector,
+  selector: ResolvedClassSelector,
   text = readFileSync(file, 'utf8'),
 ): DiscoveredClass[] {
   const kind = file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
