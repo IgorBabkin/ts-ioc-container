@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../tic.schema.json",
+  "output": "src/di/app.bundle.ts",
+  "name": "AppBundle",
+  "files": {
+    "paths": [
+      "@app/services",
+      "@app/infra"
+    ]
+  },
+  "classes": {
+    "decorators": [
+      "register"
+    ]
+  }
+}

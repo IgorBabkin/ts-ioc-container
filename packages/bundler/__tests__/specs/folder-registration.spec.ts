@@ -3,7 +3,9 @@ import { symlinkSync } from 'node:fs';
 import { decorated, TempProject } from '../project';
 
 const module = (paths: unknown[], { files, ...extra }: { files?: object; [field: string]: unknown } = {}) => ({
-  bundles: [{ output: 'src/di/container.bundle.ts', files: { paths, ...files }, ...extra }],
+  output: 'src/di/container.bundle.ts',
+  files: { paths, ...files },
+  ...extra,
 });
 
 describe('Folder registration', () => {
@@ -13,72 +15,78 @@ describe('Folder registration', () => {
 
   const generated = () => project.read('src/di/container.bundle.ts');
   const buildProject = (options: { check?: boolean } = {}) =>
-    build({ config: project.path('.bundles.json'), ...options });
+    build({ config: project.path('app.bundle.json'), ...options });
 
   describe('Story: Describe the container in a config file', () => {
     it('resolves relative paths against the config file, not the working directory', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src/services']),
+        'app.bundle.json': module(['./src/services']),
         'src/services/Logger.ts': decorated('Logger'),
       });
 
-      build({ config: project.path('.bundles.json'), cwd: '/' });
+      build({ config: project.path('app.bundle.json'), cwd: '/' });
 
       expect(generated()).toContain("import { Logger } from '../services/Logger';");
     });
 
-    it('exports the bundle class under its configured name, Bundle by default', () => {
+    it.each([
+      [{}, 'export class Bundle implements IContainerModule'],
+      [{ name: 'ServicesBundle' }, 'export class ServicesBundle implements IContainerModule'],
+    ])('exports the bundle class under its configured name, Bundle by default (%j)', (extra, expected) => {
       project = TempProject.create({
-        '.bundles.json': {
-          bundles: [
-            { output: 'src/di/a.bundle.ts', files: { paths: ['./src/services'] } },
-            { output: 'src/di/b.bundle.ts', files: { paths: ['./src/services'] }, name: 'ServicesBundle' },
-          ],
-        },
+        'app.bundle.json': module(['./src/services'], extra),
         'src/services/Logger.ts': decorated('Logger'),
       });
 
       buildProject();
 
-      expect(project.read('src/di/a.bundle.ts')).toContain('export class Bundle implements IContainerModule');
-      expect(project.read('src/di/b.bundle.ts')).toContain('export class ServicesBundle implements IContainerModule');
+      expect(generated()).toContain(expected);
+    });
+
+    it('describes exactly one bundle: a bundles list is an unknown field', () => {
+      project = TempProject.create({ 'app.bundle.json': { bundles: [module(['./src'])] } });
+
+      expect(() => buildProject()).toThrow('bundles: unknown field');
     });
 
     it('accepts and preserves bundle tags from config', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src/services'], { tags: ['test'] }),
+        'app.bundle.json': module(['./src/services'], { tags: ['test'] }),
       });
 
-      expect(loadConfig(project.path('.bundles.json')).bundles[0].tags).toEqual(['test']);
+      expect(loadConfig(project.path('app.bundle.json')).tags).toEqual(['test']);
     });
 
     it('defaults omitted bundle tags to an empty array', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src/services']),
+        'app.bundle.json': module(['./src/services']),
       });
 
-      expect(loadConfig(project.path('.bundles.json')).bundles[0].tags).toEqual([]);
+      expect(loadConfig(project.path('app.bundle.json')).tags).toEqual([]);
     });
 
     it.each([
-      [{}, 'bundles: expected a non-empty array'],
-      [{ bundles: [{ files: { paths: ['./src'] } }] }, 'bundles[0].output: expected a non-empty string'],
-      [{ bundles: [{ output: 'a.ts' }] }, 'bundles[0].files: expected an object with "paths"'],
-      [{ bundles: [{ output: 'a.ts', files: 'src/**' }] }, 'bundles[0].files: expected an object with "paths"'],
-      [{ bundles: [{ output: 'a.ts', files: {} }] }, 'bundles[0].files.paths: expected a non-empty array'],
-      [{ bundles: [{ output: 'a.ts', files: { paths: [] } }] }, 'bundles[0].files.paths: expected a non-empty array'],
-      [{ bundles: [{ output: 'a.ts', files: { paths: [{ recursive: true }] } }] }, 'bundles[0].files.paths[0].path'],
-      [{ bundles: [{ output: 'a.ts', files: { paths: ['./src'] }, name: 'not valid' }] }, 'bundles[0].name'],
-      [{ bundles: [{ output: 'a.ts', files: { paths: ['./src'] }, tags: [1] }] }, 'bundles[0].tags'],
-      [{ bundles: [{ output: 'a.ts', paths: ['./src'] }] }, 'bundles[0].paths: unknown field'],
-      [{ bundles: [{ output: 'a.ts', namespaces: ['./src'] }] }, 'bundles[0].namespaces: unknown field'],
-      [{ bundles: [{ ...module(['./src']).bundles[0], include: './x.cjs' }] }, 'bundles[0].include: unknown field'],
-      [{ bundles: [{ ...module(['./src']).bundles[0], select: {} }] }, 'bundles[0].select: unknown field'],
-      [{ bundles: [{ ...module(['./src']).bundles[0], exclude: [] }] }, 'bundles[0].exclude: unknown field'],
-      [{ ...module(['./src']), extends: '' }, 'extends: expected a non-empty string'],
-      [{ ...module(['./src']), tsconfig: './tsconfig.json' }, 'tsconfig: unknown field'],
+      [[], 'config: expected a JSON object'],
+      [{ files: { paths: ['./src'] } }, 'output: expected a non-empty string'],
+      [{ output: 'a.ts' }, 'files.paths: required when there is no tsconfig to extend'],
+      [
+        { output: 'a.ts', files: { include: ['**/*.ts'] } },
+        'files.paths: required when there is no tsconfig to extend',
+      ],
+      [{ output: 'a.ts', files: 'src/**' }, 'files: expected an object'],
+      [{ output: 'a.ts', files: { paths: [] } }, 'files.paths: expected a non-empty array'],
+      [{ output: 'a.ts', files: { paths: [{ recursive: true }] } }, 'files.paths[0].path'],
+      [module(['./src'], { name: 'not valid' }), 'name: expected a valid identifier'],
+      [module(['./src'], { tags: [1] }), 'tags: expected an array of strings'],
+      [module(['./src'], { extends: '' }), 'extends: expected a non-empty string'],
+      [{ output: 'a.ts', paths: ['./src'] }, 'paths: unknown field'],
+      [{ output: 'a.ts', namespaces: ['./src'] }, 'namespaces: unknown field'],
+      [module(['./src'], { include: './x.cjs' }), 'include: unknown field'],
+      [module(['./src'], { select: {} }), 'select: unknown field'],
+      [module(['./src'], { exclude: [] }), 'exclude: unknown field'],
+      [module(['./src'], { tsconfig: './tsconfig.json' }), 'tsconfig: unknown field'],
     ])('rejects an invalid config %j naming the field', (config, message) => {
-      project = TempProject.create({ '.bundles.json': config });
+      project = TempProject.create({ 'app.bundle.json': config });
 
       expect(() => buildProject()).toThrow(TicConfigError);
       expect(() => buildProject()).toThrow(message);
@@ -94,7 +102,7 @@ describe('Folder registration', () => {
   describe('Story: Register the classes of a folder', () => {
     it('registers every decorated class of a folder recursively, ordered by file path', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src/services']),
+        'app.bundle.json': module(['./src/services']),
         'src/services/b/UserService.ts': decorated('UserService'),
         'src/services/Auth.ts': `${decorated('AuthService')}\n@register()\nexport class TokenService {}\n`,
       });
@@ -114,7 +122,7 @@ describe('Folder registration', () => {
 
     it('limits a namespace to its own folder when recursive is false', () => {
       project = TempProject.create({
-        '.bundles.json': module([{ path: './src/services', recursive: false }]),
+        'app.bundle.json': module([{ path: './src/services', recursive: false }]),
         'src/services/Logger.ts': decorated('Logger'),
         'src/services/nested/Hidden.ts': decorated('Hidden'),
       });
@@ -127,7 +135,7 @@ describe('Folder registration', () => {
 
     it('registers every exported class by default, skipping non-exported and abstract ones', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/Classes.ts': [
           "import { register } from 'ts-ioc-container';",
           'export class Plain {}',
@@ -145,7 +153,7 @@ describe('Folder registration', () => {
 
     it('imports classes exported by export lists and default exports under their exported name', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/List.ts':
           "import { register } from 'ts-ioc-container';\n@register() class Local {}\nexport { Local as Listed };\n",
         'src/Default.ts': "import { register } from 'ts-ioc-container';\n@register() export default class Main {}\n",
@@ -159,7 +167,7 @@ describe('Folder registration', () => {
 
     it('never registers test files, declaration files or the generated output itself', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/Kept.ts': decorated('Kept'),
         'src/Kept.spec.ts': decorated('KeptSpec'),
         'src/__tests__/Helper.ts': decorated('Helper'),
@@ -175,7 +183,7 @@ describe('Folder registration', () => {
 
     it('replaces the default excludes with the configured globs', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { files: { exclude: ['src/legacy/**'] } }),
+        'app.bundle.json': module(['./src'], { files: { exclude: ['src/legacy/**'] } }),
         'src/legacy/Old.ts': decorated('Old'),
         'src/Kept.spec.ts': decorated('KeptSpec'),
       });
@@ -188,14 +196,14 @@ describe('Folder registration', () => {
 
     it('warns when a non-empty exclude drops the default test globs', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { files: { exclude: ['src/legacy/**'] } }),
+        'app.bundle.json': module(['./src'], { files: { exclude: ['src/legacy/**'] } }),
         'src/legacy/Old.ts': decorated('Old'),
       });
 
       const { warnings } = buildProject();
 
       expect(warnings).toHaveLength(1);
-      expect(warnings[0]).toContain('bundles[0].files.exclude');
+      expect(warnings[0]).toContain('files.exclude');
       expect(warnings[0]).toContain('**/*.spec.ts');
       expect(warnings[0]).toContain('add them back');
     });
@@ -205,7 +213,7 @@ describe('Folder registration', () => {
 
       for (const extra of cases) {
         project = TempProject.create({
-          '.bundles.json': module(['./src'], extra),
+          'app.bundle.json': module(['./src'], extra),
           'src/Kept.ts': decorated('Kept'),
         });
 
@@ -225,7 +233,7 @@ describe('Folder registration', () => {
 
     it('parses only files matching one of the include globs', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { files: { include: ['**/*.service.ts', '**/*.repository.ts'] } }),
+        'app.bundle.json': module(['./src'], { files: { include: ['**/*.service.ts', '**/*.repository.ts'] } }),
         ...sources,
       });
 
@@ -237,7 +245,7 @@ describe('Folder registration', () => {
     it('never reads a file outside the include globs', () => {
       // A dangling `.ts` symlink fails the build the moment it is read.
       const withBrokenFile = (files: object) => {
-        project = TempProject.create({ '.bundles.json': module(['./src'], { files }), ...sources });
+        project = TempProject.create({ 'app.bundle.json': module(['./src'], { files }), ...sources });
         symlinkSync(project.path('missing.ts'), project.path('src/broken.ts'));
       };
 
@@ -250,7 +258,7 @@ describe('Folder registration', () => {
 
     it('drops files matching exclude even when include matches them', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], {
+        'app.bundle.json': module(['./src'], {
           files: { include: ['**/*.service.ts'], exclude: [...DEFAULT_EXCLUDE, 'src/legacy/**'] },
         }),
         ...sources,
@@ -263,7 +271,7 @@ describe('Folder registration', () => {
 
     it('keeps the default excludes when only include is given', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { files: { include: ['**/*.service.ts'] } }),
+        'app.bundle.json': module(['./src'], { files: { include: ['**/*.service.ts'] } }),
         'src/user.service.ts': decorated('UserService'),
         'src/user.service.spec.ts': decorated('UserServiceSpec'),
       });
@@ -275,7 +283,7 @@ describe('Folder registration', () => {
 
     it('applies the class selector to the files that were parsed', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], {
+        'app.bundle.json': module(['./src'], {
           files: { include: ['**/*.service.ts'] },
           classes: { excludeName: 'Old*' },
         }),
@@ -288,12 +296,12 @@ describe('Folder registration', () => {
     });
 
     it.each([
-      [{ include: [] }, 'bundles[0].files.include: expected a non-empty array of strings'],
-      [{ include: [''] }, 'bundles[0].files.include: expected a non-empty array of strings'],
-      [{ exclude: 'src/**' }, 'bundles[0].files.exclude: expected an array of strings'],
-      [{ only: ['**/*.ts'] }, 'bundles[0].files.only: unknown field'],
+      [{ include: [] }, 'files.include: expected a non-empty array of strings'],
+      [{ include: [''] }, 'files.include: expected a non-empty array of strings'],
+      [{ exclude: 'src/**' }, 'files.exclude: expected an array of strings'],
+      [{ only: ['**/*.ts'] }, 'files.only: unknown field'],
     ])('rejects the file rule %j naming the field', (files, message) => {
-      project = TempProject.create({ '.bundles.json': module(['./src'], { files }) });
+      project = TempProject.create({ 'app.bundle.json': module(['./src'], { files }) });
 
       expect(() => buildProject()).toThrow(TicConfigError);
       expect(() => buildProject()).toThrow(message);
@@ -311,7 +319,7 @@ describe('Folder registration', () => {
 
     const selected = (select: object) => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { classes: select }),
+        'app.bundle.json': module(['./src'], { classes: select }),
         'src/Classes.ts': classes,
       });
       buildProject();
@@ -343,7 +351,7 @@ describe('Folder registration', () => {
 
     it('recognises decorators by name through renamed imports and member access', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { classes: { decorators: ['register', 'service'] } }),
+        'app.bundle.json': module(['./src'], { classes: { decorators: ['register', 'service'] } }),
         'src/Renamed.ts': "import { register as reg } from 'ts-ioc-container';\n@reg() export class Renamed {}\n",
         'src/Member.ts': "import * as ioc from 'ts-ioc-container';\n@ioc.register() export class Member {}\n",
         'src/Custom.ts': "import { service } from './service';\n@service export class Custom {}\n",
@@ -358,7 +366,7 @@ describe('Folder registration', () => {
 
     it('matches the name of an anonymous default export by its file name', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { classes: { name: '*Service' } }),
+        'app.bundle.json': module(['./src'], { classes: { name: '*Service' } }),
         'src/user-service.ts': 'export default class {}\n',
       });
 
@@ -380,17 +388,17 @@ describe('Folder registration', () => {
     });
 
     it.each([
-      ['decorated', 'bundles[0].classes: expected an object'],
-      [{ export: 'all' }, 'bundles[0].classes.export: expected "any", "named" or "default"'],
-      [{ decorators: [] }, 'bundles[0].classes.decorators: expected a non-empty array of strings'],
-      [{ name: '' }, 'bundles[0].classes.name: expected a non-empty string'],
-      [{ excludeClasses: [] }, 'bundles[0].classes.excludeClasses: expected a non-empty array of strings'],
-      [{ excludeName: '' }, 'bundles[0].classes.excludeName: expected a non-empty string'],
-      [{ exported: true }, 'bundles[0].classes.exported: unknown field'],
-      [{ nameGlob: '*Service' }, 'bundles[0].classes.nameGlob: unknown field'],
-      [{ excludeNameGlob: '*Mock' }, 'bundles[0].classes.excludeNameGlob: unknown field'],
+      ['decorated', 'classes: expected an object'],
+      [{ export: 'all' }, 'classes.export: expected "any", "named" or "default"'],
+      [{ decorators: [] }, 'classes.decorators: expected a non-empty array of strings'],
+      [{ name: '' }, 'classes.name: expected a non-empty string'],
+      [{ excludeClasses: [] }, 'classes.excludeClasses: expected a non-empty array of strings'],
+      [{ excludeName: '' }, 'classes.excludeName: expected a non-empty string'],
+      [{ exported: true }, 'classes.exported: unknown field'],
+      [{ nameGlob: '*Service' }, 'classes.nameGlob: unknown field'],
+      [{ excludeNameGlob: '*Mock' }, 'classes.excludeNameGlob: unknown field'],
     ])('rejects the rule %j naming the field', (select, message) => {
-      project = TempProject.create({ '.bundles.json': module(['./src'], { classes: select }) });
+      project = TempProject.create({ 'app.bundle.json': module(['./src'], { classes: select }) });
 
       expect(() => buildProject()).toThrow(TicConfigError);
       expect(() => buildProject()).toThrow(message);
@@ -403,7 +411,7 @@ describe('Folder registration', () => {
 
     it('warns when two selected classes pass the same decorator identifier', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/HttpDashboardRepository.ts': repo('HttpDashboardRepository'),
         'src/MockDashboardRepository.ts': repo('MockDashboardRepository'),
       });
@@ -411,7 +419,7 @@ describe('Folder registration', () => {
       const { warnings } = buildProject();
 
       expect(warnings).toHaveLength(1);
-      expect(warnings[0]).toContain('bundles[0]');
+      expect(warnings[0]).toContain('decorator token');
       expect(warnings[0]).toContain('IDashboardRepositoryToken');
       expect(warnings[0]).toContain('HttpDashboardRepository, MockDashboardRepository');
       expect(warnings[0]).toContain('classes.excludeClasses');
@@ -419,7 +427,7 @@ describe('Folder registration', () => {
 
     it('does not warn once one colliding class is excluded', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src'], { classes: { excludeClasses: ['MockDashboardRepository'] } }),
+        'app.bundle.json': module(['./src'], { classes: { excludeClasses: ['MockDashboardRepository'] } }),
         'src/HttpDashboardRepository.ts': repo('HttpDashboardRepository'),
         'src/MockDashboardRepository.ts': repo('MockDashboardRepository'),
       });
@@ -430,7 +438,7 @@ describe('Folder registration', () => {
 
     it('ignores decorators whose first argument is not a plain identifier', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/A.ts': decorated('A'),
         'src/B.ts': decorated('B'),
       });
@@ -444,7 +452,7 @@ describe('Folder registration', () => {
         `import { perPage } from './scope';\n` +
         `@repository(IFilterChipsToken)\n@perPage('${page}')\nexport class ${name} {}\n`;
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/StationFilterChips.ts': scoped('StationFilterChips', 'stations'),
         'src/SessionFilterChips.ts': scoped('SessionFilterChips', 'sessions'),
       });
@@ -458,7 +466,7 @@ describe('Folder registration', () => {
         `import { perPage } from './scope';\n` +
         `@repository(IFilterChipsToken)\n@perPage('stations')\nexport class ${name} {}\n`;
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/A.ts': scoped('A'),
         'src/B.ts': scoped('B'),
       });
@@ -467,12 +475,73 @@ describe('Folder registration', () => {
     });
   });
 
+  describe('Story: A bundle extends a tsconfig', () => {
+    const bundle = (extra: object = {}) => ({ output: 'src/di/container.bundle.ts', ...extra });
+    const registered = () => [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
+
+    it('scans what the tsconfig compiles when the bundle names no paths', () => {
+      project = TempProject.create({
+        'app.bundle.json': bundle(),
+        'tsconfig.json': { include: ['src'], exclude: ['src/legacy'] },
+        'src/Kept.ts': decorated('Kept'),
+        'src/legacy/Old.ts': decorated('Old'),
+        'scripts/Tool.ts': decorated('Tool'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Kept']);
+      expect(generated()).toContain('// Files: as compiled by ../../tsconfig.json');
+    });
+
+    it('scans the files a tsconfig lists, following its own extends', () => {
+      project = TempProject.create({
+        'app.bundle.json': bundle({ extends: './tsconfig.app.json' }),
+        'tsconfig.base.json': { files: ['src/Listed.ts'] },
+        'tsconfig.app.json': { extends: './tsconfig.base.json' },
+        'src/Listed.ts': decorated('Listed'),
+        'src/Unlisted.ts': decorated('Unlisted'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Listed']);
+    });
+
+    it('lets files.paths override the file set of the tsconfig', () => {
+      project = TempProject.create({
+        'app.bundle.json': bundle({ files: { paths: ['./lib'] } }),
+        'tsconfig.json': { include: ['src'] },
+        'src/App.ts': decorated('App'),
+        'lib/External.ts': decorated('External'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['External']);
+    });
+
+    it('filters the file set of the tsconfig with files.include, files.exclude and the default excludes', () => {
+      project = TempProject.create({
+        'app.bundle.json': bundle({ files: { include: ['**/*.service.ts'] } }),
+        'tsconfig.json': { include: ['src'] },
+        'src/user.service.ts': decorated('UserService'),
+        'src/user.service.spec.ts': decorated('UserServiceSpec'),
+        'src/helpers.ts': decorated('Helper'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['UserService']);
+    });
+  });
+
   describe('Story: Address folders by tsconfig aliases', () => {
     const tsconfig = (compilerOptions: object) => ({ compilerOptions });
 
     it('resolves an alias namespace through inherited tsconfig paths and imports in alias form', () => {
       project = TempProject.create({
-        '.bundles.json': module(['@app/services', './lib']),
+        'app.bundle.json': module(['@app/services', './lib']),
         'tsconfig.base.json': tsconfig({ paths: { '@app/*': ['./src/*'], '@services/*': ['./src/services/*'] } }),
         'tsconfig.json': { extends: './tsconfig.base.json' },
         'src/services/Logger.ts': decorated('Logger'),
@@ -487,7 +556,7 @@ describe('Folder registration', () => {
 
     it('extends the tsconfig named in the config', () => {
       project = TempProject.create({
-        '.bundles.json': { extends: './tsconfig.app.json', ...module(['@app/services']) },
+        'app.bundle.json': module(['@app/services'], { extends: './tsconfig.app.json' }),
         'tsconfig.app.json': tsconfig({ baseUrl: '.', paths: { '@app/*': ['src/*'] } }),
         'src/services/Logger.ts': decorated('Logger'),
       });
@@ -499,7 +568,7 @@ describe('Folder registration', () => {
 
     it('fails when the tsconfig it explicitly extends does not exist', () => {
       project = TempProject.create({
-        '.bundles.json': { extends: './tsconfig.app.json', ...module(['./src']) },
+        'app.bundle.json': module(['./src'], { extends: './tsconfig.app.json' }),
         'src/Logger.ts': decorated('Logger'),
       });
 
@@ -508,7 +577,7 @@ describe('Folder registration', () => {
     });
 
     it('builds without a tsconfig when it extends the default one and there is none', () => {
-      project = TempProject.create({ '.bundles.json': module(['./src']), 'src/Logger.ts': decorated('Logger') });
+      project = TempProject.create({ 'app.bundle.json': module(['./src']), 'src/Logger.ts': decorated('Logger') });
 
       buildProject();
 
@@ -517,7 +586,7 @@ describe('Folder registration', () => {
 
     it('fails naming a namespace that is neither a folder nor an alias', () => {
       project = TempProject.create({
-        '.bundles.json': module(['@app/missing']),
+        'app.bundle.json': module(['@app/missing']),
         'tsconfig.json': tsconfig({ paths: { '@app/*': ['./src/*'] } }),
       });
 
@@ -527,7 +596,7 @@ describe('Folder registration', () => {
 
     it('adds a .js extension under nodenext resolution', () => {
       project = TempProject.create({
-        '.bundles.json': module(['@app/services']),
+        'app.bundle.json': module(['@app/services']),
         'tsconfig.json': tsconfig({
           module: 'nodenext',
           moduleResolution: 'nodenext',
@@ -543,7 +612,7 @@ describe('Folder registration', () => {
 
     it('lets importExtension override the inferred extension', () => {
       project = TempProject.create({
-        '.bundles.json': { importExtension: '', ...module(['./src/services']) },
+        'app.bundle.json': { importExtension: '', ...module(['./src/services']) },
         'tsconfig.json': tsconfig({ module: 'nodenext', moduleResolution: 'nodenext' }),
         'src/services/Logger.ts': decorated('Logger'),
       });
@@ -557,7 +626,7 @@ describe('Folder registration', () => {
   describe('Story: Generate a plain container module', () => {
     it('imports same-named classes under distinct local names', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src']),
+        'app.bundle.json': module(['./src']),
         'src/a/Logger.ts': decorated('Logger'),
         'src/b/Logger.ts': decorated('Logger'),
       });
@@ -573,7 +642,7 @@ describe('Folder registration', () => {
   describe('Story: Generate a plain container module (protocol)', () => {
     it('writes paths into the generated TypeScript verbatim, never HTML-escaped', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src/a&b']),
+        'app.bundle.json': module(['./src/a&b']),
         'src/a&b/Logger.ts': decorated('Logger'),
       });
 
@@ -587,25 +656,25 @@ describe('Folder registration', () => {
   describe('Story: Keep bundles in sync in CI', () => {
     it('reports a missing or outdated output as stale without writing it', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src/services']),
+        'app.bundle.json': module(['./src/services']),
         'src/services/Logger.ts': decorated('Logger'),
       });
 
       const result = buildProject({ check: true });
 
-      expect(result.outputs.map((o) => o.status)).toEqual(['stale']);
+      expect(result.output.status).toBe('stale');
       expect(() => generated()).toThrow();
     });
 
     it('leaves an up-to-date output untouched', () => {
       project = TempProject.create({
-        '.bundles.json': module(['./src/services']),
+        'app.bundle.json': module(['./src/services']),
         'src/services/Logger.ts': decorated('Logger'),
       });
 
-      expect(buildProject().outputs.map((o) => o.status)).toEqual(['written']);
-      expect(buildProject().outputs.map((o) => o.status)).toEqual(['unchanged']);
-      expect(buildProject({ check: true }).outputs.map((o) => o.status)).toEqual(['unchanged']);
+      expect(buildProject().output.status).toBe('written');
+      expect(buildProject().output.status).toBe('unchanged');
+      expect(buildProject({ check: true }).output.status).toBe('unchanged');
     });
   });
 });

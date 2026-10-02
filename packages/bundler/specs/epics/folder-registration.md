@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **ADR:** [ADR 0022 - Registration discovery happens at build time, outside the container](../../../../adr/0022-build-time-registration-discovery.md)
-- **Public API:** `tic build`, `.bundles.json`, `build`, `loadConfig`
+- **Public API:** `tic build`, `*.bundle.json`, `build`, `loadConfig`, `findConfigFiles`
 - **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts`
 
 ## Intent
@@ -18,22 +18,45 @@ A folder is addressed the same way an import is: a path relative to the config f
 
 ### Story: Describe the container in a config file
 
-As an application developer, I can describe generated bundles in one
-JSON file so that the build is reproducible and reviewable.
+As an application developer, I can describe a generated bundle in one JSON
+file so that the build is reproducible and reviewable.
 
 Acceptance criteria:
 
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
-- `tic build` reads `.bundles.json` from the working directory, or the file
-  given with `--config <path>`.
+- One config file describes one bundle and is named `<name>.bundle.json`. Its
+  fields are flat: an `output` file (by convention `*.bundle.ts`), and
+  optionally `name` (default `Bundle`), `tags`, `extends`, `importExtension`,
+  `files` and `classes`.
+- `tic build` builds every `*.bundle.json` in the working directory, in name
+  order; `--config <path>` (repeatable) builds only the named configs. A
+  working directory with no `*.bundle.json` fails with a hint.
+- Several bundles — `production.bundle.json`, `development.bundle.json`,
+  `test.bundle.json` — are several configs; a bundle one config generated is
+  never registered by another.
 - Every relative path in the config resolves against the config file's
   directory, not the working directory.
-- The config lists `bundles`; each bundle has an `output` file (by convention
-  `*.bundle.ts`) and a `files` rule with at least one entry in `paths`, and may name the generated
-  class (`name`, default `Bundle`) and carry `tags`.
-- An invalid config — including an unknown bundle field — fails the build with a
-  message naming the offending field; nothing is written.
+- An invalid config — including an unknown field, such as a leftover
+  `bundles` list — fails the build with a message naming the config and the
+  offending field; nothing is written for it.
+
+### Story: A bundle extends a tsconfig
+
+As an application developer, I can point a bundle at my tsconfig so that it
+registers what my project compiles without restating its folders.
+
+Acceptance criteria:
+
+- `extends` names the tsconfig the bundle builds on, relative to the config
+  file; default `./tsconfig.json`, which may be absent. A tsconfig named
+  explicitly must exist.
+- Without `files.paths`, the bundle's candidates are the files the tsconfig
+  compiles — its `files` / `include` / `exclude`, following its own `extends`.
+- `files.paths` overrides that set, as a child tsconfig's `include` overrides
+  its parent's. With no tsconfig to extend, `files.paths` is required.
+- `files.include`, `files.exclude` and the default test excludes filter the
+  candidates either way.
 
 ### Story: Register the classes of a folder
 
@@ -61,8 +84,8 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- Selection runs in two stages: a bundle's `files` rule — the folders in
-  `paths` and the `include` / `exclude` globs within them — decides by path
+- Selection runs in two stages: a bundle's `files` rule — its candidates (the
+  tsconfig's file set, or `paths`) and the `include` / `exclude` globs — decides by path
   alone which files are read and parsed; its `classes` rule then picks classes out of
   the parsed files.
 - `files.include` is a non-empty list of globs; a file is parsed only when it

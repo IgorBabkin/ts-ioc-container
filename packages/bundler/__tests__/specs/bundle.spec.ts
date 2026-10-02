@@ -10,9 +10,9 @@ const fixture = path.resolve(__dirname, '../fixtures/app');
 
 describe('Story: Generate a bundle: a plain container module class', () => {
   it('is current: tic build --check finds nothing to regenerate', () => {
-    const result = build({ config: path.join(fixture, '.bundles.json'), check: true });
+    const result = build({ config: path.join(fixture, 'app.bundle.json'), check: true });
 
-    expect(result.outputs.map((o) => o.status)).toEqual(['unchanged']);
+    expect(result.output.status).toBe('unchanged');
   });
 
   it('type-checks inside the consumer project, aliases included', () => {

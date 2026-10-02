@@ -7,18 +7,26 @@ nothing here runs inside the container, and the core package is not changed by
 it.
 
 - The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
-  same program). `tic build` reads `.bundles.json` (schema: `tic.schema.json`) and writes one
-  bundle per `bundles[]` entry — a generated class, `export class AppBundle implements IContainerModule`, applied with `container.useModule(new AppBundle())`. `--check` writes nothing and exits 1
-  when an output is stale — run it in CI.
+  same program). One config file describes one bundle: `<name>.bundle.json`
+  (schema: `tic.schema.json`), flat — `output`, `name`, `tags`, `extends`,
+  `importExtension`, `files`, `classes`. `tic build` builds every
+  `*.bundle.json` in the working directory (or the ones named with repeatable
+  `-c`), each writing one class — `export class AppBundle implements IContainerModule`,
+  applied with `container.useModule(new AppBundle())`. Several bundles (e.g.
+  `production.bundle.json`, `development.bundle.json`) mean several configs.
+  `--check` writes nothing and exits 1 when an output is stale — run it in CI.
+- A config `extends` a tsconfig (default `./tsconfig.json`, may be absent; one
+  named explicitly must exist), like a child tsconfig: what it compiles is the
+  bundle's file set, and its `paths` aliases and module resolution shape the
+  generated imports (most specific alias, else a relative path).
 - Selection has two stages. `files: { paths, include, exclude }` decides by path
-  which files are read and parsed at all. `paths` (required) are the folders
-  scanned: relative to the config file, or tsconfig `paths` aliases; generated
-  imports use the most specific alias, else a relative path. Within them (globs
-  relative to the config) a file
-  must match one of `include` (default: all) and none of `exclude` (default:
-  test files, `__tests__/`, `node_modules/`; a non-empty list replaces it, and
-  the build warns if it drops a default). With file naming conventions,
-  `include` is the speed lever — nothing else is read.
+  which files are read and parsed at all. `paths` override the tsconfig's file
+  set with folders (relative to the config, or tsconfig aliases); required when
+  there is no tsconfig. A candidate must match one of `include` (default: all)
+  and none of `exclude` (default: test files, `__tests__/`, `node_modules/`; a
+  non-empty list replaces it, and the build warns if it drops a default). Globs
+  are relative to the config. With file naming conventions, `include` is the
+  speed lever — nothing else is read. Files `tic build` generated are never input.
 - `classes: { export, decorators, name, excludeClasses, excludeName }`
   then picks classes of the parsed files; default is every exported,
   non-abstract class; positive criteria must all hold and then `excludeClasses` (exact
@@ -29,9 +37,7 @@ it.
   (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
 - Never edit a `*.bundle.ts` by hand — change the classes or the config and
   rerun `tic build`.
-- `extends` names the tsconfig the bundles build on (default
-  `./tsconfig.json`, may be absent): its `paths` aliases and module resolution.
 - Unknown config fields are errors, at every level.
-- Programmatic API: `build({ config, cwd, check })`, `run(argv, io)`,
-  `loadConfig(file)`; errors are `TicConfigError` / `NamespaceNotFoundError`
+- Programmatic API: `build({ config, cwd, check })` (one config, one output),
+  `findConfigFiles(dir)`, `run(argv, io)`, `loadConfig(file)`; errors are `TicConfigError` / `NamespaceNotFoundError`
   (both `TicError`).

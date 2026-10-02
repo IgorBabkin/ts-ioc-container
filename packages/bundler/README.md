@@ -1,8 +1,8 @@
 # @ts-ioc-container/bundler
 
 **Bundles your dependencies into a single container module.** `tic build` scans
-your folders — by path or tsconfig alias — and generates one typed bundle that
-registers every class in them, ready for
+what your tsconfig compiles — or the folders you name, by path or tsconfig alias —
+and generates one typed bundle that registers every class in them, ready for
 [`ts-ioc-container`](https://www.npmjs.com/package/ts-ioc-container):
 
 ```ts
@@ -14,8 +14,8 @@ Adding a service means writing the class — no hand-maintained list of
 TypeScript, generated at build time, so it type-checks, bundles and tree-shakes
 like code you wrote yourself.
 
-Folders are named the way imports are: relative to the config file (`./src/services`) or through a
-`tsconfig.json` `paths` alias (`@app/services`).
+A bundle is configured like a tsconfig that `extends` yours: by default it
+takes the files your tsconfig compiles, and narrows or overrides them.
 
 ## Install
 
@@ -31,35 +31,58 @@ below use the shortcut.
 
 ## Configure
 
-`.bundles.json`, next to your `tsconfig.json`:
+One config file describes one bundle. Name it `<name>.bundle.json`, next to
+your `tsconfig.json` — `app.bundle.json`:
 
 ```json
 {
   "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
-  "bundles": [
-    {
-      "output": "src/di/app.bundle.ts",
-      "name": "AppBundle",
-      "files": {
-        "paths": ["@app/services", { "path": "./src/infra", "recursive": false }]
-      }
-    }
-  ]
+  "output": "src/di/app.bundle.ts",
+  "name": "AppBundle"
 }
 ```
 
-| Field                        | Default                                   | Meaning                                                                                      |
-| ---------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `extends`                    | `./tsconfig.json` (may be absent)         | The tsconfig to build on: source of `paths` aliases and of the import extension; one named here must exist |
-| `importExtension`            | `.js` under node16/nodenext, else none    | Extension of generated imports                                                               |
-| `bundles[].output`           | —                                         | The bundle file (convention: `*.bundle.ts`)                                                  |
-| `bundles[].name`             | `Bundle`                                  | Name of the generated class, an `IContainerModule`                                           |
-| `bundles[].tags`             | `[]`                                      | Tags associated with the bundle                                                              |
-| `bundles[].files`            | —                                         | Folders to scan and which of their files are parsed — see [Selecting files](#selecting-files) |
-| `bundles[].classes`          | every exported class                      | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)  |
+That is a complete config: the bundle registers every exported class of the
+files `./tsconfig.json` compiles, test files excluded.
+
+| Field             | Default                                | Meaning                                                                                       |
+| ----------------- | -------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `output`          | —                                      | The bundle file (convention: `*.bundle.ts`)                                                   |
+| `name`            | `Bundle`                               | Name of the generated class, an `IContainerModule`                                            |
+| `tags`            | `[]`                                   | Tags associated with the bundle                                                               |
+| `extends`         | `./tsconfig.json` (may be absent)      | The tsconfig to build on: its file set, `paths` aliases and import extension; one named here must exist |
+| `importExtension` | `.js` under node16/nodenext, else none | Extension of generated imports                                                                |
+| `files`           | what the tsconfig compiles, no tests   | Which files are parsed — see [Selecting files](#selecting-files)                              |
+| `classes`         | every exported class                   | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)   |
 
 An unknown field is an error, so a misspelled or removed option never goes
 unnoticed.
+
+## Several bundles
+
+Need more than one bundle — per environment, per app? Add a config per bundle.
+`tic build` builds every `*.bundle.json` in the working directory:
+
+```text
+production.bundle.json    → src/di/production.bundle.ts
+development.bundle.json   → src/di/development.bundle.ts
+test.bundle.json          → src/di/test.bundle.ts
+```
+
+Each one can extend its own tsconfig and select its own files:
+
+```jsonc
+// production.bundle.json
+{
+  "output": "src/di/production.bundle.ts",
+  "name": "AppBundle",
+  "extends": "./tsconfig.production.json",
+  "files": { "exclude": ["**/*.development.ts", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "**/node_modules/**"] }
+}
+```
+
+A bundle generated by one config is never registered by another, even when it
+sits in a folder the other scans.
 
 ## Selection in two stages
 
@@ -86,16 +109,20 @@ bundler never reads anything else:
 
 ## Selecting files
 
-`paths` are the folders a bundle's files come from: relative to the config file
-(`./src/services`) or tsconfig `paths` aliases (`@app/services`), scanned
-recursively unless an entry says `{ "path": "...", "recursive": false }`.
-Within them, a file is parsed when it matches **one of** `include` and **none
-of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
-spans folders.
+The candidates are the files the extended tsconfig compiles (its `files` /
+`include` / `exclude`, following its own `extends`). `paths` overrides that set
+the way a child tsconfig's `include` overrides its parent's: the bundle then scans
+those folders instead — relative to the config file (`./src/services`) or tsconfig
+`paths` aliases (`@app/services`), recursively unless an entry says
+`{ "path": "...", "recursive": false }`. Without a tsconfig, `paths` is required.
+
+A candidate is parsed when it matches **one of** `include` and **none of**
+`exclude`. Globs are relative to the config file and `/`-separated; `**` spans
+folders.
 
 | Rule      | Default                                   | Meaning                                                    |
 | --------- | ----------------------------------------- | ---------------------------------------------------------- |
-| `paths`   | — (required)                              | Folders to scan                                            |
+| `paths`   | what the tsconfig compiles                | Folders to scan instead                                    |
 | `include` | every source file                         | Globs a file must match one of, e.g. `"**/*.service.ts"`   |
 | `exclude` | test files, `__tests__/`, `node_modules/` | Globs of files never read; replaces the default when given |
 
@@ -166,7 +193,7 @@ plain-identifier first argument to a decorator — usually the binding token, as
 are not resolved), so it can only be a heuristic:
 
 ```text
-tic: warning: bundles[0]: decorator token "IDashboardRepositoryToken" is passed by
+tic: warning: app.bundle.json: decorator token "IDashboardRepositoryToken" is passed by
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
 exclude one with classes.excludeClasses
 ```
@@ -179,8 +206,8 @@ class and nothing is lost.
 ## Build
 
 ```bash
-tic build                 # .bundles.json in the working directory
-tic build -c path/to/.bundles.json
+tic build                 # every *.bundle.json in the working directory
+tic build -c app.bundle.json -c admin/admin.bundle.json   # only these
 tic build --check         # CI: write nothing, exit 1 if a bundle is out of date
 ```
 
@@ -188,7 +215,7 @@ The output is plain TypeScript over the public `ts-ioc-container` API:
 
 ```ts
 // src/di/app.bundle.ts
-// Generated by `tic build` from ../../.bundles.json. Do not edit by hand.
+// Generated by `tic build` from ../../app.bundle.json. Do not edit by hand.
 // Paths: @app/services, @app/infra
 import { type IContainer, type IContainerModule, type IRegistration, Registration } from 'ts-ioc-container';
 import { MemoryLogger } from '@app/infra/logging/MemoryLogger';

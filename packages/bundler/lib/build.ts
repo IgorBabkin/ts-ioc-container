@@ -1,14 +1,15 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { DEFAULT_CONFIG_FILE, loadConfig, type ResolvedConfig, type ResolvedBundle } from './config';
-import { emitBundle } from './emit';
+import { loadConfig, type ResolvedConfig } from './config';
+import { emitBundle, GENERATED_HEADER } from './emit';
 import { toPosix } from './glob';
-import { ImportPaths } from './ImportPaths';
-import { findClasses, listSourceFiles, type DiscoveredClass } from './scan';
+import { TicConfigError } from './errors';
+import { findClasses, isSourceFile, listSourceFiles, type DiscoveredClass } from './scan';
+import { loadTsconfig } from './tsconfig';
 
 export interface BuildOptions {
-  /** Path of `.bundles.json`, relative to `cwd`. Default `.bundles.json`. */
-  config?: string;
+  /** Path of the `*.bundle.json` to build, relative to `cwd`. */
+  config: string;
   /** Default `process.cwd()`. */
   cwd?: string;
   /** Compare instead of writing: outputs that would change are reported `stale`. */
@@ -31,80 +32,85 @@ export interface OutputResult {
 export interface BuildResult {
   /** Absolute path of the config that was built. */
   config: string;
-  outputs: OutputResult[];
+  output: OutputResult;
   /**
    * Non-fatal problems found while building, e.g. a `files.exclude` that drops a default
-   * test glob or two selected classes passing the same decorator token. Each warning
-   * names the bundle field it belongs to.
+   * test glob or two selected classes passing the same decorator token.
    */
   warnings: string[];
 }
 
 /**
- * Generates one bundle per config entry. Every bundle is generated before any
- * file is written, so a failing path leaves the previous outputs intact.
+ * Generates the bundle a config describes. Nothing is written unless generation succeeds.
  *
- * @throws {TicConfigError} when the config or the tsconfig is missing or invalid.
+ * @throws {TicConfigError} when the config or its tsconfig is missing or invalid, or the config has neither `files.paths` nor a tsconfig.
  * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
  */
-export function build({
-  config = DEFAULT_CONFIG_FILE,
-  cwd = process.cwd(),
-  check = false,
-}: BuildOptions = {}): BuildResult {
+export function build({ config, cwd = process.cwd(), check = false }: BuildOptions): BuildResult {
   const resolved = loadConfig(path.resolve(cwd, config));
-  const paths = ImportPaths.load(resolved.tsconfig, resolved.importExtension);
-  const generated = resolved.bundles.map((bundle, i) => generate(resolved, bundle, `bundles[${i}]`, paths));
+  const { content, registrations, warnings } = generate(resolved);
 
-  const outputs = generated.map(({ bundle, content, registrations }): OutputResult => {
-    const current = existsSync(bundle.output) ? readFileSync(bundle.output, 'utf8') : undefined;
-    const status: OutputStatus = current === content ? 'unchanged' : check ? 'stale' : 'written';
-    if (status === 'written') {
-      mkdirSync(path.dirname(bundle.output), { recursive: true });
-      writeFileSync(bundle.output, content);
-    }
-    return { file: bundle.output, bundle: bundle.name, status, registrations, content };
-  });
+  const current = existsSync(resolved.output) ? readFileSync(resolved.output, 'utf8') : undefined;
+  const status: OutputStatus = current === content ? 'unchanged' : check ? 'stale' : 'written';
+  if (status === 'written') {
+    mkdirSync(path.dirname(resolved.output), { recursive: true });
+    writeFileSync(resolved.output, content);
+  }
   return {
     config: resolved.file,
-    outputs,
-    warnings: [...resolved.warnings, ...generated.flatMap((g) => g.warnings)],
+    output: { file: resolved.output, bundle: resolved.name, status, registrations, content },
+    warnings: [...resolved.warnings, ...warnings],
   };
 }
 
 /**
+ * @throws {TicConfigError} when the tsconfig is invalid, or the config names no `files.paths` and there is no tsconfig to take files from.
  * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
  */
-function generate(config: ResolvedConfig, bundle: ResolvedBundle, field: string, paths: ImportPaths) {
+function generate(config: ResolvedConfig) {
+  const { importPaths: paths, fileNames } = loadTsconfig(config.tsconfig, config.importExtension);
   const relative = (file: string) => toPosix(path.relative(config.dir, file));
-  const outputs = new Set(config.bundles.map((m) => m.output));
-  const { include, exclude } = bundle.files;
+  const { include, exclude } = config.files;
   // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
   const isExcluded = (file: string) => {
-    if (outputs.has(file)) return true;
+    if (file === config.output) return true;
     const filename = relative(file);
     if (include && !include.some((glob) => glob.test(filename))) return true;
     return exclude.some((glob) => glob.test(filename));
   };
 
   const files = new Set<string>();
-  for (const entry of bundle.files.paths) {
-    const dir = paths.resolveNamespace(entry.path, config.dir);
-    for (const file of listSourceFiles(dir, entry.recursive, isExcluded)) files.add(file);
+  if (config.files.paths) {
+    // `files.paths` override the tsconfig's file set, as a child tsconfig's `include` does.
+    for (const entry of config.files.paths) {
+      const dir = paths.resolveNamespace(entry.path, config.dir);
+      for (const file of listSourceFiles(dir, entry.recursive, isExcluded)) files.add(file);
+    }
+  } else if (fileNames) {
+    for (const file of fileNames) if (isSourceFile(file) && !isExcluded(file)) files.add(file);
+  } else {
+    throw new TicConfigError(
+      `files.paths: required when there is no tsconfig to extend (${config.tsconfig.file} not found)`,
+    );
   }
 
   const classes = [...files]
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-    .flatMap((file) => findClasses(file, bundle.classes))
-    .map((cls) => ({ ...cls, specifier: paths.specifier(bundle.output, cls.file) }));
+    .flatMap((file) => {
+      const text = readFileSync(file, 'utf8');
+      // Another config's bundle can sit in a scanned folder; it is output, never input.
+      return text.startsWith(GENERATED_HEADER) ? [] : findClasses(file, config.classes, text);
+    })
+    .map((cls) => ({ ...cls, specifier: paths.specifier(config.output, cls.file) }));
 
   const content = emitBundle({
-    name: bundle.name,
-    configPath: toPosix(path.relative(path.dirname(bundle.output), config.file)),
-    paths: bundle.files.paths.map((entry) => entry.path),
+    name: config.name,
+    configPath: toPosix(path.relative(path.dirname(config.output), config.file)),
+    paths: config.files.paths?.map((entry) => entry.path),
+    tsconfigPath: toPosix(path.relative(path.dirname(config.output), config.tsconfig.file)),
     classes,
   });
-  return { bundle, content, registrations: classes.length, warnings: tokenCollisions(classes, field) };
+  return { content, registrations: classes.length, warnings: tokenCollisions(classes) };
 }
 
 /**
@@ -118,7 +124,7 @@ function generate(config: ResolvedConfig, bundle: ResolvedBundle, field: string,
  * share called with different arguments, so each scope registers its own. Those
  * groups are not warned about.
  */
-function tokenCollisions(classes: DiscoveredClass[], field: string): string[] {
+function tokenCollisions(classes: DiscoveredClass[]): string[] {
   const owners = new Map<string, DiscoveredClass[]>();
   for (const cls of classes) {
     for (const token of cls.tokens) {
@@ -133,7 +139,7 @@ function tokenCollisions(classes: DiscoveredClass[], field: string): string[] {
     .map(([token, group]) => {
       const names = group.map((cls) => cls.className);
       return (
-        `${field}: decorator token "${token}" is passed by ${names.join(', ')}; ` +
+        `decorator token "${token}" is passed by ${names.join(', ')}; ` +
         `registration is last-wins, exclude one with classes.excludeClasses`
       );
     });

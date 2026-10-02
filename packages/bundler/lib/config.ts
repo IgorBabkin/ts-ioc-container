@@ -1,18 +1,23 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { TicConfigError } from './errors';
 import { globToRegExp } from './glob';
 
 /**
  * Which files a bundle reads and parses: the first, cheap stage of selection,
- * decided by path alone. `paths` are the folders the files come from; within them
- * a file is parsed when it matches one of `include` and none of `exclude`. Globs
- * are relative to the config file and `/`-separated. With a file naming convention
+ * decided by path alone. The candidates are what the extended tsconfig compiles,
+ * or the folders in `paths` when given — they override the tsconfig's file set,
+ * as a child tsconfig's `include` overrides its parent's. A candidate is parsed
+ * when it matches one of `include` and none of `exclude`. Globs are relative to
+ * the config file and `/`-separated. With a file naming convention
  * (`*.service.ts`), `include` keeps the bundler from reading anything else.
  */
 export interface FileSelector {
-  /** Folders to scan: relative to the config file, or tsconfig `paths` aliases. */
-  paths: (string | PathConfig)[];
+  /**
+   * Folders to scan instead of the tsconfig's file set: relative to the config file,
+   * or tsconfig `paths` aliases. Required when there is no tsconfig to extend.
+   */
+  paths?: (string | PathConfig)[];
   /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
   include?: string[];
   /** Globs of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
@@ -21,7 +26,8 @@ export interface FileSelector {
 
 /** A {@link FileSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedFileSelector {
-  paths: Required<PathConfig>[];
+  /** `undefined`: the extended tsconfig's file set. */
+  paths?: Required<PathConfig>[];
   include?: RegExp[];
   exclude: RegExp[];
 }
@@ -67,34 +73,34 @@ export interface PathConfig {
   recursive?: boolean;
 }
 
+/**
+ * The shape of `*.bundle.json`: one bundle, built on one tsconfig. A project that
+ * needs several bundles keeps one config file per bundle.
+ */
 export interface BundleConfig {
+  $schema?: string;
   /** The generated file, relative to the config file. */
   output: string;
   /** Name of the generated class, an `IContainerModule`. Default `Bundle`. */
   name?: string;
   /** Tags associated with the bundle. */
   tags?: string[];
-  /** Which files are parsed: the folders in `paths`, minus test files unless `exclude` says otherwise. */
-  files: FileSelector;
-  /** Which classes of a parsed file are registered. Default: every exported class. */
-  classes?: ClassSelector;
-}
-
-/** The shape of `.bundles.json`. */
-export interface TicConfig {
-  $schema?: string;
   /**
-   * The tsconfig the bundles build on — the source of `paths` aliases and of the
-   * import extension. Relative to the config file. Default `./tsconfig.json`,
-   * which may be absent; a tsconfig named here must exist.
+   * The tsconfig the bundle builds on, like a tsconfig's own `extends`: the source of
+   * its file set, `paths` aliases and import extension. Relative to the config file.
+   * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
   extends?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
-  bundles: BundleConfig[];
+  /** Which files are parsed. Default: what the tsconfig compiles, minus {@link DEFAULT_EXCLUDE}. */
+  files?: FileSelector;
+  /** Which classes of a parsed file are registered. Default: every exported class. */
+  classes?: ClassSelector;
 }
 
-export const DEFAULT_CONFIG_FILE = '.bundles.json';
+/** A config file is named `<name>.bundle.json`, e.g. `app.bundle.json`, `production.bundle.json`. */
+export const CONFIG_FILE_SUFFIX = '.bundle.json';
 export const DEFAULT_EXTENDS = './tsconfig.json';
 export const DEFAULT_BUNDLE_NAME = 'Bundle';
 export const DEFAULT_EXCLUDE = [
@@ -106,23 +112,21 @@ export const DEFAULT_EXCLUDE = [
   '**/node_modules/**',
 ];
 
-/** A config whose defaults are filled in and whose paths are absolute. */
+/** A {@link BundleConfig} whose defaults are filled in and whose paths are absolute. */
 export interface ResolvedConfig {
+  /** The config file itself. */
   file: string;
   dir: string;
-  tsconfig: { file: string; required: boolean };
-  importExtension?: string;
-  bundles: ResolvedBundle[];
-  /** Non-fatal problems found while resolving, e.g. a `files.exclude` that drops a default test glob. */
-  warnings: string[];
-}
-
-export interface ResolvedBundle {
   output: string;
   name: string;
   tags: string[];
+  /** The extended tsconfig; `required` when the config names it, so it must exist. */
+  tsconfig: { file: string; required: boolean };
+  importExtension?: string;
   files: ResolvedFileSelector;
   classes: ResolvedClassSelector;
+  /** Non-fatal problems found while resolving, e.g. a `files.exclude` that drops a default test glob. */
+  warnings: string[];
 }
 
 type Json = Record<string, unknown>;
@@ -152,20 +156,23 @@ function toPath(value: unknown, field: string): Required<PathConfig> {
 const FILE_SELECTOR_FIELDS = new Set(['paths', 'include', 'exclude']);
 
 /**
- * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field is missing or has the wrong type.
+ * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
  */
 function toFileSelector(value: unknown, field: string): ResolvedFileSelector {
-  if (!isObject(value)) return fail(field, 'an object with "paths"');
+  if (value === undefined) return { exclude: DEFAULT_EXCLUDE.map(globToRegExp) };
+  if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !FILE_SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
   const { paths, include, exclude } = value;
-  if (!Array.isArray(paths) || paths.length === 0) return fail(`${field}.paths`, 'a non-empty array');
+  if (paths !== undefined && !(Array.isArray(paths) && paths.length > 0)) {
+    return fail(`${field}.paths`, 'a non-empty array');
+  }
   if (include !== undefined && !(isStringArray(include) && include.length > 0)) {
     return fail(`${field}.include`, 'a non-empty array of strings');
   }
   if (exclude !== undefined && !isStringArray(exclude)) return fail(`${field}.exclude`, 'an array of strings');
   return {
-    paths: paths.map((entry, i) => toPath(entry, `${field}.paths[${i}]`)),
+    paths: paths?.map((entry, i) => toPath(entry, `${field}.paths[${i}]`)),
     include: include?.map(globToRegExp),
     exclude: (exclude ?? DEFAULT_EXCLUDE).map(globToRegExp),
   };
@@ -204,49 +211,27 @@ function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
   };
 }
 
-const BUNDLE_FIELDS = new Set(['output', 'name', 'tags', 'files', 'classes']);
-
-/**
- * @throws {TicConfigError} when a bundle field is unknown, missing or has the wrong type.
- */
-function toBundle(value: unknown, field: string, dir: string): ResolvedBundle {
-  if (!isObject(value)) return fail(field, 'an object');
-  const unknown = Object.keys(value).find((key) => !BUNDLE_FIELDS.has(key));
-  if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { output, name, tags, files, classes } = value;
-  if (!isNonEmptyString(output)) return fail(`${field}.output`, 'a non-empty string');
-  if (name !== undefined && !isIdentifier(name)) return fail(`${field}.name`, 'a valid identifier');
-  if (tags !== undefined && !isStringArray(tags)) return fail(`${field}.tags`, 'an array of strings');
-  return {
-    output: path.resolve(dir, output),
-    name: name ?? DEFAULT_BUNDLE_NAME,
-    tags: tags ?? [],
-    files: toFileSelector(files, `${field}.files`),
-    classes: toClassSelector(classes, `${field}.classes`),
-  };
-}
-
 /**
  * Warns when an explicit, non-empty `files.exclude` omits one of the {@link DEFAULT_EXCLUDE}
  * globs, since that silently drops test files (or `node_modules`) from the scan.
  * An empty `exclude` is a deliberate opt-out and does not warn.
  */
-function excludeWarnings(value: unknown, field: string): string[] {
-  if (!isObject(value) || !isObject(value.files)) return [];
-  const exclude = value.files.exclude;
+function excludeWarnings(files: unknown): string[] {
+  if (!isObject(files)) return [];
+  const exclude = files.exclude;
   if (!isStringArray(exclude) || exclude.length === 0) return [];
   const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
   if (missing.length === 0) return [];
   return [
-    `${field}.files.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
+    `files.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
       `add them back`,
   ];
 }
 
-const CONFIG_FIELDS = new Set(['$schema', 'extends', 'importExtension', 'bundles']);
+const CONFIG_FIELDS = new Set(['$schema', 'output', 'name', 'tags', 'extends', 'importExtension', 'files', 'classes']);
 
 /**
- * Validates parsed `.bundles.json` content and resolves its paths against `file`'s directory.
+ * Validates parsed `*.bundle.json` content and resolves its paths against `file`'s directory.
  *
  * @throws {TicConfigError} when the content does not match the config shape; the message names the field.
  */
@@ -255,22 +240,36 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   if (!isObject(content)) return fail('config', 'a JSON object');
   const unknown = Object.keys(content).find((key) => !CONFIG_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${unknown}: unknown field`);
-  const { extends: tsconfig, importExtension, bundles } = content;
+  const { output, name, tags, extends: tsconfig, importExtension, files, classes } = content;
+  if (!isNonEmptyString(output)) return fail('output', 'a non-empty string');
+  if (name !== undefined && !isIdentifier(name)) return fail('name', 'a valid identifier');
+  if (tags !== undefined && !isStringArray(tags)) return fail('tags', 'an array of strings');
   if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('extends', 'a non-empty string');
   if (importExtension !== undefined && typeof importExtension !== 'string') return fail('importExtension', 'a string');
-  if (!Array.isArray(bundles) || bundles.length === 0) return fail('bundles', 'a non-empty array');
   return {
     file,
     dir,
+    output: path.resolve(dir, output),
+    name: name ?? DEFAULT_BUNDLE_NAME,
+    tags: tags ?? [],
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
     importExtension,
-    bundles: bundles.map((m, i) => toBundle(m, `bundles[${i}]`, dir)),
-    warnings: bundles.flatMap((m, i) => excludeWarnings(m, `bundles[${i}]`)),
+    files: toFileSelector(files, 'files'),
+    classes: toClassSelector(classes, 'classes'),
+    warnings: excludeWarnings(files),
   };
 }
 
+/** The `*.bundle.json` configs in `dir` (not its sub-folders), sorted by name. */
+export function findConfigFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(CONFIG_FILE_SUFFIX))
+    .map((entry) => path.join(dir, entry.name))
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
 /**
- * Reads and validates a `.bundles.json`.
+ * Reads and validates a `*.bundle.json`.
  *
  * @throws {TicConfigError} when the file is missing, is not valid JSON, or does not match the config shape.
  */
