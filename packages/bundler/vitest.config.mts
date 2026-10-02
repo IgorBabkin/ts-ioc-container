@@ -16,7 +16,7 @@ export default defineConfig({
   resolve: {
     // Mirrors the `@app/*` paths alias of the fixture project, so the e2e spec can
     // import the module `tic build` generated for it exactly as that project would.
-    alias: [{ find: /^@app\/(.*)$/, replacement: path.resolve(__dirname, '__tests__/fixtures/app/src/$1') }],
+    alias: [{ find: /^@app\/(.*)$/, replacement: path.resolve(import.meta.dirname, '__tests__/fixtures/app/src/$1') }],
   },
   test: {
     globals: true,
