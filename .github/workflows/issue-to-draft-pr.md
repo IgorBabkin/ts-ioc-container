@@ -4,8 +4,7 @@ description: Prepare one reviewed-by-maintainers draft pull request for an expli
 on:
   issues:
     types: [opened]
-  schedule:
-    - cron: "17 9 * * 1"
+  schedule: weekly on monday
   workflow_dispatch:
 
 if: github.event_name != 'issues' || contains(github.event.issue.body, '- [x] I authorize GitHub Copilot to implement this issue and open a draft pull request.')
@@ -14,6 +13,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: none
 
 engine: copilot
 max-ai-credits: 250
@@ -28,6 +28,9 @@ tools:
     toolsets: [repos, issues, pull_requests]
 
 safe-outputs:
+  add-comment:
+    max: 1
+    target: "*"
   create-pull-request:
     max: 1
     draft: true
