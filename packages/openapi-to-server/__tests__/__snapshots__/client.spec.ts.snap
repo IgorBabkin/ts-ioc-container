@@ -2,7 +2,7 @@
 
 exports[`renderClient should generate an axios based ApiClient 1`] = `
 "import { AxiosInstance } from 'axios';
-import { createUrl } from '@ts-ioc-container/openapi-to-server';
+import { createUrl } from '@ts-ioc-container/openapi-to-server/runtime';
 
 // Components
   export type Item = {

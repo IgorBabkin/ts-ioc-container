@@ -22,6 +22,10 @@
       "import": "./esm/index.js",
       "types": "./esm/index.d.ts"
     },
+    "./runtime": {
+      "import": "./esm/runtime.js",
+      "types": "./esm/runtime.d.ts"
+    },
     "./AGENTS.md": "./AGENTS.md",
     "./package.json": "./package.json"
   },
@@ -35,7 +39,10 @@
     "lib": "lib",
     "test": "__tests__"
   },
-  "sideEffects": true,
+  "sideEffects": [
+    "./hbs/**",
+    "./esm/render.js"
+  ],
   "files": [
     "bin/**/*",
     "esm/**/*",
