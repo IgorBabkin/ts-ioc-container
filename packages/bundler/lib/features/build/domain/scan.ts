@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import type { ResolvedClassSelector } from './config';
+import type { ResolvedClassSelector } from '../BuildConfig';
 
 /** An exported class the generated bundle registers. */
 export interface DiscoveredClass {

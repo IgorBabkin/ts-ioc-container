@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import Handlebars from 'handlebars';
-import { renderProtocol } from '../lib/render';
+import { renderProtocol } from '../lib/services/HandlebarsRenderService';
 
 const protocolDir = path.resolve(__dirname, '../lib/protocols');
 const basenames = readdirSync(protocolDir).filter((file) => file.endsWith('.hbs'));

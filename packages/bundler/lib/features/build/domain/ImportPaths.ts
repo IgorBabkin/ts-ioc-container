@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import { NamespaceNotFoundError } from './errors';
+import { NamespaceNotFoundError } from '../../../exceptions/DomainException';
 import { toPosix } from './glob';
 
 interface Alias {
