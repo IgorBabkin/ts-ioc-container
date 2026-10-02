@@ -1,0 +1,16 @@
+export const USAGE = [
+  'Usage: ts-ioc-container <command> [options]',
+  '       tic is a shortcut for ts-ioc-container',
+  '',
+  'Commands:',
+  '  ts-ioc-container build [--config <path>]... [--check]   generate one bundle per *.bundle.{json,yaml,yml} config',
+  '                                                          (none: one bundle from tsconfig.json, all defaults)',
+  '  ts-ioc-container help                                   show this help',
+  '  ts-ioc-container version                                show the version',
+  '',
+  'Options:',
+  '  -c, --config <path>   build only this config; repeatable (default: every *.bundle.{json,yaml,yml} of the package, else tsconfig.json)',
+  '  --check               write nothing; exit 1 when a generated bundle is out of date',
+  '  -h, --help            show this help',
+  '  -v, --version         show the version',
+].join('\n');

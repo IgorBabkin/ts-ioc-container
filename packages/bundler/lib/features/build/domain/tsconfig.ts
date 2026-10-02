@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import { TicConfigError } from './errors';
+import { TicConfigError } from '../../../exceptions/DomainException';
 import { ImportPaths } from './ImportPaths';
 import { isSourceFile } from './scan';
 

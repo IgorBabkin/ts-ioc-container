@@ -10,7 +10,9 @@
     "noUnusedLocals": true,
     "isolatedModules": true,
     "esModuleInterop": true,
-    "removeComments": true
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["./lib"]
 }

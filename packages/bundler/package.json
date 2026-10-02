@@ -9,7 +9,6 @@
   "author": "ibabkin <igba14@gmail.com>",
   "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/bundler#readme",
   "license": "ISC",
-  "sideEffects": false,
   "main": "cjm/index.js",
   "types": "typings/index.d.ts",
   "bin": {
@@ -60,11 +59,15 @@
     "lint": "eslint lib/**/*.ts __tests__/**/*.ts",
     "lint:fix": "pnpm run lint --fix",
     "format": "prettier --write \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
-    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\""
+    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
+    "generate:schema": "pnpm run build:cjm && node scripts/generate-schema.cjs"
   },
   "dependencies": {
     "handlebars": "^4.7.9",
-    "yaml": "^2.8.3"
+    "reflect-metadata": "^0.2.2",
+    "ts-ioc-container": "workspace:*",
+    "yaml": "^2.8.3",
+    "zod": "^4.6.5"
   },
   "peerDependencies": {
     "typescript": ">=5"
@@ -72,8 +75,7 @@
   "devDependencies": {
     "@types/node": "^25.5.2",
     "@vitest/coverage-v8": "^4.1.2",
-    "reflect-metadata": "^0.2.2",
-    "ts-ioc-container": "workspace:*",
+    "moq.ts": "^10.0.8",
     "typescript": "5.8.3",
     "unplugin-swc": "^1.6.0",
     "vitest": "^4.1.11"

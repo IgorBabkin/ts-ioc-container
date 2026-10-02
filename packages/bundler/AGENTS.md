@@ -47,5 +47,16 @@ it.
   rerun `tic build`.
 - Unknown config fields are errors, at every level.
 - Programmatic API: `build({ config, cwd, check })` (one config, one output),
-  `findConfigFiles(dir)`, `run(argv, io)`, `loadConfig(file)`; errors are `TicConfigError` / `NamespaceNotFoundError`
-  (both `TicError`).
+  `findConfigFiles(dir)`, `run(argv, io)`, `loadConfig(file)`; every error the
+  bundler raises on purpose is a `TicError` with a stable `code`
+  (`TicConfigError` = `INVALID_CONFIG`, `NamespaceNotFoundError`, `UsageError`,
+  `StaleBundlesError`, …).
+- Internals follow `release-monorepo-semantically` (ADR 0023): `createContainer(io)`
+  in `lib/app.ts` is the composition root; `Application` resolves the controller
+  registered under the command name (`@register('build')`) and runs its
+  `@onDefault(invoke)` action, which parses its own options with
+  `@inject(pipe(commandArgs, parseOptions(spec), validate(SCHEMA)))`. Work lives in
+  services behind tokens (`IBundleBuilderKey`, `ITicConfigServiceKey`, …); pure
+  logic in `lib/features/build/domain/`. A new command is a controller plus a module.
+- The config schema is `BUNDLE_CONFIG_SCHEMA` (zod); `tic.schema.json` is generated
+  from it with `pnpm run generate:schema` — never edit it by hand.
