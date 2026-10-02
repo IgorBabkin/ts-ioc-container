@@ -1,0 +1,97 @@
+name: Build
+description: Installs, builds and checks the workspace (type-check, tests, lint, format, package contents), then uploads the build output
+
+# A composite action rather than a reusable workflow: a job that calls a
+# workflow shows up as `build / build`, while a job running this action is
+# plain `build`. The caller checks the repository out first — the action lives
+# in it.
+inputs:
+  coverage:
+    description: Run tests with coverage and upload the report to Coveralls
+    default: 'false'
+  upload-build-output:
+    description: Upload each package's build output (cjm, esm, typings, tpl, hbs) as the `build-output` artifact
+    default: 'true'
+  github-token:
+    description: Token for the Coveralls upload (composite actions cannot read secrets)
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version-file: '.nvmrc'
+
+    - name: Cache pnpm store
+      uses: ./.github/actions/cache-pnpm-store
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm run ci
+
+    # Every root script below runs recursively across the workspace, so the
+    # build has to come first: @ts-ioc-container/react resolves
+    # ts-ioc-container through the workspace link and reads its build output.
+    - name: Build
+      shell: bash
+      run: pnpm run build
+
+    - name: Type check
+      shell: bash
+      run: pnpm run type-check
+
+    - name: Test
+      if: inputs.coverage != 'true'
+      shell: bash
+      run: pnpm test --maxWorkers=2
+      env:
+        NODE_ENV: test
+
+    - name: Test with coverage
+      if: inputs.coverage == 'true'
+      shell: bash
+      run: pnpm run test:coverage
+      env:
+        NODE_ENV: test
+
+    - name: Upload coverage to Coveralls
+      if: inputs.coverage == 'true'
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ inputs.github-token }}
+        file: ./packages/ts-ioc-container/coverage/lcov.info
+
+    - name: Lint
+      shell: bash
+      run: pnpm run lint
+
+    - name: Format check
+      shell: bash
+      run: pnpm run format:check
+
+    - name: Verify package contents
+      shell: bash
+      run: pnpm run verify:package-contents
+
+    # The last step: `build` ends with each package's build output as the
+    # `build-output` artifact, which the release job in publish.yml downloads
+    # and publishes. pull-request.yml turns it off.
+    - name: Upload build output
+      if: inputs.upload-build-output == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        # Stored relative to `packages/`, so download it back into `packages/`.
+        path: |
+          packages/*/cjm
+          packages/*/esm
+          packages/*/typings
+          packages/*/tpl
+          packages/*/hbs
+        if-no-files-found: error
+        retention-days: 1
