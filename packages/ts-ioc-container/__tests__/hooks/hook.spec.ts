@@ -10,6 +10,8 @@ import {
   HookContext,
   type HookFn,
   inject,
+  invoke,
+  when,
   oncePerInstance,
   parallel,
   HookCollector,
@@ -709,5 +711,34 @@ describe('hooks', () => {
     runOnStart(root.resolve(MyClass), { scope: root });
 
     expect(invoked).toEqual(['started']);
+  });
+});
+
+describe('invoke and when', () => {
+  it('should invoke the member with injected args, gated by when', () => {
+    const runOnStart = perform(runSync(), new HookCollector({ key: 'onStart' }));
+    const calls: unknown[] = [];
+
+    class MyClass {
+      @hook('onStart', invoke)
+      a(@inject(() => 'x') v: string) {
+        calls.push(v);
+      }
+
+      @hook('onStart', when((s) => s.hasTag('never'), invoke))
+      b() {
+        calls.push('b');
+      }
+
+      @hook('onStart', when((s) => s.hasTag('root'), invoke))
+      c() {
+        calls.push('c');
+      }
+    }
+
+    const root = new Container({ tags: ['root'] });
+    runOnStart(root.resolve(MyClass), { scope: root });
+
+    expect(calls).toEqual(['x', 'c']);
   });
 });
