@@ -137,7 +137,7 @@
                 },
                 "description": "The class must carry one of these decorators, recognised by name (e.g. \"register\", or a composed decorator)."
               },
-              "nameGlob": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "description": "Glob the class name must match, e.g. \"*Service\". An anonymous default export is named after its file."
@@ -151,7 +151,7 @@
                 },
                 "description": "Class names to drop after selection, e.g. one test double sitting next to the real registration in the same file."
               },
-              "excludeNameGlob": {
+              "excludeName": {
                 "type": "string",
                 "minLength": 1,
                 "description": "Glob the class name must NOT match, e.g. \"*Mock\". An anonymous default export is named after its file."

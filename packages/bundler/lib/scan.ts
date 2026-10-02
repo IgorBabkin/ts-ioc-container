@@ -149,9 +149,9 @@ export function findClasses(
       if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
       if (selector.export !== 'any' && (exportName === 'default') !== (selector.export === 'default')) return false;
       if (selector.decorators && !selector.decorators.some((name) => decorators.includes(name))) return false;
-      if (selector.nameGlob && !selector.nameGlob.test(className)) return false;
+      if (selector.name && !selector.name.test(className)) return false;
       if (selector.excludeClasses?.includes(className)) return false;
-      if (selector.excludeNameGlob?.test(className)) return false;
+      if (selector.excludeName?.test(className)) return false;
       return true;
     })
     .sort((a, b) => a.node.pos - b.node.pos)

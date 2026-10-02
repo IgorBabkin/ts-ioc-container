@@ -19,10 +19,10 @@ it.
   test files, `__tests__/`, `node_modules/`; a non-empty list replaces it, and
   the build warns if it drops a default). With file naming conventions,
   `include` is the speed lever — nothing else is read.
-- `classes: { export, decorators, nameGlob, excludeClasses, excludeNameGlob }`
+- `classes: { export, decorators, name, excludeClasses, excludeName }`
   then picks classes of the parsed files; default is every exported,
   non-abstract class; positive criteria must all hold and then `excludeClasses` (exact
-  names) and `excludeNameGlob` (glob) drop classes.
+  names) and `excludeName` (glob) drop classes.
   Decorators match by name, so composed ones must be listed. The build warns when
   two selected classes pass the same plain-identifier first decorator argument (a
   same-token heuristic), unless a decorator they share has differing arguments

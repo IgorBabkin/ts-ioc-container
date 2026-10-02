@@ -41,23 +41,23 @@ export interface ClassSelector {
   /** The class must carry one of these decorators, recognised by name (`register`, or a composed one). */
   decorators?: string[];
   /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
-  nameGlob?: string;
+  name?: string;
   /**
    * Class names to drop after selection, e.g. one test double sitting next to the
    * real registration in the same file.
    */
   excludeClasses?: string[];
   /** A glob the class name must NOT match, e.g. `*Mock`. An anonymous default export is named after its file. */
-  excludeNameGlob?: string;
+  excludeName?: string;
 }
 
 /** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedClassSelector {
   export: ExportKind;
   decorators?: string[];
-  nameGlob?: RegExp;
+  name?: RegExp;
   excludeClasses?: string[];
-  excludeNameGlob?: RegExp;
+  excludeName?: RegExp;
 }
 
 export interface PathConfig {
@@ -166,7 +166,7 @@ function toFileSelector(value: unknown, field: string): ResolvedFileSelector {
   };
 }
 
-const CLASS_SELECTOR_FIELDS = new Set(['export', 'decorators', 'nameGlob', 'excludeClasses', 'excludeNameGlob']);
+const CLASS_SELECTOR_FIELDS = new Set(['export', 'decorators', 'name', 'excludeClasses', 'excludeName']);
 
 /**
  * @throws {TicConfigError} when the rule is not an object, has an unknown field, or a field has the wrong type.
@@ -176,26 +176,26 @@ function toClassSelector(value: unknown, field: string): ResolvedClassSelector {
   if (!isObject(value)) return fail(field, 'an object');
   const unknown = Object.keys(value).find((key) => !CLASS_SELECTOR_FIELDS.has(key));
   if (unknown) throw new TicConfigError(`${field}.${unknown}: unknown field`);
-  const { export: kind, decorators, nameGlob, excludeClasses, excludeNameGlob } = value;
+  const { export: kind, decorators, name, excludeClasses, excludeName } = value;
   if (kind !== undefined && kind !== 'any' && kind !== 'named' && kind !== 'default') {
     return fail(`${field}.export`, '"any", "named" or "default"');
   }
   if (decorators !== undefined && !(isStringArray(decorators) && decorators.length > 0)) {
     return fail(`${field}.decorators`, 'a non-empty array of strings');
   }
-  if (nameGlob !== undefined && !isNonEmptyString(nameGlob)) return fail(`${field}.nameGlob`, 'a non-empty string');
+  if (name !== undefined && !isNonEmptyString(name)) return fail(`${field}.name`, 'a non-empty string');
   if (excludeClasses !== undefined && !(isStringArray(excludeClasses) && excludeClasses.length > 0)) {
     return fail(`${field}.excludeClasses`, 'a non-empty array of strings');
   }
-  if (excludeNameGlob !== undefined && !isNonEmptyString(excludeNameGlob)) {
-    return fail(`${field}.excludeNameGlob`, 'a non-empty string');
+  if (excludeName !== undefined && !isNonEmptyString(excludeName)) {
+    return fail(`${field}.excludeName`, 'a non-empty string');
   }
   return {
     export: kind ?? 'any',
     decorators,
-    nameGlob: nameGlob === undefined ? undefined : globToRegExp(nameGlob),
+    name: name === undefined ? undefined : globToRegExp(name),
     excludeClasses,
-    excludeNameGlob: excludeNameGlob === undefined ? undefined : globToRegExp(excludeNameGlob),
+    excludeName: excludeName === undefined ? undefined : globToRegExp(excludeName),
   };
 }
 
