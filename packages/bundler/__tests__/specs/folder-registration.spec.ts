@@ -75,6 +75,8 @@ describe('Folder registration', () => {
       [{ bundles: [{ ...module(['./src']).bundles[0], include: './x.cjs' }] }, 'bundles[0].include: unknown field'],
       [{ bundles: [{ ...module(['./src']).bundles[0], select: {} }] }, 'bundles[0].select: unknown field'],
       [{ bundles: [{ ...module(['./src']).bundles[0], exclude: [] }] }, 'bundles[0].exclude: unknown field'],
+      [{ ...module(['./src']), extends: '' }, 'extends: expected a non-empty string'],
+      [{ ...module(['./src']), tsconfig: './tsconfig.json' }, 'tsconfig: unknown field'],
     ])('rejects an invalid config %j naming the field', (config, message) => {
       project = TempProject.create({ '.bundles.json': config });
 
@@ -483,9 +485,9 @@ describe('Folder registration', () => {
       expect(generated()).toContain("import { External } from '../../lib/External';");
     });
 
-    it('reads the tsconfig named in the config', () => {
+    it('extends the tsconfig named in the config', () => {
       project = TempProject.create({
-        '.bundles.json': { tsconfig: './tsconfig.app.json', ...module(['@app/services']) },
+        '.bundles.json': { extends: './tsconfig.app.json', ...module(['@app/services']) },
         'tsconfig.app.json': tsconfig({ baseUrl: '.', paths: { '@app/*': ['src/*'] } }),
         'src/services/Logger.ts': decorated('Logger'),
       });
@@ -493,6 +495,24 @@ describe('Folder registration', () => {
       buildProject();
 
       expect(generated()).toContain("import { Logger } from '@app/services/Logger';");
+    });
+
+    it('fails when the tsconfig it explicitly extends does not exist', () => {
+      project = TempProject.create({
+        '.bundles.json': { extends: './tsconfig.app.json', ...module(['./src']) },
+        'src/Logger.ts': decorated('Logger'),
+      });
+
+      expect(() => buildProject()).toThrow(TicConfigError);
+      expect(() => buildProject()).toThrow(/tsconfig not found: .*tsconfig\.app\.json/);
+    });
+
+    it('builds without a tsconfig when it extends the default one and there is none', () => {
+      project = TempProject.create({ '.bundles.json': module(['./src']), 'src/Logger.ts': decorated('Logger') });
+
+      buildProject();
+
+      expect(generated()).toContain("import { Logger } from '../Logger';");
     });
 
     it('fails naming a namespace that is neither a folder nor an alias', () => {

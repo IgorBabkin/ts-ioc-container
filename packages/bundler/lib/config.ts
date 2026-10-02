@@ -83,14 +83,19 @@ export interface BundleConfig {
 /** The shape of `.bundles.json`. */
 export interface TicConfig {
   $schema?: string;
-  /** Relative to the config file. Default `tsconfig.json`, which may be absent. */
-  tsconfig?: string;
+  /**
+   * The tsconfig the bundles build on — the source of `paths` aliases and of the
+   * import extension. Relative to the config file. Default `./tsconfig.json`,
+   * which may be absent; a tsconfig named here must exist.
+   */
+  extends?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
   bundles: BundleConfig[];
 }
 
 export const DEFAULT_CONFIG_FILE = '.bundles.json';
+export const DEFAULT_EXTENDS = './tsconfig.json';
 export const DEFAULT_BUNDLE_NAME = 'Bundle';
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
@@ -238,6 +243,8 @@ function excludeWarnings(value: unknown, field: string): string[] {
   ];
 }
 
+const CONFIG_FIELDS = new Set(['$schema', 'extends', 'importExtension', 'bundles']);
+
 /**
  * Validates parsed `.bundles.json` content and resolves its paths against `file`'s directory.
  *
@@ -246,14 +253,16 @@ function excludeWarnings(value: unknown, field: string): string[] {
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const dir = path.dirname(file);
   if (!isObject(content)) return fail('config', 'a JSON object');
-  const { tsconfig, importExtension, bundles } = content;
-  if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('tsconfig', 'a non-empty string');
+  const unknown = Object.keys(content).find((key) => !CONFIG_FIELDS.has(key));
+  if (unknown) throw new TicConfigError(`${unknown}: unknown field`);
+  const { extends: tsconfig, importExtension, bundles } = content;
+  if (tsconfig !== undefined && !isNonEmptyString(tsconfig)) return fail('extends', 'a non-empty string');
   if (importExtension !== undefined && typeof importExtension !== 'string') return fail('importExtension', 'a string');
   if (!Array.isArray(bundles) || bundles.length === 0) return fail('bundles', 'a non-empty array');
   return {
     file,
     dir,
-    tsconfig: { file: path.resolve(dir, tsconfig ?? 'tsconfig.json'), required: tsconfig !== undefined },
+    tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
     importExtension,
     bundles: bundles.map((m, i) => toBundle(m, `bundles[${i}]`, dir)),
     warnings: bundles.flatMap((m, i) => excludeWarnings(m, `bundles[${i}]`)),

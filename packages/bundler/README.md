@@ -50,7 +50,7 @@ below use the shortcut.
 
 | Field                        | Default                                   | Meaning                                                                                      |
 | ---------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `tsconfig`                   | `tsconfig.json` (may be absent)           | Source of `paths` aliases and of the import extension                                        |
+| `extends`                    | `./tsconfig.json` (may be absent)         | The tsconfig to build on: source of `paths` aliases and of the import extension; one named here must exist |
 | `importExtension`            | `.js` under node16/nodenext, else none    | Extension of generated imports                                                               |
 | `bundles[].output`           | —                                         | The bundle file (convention: `*.bundle.ts`)                                                  |
 | `bundles[].name`             | `Bundle`                                  | Name of the generated class, an `IContainerModule`                                           |

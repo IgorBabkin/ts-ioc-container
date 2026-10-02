@@ -29,7 +29,9 @@ it.
   (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
 - Never edit a `*.bundle.ts` by hand — change the classes or the config and
   rerun `tic build`.
-- Unknown config fields are errors.
+- `extends` names the tsconfig the bundles build on (default
+  `./tsconfig.json`, may be absent): its `paths` aliases and module resolution.
+- Unknown config fields are errors, at every level.
 - Programmatic API: `build({ config, cwd, check })`, `run(argv, io)`,
   `loadConfig(file)`; errors are `TicConfigError` / `NamespaceNotFoundError`
   (both `TicError`).

@@ -12,9 +12,11 @@
     "$schema": {
       "type": "string"
     },
-    "tsconfig": {
+    "extends": {
       "type": "string",
-      "description": "tsconfig whose `paths` aliases bundle paths and imports may use. Default `tsconfig.json`, which may be absent."
+      "minLength": 1,
+      "default": "./tsconfig.json",
+      "description": "The tsconfig the bundles build on: the source of `paths` aliases (for `files.paths` and generated imports) and of the import extension. Relative to this file. The default may be absent; a tsconfig named here must exist."
     },
     "importExtension": {
       "type": "string",

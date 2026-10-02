@@ -4,6 +4,7 @@ export {
   loadConfig,
   resolveConfig,
   DEFAULT_CONFIG_FILE,
+  DEFAULT_EXTENDS,
   DEFAULT_EXCLUDE,
   DEFAULT_BUNDLE_NAME,
   type TicConfig,

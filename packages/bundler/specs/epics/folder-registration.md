@@ -116,8 +116,9 @@ code.
 Acceptance criteria:
 
 - A path such as `@app/services` resolves through the `paths` of the
-  config's `tsconfig` (default `tsconfig.json` next to the config file),
-  including `paths` inherited through `extends`.
+  tsconfig the config `extends` (default `./tsconfig.json` next to the config
+  file, which may be absent; one named explicitly must exist),
+  including `paths` that tsconfig inherits through its own `extends`.
 - A path that is neither an existing folder nor a resolvable alias fails
   the build with a message naming it.
 - Generated imports use the most specific matching alias; a file no alias
