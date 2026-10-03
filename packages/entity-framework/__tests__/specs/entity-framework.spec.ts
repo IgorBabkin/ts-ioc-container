@@ -2,20 +2,21 @@ import 'reflect-metadata';
 import { Container, decorate, register, Registration as R, scope, singleton, SingleToken } from 'ts-ioc-container';
 
 import {
+  type Change,
   Entity,
   EntityIdentityError,
   EntityManager,
-  entityManagerToken,
   EntityNotFoundError,
   EntityReferenceError,
-  flushEntityManagers,
-  type IEntity,
   type IIdGenerator,
   type IRepository,
+  IUnitOfWorkToken,
+  managerOf,
   preparing,
-  repositoryToken,
+  UnitOfWork,
   withId,
 } from '../../lib';
+import { by, inject } from 'ts-ioc-container';
 
 type OrderDto = {
   id: string;
@@ -44,7 +45,7 @@ const order = (id: string, overrides: Partial<OrderDto> = {}): OrderDto => ({
   ...overrides,
 });
 
-const IOrderRepositoryToken = repositoryToken<OrderRepository>('IOrderRepository');
+const IOrderRepositoryToken = new SingleToken<OrderRepository>('IOrderRepository');
 
 // An in-memory store that writes down every call it gets, so a spec reads what a flush sent.
 @register(IOrderRepositoryToken, scope((s) => s.hasTag('application')), singleton())
@@ -354,9 +355,10 @@ describe('Spec: entity framework', () => {
 
   describe('Story: records keyed by more than their id', () => {
     type TariffDto = { id: string; tenant: string; price: number };
+    type TariffKey = { id: string; tenant: string };
 
     // A store keyed by (id, tenant), as a multi-tenant table is.
-    class TariffRepository implements IRepository<TariffDto> {
+    class TariffRepository implements IRepository<TariffDto, Entity<TariffDto>, TariffKey> {
       readonly entityName = 'Tariff';
       readonly calls: string[] = [];
       readonly rows = new Map<string, TariffDto>([
@@ -364,11 +366,11 @@ describe('Spec: entity framework', () => {
         ['t-1@globex', { id: 't-1', tenant: 'globex', price: 20 }],
       ]);
 
-      keyOf(tariff: TariffDto): [string, string] {
-        return [tariff.id, tariff.tenant];
+      keyOf({ id, tenant }: TariffDto): TariffKey {
+        return { id, tenant };
       }
 
-      async findById(id: string, tenant: string): Promise<TariffDto | undefined> {
+      async findById({ id, tenant }: TariffKey): Promise<TariffDto | undefined> {
         this.calls.push(`findById:${id}@${tenant}`);
         const row = this.rows.get(`${id}@${tenant}`);
         return row && { ...row };
@@ -397,19 +399,19 @@ describe('Spec: entity framework', () => {
     it('answers one entity per key, reaching the repository once for each', async () => {
       const { manager, repository } = tariffsOver();
 
-      const acme = await manager.findByIdOrFail('t-1', 'acme');
-      const globex = await manager.findByIdOrFail('t-1', 'globex');
+      const acme = await manager.findByIdOrFail({ id: 't-1', tenant: 'acme' });
+      const globex = await manager.findByIdOrFail({ id: 't-1', tenant: 'globex' });
 
       expect([acme.state.tenant, globex.state.tenant]).toEqual(['acme', 'globex']);
-      expect(await manager.findById('t-1', 'acme')).toBe(acme);
-      expect(await manager.findById('t-1', 'globex')).toBe(globex);
+      expect(await manager.findById({ id: 't-1', tenant: 'acme' })).toBe(acme);
+      expect(await manager.findById({ tenant: 'globex', id: 't-1' })).toBe(globex);
       expect(repository.calls).toEqual(['findById:t-1@acme', 'findById:t-1@globex']);
     });
 
     it('writes each record under its own key', async () => {
       const { manager, repository } = tariffsOver();
-      (await manager.findByIdOrFail('t-1', 'acme')).state.price = 11;
-      await manager.findByIdOrFail('t-1', 'globex');
+      (await manager.findByIdOrFail({ id: 't-1', tenant: 'acme' })).state.price = 11;
+      await manager.findByIdOrFail({ id: 't-1', tenant: 'globex' });
 
       await manager.flush();
 
@@ -425,58 +427,47 @@ describe('Spec: entity framework', () => {
       manager.remove(acme);
 
       expect(globex).not.toBe(acme);
-      expect(await manager.findById('t-1', 'acme')).toBeUndefined();
-      expect(await manager.findById('t-1', 'globex')).toBe(globex);
-      expect(await manager.findById('t-1', 'initech')).toBe(initech);
+      expect(await manager.findById({ id: 't-1', tenant: 'acme' })).toBeUndefined();
+      expect(await manager.findById({ id: 't-1', tenant: 'globex' })).toBe(globex);
+      expect(await manager.findById({ id: 't-1', tenant: 'initech' })).toBe(initech);
       expect(() => manager.create({ id: 't-1', tenant: 'globex', price: 1 })).toThrow(EntityIdentityError);
     });
 
-    it('refuses a read by more than the id when the repository does not say what its key is', async () => {
-      const repository = new TariffRepository();
-      const manager = new EntityManager<IRepository<TariffDto>>({
-        entityName: 'Tariff',
-        findById: repository.findById.bind(repository),
-        create: repository.create.bind(repository),
-        update: repository.update.bind(repository),
-        delete: repository.delete.bind(repository),
-      });
-
-      await expect(manager.findById('t-1', ...(['acme'] as never[]))).rejects.toThrow(/keyOf/);
-      expect(repository.calls).toEqual([]);
-    });
-
-    it('refuses to flush an entity whose key was changed', async () => {
-      const { manager } = tariffsOver();
-      (await manager.findByIdOrFail('t-1', 'acme')).state.tenant = 'globex';
-
-      await expect(manager.flush()).rejects.toThrow(/key of Tariff t-1 was changed/);
-    });
-
-    it('reloads a record by its whole key', async () => {
+    it('reads many keys at once', async () => {
       const { manager, repository } = tariffsOver();
-      const globex = await manager.findByIdOrFail('t-1', 'globex');
+
+      const found = await manager.findByIds([
+        { id: 't-1', tenant: 'globex' },
+        { id: 't-2', tenant: 'globex' },
+      ]);
+
+      expect(found.map((t) => t.state.price)).toEqual([20]);
+      expect(repository.calls).toEqual(['findById:t-1@globex', 'findById:t-2@globex']);
+    });
+
+    it('reloads a record by its key', async () => {
+      const { manager, repository } = tariffsOver();
+      const globex = await manager.findByIdOrFail({ id: 't-1', tenant: 'globex' });
 
       await manager.reload(globex);
 
       expect(repository.calls).toEqual(['findById:t-1@globex', 'findById:t-1@globex']);
     });
 
-    it('reads many ids under the same rest of the key', async () => {
-      const { manager, repository } = tariffsOver();
+    it('refuses to flush an entity whose key was changed', async () => {
+      const { manager } = tariffsOver();
+      (await manager.findByIdOrFail({ id: 't-1', tenant: 'acme' })).state.tenant = 'globex';
 
-      const found = await manager.findByIds(['t-1', 't-2'], 'globex');
-
-      expect(found.map((t) => t.state.price)).toEqual([20]);
-      expect(repository.calls).toEqual(['findById:t-1@globex', 'findById:t-2@globex']);
+      await expect(manager.flush()).rejects.toThrow(/key of Tariff t-1 was changed/);
     });
 
-    it('names the whole key of a record that was not found', async () => {
+    it('names the key of a record that was not found', async () => {
       const { manager } = tariffsOver();
 
-      await expect(manager.findByIdOrFail('t-9', 'acme')).rejects.toMatchObject({
+      await expect(manager.findByIdOrFail({ id: 't-9', tenant: 'acme' })).rejects.toMatchObject({
         id: 't-9',
-        key: ['t-9', 'acme'],
-        message: expect.stringMatching(/^Tariff t-9 \(acme\) was not found/),
+        key: { id: 't-9', tenant: 'acme' },
+        message: expect.stringMatching(/^Tariff id=t-9, tenant=acme was not found/),
       });
     });
   });
@@ -485,30 +476,86 @@ describe('Spec: entity framework', () => {
     const app = () =>
       new Container({ tags: ['application'] })
         .addRegistration(R.fromClass(OrderRepository))
-        .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+        .addRegistration(R.fromClass(UnitOfWork).when((s) => s.hasTag('request')));
 
-    it('resolves one entity manager per repository token in a scope, and a new one in another scope', () => {
+    it('answers one entity manager per repository in a unit of work, and another in another scope', () => {
       const container = app();
       const request = container.createScope({ tags: ['request'] });
       const other = container.createScope({ tags: ['request'] });
+      const uow = IUnitOfWorkToken.resolve(request);
 
-      const manager = entityManagerToken(IOrderRepositoryToken).resolve(request);
+      const orders = uow.of(IOrderRepositoryToken);
 
-      expect(entityManagerToken(IOrderRepositoryToken).resolve(request)).toBe(manager);
-      expect(entityManagerToken(IOrderRepositoryToken).resolve(other)).not.toBe(manager);
-      expect(manager.repository).toBe(IOrderRepositoryToken.resolve(request));
+      expect(IUnitOfWorkToken.resolve(request)).toBe(uow);
+      expect(uow.of(IOrderRepositoryToken)).toBe(orders);
+      expect(IUnitOfWorkToken.resolve(other).of(IOrderRepositoryToken)).not.toBe(orders);
+      expect(orders.repository).toBe(IOrderRepositoryToken.resolve(request));
     });
 
-    it('flushes every entity manager the scope built with flushEntityManagers', async () => {
+    it('injects an entity manager with managerOf', () => {
+      class OrderService {
+        constructor(
+          @inject(managerOf(IOrderRepositoryToken)) readonly orders: EntityManager<OrderRepository>,
+          @inject(by(IUnitOfWorkToken)) readonly uow: UnitOfWork,
+        ) {}
+      }
+      const request = app().createScope({ tags: ['request'] });
+
+      const service = request.resolve(OrderService);
+
+      expect(service.orders).toBe(service.uow.of(IOrderRepositoryToken));
+    });
+
+    it('commits every manager of the unit of work, answering what it wrote', async () => {
       const container = app();
       const repository = IOrderRepositoryToken.resolve(container);
       repository.rows.set('o-1', order('o-1'));
-      const request = container.createScope({ tags: ['request'] });
-      (await entityManagerToken(IOrderRepositoryToken).resolve(request).findByIdOrFail('o-1')).cancel();
+      const uow = IUnitOfWorkToken.resolve(container.createScope({ tags: ['request'] }));
+      (await uow.of(IOrderRepositoryToken).findByIdOrFail('o-1')).cancel();
 
-      await flushEntityManagers(request);
+      const written = await uow.commit();
 
+      expect(written.map((c) => [c.type, c.entity.id])).toEqual([['update', 'o-1']]);
       expect(repository.rows.get('o-1')?.status).toBe('cancelled');
+      expect(uow.hasChanges()).toBe(false);
+    });
+
+    it('tells what a commit would write, in order, without writing', async () => {
+      const { manager, repository } = managerOver(order('o-1'), order('o-2'));
+      (await manager.findByIdOrFail('o-1')).cancel();
+      const removed = await manager.findByIdOrFail('o-2');
+      manager.remove(removed);
+      const created = manager.create(order('o-3'));
+
+      const changes = manager.getChanges();
+
+      expect(changes.map((c) => c.type)).toEqual(['update', 'delete', 'create']);
+      expect(changes[0]).toMatchObject({ type: 'update', diff: { status: 'cancelled' }, stored: order('o-1') });
+      expect(changes[2]).toMatchObject({ type: 'create', entity: created, record: order('o-3') });
+      expect(manager.getTracked()).toEqual([await manager.findById('o-1'), removed, created]);
+      expect(repository.calls).toEqual(['findById:o-1', 'findById:o-2']);
+    });
+
+    it('emits what it wrote on committed, after the commit, and nothing for a failed one', async () => {
+      const container = app();
+      const repository = IOrderRepositoryToken.resolve(container);
+      repository.rows.set('o-1', order('o-1'));
+      const uow = IUnitOfWorkToken.resolve(container.createScope({ tags: ['request'] }));
+      const seen: string[][] = [];
+      uow.committed.subscribe((changes: readonly Change[]) =>
+        seen.push(changes.map((c) => `${c.type} ${String(c.entity.id)} ${String(c.entity.hasChanges())}`)),
+      );
+      (await uow.of(IOrderRepositoryToken).findByIdOrFail('o-1')).cancel();
+      const update = repository.update.bind(repository);
+      repository.update = async () => {
+        throw new Error('aborted');
+      };
+
+      await expect(uow.commit()).rejects.toThrow('aborted');
+      repository.update = update;
+      await uow.commit();
+
+      expect(seen).toEqual([['update o-1 false']]);
     });
   });
 
@@ -517,7 +564,7 @@ describe('Spec: entity framework', () => {
 
     const INoteIdsToken = new SingleToken<IIdGenerator<string>>('INoteIds');
     const IAuthorToken = new SingleToken<string>('IAuthor');
-    const INoteRepositoryToken = repositoryToken<NoteRepository>('INoteRepository');
+    const INoteRepositoryToken = new SingleToken<NoteRepository>('INoteRepository');
 
     // An id generator the way a sequence is one: each call reserves the next id.
     class NoteIds implements IIdGenerator<string> {
@@ -566,11 +613,12 @@ describe('Spec: entity framework', () => {
         .addRegistration(R.fromClass(NoteIds).bindTo(INoteIdsToken).pipe(singleton()))
         .addRegistration(R.fromValue('ada').bindTo(IAuthorToken))
         .addRegistration(R.fromClass(NoteRepository))
-        .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+        .addRegistration(R.fromClass(UnitOfWork).when((s) => s.hasTag('request')));
 
     it('adds a new record with the id its repository reserved, tracked at once and written at the flush', async () => {
       const request = app().createScope({ tags: ['request'] });
-      const notes = entityManagerToken(INoteRepositoryToken).resolve(request);
+      const uow = IUnitOfWorkToken.resolve(request);
+      const notes = uow.of(INoteRepositoryToken);
 
       const note = await notes.add({ text: 'Hi' });
 
@@ -578,14 +626,14 @@ describe('Spec: entity framework', () => {
       expect(await notes.findById('n-1')).toBe(note);
       expect(notes.repository.calls).toEqual([]);
 
-      await flushEntityManagers(request);
+      await uow.commit();
 
       expect(notes.repository.calls).toEqual(['create:n-1:ada']);
     });
 
     it('lets a record added this way be referenced by its id before the commit', async () => {
       const request = app().createScope({ tags: ['request'] });
-      const notes = entityManagerToken(INoteRepositoryToken).resolve(request);
+      const notes = IUnitOfWorkToken.resolve(request).of(INoteRepositoryToken);
 
       const first = await notes.add({ text: 'First' });
       const reply = await notes.add({ text: `Re: ${first.id}` });
@@ -602,7 +650,7 @@ describe('Spec: entity framework', () => {
 
       expect(repository).toBeInstanceOf(NoteRepository);
       expect(repository).toBe(INoteRepositoryToken.resolve(container));
-      expect(entityManagerToken(INoteRepositoryToken).resolve(request).repository).toBe(repository);
+      expect(IUnitOfWorkToken.resolve(request).of(INoteRepositoryToken).repository).toBe(repository);
       expect(repository.calls).toEqual([]);
     });
 
@@ -643,27 +691,16 @@ describe('Spec: entity framework', () => {
       expect(repository.calls).toEqual(['findById:o-1']);
     });
 
-    it('reverts the links of a new entity and keeps its state', async () => {
+    it('reverts a removal of a new entity, and keeps its state', async () => {
       const { manager, repository } = managerOver();
       const created = manager.create(order('o-3'));
-      const lazyLog: string[] = [];
-      const lazy = new EntityManager<IRepository<OrderDto>>({
-        entityName: 'Order',
-        findById: async () => undefined,
-        create: async (value) => {
-          lazyLog.push(value.id);
-          return value;
-        },
-        update: async (stored) => stored,
-        delete: async () => undefined,
-      }).lazy(order('o-4'));
-      created.link('customer', lazy);
+      created.cancel();
+      manager.remove(created);
 
       created.revert();
       await manager.flush();
 
-      expect(created.state).toEqual(order('o-3'));
-      expect(lazyLog).toEqual([]);
+      expect(created.state.status).toBe('cancelled');
       expect(repository.calls).toEqual(['create:o-3']);
     });
 
@@ -778,74 +815,71 @@ describe('Spec: entity framework', () => {
       repository.calls.length = 0;
       await manager.flush();
 
-      expect(repository.calls).toEqual(['delete:o-1', 'update:o-2:status']);
+      expect(repository.calls).toEqual(['update:o-2:status', 'delete:o-1']);
     });
 
-    it('is all or nothing across the managers flushEntityManagers flushes', async () => {
-      const IOtherRepositoryToken = repositoryToken<FlakyOrderRepository>('IOtherRepository');
+    it('is all or nothing across the repositories of a unit of work', async () => {
+      const IOtherRepositoryToken = new SingleToken<FlakyOrderRepository>('IOtherRepository');
       const repository = new FlakyOrderRepository(order('o-1'));
       const other = new FlakyOrderRepository(order('x-1'));
       const container = new Container({ tags: ['application'] })
         .addRegistration(R.fromValue(repository).bindTo(IOrderRepositoryToken))
         .addRegistration(R.fromValue(other).bindTo(IOtherRepositoryToken))
-        .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
-      const request = container.createScope({ tags: ['request'] });
-      const orders = entityManagerToken(IOrderRepositoryToken).resolve(request);
-      const others = entityManagerToken(IOtherRepositoryToken).resolve(request);
+        .addRegistration(R.fromClass(UnitOfWork).when((s) => s.hasTag('request')));
+      const uow = IUnitOfWorkToken.resolve(container.createScope({ tags: ['request'] }));
+      const orders = uow.of(IOrderRepositoryToken);
+      const others = uow.of(IOtherRepositoryToken);
       (await orders.findByIdOrFail('o-1')).cancel();
       (await others.findByIdOrFail('x-1')).cancel();
       other.failing.add('x-1');
 
-      await expect(flushEntityManagers(request)).rejects.toThrow('cannot update x-1');
+      await expect(uow.commit()).rejects.toThrow('cannot update x-1');
       expect(orders.hasChanges()).toBe(true);
 
       other.failing.clear();
-      await flushEntityManagers(request);
+      await uow.commit();
 
       expect(repository.calls.filter((c) => c.startsWith('update'))).toEqual([
         'update:o-1:status',
         'update:o-1:status',
       ]);
-      expect([orders.hasChanges(), others.hasChanges()]).toEqual([false, false]);
+      expect(uow.hasChanges()).toBe(false);
     });
   });
 
-  describe('Story: link a record that does not exist yet, created when its holder is flushed', () => {
-    type AuthorDto = { id: string; name: string; pinnedCommentId: string | null };
-    type CommentDto = { id: string; text: string; authorId: string | null };
+  describe('Story: write in reference order', () => {
+    type AuthorDto = { id: string; name: string; pinnedPostId: string | null };
+    type PostDto = { id: string; authorId: string | null; tagIds: string[] };
     type TagDto = { id: string; label: string };
-    type PostDto = { id: string; title: string; commentId: string | null; tagIds: string[] };
+    type CommentDto = { id: string; parentId: string | null };
 
-    // A store that mints ids the way a serial column does, writing every write into one log shared by all stores.
-    class SerialRepository<S extends IEntity & { id: string }> implements IRepository<S, Entity<S>, Omit<S, 'id'>> {
+    // A store that writes every write into one log shared by all stores, and declares its foreign keys.
+    class LogRepository<S extends { id: string }> implements IRepository<S> {
       readonly rows = new Map<string, S>();
-      private next = 0;
 
       constructor(
         readonly entityName: string,
-        private readonly prefix: string,
         private readonly log: string[],
+        readonly references: IRepository<S>['references'] = {},
         ...rows: S[]
       ) {
         for (const row of rows) this.rows.set(row.id, row);
       }
 
       async findById(id: string): Promise<S | undefined> {
-        return this.rows.get(id);
+        const row = this.rows.get(id);
+        return row && { ...row };
       }
 
-      async create(value: Omit<S, 'id'>): Promise<S> {
-        const row = { ...value, id: `${this.prefix}-${++this.next}` } as S;
-        this.log.push(`create ${row.id} ${JSON.stringify(value)}`);
-        this.rows.set(row.id, row);
-        return row;
+      async create(record: S): Promise<S> {
+        this.log.push(`create ${record.id}`);
+        this.rows.set(record.id, record);
+        return { ...record };
       }
 
       async update(stored: S, diff: Partial<S>): Promise<S> {
-        this.log.push(`update ${stored.id} ${JSON.stringify(diff)}`);
-        const row = { ...stored, ...diff };
-        this.rows.set(stored.id, row);
-        return row;
+        this.log.push(`update ${stored.id} ${Object.keys(diff).join(',')}`);
+        return { ...stored, ...diff };
       }
 
       async delete(stored: S): Promise<void> {
@@ -854,150 +888,137 @@ describe('Spec: entity framework', () => {
       }
     }
 
+    const IAuthorsToken = new SingleToken<LogRepository<AuthorDto>>('IAuthors');
+    const IPostsToken = new SingleToken<LogRepository<PostDto>>('IPosts');
+    const ITagsToken = new SingleToken<LogRepository<TagDto>>('ITags');
+    const ICommentsToken = new SingleToken<LogRepository<CommentDto>>('IComments');
+
     const blog = () => {
       const log: string[] = [];
+      const container = new Container({ tags: ['request'] })
+        .addRegistration(
+          R.fromValue(
+            new LogRepository<AuthorDto>(
+              'Author',
+              log,
+              { pinnedPostId: IPostsToken },
+              {
+                id: 'a-0',
+                name: 'Ada',
+                pinnedPostId: null,
+              },
+            ),
+          ).bindTo(IAuthorsToken),
+        )
+        .addRegistration(
+          R.fromValue(
+            new LogRepository<PostDto>(
+              'Post',
+              log,
+              { authorId: IAuthorsToken, tagIds: ITagsToken },
+              {
+                id: 'p-0',
+                authorId: 'a-0',
+                tagIds: [],
+              },
+            ),
+          ).bindTo(IPostsToken),
+        )
+        .addRegistration(R.fromValue(new LogRepository<TagDto>('Tag', log)).bindTo(ITagsToken))
+        .addRegistration(
+          R.fromValue(new LogRepository<CommentDto>('Comment', log, { parentId: ICommentsToken })).bindTo(
+            ICommentsToken,
+          ),
+        )
+        .addRegistration(R.fromClass(UnitOfWork));
+      const uow = IUnitOfWorkToken.resolve(container);
       return {
         log,
-        authors: new EntityManager(new SerialRepository<AuthorDto>('Author', 'a', log)),
-        comments: new EntityManager(new SerialRepository<CommentDto>('Comment', 'c', log)),
-        tags: new EntityManager(new SerialRepository<TagDto>('Tag', 't', log)),
-        posts: new EntityManager(
-          new SerialRepository<PostDto>('Post', 'p', log, { id: 'p-0', title: 'Hello', commentId: null, tagIds: [] }),
-        ),
+        uow,
+        authors: uow.of(IAuthorsToken),
+        posts: uow.of(IPostsToken),
+        tags: uow.of(ITagsToken),
+        comments: uow.of(ICommentsToken),
       };
     };
 
-    it("creates the linked record when its holder is flushed, and sets its id on the holder's field", async () => {
-      const { log, comments, posts } = blog();
-      const comment = comments.lazy({ text: 'First!', authorId: null });
-      const post = await posts.findByIdOrFail('p-0');
+    it('writes a new record after the new records it references, across repositories', async () => {
+      const { log, uow, authors, posts } = blog();
+      posts.create({ id: 'p-1', authorId: 'a-1', tagIds: [] });
+      authors.create({ id: 'a-1', name: 'Grace', pinnedPostId: null });
 
-      post.link('commentId', comment);
-      expect(log).toEqual([]);
-      expect(post.state.commentId).toBeNull();
-      expect(posts.hasChanges()).toBe(true);
-      await posts.flush();
+      await uow.commit();
 
-      expect(log).toEqual(['create c-1 {"text":"First!","authorId":null}', 'update p-0 {"commentId":"c-1"}']);
-      expect(post.state.commentId).toBe('c-1');
-      expect(await comments.findByIdOrFail('c-1')).toBe(await comment.resolve());
+      expect(log).toEqual(['create a-1', 'create p-1']);
     });
 
-    it('never creates a record nothing flushed links', async () => {
-      const { log, comments, posts } = blog();
-      comments.lazy({ text: 'Draft', authorId: null });
-      await posts.findByIdOrFail('p-0');
+    it('writes a reply after its parent within one repository', async () => {
+      const { log, uow, comments } = blog();
+      comments.create({ id: 'c-2', parentId: 'c-1' });
+      comments.create({ id: 'c-1', parentId: null });
 
-      await posts.flush();
+      await uow.commit();
+
+      expect(log).toEqual(['create c-1', 'create c-2']);
+    });
+
+    it('writes an update after the new records it now references, ids in an array field included', async () => {
+      const { log, uow, posts, tags } = blog();
+      const post = await posts.findByIdOrFail('p-0');
+      post.state.tagIds.push('t-1', 't-2');
+      tags.create({ id: 't-2', label: 'news' });
+      tags.create({ id: 't-1', label: 'sport' });
+
+      await uow.commit();
+
+      expect(log).toEqual(['create t-2', 'create t-1', 'update p-0 tagIds']);
+    });
+
+    it('deletes after every write, a record before the deleted records it references', async () => {
+      const { log, uow, authors, posts, tags } = blog();
+      authors.remove(await authors.findByIdOrFail('a-0'));
+      posts.remove(await posts.findByIdOrFail('p-0'));
+      tags.create({ id: 't-1', label: 'news' });
+
+      await uow.commit();
+
+      expect(log).toEqual(['create t-1', 'delete p-0', 'delete a-0']);
+    });
+
+    it('keeps the order records were first tracked in otherwise', async () => {
+      const { log, uow, authors, tags } = blog();
+      tags.create({ id: 't-1', label: 'one' });
+      authors.create({ id: 'a-1', name: 'Grace', pinnedPostId: null });
+      tags.create({ id: 't-2', label: 'two' });
+
+      await uow.commit();
+
+      expect(log).toEqual(['create t-1', 'create a-1', 'create t-2']);
+    });
+
+    it('fails with EntityReferenceError before writing anything when new records reference each other', async () => {
+      const { log, uow, authors, posts } = blog();
+      authors.create({ id: 'a-1', name: 'Grace', pinnedPostId: 'p-1' });
+      posts.create({ id: 'p-1', authorId: 'a-1', tagIds: [] });
+
+      expect(() => uow.getChanges()).toThrow(EntityReferenceError);
+      await expect(uow.commit()).rejects.toThrow(/Author a-1, Post p-1 reference each other in a cycle/);
+      expect(log).toEqual([]);
+      expect(uow.hasChanges()).toBe(true);
+    });
+
+    it('writes in tracking order, creates and updates before deletes, when a manager flushes alone', async () => {
+      const log: string[] = [];
+      const comments = new EntityManager(
+        new LogRepository<CommentDto>('Comment', log, {}, { id: 'c-0', parentId: null }),
+      );
+      comments.remove(await comments.findByIdOrFail('c-0'));
+      comments.create({ id: 'c-2', parentId: 'c-1' });
+      comments.create({ id: 'c-1', parentId: null });
+
       await comments.flush();
 
-      expect(log).toEqual([]);
-    });
-
-    it('creates a record linked into several holders once, giving each the same id', async () => {
-      const { log, comments, posts } = blog();
-      const comment = comments.lazy({ text: 'Shared', authorId: null });
-      const first = (await posts.findByIdOrFail('p-0')).link('commentId', comment);
-      const second = posts
-        .create({ id: 'p-9', title: 'Again', commentId: null, tagIds: [] })
-        .link('commentId', comment);
-
-      await posts.flush();
-
-      expect(log.filter((line) => line.startsWith('create c'))).toHaveLength(1);
-      expect([first.state.commentId, second.state.commentId]).toEqual(['c-1', 'c-1']);
-    });
-
-    it('creates the records linked into a linked record first, and links ids and records mixed in an array field', async () => {
-      const { log, authors, comments, tags, posts } = blog();
-      const author = authors.lazy({ name: 'Ada', pinnedCommentId: null });
-      const post = await posts.findByIdOrFail('p-0');
-
-      post
-        .link('commentId', comments.lazy({ text: 'Nested', authorId: null }).link('authorId', author))
-        .link('tagIds', ['t-0', tags.lazy({ label: 'news' })]);
-      await posts.flush();
-
-      expect(log).toEqual([
-        'create a-1 {"name":"Ada","pinnedCommentId":null}',
-        'create c-1 {"text":"Nested","authorId":"a-1"}',
-        'create t-1 {"label":"news"}',
-        'update p-0 {"commentId":"c-1","tagIds":["t-0","t-1"]}',
-      ]);
-    });
-
-    it('creates a new holder with the id of the record linked into it', async () => {
-      const { log, comments, posts } = blog();
-
-      posts
-        .create({ id: 'p-9', title: 'New', commentId: null, tagIds: [] })
-        .link('commentId', comments.lazy({ text: 'Hi', authorId: null }));
-      await posts.flush();
-
-      expect(log).toEqual([
-        'create c-1 {"text":"Hi","authorId":null}',
-        'create p-1 {"id":"p-9","title":"New","commentId":"c-1","tagIds":[]}',
-      ]);
-    });
-
-    it('does not create what a removed holder linked', async () => {
-      const { log, comments, posts } = blog();
-      const post = (await posts.findByIdOrFail('p-0')).link(
-        'commentId',
-        comments.lazy({ text: 'Gone', authorId: null }),
-      );
-
-      posts.remove(post);
-      await posts.flush();
-
-      expect(log).toEqual(['delete p-0']);
-    });
-
-    it('keeps its own copy of the value it will create', async () => {
-      const { log, comments, posts } = blog();
-      const value = { text: 'Original', authorId: null };
-      const comment = comments.lazy(value);
-      value.text = 'Changed';
-
-      (await posts.findByIdOrFail('p-0')).link('commentId', comment);
-      await posts.flush();
-
-      expect(log[0]).toBe('create c-1 {"text":"Original","authorId":null}');
-    });
-
-    it('creates a linked record again when the flush that created it failed', async () => {
-      const { log, comments, posts } = blog();
-      const comment = comments.lazy({ text: 'Retried', authorId: null });
-      const post = (await posts.findByIdOrFail('p-0')).link('commentId', comment);
-      const update = posts.repository.update.bind(posts.repository);
-      posts.repository.update = async () => {
-        throw new Error('transaction aborted');
-      };
-
-      await expect(posts.flush()).rejects.toThrow('transaction aborted');
-      expect(post.state.commentId).toBeNull();
-      expect(post.hasChanges()).toBe(true);
-
-      posts.repository.update = update;
-      await posts.flush();
-
-      expect(log).toEqual([
-        'create c-1 {"text":"Retried","authorId":null}',
-        'create c-2 {"text":"Retried","authorId":null}',
-        'update p-0 {"commentId":"c-2"}',
-      ]);
-      expect(post.state.commentId).toBe('c-2');
-      expect((await comment.resolve()).id).toBe('c-2');
-    });
-
-    it('fails with EntityReferenceError when links form a cycle', async () => {
-      const { authors, comments, posts } = blog();
-      const comment = comments.lazy({ text: 'Loop', authorId: null });
-      const author = authors.lazy({ name: 'Ada', pinnedCommentId: null }).link('pinnedCommentId', comment);
-      comment.link('authorId', author);
-      (await posts.findByIdOrFail('p-0')).link('commentId', comment);
-
-      await expect(posts.flush()).rejects.toBeInstanceOf(EntityReferenceError);
+      expect(log).toEqual(['create c-2', 'create c-1', 'delete c-0']);
     });
   });
 });
