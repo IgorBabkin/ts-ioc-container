@@ -338,6 +338,46 @@ describe('Folder registration', () => {
       expect(registered()).toEqual(['UserRepository', 'UserService']);
     });
 
+    describe('through a tsconfig paths alias, as glob.glob takes one', () => {
+      const aliased = (exclude: string[], paths: Record<string, string[]> = {}) => {
+        project = create({
+          'tsconfig.json': {
+            compilerOptions: { paths: { '@/*': ['./*'], '@legacy/*': ['./src/legacy/*'], ...paths } },
+          },
+          'app.bundle.json': module(['./src'], { glob: { exclude: [...DEFAULT_EXCLUDE, ...exclude] } }),
+          ...sources,
+        });
+        buildProject();
+      };
+
+      it.each([['@legacy/**'], ['@legacy/'], ['@legacy'], ['@/src/legacy/**']])(
+        'drops the folder %s names',
+        (exclude) => {
+          aliased([exclude]);
+
+          expect(registered()).toEqual(['Helper', 'UserRepository', 'UserService']);
+        },
+      );
+
+      it('keeps the glob after the alias', () => {
+        aliased(['@/src/**/*.repository.ts']);
+
+        expect(registered()).toEqual(['Helper', 'OldService', 'UserService']);
+      });
+
+      it('drops every target of an alias with several', () => {
+        aliased(['@dropped/*.ts'], { '@dropped/*': ['./src/legacy/*', './src/*'] });
+
+        expect(registered()).toEqual([]);
+      });
+
+      it('never reads a file through a catch-all alias', () => {
+        aliased(['src/helpers.ts'], { '*': ['./src/legacy/*'] });
+
+        expect(registered()).toEqual(['OldService', 'UserRepository', 'UserService']);
+      });
+    });
+
     it.each([
       [{ include: ['**/*.service.ts'] }, 'glob.include: unknown field'],
       [{ exclude: '' }, 'glob.exclude: expected a glob or an array of globs'],

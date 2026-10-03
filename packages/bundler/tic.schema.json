@@ -68,7 +68,7 @@
                 "**/__tests__/**",
                 "**/node_modules/**"
               ],
-              "description": "Glob, or globs, of files never read. Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.",
+              "description": "Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.",
               "anyOf": [
                 {
                   "type": "string",

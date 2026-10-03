@@ -7,7 +7,7 @@ import { TicConfigError } from '../../../exceptions/DomainException';
 import type { ResolvedConfig } from '../BuildConfig';
 import { type ITicConfigService, ITicConfigServiceKey } from './TicConfigService';
 import { BUNDLE_PROTOCOL, bundleView, GENERATED_HEADER } from '../domain/emit';
-import { toPosix } from '../domain/glob';
+import { globToRegExp, toPosix } from '../domain/glob';
 import { findClasses, listSourceFiles } from '../domain/scan';
 import { tokenCollisions } from '../domain/tokenCollisions';
 import { loadImportPaths } from '../domain/tsconfig';
@@ -93,7 +93,7 @@ export class BundleBuilder implements IBundleBuilder {
   private generate(config: ResolvedConfig) {
     const paths = loadImportPaths(config.tsconfig, config.importExtension);
     const relative = (file: string) => toPosix(path.relative(config.dir, file));
-    const { exclude } = config.glob;
+    const exclude = config.glob.exclude.flatMap((glob) => paths.resolveGlob(glob, config.dir)).map(globToRegExp);
     // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
     const isExcluded = (file: string) => {
       const filename = relative(file);

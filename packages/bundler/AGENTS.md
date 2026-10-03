@@ -37,7 +37,9 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   non-empty list) names the folders scanned, always with their sub-folders —
   relative to the config file (`./src/services`) or tsconfig aliases
   (`@app/services`); there is no `{ path, recursive }` form. A file in them is parsed unless it matches one
-  of `exclude` (one glob or a list; default: test files, `__tests__/`,
+  of `exclude` (one glob or a list, each relative to the config file or starting
+  with a tsconfig alias — `@generated/**`, or `@generated` for the whole folder;
+  catch-all `"*"` aliases are skipped; default: test files, `__tests__/`,
   `node_modules/`; a non-empty value replaces it, and the build warns if it drops
   a default). There is no `include`. Files `tic build` generated are never input.
 - `className: { export, decorators, glob, exclude }` (or `className: '*Service'`
