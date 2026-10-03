@@ -16,11 +16,20 @@ export default {
           !releaseTypes.has(type) || packageScopes.has(scope),
           'release-triggering commits must use an exact package scope',
         ],
+        // release-monorepo-semantically applies an explicit bump tag to every
+        // package, ignoring the scope, so `feat(@ts-ioc-container/bundler)!: ...
+        // [major]` cuts a major of all five packages. The commit type and `!`
+        // already encode the level per package, so the tags must never be used.
+        'no-explicit-bump-tag': ({ header, body, footer }) => [
+          !/\[(?:major|minor|patch|skip-bump)\]/i.test([header, body, footer].filter(Boolean).join('\n')),
+          'do not use explicit bump tags ([major], [minor], [patch], [skip-bump]): they ignore the package scope and bump every package. Use feat/fix/perf/docs or `!` instead.',
+        ],
       },
     },
   ],
   rules: {
     'release-package-scope': [2, 'always'],
+    'no-explicit-bump-tag': [2, 'always'],
     // Type enum - restrict to allowed types
     'type-enum': [
       2,

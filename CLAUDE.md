@@ -479,26 +479,28 @@ patch, `docs(adr): ...` does not.
 
 A commit that changes a package's `README.md` (or its source,
 `packages/ts-ioc-container/.readme.hbs.md`) must release that package, so the
-README consumers read on npm matches the repo. Scope the commit to the exact
-package name **and** put an explicit bump tag from `release-monorepo-semantically`
-in the subject — `[patch]`, `[minor]` or `[major]` — so the release does not hinge
-on the commit type alone:
+README consumers read on npm matches the repo. Use a release-triggering type
+scoped to the exact package name:
 
 ```
-docs(ts-ioc-container): document scopeAccess rules [patch]
-chore(@ts-ioc-container/react): reword Scope example in README [patch]
+docs(ts-ioc-container): document scopeAccess rules
+fix(@ts-ioc-container/react): correct Scope example in README
 ```
 
-- Use `[patch]` for a README-only change; use `[minor]` / `[major]` when the
-  commit also carries the matching API change.
-- The tag overrides the rule-based level for that commit and is stripped from
-  the subject, so it also works on otherwise non-release types (`chore`,
-  `refactor`). It still needs the package scope to match a package.
-- With squash merges the tag must be in the commit header that appears as a `* `
-  bullet in the squash body (see [Squash merges](#squash-merges)) — tags are
-  read per entry.
-- `[skip-bump]` is the opposite tag (suppress a release); never use it on a
-  README change.
+- `docs(<package>)` and `fix` / `perf` publish a patch; `feat` a minor; `!` a
+  major. `docs(<package>)` already releases, so `chore` / `refactor` are the
+  wrong types for a README change — there is no need for a bump tag.
+
+### Never use explicit bump tags
+
+`release-monorepo-semantically` reads `[major]`, `[minor]`, `[patch]` and
+`[skip-bump]` from a commit and applies them to **every** package, ignoring the
+commit's scope (`ConventionalCommit.bumpMatch` returns the explicit level before
+any scope check). `feat(@ts-ioc-container/bundler)!: ... [major]` therefore
+releases all five packages, not just the bundler — which is what PR #223 did.
+The commit type plus `!` already set the level per package, so the tags are
+redundant and must never be used; `commitlint.config.mjs` rejects them with the
+`no-explicit-bump-tag` rule.
 
 ### Special rules
 - CI performance improvements: **always** `ci(perf):` — never `perf(ci):` (which would trigger a release)
