@@ -135,6 +135,7 @@ class OrderService {
 | You want to                       | Call                                                                                                               |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Read one record                   | `manager.findById(id)` (`undefined` when missing) / `findByIdOrFail(id)`                                           |
+| Read many records                 | `manager.findByIds(ids)` — one `findByIds` call for the untracked ones                                             |
 | Track records read some other way | `manager.trackMany(await manager.repository.findByCustomer('Ada'))`                                                |
 | Change a record                   | `entity.state.field = value`, or `entity.patch({ ... })` for several fields                                        |
 | Create a record                   | `manager.create({ id, ... })`, or `await manager.add({ ... })` to have its id reserved — written by the next flush |

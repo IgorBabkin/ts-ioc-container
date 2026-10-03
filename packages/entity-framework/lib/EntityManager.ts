@@ -18,6 +18,7 @@ import {
   isRepositoryToken,
   type NewOf,
   type RecordKey,
+  type RestOfKey,
   type StateOf,
   type ValueOf,
 } from './IRepository';
@@ -76,13 +77,15 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
   /** Tracked entities by the identity of their key, in the order they were first tracked. */
   private readonly entities = new Map<string, Entity<StateOf<TRepository>>>();
   private readonly keys = new WeakMap<Entity<StateOf<TRepository>>, string>();
+  /** Reads still waiting on the repository, by identity, so a concurrent read of the same key shares them. */
+  private readonly reading = new Map<string, Promise<EntityOf<TRepository> | undefined>>();
 
   constructor(@inject(byArgs(repositoryTokenArg)) readonly repository: TRepository) {}
 
   /**
    * The tracked entity with this id, or one built from the repository's answer
    * and tracked from then on: only the first read of a key in a unit of work
-   * reaches the repository. The arguments after the id are the rest of its key —
+   * reaches the repository, and concurrent reads of it share that one call. The arguments after the id are the rest of its key —
    * what the repository's `keyOf` answers — and go to the repository as given.
    * `undefined` when there is none, or it was removed.
    *
@@ -93,12 +96,70 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
    */
   async findById(...args: Parameters<TRepository['findById']>): Promise<EntityOf<TRepository> | undefined> {
-    const tracked = this.entities.get(this.identityOfArgs(args));
+    const identity = this.identityOfArgs(args);
+    const tracked = this.entities.get(identity);
     if (tracked !== undefined) return tracked.isRemoved ? undefined : (tracked as EntityOf<TRepository>);
-    const stored = await (this.repository.findById as (...key: unknown[]) => Promise<StateOf<TRepository> | undefined>)(
-      ...args,
-    );
-    return stored === undefined ? undefined : this.track(stored);
+    const found = await this.read(identity, async () => {
+      const stored = await (
+        this.repository.findById as (...key: unknown[]) => Promise<StateOf<TRepository> | undefined>
+      )(...args);
+      return stored === undefined ? undefined : this.track(stored);
+    });
+    return found?.isRemoved ? undefined : found;
+  }
+
+  /**
+   * The entities with these ids: the tracked ones from the identity map, the rest
+   * read in one call to the repository's `findByIds` — or one `findById` per id
+   * when it has none. Answers in the order of `ids`, each id once; ids with no
+   * record, and ones removed in this unit of work, are left out. The arguments
+   * after the ids are the rest of the key, the same for every id.
+   *
+   * @example
+   * const orders = await manager.findByIds(['o-1', 'o-2']);
+   * const tariffs = await tariffManager.findByIds(tariffIds, tenantId);
+   *
+   * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
+   */
+  async findByIds(
+    ids: Parameters<TRepository['findById']>[0][],
+    ...rest: RestOfKey<TRepository>
+  ): Promise<EntityOf<TRepository>[]> {
+    const unique = [...new Set(ids)];
+    const keyOf = (id: unknown) => [id, ...(rest as unknown[])] as Parameters<TRepository['findById']>;
+    const { findByIds } = this.repository;
+    if (findByIds !== undefined) {
+      const unread = unique.filter((id) => {
+        const identity = this.identityOfArgs(keyOf(id));
+        return !this.entities.has(identity) && !this.reading.has(identity);
+      });
+      if (unread.length > 0) {
+        const batch = (findByIds as (ids: unknown[], ...key: unknown[]) => Promise<StateOf<TRepository>[]>)
+          .call(this.repository, unread, ...(rest as unknown[]))
+          .then((records) => records.forEach((record) => this.track(record)));
+        for (const id of unread) {
+          const identity = this.identityOfArgs(keyOf(id));
+          void this.read(identity, () => batch.then(() => this.entities.get(identity) as EntityOf<TRepository>)).catch(
+            () => undefined,
+          );
+        }
+      }
+    }
+    const found = await Promise.all(unique.map((id) => this.findById(...keyOf(id))));
+    return found.filter((entity) => entity !== undefined) as EntityOf<TRepository>[];
+  }
+
+  /** `load`, shared with every concurrent read of the same identity until it settles. */
+  private read(
+    identity: string,
+    load: () => Promise<EntityOf<TRepository> | undefined>,
+  ): Promise<EntityOf<TRepository> | undefined> {
+    let reading = this.reading.get(identity);
+    if (reading === undefined) {
+      reading = load().finally(() => this.reading.delete(identity));
+      this.reading.set(identity, reading);
+    }
+    return reading;
   }
 
   /**
