@@ -1,10 +1,9 @@
 # yaml-language-server: $schema=../../../tic.schema.json
 # Development: the *.dev.ts logger replaces the production one, which is dropped by class name.
-extends: ./tsconfig.json
-exclude:
-  - src/testing/**
 output: src/di/dev.bundle.ts
-compilerOptions:
-  classes:
-    decorators: [register]
-    excludeClasses: [JsonLogger]
+files:
+  paths:
+    - '@app/services'
+    - ./src/infra
+classes:
+  excludeClasses: [JsonLogger]

@@ -7,9 +7,6 @@ import { type IFileSystemService, IFileSystemServiceKey } from '../../../service
 import { type ResolvedConfig, resolveConfig } from '../BuildConfig';
 import { findConfigFiles, findPackageRoot } from '../domain/configFiles';
 
-/** The tsconfig a build without a config file extends. */
-export const TSCONFIG_FILE = 'tsconfig.json';
-
 export interface ITicConfigService {
   /**
    * Reads and validates a `*.bundle.json`, `*.bundle.yaml` or `*.bundle.yml`.
@@ -21,12 +18,11 @@ export interface ITicConfigService {
   /**
    * The configs to build, as absolute paths: the ones named (relative to the working
    * directory), else every `*.bundle.{json,yaml,yml}` at the root of the package the working
-   * directory is in, else `[undefined]` — one build from that package's `tsconfig.json`
-   * with default settings. Never looks past the package into a workspace root.
+   * directory is in. Never looks past the package into a workspace root.
    *
-   * @throws {TicConfigError} when none is named and the package has neither a config nor a `tsconfig.json`, or one bundle is described in two formats.
+   * @throws {TicConfigError} when none is named and the package has no config, or one bundle is described in two formats.
    */
-  discover(named: string[]): (string | undefined)[];
+  discover(named: string[]): string[];
 }
 
 export const ITicConfigServiceKey = new SingleToken<ITicConfigService>('ITicConfigService');
@@ -47,15 +43,14 @@ export class TicConfigService implements ITicConfigService {
   }
 
   /**
-   * @throws {TicConfigError} when none is named and the package has neither a config nor a `tsconfig.json`, or one bundle is described in two formats.
+   * @throws {TicConfigError} when none is named and the package has no config, or one bundle is described in two formats.
    */
-  discover(named: string[]): (string | undefined)[] {
+  discover(named: string[]): string[] {
     if (named.length > 0) return named.map((config) => path.resolve(this.cwd, config));
     const root = findPackageRoot(this.cwd);
     const found = findConfigFiles(root);
     if (found.length > 0) return found;
-    if (this.fs.fileExists(path.join(root, TSCONFIG_FILE))) return [undefined];
-    throw new TicConfigError(`no *.bundle.{json,yaml,yml} or ${TSCONFIG_FILE} in ${root}; name a config with --config`);
+    throw new TicConfigError(`no *.bundle.{json,yaml,yml} in ${root}; add one or name a config with --config`);
   }
 }
 

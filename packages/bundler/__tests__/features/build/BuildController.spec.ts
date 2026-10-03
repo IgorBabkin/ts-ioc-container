@@ -18,7 +18,7 @@ const result = (status: OutputResult['status'], file: string, registrations: num
     warnings,
   }) satisfies BuildResult;
 
-const setup = (configs: (string | undefined)[], build: (config?: string) => BuildResult) => {
+const setup = (configs: string[], build: (config?: string) => BuildResult) => {
   const discovery = new Mock<ITicConfigService>().setup((m) => m.discover(It.IsAny())).returns(configs);
   const builder = new Mock<IBundleBuilder>()
     .setup((m) => m.build(It.IsAny()))
@@ -45,13 +45,13 @@ describe('BuildController', () => {
   });
 
   it('given build warnings when built then each is logged under the config it came from', () => {
-    const { logger, controller } = setup([undefined], () =>
-      result('unchanged', '/repo/src/base.bundle.ts', 0, ['files.exclude omits a glob']),
+    const { logger, controller } = setup(['/repo/app.bundle.json'], () =>
+      result('unchanged', '/repo/src/app.bundle.ts', 0, ['files.exclude omits a glob']),
     );
 
     controller.build({ config: [], check: false });
 
-    logger.verify((m) => m.warn('tsconfig.json: files.exclude omits a glob'), Times.Once());
+    logger.verify((m) => m.warn('app.bundle.json: files.exclude omits a glob'), Times.Once());
   });
 
   it('given a config that fails when built then the error names that config', () => {

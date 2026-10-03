@@ -7,7 +7,7 @@ import { StaleBundlesError, TicError } from '../../exceptions/DomainException';
 import { type ILogger, ILoggerKey } from '../../services/ConsoleLogger';
 import { type IOutputService, IOutputServiceKey } from '../../services/OutputService';
 import { type IBundleBuilder, IBundleBuilderKey, type OutputStatus } from './services/BundleBuilder';
-import { type ITicConfigService, ITicConfigServiceKey, TSCONFIG_FILE } from './services/TicConfigService';
+import { type ITicConfigService, ITicConfigServiceKey } from './services/TicConfigService';
 
 export const BUILD_OPTIONS = z.object({
   config: z.array(z.string().min(1)).default([]),
@@ -38,19 +38,20 @@ export class BuildController {
 
   /**
    * Builds every config named with `--config`, else every `*.bundle.{json,yaml,yml}` of the
-   * package, else one bundle from its `tsconfig.json`. With `--check` nothing is written and
+   * package. With `--check` nothing is written and
    * an out-of-date bundle fails the run. One line per bundle goes to stdout, warnings to
    * stderr; an error names the config it came from.
    *
    * @throws {UsageError} when an option is unknown or `--config` has no value.
    * @throws {TicConfigError} when a config or its tsconfig is missing or invalid, or none can be found.
+   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    * @throws {StaleBundlesError} when `--check` finds a bundle that differs from what a build would write.
    */
   @onDefault(invoke)
   build(@inject(pipe(commandArgs, buildArgs, validate(BUILD_OPTIONS))) options: BuildCliOptions): void {
     let stale = 0;
     for (const config of this.configs.discover(options.config)) {
-      const name = config === undefined ? TSCONFIG_FILE : path.relative(this.cwd, config);
+      const name = path.relative(this.cwd, config);
       try {
         const { output, warnings } = this.builder.build({ config, check: options.check });
         for (const warning of warnings) this.logger.warn(`${name}: ${warning}`);

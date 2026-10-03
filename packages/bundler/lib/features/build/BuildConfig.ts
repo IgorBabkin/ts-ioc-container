@@ -1,15 +1,39 @@
 import path from 'node:path';
 import { z } from 'zod';
 import { TicConfigError } from '../../exceptions/DomainException';
-import { globToRegExp, toPosix } from './domain/glob';
+import { globToRegExp } from './domain/glob';
+
+/**
+ * Which files a bundle reads and parses: the first, cheap stage of selection,
+ * decided by path alone. `paths` are the folders the files come from; within them
+ * a file is parsed when it matches one of `include` and none of `exclude`. Globs
+ * are relative to the config file and `/`-separated. With a file naming convention
+ * (`*.service.ts`), `include` keeps the bundler from reading anything else.
+ */
+export interface FileSelector {
+  /** Folders to scan: relative to the config file (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
+  paths: (string | PathConfig)[];
+  /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
+  include?: string[];
+  /** Globs of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
+  exclude?: string[];
+}
+
+/** A {@link FileSelector} with its defaults filled in and its globs compiled. */
+export interface ResolvedFileSelector {
+  paths: Required<PathConfig>[];
+  include?: RegExp[];
+  exclude: RegExp[];
+}
 
 /** Which exports of a file count: both kinds, only named exports, or only the default export. */
 export type ExportKind = 'any' | 'named' | 'default';
 
 /**
- * Which classes of a parsed file are registered. A class is selected when it is
- * exported, not abstract, and meets every criterion set here; an empty rule
- * selects every exported class.
+ * Which classes of a parsed file are registered: the second stage of selection,
+ * run on the files {@link FileSelector} let through. A class is selected when
+ * it is exported, not abstract, and meets every criterion set here; an empty
+ * rule selects every exported class.
  */
 export interface ClassSelector {
   /** Default `any`. */
@@ -39,66 +63,47 @@ export interface ResolvedClassSelector {
   excludeName?: RegExp;
 }
 
-/**
- * `compilerOptions` of a bundle config: the tsconfig's own options plus the bundler's.
- * `importExtension` and `classes` are read by `tic build`; every other option (`paths`,
- * `baseUrl`, `rootDir`, `moduleResolution`, ...) is handed to TypeScript on top of the
- * extended tsconfig, exactly as a child tsconfig's would be.
- */
-export interface BundleCompilerOptions {
-  /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
-  importExtension?: string;
-  /** Which classes of a scanned file are registered. Default: every exported class decorated with `@register`. */
-  classes?: ClassSelector;
-  [option: string]: unknown;
+export interface PathConfig {
+  /** A folder relative to the config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
+  path: string;
+  /** Scan sub-folders too. Default `true`. */
+  recursive?: boolean;
 }
 
 /**
- * The shape of `*.bundle.json`: one bundle, written as a tsconfig. `extends`, `include`,
- * `exclude` and `compilerOptions` mean what they mean in a tsconfig, so the files the bundle
- * scans are the files this config would compile; `output`, `name` and the bundler's
- * own compiler options describe the generated module. A project that needs several bundles
- * keeps one config file per bundle.
+ * The shape of `*.bundle.json`: one bundle, described explicitly — the folders it scans
+ * and the file it writes. A project that needs several bundles keeps one config file
+ * per bundle.
  */
 export interface BundleConfig {
   $schema?: string;
-  /**
-   * The generated file, relative to the config file. Default `<root>/<name>.bundle.ts`:
-   * `<root>` is the compiled `rootDir`, else the common folder of the files compiled.
-   */
-  output?: string;
+  /** The generated file, relative to the config file (convention: `*.bundle.ts`). */
+  output: string;
   /**
    * The bundle's name: letters, digits, `-` and `_`, starting with a letter. Default: the
-   * config file's stem (`production.bundle.json` -> `production`), else {@link DEFAULT_BUNDLE_NAME}.
-   * It names the default output (`production.bundle.ts`) and the generated class,
-   * an `IContainerModule` (`ProductionBundle`, see {@link toClassName}).
+   * config file's stem (`production.bundle.json` -> `production`); required for a config
+   * file named otherwise. It names the generated class, an `IContainerModule`
+   * (`ProductionBundle`, see {@link toClassName}).
    */
   name?: string;
   /**
-   * The tsconfig this config extends, as a tsconfig's own `extends`. Relative to the config
-   * file. Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
+   * The tsconfig whose `paths` aliases `files.paths` may name and generated imports are
+   * written in, and whose `moduleResolution` sets the import extension. It contributes
+   * nothing else: the files scanned are `files.paths` alone. Relative to the config file.
+   * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
-  extends?: string;
-  /**
-   * The base folder this config's relative `include`, `exclude` and `output` resolve against,
-   * so they need not repeat a shared prefix such as `src`. Relative to the config file; default
-   * the config file's directory. It is also handed to TypeScript as `compilerOptions.baseUrl`
-   * (unless that is set too), so the generated imports use it as well.
-   */
-  baseUrl?: string;
-  /** tsconfig `include`: replaces the extended tsconfig's. Relative to `baseUrl`. */
-  include?: string[];
-  /** tsconfig `exclude`: replaces the extended tsconfig's. Relative to `baseUrl`. {@link DEFAULT_EXCLUDE} applies regardless. */
-  exclude?: string[];
-  compilerOptions?: BundleCompilerOptions;
+  tsconfig?: string;
+  /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
+  importExtension?: string;
+  /** Which files are parsed: the folders in `files.paths`, minus {@link DEFAULT_EXCLUDE} unless `exclude` says otherwise. */
+  files: FileSelector;
+  /** Which classes of a parsed file are registered. Default: every exported class. */
+  classes?: ClassSelector;
 }
 
-export const DEFAULT_EXTENDS = './tsconfig.json';
-/** The bundle name when the config file gives none, e.g. building from `tsconfig.json` alone. */
-export const DEFAULT_BUNDLE_NAME = 'base';
+export const DEFAULT_TSCONFIG = './tsconfig.json';
 /** What `classes.decorators` requires when omitted: the library's own `@register`. */
 export const DEFAULT_DECORATORS = ['register'];
-/** Files never scanned, whatever the tsconfig compiles: tests, and anything under `node_modules`. */
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
   '**/*.test.ts',
@@ -108,31 +113,23 @@ export const DEFAULT_EXCLUDE = [
   '**/node_modules/**',
 ];
 
-/** The tsconfig part of a bundle config, handed to TypeScript as a tsconfig of its own. */
-export interface TsconfigOverrides {
-  include?: string[];
-  exclude?: string[];
-  /** `compilerOptions` without the bundler's own options. */
-  compilerOptions: Record<string, unknown>;
-}
-
 /** A {@link BundleConfig} whose defaults are filled in and whose paths are absolute. */
 export interface ResolvedConfig {
   /** The config file itself. */
   file: string;
   dir: string;
-  /** `undefined`: derived from what is compiled at build time (see {@link BundleConfig.output}). */
-  output?: string;
+  output: string;
   /** The bundle name: `production` for `production.bundle.json`. */
   name: string;
   /** The generated class: `ProductionBundle`. */
   className: string;
-  /** The extended tsconfig; `required` when the config names it, so it must exist. */
+  /** The tsconfig of `paths` aliases; `required` when the config names it, so it must exist. */
   tsconfig: { file: string; required: boolean };
-  /** What the config sets on top of {@link tsconfig}. */
-  overrides: TsconfigOverrides;
   importExtension?: string;
+  files: ResolvedFileSelector;
   classes: ResolvedClassSelector;
+  /** Non-fatal problems found while resolving, e.g. a `files.exclude` that drops a default test glob. */
+  warnings: string[];
 }
 
 const BUNDLE_NAME = /^[A-Za-z][\w-]*$/;
@@ -157,6 +154,46 @@ const strings = (what: string, minItems: number) =>
     .meta({ type: 'array', items: { type: 'string', minLength: 1 }, ...(minItems > 0 && { minItems }) });
 const stringList = () => strings('an array of strings', 0);
 const nonEmptyStringList = () => strings('a non-empty array of strings', 1);
+
+const PATH_SCHEMA = z.union(
+  [
+    nonEmptyString(),
+    z.object(
+      {
+        path: nonEmptyString(),
+        recursive: z.boolean(expected('a boolean')).default(true),
+      },
+      expected('a string or an object with "path"'),
+    ),
+  ],
+  expected('a string or an object with "path"'),
+);
+
+const FILES_SCHEMA = z
+  .strictObject(
+    {
+      paths: z
+        .array(PATH_SCHEMA, expected('a non-empty array'))
+        .min(1, expected('a non-empty array'))
+        .describe(
+          'Folders to scan: paths relative to this file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { "path": "...", "recursive": false }.',
+        ),
+      include: nonEmptyStringList()
+        .optional()
+        .describe(
+          'Globs a file must match one of, e.g. ["**/*.service.ts", "**/*.repository.ts"]. Default: every source file.',
+        ),
+      exclude: stringList()
+        .default(DEFAULT_EXCLUDE)
+        .describe(
+          'Globs of files never read. Replaces the default when given. A non-empty list that omits a default glob makes `tic build` warn.',
+        ),
+    },
+    expected('an object'),
+  )
+  .describe(
+    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to this file. With a file naming convention, `include` keeps every other file unread.',
+  );
 
 const CLASSES_SCHEMA = z
   .strictObject(
@@ -189,85 +226,47 @@ const CLASSES_SCHEMA = z
     expected('an object'),
   )
   .describe(
-    'Which classes of a scanned file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; by default that is every exported class decorated with @register.',
+    'Which classes of a parsed file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; by default that is every exported class decorated with @register.',
   );
-
-const COMPILER_OPTIONS_SCHEMA = z
-  .looseObject(
-    {
-      importExtension: z
-        .string(expected('a string'))
-        .optional()
-        .describe(
-          'Extension of generated imports, e.g. ".js". Inferred from the tsconfig: ".js" under node16/nodenext resolution, none otherwise.',
-        ),
-      classes: CLASSES_SCHEMA.optional(),
-      paths: z
-        .record(z.string(), z.array(z.string()))
-        .optional()
-        .describe('tsconfig `paths`: aliases the generated imports are written in.'),
-      rootDir: z
-        .string()
-        .optional()
-        .describe('tsconfig `rootDir`: where the default output (<rootDir>/<name>.bundle.ts) goes.'),
-    },
-    expected('an object'),
-  )
-  .describe(
-    "tsconfig `compilerOptions`, plus the bundler's own `importExtension` and `classes`. Every other option is handed to TypeScript on top of the extended tsconfig's, which validates it.",
-  );
-
-/** A list of tsconfig globs; TypeScript reports the bad ones. */
-const tsconfigGlobs = (field: string, note = '') =>
-  stringList()
-    .optional()
-    .describe(`tsconfig \`${field}\`: replaces the extended tsconfig's. Relative to \`baseUrl\`.${note}`);
 
 /**
- * One `*.bundle.json` / `*.bundle.yaml`: a tsconfig with the bundler's fields. The published
- * `tic.schema.json` is generated from it (`ticConfigJsonSchema`), so the schema editors
- * validate against cannot drift from what `tic build` accepts.
+ * One `*.bundle.json` / `*.bundle.yaml`. The published `tic.schema.json` is generated
+ * from it (`ticConfigJsonSchema`), so the schema editors validate against cannot drift
+ * from what `tic build` accepts.
  */
 export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
   {
     $schema: z.string().optional(),
-    // Optional rather than defaulted: a tsconfig the config names must exist, the default may be absent.
-    extends: nonEmptyString()
-      .optional()
-      .meta({ default: DEFAULT_EXTENDS })
-      .describe(
-        "The tsconfig this bundle extends, as a tsconfig's own `extends`: its file set, `paths` aliases and module resolution apply unless this file overrides them. Relative to this file. The default may be absent; a tsconfig named here must exist.",
-      ),
-    baseUrl: nonEmptyString()
-      .optional()
-      .describe(
-        "The base folder this config's relative `include`, `exclude` and `output` resolve against, so they need not repeat a shared prefix such as `src`. Relative to this file; default this file's directory. Also handed to TypeScript as `compilerOptions.baseUrl` (unless that is set too), so generated imports use it.",
-      ),
-    output: nonEmptyString()
-      .optional()
-      .describe(
-        'The bundle file (convention: *.bundle.ts). Default `<root>/<name>.bundle.ts`: <root> is the compiled rootDir, else the common folder of the files compiled.',
-      ),
+    output: nonEmptyString().describe('The bundle file, relative to this file (convention: *.bundle.ts).'),
     name: z
       .string(expected('letters, digits, "-" or "_", starting with a letter'))
       .regex(BUNDLE_NAME, expected('letters, digits, "-" or "_", starting with a letter'))
       .optional()
       .describe(
-        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: this file\'s stem (production.bundle.json → production), else "base". It names the default output (production.bundle.ts) and the generated IContainerModule class (ProductionBundle).',
+        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: this file\'s stem (production.bundle.json → production); required for a config file named otherwise. It names the generated IContainerModule class (ProductionBundle).',
       ),
-    include: tsconfigGlobs(
-      'include',
-      ' When `baseUrl` is set and this is omitted, the whole `baseUrl` folder (`.`) is scanned.',
-    ),
-    exclude: tsconfigGlobs('exclude'),
-    compilerOptions: COMPILER_OPTIONS_SCHEMA.optional(),
+    // Optional rather than defaulted: a tsconfig the config names must exist, the default may be absent.
+    tsconfig: nonEmptyString()
+      .optional()
+      .meta({ default: DEFAULT_TSCONFIG })
+      .describe(
+        'The tsconfig whose `paths` aliases files.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans files.paths alone. Relative to this file. The default may be absent; a tsconfig named here must exist.',
+      ),
+    importExtension: z
+      .string(expected('a string'))
+      .optional()
+      .describe(
+        'Extension of generated imports, e.g. ".js". Inferred from the tsconfig: ".js" under node16/nodenext resolution, none otherwise.',
+      ),
+    files: FILES_SCHEMA,
+    classes: CLASSES_SCHEMA.optional(),
   },
   expected('an object'),
 );
 
-type CompilerOptions = NonNullable<z.output<typeof BUNDLE_CONFIG_SCHEMA>['compilerOptions']>;
+type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
 
-/** `['compilerOptions', 'classes', 'export']` -> `compilerOptions.classes.export`; the root is `config`. */
+/** `['classes', 'export']` -> `classes.export`, `['files', 'paths', 0]` -> `files.paths[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -276,16 +275,36 @@ function formatPath(segments: PropertyKey[]): string {
   return formatted || 'config';
 }
 
-function formatIssue(issue: z.core.$ZodIssue): string[] {
-  if (issue.code === 'unrecognized_keys') {
-    return issue.keys.map((key) => `${formatPath([...issue.path, key])}: unknown field`);
-  }
-  return [`${formatPath(issue.path)}: ${issue.message}`];
+/**
+ * A union failure names the union unless the value had the type of one branch: an
+ * object path without `path` reports `files.paths[0].path`, not `files.paths[0]`.
+ */
+function matchedBranch(issue: z.core.$ZodIssueInvalidUnion): z.core.$ZodIssue[] | undefined {
+  const typeMatched = issue.errors.filter((branch) =>
+    branch.every((inner) => inner.code !== 'invalid_type' || inner.path.length > 0),
+  );
+  return typeMatched.length === 1 ? typeMatched[0] : undefined;
+}
+
+function formatIssue(issue: z.core.$ZodIssue, prefix: PropertyKey[] = []): string[] {
+  const at = [...prefix, ...issue.path];
+  if (issue.code === 'unrecognized_keys') return issue.keys.map((key) => `${formatPath([...at, key])}: unknown field`);
+  const branch = issue.code === 'invalid_union' ? matchedBranch(issue) : undefined;
+  if (branch) return branch.flatMap((inner) => formatIssue(inner, at));
+  return [`${formatPath(at)}: ${issue.message}`];
 }
 
 const formatIssues = (error: z.ZodError): string => error.issues.flatMap((issue) => formatIssue(issue)).join('; ');
 
-function toClassSelector(classes: CompilerOptions['classes']): ResolvedClassSelector {
+function toFileSelector(files: ParsedConfig['files']): ResolvedFileSelector {
+  return {
+    paths: files.paths.map((entry) => (typeof entry === 'string' ? { path: entry, recursive: true } : entry)),
+    include: files.include?.map(globToRegExp),
+    exclude: files.exclude.map(globToRegExp),
+  };
+}
+
+function toClassSelector(classes: ParsedConfig['classes']): ResolvedClassSelector {
   if (classes === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
   const { decorators, name, excludeName, ...rest } = classes;
   return {
@@ -298,6 +317,22 @@ function toClassSelector(classes: CompilerOptions['classes']): ResolvedClassSele
 }
 
 /**
+ * Warns when an explicit, non-empty `files.exclude` omits one of the {@link DEFAULT_EXCLUDE}
+ * globs, since that silently drops test files (or `node_modules`) from the scan.
+ * An empty `exclude` is a deliberate opt-out and does not warn.
+ */
+function excludeWarnings(files: ParsedConfig['files']): string[] {
+  const { exclude } = files;
+  if (exclude.length === 0) return [];
+  const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
+  if (missing.length === 0) return [];
+  return [
+    `files.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
+      `add them back`,
+  ];
+}
+
+/**
  * A config file is named `<name>.bundle.json`, `<name>.bundle.yaml` or `<name>.bundle.yml`,
  * e.g. `app.bundle.json`, `production.bundle.yaml`. Every format has the same shape.
  */
@@ -307,7 +342,7 @@ export const CONFIG_FILE_SUFFIXES = ['.bundle.json', '.bundle.yaml', '.bundle.ym
 export const configSuffix = (file: string): string | undefined =>
   CONFIG_FILE_SUFFIXES.find((suffix) => file.endsWith(suffix));
 
-/** `production.bundle.yaml` -> `production`; `undefined` for any other file name, e.g. `tsconfig.json`. */
+/** `production.bundle.yaml` -> `production`; `undefined` for any other file name, e.g. `bundle.json`. */
 function configStem(file: string): string | undefined {
   const base = path.basename(file);
   const suffix = configSuffix(base);
@@ -322,38 +357,31 @@ export function toClassName(name: string): string {
 }
 
 /**
- * Validates parsed `*.bundle.json` content and resolves its paths against `file`'s
- * directory, or its `baseUrl` for `include` / `exclude` / `output`.
+ * Validates parsed `*.bundle.json` content and resolves its paths against `file`'s directory.
  *
- * @throws {TicConfigError} when the content does not match the config shape; the message names the field.
+ * @throws {TicConfigError} when the content does not match the config shape, or names no bundle; the message names the field.
  */
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { output, name, baseUrl, extends: tsconfig, include, exclude, compilerOptions = {} } = result.data;
-  const { importExtension, classes, ...tsCompilerOptions } = compilerOptions;
+  const { output, name, tsconfig, importExtension, files, classes } = result.data;
   const dir = path.dirname(file);
-  const base = baseUrl === undefined ? dir : path.resolve(dir, baseUrl);
-  // A config rooted at `baseUrl` scans that whole folder unless it names its own `include`.
-  const includeGlobs = include ?? (baseUrl === undefined ? undefined : ['.']);
-  // TypeScript resolves `include` / `exclude` against the config's directory, so a base other
-  // than it is folded into each glob; an absolute glob is left for TypeScript.
-  const rebase = (globs?: string[]) =>
-    globs?.map((glob) => (path.isAbsolute(glob) ? glob : toPosix(path.relative(dir, path.resolve(base, glob))) || '.'));
-  const bundleName = name ?? configStem(file) ?? DEFAULT_BUNDLE_NAME;
+  const bundleName = name ?? configStem(file);
+  if (bundleName === undefined) {
+    throw new TicConfigError(
+      `name: required when the config file is not named <name>${CONFIG_FILE_SUFFIXES.join(' / ')}`,
+    );
+  }
   return {
     file,
     dir,
-    output: output === undefined ? undefined : path.resolve(base, output),
+    output: path.resolve(dir, output),
     name: bundleName,
     className: toClassName(bundleName),
-    tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
-    overrides: {
-      include: rebase(includeGlobs),
-      exclude: rebase(exclude),
-      compilerOptions: baseUrl === undefined ? tsCompilerOptions : { baseUrl, ...tsCompilerOptions },
-    },
+    tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG), required: tsconfig !== undefined },
     importExtension,
+    files: toFileSelector(files),
     classes: toClassSelector(classes),
+    warnings: excludeWarnings(files),
   };
 }

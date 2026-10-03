@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { run } from '../../lib';
 import { decorated, TempProject } from '../project';
@@ -18,17 +18,17 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   beforeEach(() => {
     project = TempProject.create({
-      'app.bundle.json': { output: 'src/di/container.bundle.ts', include: ['./src/services'] },
+      'app.bundle.json': { output: 'src/di/container.bundle.ts', files: { paths: ['./src/services'] } },
       'src/services/Logger.ts': decorated('Logger'),
-      'other/app.bundle.json': { output: 'out.bundle.ts', include: ['../src/services'] },
+      'other/app.bundle.json': { output: 'out.bundle.ts', files: { paths: ['../src/services'] } },
     });
   });
 
   afterEach(() => project.dispose());
 
   it('builds every *.bundle.json in the working directory', () => {
-    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', include: ['./src'] });
-    project.write('development.bundle.json', { output: 'src/di/development.bundle.ts', include: ['./src'] });
+    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', files: { paths: ['./src'] } });
+    project.write('development.bundle.json', { output: 'src/di/development.bundle.ts', files: { paths: ['./src'] } });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
@@ -41,8 +41,8 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('builds *.bundle.yaml and *.bundle.yml configs alongside *.bundle.json, in name order', () => {
-    project.write('production.bundle.yaml', 'output: src/di/production.bundle.ts\ninclude: [./src]\n');
-    project.write('development.bundle.yml', 'output: src/di/development.bundle.ts\ninclude: [./src]\n');
+    project.write('production.bundle.yaml', 'output: src/di/production.bundle.ts\nfiles:\n  paths: [./src]\n');
+    project.write('development.bundle.yml', 'output: src/di/development.bundle.ts\nfiles:\n  paths: [./src]\n');
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
@@ -62,7 +62,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('never registers a bundle another config generated', () => {
-    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', include: ['./src'] });
+    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', files: { paths: ['./src'] } });
     const io = new Io(project.root);
 
     run(['build'], io);
@@ -72,7 +72,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('builds only the configs passed with --config, reporting paths relative to the working directory', () => {
-    project.write('other/extra.bundle.json', { output: 'extra.bundle.ts', include: ['../src/services'] });
+    project.write('other/extra.bundle.json', { output: 'extra.bundle.ts', files: { paths: ['../src/services'] } });
     const io = new Io(project.root);
 
     expect(run(['build', '--config', 'other/app.bundle.json', '-c', 'other/extra.bundle.json'], io)).toBe(0);
@@ -82,13 +82,15 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     ]);
   });
 
-  it('falls back to tsconfig.json when the working directory has no *.bundle.json', () => {
+  it('never builds from tsconfig.json alone: a package without a *.bundle.json fails', () => {
+    project.write('zero/package.json', { name: 'zero' });
     project.write('zero/tsconfig.json', { include: ['src'] });
     project.write('zero/src/Logger.ts', decorated('Logger'));
     const io = new Io(project.path('zero'));
 
-    expect(run(['build'], io)).toBe(0);
-    expect(io.out).toEqual(['wrote     src/base.bundle.ts (1 registration)']);
+    expect(run(['build'], io)).toBe(1);
+    expect(io.err.join('\n')).toContain(`no *.bundle.{json,yaml,yml} in ${project.path('zero')}`);
+    expect(existsSync(project.path('zero/src/base.bundle.ts'))).toBe(false);
   });
 
   describe('in a monorepo: the package it is invoked in', () => {
@@ -103,37 +105,28 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
       project.write('repo/packages/b/src/Mailer.ts', decorated('Mailer'));
     });
 
-    it("builds from the package's tsconfig.json, even when invoked in a sub-folder", () => {
-      const io = new Io(project.path('repo/packages/a/src/services'));
-
-      expect(run(['build'], io)).toBe(0);
-      expect(io.out).toEqual(['wrote     ../base.bundle.ts (1 registration)']);
-      expect(project.read('repo/packages/a/src/base.bundle.ts')).toContain('Registration.fromClass(Logger)');
-    });
-
     it("builds the package's *.bundle.json, even when invoked in a sub-folder", () => {
-      project.write('repo/packages/b/app.bundle.json', { output: 'src/app.bundle.ts', include: ['./src'] });
+      project.write('repo/packages/b/app.bundle.json', { output: 'src/app.bundle.ts', files: { paths: ['./src'] } });
       const io = new Io(project.path('repo/packages/b/src'));
 
       expect(run(['build'], io)).toBe(0);
       expect(io.out).toEqual(['wrote     app.bundle.ts (1 registration)']);
     });
 
-    it("never falls back to the workspace root's tsconfig.json", () => {
+    it("never falls back to the workspace root's configs", () => {
+      project.write('repo/root.bundle.json', { output: 'root.bundle.ts', files: { paths: ['./packages'] } });
       const io = new Io(project.path('repo/packages/b/src'));
 
       expect(run(['build'], io)).toBe(1);
-      expect(io.err.join('\n')).toContain(
-        `no *.bundle.{json,yaml,yml} or tsconfig.json in ${project.path('repo/packages/b')};`,
-      );
+      expect(io.err.join('\n')).toContain(`no *.bundle.{json,yaml,yml} in ${project.path('repo/packages/b')};`);
     });
   });
 
-  it('fails when the working directory has neither a *.bundle.json nor a tsconfig.json', () => {
+  it('fails when the working directory has no *.bundle.json', () => {
     const io = new Io(project.path('src'));
 
     expect(run(['build'], io)).toBe(1);
-    expect(io.err.join('\n')).toContain('no *.bundle.{json,yaml,yml} or tsconfig.json');
+    expect(io.err.join('\n')).toContain('no *.bundle.{json,yaml,yml} in');
   });
 
   it('fails --check with a hint when an output is stale, and passes once it is current', () => {
@@ -147,11 +140,23 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('reports a config error on stderr', () => {
-    project.write('app.bundle.json', { output: '', include: ['./src/services'] });
+    project.write('app.bundle.json', { output: '', files: { paths: ['./src/services'] } });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(1);
     expect(io.err).toEqual(['tic: app.bundle.json: output: expected a non-empty string']);
+  });
+
+  it('prints a warning when a non-empty exclude drops the default test globs', () => {
+    project.write('app.bundle.json', {
+      output: 'src/di/container.bundle.ts',
+      files: { paths: ['./src/services'], exclude: ['legacy/**'] },
+    });
+    const io = new Io(project.root);
+
+    expect(run(['build'], io)).toBe(0);
+    expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: files.exclude');
+    expect(io.err.join('\n')).toContain('**/*.spec.ts');
   });
 
   it('prints a warning when two classes pass the same decorator token', () => {

@@ -22,15 +22,28 @@ describe('TicConfigService', () => {
     expect(() => service.load('/repo/app.bundle.json')).toThrow('/repo/app.bundle.json is not valid JSON');
   });
 
-  it('given an empty YAML config when loaded then every setting takes its default', () => {
+  it('given an empty YAML config when loaded then it throws TicConfigError naming the required fields', () => {
     const service = new TicConfigService('/repo', fileSystem('').object());
+
+    expect(() => service.load('/repo/production.bundle.yaml')).toThrow(
+      'output: expected a non-empty string; files: expected an object',
+    );
+  });
+
+  it('given a YAML config with output and paths when loaded then the rest takes its default', () => {
+    const service = new TicConfigService(
+      '/repo',
+      fileSystem('output: src/di/production.bundle.ts\nfiles:\n  paths: [./src]\n').object(),
+    );
 
     const resolved = service.load('/repo/production.bundle.yaml');
 
     expect(resolved).toMatchObject({
+      output: '/repo/src/di/production.bundle.ts',
       name: 'production',
       className: 'ProductionBundle',
       tsconfig: { file: '/repo/tsconfig.json', required: false },
+      files: { paths: [{ path: './src', recursive: true }] },
       classes: { export: 'any', decorators: ['register'] },
     });
   });
