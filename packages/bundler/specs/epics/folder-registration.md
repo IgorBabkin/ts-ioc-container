@@ -7,107 +7,73 @@
 
 ## Intent
 
-As an application developer, I want to register every class my project
-compiles at once so that adding a service means writing the class, not also
-editing a hand-maintained list of `addRegistration(...)` calls.
+As an application developer, I want to register every class of a folder at once
+so that adding a service means writing the class, not also editing a
+hand-maintained list of `addRegistration(...)` calls.
 
-A bundle config is a tsconfig: the files it scans are the files it compiles,
-chosen with the same `extends` / `include` / `exclude` a tsconfig uses.
+A folder is addressed the same way an import is: a path relative to the config file (`./src/services`) or a
+`tsconfig.json` `paths` alias (`@app/services`).
 
 ## Stories
 
-### Story: Describe the container in a config file
+### Story: Describe the container in a config
 
-As an application developer, I can describe a generated bundle in one JSON
-file so that the build is reproducible and reviewable.
+As an application developer, I can describe a generated bundle in one config
+and build it in a shell pipeline, so that the build is reproducible,
+reviewable and composes with any other tool.
 
 Acceptance criteria:
 
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
-- One config file describes one bundle and is named `<name>.bundle.json`, or
-  `<name>.bundle.yaml` / `<name>.bundle.yml` in YAML — same fields, same
-  schema; an empty YAML file is every setting at its default. One bundle
-  described in two formats fails the build naming both files. It is shaped
-  like a tsconfig, every field optional: `extends`, `include`, `exclude` and
-  `compilerOptions` as in a tsconfig, plus the bundler's `output` (by
-  convention `*.bundle.ts`) and `name` at the top level and
-  `importExtension` and `classes` under `compilerOptions`.
+- `tic build <config>` reads the config file — JSON for `.json`, YAML for
+  `.yaml` / `.yml`; any other extension fails — and prints the bundle to stdout.
+  It writes no file: `tic build app.bundle.json > src/di/app.bundle.ts`.
+- Without `<config>`, or with `-`, the config is read from stdin as YAML (which
+  covers JSON): `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`.
+  Nothing piped in fails with a usage error; more than one `<config>` too.
+- Warnings and errors go to stderr, never into the bundle on stdout; an error
+  names the config (`<stdin>` for piped text), and nothing is printed then.
+- The config's fields are flat and explicit: `glob` with its `paths` is
+  required; `name`, `tsconfig`, `importExtension` and `className` are optional.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →
-  `production`), else `base`. The generated class is named after it:
-  `ProductionBundle`, `BaseBundle`, `my-app` → `MyAppBundle`.
-- `output` defaults to `<root>/<name>.bundle.ts`: `<root>` is the compiled
-  `rootDir`, else the common folder of the files compiled, else the config's
-  folder.
-- `tic build` works on the package it is invoked in: the nearest folder with a
-  `package.json`, from the working directory up — the project root, or the
-  package in a monorepo; never a workspace root above it.
-- There it builds every `*.bundle.{json,yaml,yml}`, in name order; `--config <path>`
-  (repeatable, relative to the working directory) builds only the named
-  configs.
-- Zero config: with no config file, `tic build` (and `build()` without a
-  config) builds one bundle from the package's `tsconfig.json`, every setting
-  at its default. With neither, it fails with a hint naming the package.
-- Several bundles — `production.bundle.json`, `development.bundle.json`,
-  `test.bundle.json` — are several configs; a bundle one config generated is
-  never registered by another.
-- `extends` and `baseUrl` resolve against the config file's directory, not the
-  working directory; `include`, `exclude` and `output` resolve against
-  `baseUrl`, defaulting to the config file's directory.
-- An invalid config — including an unknown top-level field, such as a
-  leftover `files` section — fails the build with a message naming the config
-  and the offending field; nothing is written for it. Compiler options other
-  than the bundler's are validated by TypeScript, which names an unknown one.
+  `production`); piped text, or a file named otherwise, must set it. The
+  generated class is named after it: `ProductionBundle`, `my-app` →
+  `MyAppBundle`.
+- Relative paths in a config file resolve against the file; in piped text,
+  against the working directory.
+- Several bundles — production, development, test — are several configs and
+  several runs; a saved bundle is never registered by another build.
+- An invalid config — including an unknown field, such as a leftover `output`
+  or `bundles` — fails the build with a message naming the offending field.
 
-### Story: A bundle extends a tsconfig
+### Story: Name every input explicitly
 
-As an application developer, I can point a bundle at my tsconfig so that it
-registers what my project compiles without restating its folders.
+As an application developer, I can read a bundle's inputs off its config, so
+that what it registers never depends on what my tsconfig happens to compile.
 
 Acceptance criteria:
 
-- `extends` names the tsconfig the bundle config extends, relative to the
-  config file; default `./tsconfig.json`, which may be absent. A tsconfig named
-  explicitly must exist.
-- The bundle's files are the files the config compiles, as `tsc` parses it:
-  the extended tsconfig's `files` / `include` / `exclude`, following its own
-  `extends`, with the config's `include` and `exclude` replacing the parent's.
-- The config's `compilerOptions`, without the bundler's own, apply on top of
-  the extended tsconfig's — e.g. `paths` aliases for the generated imports.
+- A bundle scans its `glob.paths` and nothing else; the files its tsconfig
+  compiles play no part.
+- The generated bundle's header lists the paths it scanned.
 
-### Story: Root the config at a baseUrl
+### Story: Register the classes of a folder
 
-As an application developer, I can set one `baseUrl` so my `include`,
-`exclude` and `output` need not repeat a shared prefix such as `src`.
+As an application developer, I can list a folder in a bundle's `glob.paths` so that
+its classes become registrations of the generated bundle.
 
 Acceptance criteria:
 
-- `baseUrl` is relative to the config file; `include`, `exclude` and `output`
-  resolve against it, defaulting to the config file's directory.
-- When `include` is omitted, the whole `baseUrl` folder (`.`) is scanned; without
-  `baseUrl`, an omitted `include` still inherits the extended tsconfig's.
-- `extends` still resolves against the config file, not `baseUrl`.
-- The resolved `baseUrl` is also handed to TypeScript as
-  `compilerOptions.baseUrl` (unless the config sets that itself), so the
-  generated imports are written in `baseUrl` form.
-- Without `baseUrl`, every path resolves as before.
-
-### Story: Register the classes of the files compiled
-
-As an application developer, I can include a folder in a bundle config so
-that its classes become registrations of the generated bundle.
-
-Acceptance criteria:
-
-- An included folder is scanned recursively, as `tsc` does; a single-star glob
-  (`src/services/*`) limits it to the folder itself.
+- A path is scanned recursively by default; `recursive: false` limits it to
+  the folder itself.
 - By default every exported class is registered.
 - Abstract classes, non-exported classes and `.d.ts` files are never
   registered.
 - A class exported by `export { X }`, `export { X as Y }` or `export default` is
   registered and imported under its exported name.
-- The generated file is never scanned, even when it lives inside a scanned folder.
+- The generated file is never scanned, even when it lives inside a scanned path.
 - Registrations are ordered by file path, then by declaration order, so the
   output is stable across machines.
 
@@ -119,13 +85,21 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- `include` globs pick the files that are scanned; a file outside them is
-  never read.
-- `exclude` globs drop files that `include` matches.
-- Test files, `__tests__/` and `node_modules/` are never scanned, whatever is
-  compiled.
+- Selection runs in two stages: a bundle's `glob` rule — its `paths` and the
+  `include` / `exclude` globs — decides by path
+  alone which files are read and parsed; its `className` rule then picks classes out of
+  the parsed files.
+- `glob.include` is a non-empty list of globs; a file is parsed only when it
+  matches one of them. Omitted, every source file qualifies.
+- A file outside `include` is never read.
+- `glob.exclude` lists globs of files never read (default: test files,
+  `__tests__/`, `node_modules/`) and wins over `include`. Giving only `include`
+  keeps the default `exclude`.
 - Globs are relative to the config file and `/`-separated.
-- A non-list `include` or `exclude` fails the build naming the field.
+- A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
+  parses tests deliberately. When a non-empty `exclude` omits a default glob,
+  the build reports a warning (the escape hatch stays: `[]` warns for nothing).
+- An invalid rule fails the build naming the offending field.
 
 ### Story: Configure which classes a file contributes
 
@@ -135,7 +109,7 @@ only what I mean it to.
 
 Acceptance criteria:
 
-- A bundle's `compilerOptions.classes` rule is an object; a class is selected when it is
+- A bundle's `className` rule is an object; a class is selected when it is
   exported, not abstract, and meets every criterion the rule sets. Omitting
   a criterion applies no restriction, except `decorators`.
 - `decorators` defaults to `["register"]`: by default only classes decorated
@@ -145,54 +119,44 @@ Acceptance criteria:
 - `decorators` requires the class to carry one of the listed decorators,
   recognised by name — also when imported under another name or reached as a
   member (`@ioc.register(...)`). Composed decorators are listed like any other.
-- `name` is a glob (`*Service`) the class name must match; for an anonymous
-  default export the name is derived from the file name.
-- `excludeClasses` drops classes by exact name and `excludeName` drops classes
-  whose name matches a glob; both apply after every other criterion.
+- `glob` is a glob (`*Service`), or a non-empty list of them, the class name
+  must match one of; for an anonymous default export the name is derived from
+  the file name.
+- `exclude` is a glob, or a non-empty list of them, the class name must match
+  none of; it applies after every other criterion. A plain class name is a glob
+  matching only itself, so `["MockUserRepository", "*Fake"]` drops one class by
+  name and a family by pattern.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
-  registration is last-wins); the warning suggests
-  `compilerOptions.classes.excludeClasses`.
+  registration is last-wins); the warning suggests `className.exclude`.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):
   those registrations are scope-gated, not last-wins.
-- An invalid rule — including a string (`"classes": "decorated"`) — fails the
-  build naming the offending field (`compilerOptions.classes`).
+- An invalid rule — including a string (`"className": "decorated"`) — fails the
+  build naming the offending field.
 
-### Story: Write imports in tsconfig alias form
+### Story: Address folders by tsconfig aliases
 
-As an application developer, I receive imports in the `tsconfig.json` `paths`
-alias form my code uses, so that the bundle reads like hand-written code.
+As an application developer, I can name a path by its `tsconfig.json`
+`paths` alias so that the container config speaks the same import paths as the
+code.
 
 Acceptance criteria:
 
-- Aliases are the `paths` the config compiles with: the extended tsconfig's,
-  including `paths` it inherits through its own `extends`, or the config's
-  own `compilerOptions.paths`.
-- Generated imports use the most specific matching alias; a file no alias
-  covers is imported relative to the tsconfig's `baseUrl` when it is under
-  that folder, and otherwise by a path relative to the output file.
+- A path is either a folder relative to the config file (`./src/services`) or
+  a tsconfig `paths` alias (`@app/services`), resolved through the `paths` of
+  the config's `tsconfig` (default `./tsconfig.json` next to the config,
+  which may be absent; one named explicitly must exist), including `paths`
+  that tsconfig inherits through its own `extends`. The tsconfig contributes
+  aliases and module resolution only, never files.
+- A path that is neither an existing folder nor a resolvable alias fails
+  the build with a message naming it.
+- Generated imports use the most specific matching alias, and only aliases:
+  the bundle has no known location, so it works wherever it is saved. A
+  selected class no alias covers fails the build naming its file.
 - Under `moduleResolution` `node16` / `nodenext` imports carry a `.js`
-  extension; `compilerOptions.importExtension` overrides the inferred one.
-
-### Story: Write imports in baseUrl form
-
-As an application developer whose `tsconfig.json` sets `baseUrl`, I receive
-imports relative to it, so that the bundle reads like my non-relative,
-`baseUrl`-resolved code.
-
-Acceptance criteria:
-
-- `baseUrl` is the resolved `baseUrl` the config compiles with, including one
-  inherited through `extends`, resolved against the tsconfig that declares it.
-- A file under `baseUrl` that no `paths` alias covers is imported as the bare
-  specifier relative to `baseUrl` (`services/Logger`); a `paths` alias that
-  matches still wins, and a file outside `baseUrl` is imported relative to the
-  output file.
-- `baseUrl` only widens resolution: without it, imports stay relative to the
-  output as before.
-
+  extension; `importExtension` in the config overrides the inferred one.
 
 ### Story: Generate a bundle: a plain container module class
 
@@ -216,17 +180,17 @@ Acceptance criteria:
 
 ### Story: Keep bundles in sync in CI
 
-As a maintainer, I can verify that bundles are current without
-rewriting them so that CI catches a forgotten `tic build`.
+As a maintainer, I can verify that a saved bundle is current so that CI
+catches a forgotten `tic build`.
 
 Acceptance criteria:
 
-- `tic build --check` writes nothing and exits non-zero when any output is
-  missing or differs from what would be generated.
-- `tic build` leaves an output that is already current untouched.
+- The same config always prints the same bundle, so a saved bundle is checked
+  with `tic build app.bundle.json | diff - src/di/app.bundle.ts`.
 
 ## Notes
 
-Non-goals of this epic: per-folder scope or binding rules, file or class filtering in code (predicates), and registrations other than classes (`fromValue`, `fromFn`).
+Non-goals of this epic: glob patterns as paths, per-path scope or binding
+rules, file or class filtering in code (predicates), and registrations other than classes (`fromValue`, `fromFn`).
 The container itself is unchanged — discovery lives entirely in the bundler
 package (ADR 0022).

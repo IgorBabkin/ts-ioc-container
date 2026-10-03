@@ -1,7 +1,14 @@
 # yaml-language-server: $schema=../../../tic.schema.json
-# Production: everything tsconfig.json compiles except dev-only *.dev.ts files and the test doubles.
-extends: ./tsconfig.json
-exclude:
-  - src/**/*.dev.ts
-  - src/testing/**
-output: src/di/prod.bundle.ts
+# Production: the services and the infrastructure adapters, minus dev-only *.dev.ts files.
+glob:
+  paths:
+    - '@app/services'
+    - ./src/infra
+  exclude:
+    - '**/*.dev.ts'
+    - '**/*.spec.ts'
+    - '**/*.test.ts'
+    - '**/*.spec.tsx'
+    - '**/*.test.tsx'
+    - '**/__tests__/**'
+    - '**/node_modules/**'

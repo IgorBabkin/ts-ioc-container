@@ -1,5 +1,7 @@
+import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
+import { NamespaceNotFoundError } from '../../../exceptions/DomainException';
 import { toPosix } from './glob';
 
 interface Alias {
@@ -10,6 +12,9 @@ interface Alias {
 
 const SOURCE_EXTENSION = /\.(tsx?|mts|cts)$/;
 
+const isDirectory = (dir: string) => existsSync(dir) && statSync(dir).isDirectory();
+const isRelative = (spec: string) => spec.startsWith('.') || path.isAbsolute(spec);
+
 /** Splits a `paths` pattern at its `*`, if it has one. */
 function splitWildcard(pattern: string): [string, string] | undefined {
   const star = pattern.indexOf('*');
@@ -17,13 +22,13 @@ function splitWildcard(pattern: string): [string, string] | undefined {
 }
 
 /**
- * Import paths as a project's `tsconfig.json` sees them: writes imports in the
- * form of its `paths` aliases, else its `baseUrl`, where one matches.
+ * Import paths as a project's `tsconfig.json` sees them: resolves namespaces
+ * written as `paths` aliases to folders, and writes imports back in alias form.
  */
 export class ImportPaths {
   /**
-   * From a parsed tsconfig's options: its `paths` aliases and `baseUrl`, and the extension
-   * imports need under its `moduleResolution`; `importExtension` overrides the latter.
+   * From a parsed tsconfig's options: its `paths` aliases, and the extension imports need
+   * under its `moduleResolution`; `importExtension` overrides the latter.
    */
   static fromOptions(options: ts.CompilerOptions, tsconfigFile: string, importExtension?: string): ImportPaths {
     const { paths = {}, baseUrl, pathsBasePath, moduleResolution } = options;
@@ -35,42 +40,40 @@ export class ImportPaths {
     }));
     const nodeEsm =
       moduleResolution === ts.ModuleResolutionKind.Node16 || moduleResolution === ts.ModuleResolutionKind.NodeNext;
-    return new ImportPaths(
-      aliases,
-      importExtension ?? (nodeEsm ? '.js' : ''),
-      baseUrl === undefined ? undefined : toPosix(baseUrl),
-    );
+    return new ImportPaths(aliases, importExtension ?? (nodeEsm ? '.js' : ''));
   }
 
   constructor(
     private readonly aliases: Alias[],
     readonly extension: string,
-    /** Absolute, `/`-separated: non-relative imports resolve against it. */
-    private readonly baseUrl?: string,
   ) {}
 
   /**
-   * The specifier `fromFile` imports `toFile` by: its most specific `paths` alias, else a
-   * path relative to `baseUrl` when the file is under it, else a path relative to `fromFile`.
+   * The folder a namespace names: a path relative to `baseDir`, or a `paths` alias.
+   *
+   * @throws {NamespaceNotFoundError} when the namespace is neither an existing folder nor an alias of one.
    */
-  specifier(fromFile: string, toFile: string): string {
-    const target = toPosix(toFile);
-    const bare = target.replace(SOURCE_EXTENSION, '');
-    const best = this.bestAlias(target, bare);
-    if (best) return best.spec;
-
-    const fromBaseUrl = this.baseUrlSpecifier(bare);
-    if (fromBaseUrl) return `${fromBaseUrl}${this.extension}`;
-
-    const relative = toPosix(path.relative(path.dirname(fromFile), bare));
-    return `${relative.startsWith('.') ? relative : `./${relative}`}${this.extension}`;
+  resolveNamespace(namespace: string, baseDir: string): string {
+    const folder = path.resolve(baseDir, namespace);
+    if (isDirectory(folder)) return folder;
+    if (!isRelative(namespace)) {
+      // `@app` also matches an `@app/*` pattern, naming the alias root itself.
+      const found = [namespace, `${namespace}/`].flatMap((spec) => this.aliasTargets(spec)).find(isDirectory);
+      if (found) return path.normalize(found);
+    }
+    throw new NamespaceNotFoundError(
+      `namespace "${namespace}" is neither a folder relative to ${baseDir} nor a tsconfig paths alias of one`,
+    );
   }
 
-  /** `bare` written relative to `baseUrl`, when it is under it; `undefined` otherwise. */
-  private baseUrlSpecifier(bare: string): string | undefined {
-    if (!this.baseUrl) return undefined;
-    const prefix = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
-    return bare.startsWith(prefix) ? bare.slice(prefix.length) : undefined;
+  /**
+   * The specifier `file` is imported by: its most specific `paths` alias. `undefined` when no
+   * alias covers it — a bundle is written to stdout, so it has no location a relative import
+   * could start from.
+   */
+  specifier(file: string): string | undefined {
+    const target = toPosix(file);
+    return this.bestAlias(target, target.replace(SOURCE_EXTENSION, ''))?.spec;
   }
 
   private bestAlias(target: string, bare: string): { spec: string; score: number } | undefined {
@@ -82,6 +85,17 @@ export class ImportPaths {
       }
     }
     return best;
+  }
+
+  private aliasTargets(spec: string): string[] {
+    return this.aliases.flatMap(({ pattern, targets }) => {
+      const wildcard = splitWildcard(pattern);
+      if (!wildcard) return pattern === spec ? targets : [];
+      const [prefix, suffix] = wildcard;
+      if (!spec.startsWith(prefix) || !spec.endsWith(suffix) || spec.length < prefix.length + suffix.length) return [];
+      const captured = spec.slice(prefix.length, spec.length - suffix.length);
+      return targets.map((target) => target.replace('*', captured));
+    });
   }
 
   /** A longer matched target prefix is a more specific alias; an exact file alias beats every wildcard. */

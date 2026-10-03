@@ -2,74 +2,86 @@ import { It, Mock, Times } from 'moq.ts';
 import {
   BuildController,
   type BuildResult,
+  type CliIo,
   type IBundleBuilder,
   type ILogger,
   type IOutputService,
-  type ITicConfigService,
-  type OutputResult,
-  StaleBundlesError,
   TicConfigError,
+  UsageError,
 } from '../../../lib';
 
-const result = (status: OutputResult['status'], file: string, registrations: number, warnings: string[] = []) =>
-  ({
-    config: '',
-    output: { file, bundle: 'AppBundle', status, registrations, content: '' },
-    warnings,
-  }) satisfies BuildResult;
+const result = (content: string, warnings: string[] = []) =>
+  ({ config: '/repo/app.bundle.json', bundle: 'AppBundle', registrations: 1, content, warnings }) satisfies BuildResult;
 
-const setup = (configs: (string | undefined)[], build: (config?: string) => BuildResult) => {
-  const discovery = new Mock<ITicConfigService>().setup((m) => m.discover(It.IsAny())).returns(configs);
-  const builder = new Mock<IBundleBuilder>()
-    .setup((m) => m.build(It.IsAny()))
-    .callback(({ args: [request] }) => build(request?.config));
+const setup = (build: () => BuildResult, stdin?: () => string | undefined) => {
+  const builder = new Mock<IBundleBuilder>().setup((m) => m.build(It.IsAny())).callback(build);
   const out = new Mock<IOutputService>().setup((m) => m.write(It.IsAny())).returns(undefined);
   const logger = new Mock<ILogger>().setup((m) => m.warn(It.IsAny())).returns(undefined);
-  const controller = new BuildController('/repo', discovery.object(), builder.object(), out.object(), logger.object());
-  return { discovery, builder, out, logger, controller };
+  const io: CliIo = { cwd: '/repo', stdout: () => {}, stderr: () => {}, stdin };
+  const controller = new BuildController(io, builder.object(), out.object(), logger.object());
+  return { builder, out, logger, controller };
 };
 
 describe('BuildController', () => {
-  it('given discovered configs when built then each is built and reported on one line', () => {
-    const { discovery, out, controller } = setup(['/repo/app.bundle.json', '/repo/web.bundle.yaml'], (config) =>
-      config === '/repo/app.bundle.json'
-        ? result('written', '/repo/src/app.bundle.ts', 2)
-        : result('unchanged', '/repo/src/web.bundle.ts', 1),
-    );
+  it('given a config when built then the bundle is written to stdout once, without its trailing newline', () => {
+    const { builder, out, controller } = setup(() => result('// bundle\nexport class AppBundle {}\n'));
 
-    controller.build({ config: ['app.bundle.json'], check: false });
+    controller.build({ config: 'app.bundle.json' });
 
-    discovery.verify((m) => m.discover(It.Is((named) => JSON.stringify(named) === '["app.bundle.json"]')));
-    out.verify((m) => m.write('wrote     src/app.bundle.ts (2 registrations)'), Times.Once());
-    out.verify((m) => m.write('unchanged src/web.bundle.ts (1 registration)'), Times.Once());
+    builder.verify((m) => m.build(It.Is((request: { config: string }) => request.config === 'app.bundle.json')));
+    out.verify((m) => m.write('// bundle\nexport class AppBundle {}'), Times.Once());
   });
 
-  it('given build warnings when built then each is logged under the config it came from', () => {
-    const { logger, controller } = setup([undefined], () =>
-      result('unchanged', '/repo/src/base.bundle.ts', 0, ['files.exclude omits a glob']),
-    );
+  it('given build warnings when built then each is logged under the config, not printed with the bundle', () => {
+    const { out, logger, controller } = setup(() => result('// bundle\n', ['glob.exclude omits a glob']));
 
-    controller.build({ config: [], check: false });
+    controller.build({ config: 'app.bundle.json' });
 
-    logger.verify((m) => m.warn('tsconfig.json: files.exclude omits a glob'), Times.Once());
+    logger.verify((m) => m.warn('app.bundle.json: glob.exclude omits a glob'), Times.Once());
+    out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
-  it('given a config that fails when built then the error names that config', () => {
-    const { controller } = setup(['/repo/app.bundle.json'], () => {
-      throw new TicConfigError('output: expected a non-empty string');
+  it('given a config that fails when built then the error names the config and nothing is printed', () => {
+    const { out, controller } = setup(() => {
+      throw new TicConfigError('glob: expected an object');
     });
 
-    expect(() => controller.build({ config: [], check: false })).toThrow(
-      'app.bundle.json: output: expected a non-empty string',
-    );
+    expect(() => controller.build({ config: 'app.bundle.json' })).toThrow('app.bundle.json: glob: expected an object');
+    out.verify((m) => m.write(It.IsAny()), Times.Never());
   });
 
-  it('given a stale bundle when checked then every config is still reported before StaleBundlesError', () => {
-    const { out, controller } = setup(['/repo/a.bundle.json', '/repo/b.bundle.json'], (config) =>
-      result(config === '/repo/a.bundle.json' ? 'stale' : 'unchanged', `${config}.ts`, 1),
+  it('given - as the config when built then the config text is read from stdin', () => {
+    const { builder, out, controller } = setup(
+      () => result('// bundle\n'),
+      () => 'name: app\nglob:\n  paths: [./src]\n',
     );
 
-    expect(() => controller.build({ config: [], check: true })).toThrow(StaleBundlesError);
-    out.verify((m) => m.write(It.IsAny()), Times.Exactly(2));
+    controller.build({ config: '-' });
+
+    builder.verify((m) =>
+      m.build(It.Is((request: { text?: string }) => request.text === 'name: app\nglob:\n  paths: [./src]\n')),
+    );
+    out.verify((m) => m.write('// bundle'), Times.Once());
+  });
+
+  it('given - as the config and nothing piped in when built then it throws UsageError', () => {
+    const { controller } = setup(
+      () => result('// bundle\n'),
+      () => undefined,
+    );
+
+    expect(() => controller.build({ config: '-' })).toThrow(UsageError);
+    expect(() => controller.build({ config: '-' })).toThrow('missing <config>');
+  });
+
+  it('given a stdin config that fails when built then the error names <stdin>', () => {
+    const { controller } = setup(
+      () => {
+        throw new TicConfigError('name: required for a config read from stdin');
+      },
+      () => 'glob: {}',
+    );
+
+    expect(() => controller.build({ config: '-' })).toThrow('<stdin>: name: required for a config read from stdin');
   });
 });

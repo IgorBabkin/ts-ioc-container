@@ -27,37 +27,37 @@ export {
   type BuildRequest,
   type BuildOptions,
   type BuildResult,
-  type OutputResult,
-  type OutputStatus,
 } from './features/build/services/BundleBuilder';
 export {
   TicConfigService,
   ITicConfigServiceKey,
-  TSCONFIG_FILE,
   type ITicConfigService,
 } from './features/build/services/TicConfigService';
 export {
   resolveConfig,
   BUNDLE_CONFIG_SCHEMA,
+  parseConfig,
   CONFIG_FILE_SUFFIXES,
-  DEFAULT_EXTENDS,
+  STDIN,
+  configFormat,
+  DEFAULT_TSCONFIG,
   DEFAULT_EXCLUDE,
-  DEFAULT_BUNDLE_NAME,
   DEFAULT_DECORATORS,
   toClassName,
   type BundleConfig,
-  type BundleCompilerOptions,
+  type PathConfig,
   type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,
+  type GlobSelector,
+  type ResolvedGlobSelector,
   type ResolvedConfig,
-  type TsconfigOverrides,
+  type ConfigFormat,
 } from './features/build/BuildConfig';
-export { findConfigFiles, findPackageRoot } from './features/build/domain/configFiles';
 export { ticConfigJsonSchema } from './schema/ticConfigSchema';
 export { ImportPaths } from './features/build/domain/ImportPaths';
-export { loadTsconfig, type CompiledTsconfig } from './features/build/domain/tsconfig';
-export { findClasses, isSourceFile, type DiscoveredClass } from './features/build/domain/scan';
+export { loadImportPaths } from './features/build/domain/tsconfig';
+export { findClasses, isSourceFile, listSourceFiles, type DiscoveredClass } from './features/build/domain/scan';
 export {
   emitBundle,
   bundleView,
@@ -92,10 +92,10 @@ export {
 export {
   TicError,
   TicConfigError,
+  NamespaceNotFoundError,
   MissingCommandError,
   UnknownCommandError,
   UnknownActionError,
   UsageError,
-  StaleBundlesError,
 } from './exceptions/DomainException';
 export { ExceptionHandler } from './exceptions/ExceptionHandler';

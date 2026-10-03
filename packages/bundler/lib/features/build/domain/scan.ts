@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
 import type { ResolvedClassSelector } from '../BuildConfig';
@@ -34,6 +34,23 @@ const DECLARATION_FILE = /\.d\.[mc]?tsx?$/;
 
 /** A TypeScript source file the bundler may parse: not a declaration file. */
 export const isSourceFile = (file: string): boolean => SOURCE_FILE.test(file) && !DECLARATION_FILE.test(file);
+
+/** Source files of `dir`, sorted by path so the generated output is stable across machines. */
+export function listSourceFiles(dir: string, recursive: boolean, isExcluded: (file: string) => boolean): string[] {
+  const files: string[] = [];
+  const walk = (current: string) => {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (recursive && entry.name !== 'node_modules') walk(full);
+      } else if (isSourceFile(entry.name) && !isExcluded(full)) {
+        files.push(full);
+      }
+    }
+  };
+  walk(dir);
+  return files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
 
 const hasModifier = (node: ts.Node, kind: ts.SyntaxKind) =>
   ts.canHaveModifiers(node) && (ts.getModifiers(node) ?? []).some((m) => m.kind === kind);
@@ -135,9 +152,8 @@ export function findClasses(
       if (hasModifier(node, ts.SyntaxKind.AbstractKeyword)) return false;
       if (selector.export !== 'any' && (exportName === 'default') !== (selector.export === 'default')) return false;
       if (selector.decorators && !selector.decorators.some((name) => decorators.includes(name))) return false;
-      if (selector.name && !selector.name.test(className)) return false;
-      if (selector.excludeClasses?.includes(className)) return false;
-      if (selector.excludeName?.test(className)) return false;
+      if (selector.glob && !selector.glob.some((glob) => glob.test(className))) return false;
+      if (selector.exclude?.some((glob) => glob.test(className))) return false;
       return true;
     })
     .sort((a, b) => a.node.pos - b.node.pos)

@@ -10,6 +10,23 @@ describe('parseOptions', () => {
     expect(parse(['build'])).toEqual({});
   });
 
+  it('given positionals allowed when parsed then the words after the command come back as positionals', () => {
+    const withPositionals = parseOptions(
+      { json: { type: 'string' }, check: { type: 'boolean' } },
+      { positionals: true },
+    );
+
+    expect(withPositionals(['build', 'src/app.bundle.ts', '--json', '-', '--check'])).toEqual({
+      json: '-',
+      check: true,
+      positionals: ['src/app.bundle.ts'],
+    });
+    expect(withPositionals(['build', '--json={}', 'src/app.bundle.ts'])).toEqual({
+      json: '{}',
+      positionals: ['src/app.bundle.ts'],
+    });
+  });
+
   it('given an unknown flag when parsed then it throws UsageError', () => {
     expect(() => parse(['build', '--watch'])).toThrow(UsageError);
   });

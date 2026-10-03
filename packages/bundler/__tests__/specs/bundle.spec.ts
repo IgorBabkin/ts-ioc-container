@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
 import { Container, DependencyNotFoundError, type IContainerModule } from 'ts-ioc-container';
-import { build, findConfigFiles } from '../../lib';
+import { build } from '../../lib';
 import { DevBundle } from '../fixtures/app/src/di/dev.bundle';
 import { ProdBundle } from '../fixtures/app/src/di/prod.bundle';
 import { TestBundle } from '../fixtures/app/src/di/test.bundle';
@@ -18,18 +19,12 @@ const environments: [config: string, bundle: IContainerModule, logged: string][]
 ];
 
 describe('Story: Generate a bundle: a plain container module class', () => {
-  it('describes one bundle per environment, all found at the package root', () => {
-    expect(findConfigFiles(fixture).map((file) => path.basename(file))).toEqual([
-      'dev.bundle.yml',
-      'prod.bundle.yml',
-      'test.bundle.yml',
-    ]);
-  });
+  // `tic build <env>.bundle.yml > src/di/<env>.bundle.ts` saved each one; a fresh build must match it.
+  it.each(environments)('%s is current: a fresh build equals the saved bundle', (file) => {
+    const result = build({ config: path.join(fixture, file) });
+    const saved = readFileSync(path.join(fixture, 'src/di', file.replace('.bundle.yml', '.bundle.ts')), 'utf8');
 
-  it.each(environments)('%s is current: tic build --check finds nothing to regenerate', (config) => {
-    const result = build({ config: path.join(fixture, config), check: true });
-
-    expect(result.output.status).toBe('unchanged');
+    expect(result.content).toBe(saved);
     expect(result.warnings).toEqual([]);
   });
 

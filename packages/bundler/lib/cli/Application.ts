@@ -14,8 +14,10 @@ const COMMAND_ALIASES: Record<string, string> = {
 
 /**
  * Splits `<command> [action] [--flags...]` into its leading positionals. A flag in
- * the action position leaves the action unset, so `tic build --check` runs the
- * default action rather than one called `--check`.
+ * the action position leaves the action unset, so `tic build --help` runs the
+ * default action rather than one called `--help`. A word in that position is only a
+ * candidate: when the controller declares no such action it is an argument of the
+ * default action (`tic build src/di/app.bundle.ts`).
  *
  * @throws {MissingCommandError} when `argv` is empty.
  */
@@ -49,11 +51,14 @@ export class Application {
       const { command, action } = parseCommandAndAction(argv);
       if (!this.scope.hasRegistration(command)) throw new UnknownCommandError(command);
       const controller = this.scope.resolve<object>(command);
-      const collector = new HookCollector({
-        key: action,
-        createExecutionContext: createHookContextFactory({ args: argv }),
-      });
-      const actions = collector.getActions(controller, { scope: this.scope });
+      const actionsOf = (key: string) =>
+        new HookCollector({ key, createExecutionContext: createHookContextFactory({ args: argv }) }).getActions(
+          controller,
+          { scope: this.scope },
+        );
+      let actions = actionsOf(action);
+      // Not a declared action: the word is the default action's first argument.
+      if (actions.length === 0 && action !== DEFAULT_ACTION) actions = actionsOf(DEFAULT_ACTION);
       if (actions.length === 0) throw new UnknownActionError(command, action);
       for (const item of actions) toTask(item)();
       return 0;

@@ -1,8 +1,8 @@
 # @ts-ioc-container/bundler
 
 **Bundles your dependencies into a single container module.** `tic build` scans
-what your tsconfig compiles and generates one typed bundle that registers every
-class in it, ready for
+the folders you name — by path or tsconfig alias — and generates one typed
+bundle that registers every class in them, ready for
 [`ts-ioc-container`](https://www.npmjs.com/package/ts-ioc-container):
 
 ```ts
@@ -14,9 +14,9 @@ Adding a service means writing the class — no hand-maintained list of
 TypeScript, generated at build time, so it type-checks, bundles and tree-shakes
 like code you wrote yourself.
 
-A bundle config **is** a tsconfig that `extends` yours — `include`, `exclude`
-and `compilerOptions` mean what they mean to `tsc` — plus a few fields of the
-bundler's own.
+Everything is explicit, and `tic build` is a plain Unix filter: a config goes in
+— a file, or text on stdin — and the bundle comes out on stdout. Where it is saved
+is up to your shell, and nothing is inferred from what your tsconfig compiles.
 
 ## Install
 
@@ -30,182 +30,208 @@ below use the shortcut.
 
 `typescript` (>= 5) is a peer dependency.
 
-## Zero config
-
-With a `tsconfig.json`, there is nothing to configure:
+## Build
 
 ```bash
-tic build
+tic build [<config>]
 ```
 
-```text
-wrote     src/base.bundle.ts (12 registrations)
+`tic build` prints the bundle to **stdout** and writes nothing. `<config>` is a
+config file — JSON for `.json`, YAML for `.yaml` / `.yml`. Without it (or with
+`-`) the config is read from **stdin**. Warnings and errors go to stderr, so
+they never end up in the bundle.
+
+```bash
+# a config file in, the bundle saved by the shell
+tic build app.bundle.json > src/di/app.bundle.ts
+tic build prod.bundle.yml > src/di/prod.bundle.ts
+
+# the config piped in — it has no file name, so it sets `name` ("name": "dev")
+cat dev.bundle.json | tic build > src/di/dev.bundle.ts
+tic build < dev.bundle.yml > src/di/dev.bundle.ts
+
+# into any command: format it, show it and save it, ...
+tic build app.bundle.json | npx prettier --stdin-filepath app.bundle.ts > src/di/app.bundle.ts
+cat dev.bundle.json | tic build | tee src/di/dev.bundle.ts
+
+# a config built on the fly
+printf 'name: app\nglob:\n  paths: ["@app/services"]\n' | tic build > src/di/app.bundle.ts
+jq '.name = "admin"' app.bundle.json | tic build > src/di/admin.bundle.ts
+
+# CI: is the saved bundle current?
+tic build app.bundle.json | diff - src/di/app.bundle.ts
 ```
 
-The bundle registers every exported class decorated with `@register` among the
-files your `tsconfig.json` compiles, test files excluded, and lands at the root
-of those sources — `rootDir`, else their common folder (`src/`), so `tsc`
-compiles it too. It exports `BaseBundle`:
+A bundle can be saved anywhere, because every import in it is written through a
+tsconfig `paths` alias (`import { Greeter } from '@app/services/Greeter'`) —
+never a path relative to where the file ends up. A selected class no alias
+covers is an error naming its file; add a `paths` entry for its folder.
 
-```ts
-import { BaseBundle } from './base.bundle';
-
-const container = new Container().useModule(new BaseBundle());
-```
-
-`tic build` works on the package it is invoked in: it walks up from the working
-directory to the nearest `package.json` — the project root, or in a monorepo
-the package — and uses the `tsconfig.json` there. It never falls back to a
-workspace root's tsconfig.
+Relative paths in a config file resolve against the file; in a piped config,
+against the working directory. The bundle is named after the config file —
+`prod.bundle.json` exports `ProdBundle` — unless the config sets `name`, which a
+piped config, or a file not named `<name>.bundle.json`, must.
 
 ## Configure
 
-To change a default, add a config file next to your `tsconfig.json`. One config
-file describes one bundle and is named `<name>.bundle.json` — `app.bundle.json`:
+A config describes one bundle: the folders it scans and the classes it
+registers. Point your editor at the schema:
 
 ```json
 {
   "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
-  "output": "src/di/app.bundle.ts"
-}
-```
-
-or, in YAML, `<name>.bundle.yaml` / `<name>.bundle.yml` — same fields, same schema:
-
-```yaml
-# yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
-extends: ./tsconfig.json
-output: src/di/app.bundle.ts
-include: [src/**/*.service.ts]
-compilerOptions:
-  classes:
-    decorators: [register, service]
-```
-
-An empty YAML file is a bundle with every setting at its default. Describing
-one bundle in two formats (`app.bundle.json` and `app.bundle.yaml`) is an error.
-
-Every field is optional; `{}` is the zero-config bundle. The tsconfig fields:
-
-| Field             | Default                           | Meaning                                                                                       |
-| ----------------- | --------------------------------- | --------------------------------------------------------------------------------------------- |
-| `extends`         | `./tsconfig.json` (may be absent) | The tsconfig this config extends; one named here must exist                                   |
-| `include`         | the extended tsconfig's           | Which files are scanned — see [Selecting files](#selecting-files)                              |
-| `exclude`         | the extended tsconfig's           | Which of them are left out — see [Selecting files](#selecting-files)                           |
-| `compilerOptions` | the extended tsconfig's           | tsconfig compiler options (`paths`, `rootDir`, `moduleResolution`, …) plus the bundler's below |
-
-The bundler's own fields, at the top level:
-
-| Field     | Default                        | Meaning                                                                                                                 |
-| --------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `baseUrl` | the config file's directory    | The base `include`, `exclude` and `output` resolve against, so they need not repeat a shared prefix such as `src`; also passed to TypeScript as `compilerOptions.baseUrl` |
-| `output`  | `<root>/<name>.bundle.ts`      | The bundle file; `<root>` as in [Zero config](#zero-config)                                                             |
-| `name`    | the config's stem, else `base` | The bundle's name (`production.bundle.json` → `production`): names the default output and the class, `ProductionBundle` |
-
-and under `compilerOptions`:
-
-| Option            | Default                                | Meaning                                                                                     |
-| ----------------- | -------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `classes`         | exported classes with `@register`      | Which classes of a scanned file are registered — see [Selecting classes](#selecting-classes) |
-| `importExtension` | `.js` under node16/nodenext, else none | Extension of generated imports                                                              |
-
-An unknown top-level field is an error, so a misspelled or removed option never
-goes unnoticed. Every other compiler option is handed to TypeScript, which
-reports an unknown one (`Unknown compiler option 'pathz'. Did you mean 'paths'?`).
-
-`baseUrl` lets a config read in source terms instead of from the package root:
-
-```json
-{
-  "baseUrl": "src",
-  "output": ".generated/container.bundle.ts",
-  "exclude": [".generated/**", "db/testing/**"]
-}
-```
-
-writes `src/.generated/container.bundle.ts` from everything under `src/` except
-those two folders — with `baseUrl` set, an omitted `include` scans the whole
-`baseUrl` folder. `extends` still resolves against the config file.
-
-Generated imports read like the tsconfig you compile with: a file covered by a
-`paths` alias is imported in that alias form, a file under `baseUrl` in
-`baseUrl` form (`services/Logger`), and anything else relative to the bundle.
-
-## Several bundles
-
-Need more than one bundle — per environment, per app? Add a config per bundle.
-`tic build` builds every `*.bundle.json`, `*.bundle.yaml` and `*.bundle.yml` at
-the package root:
-
-```text
-production.bundle.json    → src/di/production.bundle.ts
-development.bundle.json   → src/di/development.bundle.ts
-test.bundle.json          → src/di/test.bundle.ts
-```
-
-Each one can extend its own tsconfig and select its own files:
-
-```jsonc
-// production.bundle.json
-{
-  "extends": "./tsconfig.production.json",
-  "exclude": ["src/**/*.development.ts"]
-}
-```
-
-It writes `src/production.bundle.ts`, exporting `ProductionBundle`.
-
-A bundle generated by one config is never registered by another, even when it
-sits in a folder the other scans.
-
-## Selecting files
-
-The files a bundle scans are the files its config compiles, as `tsc` would see
-them: the extended tsconfig's `files` / `include` / `exclude` (following its own
-`extends`), with this config's `include` and `exclude` replacing the parent's —
-exactly as in a child tsconfig. Globs are relative to `baseUrl`, defaulting to
-the config file's directory.
-
-Test files (`*.spec.ts`, `*.test.ts`, their `.tsx` twins and `__tests__/`) and
-`node_modules/` are never scanned, whatever the tsconfig compiles, since test
-classes usually carry the same `@register` decorators as production ones. Files
-`tic build` generated are never input either.
-
-Parsing is where the time goes, so when your project names files by convention
-(`user.service.ts`, `user.repository.ts`), say so in `include` and the bundler
-never reads anything else:
-
-```json
-{
-  "output": "src/di/app.bundle.ts",
-  "include": ["src/**/*.service.ts", "src/**/*.repository.ts"],
-  "exclude": ["src/legacy/**"]
-}
-```
-
-## Selecting classes
-
-By default every exported, non-abstract class of a scanned file that carries
-`@register` is registered. `compilerOptions.classes` changes that; a class must
-meet every criterion that is set:
-
-```json
-"compilerOptions": {
-  "classes": {
-    "export": "named",
-    "decorators": ["register", "repository"],
-    "name": "*Service"
+  "glob": {
+    "paths": ["@app/services", { "path": "./src/infra", "recursive": false }]
   }
 }
 ```
 
-| Criterion          | Default | Meaning                                                                                                     |
-| ------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `export`           | `any`   | `any`, `named` or `default` — which exports count                                                           |
-| `decorators`       | `["register"]` | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none |
-| `name`         | —       | Glob the class name must match, e.g. `"*Service"`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
-| `excludeClasses`   | —       | Class names to drop, e.g. `["MockDashboardRepository"]`                                                     |
-| `excludeName`  | —       | Glob the class name must **not** match, e.g. `"*Mock"`                                                      |
+```yaml
+# yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
+glob:
+  paths: ['@app/services', ./src/infra]
+  include: ['**/*.service.ts']
+```
+
+| Field             | Default                                       | Meaning                                                                                                     |
+| ----------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `glob`            | — (required, with `paths`)                    | Which files are parsed — see [Selecting files](#selecting-files)                                            |
+| `className`       | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                 |
+| `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise      |
+| `tsconfig`        | `./tsconfig.json`                             | Source of the `paths` aliases every import is written through, and of the import extension — never of files |
+| `importExtension` | `.js` under node16/nodenext, else none        | Extension of generated imports                                                                              |
+
+An unknown field is an error, so a misspelled or removed option never goes
+unnoticed.
+
+## Several bundles
+
+Need more than one bundle — per environment, per app? Keep a config per bundle
+and build each one:
+
+```bash
+for env in prod dev test; do
+  tic build "$env.bundle.yml" > "src/di/$env.bundle.ts"
+done
+```
+
+```json
+{
+  "scripts": {
+    "bundle": "tic build app.bundle.json > src/di/app.bundle.ts",
+    "bundle:check": "tic build app.bundle.json | diff - src/di/app.bundle.ts"
+  }
+}
+```
+
+Each config selects its own files and classes:
+
+```yaml
+# prod.bundle.yml: services + adapters, minus dev-only *.dev.ts files
+glob:
+  paths: ['@app/services', ./src/infra]
+  exclude:
+    - '**/*.dev.ts'
+    - '**/*.spec.ts'
+    - '**/*.test.ts'
+    - '**/*.spec.tsx'
+    - '**/*.test.tsx'
+    - '**/__tests__/**'
+    - '**/node_modules/**'
+```
+
+```yaml
+# dev.bundle.yml: the *.dev.ts logger replaces the production one, dropped by class name
+glob:
+  paths: ['@app/services', ./src/infra]
+className:
+  exclude: JsonLogger
+```
+
+A saved bundle is never registered by another build, even when it sits in a
+folder that build scans.
+
+## Selection in two stages
+
+A bundle picks its registrations in two stages:
+
+1. **`glob`** — decided by path alone, before anything is read. Only files that
+   pass are parsed.
+2. **`className`** — decided per class, on the files stage 1 let through.
+
+Parsing is where the time goes, so when your project names files by convention
+(`user.service.ts`, `user.repository.ts`), say so in `glob.include` and the
+bundler never reads anything else:
+
+```json
+{
+  "glob": {
+    "paths": ["@app/services"],
+    "include": ["**/*.service.ts", "**/*.repository.ts"]
+  },
+  "className": { "decorators": ["register"] }
+}
+```
+
+## Selecting files
+
+`paths` are the folders a bundle's files come from, and the only ones: what
+your tsconfig compiles plays no part. Each entry is a folder relative to the
+config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`,
+for a `"@app/*": ["./src/*"]` alias), scanned recursively unless it says
+`{ "path": "...", "recursive": false }`.
+
+Within them, a file is parsed when it matches **one of** `include` and **none of**
+`exclude`. Globs are relative to the config file and `/`-separated; `**`
+spans folders.
+
+| Rule      | Default                                   | Meaning                                                    |
+| --------- | ----------------------------------------- | ---------------------------------------------------------- |
+| `paths`   | — (required)                              | Folders to scan                                            |
+| `include` | every source file                         | Globs a file must match one of, e.g. `"**/*.service.ts"`   |
+| `exclude` | test files, `__tests__/`, `node_modules/` | Globs of files never read; replaces the default when given |
+
+A non-empty `exclude` replaces the defaults, so restate the ones you still want:
+
+```json
+"glob": {
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "**/node_modules/**",
+    "frontend/api/generated/**"
+  ]
+}
+```
+
+If it omits a default glob the build warns, since test classes usually carry
+the same `@register` decorators as production ones. `"exclude": []` deliberately
+parses everything, including tests. Giving only `include` keeps the default
+`exclude`, so `**/*.service.ts` still skips `user.service.spec.ts`.
+
+## Selecting classes
+
+By default every exported, non-abstract class of a parsed file that carries
+`@register` is registered. `className` changes that; a class must meet every
+criterion that is set:
+
+```json
+"className": {
+  "export": "named",
+  "decorators": ["register", "repository"],
+  "glob": "*Service"
+}
+```
+
+| Criterion    | Default        | Meaning                                                                                                                                                                                           |
+| ------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `export`     | `any`          | `any`, `named` or `default` — which exports count                                                                                                                                                 |
+| `decorators` | `["register"]` | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none                                                                   |
+| `glob`       | —              | A glob, or a list of them, the class name must match one of: `"*Service"`, `["*Service", "*Repository"]`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
+| `exclude`    | —              | A glob, or a list of them, the class name must match **none** of: `"*Mock"`, `["MockDashboardRepository", "*Fake"]`                                                                               |
 
 Abstract and non-exported classes are never registered.
 
@@ -213,20 +239,18 @@ Abstract and non-exported classes are never registered.
 
 When a real implementation and a test-only stand-in are both decorated and both
 bind the same token, registration is last-wins and the stand-in silently wins.
-`excludeClasses` and `excludeName` drop a class right in the config:
+`exclude` drops it right in the config. A plain class name is a glob that
+matches only itself, so one list drops a class by name and a family by pattern:
 
 ```json
-"compilerOptions": {
-  "classes": {
-    "decorators": ["repository", "service"],
-    "excludeClasses": ["MockDashboardRepository"],
-    "excludeName": "*Fake"
-  }
+"className": {
+  "decorators": ["repository", "service"],
+  "exclude": ["MockDashboardRepository", "*Fake"]
 }
 ```
 
-Both apply after every other criterion, so they can be combined with
-`decorators` and `name` freely.
+`exclude` applies after every other criterion, so it combines with
+`decorators` and `glob` freely.
 
 As a safety net, the build warns when two selected classes pass the same
 plain-identifier first argument to a decorator — usually the binding token, as in
@@ -236,7 +260,7 @@ are not resolved), so it can only be a heuristic:
 ```text
 tic: warning: app.bundle.json: decorator token "IDashboardRepositoryToken" is passed by
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
-exclude one with compilerOptions.classes.excludeClasses
+exclude one with className.exclude
 ```
 
 Classes that are scope-gated are not last-wins, so they do not warn: when the
@@ -244,27 +268,19 @@ colliding classes share a decorator called with different arguments, e.g.
 `@perPage('stations')` vs `@perPage('sessions')`, each scope registers its own
 class and nothing is lost.
 
-## Build
-
-```bash
-tic build                 # every *.bundle.{json,yaml,yml} of this package, else its tsconfig.json
-tic build -c app.bundle.json -c admin/admin.bundle.json   # only these
-tic build --check         # CI: write nothing, exit 1 if a bundle is out of date
-```
+## Output
 
 The output is plain TypeScript over the public `ts-ioc-container` API:
 
 ```ts
 // src/di/app.bundle.ts
-// Generated by `tic build` from ../../app.bundle.json. Do not edit by hand.
+// Generated by `tic build`. Do not edit by hand.
+// Paths: @app/services, @app/infra
 import { type IContainer, type IContainerModule, type IRegistration, Registration } from 'ts-ioc-container';
 import { MemoryLogger } from '@app/infra/logging/MemoryLogger';
 import { Greeter } from '@app/services/Greeter';
 
-export const registrations: IRegistration[] = [
-  Registration.fromClass(MemoryLogger),
-  Registration.fromClass(Greeter),
-];
+export const registrations: IRegistration[] = [Registration.fromClass(MemoryLogger), Registration.fromClass(Greeter)];
 
 export class AppBundle implements IContainerModule {
   applyTo(container: IContainer): void {
@@ -278,8 +294,24 @@ const container = new Container().useModule(new AppBundle());
 ```
 
 Treat `*.bundle.ts` as build output: add it to `.prettierignore` (and any
-other formatter's ignore list), since `--check` compares files byte for byte.
+other formatter's ignore list) unless you format it in the pipe, so a
+`tic build … | diff - …` check compares like with like.
 
 Each class keeps its own `@register(...)` config (key, scope, singleton, …);
 an undecorated class is bound by its class name. Discovery is syntactic — no
 type checker runs.
+
+## Programmatic API
+
+`build()` returns the bundle and writes nothing, like the CLI:
+
+```ts
+import { writeFileSync } from 'node:fs';
+import { build } from '@ts-ioc-container/bundler';
+
+const { content, warnings } = build({ config: 'app.bundle.json' });
+writeFileSync('src/di/app.bundle.ts', content);
+
+// or config text, as `tic build` reads from stdin
+build({ text: 'name: app\nglob:\n  paths: ["@app/services"]\n' });
+```
