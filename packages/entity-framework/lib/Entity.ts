@@ -36,20 +36,25 @@ export class Entity<State extends IEntity = IEntity> {
   private stored: State | undefined;
   private removed = false;
   private readonly links = new Links<State>();
+  private readonly trackedId: State['id'];
 
   constructor(state: State, { isNew = false }: EntityOptions = {}) {
     this.state = snapshot(state);
     this.stored = isNew ? undefined : snapshot(state);
+    this.trackedId = state.id;
   }
 
+  /** The id the entity was tracked under — what is stored, not a reassigned `state.id`. */
   get id(): State['id'] {
-    return (this.stored ?? this.state).id;
+    return this.trackedId;
   }
 
+  /** Not stored yet: the next flush creates it. */
   get isNew(): boolean {
     return this.stored === undefined;
   }
 
+  /** Marked for deletion: the next flush deletes it. */
   get isRemoved(): boolean {
     return this.removed;
   }
@@ -74,17 +79,25 @@ export class Entity<State extends IEntity = IEntity> {
     );
   }
 
+  /** Whether a flush would write it: new, removed, linked, or with a non-empty diff. */
   hasChanges(): boolean {
     return this.removed || this.isNew || this.links.size > 0 || Object.keys(this.getDiff()).length > 0;
   }
 
   /**
    * Sets the given fields of `state` — `undefined` included — and leaves the
-   * rest as they are. The `id` cannot be patched to another value.
+   * rest as they are. Answers the entity, so calls chain.
+   *
+   * @example
+   * order.patch({ status: 'cancelled', note: undefined });
+   *
+   * @throws {EntityIdentityError} when the patch names another `id`.
    */
   patch(changes: Partial<State>): this {
     if (changes.id !== undefined && changes.id !== this.id) {
-      throw new EntityIdentityError(`The id of ${String(this.id)} cannot be patched to ${String(changes.id)}`);
+      throw new EntityIdentityError(
+        `The id of ${String(this.id)} cannot be patched to ${String(changes.id)}: leave id out of the patch.`,
+      );
     }
     Object.assign(this.state, snapshot(changes));
     return this;
@@ -117,6 +130,7 @@ export class Entity<State extends IEntity = IEntity> {
     this.stored = snapshot(stored);
   }
 
+  /** Marks the entity for deletion. Prefer `EntityManager.remove`, which also makes its id read as missing. */
   remove(): void {
     this.removed = true;
   }

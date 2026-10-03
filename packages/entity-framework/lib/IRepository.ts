@@ -16,6 +16,19 @@ export interface IEntity {
  * `Value` is what `create` takes: the state itself when the caller mints ids,
  * or the state without its id when the database does — which is what
  * `EntityManager.lazy` needs.
+ *
+ * @example
+ * export const IOrderRepositoryToken = repositoryToken<OrderRepository>('IOrderRepository');
+ *
+ * @register(IOrderRepositoryToken, scope((s) => s.hasTag('application')), singleton())
+ * export class OrderRepository implements IRepository<OrderDto, Order> {
+ *   readonly entityName = 'Order';
+ *   readonly entityClass = Order;
+ *   findById(id: string) { ... }                                // SELECT
+ *   create(order: OrderDto) { ... }                              // INSERT, answer the row
+ *   update(stored: OrderDto, diff: Partial<OrderDto>) { ... }    // UPDATE only the diff
+ *   delete(stored: OrderDto) { ... }                             // DELETE
+ * }
  */
 export interface IRepository<State extends IEntity = IEntity, E extends Entity<State> = Entity<State>, Value = State> {
   /** What a missing record is called: `Order` in `Order o-1 was not found.` */
@@ -54,9 +67,16 @@ export type ValueOf<TRepository> = TRepository extends IRepository<infer _S, inf
 
 const REPOSITORY_TAG = 'repository';
 
-/** A token for a repository, tagged so `EntityManager` can pick it out of the args it is resolved with. */
+/**
+ * A token for a repository, tagged so `EntityManager` can pick it out of the args
+ * it is resolved with. A plain `SingleToken` is not recognised.
+ *
+ * @example
+ * export const IOrderRepositoryToken = repositoryToken<OrderRepository>('IOrderRepository');
+ */
 export const repositoryToken = <TRepository extends AnyRepository>(key: DependencyKey): SingleToken<TRepository> =>
   new SingleToken<TRepository>(key, { tags: [REPOSITORY_TAG] });
 
+/** Whether `value` is a token made by `repositoryToken`. */
 export const isRepositoryToken = (value: unknown): value is InjectionToken<AnyRepository> =>
   isInjectionToken(value) && value.hasTag(REPOSITORY_TAG);

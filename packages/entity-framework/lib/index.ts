@@ -7,7 +7,7 @@ export {
   entityManagerToken,
   flushEntityManagers,
 } from './EntityManager';
-export { EntityIdentityError, EntityNotFoundError, EntityReferenceError } from './errors';
+export { EntityIdentityError, EntityManagerArgumentError, EntityNotFoundError, EntityReferenceError } from './errors';
 export {
   type AnyRepository,
   type EntityOf,

@@ -6,20 +6,31 @@ scope's changes. No query language and no ORM — reads and writes go through yo
 own repositories. This file ships inside the npm package, so it matches the
 installed version. For the container itself, read `node_modules/ts-ioc-container/AGENTS.md` first.
 
+## Setup
+
+```bash
+npm install @ts-ioc-container/entity-framework ts-ioc-container reflect-metadata
+```
+
+`tsconfig.json` needs `"experimentalDecorators": true` and `"emitDecoratorMetadata": true`,
+and the entrypoint must `import 'reflect-metadata'` first.
+
 ## API
 
-| Export                                | What it does                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Entity<State>`                       | One tracked record. `state` is the DTO, changed in place (nested values too). `getDiff()` answers the fields that differ from what is stored; `patch(changes)` sets several fields at once; `link(field, lazyRef)` sets a field to the id of a record created at flush; `getStored()`, `isNew`, `isRemoved`, `remove()`, `hasChanges()`. Extend it for domain behaviour |
-| `EntityManager<TRepository>`          | The unit of work over one repository: `findById` / `findByIdOrFail` (identity map first, the repository once), `trackMany` / `track` (records read some other way), `create`, `remove`, `hasChanges`, `flush`                                                                                                                                                           |
-| `IRepository<State, E>`               | What a repository implements: `entityName`, optional `entityClass`, `findById(id, ...key)`, `create(state)`, `update(stored, diff)`, `delete(stored)`                                                                                                                                                                                                                   |
-| `repositoryToken(key)`                | A `SingleToken` for a repository, tagged so an `EntityManager` resolved with it finds it                                                                                                                                                                                                                                                                                |
-| `entityManagerToken(repositoryToken)` | The token the `EntityManager` over that repository resolves by — one per repository token per scope                                                                                                                                                                                                                                                                     |
-| `flushEntityManagers(scope)`          | Flushes every `EntityManager` the scope built, in the order they were built — the commit. Opens no transaction                                                                                                                                                                                                                                                          |
-| `EntityNotFoundError`                 | `code: 'IOC_ENTITY_NOT_FOUND'`; missing record, or one removed in this unit of work                                                                                                                                                                                                                                                                                     |
-| `EntityIdentityError`                 | `code: 'IOC_ENTITY_IDENTITY'`; `create` for a tracked id, or a flushed entity whose `id` changed                                                                                                                                                                                                                                                                        |
+| Export                                                        | What it does                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Entity<State>`                                               | One tracked record. `state` is the DTO — change it in place, nested values too. `getDiff()` answers the fields that differ from what is stored; `patch(changes)` sets several fields; `link(field, lazyRef)` sets a field to the id of a record created at flush; `getStored()`, `isNew`, `isRemoved`, `hasChanges()`. Extend it for domain behaviour |
+| `EntityManager<TRepository>`                                  | The unit of work over one repository: `findById` / `findByIdOrFail` (identity map first, the repository once), `track` / `trackMany` (records read some other way), `create`, `lazy`, `remove`, `hasChanges`, `flush`                                                                                                                                 |
+| `IRepository<State, E, Value>`                                | What a repository implements: `entityName`, optional `entityClass`, `findById(id, ...key)`, `create(value)`, `update(stored, diff)`, `delete(stored)`. `Value` is what `create` takes (default `State`; the state without its id when the database mints ids)                                                                                         |
+| `LazyRef<E, Value>`                                           | `manager.lazy(value)`: a record that does not exist yet. `entity.link(field, ref)` puts it where its id is wanted; `ref.link(field, other)` nests one inside another                                                                                                                                                                                  |
+| `repositoryToken(key)`                                        | A `SingleToken` for a repository, tagged so an `EntityManager` resolved with it finds it                                                                                                                                                                                                                                                              |
+| `entityManagerToken(repositoryToken)`                         | The token the `EntityManager` over that repository resolves by — one per repository token per scope                                                                                                                                                                                                                                                   |
+| `flushEntityManagers(scope)`                                  | Flushes every `EntityManager` the scope built, in the order they were built — the commit. Opens no transaction                                                                                                                                                                                                                                        |
+| `IEntityManagerToken`, `isEntityManager`, `isRepositoryToken` | Lower-level pieces of the above; rarely needed directly                                                                                                                                                                                                                                                                                               |
 
-## Recipe
+## Recipes
+
+### Repository, entity, and one unit of work per request
 
 ```ts
 import 'reflect-metadata';
@@ -47,24 +58,23 @@ const IOrderRepositoryToken = repositoryToken<OrderRepository>('IOrderRepository
 class OrderRepository implements IRepository<OrderDto, Order> {
   readonly entityName = 'Order';
   readonly entityClass = Order;
-  async findById(id: string) {
-    /* SELECT */ return undefined as OrderDto | undefined;
+  async findById(id: string): Promise<OrderDto | undefined> {
+    /* SELECT */
   }
-  async create(order: OrderDto) {
-    /* INSERT */ return order;
+  async create(order: OrderDto): Promise<OrderDto> {
+    /* INSERT, answer the row */
   }
-  async update(stored: OrderDto, diff: Partial<OrderDto>) {
-    /* UPDATE only diff */ return { ...stored, ...diff };
+  async update(stored: OrderDto, diff: Partial<OrderDto>): Promise<OrderDto> {
+    /* UPDATE only diff */
   }
-  async delete(stored: OrderDto) {
+  async delete(stored: OrderDto): Promise<void> {
     /* DELETE */
   }
 }
 
 const app = new Container({ tags: ['application'] })
   .addRegistration(R.fromClass(OrderRepository))
-  // one unit of work per request scope
-  .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+  .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request'))); // one unit of work per request
 
 const request = app.createScope({ tags: ['request'] });
 const orders = entityManagerToken(IOrderRepositoryToken).resolve(request);
@@ -77,7 +87,32 @@ await db.transaction(() => flushEntityManagers(request)); // update(stored, { st
 request.dispose();
 ```
 
-## Lazy references
+### Inject an entity manager
+
+```ts
+@register(IOrderServiceToken, scope((s) => s.hasTag('request')), singleton())
+class OrderService {
+  constructor(
+    @inject(by(entityManagerToken(IOrderRepositoryToken))) private readonly orders: EntityManager<OrderRepository>,
+  ) {}
+
+  async cancel(id: string): Promise<OrderDto> {
+    const order = await this.orders.findByIdOrFail(id);
+    order.cancel();
+    return order.state; // written when the request commits
+  }
+}
+```
+
+### Create, track a list, remove
+
+```ts
+const created = orders.create({ id: 'o-2', status: 'open', lines: [] }); // INSERT at flush
+for (const order of orders.trackMany(await orders.repository.findByCustomer('Ada'))) order.cancel();
+orders.remove(await orders.findByIdOrFail('o-3')); // DELETE at flush
+```
+
+### Link a record that does not exist yet
 
 A foreign key can point at a record that is only created if, and when, the
 entity linking it is written — at the commit, inside the same transaction. DTO
@@ -101,18 +136,35 @@ field takes ids and references mixed (`post.link('tagIds', ['t-0', tags.lazy(...
 The created record is tracked by its own manager as stored. `lazy` copies its
 value when called.
 
+## Pitfalls
+
+| Symptom                                                          | Cause                                                                     | Fix                                                                                                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `EntityManagerArgumentError`                                     | Resolved `IEntityManagerToken` on its own, or with a plain `SingleToken`  | `entityManagerToken(repositoryToken<R>('IR')).resolve(scope)`                                                             |
+| Changes from one request show up in another                      | `EntityManager` registered without a scope rule is shared by every scope  | `R.fromClass(EntityManager).when((s) => s.hasTag('request'))`                                                             |
+| A repository singleton differs per request                       | A registration without `scope(...)` is copied into every child scope      | `@register(token, scope((s) => s.hasTag('application')), singleton())`                                                    |
+| Nothing is written                                               | `flush` / `flushEntityManagers` never ran, or ran on another scope        | Run `flushEntityManagers(requestScope)` after the use case, inside a transaction                                          |
+| A change made right after reading is not written                 | The record was read from the repository directly, so it is untracked      | Read through the manager: `findByIdOrFail`, or `trackMany(repository.list())`                                             |
+| A change inside a class instance in the DTO is not written       | Only plain data is copied and compared; other objects compare by identity | Keep state plain (objects, arrays, dates), or assign a new instance                                                       |
+| Foreign-key violation when related rows are written in one flush | Managers flush in the order the scope built them                          | Let the database check foreign keys at commit (Postgres: `DEFERRABLE INITIALLY DEFERRED`), or `link` the dependent record |
+| TS error on `link(field, ref)`                                   | The field cannot hold the referenced record's id type                     | Link a field typed for that id (`string`, `string \| null`, `string[]`)                                                   |
+| `EntityIdentityError` on `create`                                | The id is tracked already, or was removed in this unit of work            | Change the tracked entity instead of creating it again                                                                    |
+
+## Errors
+
+Every error has a stable `code` and a message that says how to fix it.
+
+| Class                        | `code`                        | When                                                                                                                                  |
+| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `EntityNotFoundError`        | `IOC_ENTITY_NOT_FOUND`        | `findByIdOrFail` / `remove` for a record the repository does not have, or one removed in this unit of work. Has `entityName` and `id` |
+| `EntityIdentityError`        | `IOC_ENTITY_IDENTITY`         | `create` for a tracked or removed id; `patch` to another id; flushing an entity whose `state.id` was reassigned                       |
+| `EntityReferenceError`       | `IOC_ENTITY_REFERENCE`        | Lazy records linked into each other in a cycle                                                                                        |
+| `EntityManagerArgumentError` | `IOC_ENTITY_MANAGER_ARGUMENT` | An `EntityManager` resolved without a repository token                                                                                |
+
 ## Rules
 
 - State is plain data: primitives, arrays, plain objects, `Date`. Those are
-  copied; any other object (a `LazyRef`, a class instance) is kept as the same
-  object and compared by identity, so a change inside one is not seen.
-- Register `EntityManager` with a scope rule (`.when(...)`): without one it is
-  shared by every scope that resolves it, and the identity map outlives the unit of work.
-- `flush` writes in the order entities were first tracked, and
-  `flushEntityManagers` flushes managers in the order the scope built them.
-  When rows reference each other across repositories, let the database check
-  foreign keys at commit (Postgres: `DEFERRABLE INITIALLY DEFERRED`).
+  copied; any other object is kept as the same object and compared by identity.
 - `update` receives the record as the unit of work read it, so a repository can
   refuse a write when the stored row no longer matches it (optimistic concurrency).
-- The id is the identity-map key and cannot change; a removed id cannot be
-  created again in the same unit of work.
+- The id is the identity-map key and cannot change.

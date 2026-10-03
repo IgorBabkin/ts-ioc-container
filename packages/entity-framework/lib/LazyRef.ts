@@ -14,7 +14,7 @@ export type Linkable<V> = [V] extends [readonly (infer Item)[]]
   ? (Item | ILazyRef<{ readonly id: Item }>)[]
   : ILazyRef<{ readonly id: NonNullable<V> }>;
 
-/** Fields waiting for the ids of records that do not exist yet. */
+/** Fields waiting for the ids of records that do not exist yet. Internal to `Entity` and `LazyRef`. */
 export class Links<T> {
   private readonly links = new Map<keyof T, unknown>();
 
@@ -69,11 +69,17 @@ export class LazyRef<
     return this;
   }
 
-  /** The record, created on the first call; every later call answers the same one. */
+  /**
+   * The record, created on the first call; every later call answers the same one.
+   * A flush calls it for you — call it yourself only to create the record now.
+   *
+   * @throws {EntityReferenceError} when lazy records linked into each other form a cycle.
+   */
   resolve(): Promise<E> {
     if (this.resolving) {
       throw new EntityReferenceError(
-        'A lazy reference was asked for while it was being created: the links form a cycle',
+        'Lazy records are linked into each other in a cycle, so none can be created first. ' +
+          'Break the cycle: link one side, flush, then set the other field to the id it got.',
       );
     }
     if (this.resolved === undefined) {
