@@ -6,4 +6,4 @@ glob:
     - '@app/services'
     - ./src/infra
 classes:
-  excludeClasses: [JsonLogger]
+  exclude: JsonLogger

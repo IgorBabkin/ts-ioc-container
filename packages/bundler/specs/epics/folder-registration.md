@@ -124,13 +124,16 @@ Acceptance criteria:
 - `decorators` requires the class to carry one of the listed decorators,
   recognised by name — also when imported under another name or reached as a
   member (`@ioc.register(...)`). Composed decorators are listed like any other.
-- `glob` is a glob (`*Service`) the class name must match; for an anonymous
-  default export the name is derived from the file name.
-- `excludeClasses` drops classes by exact name and `exclude` drops classes
-  whose name matches a glob; both apply after every other criterion.
+- `glob` is a glob (`*Service`), or a non-empty list of them, the class name
+  must match one of; for an anonymous default export the name is derived from
+  the file name.
+- `exclude` is a glob, or a non-empty list of them, the class name must match
+  none of; it applies after every other criterion. A plain class name is a glob
+  matching only itself, so `["MockUserRepository", "*Fake"]` drops one class by
+  name and a family by pattern.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
-  registration is last-wins); the warning suggests `classes.excludeClasses`.
+  registration is last-wins); the warning suggests `classes.exclude`.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):

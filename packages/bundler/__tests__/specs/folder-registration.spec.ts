@@ -384,6 +384,10 @@ describe('Folder registration', () => {
       expect(selected({ glob: '*Service' })).toEqual(['UserService', 'AuthService', 'MainService']);
     });
 
+    it('requires the class name to match one of a list of globs', () => {
+      expect(selected({ glob: ['Auth*', 'Helper'] })).toEqual(['AuthService', 'Helper']);
+    });
+
     it('combines criteria: a class must meet every one', () => {
       expect(selected({ export: 'named', decorators: ['register'], glob: '*Service' })).toEqual(['AuthService']);
     });
@@ -414,25 +418,27 @@ describe('Folder registration', () => {
       expect(generated()).toContain("import UserService from '../user-service';");
     });
 
-    it('drops classes by exact name with excludeClasses', () => {
-      expect(selected({ excludeClasses: ['Helper', 'AuthService'] })).toEqual(['UserService', 'MainService']);
-    });
-
     it('drops classes whose name matches exclude', () => {
       expect(selected({ exclude: '*Service' })).toEqual(['Helper']);
     });
 
+    it('drops classes matching any exclude glob: a plain name drops exactly that class', () => {
+      expect(selected({ exclude: ['Helper', 'Auth*'] })).toEqual(['UserService', 'MainService']);
+    });
+
     it('applies exclusions after the positive criteria', () => {
-      expect(selected({ decorators: ['register'], excludeClasses: ['MainService'] })).toEqual(['AuthService']);
+      expect(selected({ decorators: ['register'], exclude: 'MainService' })).toEqual(['AuthService']);
     });
 
     it.each([
       ['decorated', 'classes: expected an object'],
       [{ export: 'all' }, 'classes.export: expected "any", "named" or "default"'],
       [{ decorators: [''] }, 'classes.decorators: expected an array of strings'],
-      [{ glob: '' }, 'classes.glob: expected a non-empty string'],
-      [{ excludeClasses: [] }, 'classes.excludeClasses: expected a non-empty array of strings'],
-      [{ exclude: '' }, 'classes.exclude: expected a non-empty string'],
+      [{ glob: '' }, 'classes.glob: expected a glob or a non-empty array of globs'],
+      [{ glob: [] }, 'classes.glob: expected a glob or a non-empty array of globs'],
+      [{ exclude: [''] }, 'classes.exclude: expected a glob or a non-empty array of globs'],
+      [{ exclude: 1 }, 'classes.exclude: expected a glob or a non-empty array of globs'],
+      [{ excludeClasses: ['Helper'] }, 'classes.excludeClasses: unknown field'],
       [{ exported: true }, 'classes.exported: unknown field'],
       [{ nameGlob: '*Service' }, 'classes.nameGlob: unknown field'],
       [{ excludeNameGlob: '*Mock' }, 'classes.excludeNameGlob: unknown field'],
@@ -463,13 +469,13 @@ describe('Folder registration', () => {
       expect(warnings[0]).toContain('decorator token');
       expect(warnings[0]).toContain('IDashboardRepositoryToken');
       expect(warnings[0]).toContain('HttpDashboardRepository, MockDashboardRepository');
-      expect(warnings[0]).toContain('classes.excludeClasses');
+      expect(warnings[0]).toContain('classes.exclude');
     });
 
     it('does not warn once one colliding class is excluded', () => {
       project = TempProject.create({
         'app.bundle.json': module(['./src'], {
-          classes: { decorators: ['repository'], excludeClasses: ['MockDashboardRepository'] },
+          classes: { decorators: ['repository'], exclude: 'MockDashboardRepository' },
         }),
         'src/HttpDashboardRepository.ts': repo('HttpDashboardRepository'),
         'src/MockDashboardRepository.ts': repo('MockDashboardRepository'),

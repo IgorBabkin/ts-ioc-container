@@ -118,23 +118,38 @@
           }
         },
         "glob": {
-          "description": "Glob the class name must match, e.g. \"*Service\". An anonymous default export is named after its file.",
-          "type": "string",
-          "minLength": 1
-        },
-        "excludeClasses": {
-          "description": "Class names to drop after selection, e.g. one test double sitting next to the real registration in the same file.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "minItems": 1
+          "description": "Glob, or globs, the class name must match one of, e.g. \"*Service\" or [\"*Service\", \"*Repository\"]. An anonymous default export is named after its file.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          ]
         },
         "exclude": {
-          "description": "Glob the class name must NOT match, e.g. \"*Mock\". An anonymous default export is named after its file.",
-          "type": "string",
-          "minLength": 1
+          "description": "Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: [\"MockUserRepository\", \"*Fake\"].",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          ]
         }
       },
       "additionalProperties": false,

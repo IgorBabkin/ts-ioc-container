@@ -43,24 +43,25 @@ export interface ClassSelector {
    * composed one). Default {@link DEFAULT_DECORATORS}; `[]` requires none.
    */
   decorators?: string[];
-  /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
-  glob?: string;
   /**
-   * Class names to drop after selection, e.g. one test double sitting next to the
-   * real registration in the same file.
+   * Globs the class name must match one of, e.g. `*Service` or `["*Service", "*Repository"]`.
+   * An anonymous default export is named after its file.
    */
-  excludeClasses?: string[];
-  /** A glob the class name must NOT match, e.g. `*Mock`. An anonymous default export is named after its file. */
-  exclude?: string;
+  glob?: string | string[];
+  /**
+   * Globs the class name must match none of, applied after every other criterion. A plain
+   * name is a glob too, so `["MockUserRepository", "*Fake"]` drops one class by name and a
+   * family by pattern.
+   */
+  exclude?: string | string[];
 }
 
 /** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedClassSelector {
   export: ExportKind;
   decorators?: string[];
-  glob?: RegExp;
-  excludeClasses?: string[];
-  exclude?: RegExp;
+  glob?: RegExp[];
+  exclude?: RegExp[];
 }
 
 export interface PathConfig {
@@ -155,6 +156,22 @@ const strings = (what: string, minItems: number) =>
 const stringList = () => strings('an array of strings', 0);
 const nonEmptyStringList = () => strings('a non-empty array of strings', 1);
 
+/** One glob or a non-empty list of them, validated as one value like {@link strings}. */
+const globs = () =>
+  z
+    .custom<string | string[]>(
+      (value) => isNonEmptyString(value) || (Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString)),
+      expected('a glob or a non-empty array of globs'),
+    )
+    .meta({
+      anyOf: [
+        { type: 'string', minLength: 1 },
+        { type: 'array', items: { type: 'string', minLength: 1 }, minItems: 1 },
+      ],
+    });
+const toGlobs = (value?: string | string[]): RegExp[] | undefined =>
+  value === undefined ? undefined : (Array.isArray(value) ? value : [value]).map(globToRegExp);
+
 const PATH_SCHEMA = z.union(
   [
     nonEmptyString(),
@@ -207,20 +224,15 @@ const CLASSES_SCHEMA = z
         .describe(
           'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator). Default ["register"]; [] requires none.',
         ),
-      glob: nonEmptyString()
+      glob: globs()
         .optional()
         .describe(
-          'Glob the class name must match, e.g. "*Service". An anonymous default export is named after its file.',
+          'Glob, or globs, the class name must match one of, e.g. "*Service" or ["*Service", "*Repository"]. An anonymous default export is named after its file.',
         ),
-      excludeClasses: nonEmptyStringList()
+      exclude: globs()
         .optional()
         .describe(
-          'Class names to drop after selection, e.g. one test double sitting next to the real registration in the same file.',
-        ),
-      exclude: nonEmptyString()
-        .optional()
-        .describe(
-          'Glob the class name must NOT match, e.g. "*Mock". An anonymous default export is named after its file.',
+          'Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: ["MockUserRepository", "*Fake"].',
         ),
     },
     expected('an object'),
@@ -311,8 +323,8 @@ function toClassSelector(classes: ParsedConfig['classes']): ResolvedClassSelecto
     ...rest,
     // `[]` is the explicit opt-out: no decorator required.
     decorators: decorators.length > 0 ? decorators : undefined,
-    glob: glob === undefined ? undefined : globToRegExp(glob),
-    exclude: exclude === undefined ? undefined : globToRegExp(exclude),
+    glob: toGlobs(glob),
+    exclude: toGlobs(exclude),
   };
 }
 

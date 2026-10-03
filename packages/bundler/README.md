@@ -181,13 +181,12 @@ criterion that is set:
 }
 ```
 
-| Criterion        | Default        | Meaning                                                                                                                                    |
-| ---------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `export`         | `any`          | `any`, `named` or `default` — which exports count                                                                                          |
-| `decorators`     | `["register"]` | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none            |
-| `glob`           | —              | Glob the class name must match, e.g. `"*Service"`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
-| `excludeClasses` | —              | Class names to drop, e.g. `["MockDashboardRepository"]`                                                                                    |
-| `exclude`        | —              | Glob the class name must **not** match, e.g. `"*Mock"`                                                                                     |
+| Criterion    | Default        | Meaning                                                                                                                                                                                           |
+| ------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `export`     | `any`          | `any`, `named` or `default` — which exports count                                                                                                                                                 |
+| `decorators` | `["register"]` | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none                                                                   |
+| `glob`       | —              | A glob, or a list of them, the class name must match one of: `"*Service"`, `["*Service", "*Repository"]`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
+| `exclude`    | —              | A glob, or a list of them, the class name must match **none** of: `"*Mock"`, `["MockDashboardRepository", "*Fake"]`                                                                               |
 
 Abstract and non-exported classes are never registered.
 
@@ -195,17 +194,17 @@ Abstract and non-exported classes are never registered.
 
 When a real implementation and a test-only stand-in are both decorated and both
 bind the same token, registration is last-wins and the stand-in silently wins.
-`excludeClasses` and `exclude` drop a class right in the config:
+`exclude` drops it right in the config. A plain class name is a glob that
+matches only itself, so one list drops a class by name and a family by pattern:
 
 ```json
 "classes": {
   "decorators": ["repository", "service"],
-  "excludeClasses": ["MockDashboardRepository"],
-  "exclude": "*Fake"
+  "exclude": ["MockDashboardRepository", "*Fake"]
 }
 ```
 
-Both apply after every other criterion, so they can be combined with
+`exclude` applies after every other criterion, so it combines with
 `decorators` and `glob` freely.
 
 As a safety net, the build warns when two selected classes pass the same
@@ -216,7 +215,7 @@ are not resolved), so it can only be a heuristic:
 ```text
 tic: warning: app.bundle.json: decorator token "IDashboardRepositoryToken" is passed by
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
-exclude one with classes.excludeClasses
+exclude one with classes.exclude
 ```
 
 Classes that are scope-gated are not last-wins, so they do not warn: when the
