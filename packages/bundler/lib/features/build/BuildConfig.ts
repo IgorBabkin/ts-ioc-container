@@ -6,20 +6,24 @@ import { globToRegExp } from './domain/glob';
 
 /**
  * Which files a bundle reads and parses: the first, cheap stage of selection,
- * decided by path alone. `paths` are the folders the files come from; within them
+ * decided by path alone. `glob` names the folders the files come from; within them
  * a file is parsed unless it matches one of `exclude`. Globs are relative to the
  * config file and `/`-separated.
  */
 export interface GlobSelector {
-  /** Folders to scan: relative to the config file (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
-  paths: (string | PathConfig)[];
+  /**
+   * Folder, or folders, to scan recursively: relative to the config file (`./src/services`),
+   * or tsconfig `paths` aliases (`@app/services`).
+   */
+  glob: string | string[];
   /** Glob, or globs, of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
   exclude?: string | string[];
 }
 
 /** A {@link GlobSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedGlobSelector {
-  paths: Required<PathConfig>[];
+  /** The folders to scan, as written in the config. */
+  glob: string[];
   exclude: RegExp[];
 }
 
@@ -61,13 +65,6 @@ export interface ResolvedClassSelector {
   exclude?: RegExp[];
 }
 
-export interface PathConfig {
-  /** A folder relative to the config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
-  path: string;
-  /** Scan sub-folders too. Default `true`. */
-  recursive?: boolean;
-}
-
 /**
  * A bundle config file: one bundle, described explicitly — the folders it scans and the
  * classes it registers. `tic build <config>` prints the bundle to stdout; where it is
@@ -83,21 +80,24 @@ export interface BundleConfig {
    */
   name?: string;
   /**
-   * The tsconfig whose `paths` aliases `glob.paths` may name and generated imports are
+   * The tsconfig whose `paths` aliases `glob.glob` may name and generated imports are
    * written in, and whose `moduleResolution` sets the import extension. It contributes
-   * nothing else: the files scanned are `glob.paths` alone. Relative to the config file.
+   * nothing else: the files scanned are `glob.glob` alone. Relative to the config file.
    * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
   tsconfig?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
   /**
-   * Which files are parsed: the folders in `glob.paths`, minus {@link DEFAULT_EXCLUDE} unless
-   * `exclude` says otherwise. A folder or a list of folders is shorthand for `{ paths }`.
+   * Which files are parsed: the folders in `glob.glob`, minus {@link DEFAULT_EXCLUDE} unless
+   * `exclude` says otherwise. A folder or a list of folders is shorthand for `{ glob }`, as on {@link ClassSelector}.
    */
-  glob: string | (string | PathConfig)[] | GlobSelector;
-  /** Which classes of a parsed file are registered. Default: every exported class. */
-  className?: ClassSelector;
+  glob: string | string[] | GlobSelector;
+  /**
+   * Which classes of a parsed file are registered. Default: every exported class decorated
+   * with `@register`. A glob or a list of globs is shorthand for `{ glob }`, as on `glob`.
+   */
+  className?: string | string[] | ClassSelector;
 }
 
 export const DEFAULT_TSCONFIG = './tsconfig.json';
@@ -172,27 +172,15 @@ const toList = (value: string | string[]): string[] => (Array.isArray(value) ? v
 const toGlobs = (value?: string | string[]): RegExp[] | undefined =>
   value === undefined ? undefined : toList(value).map(globToRegExp);
 
-const PATH_SCHEMA = z.union(
-  [
-    nonEmptyString(),
-    z.object(
-      {
-        path: nonEmptyString(),
-        recursive: z.boolean(expected('a boolean')).default(true),
-      },
-      expected('a string or an object with "path"'),
-    ),
-  ],
-  expected('a string or an object with "path"'),
-);
-
-const PATHS_SCHEMA = z.array(PATH_SCHEMA, expected('a non-empty array')).min(1, expected('a non-empty array'));
+const FOLDERS_SCHEMA = z.array(nonEmptyString(), expected('a non-empty array')).min(1, expected('a non-empty array'));
 
 const GLOB_OBJECT_SCHEMA = z.strictObject(
   {
-    paths: PATHS_SCHEMA.describe(
-      'Folders to scan: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { "path": "...", "recursive": false }.',
-    ),
+    glob: z
+      .union([nonEmptyString(), FOLDERS_SCHEMA], expected('a folder or a non-empty array of folders'))
+      .describe(
+        'Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services).',
+      ),
     exclude: globList('a glob or an array of globs', 0)
       .default(DEFAULT_EXCLUDE)
       .describe(
@@ -205,43 +193,57 @@ const GLOB_OBJECT_SCHEMA = z.strictObject(
 const GLOB_SCHEMA = z
   .union(
     [
-      nonEmptyString().describe('One folder to scan, with the default exclude: shorthand for { "paths": [...] }.'),
-      PATHS_SCHEMA.describe('Folders to scan, with the default exclude: shorthand for { "paths": [...] }.'),
+      nonEmptyString().describe('One folder to scan, with the default exclude: shorthand for { "glob": [...] }.'),
+      FOLDERS_SCHEMA.describe('Folders to scan, with the default exclude: shorthand for { "glob": [...] }.'),
       GLOB_OBJECT_SCHEMA,
     ],
-    expected('a folder, a non-empty array of folders or an object with "paths"'),
+    expected('a folder, a non-empty array of folders or an object with "glob"'),
   )
   .describe(
-    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { "paths": [...] }.',
+    'Which files this bundle reads and parses — decided by path alone, before parsing. `glob` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { "glob": [...] }.',
   );
 
+const CLASS_OBJECT_SCHEMA = z.strictObject(
+  {
+    export: z
+      .enum(['any', 'named', 'default'], expected('"any", "named" or "default"'))
+      .default('any')
+      .describe('Which exports count.'),
+    decorators: stringList()
+      .default(DEFAULT_DECORATORS)
+      .describe(
+        'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator). Default ["register"]; [] requires none.',
+      ),
+    glob: globs()
+      .optional()
+      .describe(
+        'Glob, or globs, the class name must match one of, e.g. "*Service" or ["*Service", "*Repository"]. An anonymous default export is named after its file.',
+      ),
+    exclude: globs()
+      .optional()
+      .describe(
+        'Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: ["MockUserRepository", "*Fake"].',
+      ),
+  },
+  expected('an object'),
+);
+
 const CLASSES_SCHEMA = z
-  .strictObject(
-    {
-      export: z
-        .enum(['any', 'named', 'default'], expected('"any", "named" or "default"'))
-        .default('any')
-        .describe('Which exports count.'),
-      decorators: stringList()
-        .default(DEFAULT_DECORATORS)
-        .describe(
-          'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator). Default ["register"]; [] requires none.',
-        ),
-      glob: globs()
-        .optional()
-        .describe(
-          'Glob, or globs, the class name must match one of, e.g. "*Service" or ["*Service", "*Repository"]. An anonymous default export is named after its file.',
-        ),
-      exclude: globs()
-        .optional()
-        .describe(
-          'Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: ["MockUserRepository", "*Fake"].',
-        ),
-    },
-    expected('an object'),
+  .union(
+    [
+      nonEmptyString().describe(
+        'One class-name glob, with the default export and decorators: shorthand for { "glob": "..." }.',
+      ),
+      z
+        .array(nonEmptyString(), expected('a non-empty array'))
+        .min(1, expected('a non-empty array'))
+        .describe('Class-name globs, with the default export and decorators: shorthand for { "glob": [...] }.'),
+      CLASS_OBJECT_SCHEMA,
+    ],
+    expected('a glob, a non-empty array of globs or an object'),
   )
   .describe(
-    'Which classes of a parsed file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; by default that is every exported class decorated with @register.',
+    'Which classes of a parsed file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; by default that is every exported class decorated with @register. A glob, or a list of globs, is shorthand for { "glob": ... }.',
   );
 
 /**
@@ -264,7 +266,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .optional()
       .meta({ default: DEFAULT_TSCONFIG })
       .describe(
-        'The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.',
+        'The tsconfig whose `paths` aliases glob.glob may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.glob alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.',
       ),
     importExtension: z
       .string(expected('a string'))
@@ -280,7 +282,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
 
 type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
 
-/** `['className', 'export']` -> `className.export`, `['glob', 'paths', 0]` -> `glob.paths[0]`; the root is `config`. */
+/** `['className', 'export']` -> `className.export`, `['glob', 'glob', 0]` -> `glob.glob[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -291,7 +293,7 @@ function formatPath(segments: PropertyKey[]): string {
 
 /**
  * A union failure names the union unless the value had the type of one branch: an
- * object path without `path` reports `glob.paths[0].path`, not `glob.paths[0]`.
+ * object path without `path` reports `glob.glob[0].path`, not `glob.glob[0]`.
  */
 function matchedBranch(issue: z.core.$ZodIssueInvalidUnion): z.core.$ZodIssue[] | undefined {
   const typeMatched = issue.errors.filter((branch) =>
@@ -314,21 +316,24 @@ type ParsedGlob = z.output<typeof GLOB_OBJECT_SCHEMA>;
 
 /** Expands the folder / folder-list shorthand into the object form, with the default exclude. */
 function toGlobObject(glob: ParsedConfig['glob']): ParsedGlob {
-  if (Array.isArray(glob)) return { paths: glob, exclude: DEFAULT_EXCLUDE };
-  if (typeof glob === 'string') return { paths: [glob], exclude: DEFAULT_EXCLUDE };
+  if (typeof glob === 'string' || Array.isArray(glob)) return { glob, exclude: DEFAULT_EXCLUDE };
   return glob;
 }
 
 function toGlobSelector(glob: ParsedGlob): ResolvedGlobSelector {
   return {
-    paths: glob.paths.map((entry) => (typeof entry === 'string' ? { path: entry, recursive: true } : entry)),
+    glob: toList(glob.glob),
     exclude: toList(glob.exclude).map(globToRegExp),
   };
 }
 
-function toClassSelector(classes: ParsedConfig['className']): ResolvedClassSelector {
-  if (classes === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
-  const { decorators, glob, exclude, ...rest } = classes;
+function toClassSelector(className: ParsedConfig['className']): ResolvedClassSelector {
+  if (className === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
+  // A glob, or a list of globs, is shorthand for `{ glob }` with the default export and decorators.
+  if (typeof className === 'string' || Array.isArray(className)) {
+    return { export: 'any', decorators: DEFAULT_DECORATORS, glob: toGlobs(className) };
+  }
+  const { decorators, glob, exclude, ...rest } = className;
   return {
     ...rest,
     // `[]` is the explicit opt-out: no decorator required.

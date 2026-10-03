@@ -45,7 +45,6 @@ export {
   DEFAULT_DECORATORS,
   toClassName,
   type BundleConfig,
-  type PathConfig,
   type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,

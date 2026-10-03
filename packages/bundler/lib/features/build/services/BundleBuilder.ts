@@ -101,9 +101,9 @@ export class BundleBuilder implements IBundleBuilder {
     };
 
     const files = new Set<string>();
-    for (const entry of config.glob.paths) {
-      const dir = paths.resolveNamespace(entry.path, config.dir);
-      for (const file of listSourceFiles(dir, entry.recursive, isExcluded)) files.add(file);
+    for (const folder of config.glob.glob) {
+      const dir = paths.resolveNamespace(folder, config.dir);
+      for (const file of listSourceFiles(dir, isExcluded)) files.add(file);
     }
 
     const classes = [...files]
@@ -126,7 +126,7 @@ export class BundleBuilder implements IBundleBuilder {
       BUNDLE_PROTOCOL,
       bundleView({
         name: config.bundleClassName,
-        paths: config.glob.paths.map((entry) => entry.path),
+        paths: config.glob.glob,
         classes: classes.map((cls) => ({ ...cls, specifier: cls.specifier! })),
       }),
     );

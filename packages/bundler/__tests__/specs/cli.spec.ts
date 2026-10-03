@@ -23,7 +23,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   beforeEach(() => {
     project = TempProject.create({
       'tsconfig.json': { compilerOptions: { paths: { '@app/*': ['./src/*'] } } },
-      'app.bundle.json': { glob: { paths: ['@app/services'] } },
+      'app.bundle.json': { glob: { glob: ['@app/services'] } },
       'src/services/Logger.ts': decorated('Logger'),
     });
   });
@@ -51,7 +51,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('reads a YAML config, resolving its paths against the config file', () => {
-    project.write('config/prod.bundle.yml', "tsconfig: ../tsconfig.json\nglob:\n  paths: ['../src']\n");
+    project.write('config/prod.bundle.yml', "tsconfig: ../tsconfig.json\nglob:\n  glob: ['../src']\n");
     const io = new Io(project.path('src'));
 
     expect(run(['build', '../config/prod.bundle.yml'], io)).toBe(0);
@@ -81,9 +81,9 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it.each([
-    [['build'], "name: app\nglob:\n  paths: ['@app/services']\n"],
-    [['build', '-'], "name: app\nglob:\n  paths: ['@app/services']\n"],
-    [['build'], JSON.stringify({ name: 'app', glob: { paths: ['@app/services'] } })],
+    [['build'], "name: app\nglob:\n  glob: ['@app/services']\n"],
+    [['build', '-'], "name: app\nglob:\n  glob: ['@app/services']\n"],
+    [['build'], JSON.stringify({ name: 'app', glob: { glob: ['@app/services'] } })],
   ])('reads a piped config from stdin with %j: cat app.bundle.yml | tic build > out.ts', (argv, input) => {
     const io = new Io(project.root, input);
 
@@ -93,21 +93,21 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('resolves a piped config against the working directory', () => {
-    const io = new Io(project.path('src'), "name: app\ntsconfig: ../tsconfig.json\nglob:\n  paths: ['./services']\n");
+    const io = new Io(project.path('src'), "name: app\ntsconfig: ../tsconfig.json\nglob:\n  glob: ['./services']\n");
 
     expect(run(['build'], io)).toBe(0);
     expect(io.out.join('\n')).toContain('Registration.fromClass(Logger)');
   });
 
   it('requires a name in a piped config: there is no file name to take it from', () => {
-    const io = new Io(project.root, "glob:\n  paths: ['@app/services']\n");
+    const io = new Io(project.root, "glob:\n  glob: ['@app/services']\n");
 
     expect(run(['build'], io)).toBe(1);
     expect(io.err).toEqual(['tic: <stdin>: name: required for a config read from stdin']);
   });
 
   it('reports a config error on stderr, naming the config, and prints nothing', () => {
-    project.write('app.bundle.json', { output: 'x.ts', glob: { paths: ['@app/services'] } });
+    project.write('app.bundle.json', { output: 'x.ts', glob: { glob: ['@app/services'] } });
     const io = new Io(project.root);
 
     expect(run(['build', 'app.bundle.json'], io)).toBe(1);
@@ -116,7 +116,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('fails when a selected class is not covered by a tsconfig alias', () => {
-    project.write('app.bundle.json', { glob: { paths: ['./lib'] } });
+    project.write('app.bundle.json', { glob: { glob: ['./lib'] } });
     project.write('lib/External.ts', decorated('External'));
     const io = new Io(project.root);
 
@@ -125,7 +125,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('prints warnings to stderr, never into the bundle on stdout', () => {
-    project.write('app.bundle.json', { glob: { paths: ['@app/services'], exclude: ['legacy/**'] } });
+    project.write('app.bundle.json', { glob: { glob: ['@app/services'], exclude: ['legacy/**'] } });
     const io = new Io(project.root);
 
     expect(run(['build', 'app.bundle.json'], io)).toBe(0);

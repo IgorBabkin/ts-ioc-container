@@ -53,13 +53,13 @@ describe('BuildController', () => {
   it('given - as the config when built then the config text is read from stdin', () => {
     const { builder, out, controller } = setup(
       () => result('// bundle\n'),
-      () => 'name: app\nglob:\n  paths: [./src]\n',
+      () => 'name: app\nglob:\n  glob: [./src]\n',
     );
 
     controller.build({ config: '-' });
 
     builder.verify((m) =>
-      m.build(It.Is((request: { text?: string }) => request.text === 'name: app\nglob:\n  paths: [./src]\n')),
+      m.build(It.Is((request: { text?: string }) => request.text === 'name: app\nglob:\n  glob: [./src]\n')),
     );
     out.verify((m) => m.write('// bundle'), Times.Once());
   });

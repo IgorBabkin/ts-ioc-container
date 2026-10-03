@@ -8,8 +8,8 @@ const ROOT_ALIAS = { compilerOptions: { paths: { '@/*': ['./*'] } } };
 const create = (files: Record<string, string | object>) =>
   TempProject.create({ 'tsconfig.json': ROOT_ALIAS, ...files });
 
-const module = (paths: unknown[], { glob, ...extra }: { glob?: object; [field: string]: unknown } = {}) => ({
-  glob: { paths, ...glob },
+const module = (folders: unknown[], { glob, ...extra }: { glob?: object; [field: string]: unknown } = {}) => ({
+  glob: { glob: folders, ...glob },
   ...extra,
 });
 
@@ -78,15 +78,17 @@ describe('Folder registration', () => {
 
     it.each([
       [[], 'config: expected an object'],
-      [{}, 'glob: expected a folder, a non-empty array of folders or an object with "paths"'],
+      [{}, 'glob: expected a folder, a non-empty array of folders or an object with "glob"'],
       [module(['./src'], { output: 'src/di/container.bundle.ts' }), 'output: unknown field'],
-      [{ glob: {} }, 'glob.paths: expected a non-empty array'],
-      [{ glob: { exclude: ['**/*.ts'] } }, 'glob.paths: expected a non-empty array'],
+      [{ glob: {} }, 'glob.glob: expected a folder or a non-empty array of folders'],
+      [{ glob: { exclude: ['**/*.ts'] } }, 'glob.glob: expected a folder or a non-empty array of folders'],
       [{ glob: '' }, 'glob: expected a non-empty string'],
       [{ glob: [] }, 'glob: expected a non-empty array'],
-      [{ glob: 42 }, 'glob: expected a folder, a non-empty array of folders or an object with "paths"'],
-      [{ glob: { paths: [] } }, 'glob.paths: expected a non-empty array'],
-      [{ glob: { paths: [{ recursive: true }] } }, 'glob.paths[0].path'],
+      [{ glob: 42 }, 'glob: expected a folder, a non-empty array of folders or an object with "glob"'],
+      [{ glob: { glob: [] } }, 'glob.glob: expected a non-empty array'],
+      [{ glob: { glob: [{ path: './src' }] } }, 'glob.glob[0]: expected a non-empty string'],
+      [{ glob: [{ path: './src', recursive: false }] }, 'glob[0]: expected a non-empty string'],
+      [{ glob: { glob: 42 } }, 'glob.glob: expected a folder or a non-empty array of folders'],
       [module(['./src'], { name: 'not valid' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { name: '2fa' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { tags: ['production'] }), 'tags: unknown field'],
@@ -109,20 +111,20 @@ describe('Folder registration', () => {
   describe('Story: Name the scanned folders without an object', () => {
     it.each([
       ['a folder', './src/services'],
-      ['a list of folders', ['./src/services', { path: './src/infra', recursive: false }]],
+      ['a list of folders', ['./src/services', './src/infra']],
+      ['an object whose glob is a folder', { glob: './src/services' }],
     ])('takes glob as %s, keeping the default exclude', (_, glob) => {
       project = create({
         'app.bundle.json': { glob },
         'src/services/Logger.ts': decorated('Logger'),
         'src/services/Logger.spec.ts': decorated('LoggerSpec'),
         'src/infra/Db.ts': decorated('Db'),
-        'src/infra/nested/Deep.ts': decorated('Deep'),
       });
 
       const { warnings } = buildProject();
 
       expect(generated()).toContain('Registration.fromClass(Logger)');
-      expect(generated()).not.toMatch(/LoggerSpec|Deep/);
+      expect(generated()).not.toContain('LoggerSpec');
       expect(warnings).toEqual([]);
     });
   });
@@ -131,7 +133,7 @@ describe('Folder registration', () => {
     const yaml = [
       'name: services',
       'glob:',
-      '  paths:',
+      '  glob:',
       '    - ./src/services',
       'className:',
       '  decorators: [register]',
@@ -150,14 +152,14 @@ describe('Folder registration', () => {
       project = create({ 'production.bundle.yaml': '', 'tsconfig.json': { include: ['src'] } });
 
       expect(() => buildFrom('production.bundle.yaml')).toThrow(
-        'glob: expected a folder, a non-empty array of folders or an object with "paths"',
+        'glob: expected a folder, a non-empty array of folders or an object with "glob"',
       );
     });
 
     it.each([
       ['glob: [unclosed', /not valid YAML/],
       ['- glob: {}', 'config: expected an object'],
-      ['glob:\n  paths: [./src]\nselect: {}', 'select: unknown field'],
+      ['glob:\n  glob: [./src]\nselect: {}', 'select: unknown field'],
       ['output: src/di/app.bundle.ts', 'output: unknown field'],
     ])('rejects %j naming the problem', (source, message) => {
       project = create({ 'app.bundle.yaml': source });
@@ -188,17 +190,17 @@ describe('Folder registration', () => {
       );
     });
 
-    it('limits a namespace to its own folder when recursive is false', () => {
+    it('scans the folders of a list, each one recursively', () => {
       project = create({
-        'app.bundle.json': module([{ path: './src/services', recursive: false }]),
+        'app.bundle.json': module(['./src/services', './src/infra']),
         'src/services/Logger.ts': decorated('Logger'),
-        'src/services/nested/Hidden.ts': decorated('Hidden'),
+        'src/infra/nested/Db.ts': decorated('Db'),
       });
 
       buildProject();
 
       expect(generated()).toContain('Registration.fromClass(Logger)');
-      expect(generated()).not.toContain('Hidden');
+      expect(generated()).toContain('Registration.fromClass(Db)');
     });
 
     it('registers exported classes, skipping non-exported and abstract ones', () => {
@@ -439,12 +441,29 @@ describe('Folder registration', () => {
       expect(selected({ exclude: ['Helper', 'Auth*'] })).toEqual(['UserService', 'MainService']);
     });
 
+    it.each([
+      ['a glob', 'Auth*', ['AuthService']],
+      ['a list of globs', ['Auth*', 'Helper'], ['AuthService']],
+    ])(
+      'takes className as %s: a shortcut for className.glob, keeping the default decorators',
+      (_, className, expected) => {
+        project = create({ 'app.bundle.json': module(['./src'], { className }), 'src/Classes.ts': classes });
+
+        buildProject();
+
+        expect([...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name)).toEqual(expected);
+      },
+    );
+
     it('applies exclusions after the positive criteria', () => {
       expect(selected({ decorators: ['register'], exclude: 'MainService' })).toEqual(['AuthService']);
     });
 
     it.each([
-      ['decorated', 'className: expected an object'],
+      [42, 'className: expected a glob, a non-empty array of globs or an object'],
+      ['', 'className: expected a non-empty string'],
+      [[], 'className: expected a non-empty array'],
+      [['*Service', ''], 'className[1]: expected a non-empty string'],
       [{ export: 'all' }, 'className.export: expected "any", "named" or "default"'],
       [{ decorators: [''] }, 'className.decorators: expected an array of strings'],
       [{ glob: '' }, 'className.glob: expected a glob or a non-empty array of globs'],
@@ -540,7 +559,7 @@ describe('Folder registration', () => {
   describe('Story: Name every input explicitly', () => {
     const registered = () => [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
 
-    it('never takes files from the tsconfig: only glob.paths are scanned', () => {
+    it('never takes files from the tsconfig: only the glob folders are scanned', () => {
       project = create({
         'app.bundle.json': module(['./lib']),
         'tsconfig.json': { ...ROOT_ALIAS, include: ['src'] },
@@ -575,7 +594,7 @@ describe('Folder registration', () => {
     it('requires a name when the config file is not named <name>.bundle.json', () => {
       project = create({
         'di.json': module(['./src']),
-        'named.yml': 'name: admin\nglob:\n  paths: [./src]\n',
+        'named.yml': 'name: admin\nglob:\n  glob: [./src]\n',
         'src/Logger.ts': decorated('Logger'),
       });
 
