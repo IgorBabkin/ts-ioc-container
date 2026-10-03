@@ -1,6 +1,6 @@
 {
   "name": "@ts-ioc-container/openapi-to-zod",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Generates Zod validation schemas from OpenAPI specifications",
   "keywords": [
     "openapi",

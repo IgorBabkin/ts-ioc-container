@@ -1,6 +1,6 @@
 {
   "name": "@ts-ioc-container/bundler",
-  "version": "3.1.0",
+  "version": "4.0.0",
   "description": "Bundles your dependencies into a single container module for ts-ioc-container: the `tic` CLI scans folders (by path or tsconfig alias) and generates one typed bundle that registers every class — `container.useModule(new AppBundle())`.",
   "publishConfig": {
     "access": "public",

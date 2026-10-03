@@ -1,3 +1,48 @@
+# 76.0.0 (2026-10-03)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    tic build reads a config file or stdin, prints to stdout
+    (4a77fd957b3d251b969bc2449fdf375763d9f1e9)
+    - **@ts-ioc-container/bundler:**
+    output argument, config as --json/--yaml content
+    (8aec2ada1bd355796f1bb370cd4e6615ae95a254)
+    - **@ts-ioc-container/bundler:**
+    drop excludeClasses; classes.glob / exclude take lists
+    (0a19dfe30c672bf526e00d296f567f761e54373d)
+    - **@ts-ioc-container/bundler:**
+    rename class name globs to glob / exclude
+    (52c61f3a94759a5e4792b5dd7836ac4437472f26)
+    - **@ts-ioc-container/bundler:**
+    rename the files config section to glob
+    (54afd9f853c9c89044fac19769e2cb3d8dcfc086)
+    - **@ts-ioc-container/bundler:**
+    explicit configs, no tsconfig extension or zero config
+    (454abd9ece738a91c84ce03eb9b910af7444faa0)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    tic build reads a config file or stdin, prints to stdout
+    (4a77fd957b3d251b969bc2449fdf375763d9f1e9)
+    - **@ts-ioc-container/bundler:**
+    output argument, config as --json/--yaml content
+    (8aec2ada1bd355796f1bb370cd4e6615ae95a254)
+    - **@ts-ioc-container/bundler:**
+    drop excludeClasses; classes.glob / exclude take lists
+    (0a19dfe30c672bf526e00d296f567f761e54373d)
+    - **@ts-ioc-container/bundler:**
+    rename class name globs to glob / exclude
+    (52c61f3a94759a5e4792b5dd7836ac4437472f26)
+    - **@ts-ioc-container/bundler:**
+    rename the files config section to glob
+    (54afd9f853c9c89044fac19769e2cb3d8dcfc086)
+    - **@ts-ioc-container/bundler:**
+    explicit configs, no tsconfig extension or zero config
+    (454abd9ece738a91c84ce03eb9b910af7444faa0)
+
+
 # 75.0.0 (2026-10-03)
 
   ### 💥 BREAKING CHANGES
@@ -557,6 +602,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
