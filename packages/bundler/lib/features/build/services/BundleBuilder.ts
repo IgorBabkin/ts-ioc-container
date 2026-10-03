@@ -93,18 +93,17 @@ export class BundleBuilder implements IBundleBuilder {
   private generate(config: ResolvedConfig) {
     const paths = loadImportPaths(config.tsconfig, config.importExtension);
     const relative = (file: string) => toPosix(path.relative(config.dir, file));
-    const { include, exclude } = config.glob;
+    const { exclude } = config.glob;
     // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
     const isExcluded = (file: string) => {
       const filename = relative(file);
-      if (include && !include.some((glob) => glob.test(filename))) return true;
       return exclude.some((glob) => glob.test(filename));
     };
 
     const files = new Set<string>();
-    for (const entry of config.glob.paths) {
-      const dir = paths.resolveNamespace(entry.path, config.dir);
-      for (const file of listSourceFiles(dir, entry.recursive, isExcluded)) files.add(file);
+    for (const folder of config.glob.glob) {
+      const dir = paths.resolveNamespace(folder, config.dir);
+      for (const file of listSourceFiles(dir, isExcluded)) files.add(file);
     }
 
     const classes = [...files]
@@ -127,7 +126,7 @@ export class BundleBuilder implements IBundleBuilder {
       BUNDLE_PROTOCOL,
       bundleView({
         name: config.bundleClassName,
-        paths: config.glob.paths.map((entry) => entry.path),
+        paths: config.glob.glob,
         classes: classes.map((cls) => ({ ...cls, specifier: cls.specifier! })),
       }),
     );

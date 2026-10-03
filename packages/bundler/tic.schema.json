@@ -15,7 +15,7 @@
     },
     "tsconfig": {
       "default": "./tsconfig.json",
-      "description": "The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.",
+      "description": "The tsconfig whose `paths` aliases glob.glob may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.glob alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.",
       "type": "string",
       "minLength": 1
     },
@@ -24,131 +24,153 @@
       "type": "string"
     },
     "glob": {
-      "type": "object",
-      "properties": {
-        "paths": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "One folder to scan, with the default exclude: shorthand for { \"glob\": [...] }."
+        },
+        {
           "minItems": 1,
           "type": "array",
           "items": {
-            "anyOf": [
-              {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Folders to scan, with the default exclude: shorthand for { \"glob\": [...] }."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "glob": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              ],
+              "description": "Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services)."
+            },
+            "exclude": {
+              "default": [
+                "**/*.spec.ts",
+                "**/*.test.ts",
+                "**/*.spec.tsx",
+                "**/*.test.tsx",
+                "**/__tests__/**",
+                "**/node_modules/**"
+              ],
+              "description": "Glob, or globs, of files never read. Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "glob"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `glob` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { \"glob\": [...] }."
+    },
+    "className": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "One class-name glob, with the default export and decorators: shorthand for { \"glob\": \"...\" }."
+        },
+        {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Class-name globs, with the default export and decorators: shorthand for { \"glob\": [...] }."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "export": {
+              "default": "any",
+              "description": "Which exports count.",
+              "type": "string",
+              "enum": [
+                "any",
+                "named",
+                "default"
+              ]
+            },
+            "decorators": {
+              "default": [
+                "register"
+              ],
+              "description": "The class must carry one of these decorators, recognised by name (e.g. \"register\", or a composed decorator). Default [\"register\"]; [] requires none.",
+              "type": "array",
+              "items": {
                 "type": "string",
                 "minLength": 1
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "path": {
+              }
+            },
+            "glob": {
+              "description": "Glob, or globs, the class name must match one of, e.g. \"*Service\" or [\"*Service\", \"*Repository\"]. An anonymous default export is named after its file.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
                     "type": "string",
                     "minLength": 1
                   },
-                  "recursive": {
-                    "default": true,
-                    "type": "boolean"
-                  }
+                  "minItems": 1
+                }
+              ]
+            },
+            "exclude": {
+              "description": "Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: [\"MockUserRepository\", \"*Fake\"].",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
                 },
-                "required": [
-                  "path"
-                ],
-                "additionalProperties": false
-              }
-            ]
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
           },
-          "description": "Folders to scan: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { \"path\": \"...\", \"recursive\": false }."
-        },
-        "include": {
-          "description": "Globs a file must match one of, e.g. [\"**/*.service.ts\", \"**/*.repository.ts\"]. Default: every source file.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "minItems": 1
-        },
-        "exclude": {
-          "default": [
-            "**/*.spec.ts",
-            "**/*.test.ts",
-            "**/*.spec.tsx",
-            "**/*.test.tsx",
-            "**/__tests__/**",
-            "**/node_modules/**"
-          ],
-          "description": "Globs of files never read. Replaces the default when given. A non-empty list that omits a default glob makes `tic build` warn.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
+          "additionalProperties": false
         }
-      },
-      "required": [
-        "paths"
       ],
-      "additionalProperties": false,
-      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the config file. With a file naming convention, `include` keeps every other file unread."
-    },
-    "className": {
-      "type": "object",
-      "properties": {
-        "export": {
-          "default": "any",
-          "description": "Which exports count.",
-          "type": "string",
-          "enum": [
-            "any",
-            "named",
-            "default"
-          ]
-        },
-        "decorators": {
-          "default": [
-            "register"
-          ],
-          "description": "The class must carry one of these decorators, recognised by name (e.g. \"register\", or a composed decorator). Default [\"register\"]; [] requires none.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "glob": {
-          "description": "Glob, or globs, the class name must match one of, e.g. \"*Service\" or [\"*Service\", \"*Repository\"]. An anonymous default export is named after its file.",
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "minItems": 1
-            }
-          ]
-        },
-        "exclude": {
-          "description": "Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: [\"MockUserRepository\", \"*Fake\"].",
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "minItems": 1
-            }
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "description": "Which classes of a parsed file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; by default that is every exported class decorated with @register."
+      "description": "Which classes of a parsed file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; by default that is every exported class decorated with @register. A glob, or a list of globs, is shorthand for { \"glob\": ... }."
     }
   },
   "required": [

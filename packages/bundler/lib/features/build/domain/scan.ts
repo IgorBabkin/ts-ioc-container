@@ -35,14 +35,14 @@ const DECLARATION_FILE = /\.d\.[mc]?tsx?$/;
 /** A TypeScript source file the bundler may parse: not a declaration file. */
 export const isSourceFile = (file: string): boolean => SOURCE_FILE.test(file) && !DECLARATION_FILE.test(file);
 
-/** Source files of `dir`, sorted by path so the generated output is stable across machines. */
-export function listSourceFiles(dir: string, recursive: boolean, isExcluded: (file: string) => boolean): string[] {
+/** Source files of `dir` and its sub-folders, sorted by path so the generated output is stable across machines. */
+export function listSourceFiles(dir: string, isExcluded: (file: string) => boolean): string[] {
   const files: string[] = [];
   const walk = (current: string) => {
     for (const entry of readdirSync(current, { withFileTypes: true })) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
-        if (recursive && entry.name !== 'node_modules') walk(full);
+        if (entry.name !== 'node_modules') walk(full);
       } else if (isSourceFile(entry.name) && !isExcluded(full)) {
         files.push(full);
       }

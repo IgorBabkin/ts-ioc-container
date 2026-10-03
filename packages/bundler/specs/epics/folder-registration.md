@@ -34,8 +34,9 @@ Acceptance criteria:
   Nothing piped in fails with a usage error; more than one `<config>` too.
 - Warnings and errors go to stderr, never into the bundle on stdout; an error
   names the config (`<stdin>` for piped text), and nothing is printed then.
-- The config's fields are flat and explicit: `glob` with its `paths` is
-  required; `name`, `tsconfig`, `importExtension` and `className` are optional.
+- The config's fields are flat and explicit: `glob` with its folders
+  (`glob.glob`) is required — a folder (`glob: ./src`) or a list of folders is
+  shorthand for `{ glob: ... }` with the default `exclude`; `name`, `tsconfig`, `importExtension` and `className` are optional.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →
   `production`); piped text, or a file named otherwise, must set it. The
@@ -55,19 +56,19 @@ that what it registers never depends on what my tsconfig happens to compile.
 
 Acceptance criteria:
 
-- A bundle scans its `glob.paths` and nothing else; the files its tsconfig
+- A bundle scans its `glob.glob` and nothing else; the files its tsconfig
   compiles play no part.
 - The generated bundle's header lists the paths it scanned.
 
 ### Story: Register the classes of a folder
 
-As an application developer, I can list a folder in a bundle's `glob.paths` so that
+As an application developer, I can list a folder in a bundle's `glob.glob` so that
 its classes become registrations of the generated bundle.
 
 Acceptance criteria:
 
-- A path is scanned recursively by default; `recursive: false` limits it to
-  the folder itself.
+- `glob.glob` is one folder or a non-empty list of them; each is scanned
+  with its sub-folders. There is no non-recursive form.
 - By default every exported class is registered.
 - Abstract classes, non-exported classes and `.d.ts` files are never
   registered.
@@ -85,16 +86,14 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- Selection runs in two stages: a bundle's `glob` rule — its `paths` and the
-  `include` / `exclude` globs — decides by path
+- Selection runs in two stages: a bundle's `glob` rule — its folders (`glob.glob`) and its
+  `exclude` globs — decides by path
   alone which files are read and parsed; its `className` rule then picks classes out of
   the parsed files.
-- `glob.include` is a non-empty list of globs; a file is parsed only when it
-  matches one of them. Omitted, every source file qualifies.
-- A file outside `include` is never read.
-- `glob.exclude` lists globs of files never read (default: test files,
-  `__tests__/`, `node_modules/`) and wins over `include`. Giving only `include`
-  keeps the default `exclude`.
+- `glob.exclude` is a glob or a list of globs of files never read (default: test files,
+  `__tests__/`, `node_modules/`); every other source file in `glob.glob` is parsed.
+  There is no `include`: it is an unknown field.
+- An excluded file is never read.
 - Globs are relative to the config file and `/`-separated.
 - A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
   parses tests deliberately. When a non-empty `exclude` omits a default glob,
@@ -129,6 +128,9 @@ Acceptance criteria:
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
   registration is last-wins); the warning suggests `className.exclude`.
+- `className` can be a glob or a non-empty list of globs: a shortcut for
+  `className.glob` with the default `export` and `decorators`, the same
+  shortcut `glob` has for `glob.glob`.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):

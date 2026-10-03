@@ -28,7 +28,7 @@ describe('TicConfigService', () => {
   });
 
   it('given a YAML config when loaded then paths resolve against it and the name comes from its file', () => {
-    const service = new TicConfigService(fileSystem('glob:\n  paths: [./src]\n').object());
+    const service = new TicConfigService(fileSystem('glob:\n  glob: [./src]\n').object());
 
     expect(service.load('/repo/production.bundle.yaml')).toMatchObject({
       file: '/repo/production.bundle.yaml',
@@ -36,7 +36,7 @@ describe('TicConfigService', () => {
       name: 'production',
       bundleClassName: 'ProductionBundle',
       tsconfig: { file: '/repo/tsconfig.json', required: false },
-      glob: { paths: [{ path: './src', recursive: true }] },
+      glob: { glob: ['./src'] },
       className: { export: 'any', decorators: ['register'] },
     });
   });

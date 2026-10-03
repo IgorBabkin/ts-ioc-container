@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../../tic.schema.json
 # Tests: only the services under test and the test doubles; no infrastructure adapters.
 glob:
-  paths:
+  glob:
     - '@app/services'
     - ./src/testing
