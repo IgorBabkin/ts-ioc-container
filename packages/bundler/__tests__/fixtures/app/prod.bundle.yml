@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../../../tic.schema.json
+# Production: everything tsconfig.json compiles except dev-only *.dev.ts files and the test doubles.
+extends: ./tsconfig.json
+exclude:
+  - src/**/*.dev.ts
+  - src/testing/**
+output: src/di/prod.bundle.ts
+tags: [production]

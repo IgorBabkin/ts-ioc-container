@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../../../tic.schema.json
+# Tests: only the services under test and the test doubles; no infrastructure adapters.
+extends: ./tsconfig.json
+include:
+  - src/services
+  - src/testing
+output: src/di/test.bundle.ts
+tags: [test]
