@@ -210,6 +210,63 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
     entity.remove();
   }
 
+  /**
+   * Stops tracking an entity: a flush ignores it, and the next read of its key
+   * reaches the repository and answers a new entity. The entity itself is left
+   * as it is.
+   *
+   * @example
+   * for (const row of batch) {
+   *   (await rows.findByIdOrFail(row.id)).patch(row);
+   * }
+   * await rows.flush();
+   * rows.clear(); // keep a long batch's identity map small
+   *
+   * @throws {EntityNotFoundError} when the entity is not tracked by this manager.
+   */
+  detach(entity: Entity<StateOf<TRepository>>): void {
+    if (!this.keys.has(entity)) throw new EntityNotFoundError(this.repository.entityName, entity.id);
+    this.untrack(entity);
+  }
+
+  /** Detaches every entity: the identity map starts over, and nothing is pending. */
+  clear(): void {
+    for (const entity of [...this.entities.values()]) this.untrack(entity);
+  }
+
+  /**
+   * Re-reads a tracked entity by its whole key — after an optimistic-concurrency
+   * conflict, say. What the repository answers becomes what is stored and
+   * `state` (the same object), and what this unit of work changed in it — fields,
+   * links, removal — is dropped. Answers the entity, or `undefined` when its
+   * record is gone, in which case it is no longer tracked.
+   *
+   * @example
+   * try {
+   *   await db.transaction(() => flushEntityManagers(request));
+   * } catch (e) {
+   *   if (e instanceof StaleRecordError) await orders.reload(order); // then decide again
+   * }
+   *
+   * @throws {EntityNotFoundError} when the entity is new — nothing is stored to read — or not tracked by this manager.
+   */
+  async reload(entity: Entity<StateOf<TRepository>>): Promise<EntityOf<TRepository> | undefined> {
+    const stored: StateOf<TRepository> | undefined = entity.getStored();
+    if (!this.keys.has(entity) || stored === undefined) {
+      throw new EntityNotFoundError(this.repository.entityName, entity.id);
+    }
+    const key = this.keyOf(stored);
+    const fresh = await (this.repository.findById as (...key: unknown[]) => Promise<StateOf<TRepository> | undefined>)(
+      ...key,
+    );
+    if (fresh === undefined) {
+      this.untrack(entity);
+      return undefined;
+    }
+    entity[markStored](fresh);
+    return entity.revert() as EntityOf<TRepository>;
+  }
+
   /** Whether a `flush` would write anything: a new, removed, linked, or changed entity. */
   hasChanges(): boolean {
     return [...this.entities.values()].some((entity) => entity.hasChanges());
@@ -269,10 +326,7 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
     const stored = entity.getStored();
     if (entity.isRemoved) {
       if (stored !== undefined) await repository.delete(stored);
-      flush.onCommit(() => {
-        this.entities.delete(identity);
-        this.keys.delete(entity);
-      });
+      flush.onCommit(() => this.untrack(entity));
       return;
     }
     if (!entity.hasChanges()) return;
@@ -299,9 +353,20 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
     return entity;
   }
 
+  /** The whole key of a record, as `findById` takes it: what the repository's `keyOf` answers, or its id. */
+  private keyOf(record: StateOf<TRepository>): RecordKey {
+    return this.repository.keyOf?.(record) ?? [record.id];
+  }
+
+  private untrack(entity: Entity<StateOf<TRepository>>): void {
+    const identity = this.keys.get(entity);
+    if (identity !== undefined && this.entities.get(identity) === entity) this.entities.delete(identity);
+    this.keys.delete(entity);
+  }
+
   /** The identity-map key of a record: its whole key, as the repository's `keyOf` answers it, or its id. */
   private identityOf(record: StateOf<TRepository>): string {
-    return identityOfKey(this.repository.keyOf?.(record) ?? [record.id]);
+    return identityOfKey(this.keyOf(record));
   }
 
   /**

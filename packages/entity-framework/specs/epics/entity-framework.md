@@ -105,6 +105,28 @@ Acceptance criteria:
   once per `size` ids (hi/lo), sharing one refill between concurrent calls.
 - `uuidV7Ids()` makes time-ordered RFC 9562 version 7 UUIDs with no round trip.
 
+### Story: Discard, detach and reload
+
+As an application developer, I want to undo what a unit of work changed, stop
+tracking records, and re-read a record, so that a failed validation, a long
+batch, or an optimistic-concurrency conflict does not leave me stuck with the
+tracked state.
+
+Acceptance criteria:
+
+- `entity.revert()` puts `state` back to what is stored — the same object —
+  drops its links and undoes `remove`, so a flush writes nothing for it. A new
+  entity has nothing stored: `revert` drops its links and removal, and keeps `state`.
+- `manager.detach(entity)` stops tracking it: a flush ignores it, and the next
+  read of its key reaches the repository and answers a new entity. Detaching an
+  entity the manager does not track fails with `EntityNotFoundError`.
+- `manager.clear()` detaches every entity.
+- `manager.reload(entity)` re-reads it by its whole key: what the repository
+  answers becomes what is stored and `state`, and local changes, links and
+  removal are dropped; it answers the same entity. When the record is gone, it
+  answers `undefined` and stops tracking it. A new entity, or one the manager does
+  not track, fails with `EntityNotFoundError`.
+
 ### Story: Retry a commit that failed
 
 As an application developer who commits inside a database transaction, I want a
