@@ -3,6 +3,7 @@ const packageScopes = new Set([
   'ts-ioc-container',
   '@ts-ioc-container/react',
   '@ts-ioc-container/bundler',
+  '@ts-ioc-container/entity-framework',
   '@ts-ioc-container/openapi-to-server',
   '@ts-ioc-container/openapi-to-zod',
 ]);
@@ -55,6 +56,7 @@ export default {
         'ts-ioc-container',
         '@ts-ioc-container/react',
         '@ts-ioc-container/bundler',
+        '@ts-ioc-container/entity-framework',
         '@ts-ioc-container/openapi-to-server',
         '@ts-ioc-container/openapi-to-zod',
 
