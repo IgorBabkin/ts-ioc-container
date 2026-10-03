@@ -43,6 +43,24 @@ Acceptance criteria:
 - `findByIdOrFail` fails with `EntityNotFoundError` for an id the repository
   does not have; `findById` answers `undefined`.
 
+### Story: Records keyed by more than their id
+
+As an application developer whose records are keyed by more than their id — a
+tenant's record, say — I want the identity map to tell two records with the same
+id apart, so that one tenant never reads or writes another tenant's record.
+
+Acceptance criteria:
+
+- A repository whose `findById` takes more than the id names the whole key of a
+  record with `keyOf(record)`; the identity map keys entities by it.
+- Reading the same id under two keys answers two entities and reaches the
+  repository twice; reading it again under either key answers that entity.
+- `track`, `create` and `remove` use the same key, so the same id under another
+  key is another record.
+- `findById` with more than the id, on a repository without `keyOf`, fails with
+  `EntityIdentityError` instead of answering whichever record was read first.
+- `flush` refuses an entity whose key was changed, with `EntityIdentityError`.
+
 ### Story: Write a unit of work with one flush
 
 Acceptance criteria:

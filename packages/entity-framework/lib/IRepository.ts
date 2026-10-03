@@ -7,11 +7,14 @@ export interface IEntity {
   readonly id: string | number;
 }
 
+/** The whole key of a record: its id, then the rest of the key when it has more. */
+export type RecordKey<State extends IEntity = IEntity> = readonly [State['id'], ...unknown[]];
+
 /**
  * What an `EntityManager` reads and writes through: the calls a unit of work
  * needs, and nothing about querying. A record keyed by more than its id — a
  * tenant's record, say — takes the rest of its key after the id when read,
- * and off the record itself when written.
+ * names its whole key with `keyOf`, and is written off the record itself.
  *
  * `Value` is what `create` takes: the state itself when the caller mints ids,
  * or the state without its id when the database does — which is what
@@ -37,7 +40,17 @@ export interface IRepository<State extends IEntity = IEntity, E extends Entity<S
   /** The class the entity manager builds this repository's entities with; `Entity` when left out. */
   readonly entityClass?: EntityClass<State, E>;
 
-  /** The record, or `undefined` when there is none. */
+  /**
+   * The whole key of a record, as `findById` takes it: `[record.id, record.tenant]`.
+   * The identity map keys entities by it. Leave it out when the id alone is the key.
+   *
+   * @example
+   * keyOf(tariff: TariffDto) { return [tariff.id, tariff.tenant] as const; }
+   * findById(id: string, tenant: string) { ... }
+   */
+  keyOf?(record: State): RecordKey<State>;
+
+  /** The record, or `undefined` when there is none. Takes the whole key: what `keyOf` answers, or the id alone. */
   findById(id: State['id'], ...key: never[]): Promise<State | undefined>;
 
   create(value: Value): Promise<State>;

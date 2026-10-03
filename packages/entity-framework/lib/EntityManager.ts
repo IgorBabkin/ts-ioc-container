@@ -14,9 +14,9 @@ import { EntityIdentityError, EntityManagerArgumentError, EntityNotFoundError } 
 import {
   type AnyRepository,
   type EntityOf,
-  type IEntity,
   type IRepository,
   isRepositoryToken,
+  type RecordKey,
   type StateOf,
   type ValueOf,
 } from './IRepository';
@@ -67,23 +67,27 @@ function repositoryTokenArg(args: unknown[] = []): InjectionToken<AnyRepository>
  */
 @register(bindTo(IEntityManagerToken), singleton(repositoryTokenArg))
 export class EntityManager<TRepository extends AnyRepository = AnyRepository> implements IEntityManager {
-  private readonly entities = new Map<StateOf<TRepository>['id'], Entity<StateOf<TRepository>>>();
+  /** Tracked entities by the identity of their key, in the order they were first tracked. */
+  private readonly entities = new Map<string, Entity<StateOf<TRepository>>>();
+  private readonly keys = new WeakMap<Entity<StateOf<TRepository>>, string>();
 
   constructor(@inject(byArgs(repositoryTokenArg)) readonly repository: TRepository) {}
 
   /**
    * The tracked entity with this id, or one built from the repository's answer
-   * and tracked from then on: only the first read of an id in a unit of work
-   * reaches the repository. The arguments after the id are the rest of its key
-   * and go to the repository as given. `undefined` when there is none, or it was removed.
+   * and tracked from then on: only the first read of a key in a unit of work
+   * reaches the repository. The arguments after the id are the rest of its key —
+   * what the repository's `keyOf` answers — and go to the repository as given.
+   * `undefined` when there is none, or it was removed.
    *
    * @example
    * const order = await orders.findById('o-1');
    * const tariff = await tariffs.findById(tariffId, tenantId); // a repository keyed by more than the id
+   *
+   * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
    */
   async findById(...args: Parameters<TRepository['findById']>): Promise<EntityOf<TRepository> | undefined> {
-    const [id] = args as unknown as [StateOf<TRepository>['id']];
-    const tracked = this.entities.get(id);
+    const tracked = this.entities.get(this.identityOfArgs(args));
     if (tracked !== undefined) return tracked.isRemoved ? undefined : (tracked as EntityOf<TRepository>);
     const stored = await (this.repository.findById as (...key: unknown[]) => Promise<StateOf<TRepository> | undefined>)(
       ...args,
@@ -95,10 +99,14 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * `findById`, failing when there is nothing to answer.
    *
    * @throws {EntityNotFoundError} when the repository has no such record, or it was removed in this unit of work.
+   * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
    */
   async findByIdOrFail(...args: Parameters<TRepository['findById']>): Promise<EntityOf<TRepository>> {
     const found = await this.findById(...args);
-    if (found === undefined) throw new EntityNotFoundError(this.repository.entityName, args[0]);
+    if (found === undefined) {
+      const [id, ...rest] = args as unknown as RecordKey;
+      throw new EntityNotFoundError(this.repository.entityName, id, ...rest);
+    }
     return found;
   }
 
@@ -113,12 +121,14 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * }
    */
   trackMany(records: StateOf<TRepository>[]): EntityOf<TRepository>[] {
-    return records.filter((record) => !this.entities.get(record.id)?.isRemoved).map((record) => this.track(record));
+    return records
+      .filter((record) => !this.entities.get(this.identityOf(record))?.isRemoved)
+      .map((record) => this.track(record));
   }
 
   /** `trackMany` for one record. */
   track(record: StateOf<TRepository>): EntityOf<TRepository> {
-    return (this.entities.get(record.id) ?? this.add(record, {})) as EntityOf<TRepository>;
+    return (this.entities.get(this.identityOf(record)) ?? this.add(record, {})) as EntityOf<TRepository>;
   }
 
   /**
@@ -131,7 +141,7 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * @throws {EntityIdentityError} when the id is tracked already, or was removed in this unit of work.
    */
   create(record: StateOf<TRepository>): EntityOf<TRepository> {
-    const tracked = this.entities.get(record.id);
+    const tracked = this.entities.get(this.identityOf(record));
     if (tracked !== undefined) {
       const why = tracked.isRemoved
         ? 'was removed in this unit of work and cannot be created again in it'
@@ -166,9 +176,8 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * @throws {EntityNotFoundError} when the entity is not tracked by this manager.
    */
   remove(entity: Entity<StateOf<TRepository>>): void {
-    const tracked = this.entities.get(entity.id);
-    if (tracked === undefined) throw new EntityNotFoundError(this.repository.entityName, entity.id);
-    tracked.remove();
+    if (!this.keys.has(entity)) throw new EntityNotFoundError(this.repository.entityName, entity.id);
+    entity.remove();
   }
 
   /** Whether a `flush` would write anything: a new, removed, linked, or changed entity. */
@@ -182,26 +191,36 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * the records linked into each first. Opens no transaction: call it inside one,
    * usually through `flushEntityManagers(scope)`.
    *
-   * @throws {EntityIdentityError} when an entity's `state.id` was reassigned.
+   * @throws {EntityIdentityError} when an entity's `state.id`, or the rest of its key, was reassigned.
    * @throws {EntityReferenceError} when linked lazy records form a cycle.
    */
   async flush(): Promise<void> {
     for (const entity of [...this.entities.values()]) {
-      await this.persist(entity, this.repository);
+      await this.persist(entity);
     }
   }
 
-  private async persist<S extends IEntity>(entity: Entity<S>, repository: IRepository<S>): Promise<void> {
+  private async persist(entity: Entity<StateOf<TRepository>>): Promise<void> {
+    const repository: IRepository<StateOf<TRepository>> = this.repository;
+    const name = `${repository.entityName} ${String(entity.id)}`;
     if (entity.state.id !== entity.id) {
       throw new EntityIdentityError(
-        `The id of ${repository.entityName} ${String(entity.id)} was changed to ${String(entity.state.id)}. ` +
+        `The id of ${name} was changed to ${String(entity.state.id)}. ` +
           'An id cannot change: create a new entity and remove this one.',
+      );
+    }
+    const identity = this.keys.get(entity)!;
+    if (this.identityOf(entity.state) !== identity) {
+      throw new EntityIdentityError(
+        `The key of ${name} was changed from ${identity} to ${this.identityOf(entity.state)}. ` +
+          'A key cannot change: create a new entity and remove this one.',
       );
     }
     const stored = entity.getStored();
     if (entity.isRemoved) {
       if (stored !== undefined) await repository.delete(stored);
-      this.entities.delete(entity.id);
+      this.entities.delete(identity);
+      this.keys.delete(entity);
       return;
     }
     await entity[resolveReferences]();
@@ -219,9 +238,37 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
       EntityOf<TRepository>
     >;
     const entity = new EntityType(record, options);
-    this.entities.set(entity.id, entity);
+    const identity = this.identityOf(record);
+    this.entities.set(identity, entity);
+    this.keys.set(entity, identity);
     return entity;
   }
+
+  /** The identity-map key of a record: its whole key, as the repository's `keyOf` answers it, or its id. */
+  private identityOf(record: StateOf<TRepository>): string {
+    return identityOfKey(this.repository.keyOf?.(record) ?? [record.id]);
+  }
+
+  /**
+   * The identity-map key `findById` reads by.
+   *
+   * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
+   */
+  private identityOfArgs(args: unknown[]): string {
+    if (args.length > 1 && this.repository.keyOf === undefined) {
+      throw new EntityIdentityError(
+        `${this.repository.entityName} was read by more than its id, but its repository has no keyOf, so the ` +
+          'identity map cannot tell records with the same id apart. Give the repository keyOf(record), ' +
+          'answering the arguments findById takes: [record.id, ...the rest of the key].',
+      );
+    }
+    return identityOfKey(args as unknown as RecordKey);
+  }
+}
+
+/** Key parts are primitives, so their JSON tells keys apart — `1` from `'1'` included. */
+function identityOfKey(key: RecordKey): string {
+  return JSON.stringify(key);
 }
 
 /** Whether `value` is an `EntityManager` — how `flushEntityManagers` finds them among a scope's instances. */

@@ -137,6 +137,27 @@ State is plain data: primitives, arrays, plain objects and `Date`s are copied
 and compared by value; any other object is kept as it is and compared by
 identity, so assign a new instance to change one.
 
+## Records keyed by more than their id
+
+When a record is keyed by more than its id — a tenant's record, say — let
+`findById` take the rest of the key and name a record's whole key with
+`keyOf`, so the identity map tells the same id under two tenants apart:
+
+```ts
+class TariffRepository implements IRepository<TariffDto> {
+  readonly entityName = 'Tariff';
+  keyOf(tariff: TariffDto) {
+    return [tariff.id, tariff.tenant] as const;
+  }
+  async findById(id: string, tenant: string): Promise<TariffDto | undefined> {
+    /* SELECT ... WHERE id = $1 AND tenant = $2 */
+  }
+  // create, update and delete as usual
+}
+
+const tariff = await tariffs.findByIdOrFail('t-1', 'acme');
+```
+
 ## Linking a record that does not exist yet
 
 A foreign key can point at a record that is only created if, and when, the
