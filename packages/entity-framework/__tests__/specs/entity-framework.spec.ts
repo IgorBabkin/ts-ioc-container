@@ -7,9 +7,13 @@ import {
   EntityManager,
   entityManagerToken,
   EntityNotFoundError,
+  EntityReferenceError,
   flushEntityManagers,
+  type IEntity,
   type IRepository,
+  type Ref,
   repositoryToken,
+  type Resolved,
 } from '../../lib';
 
 type OrderDto = {
@@ -312,6 +316,146 @@ describe('Spec: entity framework', () => {
       await flushEntityManagers(request);
 
       expect(repository.rows.get('o-1')?.status).toBe('cancelled');
+    });
+  });
+
+  describe('Story: save a referenced record lazily, when the entity holding it is flushed', () => {
+    type AuthorDto = { id: string; name: string };
+    type CommentDto = { id: string; text: string; authorId: Ref<string> | null };
+    type PostDto = { id: string; title: string; commentId: Ref<string> | null; tagIds: Ref<string>[] };
+
+    // A store that mints ids the way a serial column does, writing every write into one log shared by all stores.
+    class SerialRepository<S extends IEntity & { id: string }> implements IRepository<S, Entity<S>, Omit<S, 'id'>> {
+      readonly rows = new Map<string, Resolved<S>>();
+      private next = 0;
+
+      constructor(
+        readonly entityName: string,
+        private readonly prefix: string,
+        private readonly log: string[],
+        ...rows: Resolved<S>[]
+      ) {
+        for (const row of rows) this.rows.set(row.id, row);
+      }
+
+      async findById(id: string): Promise<S | undefined> {
+        return this.rows.get(id) as S | undefined;
+      }
+
+      async create(value: Resolved<Omit<S, 'id'>>): Promise<S> {
+        const row = { ...value, id: `${this.prefix}-${++this.next}` } as unknown as Resolved<S>;
+        this.log.push(`create ${row.id} ${JSON.stringify(value)}`);
+        this.rows.set(row.id, row);
+        return row as unknown as S;
+      }
+
+      async update(stored: Resolved<S>, diff: Partial<Resolved<S>>): Promise<S> {
+        this.log.push(`update ${stored.id} ${JSON.stringify(diff)}`);
+        const row = { ...stored, ...diff };
+        this.rows.set(stored.id, row);
+        return row as unknown as S;
+      }
+
+      async delete(stored: Resolved<S>): Promise<void> {
+        this.log.push(`delete ${stored.id}`);
+        this.rows.delete(stored.id);
+      }
+    }
+
+    const blog = () => {
+      const log: string[] = [];
+      const authors = new EntityManager(new SerialRepository<AuthorDto>('Author', 'a', log));
+      const comments = new EntityManager(new SerialRepository<CommentDto>('Comment', 'c', log));
+      const posts = new EntityManager(
+        new SerialRepository<PostDto>('Post', 'p', log, { id: 'p-0', title: 'Hello', commentId: null, tagIds: [] }),
+      );
+      return { log, authors, comments, posts };
+    };
+
+    it("creates the record when its holder is flushed, and writes its id into the holder's foreign key", async () => {
+      const { log, comments, posts } = blog();
+      const comment = comments.lazy({ text: 'First!', authorId: null });
+      const post = await posts.findByIdOrFail('p-0');
+
+      post.state.commentId = comment;
+      expect(log).toEqual([]);
+      await posts.flush();
+
+      expect(log).toEqual(['create c-1 {"text":"First!","authorId":null}', 'update p-0 {"commentId":"c-1"}']);
+      expect(post.state.commentId).toBe('c-1');
+      expect(await comments.findByIdOrFail('c-1')).toBe(await comment.resolve());
+    });
+
+    it('never creates a reference no flushed entity holds', async () => {
+      const { log, comments, posts } = blog();
+      comments.lazy({ text: 'Draft', authorId: null });
+      await posts.findByIdOrFail('p-0');
+
+      await posts.flush();
+      await comments.flush();
+
+      expect(log).toEqual([]);
+    });
+
+    it('creates a reference held by several entities once, giving each the same id', async () => {
+      const { log, comments, posts } = blog();
+      const comment = comments.lazy({ text: 'Shared', authorId: null });
+      const first = await posts.findByIdOrFail('p-0');
+      const second = posts.create({ id: 'p-9', title: 'Again', commentId: comment, tagIds: [] });
+      first.state.commentId = comment;
+
+      await posts.flush();
+
+      expect(log.filter((line) => line.startsWith('create c'))).toHaveLength(1);
+      expect([first.state.commentId, second.state.commentId]).toEqual(['c-1', 'c-1']);
+    });
+
+    it('resolves references inside a referenced record first, and those in arrays', async () => {
+      const { log, authors, comments, posts } = blog();
+      const author = authors.lazy({ name: 'Ada' });
+      const post = await posts.findByIdOrFail('p-0');
+
+      post.patch({ commentId: comments.lazy({ text: 'Nested', authorId: author }), tagIds: ['t-0', author] });
+      await posts.flush();
+
+      expect(log).toEqual([
+        'create a-1 {"name":"Ada"}',
+        'create c-1 {"text":"Nested","authorId":"a-1"}',
+        'update p-0 {"commentId":"c-1","tagIds":["t-0","a-1"]}',
+      ]);
+    });
+
+    it('creates a new holder with the id of the record it references', async () => {
+      const { log, comments, posts } = blog();
+
+      posts.create({ id: 'p-9', title: 'New', commentId: comments.lazy({ text: 'Hi', authorId: null }), tagIds: [] });
+      await posts.flush();
+
+      expect(log).toEqual([
+        'create c-1 {"text":"Hi","authorId":null}',
+        'create p-1 {"id":"p-9","title":"New","commentId":"c-1","tagIds":[]}',
+      ]);
+    });
+
+    it('does not create what a removed holder referenced', async () => {
+      const { log, comments, posts } = blog();
+      const post = await posts.findByIdOrFail('p-0');
+      post.state.commentId = comments.lazy({ text: 'Gone', authorId: null });
+
+      posts.remove(post);
+      await posts.flush();
+
+      expect(log).toEqual(['delete p-0']);
+    });
+
+    it('fails with EntityReferenceError when references form a cycle', async () => {
+      const { comments, posts } = blog();
+      const value: Omit<CommentDto, 'id'> = { text: 'Loop', authorId: null };
+      const comment = comments.lazy(value);
+      value.authorId = comment;
+      (await posts.findByIdOrFail('p-0')).state.commentId = comment;
+
+      await expect(posts.flush()).rejects.toBeInstanceOf(EntityReferenceError);
     });
   });
 });

@@ -1,7 +1,7 @@
 # Epic: Entity framework
 
 - **Status:** Proposed
-- **Public API:** `Entity`, `EntityManager`, `IRepository`, `repositoryToken`, `entityManagerToken`, `flushEntityManagers`, `EntityNotFoundError`, `EntityIdentityError`
+- **Public API:** `Entity`, `EntityManager`, `IRepository`, `LazyRef`, `Ref`, `Resolved`, `repositoryToken`, `entityManagerToken`, `flushEntityManagers`, `EntityNotFoundError`, `EntityIdentityError`, `EntityReferenceError`
 - **Package:** `@ts-ioc-container/entity-framework`
 - **Executable spec:** `packages/entity-framework/__tests__/specs/entity-framework.spec.ts`
 
@@ -57,6 +57,25 @@ Acceptance criteria:
   created and removed in one unit of work writes nothing.
 - `create` refuses an id the manager tracks, or one it removed, with `EntityIdentityError`.
 - `flush` refuses an entity whose `id` was changed, with `EntityIdentityError`.
+
+### Story: Save a referenced record lazily
+
+As an application developer, I can put a reference to a record that does not
+exist yet in a foreign-key field, so that the record is created — and its id
+written into the field — only when the entity holding it is written.
+
+Acceptance criteria:
+
+- `lazy(value)` writes nothing. When an entity whose state holds the reference
+  is flushed, the record is created first and the field holds its id; the
+  created record is tracked by its manager as stored.
+- A reference no flushed entity holds is never created.
+- A reference held by several entities is created once; each gets the same id.
+- References inside a referenced value, and in arrays, are resolved first.
+- A new entity holding a reference is created with the referenced record's id.
+- A removed entity's references are not created.
+- References that form a cycle fail with `EntityReferenceError`.
+- Repository writes receive resolved data: never a `LazyRef`.
 
 ### Story: One unit of work per scope
 

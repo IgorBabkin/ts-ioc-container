@@ -1,9 +1,13 @@
 import { EntityIdentityError } from './errors';
 import type { IEntity } from './IRepository';
+import { resolveRefs } from './LazyRef';
 import { isEqual, snapshot } from './snapshot';
 
 /** How `EntityManager` records what a repository stored; not exported from the package, so only a flush moves what an entity diffs against. */
 export const markStored = Symbol('markStored');
+
+/** How `EntityManager` resolves the `LazyRef`s an entity's state holds before writing it; not exported from the package. */
+export const resolveReferences = Symbol('resolveReferences');
 
 export interface EntityOptions {
   /** The record does not exist yet: it has nothing stored, and the next flush creates it. */
@@ -86,6 +90,10 @@ export class Entity<State extends IEntity = IEntity> {
   }
 
   /** What the repository stored becomes `state` — the same object, for whoever holds it — and what the diff compares against. */
+  async [resolveReferences](): Promise<void> {
+    await resolveRefs(this.state);
+  }
+
   [markStored](stored: State): void {
     for (const key of Object.keys(this.state)) {
       if (!Object.hasOwn(stored, key)) delete (this.state as Record<string, unknown>)[key];

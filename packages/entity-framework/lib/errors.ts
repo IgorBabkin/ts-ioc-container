@@ -22,3 +22,14 @@ export class EntityIdentityError extends Error {
     Object.setPrototypeOf(this, EntityIdentityError.prototype);
   }
 }
+
+/** A `LazyRef` that cannot be resolved — its references form a cycle. Code `IOC_ENTITY_REFERENCE`. */
+export class EntityReferenceError extends Error {
+  name = 'EntityReferenceError';
+  readonly code = 'IOC_ENTITY_REFERENCE';
+
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, EntityReferenceError.prototype);
+  }
+}

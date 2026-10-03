@@ -7,7 +7,7 @@ export {
   entityManagerToken,
   flushEntityManagers,
 } from './EntityManager';
-export { EntityIdentityError, EntityNotFoundError } from './errors';
+export { EntityIdentityError, EntityNotFoundError, EntityReferenceError } from './errors';
 export {
   type AnyRepository,
   type EntityOf,
@@ -16,4 +16,6 @@ export {
   isRepositoryToken,
   repositoryToken,
   type StateOf,
+  type ValueOf,
 } from './IRepository';
+export { LazyRef, type Ref, type Resolved } from './LazyRef';

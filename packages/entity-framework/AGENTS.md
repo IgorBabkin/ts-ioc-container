@@ -77,10 +77,32 @@ await db.transaction(() => flushEntityManagers(request)); // update(stored, { st
 request.dispose();
 ```
 
+## Lazy references
+
+A foreign key can point at a record that is only created if, and when, the
+entity holding it is written — at the commit, inside the same transaction:
+
+```ts
+type PostDto = { id: string; title: string; commentId: Ref<string> | null };
+
+const comment = comments.lazy({ text: 'First!' }); // nothing written yet
+post.state.commentId = comment;
+
+await db.transaction(() => flushEntityManagers(request));
+// comments.create({ text: 'First!' }) -> { id: 'c-1', ... }
+// posts.update(stored, { commentId: 'c-1' })
+post.state.commentId; // 'c-1'
+```
+
+A reference nothing flushed holds is never created; one held by several
+entities is created once; references inside a referenced value, and in arrays,
+resolve first. The created record is tracked by its own manager as stored.
+
 ## Rules
 
-- State is plain data: primitives, arrays, plain objects, `Date`. It is copied
-  with `structuredClone`, so class instances inside a DTO come back as plain objects.
+- State is plain data: primitives, arrays, plain objects, `Date`. Those are
+  copied; any other object (a `LazyRef`, a class instance) is kept as the same
+  object and compared by identity, so a change inside one is not seen.
 - Register `EntityManager` with a scope rule (`.when(...)`): without one it is
   shared by every scope that resolves it, and the identity map outlives the unit of work.
 - `flush` writes in the order entities were first tracked, and

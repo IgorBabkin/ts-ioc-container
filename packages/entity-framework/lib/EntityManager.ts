@@ -10,9 +10,19 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
-import { Entity, type EntityClass, type EntityOptions, markStored } from './Entity';
+import { Entity, type EntityClass, type EntityOptions, markStored, resolveReferences } from './Entity';
 import { EntityIdentityError, EntityNotFoundError } from './errors';
-import { type AnyRepository, type EntityOf, type IRepository, isRepositoryToken, type StateOf } from './IRepository';
+import { snapshot } from './snapshot';
+import {
+  type AnyRepository,
+  type EntityOf,
+  type IEntity,
+  type IRepository,
+  isRepositoryToken,
+  type StateOf,
+  type ValueOf,
+} from './IRepository';
+import { LazyRef, type Resolved, resolveRefs } from './LazyRef';
 
 export interface IEntityManager {
   /** Writes every pending create, change, and removal through the repository, in the order the entities were first tracked. */
@@ -88,6 +98,20 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
     return this.add(record, { isNew: true }) as EntityOf<TRepository>;
   }
 
+  /**
+   * A record to create only if, and when, an entity holding the reference is
+   * flushed: set it where that entity's state wants this record's id. It is
+   * created through the repository — its own `LazyRef`s first — tracked as
+   * stored, and the reference is replaced with its id. `value` is read when the
+   * record is created, not when the reference is made.
+   */
+  lazy(value: ValueOf<TRepository>): LazyRef<EntityOf<TRepository>> {
+    return new LazyRef(async () => {
+      const created = await (this.repository as IRepository).create(await resolveRefs(snapshot(value)));
+      return this.track(created as StateOf<TRepository>);
+    });
+  }
+
   /** Deletes a tracked entity on the next `flush`; from now on its id reads as missing. */
   remove(entity: Entity<StateOf<TRepository>>): void {
     const tracked = this.entities.get(entity.id);
@@ -111,11 +135,14 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
         `The id of ${repository.entityName} ${String(entity.id)} was changed to ${String(entity.state.id)}`,
       );
     }
-    const stored = entity.getStored();
+    const stored = entity.getStored() as Resolved<IEntity> | undefined;
     if (entity.isRemoved) {
       if (stored !== undefined) await repository.delete(stored);
       this.entities.delete(entity.id);
-    } else if (stored === undefined) {
+      return;
+    }
+    await entity[resolveReferences]();
+    if (stored === undefined) {
       entity[markStored](await repository.create(entity.state));
     } else {
       const diff = entity.getDiff();
