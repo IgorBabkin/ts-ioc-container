@@ -1,3 +1,12 @@
+# 5.1.0 (2026-10-03)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    resolve tsconfig paths aliases in glob.exclude
+    (38366ea4b9a9ea65a52b3a3f5f5f5e1932f8cfa2)
+
+
 # 5.0.0 (2026-10-03)
 
   ### 💥 BREAKING CHANGES
@@ -302,6 +311,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
