@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { z } from 'zod';
 import { TicConfigError } from '../../exceptions/DomainException';
-import { globToRegExp } from './domain/glob';
+import { globToRegExp, toPosix } from './domain/glob';
 
 /** Which exports of a file count: both kinds, only named exports, or only the default export. */
 export type ExportKind = 'any' | 'named' | 'default';
@@ -79,9 +79,16 @@ export interface BundleConfig {
    * file. Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
   extends?: string;
-  /** tsconfig `include`: replaces the extended tsconfig's. */
+  /**
+   * The base folder this config's relative `include`, `exclude` and `output` resolve against,
+   * so they need not repeat a shared prefix such as `src`. Relative to the config file; default
+   * the config file's directory. It is also handed to TypeScript as `compilerOptions.baseUrl`
+   * (unless that is set too), so the generated imports use it as well.
+   */
+  baseUrl?: string;
+  /** tsconfig `include`: replaces the extended tsconfig's. Relative to `baseUrl`. */
   include?: string[];
-  /** tsconfig `exclude`: replaces the extended tsconfig's. {@link DEFAULT_EXCLUDE} applies regardless. */
+  /** tsconfig `exclude`: replaces the extended tsconfig's. Relative to `baseUrl`. {@link DEFAULT_EXCLUDE} applies regardless. */
   exclude?: string[];
   compilerOptions?: BundleCompilerOptions;
 }
@@ -211,8 +218,10 @@ const COMPILER_OPTIONS_SCHEMA = z
   );
 
 /** A list of tsconfig globs; TypeScript reports the bad ones. */
-const tsconfigGlobs = (field: string) =>
-  stringList().optional().describe(`tsconfig \`${field}\`: replaces the extended tsconfig's. Relative to this file.`);
+const tsconfigGlobs = (field: string, note = '') =>
+  stringList()
+    .optional()
+    .describe(`tsconfig \`${field}\`: replaces the extended tsconfig's. Relative to \`baseUrl\`.${note}`);
 
 /**
  * One `*.bundle.json` / `*.bundle.yaml`: a tsconfig with the bundler's fields. The published
@@ -229,6 +238,11 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .describe(
         "The tsconfig this bundle extends, as a tsconfig's own `extends`: its file set, `paths` aliases and module resolution apply unless this file overrides them. Relative to this file. The default may be absent; a tsconfig named here must exist.",
       ),
+    baseUrl: nonEmptyString()
+      .optional()
+      .describe(
+        "The base folder this config's relative `include`, `exclude` and `output` resolve against, so they need not repeat a shared prefix such as `src`. Relative to this file; default this file's directory. Also handed to TypeScript as `compilerOptions.baseUrl` (unless that is set too), so generated imports use it.",
+      ),
     output: nonEmptyString()
       .optional()
       .describe(
@@ -241,7 +255,10 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .describe(
         'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: this file\'s stem (production.bundle.json → production), else "base". It names the default output (production.bundle.ts) and the generated IContainerModule class (ProductionBundle).',
       ),
-    include: tsconfigGlobs('include'),
+    include: tsconfigGlobs(
+      'include',
+      ' When `baseUrl` is set and this is omitted, the whole `baseUrl` folder (`.`) is scanned.',
+    ),
     exclude: tsconfigGlobs('exclude'),
     compilerOptions: COMPILER_OPTIONS_SCHEMA.optional(),
   },
@@ -305,25 +322,37 @@ export function toClassName(name: string): string {
 }
 
 /**
- * Validates parsed `*.bundle.json` content and resolves its paths against `file`'s directory.
+ * Validates parsed `*.bundle.json` content and resolves its paths against `file`'s
+ * directory, or its `baseUrl` for `include` / `exclude` / `output`.
  *
  * @throws {TicConfigError} when the content does not match the config shape; the message names the field.
  */
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { output, name, extends: tsconfig, include, exclude, compilerOptions = {} } = result.data;
+  const { output, name, baseUrl, extends: tsconfig, include, exclude, compilerOptions = {} } = result.data;
   const { importExtension, classes, ...tsCompilerOptions } = compilerOptions;
   const dir = path.dirname(file);
+  const base = baseUrl === undefined ? dir : path.resolve(dir, baseUrl);
+  // A config rooted at `baseUrl` scans that whole folder unless it names its own `include`.
+  const includeGlobs = include ?? (baseUrl === undefined ? undefined : ['.']);
+  // TypeScript resolves `include` / `exclude` against the config's directory, so a base other
+  // than it is folded into each glob; an absolute glob is left for TypeScript.
+  const rebase = (globs?: string[]) =>
+    globs?.map((glob) => (path.isAbsolute(glob) ? glob : toPosix(path.relative(dir, path.resolve(base, glob))) || '.'));
   const bundleName = name ?? configStem(file) ?? DEFAULT_BUNDLE_NAME;
   return {
     file,
     dir,
-    output: output === undefined ? undefined : path.resolve(dir, output),
+    output: output === undefined ? undefined : path.resolve(base, output),
     name: bundleName,
     className: toClassName(bundleName),
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
-    overrides: { include, exclude, compilerOptions: tsCompilerOptions },
+    overrides: {
+      include: rebase(includeGlobs),
+      exclude: rebase(exclude),
+      compilerOptions: baseUrl === undefined ? tsCompilerOptions : { baseUrl, ...tsCompilerOptions },
+    },
     importExtension,
     classes: toClassSelector(classes),
   };

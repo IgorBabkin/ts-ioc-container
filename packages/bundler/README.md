@@ -96,10 +96,11 @@ Every field is optional; `{}` is the zero-config bundle. The tsconfig fields:
 
 The bundler's own fields, at the top level:
 
-| Field    | Default                        | Meaning                                                                                                                 |
-| -------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `output` | `<root>/<name>.bundle.ts`      | The bundle file; `<root>` as in [Zero config](#zero-config)                                                             |
-| `name`   | the config's stem, else `base` | The bundle's name (`production.bundle.json` → `production`): names the default output and the class, `ProductionBundle` |
+| Field     | Default                        | Meaning                                                                                                                 |
+| --------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `baseUrl` | the config file's directory    | The base `include`, `exclude` and `output` resolve against, so they need not repeat a shared prefix such as `src`; also passed to TypeScript as `compilerOptions.baseUrl` |
+| `output`  | `<root>/<name>.bundle.ts`      | The bundle file; `<root>` as in [Zero config](#zero-config)                                                             |
+| `name`    | the config's stem, else `base` | The bundle's name (`production.bundle.json` → `production`): names the default output and the class, `ProductionBundle` |
 
 and under `compilerOptions`:
 
@@ -111,6 +112,24 @@ and under `compilerOptions`:
 An unknown top-level field is an error, so a misspelled or removed option never
 goes unnoticed. Every other compiler option is handed to TypeScript, which
 reports an unknown one (`Unknown compiler option 'pathz'. Did you mean 'paths'?`).
+
+`baseUrl` lets a config read in source terms instead of from the package root:
+
+```json
+{
+  "baseUrl": "src",
+  "output": ".generated/container.bundle.ts",
+  "exclude": [".generated/**", "db/testing/**"]
+}
+```
+
+writes `src/.generated/container.bundle.ts` from everything under `src/` except
+those two folders — with `baseUrl` set, an omitted `include` scans the whole
+`baseUrl` folder. `extends` still resolves against the config file.
+
+Generated imports read like the tsconfig you compile with: a file covered by a
+`paths` alias is imported in that alias form, a file under `baseUrl` in
+`baseUrl` form (`services/Logger`), and anything else relative to the bundle.
 
 ## Several bundles
 
@@ -144,7 +163,8 @@ sits in a folder the other scans.
 The files a bundle scans are the files its config compiles, as `tsc` would see
 them: the extended tsconfig's `files` / `include` / `exclude` (following its own
 `extends`), with this config's `include` and `exclude` replacing the parent's —
-exactly as in a child tsconfig. Globs are relative to the config file.
+exactly as in a child tsconfig. Globs are relative to `baseUrl`, defaulting to
+the config file's directory.
 
 Test files (`*.spec.ts`, `*.test.ts`, their `.tsx` twins and `__tests__/`) and
 `node_modules/` are never scanned, whatever the tsconfig compiles, since test
