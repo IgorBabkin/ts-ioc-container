@@ -51,8 +51,8 @@ importers:
         specifier: 3.9.7
         version: 3.9.7
       release-monorepo-semantically:
-        specifier: 1.14.0
-        version: 1.14.0
+        specifier: 1.14.1
+        version: 1.14.1
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -3323,8 +3323,8 @@ packages:
   reflect-metadata@0.2.2:
     resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
-  release-monorepo-semantically@1.14.0:
-    resolution: {integrity: sha512-KSYFfVAQsUx6PAI2ejDF4kDzJSHKvuazbGx296hL8SdSQRMYimF4hVRrc2jEP9/OVPqxb+V+a9qmUS02fsrAVA==}
+  release-monorepo-semantically@1.14.1:
+    resolution: {integrity: sha512-nFDc5oYVaNrkuN8daT4wGryUq5BOpw50zs5j7di7bD+N2C+tIvgOYjEpZ0sMy0ZMQdw3ucJU2SAsOMZ18zQL+A==}
     engines: {node: '>=20.11'}
     hasBin: true
 
@@ -7370,7 +7370,7 @@ snapshots:
 
   reflect-metadata@0.2.2: {}
 
-  release-monorepo-semantically@1.14.0:
+  release-monorepo-semantically@1.14.1:
     dependencies:
       commander: 14.0.3
       glob: 10.5.0
