@@ -113,9 +113,12 @@ tariffs.findById({ id: 't-1', tenant: 'acme' });
 ```
 
 - `IRepository<State, E = Entity<State>, Key = State['id']>`: `findById(key: Key)`,
-  `findByIds?(keys: Key[])`, and `keyOf(record): Key`, which the type requires
-  when `Key` is not `State['id']`. Object keys are compared by value, whatever
-  the order of their fields.
+  `findByIds?(keys: Key[])` and `keyOf?(record): Key`. `IRepository` stays an
+  interface, so a generic repository class can implement it; `keyOf` is required
+  where a repository is used — `new EntityManager(repository)`, `uow.of(token)`,
+  `managerOf(token)` — when `Key` is not `State['id']` (`RequireKeyOf`), and the
+  compile error names it. Object keys are compared by value, whatever the order
+  of their fields.
 - `EntityNotFoundError` carries the `key`; `EntityManager.findById(key)`,
   `findByIdOrFail(key)` and `findByIds(keys)` take keys.
 - **Removed:** `RecordKey`, `RestOfKey`, the variadic `findById(id, ...key)`, and

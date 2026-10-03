@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  by,
   Container,
   decorate,
   inject,
@@ -15,13 +14,13 @@ import {
 
 import {
   Entity,
-  EntityManager,
-  entityManagerToken,
-  flushEntityManagers,
+  type EntityManager,
   type IIdGenerator,
   type IRepository,
+  IUnitOfWorkToken,
+  managerOf,
   preparing,
-  repositoryToken,
+  UnitOfWork,
   uuidV7Ids,
   withId,
 } from '../../lib';
@@ -39,7 +38,7 @@ describe('README', () => {
     }
   }
 
-  const IOrderRepositoryToken = repositoryToken<OrderRepository>('IOrderRepository');
+  const IOrderRepositoryToken = new SingleToken<OrderRepository>('IOrderRepository');
 
   @register(IOrderRepositoryToken, scope((s) => s.hasTag('application')), singleton())
   class OrderRepository implements IRepository<OrderDto, Order> {
@@ -76,20 +75,21 @@ describe('README', () => {
   const createApp = () =>
     new Container({ tags: ['application'] })
       .addRegistration(R.fromClass(OrderRepository))
-      .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+      .addRegistration(R.fromClass(UnitOfWork).when((s) => s.hasTag('request')));
 
   it('Quick start: read, change in place, commit', async () => {
     const app = createApp();
     const request = app.createScope({ tags: ['request'] });
     let order: Order;
     try {
-      const orders = entityManagerToken(IOrderRepositoryToken).resolve(request);
+      const uow = IUnitOfWorkToken.resolve(request);
+      const orders = uow.of(IOrderRepositoryToken);
 
       order = await orders.findByIdOrFail('o-1');
       order.cancel();
       order.state.lines.push({ sku: 'idle', quantity: 3 });
 
-      await db.transaction(() => flushEntityManagers(request));
+      await db.transaction(() => uow.commit());
     } finally {
       request.dispose();
     }
@@ -101,8 +101,8 @@ describe('README', () => {
   it('Quick start: a commit that failed can be run again', async () => {
     const app = createApp();
     const repository = IOrderRepositoryToken.resolve(app);
-    const request = app.createScope({ tags: ['request'] });
-    (await entityManagerToken(IOrderRepositoryToken).resolve(request).findByIdOrFail('o-1')).cancel();
+    const uow = IUnitOfWorkToken.resolve(app.createScope({ tags: ['request'] }));
+    (await uow.of(IOrderRepositoryToken).findByIdOrFail('o-1')).cancel();
     let attempts = 0;
     const update = repository.update.bind(repository);
     repository.update = async (stored, diff) => {
@@ -111,7 +111,7 @@ describe('README', () => {
     };
     const retry = async <T>(fn: () => Promise<T>): Promise<T> => fn().catch(() => fn());
 
-    await retry(() => db.transaction(() => flushEntityManagers(request)));
+    await retry(() => db.transaction(() => uow.commit()));
 
     expect(attempts).toBe(2);
     expect(repository.rows.get('o-1')?.status).toBe('cancelled');
@@ -119,34 +119,73 @@ describe('README', () => {
 
   it('Quick start: inject the entity manager into a service', () => {
     class OrderService {
-      constructor(
-        @inject(by(entityManagerToken(IOrderRepositoryToken))) readonly orders: EntityManager<OrderRepository>,
-      ) {}
+      constructor(@inject(managerOf(IOrderRepositoryToken)) readonly orders: EntityManager<OrderRepository>) {}
     }
     const request = createApp().createScope({ tags: ['request'] });
 
     const service = request.resolve(OrderService);
 
-    expect(service.orders).toBe(entityManagerToken(IOrderRepositoryToken).resolve(request));
+    expect(service.orders).toBe(IUnitOfWorkToken.resolve(request).of(IOrderRepositoryToken));
   });
 
-  it('Working with entities: create, track a list, patch, remove', async () => {
+  it('Working with entities: create, track a list, patch, remove, see what will be written', async () => {
     const app = createApp();
-    const request = app.createScope({ tags: ['request'] });
-    const orders = entityManagerToken(IOrderRepositoryToken).resolve(request);
+    const uow = IUnitOfWorkToken.resolve(app.createScope({ tags: ['request'] }));
+    const orders = uow.of(IOrderRepositoryToken);
+    const written: string[] = [];
+    uow.committed.subscribe((changes) => written.push(...changes.map((c) => `${c.type} ${String(c.entity.id)}`)));
 
     orders.create({ id: 'o-2', status: 'open', lines: [] });
     const [listed] = orders.trackMany([{ id: 'o-3', status: 'open', lines: [] }]);
     listed.patch({ status: 'cancelled' });
     orders.remove(await orders.findByIdOrFail('o-1'));
-    await flushEntityManagers(request);
+    expect(uow.getChanges().map((c) => c.type)).toEqual(['create', 'update', 'delete']);
+    await uow.commit();
 
     expect(IOrderRepositoryToken.resolve(app).writes).toEqual(['create o-2', 'update o-3 status', 'delete o-1']);
+    expect(written).toEqual(['create o-2', 'update o-3', 'delete o-1']);
+  });
+
+  it('Foreign keys', async () => {
+    type AuthorDto = { id: string; name: string };
+    type PostDto = { id: string; authorId: string; tagIds: string[] };
+    const log: string[] = [];
+    const store = <S extends { id: string }>(entityName: string, references: IRepository<S>['references'] = {}) =>
+      ({
+        entityName,
+        references,
+        findById: async () => undefined,
+        create: async (record: S) => {
+          log.push(`INSERT ${entityName} ${record.id}`);
+          return record;
+        },
+        update: async (stored: S) => stored,
+        delete: async () => undefined,
+      }) satisfies IRepository<S>;
+    const IAuthorRepositoryToken = new SingleToken<IRepository<AuthorDto>>('IAuthorRepository');
+    const ITagRepositoryToken = new SingleToken<IRepository<{ id: string }>>('ITagRepository');
+    const IPostRepositoryToken = new SingleToken<IRepository<PostDto>>('IPostRepository');
+    const request = new Container()
+      .addRegistration(R.fromValue(store<AuthorDto>('author')).bindTo(IAuthorRepositoryToken))
+      .addRegistration(R.fromValue(store<{ id: string }>('tag')).bindTo(ITagRepositoryToken))
+      .addRegistration(
+        R.fromValue(store<PostDto>('post', { authorId: IAuthorRepositoryToken, tagIds: ITagRepositoryToken })).bindTo(
+          IPostRepositoryToken,
+        ),
+      )
+      .addRegistration(R.fromClass(UnitOfWork));
+    const uow = IUnitOfWorkToken.resolve(request);
+
+    uow.of(IPostRepositoryToken).create({ id: 'p-1', authorId: 'a-1', tagIds: [] });
+    uow.of(IAuthorRepositoryToken).create({ id: 'a-1', name: 'Grace' });
+    await uow.commit();
+
+    expect(log).toEqual(['INSERT author a-1', 'INSERT post p-1']);
   });
 
   it('Ids from a sequence or a UUID', async () => {
     const IOrderIdsToken = new SingleToken<IIdGenerator<string>>('IOrderIds');
-    const IUuidOrderRepositoryToken = repositoryToken<UuidOrderRepository>('IUuidOrderRepository');
+    const IUuidOrderRepositoryToken = new SingleToken<UuidOrderRepository>('IUuidOrderRepository');
 
     @register(IOrderIdsToken, scope((s) => s.hasTag('application')), singleton())
     class OrderIds implements IIdGenerator<string> {
@@ -167,49 +206,54 @@ describe('README', () => {
     const app = new Container({ tags: ['application'] })
       .addRegistration(R.fromClass(OrderIds))
       .addRegistration(R.fromClass(UuidOrderRepository))
-      .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
-    const request = app.createScope({ tags: ['request'] });
-    const orders = entityManagerToken(IUuidOrderRepositoryToken).resolve(request);
+      .addRegistration(R.fromClass(UnitOfWork).when((s) => s.hasTag('request')));
+    const uow = IUnitOfWorkToken.resolve(app.createScope({ tags: ['request'] }));
+    const orders = uow.of(IUuidOrderRepositoryToken);
 
     const order = await orders.add({ status: 'open', lines: [] });
     expect(order.id).toMatch(/^[0-9a-f-]{36}$/);
-    await flushEntityManagers(request);
+    await uow.commit();
 
     expect(orders.repository.writes).toEqual([`create ${order.id}`]);
   });
 
-  it('Linking a record that does not exist yet', async () => {
-    type PostDto = { id: string; title: string; commentId: string | null };
-    type CommentDto = { id: string; text: string };
-    const log: string[] = [];
-    const comments = new EntityManager<IRepository<CommentDto, Entity<CommentDto>, Omit<CommentDto, 'id'>>>({
-      entityName: 'Comment',
-      findById: async () => undefined,
-      create: async (value) => {
-        log.push(`create comment ${JSON.stringify(value)}`);
-        return { ...value, id: 'c-1' };
-      },
-      update: async (stored, diff) => ({ ...stored, ...diff }),
-      delete: async () => undefined,
-    });
-    const posts = new EntityManager<IRepository<PostDto>>({
-      entityName: 'Post',
-      findById: async (id) => ({ id, title: 'Hello', commentId: null }),
-      create: async (value) => value,
-      update: async (stored, diff) => {
-        log.push(`update post ${JSON.stringify(diff)}`);
+  it('Records keyed by more than their id', async () => {
+    type TariffDto = { id: string; tenant: string; price: number };
+    type TariffKey = { id: string; tenant: string };
+    const rows: TariffDto[] = [
+      { id: 't-1', tenant: 'acme', price: 10 },
+      { id: 't-1', tenant: 'globex', price: 20 },
+    ];
+
+    class TariffRepository implements IRepository<TariffDto, Entity<TariffDto>, TariffKey> {
+      readonly entityName = 'Tariff';
+      keyOf({ id, tenant }: TariffDto): TariffKey {
+        return { id, tenant };
+      }
+      async findById({ id, tenant }: TariffKey): Promise<TariffDto | undefined> {
+        const row = rows.find((r) => r.id === id && r.tenant === tenant);
+        return row && { ...row };
+      }
+      async create(tariff: TariffDto): Promise<TariffDto> {
+        return tariff;
+      }
+      async update(stored: TariffDto, diff: Partial<TariffDto>): Promise<TariffDto> {
         return { ...stored, ...diff };
-      },
-      delete: async () => undefined,
-    });
-    const post = await posts.findByIdOrFail('p-1');
+      }
+      async delete(): Promise<void> {}
+    }
+    const ITariffRepositoryToken = new SingleToken<TariffRepository>('ITariffRepository');
+    const uow = IUnitOfWorkToken.resolve(
+      new Container()
+        .addRegistration(R.fromClass(TariffRepository).bindTo(ITariffRepositoryToken))
+        .addRegistration(R.fromClass(UnitOfWork)),
+    );
+    const tariffs = uow.of(ITariffRepositoryToken);
 
-    post.link('commentId', comments.lazy({ text: 'First!' }));
-    expect(log).toEqual([]);
-    await posts.flush();
+    const tariff = await tariffs.findByIdOrFail({ id: 't-1', tenant: 'acme' });
 
-    expect(log).toEqual(['create comment {"text":"First!"}', 'update post {"commentId":"c-1"}']);
-    expect(post.state.commentId).toBe('c-1');
+    expect(tariff.state.price).toBe(10);
+    expect(await tariffs.findById({ id: 't-1', tenant: 'globex' })).not.toBe(tariff);
   });
 
   it('lists every error class the package exports, with its code', async () => {
