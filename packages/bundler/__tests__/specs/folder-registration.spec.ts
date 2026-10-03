@@ -59,6 +59,7 @@ describe('Folder registration', () => {
       [module(['./src'], { name: '2fa' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { tags: ['production'] }), 'tags: unknown field'],
       [module(['./src'], { extends: '' }), 'extends: expected a non-empty string'],
+      [module(['./src'], { baseUrl: '' }), 'baseUrl: expected a non-empty string'],
       [module(['./src'], { include: 'src/**' }), 'include: expected an array of strings'],
       [module(['./src'], { exclude: [1] }), 'exclude: expected an array of strings'],
       [module(['./src'], { compilerOptions: 'strict' }), 'compilerOptions: expected an object'],
@@ -712,6 +713,121 @@ describe('Folder registration', () => {
       buildProject();
 
       expect(generated()).toContain("import { Logger } from '../services/Logger';");
+    });
+  });
+
+  describe('Story: Write imports in baseUrl form', () => {
+    const tsconfig = (compilerOptions: object) => ({ compilerOptions });
+
+    it('imports relative to baseUrl when no paths alias matches', () => {
+      project = TempProject.create({
+        'app.bundle.json': module(['./src/services']),
+        'tsconfig.json': tsconfig({ baseUrl: 'src' }),
+        'src/services/Logger.ts': decorated('Logger'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import { Logger } from 'services/Logger';");
+    });
+
+    it('lets the most specific paths alias win over baseUrl', () => {
+      project = TempProject.create({
+        'app.bundle.json': module(['./src/services']),
+        'tsconfig.json': tsconfig({ baseUrl: '.', paths: { '@app/*': ['./src/*'] } }),
+        'src/services/Logger.ts': decorated('Logger'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import { Logger } from '@app/services/Logger';");
+    });
+
+    it('keeps a file outside baseUrl relative to the output', () => {
+      project = TempProject.create({
+        'app.bundle.json': module(['./src', './lib']),
+        'tsconfig.json': tsconfig({ baseUrl: 'src' }),
+        'src/services/Logger.ts': decorated('Logger'),
+        'lib/External.ts': decorated('External'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import { Logger } from 'services/Logger';");
+      expect(generated()).toContain("import { External } from '../../lib/External';");
+    });
+
+    it('adds the inferred extension to baseUrl imports', () => {
+      project = TempProject.create({
+        'app.bundle.json': module(['./src/services']),
+        'tsconfig.json': tsconfig({ baseUrl: 'src', module: 'nodenext', moduleResolution: 'nodenext' }),
+        'src/services/Logger.ts': decorated('Logger'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import { Logger } from 'services/Logger.js';");
+    });
+
+    it('takes baseUrl from the tsconfig it extends, resolved against that tsconfig', () => {
+      project = TempProject.create({
+        'app.bundle.json': module(['./src/services'], { extends: './tsconfig.app.json' }),
+        'tsconfig.app.json': tsconfig({ baseUrl: '.' }),
+        'src/services/Logger.ts': decorated('Logger'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import { Logger } from 'src/services/Logger';");
+    });
+  });
+
+  describe('Story: Root the config at a baseUrl', () => {
+    it('defaults include to the whole baseUrl folder, resolving exclude and output against it', () => {
+      project = TempProject.create({
+        'app.bundle.json': {
+          baseUrl: 'src',
+          output: '.generated/container.bundle.ts',
+          exclude: ['.generated/**', 'db/testing/**'],
+        },
+        'src/services/Logger.ts': decorated('Logger'),
+        'src/db/RealLogger.ts': decorated('RealLogger'),
+        'src/db/testing/MemoryLogger.ts': decorated('MemoryLogger'),
+      });
+
+      buildProject();
+
+      const out = project.read('src/.generated/container.bundle.ts');
+      expect(out).toContain('Registration.fromClass(Logger)');
+      expect(out).toContain('Registration.fromClass(RealLogger)');
+      expect(out).not.toContain('MemoryLogger');
+    });
+
+    it('also shapes the generated imports, as compilerOptions.baseUrl would', () => {
+      project = TempProject.create({
+        'app.bundle.json': { baseUrl: 'src', output: 'di/container.bundle.ts' },
+        'src/services/Logger.ts': decorated('Logger'),
+      });
+
+      buildProject();
+
+      expect(project.read('src/di/container.bundle.ts')).toContain("import { Logger } from 'services/Logger';");
+    });
+
+    it('still resolves extends against the config file, not baseUrl', () => {
+      project = TempProject.create({
+        'app.bundle.json': {
+          baseUrl: 'src',
+          extends: './config/tsconfig.app.json',
+          output: 'di/container.bundle.ts',
+        },
+        'config/tsconfig.app.json': { compilerOptions: { strict: true } },
+        'src/services/Logger.ts': decorated('Logger'),
+      });
+
+      buildProject();
+
+      expect(project.read('src/di/container.bundle.ts')).toContain('Registration.fromClass(Logger)');
     });
   });
 

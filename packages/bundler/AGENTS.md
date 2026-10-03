@@ -10,8 +10,8 @@ it.
   same program). One config file describes one bundle: `<name>.bundle.json`, or the same in
   YAML as `<name>.bundle.yaml` / `.yml` (an empty YAML file = all defaults)
   (schema: `tic.schema.json`), shaped like a tsconfig — `extends`, `include`,
-  `exclude`, `compilerOptions` — plus the bundler's `output` and `name` at
-  the top level and `compilerOptions.importExtension` / `compilerOptions.classes`;
+  `exclude`, `compilerOptions` — plus the bundler's `baseUrl`, `output` and `name`
+  at the top level and `compilerOptions.importExtension` / `compilerOptions.classes`;
   all optional. `tic build` works on
   the package it is invoked in (nearest `package.json` up from the working
   directory; never a workspace root): it builds every `*.bundle.{json,yaml,yml}` there
@@ -24,9 +24,17 @@ it.
   be absent; one named explicitly must exist): TypeScript parses it with the
   bundler's own fields removed, so the files it compiles (its `include` /
   `exclude` replacing the parent's) are the bundle's file set, and the merged
-  `paths` aliases and module resolution shape the generated imports (most
-  specific alias, else a relative path). Every compiler option but `classes`
+  `paths` aliases, `baseUrl` and module resolution shape the generated imports
+  (most specific alias, else a path relative to `baseUrl` when the file is under
+  it, else a relative path). Every compiler option but `classes`
   and `importExtension` goes to TypeScript, which reports unknown ones.
+  The top-level `baseUrl` (default the config's directory) is the base the
+  config's own `include`, `exclude` and `output` resolve against — so they need
+  not repeat a shared prefix — and is passed to TypeScript as
+  `compilerOptions.baseUrl` unless that is set too; `extends` stays relative to
+  the config file. With `baseUrl` set, an omitted `include` defaults to the whole
+  `baseUrl` folder (`.`); without it, an omitted `include` still inherits the
+  extended tsconfig's.
   `output` defaults to `<root>/<name>.bundle.ts`: root = compiled `rootDir`,
   else the common folder of the files compiled. `name` defaults to the config's
   stem (`production.bundle.json` → `production`), else `base`; the class is

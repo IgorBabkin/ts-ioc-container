@@ -52,8 +52,9 @@ Acceptance criteria:
 - Several bundles — `production.bundle.json`, `development.bundle.json`,
   `test.bundle.json` — are several configs; a bundle one config generated is
   never registered by another.
-- Every relative path in the config resolves against the config file's
-  directory, not the working directory.
+- `extends` and `baseUrl` resolve against the config file's directory, not the
+  working directory; `include`, `exclude` and `output` resolve against
+  `baseUrl`, defaulting to the config file's directory.
 - An invalid config — including an unknown top-level field, such as a
   leftover `files` section — fails the build with a message naming the config
   and the offending field; nothing is written for it. Compiler options other
@@ -74,6 +75,23 @@ Acceptance criteria:
   `extends`, with the config's `include` and `exclude` replacing the parent's.
 - The config's `compilerOptions`, without the bundler's own, apply on top of
   the extended tsconfig's — e.g. `paths` aliases for the generated imports.
+
+### Story: Root the config at a baseUrl
+
+As an application developer, I can set one `baseUrl` so my `include`,
+`exclude` and `output` need not repeat a shared prefix such as `src`.
+
+Acceptance criteria:
+
+- `baseUrl` is relative to the config file; `include`, `exclude` and `output`
+  resolve against it, defaulting to the config file's directory.
+- When `include` is omitted, the whole `baseUrl` folder (`.`) is scanned; without
+  `baseUrl`, an omitted `include` still inherits the extended tsconfig's.
+- `extends` still resolves against the config file, not `baseUrl`.
+- The resolved `baseUrl` is also handed to TypeScript as
+  `compilerOptions.baseUrl` (unless the config sets that itself), so the
+  generated imports are written in `baseUrl` form.
+- Without `baseUrl`, every path resolves as before.
 
 ### Story: Register the classes of the files compiled
 
@@ -153,9 +171,28 @@ Acceptance criteria:
   including `paths` it inherits through its own `extends`, or the config's
   own `compilerOptions.paths`.
 - Generated imports use the most specific matching alias; a file no alias
-  covers is imported by a path relative to the output file.
+  covers is imported relative to the tsconfig's `baseUrl` when it is under
+  that folder, and otherwise by a path relative to the output file.
 - Under `moduleResolution` `node16` / `nodenext` imports carry a `.js`
   extension; `compilerOptions.importExtension` overrides the inferred one.
+
+### Story: Write imports in baseUrl form
+
+As an application developer whose `tsconfig.json` sets `baseUrl`, I receive
+imports relative to it, so that the bundle reads like my non-relative,
+`baseUrl`-resolved code.
+
+Acceptance criteria:
+
+- `baseUrl` is the resolved `baseUrl` the config compiles with, including one
+  inherited through `extends`, resolved against the tsconfig that declares it.
+- A file under `baseUrl` that no `paths` alias covers is imported as the bare
+  specifier relative to `baseUrl` (`services/Logger`); a `paths` alias that
+  matches still wins, and a file outside `baseUrl` is imported relative to the
+  output file.
+- `baseUrl` only widens resolution: without it, imports stay relative to the
+  output as before.
+
 
 ### Story: Generate a bundle: a plain container module class
 
