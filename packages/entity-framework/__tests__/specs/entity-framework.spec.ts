@@ -212,6 +212,69 @@ describe('Spec: entity framework', () => {
     });
   });
 
+  describe('Story: read many records at once', () => {
+    // A store that also reads many ids in one call, the way `WHERE id IN (...)` does.
+    class BatchOrderRepository extends OrderRepository {
+      async findByIds(ids: string[]): Promise<OrderDto[]> {
+        this.calls.push(`findByIds:${ids.join(',')}`);
+        return ids.flatMap((id) => {
+          const row = this.rows.get(id);
+          return row ? [structuredClone(row)] : [];
+        });
+      }
+    }
+
+    it('reads only the ids it does not track, in one call, answering in the order asked', async () => {
+      const repository = new BatchOrderRepository(order('o-1'), order('o-2'), order('o-3'));
+      const manager = new EntityManager(repository);
+      const tracked = await manager.findByIdOrFail('o-2');
+
+      const found = await manager.findByIds(['o-3', 'o-2', 'o-9', 'o-1', 'o-3']);
+
+      expect(found.map((o) => o.id)).toEqual(['o-3', 'o-2', 'o-1']);
+      expect(found[1]).toBe(tracked);
+      expect(found[0]).toBeInstanceOf(Order);
+      expect(repository.calls).toEqual(['findById:o-2', 'findByIds:o-3,o-9,o-1']);
+      expect(await manager.findById('o-3')).toBe(found[0]);
+    });
+
+    it('reads one id at a time when the repository cannot read many', async () => {
+      const { manager, repository } = managerOver(order('o-1'), order('o-2'));
+
+      const found = await manager.findByIds(['o-1', 'o-2']);
+
+      expect(found.map((o) => o.id)).toEqual(['o-1', 'o-2']);
+      expect(repository.calls).toEqual(['findById:o-1', 'findById:o-2']);
+    });
+
+    it('leaves out the ids removed in this unit of work', async () => {
+      const repository = new BatchOrderRepository(order('o-1'), order('o-2'));
+      const manager = new EntityManager(repository);
+      manager.remove(await manager.findByIdOrFail('o-1'));
+
+      expect((await manager.findByIds(['o-1', 'o-2'])).map((o) => o.id)).toEqual(['o-2']);
+    });
+
+    it('shares one repository call between concurrent reads of an id', async () => {
+      const { manager, repository } = managerOver(order('o-1'));
+
+      const [first, second] = await Promise.all([manager.findById('o-1'), manager.findById('o-1')]);
+
+      expect(first).toBe(second);
+      expect(repository.calls).toEqual(['findById:o-1']);
+    });
+
+    it('shares a batch read with a concurrent read of one of its ids', async () => {
+      const repository = new BatchOrderRepository(order('o-1'), order('o-2'));
+      const manager = new EntityManager(repository);
+
+      const [many, one] = await Promise.all([manager.findByIds(['o-1', 'o-2']), manager.findById('o-2')]);
+
+      expect(one).toBe(many[1]);
+      expect(repository.calls).toEqual(['findByIds:o-1,o-2']);
+    });
+  });
+
   describe('Story: write a unit of work with one flush', () => {
     it('updates only the fields that changed, given the record as it was read, and writes nothing unchanged', async () => {
       const { manager, repository } = managerOver(order('o-1'), order('o-2'));
@@ -396,6 +459,15 @@ describe('Spec: entity framework', () => {
       await manager.reload(globex);
 
       expect(repository.calls).toEqual(['findById:t-1@globex', 'findById:t-1@globex']);
+    });
+
+    it('reads many ids under the same rest of the key', async () => {
+      const { manager, repository } = tariffsOver();
+
+      const found = await manager.findByIds(['t-1', 't-2'], 'globex');
+
+      expect(found.map((t) => t.state.price)).toEqual([20]);
+      expect(repository.calls).toEqual(['findById:t-1@globex', 'findById:t-2@globex']);
     });
 
     it('names the whole key of a record that was not found', async () => {

@@ -161,6 +161,16 @@ describe('AGENTS.md recipes', () => {
     expect([acme.state.price, globex.state.price]).toEqual([10, 20]);
   });
 
+  it('Read many records at once', async () => {
+    const repository = IOrderRepositoryToken.resolve(createApp());
+    repository.rows.set('o-2', { id: 'o-2', status: 'open', lines: [] });
+    const orders = new EntityManager(repository);
+
+    const found = await orders.findByIds(['o-2', 'o-9', 'o-1', 'o-2']);
+
+    expect(found.map((o) => o.id)).toEqual(['o-2', 'o-1']);
+  });
+
   it('Discard, detach, reload', async () => {
     const app = createApp();
     const repository = IOrderRepositoryToken.resolve(app);

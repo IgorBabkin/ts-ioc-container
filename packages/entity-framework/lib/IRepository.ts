@@ -60,6 +60,14 @@ export interface IRepository<State extends IEntity = IEntity, E extends Entity<S
   /** The record, or `undefined` when there is none. Takes the whole key: what `keyOf` answers, or the id alone. */
   findById(id: State['id'], ...key: never[]): Promise<State | undefined>;
 
+  /**
+   * The records with these ids, in any order — `WHERE id IN (...)`. Ids with no
+   * record are left out. The rest of the key after the id, when there is one,
+   * follows the ids and is the same for all of them. Optional: without it,
+   * `EntityManager.findByIds` reads one id at a time.
+   */
+  findByIds?(ids: State['id'][], ...key: never[]): Promise<State[]>;
+
   create(value: Value): Promise<State>;
 
   /** `stored` is the record as the unit of work read it; `diff` holds only the fields that differ from it. */
@@ -97,6 +105,10 @@ export type ValueOf<TRepository> = TRepository extends IRepository<infer _S, inf
 export type NewOf<TRepository> = TRepository extends { prepare(value: infer New): Promise<unknown> }
   ? New
   : Omit<StateOf<TRepository>, 'id'>;
+
+/** What `findById` takes after the id: the rest of the key. */
+export type RestOfKey<TRepository extends AnyRepository> =
+  Parameters<TRepository['findById']> extends [unknown, ...infer Rest] ? Rest : never[];
 
 const REPOSITORY_TAG = 'repository';
 

@@ -61,6 +61,22 @@ Acceptance criteria:
   `EntityIdentityError` instead of answering whichever record was read first.
 - `flush` refuses an entity whose key was changed, with `EntityIdentityError`.
 
+### Story: Read many records at once
+
+As an application developer loading a list of records by id, I want one read for
+the ones not tracked yet, and no second read of a record already being read, so
+that a unit of work does not pay a round trip per id.
+
+Acceptance criteria:
+
+- `findByIds(ids, ...rest)` answers the tracked entities from the identity map and
+  reads only the missing ids — through the repository's `findByIds` when it has
+  one, in one call, or else one `findById` per id. It answers in the order of
+  `ids`, each id once; ids with no record, and removed ones, are left out.
+- The rest of a key after the id is the same for every id: `findByIds(ids, tenant)`.
+- Concurrent reads of one key share one repository call: two `findById`s of an id
+  still being read, or a `findById` of an id a `findByIds` is reading.
+
 ### Story: Write a unit of work with one flush
 
 Acceptance criteria:
