@@ -26,14 +26,14 @@ describe('TicConfigService', () => {
     const service = new TicConfigService('/repo', fileSystem('').object());
 
     expect(() => service.load('/repo/production.bundle.yaml')).toThrow(
-      'output: expected a non-empty string; files: expected an object',
+      'output: expected a non-empty string; glob: expected an object',
     );
   });
 
   it('given a YAML config with output and paths when loaded then the rest takes its default', () => {
     const service = new TicConfigService(
       '/repo',
-      fileSystem('output: src/di/production.bundle.ts\nfiles:\n  paths: [./src]\n').object(),
+      fileSystem('output: src/di/production.bundle.ts\nglob:\n  paths: [./src]\n').object(),
     );
 
     const resolved = service.load('/repo/production.bundle.yaml');
@@ -43,7 +43,7 @@ describe('TicConfigService', () => {
       name: 'production',
       className: 'ProductionBundle',
       tsconfig: { file: '/repo/tsconfig.json', required: false },
-      files: { paths: [{ path: './src', recursive: true }] },
+      glob: { paths: [{ path: './src', recursive: true }] },
       classes: { export: 'any', decorators: ['register'] },
     });
   });

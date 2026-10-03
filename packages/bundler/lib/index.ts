@@ -48,8 +48,8 @@ export {
   type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,
-  type FileSelector,
-  type ResolvedFileSelector,
+  type GlobSelector,
+  type ResolvedGlobSelector,
   type ResolvedConfig,
 } from './features/build/BuildConfig';
 export { findConfigFiles, findPackageRoot } from './features/build/domain/configFiles';

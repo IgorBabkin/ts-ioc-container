@@ -42,7 +42,7 @@ export interface BuildResult {
   config: string;
   output: OutputResult;
   /**
-   * Non-fatal problems found while building, e.g. a `files.exclude` that drops a default
+   * Non-fatal problems found while building, e.g. a `glob.exclude` that drops a default
    * test glob or two selected classes passing the same decorator token.
    */
   warnings: string[];
@@ -95,7 +95,7 @@ export class BundleBuilder implements IBundleBuilder {
     const paths = loadImportPaths(config.tsconfig, config.importExtension);
     const { output } = config;
     const relative = (file: string) => toPosix(path.relative(config.dir, file));
-    const { include, exclude } = config.files;
+    const { include, exclude } = config.glob;
     // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
     const isExcluded = (file: string) => {
       if (file === output) return true;
@@ -105,7 +105,7 @@ export class BundleBuilder implements IBundleBuilder {
     };
 
     const files = new Set<string>();
-    for (const entry of config.files.paths) {
+    for (const entry of config.glob.paths) {
       const dir = paths.resolveNamespace(entry.path, config.dir);
       for (const file of listSourceFiles(dir, entry.recursive, isExcluded)) files.add(file);
     }
@@ -124,7 +124,7 @@ export class BundleBuilder implements IBundleBuilder {
       bundleView({
         name: config.className,
         configPath: toPosix(path.relative(path.dirname(output), config.file)),
-        paths: config.files.paths.map((entry) => entry.path),
+        paths: config.glob.paths.map((entry) => entry.path),
         classes,
       }),
     );

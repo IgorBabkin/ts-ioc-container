@@ -46,12 +46,12 @@ describe('BuildController', () => {
 
   it('given build warnings when built then each is logged under the config it came from', () => {
     const { logger, controller } = setup(['/repo/app.bundle.json'], () =>
-      result('unchanged', '/repo/src/app.bundle.ts', 0, ['files.exclude omits a glob']),
+      result('unchanged', '/repo/src/app.bundle.ts', 0, ['glob.exclude omits a glob']),
     );
 
     controller.build({ config: [], check: false });
 
-    logger.verify((m) => m.warn('app.bundle.json: files.exclude omits a glob'), Times.Once());
+    logger.verify((m) => m.warn('app.bundle.json: glob.exclude omits a glob'), Times.Once());
   });
 
   it('given a config that fails when built then the error names that config', () => {

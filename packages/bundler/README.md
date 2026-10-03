@@ -38,7 +38,7 @@ One config file describes one bundle and is named `<name>.bundle.json` —
 {
   "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
   "output": "src/di/app.bundle.ts",
-  "files": {
+  "glob": {
     "paths": ["@app/services", { "path": "./src/infra", "recursive": false }]
   }
 }
@@ -49,7 +49,7 @@ or, in YAML, `<name>.bundle.yaml` / `<name>.bundle.yml` — same fields, same sc
 ```yaml
 # yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
 output: src/di/app.bundle.ts
-files:
+glob:
   paths: ['@app/services', ./src/infra]
   include: ['**/*.service.ts']
 ```
@@ -60,7 +60,7 @@ is an error.
 | Field             | Default                                | Meaning                                                                                                                                                |
 | ----------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `output`          | — (required)                           | The bundle file, relative to the config (convention: `*.bundle.ts`)                                                                                    |
-| `files`           | — (required, with `paths`)             | Which files are parsed — see [Selecting files](#selecting-files)                                                                                       |
+| `glob`            | — (required, with `paths`)             | Which files are parsed — see [Selecting files](#selecting-files)                                                                                       |
 | `name`            | the config's stem                      | The bundle's name (`production.bundle.json` → `production`): names the class, `ProductionBundle`. Required for a config not named `<name>.bundle.json` |
 | `tsconfig`        | `./tsconfig.json` (may be absent)      | Source of `paths` aliases and of the import extension — never of files; one named here must exist                                                      |
 | `importExtension` | `.js` under node16/nodenext, else none | Extension of generated imports                                                                                                                         |
@@ -93,7 +93,7 @@ Each one selects its own files:
 // production.bundle.json
 {
   "output": "src/di/production.bundle.ts",
-  "files": {
+  "glob": {
     "paths": ["@app/services", "./src/infra"],
     "exclude": ["**/*.development.ts", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "**/node_modules/**"],
   },
@@ -109,18 +109,18 @@ sits in a folder the other scans.
 
 A bundle picks its registrations in two stages:
 
-1. **`files`** — decided by path alone, before anything is read. Only files that
+1. **`glob`** — decided by path alone, before anything is read. Only files that
    pass are parsed.
 2. **`classes`** — decided per class, on the files stage 1 let through.
 
 Parsing is where the time goes, so when your project names files by convention
-(`user.service.ts`, `user.repository.ts`), say so in `files.include` and the
+(`user.service.ts`, `user.repository.ts`), say so in `glob.include` and the
 bundler never reads anything else:
 
 ```json
 {
   "output": "src/di/app.bundle.ts",
-  "files": {
+  "glob": {
     "paths": ["@app/services"],
     "include": ["**/*.service.ts", "**/*.repository.ts"]
   },
@@ -149,7 +149,7 @@ folders.
 A non-empty `exclude` replaces the defaults, so restate the ones you still want:
 
 ```json
-"files": {
+"glob": {
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",

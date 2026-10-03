@@ -12,7 +12,7 @@ export function ticConfigJsonSchema(): Record<string, unknown> {
     target: 'draft-7',
     // String lists are custom checks; their shape comes from `.meta()`.
     unrepresentable: 'any',
-    // Editors flag unknown fields everywhere; the CLI tolerates them inside a `files.paths` entry.
+    // Editors flag unknown fields everywhere; the CLI tolerates them inside a `glob.paths` entry.
     override: ({ jsonSchema }) => {
       if (jsonSchema.type === 'object') jsonSchema.additionalProperties = false;
     },

@@ -18,17 +18,17 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   beforeEach(() => {
     project = TempProject.create({
-      'app.bundle.json': { output: 'src/di/container.bundle.ts', files: { paths: ['./src/services'] } },
+      'app.bundle.json': { output: 'src/di/container.bundle.ts', glob: { paths: ['./src/services'] } },
       'src/services/Logger.ts': decorated('Logger'),
-      'other/app.bundle.json': { output: 'out.bundle.ts', files: { paths: ['../src/services'] } },
+      'other/app.bundle.json': { output: 'out.bundle.ts', glob: { paths: ['../src/services'] } },
     });
   });
 
   afterEach(() => project.dispose());
 
   it('builds every *.bundle.json in the working directory', () => {
-    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', files: { paths: ['./src'] } });
-    project.write('development.bundle.json', { output: 'src/di/development.bundle.ts', files: { paths: ['./src'] } });
+    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', glob: { paths: ['./src'] } });
+    project.write('development.bundle.json', { output: 'src/di/development.bundle.ts', glob: { paths: ['./src'] } });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
@@ -41,8 +41,8 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('builds *.bundle.yaml and *.bundle.yml configs alongside *.bundle.json, in name order', () => {
-    project.write('production.bundle.yaml', 'output: src/di/production.bundle.ts\nfiles:\n  paths: [./src]\n');
-    project.write('development.bundle.yml', 'output: src/di/development.bundle.ts\nfiles:\n  paths: [./src]\n');
+    project.write('production.bundle.yaml', 'output: src/di/production.bundle.ts\nglob:\n  paths: [./src]\n');
+    project.write('development.bundle.yml', 'output: src/di/development.bundle.ts\nglob:\n  paths: [./src]\n');
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
@@ -62,7 +62,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('never registers a bundle another config generated', () => {
-    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', files: { paths: ['./src'] } });
+    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', glob: { paths: ['./src'] } });
     const io = new Io(project.root);
 
     run(['build'], io);
@@ -72,7 +72,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('builds only the configs passed with --config, reporting paths relative to the working directory', () => {
-    project.write('other/extra.bundle.json', { output: 'extra.bundle.ts', files: { paths: ['../src/services'] } });
+    project.write('other/extra.bundle.json', { output: 'extra.bundle.ts', glob: { paths: ['../src/services'] } });
     const io = new Io(project.root);
 
     expect(run(['build', '--config', 'other/app.bundle.json', '-c', 'other/extra.bundle.json'], io)).toBe(0);
@@ -106,7 +106,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     });
 
     it("builds the package's *.bundle.json, even when invoked in a sub-folder", () => {
-      project.write('repo/packages/b/app.bundle.json', { output: 'src/app.bundle.ts', files: { paths: ['./src'] } });
+      project.write('repo/packages/b/app.bundle.json', { output: 'src/app.bundle.ts', glob: { paths: ['./src'] } });
       const io = new Io(project.path('repo/packages/b/src'));
 
       expect(run(['build'], io)).toBe(0);
@@ -114,7 +114,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     });
 
     it("never falls back to the workspace root's configs", () => {
-      project.write('repo/root.bundle.json', { output: 'root.bundle.ts', files: { paths: ['./packages'] } });
+      project.write('repo/root.bundle.json', { output: 'root.bundle.ts', glob: { paths: ['./packages'] } });
       const io = new Io(project.path('repo/packages/b/src'));
 
       expect(run(['build'], io)).toBe(1);
@@ -140,7 +140,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('reports a config error on stderr', () => {
-    project.write('app.bundle.json', { output: '', files: { paths: ['./src/services'] } });
+    project.write('app.bundle.json', { output: '', glob: { paths: ['./src/services'] } });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(1);
@@ -150,12 +150,12 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   it('prints a warning when a non-empty exclude drops the default test globs', () => {
     project.write('app.bundle.json', {
       output: 'src/di/container.bundle.ts',
-      files: { paths: ['./src/services'], exclude: ['legacy/**'] },
+      glob: { paths: ['./src/services'], exclude: ['legacy/**'] },
     });
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(0);
-    expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: files.exclude');
+    expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: glob.exclude');
     expect(io.err.join('\n')).toContain('**/*.spec.ts');
   });
 

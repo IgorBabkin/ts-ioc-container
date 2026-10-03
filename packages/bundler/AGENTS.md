@@ -9,7 +9,7 @@ it.
 - The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
   same program). One config file describes one bundle: `<name>.bundle.json`, or the same in
   YAML as `<name>.bundle.yaml` / `.yml` (schema: `tic.schema.json`), flat —
-  `output` and `files.paths` required; `name`, `tsconfig`, `importExtension`,
+  `output` and `glob.paths` required; `name`, `tsconfig`, `importExtension`,
   `classes` optional. There is no zero config: `tic build` works on
   the package it is invoked in (nearest `package.json` up from the working
   directory; never a workspace root) and builds every `*.bundle.{json,yaml,yml}` there
@@ -20,13 +20,13 @@ it.
   `--check` writes nothing and exits 1 when an output is stale — run it in CI.
 - A config does **not** extend its tsconfig and never takes files from it. The
   `tsconfig` field (default `./tsconfig.json`, may be absent; one named
-  explicitly must exist) only supplies `paths` aliases — which `files.paths` may
+  explicitly must exist) only supplies `paths` aliases — which `glob.paths` may
   name and generated imports are written in (most specific alias, else a
   relative path) — and the module resolution that sets the import extension.
   `name` defaults to the config's stem (`production.bundle.json` →
   `production`) and is required for a config named otherwise; the class is
   `toClassName(name)` — `ProductionBundle`.
-- Selection has two stages. `files: { paths, include, exclude }` decides by path
+- Selection has two stages. `glob: { paths, include, exclude }` decides by path
   which files are read and parsed at all. `paths` (required, non-empty) are the
   folders scanned — relative to the config (`./src/services`) or tsconfig
   aliases (`@app/services`). A file in them must match one of `include` (default: all)

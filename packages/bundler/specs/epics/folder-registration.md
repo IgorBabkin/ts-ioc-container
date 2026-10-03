@@ -29,7 +29,7 @@ Acceptance criteria:
   `<name>.bundle.yaml` / `<name>.bundle.yml` in YAML — same fields, same
   schema. One bundle described in two formats fails the build naming both
   files. Its fields are flat and explicit: `output` (by convention
-  `*.bundle.ts`) and `files` with its `paths` are required; `name`,
+  `*.bundle.ts`) and `glob` with its `paths` are required; `name`,
   `tsconfig`, `importExtension` and `classes` are optional.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →
@@ -60,13 +60,13 @@ that what it registers never depends on what my tsconfig happens to compile.
 
 Acceptance criteria:
 
-- A bundle scans its `files.paths` and nothing else; the files its tsconfig
+- A bundle scans its `glob.paths` and nothing else; the files its tsconfig
   compiles play no part.
 - The generated bundle's header lists the paths it scanned.
 
 ### Story: Register the classes of a folder
 
-As an application developer, I can list a folder in a bundle's `files.paths` so that
+As an application developer, I can list a folder in a bundle's `glob.paths` so that
 its classes become registrations of the generated bundle.
 
 Acceptance criteria:
@@ -90,14 +90,14 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- Selection runs in two stages: a bundle's `files` rule — its `paths` and the
+- Selection runs in two stages: a bundle's `glob` rule — its `paths` and the
   `include` / `exclude` globs — decides by path
   alone which files are read and parsed; its `classes` rule then picks classes out of
   the parsed files.
-- `files.include` is a non-empty list of globs; a file is parsed only when it
+- `glob.include` is a non-empty list of globs; a file is parsed only when it
   matches one of them. Omitted, every source file qualifies.
 - A file outside `include` is never read.
-- `files.exclude` lists globs of files never read (default: test files,
+- `glob.exclude` lists globs of files never read (default: test files,
   `__tests__/`, `node_modules/`) and wins over `include`. Giving only `include`
   keeps the default `exclude`.
 - Globs are relative to the config file and `/`-separated.

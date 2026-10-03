@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../../tic.schema.json
 # Production: the services and the infrastructure adapters, minus dev-only *.dev.ts files.
 output: src/di/prod.bundle.ts
-files:
+glob:
   paths:
     - '@app/services'
     - ./src/infra

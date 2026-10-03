@@ -20,7 +20,7 @@
     },
     "tsconfig": {
       "default": "./tsconfig.json",
-      "description": "The tsconfig whose `paths` aliases files.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans files.paths alone. Relative to this file. The default may be absent; a tsconfig named here must exist.",
+      "description": "The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to this file. The default may be absent; a tsconfig named here must exist.",
       "type": "string",
       "minLength": 1
     },
@@ -28,7 +28,7 @@
       "description": "Extension of generated imports, e.g. \".js\". Inferred from the tsconfig: \".js\" under node16/nodenext resolution, none otherwise.",
       "type": "string"
     },
-    "files": {
+    "glob": {
       "type": "object",
       "properties": {
         "paths": {
@@ -143,7 +143,7 @@
   },
   "required": [
     "output",
-    "files"
+    "glob"
   ],
   "additionalProperties": false
 }

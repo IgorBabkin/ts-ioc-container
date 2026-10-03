@@ -10,7 +10,7 @@ import { globToRegExp } from './domain/glob';
  * are relative to the config file and `/`-separated. With a file naming convention
  * (`*.service.ts`), `include` keeps the bundler from reading anything else.
  */
-export interface FileSelector {
+export interface GlobSelector {
   /** Folders to scan: relative to the config file (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
   paths: (string | PathConfig)[];
   /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
@@ -19,8 +19,8 @@ export interface FileSelector {
   exclude?: string[];
 }
 
-/** A {@link FileSelector} with its defaults filled in and its globs compiled. */
-export interface ResolvedFileSelector {
+/** A {@link GlobSelector} with its defaults filled in and its globs compiled. */
+export interface ResolvedGlobSelector {
   paths: Required<PathConfig>[];
   include?: RegExp[];
   exclude: RegExp[];
@@ -31,7 +31,7 @@ export type ExportKind = 'any' | 'named' | 'default';
 
 /**
  * Which classes of a parsed file are registered: the second stage of selection,
- * run on the files {@link FileSelector} let through. A class is selected when
+ * run on the files {@link GlobSelector} let through. A class is selected when
  * it is exported, not abstract, and meets every criterion set here; an empty
  * rule selects every exported class.
  */
@@ -87,16 +87,16 @@ export interface BundleConfig {
    */
   name?: string;
   /**
-   * The tsconfig whose `paths` aliases `files.paths` may name and generated imports are
+   * The tsconfig whose `paths` aliases `glob.paths` may name and generated imports are
    * written in, and whose `moduleResolution` sets the import extension. It contributes
-   * nothing else: the files scanned are `files.paths` alone. Relative to the config file.
+   * nothing else: the files scanned are `glob.paths` alone. Relative to the config file.
    * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
   tsconfig?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
-  /** Which files are parsed: the folders in `files.paths`, minus {@link DEFAULT_EXCLUDE} unless `exclude` says otherwise. */
-  files: FileSelector;
+  /** Which files are parsed: the folders in `glob.paths`, minus {@link DEFAULT_EXCLUDE} unless `exclude` says otherwise. */
+  glob: GlobSelector;
   /** Which classes of a parsed file are registered. Default: every exported class. */
   classes?: ClassSelector;
 }
@@ -126,9 +126,9 @@ export interface ResolvedConfig {
   /** The tsconfig of `paths` aliases; `required` when the config names it, so it must exist. */
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
-  files: ResolvedFileSelector;
+  glob: ResolvedGlobSelector;
   classes: ResolvedClassSelector;
-  /** Non-fatal problems found while resolving, e.g. a `files.exclude` that drops a default test glob. */
+  /** Non-fatal problems found while resolving, e.g. a `glob.exclude` that drops a default test glob. */
   warnings: string[];
 }
 
@@ -169,7 +169,7 @@ const PATH_SCHEMA = z.union(
   expected('a string or an object with "path"'),
 );
 
-const FILES_SCHEMA = z
+const GLOB_SCHEMA = z
   .strictObject(
     {
       paths: z
@@ -250,7 +250,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .optional()
       .meta({ default: DEFAULT_TSCONFIG })
       .describe(
-        'The tsconfig whose `paths` aliases files.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans files.paths alone. Relative to this file. The default may be absent; a tsconfig named here must exist.',
+        'The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to this file. The default may be absent; a tsconfig named here must exist.',
       ),
     importExtension: z
       .string(expected('a string'))
@@ -258,7 +258,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .describe(
         'Extension of generated imports, e.g. ".js". Inferred from the tsconfig: ".js" under node16/nodenext resolution, none otherwise.',
       ),
-    files: FILES_SCHEMA,
+    glob: GLOB_SCHEMA,
     classes: CLASSES_SCHEMA.optional(),
   },
   expected('an object'),
@@ -266,7 +266,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
 
 type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
 
-/** `['classes', 'export']` -> `classes.export`, `['files', 'paths', 0]` -> `files.paths[0]`; the root is `config`. */
+/** `['classes', 'export']` -> `classes.export`, `['glob', 'paths', 0]` -> `glob.paths[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -277,7 +277,7 @@ function formatPath(segments: PropertyKey[]): string {
 
 /**
  * A union failure names the union unless the value had the type of one branch: an
- * object path without `path` reports `files.paths[0].path`, not `files.paths[0]`.
+ * object path without `path` reports `glob.paths[0].path`, not `glob.paths[0]`.
  */
 function matchedBranch(issue: z.core.$ZodIssueInvalidUnion): z.core.$ZodIssue[] | undefined {
   const typeMatched = issue.errors.filter((branch) =>
@@ -296,11 +296,11 @@ function formatIssue(issue: z.core.$ZodIssue, prefix: PropertyKey[] = []): strin
 
 const formatIssues = (error: z.ZodError): string => error.issues.flatMap((issue) => formatIssue(issue)).join('; ');
 
-function toFileSelector(files: ParsedConfig['files']): ResolvedFileSelector {
+function toGlobSelector(glob: ParsedConfig['glob']): ResolvedGlobSelector {
   return {
-    paths: files.paths.map((entry) => (typeof entry === 'string' ? { path: entry, recursive: true } : entry)),
-    include: files.include?.map(globToRegExp),
-    exclude: files.exclude.map(globToRegExp),
+    paths: glob.paths.map((entry) => (typeof entry === 'string' ? { path: entry, recursive: true } : entry)),
+    include: glob.include?.map(globToRegExp),
+    exclude: glob.exclude.map(globToRegExp),
   };
 }
 
@@ -317,17 +317,17 @@ function toClassSelector(classes: ParsedConfig['classes']): ResolvedClassSelecto
 }
 
 /**
- * Warns when an explicit, non-empty `files.exclude` omits one of the {@link DEFAULT_EXCLUDE}
+ * Warns when an explicit, non-empty `glob.exclude` omits one of the {@link DEFAULT_EXCLUDE}
  * globs, since that silently drops test files (or `node_modules`) from the scan.
  * An empty `exclude` is a deliberate opt-out and does not warn.
  */
-function excludeWarnings(files: ParsedConfig['files']): string[] {
-  const { exclude } = files;
+function excludeWarnings(glob: ParsedConfig['glob']): string[] {
+  const { exclude } = glob;
   if (exclude.length === 0) return [];
   const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
   if (missing.length === 0) return [];
   return [
-    `files.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
+    `glob.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
       `add them back`,
   ];
 }
@@ -364,7 +364,7 @@ export function toClassName(name: string): string {
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { output, name, tsconfig, importExtension, files, classes } = result.data;
+  const { output, name, tsconfig, importExtension, glob, classes } = result.data;
   const dir = path.dirname(file);
   const bundleName = name ?? configStem(file);
   if (bundleName === undefined) {
@@ -380,8 +380,8 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     className: toClassName(bundleName),
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG), required: tsconfig !== undefined },
     importExtension,
-    files: toFileSelector(files),
+    glob: toGlobSelector(glob),
     classes: toClassSelector(classes),
-    warnings: excludeWarnings(files),
+    warnings: excludeWarnings(glob),
   };
 }
