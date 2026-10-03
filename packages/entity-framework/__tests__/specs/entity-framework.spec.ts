@@ -286,6 +286,117 @@ describe('Spec: entity framework', () => {
     });
   });
 
+  describe('Story: records keyed by more than their id', () => {
+    type TariffDto = { id: string; tenant: string; price: number };
+
+    // A store keyed by (id, tenant), as a multi-tenant table is.
+    class TariffRepository implements IRepository<TariffDto> {
+      readonly entityName = 'Tariff';
+      readonly calls: string[] = [];
+      readonly rows = new Map<string, TariffDto>([
+        ['t-1@acme', { id: 't-1', tenant: 'acme', price: 10 }],
+        ['t-1@globex', { id: 't-1', tenant: 'globex', price: 20 }],
+      ]);
+
+      keyOf(tariff: TariffDto): [string, string] {
+        return [tariff.id, tariff.tenant];
+      }
+
+      async findById(id: string, tenant: string): Promise<TariffDto | undefined> {
+        this.calls.push(`findById:${id}@${tenant}`);
+        const row = this.rows.get(`${id}@${tenant}`);
+        return row && { ...row };
+      }
+
+      async create(tariff: TariffDto): Promise<TariffDto> {
+        this.calls.push(`create:${tariff.id}@${tariff.tenant}`);
+        return { ...tariff };
+      }
+
+      async update(stored: TariffDto, diff: Partial<TariffDto>): Promise<TariffDto> {
+        this.calls.push(`update:${stored.id}@${stored.tenant}`);
+        return { ...stored, ...diff };
+      }
+
+      async delete(stored: TariffDto): Promise<void> {
+        this.calls.push(`delete:${stored.id}@${stored.tenant}`);
+      }
+    }
+
+    const tariffsOver = () => {
+      const repository = new TariffRepository();
+      return { manager: new EntityManager(repository), repository };
+    };
+
+    it('answers one entity per key, reaching the repository once for each', async () => {
+      const { manager, repository } = tariffsOver();
+
+      const acme = await manager.findByIdOrFail('t-1', 'acme');
+      const globex = await manager.findByIdOrFail('t-1', 'globex');
+
+      expect([acme.state.tenant, globex.state.tenant]).toEqual(['acme', 'globex']);
+      expect(await manager.findById('t-1', 'acme')).toBe(acme);
+      expect(await manager.findById('t-1', 'globex')).toBe(globex);
+      expect(repository.calls).toEqual(['findById:t-1@acme', 'findById:t-1@globex']);
+    });
+
+    it('writes each record under its own key', async () => {
+      const { manager, repository } = tariffsOver();
+      (await manager.findByIdOrFail('t-1', 'acme')).state.price = 11;
+      await manager.findByIdOrFail('t-1', 'globex');
+
+      await manager.flush();
+
+      expect(repository.calls.filter((c) => !c.startsWith('findById'))).toEqual(['update:t-1@acme']);
+    });
+
+    it('tracks, creates and removes by the whole key', async () => {
+      const { manager } = tariffsOver();
+      const acme = manager.track({ id: 't-1', tenant: 'acme', price: 10 });
+
+      const [globex] = manager.trackMany([{ id: 't-1', tenant: 'globex', price: 20 }]);
+      const initech = manager.create({ id: 't-1', tenant: 'initech', price: 30 });
+      manager.remove(acme);
+
+      expect(globex).not.toBe(acme);
+      expect(await manager.findById('t-1', 'acme')).toBeUndefined();
+      expect(await manager.findById('t-1', 'globex')).toBe(globex);
+      expect(await manager.findById('t-1', 'initech')).toBe(initech);
+      expect(() => manager.create({ id: 't-1', tenant: 'globex', price: 1 })).toThrow(EntityIdentityError);
+    });
+
+    it('refuses a read by more than the id when the repository does not say what its key is', async () => {
+      const repository = new TariffRepository();
+      const manager = new EntityManager<IRepository<TariffDto>>({
+        entityName: 'Tariff',
+        findById: repository.findById.bind(repository),
+        create: repository.create.bind(repository),
+        update: repository.update.bind(repository),
+        delete: repository.delete.bind(repository),
+      });
+
+      await expect(manager.findById('t-1', ...(['acme'] as never[]))).rejects.toThrow(/keyOf/);
+      expect(repository.calls).toEqual([]);
+    });
+
+    it('refuses to flush an entity whose key was changed', async () => {
+      const { manager } = tariffsOver();
+      (await manager.findByIdOrFail('t-1', 'acme')).state.tenant = 'globex';
+
+      await expect(manager.flush()).rejects.toThrow(/key of Tariff t-1 was changed/);
+    });
+
+    it('names the whole key of a record that was not found', async () => {
+      const { manager } = tariffsOver();
+
+      await expect(manager.findByIdOrFail('t-9', 'acme')).rejects.toMatchObject({
+        id: 't-9',
+        key: ['t-9', 'acme'],
+        message: expect.stringMatching(/^Tariff t-9 \(acme\) was not found/),
+      });
+    });
+  });
+
   describe('Story: one unit of work per scope', () => {
     const app = () =>
       new Container({ tags: ['application'] })

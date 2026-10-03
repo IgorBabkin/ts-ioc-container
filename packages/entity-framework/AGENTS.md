@@ -21,7 +21,7 @@ and the entrypoint must `import 'reflect-metadata'` first.
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Entity<State>`                                               | One tracked record. `state` is the DTO — change it in place, nested values too. `getDiff()` answers the fields that differ from what is stored; `patch(changes)` sets several fields; `link(field, lazyRef)` sets a field to the id of a record created at flush; `getStored()`, `isNew`, `isRemoved`, `hasChanges()`. Extend it for domain behaviour |
 | `EntityManager<TRepository>`                                  | The unit of work over one repository: `findById` / `findByIdOrFail` (identity map first, the repository once), `track` / `trackMany` (records read some other way), `create`, `lazy`, `remove`, `hasChanges`, `flush`                                                                                                                                 |
-| `IRepository<State, E, Value>`                                | What a repository implements: `entityName`, optional `entityClass`, `findById(id, ...key)`, `create(value)`, `update(stored, diff)`, `delete(stored)`. `Value` is what `create` takes (default `State`; the state without its id when the database mints ids)                                                                                         |
+| `IRepository<State, E, Value>`                                | What a repository implements: `entityName`, optional `entityClass`, optional `keyOf(record)` (the whole key, when more than the id), `findById(id, ...key)`, `create(value)`, `update(stored, diff)`, `delete(stored)`. `Value` is what `create` takes (default `State`; the state without its id when the database mints ids)                        |
 | `LazyRef<E, Value>`                                           | `manager.lazy(value)`: a record that does not exist yet. `entity.link(field, ref)` puts it where its id is wanted; `ref.link(field, other)` nests one inside another                                                                                                                                                                                  |
 | `repositoryToken(key)`                                        | A `SingleToken` for a repository, tagged so an `EntityManager` resolved with it finds it                                                                                                                                                                                                                                                              |
 | `entityManagerToken(repositoryToken)`                         | The token the `EntityManager` over that repository resolves by — one per repository token per scope                                                                                                                                                                                                                                                   |
@@ -112,6 +112,28 @@ for (const order of orders.trackMany(await orders.repository.findByCustomer('Ada
 orders.remove(await orders.findByIdOrFail('o-3')); // DELETE at flush
 ```
 
+### A record keyed by more than its id
+
+A tenant's record, say: `findById` takes the rest of the key after the id, and
+`keyOf` names a record's whole key in the same order. The identity map keys
+entities by it, so the same id under two tenants is two records.
+
+```ts
+class TariffRepository implements IRepository<TariffDto> {
+  readonly entityName = 'Tariff';
+  keyOf(tariff: TariffDto) {
+    return [tariff.id, tariff.tenant] as const;
+  }
+  async findById(id: string, tenant: string): Promise<TariffDto | undefined> {
+    /* SELECT ... WHERE id = $1 AND tenant = $2 */
+  }
+  // create, update, delete as usual: the key is on the record
+}
+
+const acme = await tariffs.findByIdOrFail('t-1', 'acme');
+const globex = await tariffs.findByIdOrFail('t-1', 'globex'); // another entity
+```
+
 ### Link a record that does not exist yet
 
 A foreign key can point at a record that is only created if, and when, the
@@ -148,18 +170,19 @@ value when called.
 | A change inside a class instance in the DTO is not written       | Only plain data is copied and compared; other objects compare by identity | Keep state plain (objects, arrays, dates), or assign a new instance                                                       |
 | Foreign-key violation when related rows are written in one flush | Managers flush in the order the scope built them                          | Let the database check foreign keys at commit (Postgres: `DEFERRABLE INITIALLY DEFERRED`), or `link` the dependent record |
 | TS error on `link(field, ref)`                                   | The field cannot hold the referenced record's id type                     | Link a field typed for that id (`string`, `string \| null`, `string[]`)                                                   |
+| `EntityIdentityError`: read by more than its id                  | `findById(id, tenant)` on a repository without `keyOf`                    | Add `keyOf(record)` answering `[record.id, record.tenant]` — the arguments `findById` takes                               |
 | `EntityIdentityError` on `create`                                | The id is tracked already, or was removed in this unit of work            | Change the tracked entity instead of creating it again                                                                    |
 
 ## Errors
 
 Every error has a stable `code` and a message that says how to fix it.
 
-| Class                        | `code`                        | When                                                                                                                                  |
-| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `EntityNotFoundError`        | `IOC_ENTITY_NOT_FOUND`        | `findByIdOrFail` / `remove` for a record the repository does not have, or one removed in this unit of work. Has `entityName` and `id` |
-| `EntityIdentityError`        | `IOC_ENTITY_IDENTITY`         | `create` for a tracked or removed id; `patch` to another id; flushing an entity whose `state.id` was reassigned                       |
-| `EntityReferenceError`       | `IOC_ENTITY_REFERENCE`        | Lazy records linked into each other in a cycle                                                                                        |
-| `EntityManagerArgumentError` | `IOC_ENTITY_MANAGER_ARGUMENT` | An `EntityManager` resolved without a repository token                                                                                |
+| Class                        | `code`                        | When                                                                                                                                                                |
+| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EntityNotFoundError`        | `IOC_ENTITY_NOT_FOUND`        | `findByIdOrFail` / `remove` for a record the repository does not have, or one removed in this unit of work. Has `entityName`, `id` and `key` (the whole key)        |
+| `EntityIdentityError`        | `IOC_ENTITY_IDENTITY`         | `create` for a tracked or removed id; `patch` to another id; flushing an entity whose `state.id` or key was reassigned; reading by more than the id without `keyOf` |
+| `EntityReferenceError`       | `IOC_ENTITY_REFERENCE`        | Lazy records linked into each other in a cycle                                                                                                                      |
+| `EntityManagerArgumentError` | `IOC_ENTITY_MANAGER_ARGUMENT` | An `EntityManager` resolved without a repository token                                                                                                              |
 
 ## Rules
 
@@ -167,4 +190,4 @@ Every error has a stable `code` and a message that says how to fix it.
   copied; any other object is kept as the same object and compared by identity.
 - `update` receives the record as the unit of work read it, so a repository can
   refuse a write when the stored row no longer matches it (optimistic concurrency).
-- The id is the identity-map key and cannot change.
+- The key — the id, or what `keyOf` answers — is the identity-map key and cannot change.
