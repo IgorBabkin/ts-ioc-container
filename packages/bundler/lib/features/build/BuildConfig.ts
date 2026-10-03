@@ -16,7 +16,10 @@ export interface GlobSelector {
    * or tsconfig `paths` aliases (`@app/services`).
    */
   glob: string | string[];
-  /** Glob, or globs, of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
+  /**
+   * Glob, or globs, of files never read; one may start with a tsconfig `paths` alias
+   * (`@generated/**`, or `@generated` for the whole folder). Replaces {@link DEFAULT_EXCLUDE} when given.
+   */
   exclude?: string | string[];
 }
 
@@ -24,7 +27,8 @@ export interface GlobSelector {
 export interface ResolvedGlobSelector {
   /** The folders to scan, as written in the config. */
   glob: string[];
-  exclude: RegExp[];
+  /** As written in the config: an alias in one is resolved, and the glob compiled, once the tsconfig is loaded. */
+  exclude: string[];
 }
 
 /** Which exports of a file count: both kinds, only named exports, or only the default export. */
@@ -184,7 +188,7 @@ const GLOB_OBJECT_SCHEMA = z.strictObject(
     exclude: globList('a glob or an array of globs', 0)
       .default(DEFAULT_EXCLUDE)
       .describe(
-        'Glob, or globs, of files never read. Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.',
+        'Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.',
       ),
   },
   expected('an object'),
@@ -323,7 +327,7 @@ function toGlobObject(glob: ParsedConfig['glob']): ParsedGlob {
 function toGlobSelector(glob: ParsedGlob): ResolvedGlobSelector {
   return {
     glob: toList(glob.glob),
-    exclude: toList(glob.exclude).map(globToRegExp),
+    exclude: toList(glob.exclude),
   };
 }
 

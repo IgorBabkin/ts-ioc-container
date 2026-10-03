@@ -194,12 +194,16 @@ glob: # the object form, for a custom exclude
 ```
 
 Within them, a file is parsed unless it matches **one of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
-spans folders.
+spans folders. Like a folder in `glob.glob`, an exclude glob may start with a
+tsconfig `paths` alias: with `"@generated/*": ["./src/.generated/*"]`,
+`@generated/**` reads `src/.generated/**`, and `@generated` (or `@generated/`)
+drops the whole folder. A catch-all `"*"` alias is never applied, so plain globs
+such as `**/*.spec.ts` keep their meaning.
 
-| Rule      | Default                                   | Meaning                                                                         |
-| --------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
-| `glob`    | — (required)                              | Folder, or folders, to scan                                                     |
-| `exclude` | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; replaces the default when given |
+| Rule      | Default                                   | Meaning                                                                                                          |
+| --------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `glob`    | — (required)                              | Folder, or folders, to scan                                                                                      |
+| `exclude` | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; may start with a tsconfig alias; replaces the default when given |
 
 A non-empty `exclude` replaces the defaults, so restate the ones you still want:
 
@@ -212,7 +216,8 @@ A non-empty `exclude` replaces the defaults, so restate the ones you still want:
     "**/*.test.tsx",
     "**/__tests__/**",
     "**/node_modules/**",
-    "frontend/api/generated/**"
+    "frontend/api/generated/**",
+    "@generated"
   ]
 }
 ```

@@ -94,7 +94,11 @@ Acceptance criteria:
   `__tests__/`, `node_modules/`); every other source file in `glob.glob` is parsed.
   There is no `include`: it is an unknown field.
 - An excluded file is never read.
-- Globs are relative to the config file and `/`-separated.
+- Globs are relative to the config file and `/`-separated. Like a folder in
+  `glob.glob`, an exclude glob may start with a tsconfig `paths` alias instead:
+  `@generated/**` reads the folder the alias names, and `@generated` (or
+  `@generated/`) drops all of it. An alias with several targets excludes under
+  each; a catch-all `"*"` alias is never applied to an exclude glob.
 - A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
   parses tests deliberately. When a non-empty `exclude` omits a default glob,
   the build reports a warning (the escape hatch stays: `[]` warns for nothing).

@@ -67,6 +67,19 @@ export class ImportPaths {
   }
 
   /**
+   * An exclude glob as a glob relative to `baseDir`. One that starts with a `paths` alias
+   * reads from the folder the alias names — `@generated/**` -> `src/.generated/**` — and an
+   * alias naming a folder alone (`@generated`, `@generated/`) covers everything in it. An
+   * alias with several targets yields one glob per target; any other glob is returned as is.
+   */
+  resolveGlob(glob: string, baseDir: string): string[] {
+    if (isRelative(glob)) return [glob];
+    const targets = [glob, `${glob}/`].map((spec) => this.aliasTargets(spec, true)).find((found) => found.length > 0);
+    if (!targets) return [glob];
+    return targets.map((target) => toPosix(path.relative(baseDir, target.endsWith('/') ? `${target}**` : target)));
+  }
+
+  /**
    * The specifier `file` is imported by: its most specific `paths` alias. `undefined` when no
    * alias covers it — a bundle is written to stdout, so it has no location a relative import
    * could start from.
@@ -87,11 +100,13 @@ export class ImportPaths {
     return best;
   }
 
-  private aliasTargets(spec: string): string[] {
+  /** `prefixed` skips catch-all aliases (`"*"`), which would claim every plain glob such as `**\/*.spec.ts`. */
+  private aliasTargets(spec: string, prefixed = false): string[] {
     return this.aliases.flatMap(({ pattern, targets }) => {
       const wildcard = splitWildcard(pattern);
       if (!wildcard) return pattern === spec ? targets : [];
       const [prefix, suffix] = wildcard;
+      if (prefixed && prefix === '') return [];
       if (!spec.startsWith(prefix) || !spec.endsWith(suffix) || spec.length < prefix.length + suffix.length) return [];
       const captured = spec.slice(prefix.length, spec.length - suffix.length);
       return targets.map((target) => target.replace('*', captured));
