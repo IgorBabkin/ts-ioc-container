@@ -78,11 +78,13 @@ describe('Folder registration', () => {
 
     it.each([
       [[], 'config: expected an object'],
-      [{}, 'glob: expected an object'],
+      [{}, 'glob: expected a folder, a non-empty array of folders or an object with "paths"'],
       [module(['./src'], { output: 'src/di/container.bundle.ts' }), 'output: unknown field'],
       [{ glob: {} }, 'glob.paths: expected a non-empty array'],
       [{ glob: { include: ['**/*.ts'] } }, 'glob.paths: expected a non-empty array'],
-      [{ glob: 'src/**' }, 'glob: expected an object'],
+      [{ glob: '' }, 'glob: expected a non-empty string'],
+      [{ glob: [] }, 'glob: expected a non-empty array'],
+      [{ glob: 42 }, 'glob: expected a folder, a non-empty array of folders or an object with "paths"'],
       [{ glob: { paths: [] } }, 'glob.paths: expected a non-empty array'],
       [{ glob: { paths: [{ recursive: true }] } }, 'glob.paths[0].path'],
       [module(['./src'], { name: 'not valid' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
@@ -101,6 +103,27 @@ describe('Folder registration', () => {
 
       expect(() => buildProject()).toThrow(TicConfigError);
       expect(() => buildProject()).toThrow(message);
+    });
+  });
+
+  describe('Story: Name the scanned folders without an object', () => {
+    it.each([
+      ['a folder', './src/services'],
+      ['a list of folders', ['./src/services', { path: './src/infra', recursive: false }]],
+    ])('takes glob as %s, keeping the default include and exclude', (_, glob) => {
+      project = create({
+        'app.bundle.json': { glob },
+        'src/services/Logger.ts': decorated('Logger'),
+        'src/services/Logger.spec.ts': decorated('LoggerSpec'),
+        'src/infra/Db.ts': decorated('Db'),
+        'src/infra/nested/Deep.ts': decorated('Deep'),
+      });
+
+      const { warnings } = buildProject();
+
+      expect(generated()).toContain('Registration.fromClass(Logger)');
+      expect(generated()).not.toMatch(/LoggerSpec|Deep/);
+      expect(warnings).toEqual([]);
     });
   });
 
@@ -126,7 +149,9 @@ describe('Folder registration', () => {
     it('rejects an empty YAML file: glob must be written out', () => {
       project = create({ 'production.bundle.yaml': '', 'tsconfig.json': { include: ['src'] } });
 
-      expect(() => buildFrom('production.bundle.yaml')).toThrow('glob: expected an object');
+      expect(() => buildFrom('production.bundle.yaml')).toThrow(
+        'glob: expected a folder, a non-empty array of folders or an object with "paths"',
+      );
     });
 
     it.each([
@@ -312,6 +337,26 @@ describe('Folder registration', () => {
       expect(registered()).toEqual(['UserService']);
     });
 
+    it('takes a single include glob as a string', () => {
+      project = create({ 'app.bundle.json': module(['./src'], { glob: { include: '**/*.service.ts' } }), ...sources });
+
+      buildProject();
+
+      expect(registered()).toEqual(['OldService', 'UserService']);
+    });
+
+    it('takes a single exclude glob as a string, replacing the defaults', () => {
+      project = create({
+        'app.bundle.json': module(['./src'], { glob: { include: '**/*.service.ts', exclude: 'src/legacy/**' } }),
+        ...sources,
+      });
+
+      const { warnings } = buildProject();
+
+      expect(registered()).toEqual(['UserService']);
+      expect(warnings[0]).toContain('glob.exclude');
+    });
+
     it('keeps the default excludes when only include is given', () => {
       project = create({
         'app.bundle.json': module(['./src'], { glob: { include: ['**/*.service.ts'] } }),
@@ -339,9 +384,11 @@ describe('Folder registration', () => {
     });
 
     it.each([
-      [{ include: [] }, 'glob.include: expected a non-empty array of strings'],
-      [{ include: [''] }, 'glob.include: expected a non-empty array of strings'],
-      [{ exclude: 'src/**' }, 'glob.exclude: expected an array of strings'],
+      [{ include: [] }, 'glob.include: expected a glob or a non-empty array of globs'],
+      [{ include: [''] }, 'glob.include: expected a glob or a non-empty array of globs'],
+      [{ include: '' }, 'glob.include: expected a glob or a non-empty array of globs'],
+      [{ exclude: '' }, 'glob.exclude: expected a glob or an array of globs'],
+      [{ exclude: [42] }, 'glob.exclude: expected a glob or an array of globs'],
       [{ only: ['**/*.ts'] }, 'glob.only: unknown field'],
     ])('rejects the file rule %j naming the field', (glob, message) => {
       project = create({ 'app.bundle.json': module(['./src'], { glob }) });

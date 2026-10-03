@@ -24,9 +24,13 @@
       "type": "string"
     },
     "glob": {
-      "type": "object",
-      "properties": {
-        "paths": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "One folder to scan, with the default include and exclude: shorthand for { \"paths\": [...] }."
+        },
+        {
           "minItems": 1,
           "type": "array",
           "items": {
@@ -54,39 +58,90 @@
               }
             ]
           },
-          "description": "Folders to scan: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { \"path\": \"...\", \"recursive\": false }."
+          "description": "Folders to scan, with the default include and exclude: shorthand for { \"paths\": [...] }."
         },
-        "include": {
-          "description": "Globs a file must match one of, e.g. [\"**/*.service.ts\", \"**/*.repository.ts\"]. Default: every source file.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
+        {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "recursive": {
+                        "default": true,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "description": "Folders to scan: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { \"path\": \"...\", \"recursive\": false }."
+            },
+            "include": {
+              "description": "Glob, or globs, a file must match one of, e.g. \"**/*.service.ts\" or [\"**/*.service.ts\", \"**/*.repository.ts\"]. Default: every source file.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "exclude": {
+              "default": [
+                "**/*.spec.ts",
+                "**/*.test.ts",
+                "**/*.spec.tsx",
+                "**/*.test.tsx",
+                "**/__tests__/**",
+                "**/node_modules/**"
+              ],
+              "description": "Glob, or globs, of files never read. Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              ]
+            }
           },
-          "minItems": 1
-        },
-        "exclude": {
-          "default": [
-            "**/*.spec.ts",
-            "**/*.test.ts",
-            "**/*.spec.tsx",
-            "**/*.test.tsx",
-            "**/__tests__/**",
-            "**/node_modules/**"
+          "required": [
+            "paths"
           ],
-          "description": "Globs of files never read. Replaces the default when given. A non-empty list that omits a default glob makes `tic build` warn.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
+          "additionalProperties": false
         }
-      },
-      "required": [
-        "paths"
       ],
-      "additionalProperties": false,
-      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the config file. With a file naming convention, `include` keeps every other file unread."
+      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the config file. With a file naming convention, `include` keeps every other file unread. A folder, or a list of folders, is shorthand for { \"paths\": [...] }."
     },
     "className": {
       "type": "object",

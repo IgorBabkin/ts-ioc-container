@@ -95,7 +95,7 @@ glob:
 
 | Field             | Default                                       | Meaning                                                                                                     |
 | ----------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `glob`            | — (required, with `paths`)                    | Which files are parsed — see [Selecting files](#selecting-files)                                            |
+| `glob`            | — (required)                                  | Which files are parsed — see [Selecting files](#selecting-files)                                            |
 | `className`       | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                 |
 | `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise      |
 | `tsconfig`        | `./tsconfig.json`                             | Source of the `paths` aliases every import is written through, and of the import extension — never of files |
@@ -181,15 +181,26 @@ config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`,
 for a `"@app/*": ["./src/*"]` alias), scanned recursively unless it says
 `{ "path": "...", "recursive": false }`.
 
+When the defaults for `include` and `exclude` are all you need, `glob` can be
+just the folders — a string or a list:
+
+```yaml
+glob: ./src/services
+```
+
+```yaml
+glob: ['@app/services', ./src/infra]
+```
+
 Within them, a file is parsed when it matches **one of** `include` and **none of**
 `exclude`. Globs are relative to the config file and `/`-separated; `**`
 spans folders.
 
-| Rule      | Default                                   | Meaning                                                    |
-| --------- | ----------------------------------------- | ---------------------------------------------------------- |
-| `paths`   | — (required)                              | Folders to scan                                            |
-| `include` | every source file                         | Globs a file must match one of, e.g. `"**/*.service.ts"`   |
-| `exclude` | test files, `__tests__/`, `node_modules/` | Globs of files never read; replaces the default when given |
+| Rule      | Default                                   | Meaning                                                                         |
+| --------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
+| `paths`   | — (required)                              | Folders to scan                                                                 |
+| `include` | every source file                         | A glob, or a list of them, a file must match one of, e.g. `"**/*.service.ts"`   |
+| `exclude` | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; replaces the default when given |
 
 A non-empty `exclude` replaces the defaults, so restate the ones you still want:
 
