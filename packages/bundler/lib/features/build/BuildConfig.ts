@@ -44,23 +44,23 @@ export interface ClassSelector {
    */
   decorators?: string[];
   /** A glob the class name must match, e.g. `*Service`. An anonymous default export is named after its file. */
-  name?: string;
+  glob?: string;
   /**
    * Class names to drop after selection, e.g. one test double sitting next to the
    * real registration in the same file.
    */
   excludeClasses?: string[];
   /** A glob the class name must NOT match, e.g. `*Mock`. An anonymous default export is named after its file. */
-  excludeName?: string;
+  exclude?: string;
 }
 
 /** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedClassSelector {
   export: ExportKind;
   decorators?: string[];
-  name?: RegExp;
+  glob?: RegExp;
   excludeClasses?: string[];
-  excludeName?: RegExp;
+  exclude?: RegExp;
 }
 
 export interface PathConfig {
@@ -207,7 +207,7 @@ const CLASSES_SCHEMA = z
         .describe(
           'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator). Default ["register"]; [] requires none.',
         ),
-      name: nonEmptyString()
+      glob: nonEmptyString()
         .optional()
         .describe(
           'Glob the class name must match, e.g. "*Service". An anonymous default export is named after its file.',
@@ -217,7 +217,7 @@ const CLASSES_SCHEMA = z
         .describe(
           'Class names to drop after selection, e.g. one test double sitting next to the real registration in the same file.',
         ),
-      excludeName: nonEmptyString()
+      exclude: nonEmptyString()
         .optional()
         .describe(
           'Glob the class name must NOT match, e.g. "*Mock". An anonymous default export is named after its file.',
@@ -306,13 +306,13 @@ function toGlobSelector(glob: ParsedConfig['glob']): ResolvedGlobSelector {
 
 function toClassSelector(classes: ParsedConfig['classes']): ResolvedClassSelector {
   if (classes === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
-  const { decorators, name, excludeName, ...rest } = classes;
+  const { decorators, glob, exclude, ...rest } = classes;
   return {
     ...rest,
     // `[]` is the explicit opt-out: no decorator required.
     decorators: decorators.length > 0 ? decorators : undefined,
-    name: name === undefined ? undefined : globToRegExp(name),
-    excludeName: excludeName === undefined ? undefined : globToRegExp(excludeName),
+    glob: glob === undefined ? undefined : globToRegExp(glob),
+    exclude: exclude === undefined ? undefined : globToRegExp(exclude),
   };
 }
 

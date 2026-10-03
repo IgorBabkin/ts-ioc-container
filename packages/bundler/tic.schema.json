@@ -117,7 +117,7 @@
             "minLength": 1
           }
         },
-        "name": {
+        "glob": {
           "description": "Glob the class name must match, e.g. \"*Service\". An anonymous default export is named after its file.",
           "type": "string",
           "minLength": 1
@@ -131,7 +131,7 @@
           },
           "minItems": 1
         },
-        "excludeName": {
+        "exclude": {
           "description": "Glob the class name must NOT match, e.g. \"*Mock\". An anonymous default export is named after its file.",
           "type": "string",
           "minLength": 1

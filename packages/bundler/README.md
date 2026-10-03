@@ -177,7 +177,7 @@ criterion that is set:
 "classes": {
   "export": "named",
   "decorators": ["register", "repository"],
-  "name": "*Service"
+  "glob": "*Service"
 }
 ```
 
@@ -185,9 +185,9 @@ criterion that is set:
 | ---------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `export`         | `any`          | `any`, `named` or `default` — which exports count                                                                                          |
 | `decorators`     | `["register"]` | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none            |
-| `name`           | —              | Glob the class name must match, e.g. `"*Service"`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
+| `glob`           | —              | Glob the class name must match, e.g. `"*Service"`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
 | `excludeClasses` | —              | Class names to drop, e.g. `["MockDashboardRepository"]`                                                                                    |
-| `excludeName`    | —              | Glob the class name must **not** match, e.g. `"*Mock"`                                                                                     |
+| `exclude`        | —              | Glob the class name must **not** match, e.g. `"*Mock"`                                                                                     |
 
 Abstract and non-exported classes are never registered.
 
@@ -195,18 +195,18 @@ Abstract and non-exported classes are never registered.
 
 When a real implementation and a test-only stand-in are both decorated and both
 bind the same token, registration is last-wins and the stand-in silently wins.
-`excludeClasses` and `excludeName` drop a class right in the config:
+`excludeClasses` and `exclude` drop a class right in the config:
 
 ```json
 "classes": {
   "decorators": ["repository", "service"],
   "excludeClasses": ["MockDashboardRepository"],
-  "excludeName": "*Fake"
+  "exclude": "*Fake"
 }
 ```
 
 Both apply after every other criterion, so they can be combined with
-`decorators` and `name` freely.
+`decorators` and `glob` freely.
 
 As a safety net, the build warns when two selected classes pass the same
 plain-identifier first argument to a decorator — usually the binding token, as in

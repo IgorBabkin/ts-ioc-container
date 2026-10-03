@@ -34,11 +34,11 @@ it.
   non-empty list replaces it, and the build warns if it drops a default). Globs
   are relative to the config. With file naming conventions, `include` is the
   speed lever — nothing else is read. Files `tic build` generated are never input.
-- `classes: { export, decorators, name, excludeClasses, excludeName }`
+- `classes: { export, decorators, glob, excludeClasses, exclude }`
   then picks classes of the parsed files; default is every exported,
   non-abstract class decorated with `@register` (`decorators` defaults to
   `["register"]`; `[]` requires none); positive criteria must all hold and then `excludeClasses` (exact
-  names) and `excludeName` (glob) drop classes.
+  names) and `exclude` (glob) drop classes.
   Decorators match by name, so composed ones must be listed. The build warns when
   two selected classes pass the same plain-identifier first decorator argument (a
   same-token heuristic), unless a decorator they share has differing arguments

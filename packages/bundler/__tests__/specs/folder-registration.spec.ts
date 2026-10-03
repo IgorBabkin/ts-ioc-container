@@ -313,7 +313,7 @@ describe('Folder registration', () => {
       project = TempProject.create({
         'app.bundle.json': module(['./src'], {
           glob: { include: ['**/*.service.ts'] },
-          classes: { excludeName: 'Old*' },
+          classes: { exclude: 'Old*' },
         }),
         ...sources,
       });
@@ -381,11 +381,11 @@ describe('Folder registration', () => {
     });
 
     it('requires the class name to match a glob', () => {
-      expect(selected({ name: '*Service' })).toEqual(['UserService', 'AuthService', 'MainService']);
+      expect(selected({ glob: '*Service' })).toEqual(['UserService', 'AuthService', 'MainService']);
     });
 
     it('combines criteria: a class must meet every one', () => {
-      expect(selected({ export: 'named', decorators: ['register'], name: '*Service' })).toEqual(['AuthService']);
+      expect(selected({ export: 'named', decorators: ['register'], glob: '*Service' })).toEqual(['AuthService']);
     });
 
     it('recognises decorators by name through renamed imports and member access', () => {
@@ -405,7 +405,7 @@ describe('Folder registration', () => {
 
     it('matches the name of an anonymous default export by its file name', () => {
       project = TempProject.create({
-        'app.bundle.json': module(['./src'], { classes: { decorators: [], name: '*Service' } }),
+        'app.bundle.json': module(['./src'], { classes: { decorators: [], glob: '*Service' } }),
         'src/user-service.ts': 'export default class {}\n',
       });
 
@@ -418,8 +418,8 @@ describe('Folder registration', () => {
       expect(selected({ excludeClasses: ['Helper', 'AuthService'] })).toEqual(['UserService', 'MainService']);
     });
 
-    it('drops classes whose name matches excludeName', () => {
-      expect(selected({ excludeName: '*Service' })).toEqual(['Helper']);
+    it('drops classes whose name matches exclude', () => {
+      expect(selected({ exclude: '*Service' })).toEqual(['Helper']);
     });
 
     it('applies exclusions after the positive criteria', () => {
@@ -430,12 +430,14 @@ describe('Folder registration', () => {
       ['decorated', 'classes: expected an object'],
       [{ export: 'all' }, 'classes.export: expected "any", "named" or "default"'],
       [{ decorators: [''] }, 'classes.decorators: expected an array of strings'],
-      [{ name: '' }, 'classes.name: expected a non-empty string'],
+      [{ glob: '' }, 'classes.glob: expected a non-empty string'],
       [{ excludeClasses: [] }, 'classes.excludeClasses: expected a non-empty array of strings'],
-      [{ excludeName: '' }, 'classes.excludeName: expected a non-empty string'],
+      [{ exclude: '' }, 'classes.exclude: expected a non-empty string'],
       [{ exported: true }, 'classes.exported: unknown field'],
       [{ nameGlob: '*Service' }, 'classes.nameGlob: unknown field'],
       [{ excludeNameGlob: '*Mock' }, 'classes.excludeNameGlob: unknown field'],
+      [{ name: '*Service' }, 'classes.name: unknown field'],
+      [{ excludeName: '*Mock' }, 'classes.excludeName: unknown field'],
     ])('rejects the rule %j naming the field', (select, message) => {
       project = TempProject.create({ 'app.bundle.json': module(['./src'], { classes: select }) });
 

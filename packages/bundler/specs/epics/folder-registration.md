@@ -124,9 +124,9 @@ Acceptance criteria:
 - `decorators` requires the class to carry one of the listed decorators,
   recognised by name — also when imported under another name or reached as a
   member (`@ioc.register(...)`). Composed decorators are listed like any other.
-- `name` is a glob (`*Service`) the class name must match; for an anonymous
+- `glob` is a glob (`*Service`) the class name must match; for an anonymous
   default export the name is derived from the file name.
-- `excludeClasses` drops classes by exact name and `excludeName` drops classes
+- `excludeClasses` drops classes by exact name and `exclude` drops classes
   whose name matches a glob; both apply after every other criterion.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
