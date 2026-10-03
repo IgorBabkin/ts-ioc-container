@@ -1,3 +1,12 @@
+# 3.1.0 (2026-10-03)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    support baseUrl in bundle configs
+    (3f7baca54da8560dbe5155aed3ae8cbfc69d29a6)
+
+
 # 3.0.0 (2026-10-03)
 
   ### 💥 BREAKING CHANGES
@@ -217,6 +226,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
