@@ -1,0 +1,78 @@
+{
+  "name": "@ts-ioc-container/entity-framework",
+  "version": "0.1.0",
+  "description": "A unit of work over plain DTOs for ts-ioc-container: an identity map per repository, snapshot change tracking, and one flush for a scope's changes. No query language, no ORM.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "ibabkin <igba14@gmail.com>",
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/entity-framework#readme",
+  "license": "ISC",
+  "sideEffects": false,
+  "main": "cjm/index.js",
+  "types": "typings/index.d.ts",
+  "module": "esm/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./typings/index.d.ts",
+        "default": "./esm/index.js"
+      },
+      "require": {
+        "types": "./typings/index.d.ts",
+        "default": "./cjm/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "unit-of-work",
+    "identity-map",
+    "change-tracking",
+    "entity",
+    "repository",
+    "dependency-injection",
+    "ioc",
+    "ts-ioc-container"
+  ],
+  "files": [
+    "cjm/**/*",
+    "esm/**/*",
+    "typings/**/*",
+    "lib/**/*",
+    "AGENTS.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgorBabkin/ts-ioc-container",
+    "directory": "packages/entity-framework"
+  },
+  "scripts": {
+    "build:cjm": "node ../scripts/build.mjs cjm",
+    "build:esm": "node ../scripts/build.mjs esm",
+    "build:types": "node ../scripts/build.mjs types",
+    "build": "pnpm run build:cjm && pnpm run build:esm && pnpm run build:types",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.reporter=lcov",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint lib/**/*.ts __tests__/**/*.ts",
+    "lint:fix": "pnpm run lint --fix",
+    "format": "prettier --write \"lib/**/*.ts\" \"__tests__/**/*.ts\"",
+    "format:check": "prettier --check \"lib/**/*.ts\" \"__tests__/**/*.ts\""
+  },
+  "peerDependencies": {
+    "ts-ioc-container": ">=76"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.2",
+    "reflect-metadata": "^0.2.2",
+    "ts-ioc-container": "workspace:*",
+    "typescript": "5.8.3",
+    "unplugin-swc": "^1.6.0",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
+}

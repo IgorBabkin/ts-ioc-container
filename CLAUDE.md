@@ -12,22 +12,24 @@ Uses **pnpm** workspaces:
 - `packages/ts-ioc-container`: `ts-ioc-container` — the library itself (`lib/`, `__tests__/`, `__benchmarks__/`, `specs/`)
 - `packages/react`: `@ts-ioc-container/react` — React bindings (`Scope`, `ScopeContext`, `useScopeOrFail`, `useResolveOrFail`, `OutOfScopeError`)
 - `packages/bundler`: `@ts-ioc-container/bundler` — bundles an application's dependencies into a single container module, discovered at build time (ADR 0022). Ships the `tic` CLI, a Unix filter: `tic build [<config>]` reads a config file (or, without one, config text from stdin) and prints one **bundle** — a container module class (`useModule(new AppBundle())`) — to stdout, writing nothing (`tic build app.bundle.json > src/di/app.bundle.ts`, `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`). It scans only the folders the config names in `glob` (one folder or a list, shorthand for `glob.glob`: relative paths or tsconfig `paths` aliases) and writes every import through a tsconfig alias, so the bundle works wherever it is saved. No zero config; the config's `tsconfig` supplies aliases and the import extension only, never files. Generated files are declared by **protocols** — Handlebars templates in `packages/bundler/lib/protocols/`, precompiled by `hbs:compile` into the gitignored `tpl/index.cjs`, which registers them in the process-global `Handlebars.templates` under their file basename (so keep basenames unique, and interpolate with `{{{ }}}` — output is TypeScript, not HTML); `emit.ts` only prepares the data. `hbs:compile` runs before `build`, `test` and `type-check`, and on publish (`prepack`); the tarball ships only the compiled `tpl/`, never the `.hbs` sources. CJS-only (it is a Node tool); `typescript` is a peer dependency. Internally it is structured like `release-monorepo-semantically` (ADR 0023): a composition root (`lib/app.ts`), controllers registered under their command name with hook-based actions, services behind tokens, and a zod config schema (`BUNDLE_CONFIG_SCHEMA`) from which `tic.schema.json` is generated (`pnpm run generate:schema`; a test fails when it is stale). It depends on `ts-ioc-container` at runtime (`workspace:*`) to run itself, but never changes the core package — generated code uses only the public `Registration` / `IContainerModule` API
+- `packages/entity-framework`: `@ts-ioc-container/entity-framework` — a unit of work over plain DTOs: `Entity` (snapshot change tracking, `getDiff`, `patch`, `link`, extend it for behaviour), `EntityManager` (an identity map per repository, `flush`, `lazy` records `link`ed into a field and created when the linking entity is flushed), `IRepository`, `repositoryToken`, `entityManagerToken`, `flushEntityManagers`. No queries; repositories read and write. `ts-ioc-container` is a peer dependency
 - `packages/openapi-to-server`: `@ts-ioc-container/openapi-to-server` — generates TypeScript server interfaces from OpenAPI 3.0 specs, plus `openapi-to-server` / `openapi-to-client` CLIs
 - `packages/openapi-to-zod`: `@ts-ioc-container/openapi-to-zod` — generates Zod validation schemas from OpenAPI 3.0 specs, plus the `openapi-to-zod` CLI
 - `packages/scripts`: `@ts-ioc-container/scripts` — private build/release tooling shared across packages (`build.mjs`, `postbuild-extensions.mjs`, `generate-readme/`, release commit template)
 - `adr/`: architecture decision records (plain markdown, not built or published)
 
 `ts-ioc-container`, `@ts-ioc-container/react`, `@ts-ioc-container/bundler`,
-`@ts-ioc-container/openapi-to-server` and `@ts-ioc-container/openapi-to-zod` are
-released independently by
+`@ts-ioc-container/entity-framework`, `@ts-ioc-container/openapi-to-server` and
+`@ts-ioc-container/openapi-to-zod` are released independently by
 [`release-monorepo-semantically`](https://github.com/IgorBabkin/release-monorepo-semantically)
 — see [Release](#release) below. `packages/scripts` is `private: true`
 and never released.
 
-`@ts-ioc-container/bundler` has **never been published**, so its first release
-must be published by hand (see [npm authentication](#npm-authentication-trusted-publishing--oidc))
-and given a trusted publisher before a `feat(@ts-ioc-container/bundler)` commit
-reaches `main` — otherwise that release fails mid-pipeline with `ENEEDAUTH`.
+`@ts-ioc-container/bundler` and `@ts-ioc-container/entity-framework` have
+**never been published**, so each one's first release must be published by hand
+(see [npm authentication](#npm-authentication-trusted-publishing--oidc)) and
+given a trusted publisher before a `feat(<that package>)` commit reaches `main`
+— otherwise that release fails mid-pipeline with `ENEEDAUTH`.
 
 `@ts-ioc-container/openapi-to-server` and `@ts-ioc-container/openapi-to-zod` were
 imported from `@ibabkin/openapi-*` and first published by hand under their new
