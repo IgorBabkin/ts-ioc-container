@@ -3,7 +3,9 @@ import { by, inject, register, SingleToken } from 'ts-ioc-container';
 import { globalConfig } from '../../../domain/GlobalConfig';
 import { type IRenderService, IRenderServiceKey } from '../../../services/HandlebarsRenderService';
 import { type IFileSystemService, IFileSystemServiceKey } from '../../../services/NodeFileSystemService';
-import { type ResolvedConfig, resolveConfig } from '../BuildConfig';
+import { TicConfigError } from '../../../exceptions/DomainException';
+import type { ResolvedConfig } from '../BuildConfig';
+import { type ITicConfigService, ITicConfigServiceKey } from './TicConfigService';
 import { BUNDLE_PROTOCOL, bundleView, GENERATED_HEADER } from '../domain/emit';
 import { toPosix } from '../domain/glob';
 import { findClasses, listSourceFiles } from '../domain/scan';
@@ -11,39 +13,32 @@ import { tokenCollisions } from '../domain/tokenCollisions';
 import { loadImportPaths } from '../domain/tsconfig';
 
 /** What one build does. Paths resolve against the run's working directory. */
-export interface BuildRequest {
-  /** Path of the bundle to write, `<name>.bundle.ts`, relative to the working directory. */
-  output: string;
-  /**
-   * The bundle config, as content — parsed JSON or YAML, never a path: reading it from a
-   * file is the caller's job (see `parseConfig`). Its relative paths resolve against the
-   * working directory.
-   */
-  config: unknown;
-  /** Compare instead of writing: outputs that would change are reported `stale`. */
-  check?: boolean;
-}
+export type BuildRequest =
+  | {
+      /** Path of the config file — `*.json`, `*.yaml` or `*.yml` — relative to the working directory. */
+      config: string;
+    }
+  | {
+      /**
+       * The config as text, e.g. read from stdin: YAML or JSON. Its relative paths resolve
+       * against the working directory, and it must set `name`.
+       */
+      text: string;
+    };
 
-export interface BuildOptions extends BuildRequest {
+export type BuildOptions = BuildRequest & {
   /** Default `process.cwd()`. */
   cwd?: string;
-}
-
-/** `written` / `unchanged` after a build; `stale` / `unchanged` after a check. */
-export type OutputStatus = 'written' | 'unchanged' | 'stale';
-
-export interface OutputResult {
-  /** Absolute path of the generated file. */
-  file: string;
-  /** Name of the generated class. */
-  bundle: string;
-  status: OutputStatus;
-  registrations: number;
-  content: string;
-}
+};
 
 export interface BuildResult {
-  output: OutputResult;
+  /** Absolute path of the config file that was built; `undefined` for config text. */
+  config?: string;
+  /** Name of the generated class. */
+  bundle: string;
+  registrations: number;
+  /** The generated bundle. Nothing is written: saving it is the caller's job (`tic build app.bundle.json > src/di/app.bundle.ts`). */
+  content: string;
   /**
    * Non-fatal problems found while building, e.g. a `glob.exclude` that drops a default
    * test glob or two selected classes passing the same decorator token.
@@ -53,9 +48,9 @@ export interface BuildResult {
 
 export interface IBundleBuilder {
   /**
-   * Generates the bundle a config describes. Nothing is written unless generation succeeds.
+   * Generates the bundle a config describes and returns it; nothing is written.
    *
-   * @throws {TicConfigError} when the config or its tsconfig is invalid, or the bundle has no name (none given, and the output is not named `<name>.bundle.ts`).
+   * @throws {TicConfigError} when the config file is missing or unreadable, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
   build(request: BuildRequest): BuildResult;
@@ -67,39 +62,40 @@ export const IBundleBuilderKey = new SingleToken<IBundleBuilder>('IBundleBuilder
 export class BundleBuilder implements IBundleBuilder {
   constructor(
     @inject(globalConfig('cwd')) private readonly cwd: string,
+    @inject(by(ITicConfigServiceKey)) private readonly configs: ITicConfigService,
     @inject(by(IFileSystemServiceKey)) private readonly fs: IFileSystemService,
     @inject(by(IRenderServiceKey)) private readonly renderer: IRenderService,
   ) {}
 
   /**
-   * @throws {TicConfigError} when the config or its tsconfig is invalid, or the bundle has no name (none given, and the output is not named `<name>.bundle.ts`).
+   * @throws {TicConfigError} when the config file is missing or unreadable, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
-  build({ output: outputPath, config, check = false }: BuildRequest): BuildResult {
-    const output = path.resolve(this.cwd, outputPath);
-    const resolved = resolveConfig(config, { dir: this.cwd, output });
-    const { content, registrations, warnings } = this.generate(resolved, output);
-
-    const current = this.fs.fileExists(output) ? this.fs.readFile(output) : undefined;
-    const status: OutputStatus = current === content ? 'unchanged' : check ? 'stale' : 'written';
-    if (status === 'written') this.fs.writeFile(output, content);
+  build(request: BuildRequest): BuildResult {
+    const resolved =
+      'text' in request
+        ? this.configs.parse(request.text, this.cwd)
+        : this.configs.load(path.resolve(this.cwd, request.config));
+    const { content, registrations, warnings } = this.generate(resolved);
     return {
-      output: { file: output, bundle: resolved.bundleClassName, status, registrations, content },
+      config: 'text' in request ? undefined : resolved.file,
+      bundle: resolved.bundleClassName,
+      registrations,
+      content,
       warnings: [...resolved.warnings, ...warnings],
     };
   }
 
   /**
-   * @throws {TicConfigError} when the tsconfig is missing or invalid.
+   * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
-  private generate(config: ResolvedConfig, output: string) {
+  private generate(config: ResolvedConfig) {
     const paths = loadImportPaths(config.tsconfig, config.importExtension);
     const relative = (file: string) => toPosix(path.relative(config.dir, file));
     const { include, exclude } = config.glob;
     // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
     const isExcluded = (file: string) => {
-      if (file === output) return true;
       const filename = relative(file);
       if (include && !include.some((glob) => glob.test(filename))) return true;
       return exclude.some((glob) => glob.test(filename));
@@ -118,14 +114,21 @@ export class BundleBuilder implements IBundleBuilder {
         // Another config's bundle can sit in a scanned folder; it is output, never input.
         return text.startsWith(GENERATED_HEADER) ? [] : findClasses(file, config.className, text);
       })
-      .map((cls) => ({ ...cls, specifier: paths.specifier(output, cls.file) }));
+      .map((cls) => ({ ...cls, specifier: paths.specifier(cls.file) }));
+    const uncovered = [...new Set(classes.filter((cls) => cls.specifier === undefined).map((cls) => cls.file))];
+    if (uncovered.length > 0) {
+      throw new TicConfigError(
+        `no tsconfig paths alias covers ${uncovered.map((file) => toPosix(path.relative(config.dir, file))).join(', ')}; ` +
+          `the bundle goes to stdout, so every import is written through an alias — add a "paths" entry to ${toPosix(path.relative(config.dir, config.tsconfig.file))}`,
+      );
+    }
 
     const content = this.renderer.render(
       BUNDLE_PROTOCOL,
       bundleView({
         name: config.bundleClassName,
         paths: config.glob.paths.map((entry) => entry.path),
-        classes,
+        classes: classes.map((cls) => ({ ...cls, specifier: cls.specifier! })),
       }),
     );
     return { content, registrations: classes.length, warnings: tokenCollisions(classes) };

@@ -14,9 +14,9 @@ Adding a service means writing the class — no hand-maintained list of
 TypeScript, generated at build time, so it type-checks, bundles and tree-shakes
 like code you wrote yourself.
 
-Everything is explicit: you name the file to write, and you hand over the config
-as content. `tic build` never looks for a config file, never reads one, and
-never infers anything from what your tsconfig compiles.
+Everything is explicit, and `tic build` is a plain Unix filter: a config goes in
+— a file, or text on stdin — and the bundle comes out on stdout. Where it is saved
+is up to your shell, and nothing is inferred from what your tsconfig compiles.
 
 ## Install
 
@@ -33,45 +33,49 @@ below use the shortcut.
 ## Build
 
 ```bash
-tic build <output> (--json <content> | --yaml <content>) [--check]
+tic build [<config>]
 ```
 
-`<output>` is the bundle file to write. The config is passed as **content** with
-`--json` or `--yaml`; `-` reads it from standard input. Reading it from a file is
-your shell's job:
+`tic build` prints the bundle to **stdout** and writes nothing. `<config>` is a
+config file — JSON for `.json`, YAML for `.yaml` / `.yml`. Without it (or with
+`-`) the config is read from **stdin**. Warnings and errors go to stderr, so
+they never end up in the bundle.
 
 ```bash
-# the content as an argument
-tic build src/di/app.bundle.ts --json "$(cat app.bundle.json)"
-tic build src/di/app.bundle.ts --yaml "$(cat app.bundle.yml)"
+# a config file in, the bundle saved by the shell
+tic build app.bundle.json > src/di/app.bundle.ts
+tic build prod.bundle.yml > src/di/prod.bundle.ts
 
-# piped into stdin
-cat app.bundle.json | tic build src/di/app.bundle.ts --json -
-cat app.bundle.yml | tic build src/di/app.bundle.ts --yaml -
-tic build src/di/app.bundle.ts --yaml - < app.bundle.yml
+# the config piped in — it has no file name, so it sets `name` ("name": "dev")
+cat dev.bundle.json | tic build > src/di/dev.bundle.ts
+tic build < dev.bundle.yml > src/di/dev.bundle.ts
 
-# inline, no file at all
-tic build src/di/app.bundle.ts --json '{"glob":{"paths":["./src/services"]}}'
+# into any command: format it, show it and save it, ...
+tic build app.bundle.json | npx prettier --stdin-filepath app.bundle.ts > src/di/app.bundle.ts
+cat dev.bundle.json | tic build | tee src/di/dev.bundle.ts
 
-# CI: write nothing, exit 1 when the bundle is out of date
-cat app.bundle.json | tic build src/di/app.bundle.ts --json - --check
+# a config built on the fly
+printf 'name: app\nglob:\n  paths: ["@app/services"]\n' | tic build > src/di/app.bundle.ts
+jq '.name = "admin"' app.bundle.json | tic build > src/di/admin.bundle.ts
+
+# CI: is the saved bundle current?
+tic build app.bundle.json | diff - src/di/app.bundle.ts
 ```
 
-```text
-wrote     src/di/app.bundle.ts (3 registrations)
-```
+A bundle can be saved anywhere, because every import in it is written through a
+tsconfig `paths` alias (`import { Greeter } from '@app/services/Greeter'`) —
+never a path relative to where the file ends up. A selected class no alias
+covers is an error naming its file; add a `paths` entry for its folder.
 
-`<output>` and every relative path in the config resolve against the working
-directory. The bundle is named after the output — `src/di/app.bundle.ts`
-exports `AppBundle`, `src/di/prod.bundle.ts` exports `ProdBundle` — unless the
-config sets `name`, which it must when the output is not named
-`<name>.bundle.ts`.
+Relative paths in a config file resolve against the file; in a piped config,
+against the working directory. The bundle is named after the config file —
+`prod.bundle.json` exports `ProdBundle` — unless the config sets `name`, which a
+piped config, or a file not named `<name>.bundle.json`, must.
 
 ## Configure
 
 A config describes one bundle: the folders it scans and the classes it
-registers. Keep it wherever you like — in a file, a script, an environment
-variable. In a file, point your editor at the schema:
+registers. Point your editor at the schema:
 
 ```json
 {
@@ -89,13 +93,13 @@ glob:
   include: ['**/*.service.ts']
 ```
 
-| Field             | Default                                | Meaning                                                                                              |
-| ----------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `glob`            | — (required, with `paths`)             | Which files are parsed — see [Selecting files](#selecting-files)                                     |
-| `className`       | exported classes with `@register`      | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)          |
-| `name`            | the output's (`app.bundle.ts` → `app`) | The bundle's name: names the class, `AppBundle`. Required for an output not named `<name>.bundle.ts` |
-| `tsconfig`        | `./tsconfig.json` (may be absent)      | Source of `paths` aliases and of the import extension — never of files; one named here must exist    |
-| `importExtension` | `.js` under node16/nodenext, else none | Extension of generated imports                                                                       |
+| Field             | Default                                       | Meaning                                                                                                     |
+| ----------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `glob`            | — (required, with `paths`)                    | Which files are parsed — see [Selecting files](#selecting-files)                                            |
+| `className`       | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                 |
+| `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise      |
+| `tsconfig`        | `./tsconfig.json`                             | Source of the `paths` aliases every import is written through, and of the import extension — never of files |
+| `importExtension` | `.js` under node16/nodenext, else none        | Extension of generated imports                                                                              |
 
 An unknown field is an error, so a misspelled or removed option never goes
 unnoticed.
@@ -106,21 +110,16 @@ Need more than one bundle — per environment, per app? Keep a config per bundle
 and build each one:
 
 ```bash
-cat prod.bundle.yml | tic build src/di/prod.bundle.ts --yaml -
-cat dev.bundle.yml | tic build src/di/dev.bundle.ts --yaml -
-cat test.bundle.yml | tic build src/di/test.bundle.ts --yaml -
-
-# or all of them
 for env in prod dev test; do
-  tic build "src/di/$env.bundle.ts" --yaml "$(cat "$env.bundle.yml")"
+  tic build "$env.bundle.yml" > "src/di/$env.bundle.ts"
 done
 ```
 
 ```json
 {
   "scripts": {
-    "bundle": "tic build src/di/app.bundle.ts --json \"$(cat app.bundle.json)\"",
-    "bundle:check": "tic build src/di/app.bundle.ts --json \"$(cat app.bundle.json)\" --check"
+    "bundle": "tic build app.bundle.json > src/di/app.bundle.ts",
+    "bundle:check": "tic build app.bundle.json | diff - src/di/app.bundle.ts"
   }
 }
 ```
@@ -149,8 +148,8 @@ className:
   exclude: JsonLogger
 ```
 
-A bundle generated by one build is never registered by another, even when it
-sits in a folder the other scans.
+A saved bundle is never registered by another build, even when it sits in a
+folder that build scans.
 
 ## Selection in two stages
 
@@ -178,12 +177,12 @@ bundler never reads anything else:
 
 `paths` are the folders a bundle's files come from, and the only ones: what
 your tsconfig compiles plays no part. Each entry is a folder relative to the
-working directory (`./src/services`) or a tsconfig `paths` alias (`@app/services`,
+config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`,
 for a `"@app/*": ["./src/*"]` alias), scanned recursively unless it says
 `{ "path": "...", "recursive": false }`.
 
 Within them, a file is parsed when it matches **one of** `include` and **none of**
-`exclude`. Globs are relative to the working directory and `/`-separated; `**`
+`exclude`. Globs are relative to the config file and `/`-separated; `**`
 spans folders.
 
 | Rule      | Default                                   | Meaning                                                    |
@@ -259,7 +258,7 @@ plain-identifier first argument to a decorator — usually the binding token, as
 are not resolved), so it can only be a heuristic:
 
 ```text
-tic: warning: src/di/app.bundle.ts: decorator token "IDashboardRepositoryToken" is passed by
+tic: warning: app.bundle.json: decorator token "IDashboardRepositoryToken" is passed by
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
 exclude one with className.exclude
 ```
@@ -295,7 +294,8 @@ const container = new Container().useModule(new AppBundle());
 ```
 
 Treat `*.bundle.ts` as build output: add it to `.prettierignore` (and any
-other formatter's ignore list), since `--check` compares files byte for byte.
+other formatter's ignore list) unless you format it in the pipe, so a
+`tic build … | diff - …` check compares like with like.
 
 Each class keeps its own `@register(...)` config (key, scope, singleton, …);
 an undecorated class is bound by its class name. Discovery is syntactic — no
@@ -303,13 +303,15 @@ type checker runs.
 
 ## Programmatic API
 
-`build()` takes the config as a parsed object; reading and parsing it is yours
-(`parseConfig(text, 'json' | 'yaml')` parses text the way the CLI does):
+`build()` returns the bundle and writes nothing, like the CLI:
 
 ```ts
-import { readFileSync } from 'node:fs';
-import { build, parseConfig } from '@ts-ioc-container/bundler';
+import { writeFileSync } from 'node:fs';
+import { build } from '@ts-ioc-container/bundler';
 
-const config = parseConfig(readFileSync('app.bundle.yml', 'utf8'), 'yaml');
-const { output, warnings } = build({ output: 'src/di/app.bundle.ts', config });
+const { content, warnings } = build({ config: 'app.bundle.json' });
+writeFileSync('src/di/app.bundle.ts', content);
+
+// or config text, as `tic build` reads from stdin
+build({ text: 'name: app\nglob:\n  paths: ["@app/services"]\n' });
 ```

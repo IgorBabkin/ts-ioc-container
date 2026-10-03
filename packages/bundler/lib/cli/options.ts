@@ -15,7 +15,7 @@ export const commandArgs = ({ args = [] }: InjectOptions): string[] => args.map(
  *
  * With `positionals`, the default action of a command takes arguments too: everything
  * after the command is parsed, and the words that are not flags or their values come
- * back as `positionals` (`tic build src/di/app.bundle.ts --check`).
+ * back as `positionals` (`tic build app.bundle.json`).
  *
  * @throws {UsageError} when a flag is unknown or a flag that takes a value has none.
  */

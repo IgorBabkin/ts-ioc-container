@@ -6,8 +6,8 @@ export interface CliIo {
   cwd: string;
   stdout: (line: string) => void;
   stderr: (line: string) => void;
-  /** Reads all of standard input: what `--json -` / `--yaml -` take. Absent: there is no stdin to read. */
-  stdin?: () => string;
+  /** All of standard input, or `undefined` when nothing is piped in (a terminal, or no stdin at all). */
+  stdin?: () => string | undefined;
 }
 
 export const CliIoKey = new SingleToken<CliIo>('CliIo');
@@ -16,5 +16,5 @@ export const processIo = (): CliIo => ({
   cwd: process.cwd(),
   stdout: console.log,
   stderr: console.error,
-  stdin: () => readFileSync(0, 'utf8'),
+  stdin: () => (process.stdin.isTTY ? undefined : readFileSync(0, 'utf8')),
 });

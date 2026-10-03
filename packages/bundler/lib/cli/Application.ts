@@ -14,8 +14,8 @@ const COMMAND_ALIASES: Record<string, string> = {
 
 /**
  * Splits `<command> [action] [--flags...]` into its leading positionals. A flag in
- * the action position leaves the action unset, so `tic build --check` runs the
- * default action rather than one called `--check`. A word in that position is only a
+ * the action position leaves the action unset, so `tic build --help` runs the
+ * default action rather than one called `--help`. A word in that position is only a
  * candidate: when the controller declares no such action it is an argument of the
  * default action (`tic build src/di/app.bundle.ts`).
  *

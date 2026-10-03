@@ -11,7 +11,7 @@ As an application developer, I want to register every class of a folder at once
 so that adding a service means writing the class, not also editing a
 hand-maintained list of `addRegistration(...)` calls.
 
-A folder is addressed the same way an import is: a path relative to the working directory (`./src/services`) or a
+A folder is addressed the same way an import is: a path relative to the config file (`./src/services`) or a
 `tsconfig.json` `paths` alias (`@app/services`).
 
 ## Stories
@@ -19,34 +19,34 @@ A folder is addressed the same way an import is: a path relative to the working 
 ### Story: Describe the container in a config
 
 As an application developer, I can describe a generated bundle in one config
-and hand it to `tic build` so that the build is reproducible and reviewable.
+and build it in a shell pipeline, so that the build is reproducible,
+reviewable and composes with any other tool.
 
 Acceptance criteria:
 
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
-- `tic build <output> (--json <content> | --yaml <content>) [--check]` builds one
-  bundle into `<output>`. The config is content, never a path: `tic` reads no
-  config file and discovers none. `-` reads the content from stdin, so
-  `cat app.bundle.yml | tic build src/di/app.bundle.ts --yaml -` and
-  `tic build src/di/app.bundle.ts --json "$(cat app.bundle.json)"` both work.
-- Exactly one `<output>` and exactly one of `--json` / `--yaml` are required;
-  anything else fails with a usage error. Content that is not valid JSON / YAML
-  fails naming the flag.
+- `tic build <config>` reads the config file — JSON for `.json`, YAML for
+  `.yaml` / `.yml`; any other extension fails — and prints the bundle to stdout.
+  It writes no file: `tic build app.bundle.json > src/di/app.bundle.ts`.
+- Without `<config>`, or with `-`, the config is read from stdin as YAML (which
+  covers JSON): `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`.
+  Nothing piped in fails with a usage error; more than one `<config>` too.
+- Warnings and errors go to stderr, never into the bundle on stdout; an error
+  names the config (`<stdin>` for piped text), and nothing is printed then.
 - The config's fields are flat and explicit: `glob` with its `paths` is
   required; `name`, `tsconfig`, `importExtension` and `className` are optional.
-  `output` is not a field.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
-  letter — and defaults to the output's (`src/di/production.bundle.ts` →
-  `production`); an output named otherwise needs it. The generated class is
-  named after it: `ProductionBundle`, `my-app` → `MyAppBundle`.
+  letter — and defaults to the config file's stem (`production.bundle.json` →
+  `production`); piped text, or a file named otherwise, must set it. The
+  generated class is named after it: `ProductionBundle`, `my-app` →
+  `MyAppBundle`.
+- Relative paths in a config file resolve against the file; in piped text,
+  against the working directory.
 - Several bundles — production, development, test — are several configs and
-  several runs; a bundle one run generated is never registered by another.
-- `<output>` and every relative path in the config resolve against the working
-  directory.
+  several runs; a saved bundle is never registered by another build.
 - An invalid config — including an unknown field, such as a leftover `output`
-  or `bundles` — fails the build with a message naming the output and the
-  offending field; nothing is written.
+  or `bundles` — fails the build with a message naming the offending field.
 
 ### Story: Name every input explicitly
 
@@ -95,7 +95,7 @@ Acceptance criteria:
 - `glob.exclude` lists globs of files never read (default: test files,
   `__tests__/`, `node_modules/`) and wins over `include`. Giving only `include`
   keeps the default `exclude`.
-- Globs are relative to the working directory and `/`-separated.
+- Globs are relative to the config file and `/`-separated.
 - A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
   parses tests deliberately. When a non-empty `exclude` omits a default glob,
   the build reports a warning (the escape hatch stays: `[]` warns for nothing).
@@ -144,16 +144,17 @@ code.
 
 Acceptance criteria:
 
-- A path is either a folder relative to the working directory (`./src/services`) or
+- A path is either a folder relative to the config file (`./src/services`) or
   a tsconfig `paths` alias (`@app/services`), resolved through the `paths` of
-  the config's `tsconfig` (default `./tsconfig.json` in the working directory,
+  the config's `tsconfig` (default `./tsconfig.json` next to the config,
   which may be absent; one named explicitly must exist), including `paths`
   that tsconfig inherits through its own `extends`. The tsconfig contributes
   aliases and module resolution only, never files.
 - A path that is neither an existing folder nor a resolvable alias fails
   the build with a message naming it.
-- Generated imports use the most specific matching alias; a file no alias
-  covers is imported by a path relative to the output file.
+- Generated imports use the most specific matching alias, and only aliases:
+  the bundle has no known location, so it works wherever it is saved. A
+  selected class no alias covers fails the build naming its file.
 - Under `moduleResolution` `node16` / `nodenext` imports carry a `.js`
   extension; `importExtension` in the config overrides the inferred one.
 
@@ -179,14 +180,13 @@ Acceptance criteria:
 
 ### Story: Keep bundles in sync in CI
 
-As a maintainer, I can verify that bundles are current without
-rewriting them so that CI catches a forgotten `tic build`.
+As a maintainer, I can verify that a saved bundle is current so that CI
+catches a forgotten `tic build`.
 
 Acceptance criteria:
 
-- `tic build --check` writes nothing and exits non-zero when any output is
-  missing or differs from what would be generated.
-- `tic build` leaves an output that is already current untouched.
+- The same config always prints the same bundle, so a saved bundle is checked
+  with `tic build app.bundle.json | diff - src/di/app.bundle.ts`.
 
 ## Notes
 

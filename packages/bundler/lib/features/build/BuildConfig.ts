@@ -8,11 +8,11 @@ import { globToRegExp } from './domain/glob';
  * Which files a bundle reads and parses: the first, cheap stage of selection,
  * decided by path alone. `paths` are the folders the files come from; within them
  * a file is parsed when it matches one of `include` and none of `exclude`. Globs
- * are relative to the working directory and `/`-separated. With a file naming convention
+ * are relative to the config file and `/`-separated. With a file naming convention
  * (`*.service.ts`), `include` keeps the bundler from reading anything else.
  */
 export interface GlobSelector {
-  /** Folders to scan: relative to the working directory (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
+  /** Folders to scan: relative to the config file (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
   paths: (string | PathConfig)[];
   /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
   include?: string[];
@@ -66,31 +66,30 @@ export interface ResolvedClassSelector {
 }
 
 export interface PathConfig {
-  /** A folder relative to the working directory (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
+  /** A folder relative to the config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
   path: string;
   /** Scan sub-folders too. Default `true`. */
   recursive?: boolean;
 }
 
 /**
- * A bundle config: one bundle, described explicitly — the folders it scans and the
- * classes it registers. It is content, not a file: the caller reads it from wherever it
- * keeps it and hands it over (`tic build <output> --json '<content>'`, or `build()`).
- * The file it writes is not part of it either: that is given on every build.
+ * A bundle config file: one bundle, described explicitly — the folders it scans and the
+ * classes it registers. `tic build <config>` prints the bundle to stdout; where it is
+ * saved is the caller's choice (`tic build app.bundle.json > src/di/app.bundle.ts`).
  */
 export interface BundleConfig {
   $schema?: string;
   /**
    * The bundle's name: letters, digits, `-` and `_`, starting with a letter. Default: the
-   * output's (`src/di/production.bundle.ts` -> `production`); required for an output named
-   * otherwise. It names the generated class, an `IContainerModule` (`ProductionBundle`,
-   * see {@link toClassName}).
+   * config file's stem (`production.bundle.json` -> `production`); required for a config
+   * file named otherwise. It names the generated class, an `IContainerModule`
+   * (`ProductionBundle`, see {@link toClassName}).
    */
   name?: string;
   /**
    * The tsconfig whose `paths` aliases `glob.paths` may name and generated imports are
    * written in, and whose `moduleResolution` sets the import extension. It contributes
-   * nothing else: the files scanned are `glob.paths` alone. Relative to the working directory.
+   * nothing else: the files scanned are `glob.paths` alone. Relative to the config file.
    * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
   tsconfig?: string;
@@ -116,9 +115,11 @@ export const DEFAULT_EXCLUDE = [
 
 /** A {@link BundleConfig} whose defaults are filled in and whose paths are absolute. */
 export interface ResolvedConfig {
-  /** The folder the config's relative paths resolve against: the working directory. */
+  /** The config file itself. */
+  file: string;
+  /** Its folder: what the config's relative paths resolve against. */
   dir: string;
-  /** The bundle name: `production` for `production.bundle.ts`. */
+  /** The bundle name: `production` for `production.bundle.json`. */
   name: string;
   /** The generated class: `ProductionBundle`. */
   bundleClassName: string;
@@ -191,7 +192,7 @@ const GLOB_SCHEMA = z
         .array(PATH_SCHEMA, expected('a non-empty array'))
         .min(1, expected('a non-empty array'))
         .describe(
-          'Folders to scan: paths relative to the working directory (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { "path": "...", "recursive": false }.',
+          'Folders to scan: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { "path": "...", "recursive": false }.',
         ),
       include: nonEmptyStringList()
         .optional()
@@ -207,7 +208,7 @@ const GLOB_SCHEMA = z
     expected('an object'),
   )
   .describe(
-    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the working directory. With a file naming convention, `include` keeps every other file unread.',
+    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the config file. With a file naming convention, `include` keeps every other file unread.',
   );
 
 const CLASSES_SCHEMA = z
@@ -252,14 +253,14 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .regex(BUNDLE_NAME, expected('letters, digits, "-" or "_", starting with a letter'))
       .optional()
       .describe(
-        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: the output\'s (src/di/production.bundle.ts → production); required for an output named otherwise. It names the generated IContainerModule class (ProductionBundle).',
+        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: the config file\'s stem (production.bundle.json → production); required for a config file named otherwise. It names the generated IContainerModule class (ProductionBundle).',
       ),
     // Optional rather than defaulted: a tsconfig the config names must exist, the default may be absent.
     tsconfig: nonEmptyString()
       .optional()
       .meta({ default: DEFAULT_TSCONFIG })
       .describe(
-        'The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to the working directory. The default may be absent; a tsconfig named here must exist.',
+        'The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.',
       ),
     importExtension: z
       .string(expected('a string'))
@@ -341,22 +342,32 @@ function excludeWarnings(glob: ParsedConfig['glob']): string[] {
   ];
 }
 
-/** What a bundle file is named: `<name>.bundle.ts`. */
-export const OUTPUT_FILE_SUFFIX = '.bundle.ts';
+/**
+ * A config file is named `<name>.bundle.json`, `<name>.bundle.yaml` or `<name>.bundle.yml`
+ * by convention, e.g. `app.bundle.json`; any `.json` / `.yaml` / `.yml` file works.
+ */
+export const CONFIG_FILE_SUFFIXES = ['.bundle.json', '.bundle.yaml', '.bundle.yml'];
 
-/** `src/di/production.bundle.ts` -> `production`; `undefined` for an output named otherwise. */
-function outputStem(output: string): string | undefined {
-  const base = path.basename(output);
-  const stem = base.endsWith(OUTPUT_FILE_SUFFIX) ? base.slice(0, -OUTPUT_FILE_SUFFIX.length) : '';
+/** `production.bundle.yaml` -> `production`; `undefined` for a file named otherwise, e.g. `di.json`. */
+function configStem(file: string): string | undefined {
+  const base = path.basename(file);
+  const suffix = CONFIG_FILE_SUFFIXES.find((candidate) => base.endsWith(candidate));
+  const stem = suffix ? base.slice(0, -suffix.length) : '';
   return BUNDLE_NAME.test(stem) ? stem : undefined;
 }
 
-/** The format of config content: what `--json` and `--yaml` take. */
+/** What stands for standard input where a config file is expected: `tic build -`. */
+export const STDIN = '-';
+
+/** The format of a config file, by extension; `undefined` for any other file. */
+export const configFormat = (file: string): ConfigFormat | undefined =>
+  file.endsWith('.json') ? 'json' : file.endsWith('.yaml') || file.endsWith('.yml') ? 'yaml' : undefined;
+
+/** The format of config text: JSON or YAML. */
 export type ConfigFormat = 'json' | 'yaml';
 
 /**
- * Parses config content in its format. An empty YAML document is `{}`. Reading it from a
- * file is the caller's job.
+ * Parses config text in its format. An empty YAML document is `{}`.
  *
  * @throws {TicConfigError} when the text is not valid in its format.
  */
@@ -364,7 +375,7 @@ export function parseConfig(text: string, format: ConfigFormat): unknown {
   try {
     return format === 'yaml' ? (parseYaml(text) ?? {}) : JSON.parse(text);
   } catch (e) {
-    throw new TicConfigError(`--${format} is not valid ${format.toUpperCase()}: ${(e as Error).message}`);
+    throw new TicConfigError(`not valid ${format.toUpperCase()}: ${(e as Error).message}`);
   }
 }
 
@@ -375,20 +386,26 @@ export function toClassName(name: string): string {
 }
 
 /**
- * Validates parsed config content and resolves its paths against `dir`, the working
- * directory. Without a `name` the bundle is named after `output`.
+ * Validates parsed config content and resolves its paths against `file`'s directory.
+ * Without a `name` the bundle is named after the file: `production.bundle.json` -> `production`.
  *
  * @throws {TicConfigError} when the content does not match the config shape, or names no bundle; the message names the field.
  */
-export function resolveConfig(content: unknown, { dir, output }: { dir: string; output: string }): ResolvedConfig {
+export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
   const { name, tsconfig, importExtension, glob, className } = result.data;
-  const bundleName = name ?? outputStem(output);
+  const bundleName = name ?? configStem(file);
   if (bundleName === undefined) {
-    throw new TicConfigError(`name: required when the output is not named <name>${OUTPUT_FILE_SUFFIX}`);
+    throw new TicConfigError(
+      path.basename(file) === STDIN
+        ? 'name: required for a config read from stdin'
+        : `name: required when the config file is not named <name>${CONFIG_FILE_SUFFIXES.join(' / ')}`,
+    );
   }
+  const dir = path.dirname(file);
   return {
+    file,
     dir,
     name: bundleName,
     bundleClassName: toClassName(bundleName),

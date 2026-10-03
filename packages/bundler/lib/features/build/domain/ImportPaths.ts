@@ -66,15 +66,14 @@ export class ImportPaths {
     );
   }
 
-  /** The specifier `fromFile` imports `toFile` by: its most specific alias, else a relative path. */
-  specifier(fromFile: string, toFile: string): string {
-    const target = toPosix(toFile);
-    const bare = target.replace(SOURCE_EXTENSION, '');
-    const best = this.bestAlias(target, bare);
-    if (best) return best.spec;
-
-    const relative = toPosix(path.relative(path.dirname(fromFile), bare));
-    return `${relative.startsWith('.') ? relative : `./${relative}`}${this.extension}`;
+  /**
+   * The specifier `file` is imported by: its most specific `paths` alias. `undefined` when no
+   * alias covers it — a bundle is written to stdout, so it has no location a relative import
+   * could start from.
+   */
+  specifier(file: string): string | undefined {
+    const target = toPosix(file);
+    return this.bestAlias(target, target.replace(SOURCE_EXTENSION, ''))?.spec;
   }
 
   private bestAlias(target: string, bare: string): { spec: string; score: number } | undefined {

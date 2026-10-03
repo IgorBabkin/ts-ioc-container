@@ -1,65 +1,30 @@
-import path from 'node:path';
 import { by, inject, invoke, pipe, register } from 'ts-ioc-container';
 import { z } from 'zod';
 import { commandArgs, onDefault, parseOptions, validate } from '../../cli';
 import { type CliIo, CliIoKey } from '../../domain/CliIo';
-import { globalConfig } from '../../domain/GlobalConfig';
-import { StaleBundlesError, TicError, UsageError } from '../../exceptions/DomainException';
+import { TicError, UsageError } from '../../exceptions/DomainException';
 import { type ILogger, ILoggerKey } from '../../services/ConsoleLogger';
 import { type IOutputService, IOutputServiceKey } from '../../services/OutputService';
-import { type ConfigFormat, parseConfig } from './BuildConfig';
-import { type IBundleBuilder, IBundleBuilderKey, type OutputStatus } from './services/BundleBuilder';
+import { STDIN } from './BuildConfig';
+import { type IBundleBuilder, IBundleBuilderKey } from './services/BundleBuilder';
 
-/** The value of `--json` / `--yaml` that means "read the content from standard input". */
-export const STDIN = '-';
-
-export const BUILD_OPTIONS = z
-  .object({
-    positionals: z.array(z.string().min(1)),
-    json: z.string().optional(),
-    yaml: z.string().optional(),
-    check: z.boolean().default(false),
-  })
-  .transform(({ positionals, json, yaml, check }, ctx) => {
-    if (positionals.length !== 1) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['output'],
-        message: positionals.length === 0 ? 'missing <output>' : `expected one <output>, got ${positionals.join(' ')}`,
-      });
-    }
-    if ((json === undefined) === (yaml === undefined)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['config'],
-        message: 'pass the config as exactly one of --json <content> or --yaml <content> (- reads stdin)',
-      });
-    }
-    if (positionals.length !== 1 || (json === undefined) === (yaml === undefined)) return z.NEVER;
-    const [format, content]: [ConfigFormat, string] = json !== undefined ? ['json', json] : ['yaml', yaml!];
-    return { output: positionals[0], format, content, check };
-  });
+export const BUILD_OPTIONS = z.object({ positionals: z.array(z.string().min(1)) }).transform(({ positionals }, ctx) => {
+  if (positionals.length > 1) {
+    ctx.addIssue({ code: 'custom', path: ['config'], message: `expected one <config>, got ${positionals.join(' ')}` });
+    return z.NEVER;
+  }
+  // No <config>, or `-`: the config is read from stdin.
+  return { config: positionals[0] ?? STDIN };
+});
 
 export type BuildCliOptions = z.output<typeof BUILD_OPTIONS>;
 
-const buildArgs = parseOptions(
-  {
-    json: { type: 'string' },
-    yaml: { type: 'string' },
-    check: { type: 'boolean' },
-  },
-  { positionals: true },
-);
+const buildArgs = parseOptions({}, { positionals: true });
 
-const VERB: Record<OutputStatus, string> = { written: 'wrote', unchanged: 'unchanged', stale: 'stale' };
-
-const plural = (n: number) => `${n} registration${n === 1 ? '' : 's'}`;
-
-/** `tic build <output> (--json <content> | --yaml <content>) [--check]`. */
+/** `tic build [<config> | -]`: the bundle goes to stdout; without a config file, the config comes from stdin. */
 @register('build')
 export class BuildController {
   constructor(
-    @inject(globalConfig('cwd')) private readonly cwd: string,
     @inject(by(CliIoKey)) private readonly io: CliIo,
     @inject(by(IBundleBuilderKey)) private readonly builder: IBundleBuilder,
     @inject(by(IOutputServiceKey)) private readonly output: IOutputService,
@@ -67,39 +32,37 @@ export class BuildController {
   ) {}
 
   /**
-   * Builds the bundle `<output>` from the config content passed with `--json` or `--yaml`
-   * (`-` reads it from stdin). The CLI never reads a config file: the caller does —
-   * `--json "$(cat app.bundle.json)"`, or `cat app.bundle.json | tic build <output> --json -`.
-   * With `--check` nothing is written and an out-of-date bundle fails the run. One line goes
-   * to stdout, warnings to stderr; an error names the output it was building.
+   * Builds the bundle the config file `<config>` describes — or, without one (or with `-`),
+   * the config piped into stdin — and prints it to stdout. Saving it is the shell's job:
+   * `tic build app.bundle.json > src/di/app.bundle.ts`, `cat app.bundle.yml | tic build > out.ts`.
+   * Warnings go to stderr, so they never end up in the bundle; an error names the config.
    *
-   * @throws {UsageError} when an option is unknown, there is not exactly one `<output>`, not exactly one of `--json` / `--yaml`, or `-` is given with no stdin to read.
-   * @throws {TicConfigError} when the content is not valid JSON / YAML, the config or its tsconfig is invalid, or the bundle has no name.
+   * @throws {UsageError} when an option is unknown, there is more than one `<config>`, or the config should come from stdin and nothing is piped in.
+   * @throws {TicConfigError} when the config file is missing or unreadable, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
-   * @throws {StaleBundlesError} when `--check` finds the bundle differs from what a build would write.
    */
   @onDefault(invoke)
-  build(@inject(pipe(commandArgs, buildArgs, validate(BUILD_OPTIONS))) options: BuildCliOptions): void {
-    const { output: outputPath, format, check } = options;
+  build(@inject(pipe(commandArgs, buildArgs, validate(BUILD_OPTIONS))) { config }: BuildCliOptions): void {
+    const label = config === STDIN ? '<stdin>' : config;
     try {
-      const config = parseConfig(this.content(options), format);
-      const { output, warnings } = this.builder.build({ output: outputPath, config, check });
-      for (const warning of warnings) this.logger.warn(`${outputPath}: ${warning}`);
-      const { status, registrations } = output;
-      this.output.write(`${VERB[status].padEnd(10)}${path.relative(this.cwd, output.file)} (${plural(registrations)})`);
-      if (status === 'stale') throw new StaleBundlesError(1);
+      const { content, warnings } = this.builder.build(config === STDIN ? { text: this.stdin() } : { config });
+      for (const warning of warnings) this.logger.warn(`${label}: ${warning}`);
+      // The bundle ends with a newline; the output service adds its own.
+      this.output.write(content.replace(/\n$/, ''));
     } catch (e) {
-      if (e instanceof TicError && !(e instanceof StaleBundlesError)) e.message = `${outputPath}: ${e.message}`;
+      if (e instanceof TicError && !(e instanceof UsageError)) e.message = `${label}: ${e.message}`;
       throw e;
     }
   }
 
   /**
-   * @throws {UsageError} when the content is `-` and there is no stdin to read.
+   * @throws {UsageError} when nothing is piped into stdin.
    */
-  private content({ format, content }: BuildCliOptions): string {
-    if (content !== STDIN) return content;
-    if (!this.io.stdin) throw new UsageError(`--${format} -: there is no stdin to read`);
-    return this.io.stdin();
+  private stdin(): string {
+    const text = this.io.stdin?.();
+    if (text === undefined) {
+      throw new UsageError('missing <config>: name a config file, or pipe one in (cat app.bundle.json | tic build)');
+    }
+    return text;
   }
 }

@@ -1,5 +1,5 @@
 // Entry points: the composition root and the functions that run it.
-export { build, run, createContainer } from './app';
+export { build, run, loadConfig, createContainer } from './app';
 export { type CliIo, CliIoKey } from './domain/CliIo';
 export { type GlobalConfig, GlobalConfigKey, globalConfig } from './domain/GlobalConfig';
 
@@ -19,7 +19,7 @@ export {
 
 // Feature: build
 export { BuildModule } from './features/build/BuildModule';
-export { BuildController, BUILD_OPTIONS, STDIN, type BuildCliOptions } from './features/build/BuildController';
+export { BuildController, BUILD_OPTIONS, type BuildCliOptions } from './features/build/BuildController';
 export {
   BundleBuilder,
   IBundleBuilderKey,
@@ -27,14 +27,19 @@ export {
   type BuildRequest,
   type BuildOptions,
   type BuildResult,
-  type OutputResult,
-  type OutputStatus,
 } from './features/build/services/BundleBuilder';
+export {
+  TicConfigService,
+  ITicConfigServiceKey,
+  type ITicConfigService,
+} from './features/build/services/TicConfigService';
 export {
   resolveConfig,
   BUNDLE_CONFIG_SCHEMA,
   parseConfig,
-  OUTPUT_FILE_SUFFIX,
+  CONFIG_FILE_SUFFIXES,
+  STDIN,
+  configFormat,
   DEFAULT_TSCONFIG,
   DEFAULT_EXCLUDE,
   DEFAULT_DECORATORS,
@@ -92,6 +97,5 @@ export {
   UnknownCommandError,
   UnknownActionError,
   UsageError,
-  StaleBundlesError,
 } from './exceptions/DomainException';
 export { ExceptionHandler } from './exceptions/ExceptionHandler';

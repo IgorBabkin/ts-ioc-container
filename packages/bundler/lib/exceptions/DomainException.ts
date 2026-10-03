@@ -53,10 +53,3 @@ export class UsageError extends TicError {
     super('USAGE', message);
   }
 }
-
-/** `tic build --check` found generated bundles that differ from what a build would write. */
-export class StaleBundlesError extends TicError {
-  constructor(count: number) {
-    super('STALE_BUNDLES', `${count} generated bundle${count === 1 ? ' is' : 's are'} out of date — run \`tic build\``);
-  }
-}
