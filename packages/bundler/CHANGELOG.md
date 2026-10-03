@@ -1,3 +1,27 @@
+# 5.0.0 (2026-10-03)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    glob and className share { glob, exclude }
+    (e962be8670e4085614347956442e30cbcfe4e24e)
+    - **@ts-ioc-container/bundler:**
+    drop glob.include
+    (35f8277ef59706bd79d9049efdda99d41a4665e1)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    glob and className share { glob, exclude }
+    (e962be8670e4085614347956442e30cbcfe4e24e)
+    - **@ts-ioc-container/bundler:**
+    drop glob.include
+    (35f8277ef59706bd79d9049efdda99d41a4665e1)
+    - **@ts-ioc-container/bundler:**
+    glob, include and exclude take a string or string[]
+    (dac0d4423f006f95b6ee4ad900b8a488978dbb6e)
+
+
 # 4.0.0 (2026-10-03)
 
   ### 💥 BREAKING CHANGES
@@ -278,6 +302,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
