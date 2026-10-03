@@ -389,6 +389,15 @@ describe('Spec: entity framework', () => {
       await expect(manager.flush()).rejects.toThrow(/key of Tariff t-1 was changed/);
     });
 
+    it('reloads a record by its whole key', async () => {
+      const { manager, repository } = tariffsOver();
+      const globex = await manager.findByIdOrFail('t-1', 'globex');
+
+      await manager.reload(globex);
+
+      expect(repository.calls).toEqual(['findById:t-1@globex', 'findById:t-1@globex']);
+    });
+
     it('names the whole key of a record that was not found', async () => {
       const { manager } = tariffsOver();
 
@@ -530,6 +539,121 @@ describe('Spec: entity framework', () => {
 
       await expect(manager.add(order('o-9'))).rejects.toThrow(EntityIdentityError);
       await expect(manager.add(order('o-9'))).rejects.toThrow(/preparing\(withId/);
+    });
+  });
+
+  describe('Story: discard, detach and reload', () => {
+    it('reverts a change: state goes back to what is stored, in place, and nothing is written', async () => {
+      const { manager, repository } = managerOver(order('o-1'));
+      const found = await manager.findByIdOrFail('o-1');
+      const { state } = found;
+      found.cancel();
+      found.addLine('idle', 1);
+
+      expect(found.revert()).toBe(found);
+
+      expect(found.state).toBe(state);
+      expect(found.state).toEqual(order('o-1'));
+      expect(manager.hasChanges()).toBe(false);
+      await manager.flush();
+      expect(repository.calls).toEqual(['findById:o-1']);
+    });
+
+    it('reverts a removal: the id reads again, and nothing is deleted', async () => {
+      const { manager, repository } = managerOver(order('o-1'));
+      const found = await manager.findByIdOrFail('o-1');
+      manager.remove(found);
+
+      found.revert();
+
+      expect(await manager.findById('o-1')).toBe(found);
+      await manager.flush();
+      expect(repository.calls).toEqual(['findById:o-1']);
+    });
+
+    it('reverts the links of a new entity and keeps its state', async () => {
+      const { manager, repository } = managerOver();
+      const created = manager.create(order('o-3'));
+      const lazyLog: string[] = [];
+      const lazy = new EntityManager<IRepository<OrderDto>>({
+        entityName: 'Order',
+        findById: async () => undefined,
+        create: async (value) => {
+          lazyLog.push(value.id);
+          return value;
+        },
+        update: async (stored) => stored,
+        delete: async () => undefined,
+      }).lazy(order('o-4'));
+      created.link('customer', lazy);
+
+      created.revert();
+      await manager.flush();
+
+      expect(created.state).toEqual(order('o-3'));
+      expect(lazyLog).toEqual([]);
+      expect(repository.calls).toEqual(['create:o-3']);
+    });
+
+    it('detaches an entity: the flush ignores it, and the next read answers a new one', async () => {
+      const { manager, repository } = managerOver(order('o-1'));
+      const found = await manager.findByIdOrFail('o-1');
+      found.cancel();
+
+      manager.detach(found);
+      await manager.flush();
+      const again = await manager.findByIdOrFail('o-1');
+
+      expect(again).not.toBe(found);
+      expect(again.state.status).toBe('open');
+      expect(repository.calls).toEqual(['findById:o-1', 'findById:o-1']);
+      expect(() => manager.detach(found)).toThrow(EntityNotFoundError);
+    });
+
+    it('clears the whole identity map', async () => {
+      const { manager, repository } = managerOver(order('o-1'), order('o-2'));
+      const found = await manager.findByIdOrFail('o-1');
+      found.cancel();
+      manager.create(order('o-3'));
+
+      manager.clear();
+
+      expect(manager.hasChanges()).toBe(false);
+      expect(() => manager.remove(found)).toThrow(EntityNotFoundError);
+      await manager.flush();
+      expect(repository.calls).toEqual(['findById:o-1']);
+    });
+
+    it('reloads an entity from the repository, dropping what this unit of work changed', async () => {
+      const { manager, repository } = managerOver(order('o-1'));
+      const found = await manager.findByIdOrFail('o-1');
+      const { state } = found;
+      found.addLine('idle', 1);
+      repository.rows.set('o-1', order('o-1', { status: 'cancelled' }));
+
+      expect(await manager.reload(found)).toBe(found);
+
+      expect(found.state).toBe(state);
+      expect(found.state.status).toBe('cancelled');
+      expect(found.getStored()?.status).toBe('cancelled');
+      expect(found.hasChanges()).toBe(false);
+    });
+
+    it('stops tracking an entity whose record is gone when reloaded', async () => {
+      const { manager, repository } = managerOver(order('o-1'));
+      const found = await manager.findByIdOrFail('o-1');
+      repository.rows.delete('o-1');
+
+      expect(await manager.reload(found)).toBeUndefined();
+
+      expect(() => manager.detach(found)).toThrow(EntityNotFoundError);
+    });
+
+    it('refuses to reload a new entity, or one it does not track', async () => {
+      const { manager } = managerOver();
+
+      await expect(manager.reload(manager.create(order('o-3')))).rejects.toBeInstanceOf(EntityNotFoundError);
+      await expect(manager.reload(new Order(order('o-9')))).rejects.toBeInstanceOf(EntityNotFoundError);
     });
   });
 

@@ -161,6 +161,26 @@ describe('AGENTS.md recipes', () => {
     expect([acme.state.price, globex.state.price]).toEqual([10, 20]);
   });
 
+  it('Discard, detach, reload', async () => {
+    const app = createApp();
+    const repository = IOrderRepositoryToken.resolve(app);
+    const orders = entityManagerToken(IOrderRepositoryToken).resolve(app.createScope({ tags: ['request'] }));
+    const order = await orders.findByIdOrFail('o-1');
+
+    order.cancel();
+    order.revert();
+    expect(order.state.status).toBe('open');
+
+    repository.rows.set('o-1', { id: 'o-1', status: 'cancelled', lines: [] });
+    expect(await orders.reload(order)).toBe(order);
+    expect(order.state.status).toBe('cancelled');
+
+    orders.detach(order);
+    expect(await orders.findByIdOrFail('o-1')).not.toBe(order);
+    orders.clear();
+    expect(orders.hasChanges()).toBe(false);
+  });
+
   describe('Pitfalls', () => {
     it('EntityManagerArgumentError: IEntityManagerToken resolved on its own, or with a plain SingleToken', () => {
       const request = createApp().createScope({ tags: ['request'] });

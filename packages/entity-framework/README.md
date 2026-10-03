@@ -139,6 +139,9 @@ class OrderService {
 | Change a record                   | `entity.state.field = value`, or `entity.patch({ ... })` for several fields                                        |
 | Create a record                   | `manager.create({ id, ... })`, or `await manager.add({ ... })` to have its id reserved — written by the next flush |
 | Delete a record                   | `manager.remove(entity)` — its id reads as missing from now on                                                     |
+| Discard changes                   | `entity.revert()` — `state` goes back to what is stored                                                            |
+| Stop tracking                     | `manager.detach(entity)`, or `manager.clear()` for all                                                             |
+| Re-read a record                  | `await manager.reload(entity)` — after a concurrency conflict, say                                                 |
 | See what changed                  | `entity.getDiff()`, `entity.hasChanges()`, `manager.hasChanges()`                                                  |
 | Write everything                  | `flushEntityManagers(scope)`, or `manager.flush()` for one repository                                              |
 

@@ -122,16 +122,38 @@ export class Entity<State extends IEntity = IEntity> {
    */
   [markStored](stored: State): void {
     this.links.clear();
-    for (const key of Object.keys(this.state)) {
-      if (!Object.hasOwn(stored, key)) delete (this.state as Record<string, unknown>)[key];
-    }
-    Object.assign(this.state, snapshot(stored));
+    this.replaceState(stored);
     this.stored = snapshot(stored);
   }
 
   /** Marks the entity for deletion. Prefer `EntityManager.remove`, which also makes its id read as missing. */
   remove(): void {
     this.removed = true;
+  }
+
+  /**
+   * Discards what this unit of work changed: `state` goes back to what is
+   * stored — the same object, for whoever holds it — links are dropped and
+   * `remove` is undone, so a flush writes nothing for it. A new entity has
+   * nothing stored, so its `state` is kept; to drop it, `detach` it from its
+   * manager. Answers the entity, so calls chain.
+   *
+   * @example
+   * if (!order.isValid()) order.revert();
+   */
+  revert(): this {
+    this.links.clear();
+    this.removed = false;
+    if (this.stored !== undefined) this.replaceState(this.stored);
+    return this;
+  }
+
+  /** `state` becomes a copy of `next`, in place: the fields `next` lacks are deleted. */
+  private replaceState(next: State): void {
+    for (const key of Object.keys(this.state)) {
+      if (!Object.hasOwn(next, key)) delete (this.state as Record<string, unknown>)[key];
+    }
+    Object.assign(this.state, snapshot(next));
   }
 }
 
