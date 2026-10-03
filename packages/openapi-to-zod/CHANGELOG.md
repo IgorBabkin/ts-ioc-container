@@ -1,3 +1,24 @@
+# 4.0.0 (2026-10-03)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+
 # 3.0.0 (2026-10-02)
 
   ### 💥 BREAKING CHANGES
@@ -143,6 +164,7 @@
     - **@ibabkin/openapi-to-zod:**
     publish under the existing package name
     (8d522ae590718b67abc91308ece3976364013638)
+
 
 
 

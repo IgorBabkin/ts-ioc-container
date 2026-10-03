@@ -1,3 +1,31 @@
+# 3.0.0 (2026-10-03)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    75.0.0
+
+
 # 2.1.0 (2026-10-02)
 
   ### ✨ Features
@@ -189,6 +217,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 

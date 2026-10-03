@@ -1,3 +1,24 @@
+# 7.0.0 (2026-10-03)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+
 # 6.0.0 (2026-10-02)
 
   ### 💥 BREAKING CHANGES
@@ -164,6 +185,7 @@
     - **@ibabkin/openapi-to-server:**
     publish under the existing package name
     (8e6973ced01f7d64dfae65da2e204e24d674c9a8)
+
 
 
 

@@ -1,3 +1,24 @@
+# 75.0.0 (2026-10-03)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    remove the unused tags config field
+    (3a18cfc755c1764c721b2630847bc20adf84c4a7)
+    - **@ts-ioc-container/bundler:**
+    shape bundle configs like a tsconfig
+    (1b6911976528d648cca236e6a125e258dbe2e3f1)
+
+
 # 74.0.0 (2026-10-02)
 
   ### 💥 BREAKING CHANGES
@@ -536,6 +557,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
