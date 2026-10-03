@@ -12,6 +12,16 @@ export function snapshot<T>(value: T): T {
   return value;
 }
 
+/** The fields of `state` that differ from `stored`; a field `state` no longer has is in it as `undefined`. */
+export function diff<T extends object>(stored: T, state: T): Partial<T> {
+  const keys = new Set([...Object.keys(stored), ...Object.keys(state)]) as Set<keyof T>;
+  return snapshot(
+    Object.fromEntries(
+      [...keys].filter((key) => !isEqual(state[key], stored[key])).map((key) => [key, state[key]]),
+    ) as Partial<T>,
+  );
+}
+
 export function isEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();

@@ -428,6 +428,87 @@ describe('Spec: entity framework', () => {
     });
   });
 
+  describe('Story: retry a commit that failed', () => {
+    // A store whose writes to the ids in `failing` throw, as a database does when the transaction aborts.
+    class FlakyOrderRepository extends OrderRepository {
+      readonly failing = new Set<string>();
+
+      override async update(stored: OrderDto, diff: Partial<OrderDto>): Promise<OrderDto> {
+        if (this.failing.has(stored.id)) throw new Error(`cannot update ${stored.id}`);
+        return super.update(stored, diff);
+      }
+    }
+
+    const flakyOver = (...orders: OrderDto[]) => {
+      const repository = new FlakyOrderRepository(...orders);
+      return { manager: new EntityManager(repository), repository };
+    };
+
+    it('keeps every pending change when a write fails, so a retry sends the same writes', async () => {
+      const { manager, repository } = flakyOver(order('o-1'), order('o-2'));
+      const first = await manager.findByIdOrFail('o-1');
+      const second = await manager.findByIdOrFail('o-2');
+      first.cancel();
+      second.cancel();
+      repository.failing.add('o-2');
+
+      await expect(manager.flush()).rejects.toThrow('cannot update o-2');
+      expect([first.hasChanges(), second.hasChanges()]).toEqual([true, true]);
+      expect(first.getStored()?.status).toBe('open');
+
+      repository.failing.clear();
+      repository.calls.length = 0;
+      await manager.flush();
+
+      expect(repository.calls).toEqual(['update:o-1:status', 'update:o-2:status']);
+      expect(manager.hasChanges()).toBe(false);
+    });
+
+    it('keeps a removed entity pending removal, and deletes it on the retry', async () => {
+      const { manager, repository } = flakyOver(order('o-1'), order('o-2'));
+      manager.remove(await manager.findByIdOrFail('o-1'));
+      (await manager.findByIdOrFail('o-2')).cancel();
+      repository.failing.add('o-2');
+
+      await expect(manager.flush()).rejects.toThrow();
+      expect(await manager.findById('o-1')).toBeUndefined();
+
+      repository.failing.clear();
+      repository.calls.length = 0;
+      await manager.flush();
+
+      expect(repository.calls).toEqual(['delete:o-1', 'update:o-2:status']);
+    });
+
+    it('is all or nothing across the managers flushEntityManagers flushes', async () => {
+      const IOtherRepositoryToken = repositoryToken<FlakyOrderRepository>('IOtherRepository');
+      const repository = new FlakyOrderRepository(order('o-1'));
+      const other = new FlakyOrderRepository(order('x-1'));
+      const container = new Container({ tags: ['application'] })
+        .addRegistration(R.fromValue(repository).bindTo(IOrderRepositoryToken))
+        .addRegistration(R.fromValue(other).bindTo(IOtherRepositoryToken))
+        .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+      const request = container.createScope({ tags: ['request'] });
+      const orders = entityManagerToken(IOrderRepositoryToken).resolve(request);
+      const others = entityManagerToken(IOtherRepositoryToken).resolve(request);
+      (await orders.findByIdOrFail('o-1')).cancel();
+      (await others.findByIdOrFail('x-1')).cancel();
+      other.failing.add('x-1');
+
+      await expect(flushEntityManagers(request)).rejects.toThrow('cannot update x-1');
+      expect(orders.hasChanges()).toBe(true);
+
+      other.failing.clear();
+      await flushEntityManagers(request);
+
+      expect(repository.calls.filter((c) => c.startsWith('update'))).toEqual([
+        'update:o-1:status',
+        'update:o-1:status',
+      ]);
+      expect([orders.hasChanges(), others.hasChanges()]).toEqual([false, false]);
+    });
+  });
+
   describe('Story: link a record that does not exist yet, created when its holder is flushed', () => {
     type AuthorDto = { id: string; name: string; pinnedCommentId: string | null };
     type CommentDto = { id: string; text: string; authorId: string | null };
@@ -581,6 +662,31 @@ describe('Spec: entity framework', () => {
       await posts.flush();
 
       expect(log[0]).toBe('create c-1 {"text":"Original","authorId":null}');
+    });
+
+    it('creates a linked record again when the flush that created it failed', async () => {
+      const { log, comments, posts } = blog();
+      const comment = comments.lazy({ text: 'Retried', authorId: null });
+      const post = (await posts.findByIdOrFail('p-0')).link('commentId', comment);
+      const update = posts.repository.update.bind(posts.repository);
+      posts.repository.update = async () => {
+        throw new Error('transaction aborted');
+      };
+
+      await expect(posts.flush()).rejects.toThrow('transaction aborted');
+      expect(post.state.commentId).toBeNull();
+      expect(post.hasChanges()).toBe(true);
+
+      posts.repository.update = update;
+      await posts.flush();
+
+      expect(log).toEqual([
+        'create c-1 {"text":"Retried","authorId":null}',
+        'create c-2 {"text":"Retried","authorId":null}',
+        'update p-0 {"commentId":"c-2"}',
+      ]);
+      expect(post.state.commentId).toBe('c-2');
+      expect((await comment.resolve()).id).toBe('c-2');
     });
 
     it('fails with EntityReferenceError when links form a cycle', async () => {

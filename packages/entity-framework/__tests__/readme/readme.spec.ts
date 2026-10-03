@@ -84,6 +84,25 @@ describe('README', () => {
     expect(IOrderRepositoryToken.resolve(app).writes).toEqual(['update o-1 status,lines']);
   });
 
+  it('Quick start: a commit that failed can be run again', async () => {
+    const app = createApp();
+    const repository = IOrderRepositoryToken.resolve(app);
+    const request = app.createScope({ tags: ['request'] });
+    (await entityManagerToken(IOrderRepositoryToken).resolve(request).findByIdOrFail('o-1')).cancel();
+    let attempts = 0;
+    const update = repository.update.bind(repository);
+    repository.update = async (stored, diff) => {
+      if (++attempts === 1) throw new Error('serialization failure');
+      return update(stored, diff);
+    };
+    const retry = async <T>(fn: () => Promise<T>): Promise<T> => fn().catch(() => fn());
+
+    await retry(() => db.transaction(() => flushEntityManagers(request)));
+
+    expect(attempts).toBe(2);
+    expect(repository.rows.get('o-1')?.status).toBe('cancelled');
+  });
+
   it('Quick start: inject the entity manager into a service', () => {
     class OrderService {
       constructor(

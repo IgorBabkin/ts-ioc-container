@@ -9,7 +9,7 @@ import {
   singleton,
 } from 'ts-ioc-container';
 
-import { Entity, type EntityClass, type EntityOptions, markStored, resolveReferences } from './Entity';
+import { Entity, type EntityClass, type EntityOptions, markStored, resolveLinks } from './Entity';
 import { EntityIdentityError, EntityManagerArgumentError, EntityNotFoundError } from './errors';
 import {
   type AnyRepository,
@@ -20,13 +20,18 @@ import {
   type StateOf,
   type ValueOf,
 } from './IRepository';
+import { Flush } from './Flush';
 import { LazyRef } from './LazyRef';
+import { diff } from './snapshot';
 
 /** What `flushEntityManagers` needs of an entity manager. */
 export interface IEntityManager {
   /** Writes every pending create, change, and removal through the repository, in the order the entities were first tracked. */
   flush(): Promise<void>;
 }
+
+/** How `flushEntityManagers` writes several managers in one commit; not exported from the package. */
+export const writeIn = Symbol('writeIn');
 
 /**
  * The token every `EntityManager` is registered under. Do not resolve it on its
@@ -154,17 +159,18 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
   /**
    * A record to create only if, and when, an entity it is `link`ed into is
    * flushed. It is created through the repository — the records linked into
-   * it first — tracked as stored, and the linking field gets its id. `value`
-   * is copied now.
+   * it first — tracked as stored once the flush commits, and the linking field
+   * gets its id. `value` is copied now.
    *
    * ```ts
    * post.link('commentId', comments.lazy({ text: 'First!' }));
    * ```
    */
   lazy(value: ValueOf<TRepository>): LazyRef<EntityOf<TRepository>, ValueOf<TRepository>> {
-    return new LazyRef(value, async (created) =>
-      this.track((await this.repository.create(created)) as StateOf<TRepository>),
-    );
+    return new LazyRef(value, async (created) => {
+      const stored = (await this.repository.create(created)) as StateOf<TRepository>;
+      return { id: stored.id, adopt: () => this.track(stored) };
+    });
   }
 
   /**
@@ -191,16 +197,36 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * the records linked into each first. Opens no transaction: call it inside one,
    * usually through `flushEntityManagers(scope)`.
    *
+   * Only once every write succeeded does what they answered become what is
+   * stored. When one throws — and the transaction rolls back — nothing changes
+   * in memory: every entity is still pending, and flushing again sends the same writes.
+   *
    * @throws {EntityIdentityError} when an entity's `state.id`, or the rest of its key, was reassigned.
    * @throws {EntityReferenceError} when linked lazy records form a cycle.
    */
   async flush(): Promise<void> {
+    const flush = new Flush();
+    await this[writeIn](flush);
+    flush.commit();
+  }
+
+  /**
+   * Writes every tracked entity in `flush`, leaving what changes in memory to its commit.
+   *
+   * @throws {EntityIdentityError} when an entity's `state.id`, or the rest of its key, was reassigned.
+   * @throws {EntityReferenceError} when linked lazy records form a cycle.
+   */
+  async [writeIn](flush: Flush): Promise<void> {
     for (const entity of [...this.entities.values()]) {
-      await this.persist(entity);
+      await this.write(entity, flush);
     }
   }
 
-  private async persist(entity: Entity<StateOf<TRepository>>): Promise<void> {
+  /**
+   * @throws {EntityIdentityError} when the entity's `state.id`, or the rest of its key, was reassigned.
+   * @throws {EntityReferenceError} when linked lazy records form a cycle.
+   */
+  private async write(entity: Entity<StateOf<TRepository>>, flush: Flush): Promise<void> {
     const repository: IRepository<StateOf<TRepository>> = this.repository;
     const name = `${repository.entityName} ${String(entity.id)}`;
     if (entity.state.id !== entity.id) {
@@ -219,17 +245,22 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
     const stored = entity.getStored();
     if (entity.isRemoved) {
       if (stored !== undefined) await repository.delete(stored);
-      this.entities.delete(identity);
-      this.keys.delete(entity);
+      flush.onCommit(() => {
+        this.entities.delete(identity);
+        this.keys.delete(entity);
+      });
       return;
     }
-    await entity[resolveReferences]();
+    if (!entity.hasChanges()) return;
+    const state = await entity[resolveLinks](flush);
     if (stored === undefined) {
-      entity[markStored](await repository.create(entity.state));
-    } else {
-      const diff = entity.getDiff();
-      if (Object.keys(diff).length > 0) entity[markStored](await repository.update(stored, diff));
+      const created = await repository.create(state);
+      flush.onCommit(() => entity[markStored](created));
+      return;
     }
+    const changes = diff(stored, state);
+    const updated = Object.keys(changes).length > 0 ? await repository.update(stored, changes) : stored;
+    flush.onCommit(() => entity[markStored](updated));
   }
 
   private add(record: StateOf<TRepository>, options: EntityOptions): EntityOf<TRepository> {
@@ -293,6 +324,10 @@ export const entityManagerToken = <TRepository extends AnyRepository>(
  * they were built — the commit of a unit of work. Run it inside the
  * transaction that should hold the writes; it opens none of its own.
  *
+ * All or nothing in memory: when a write fails, no manager — not even one
+ * whose writes all succeeded — takes anything as stored, so once the
+ * transaction rolls back the whole commit can be retried.
+ *
  * @example
  * try {
  *   const response = await route.handle(payload);
@@ -301,9 +336,14 @@ export const entityManagerToken = <TRepository extends AnyRepository>(
  * } finally {
  *   requestScope.dispose();
  * }
+ *
+ * @throws {EntityIdentityError} when an entity's `state.id`, or the rest of its key, was reassigned.
+ * @throws {EntityReferenceError} when linked lazy records form a cycle.
  */
 export async function flushEntityManagers(scope: IContainer): Promise<void> {
+  const flush = new Flush();
   for (const manager of scope.getInstances().filter(isEntityManager)) {
-    await manager.flush();
+    await manager[writeIn](flush);
   }
+  flush.commit();
 }

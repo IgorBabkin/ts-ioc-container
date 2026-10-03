@@ -25,7 +25,7 @@ and the entrypoint must `import 'reflect-metadata'` first.
 | `LazyRef<E, Value>`                                           | `manager.lazy(value)`: a record that does not exist yet. `entity.link(field, ref)` puts it where its id is wanted; `ref.link(field, other)` nests one inside another                                                                                                                                                                                  |
 | `repositoryToken(key)`                                        | A `SingleToken` for a repository, tagged so an `EntityManager` resolved with it finds it                                                                                                                                                                                                                                                              |
 | `entityManagerToken(repositoryToken)`                         | The token the `EntityManager` over that repository resolves by — one per repository token per scope                                                                                                                                                                                                                                                   |
-| `flushEntityManagers(scope)`                                  | Flushes every `EntityManager` the scope built, in the order they were built — the commit. Opens no transaction                                                                                                                                                                                                                                        |
+| `flushEntityManagers(scope)`                                  | Flushes every `EntityManager` the scope built, in the order they were built — the commit. Opens no transaction; when it throws nothing changes in memory, so it can be retried                                                                                                                                                                        |
 | `IEntityManagerToken`, `isEntityManager`, `isRepositoryToken` | Lower-level pieces of the above; rarely needed directly                                                                                                                                                                                                                                                                                               |
 
 ## Recipes
@@ -191,3 +191,9 @@ Every error has a stable `code` and a message that says how to fix it.
 - `update` receives the record as the unit of work read it, so a repository can
   refuse a write when the stored row no longer matches it (optimistic concurrency).
 - The key — the id, or what `keyOf` answers — is the identity-map key and cannot change.
+- A flush is all or nothing in memory: what the repository answered becomes
+  what is stored only once every write — across every manager
+  `flushEntityManagers` flushes — succeeded. When one throws, every entity,
+  removal and link is still pending, so after the transaction rolls back the
+  same commit can be retried. Lazy records the failed flush created are created
+  again by the retry.

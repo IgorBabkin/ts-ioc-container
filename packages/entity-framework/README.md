@@ -109,6 +109,15 @@ try {
 }
 ```
 
+A commit is all or nothing in memory: what the repository answered becomes
+what is stored only once every write succeeded. When one throws, every change,
+removal and link is still pending, so after the transaction rolls back you can
+run the same commit again:
+
+```ts
+await retry(() => db.transaction(() => flushEntityManagers(request)));
+```
+
 In a service, inject the manager instead of resolving it:
 
 ```ts
