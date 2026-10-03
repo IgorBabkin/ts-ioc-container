@@ -1,7 +1,6 @@
 import { type DependencyKey, type InjectionToken, isInjectionToken, SingleToken } from 'ts-ioc-container';
 
 import type { Entity, EntityClass } from './Entity';
-import type { Resolved } from './LazyRef';
 
 /** Any record with an id. The id is what the identity map keys it by. */
 export interface IEntity {
@@ -16,8 +15,7 @@ export interface IEntity {
  *
  * `Value` is what `create` takes: the state itself when the caller mints ids,
  * or the state without its id when the database does — which is what
- * `EntityManager.lazy` needs. A write never receives a `LazyRef`: each is
- * resolved to its record's id first.
+ * `EntityManager.lazy` needs.
  */
 export interface IRepository<State extends IEntity = IEntity, E extends Entity<State> = Entity<State>, Value = State> {
   /** What a missing record is called: `Order` in `Order o-1 was not found.` */
@@ -29,12 +27,12 @@ export interface IRepository<State extends IEntity = IEntity, E extends Entity<S
   /** The record, or `undefined` when there is none. */
   findById(id: State['id'], ...key: never[]): Promise<State | undefined>;
 
-  create(value: Resolved<Value>): Promise<State>;
+  create(value: Value): Promise<State>;
 
   /** `stored` is the record as the unit of work read it; `diff` holds only the fields that differ from it. */
-  update(stored: Resolved<State>, diff: Partial<Resolved<State>>): Promise<State>;
+  update(stored: State, diff: Partial<State>): Promise<State>;
 
-  delete(stored: Resolved<State>): Promise<void>;
+  delete(stored: State): Promise<void>;
 }
 
 /**

@@ -18,4 +18,4 @@ export {
   type StateOf,
   type ValueOf,
 } from './IRepository';
-export { LazyRef, type Ref, type Resolved } from './LazyRef';
+export { type ILazyRef, LazyRef, type Linkable } from './LazyRef';

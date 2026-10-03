@@ -12,7 +12,6 @@ import {
 
 import { Entity, type EntityClass, type EntityOptions, markStored, resolveReferences } from './Entity';
 import { EntityIdentityError, EntityNotFoundError } from './errors';
-import { snapshot } from './snapshot';
 import {
   type AnyRepository,
   type EntityOf,
@@ -22,7 +21,7 @@ import {
   type StateOf,
   type ValueOf,
 } from './IRepository';
-import { LazyRef, type Resolved, resolveRefs } from './LazyRef';
+import { LazyRef } from './LazyRef';
 
 export interface IEntityManager {
   /** Writes every pending create, change, and removal through the repository, in the order the entities were first tracked. */
@@ -99,17 +98,19 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
   }
 
   /**
-   * A record to create only if, and when, an entity holding the reference is
-   * flushed: set it where that entity's state wants this record's id. It is
-   * created through the repository — its own `LazyRef`s first — tracked as
-   * stored, and the reference is replaced with its id. `value` is read when the
-   * record is created, not when the reference is made.
+   * A record to create only if, and when, an entity it is `link`ed into is
+   * flushed. It is created through the repository — the records linked into
+   * it first — tracked as stored, and the linking field gets its id. `value`
+   * is copied now.
+   *
+   * ```ts
+   * post.link('commentId', comments.lazy({ text: 'First!' }));
+   * ```
    */
-  lazy(value: ValueOf<TRepository>): LazyRef<EntityOf<TRepository>> {
-    return new LazyRef(async () => {
-      const created = await (this.repository as IRepository).create(await resolveRefs(snapshot(value)));
-      return this.track(created as StateOf<TRepository>);
-    });
+  lazy(value: ValueOf<TRepository>): LazyRef<EntityOf<TRepository>, ValueOf<TRepository>> {
+    return new LazyRef(value, async (created) =>
+      this.track((await this.repository.create(created)) as StateOf<TRepository>),
+    );
   }
 
   /** Deletes a tracked entity on the next `flush`; from now on its id reads as missing. */
@@ -129,13 +130,13 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
     }
   }
 
-  private async persist(entity: Entity, repository: IRepository): Promise<void> {
+  private async persist<S extends IEntity>(entity: Entity<S>, repository: IRepository<S>): Promise<void> {
     if (entity.state.id !== entity.id) {
       throw new EntityIdentityError(
         `The id of ${repository.entityName} ${String(entity.id)} was changed to ${String(entity.state.id)}`,
       );
     }
-    const stored = entity.getStored() as Resolved<IEntity> | undefined;
+    const stored = entity.getStored();
     if (entity.isRemoved) {
       if (stored !== undefined) await repository.delete(stored);
       this.entities.delete(entity.id);

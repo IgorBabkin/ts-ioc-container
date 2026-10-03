@@ -1,7 +1,7 @@
 # Epic: Entity framework
 
 - **Status:** Proposed
-- **Public API:** `Entity`, `EntityManager`, `IRepository`, `LazyRef`, `Ref`, `Resolved`, `repositoryToken`, `entityManagerToken`, `flushEntityManagers`, `EntityNotFoundError`, `EntityIdentityError`, `EntityReferenceError`
+- **Public API:** `Entity`, `EntityManager`, `IRepository`, `LazyRef`, `Linkable`, `repositoryToken`, `entityManagerToken`, `flushEntityManagers`, `EntityNotFoundError`, `EntityIdentityError`, `EntityReferenceError`
 - **Package:** `@ts-ioc-container/entity-framework`
 - **Executable spec:** `packages/entity-framework/__tests__/specs/entity-framework.spec.ts`
 
@@ -58,24 +58,25 @@ Acceptance criteria:
 - `create` refuses an id the manager tracks, or one it removed, with `EntityIdentityError`.
 - `flush` refuses an entity whose `id` was changed, with `EntityIdentityError`.
 
-### Story: Save a referenced record lazily
+### Story: Link a record that does not exist yet
 
-As an application developer, I can put a reference to a record that does not
-exist yet in a foreign-key field, so that the record is created — and its id
-written into the field — only when the entity holding it is written.
+As an application developer, I can link a record that does not exist yet into a
+foreign-key field, so that the record is created — and its id set on the field —
+only when the entity linking it is written. DTO types stay plain.
 
 Acceptance criteria:
 
-- `lazy(value)` writes nothing. When an entity whose state holds the reference
-  is flushed, the record is created first and the field holds its id; the
-  created record is tracked by its manager as stored.
-- A reference no flushed entity holds is never created.
-- A reference held by several entities is created once; each gets the same id.
-- References inside a referenced value, and in arrays, are resolved first.
-- A new entity holding a reference is created with the referenced record's id.
-- A removed entity's references are not created.
-- References that form a cycle fail with `EntityReferenceError`.
-- Repository writes receive resolved data: never a `LazyRef`.
+- `lazy(value)` writes nothing and copies `value`. `entity.link(field, ref)`
+  leaves `state` as it is until the flush, and makes the entity have changes.
+- When the linking entity is flushed, the record is created first and the field
+  holds its id; the created record is tracked by its manager as stored.
+- A record no flushed entity links is never created.
+- A record linked into several entities is created once; each gets the same id.
+- Records linked into a linked record (`ref.link`) are created first; an array
+  field takes ids and references mixed.
+- A new entity linking a record is created with that record's id.
+- A removed entity's links are not created.
+- Links that form a cycle fail with `EntityReferenceError`.
 
 ### Story: One unit of work per scope
 

@@ -1,12 +1,12 @@
 import { EntityIdentityError } from './errors';
 import type { IEntity } from './IRepository';
-import { resolveRefs } from './LazyRef';
+import { type Linkable, Links } from './LazyRef';
 import { isEqual, snapshot } from './snapshot';
 
 /** How `EntityManager` records what a repository stored; not exported from the package, so only a flush moves what an entity diffs against. */
 export const markStored = Symbol('markStored');
 
-/** How `EntityManager` resolves the `LazyRef`s an entity's state holds before writing it; not exported from the package. */
+/** How `EntityManager` creates the records linked into an entity before writing it; not exported from the package. */
 export const resolveReferences = Symbol('resolveReferences');
 
 export interface EntityOptions {
@@ -35,6 +35,7 @@ export class Entity<State extends IEntity = IEntity> {
   readonly state: State;
   private stored: State | undefined;
   private removed = false;
+  private readonly links = new Links<State>();
 
   constructor(state: State, { isNew = false }: EntityOptions = {}) {
     this.state = snapshot(state);
@@ -74,7 +75,7 @@ export class Entity<State extends IEntity = IEntity> {
   }
 
   hasChanges(): boolean {
-    return this.removed || this.isNew || Object.keys(this.getDiff()).length > 0;
+    return this.removed || this.isNew || this.links.size > 0 || Object.keys(this.getDiff()).length > 0;
   }
 
   /**
@@ -90,8 +91,22 @@ export class Entity<State extends IEntity = IEntity> {
   }
 
   /** What the repository stored becomes `state` — the same object, for whoever holds it — and what the diff compares against. */
+  /**
+   * Sets `field`, when this entity is flushed, to the id of a record that does
+   * not exist yet — created then, first. Until the flush `state` keeps what it
+   * holds; a later `link` of the same field replaces this one.
+   *
+   * ```ts
+   * post.link('commentId', comments.lazy({ text: 'First!' }));
+   * ```
+   */
+  link<K extends keyof State>(field: K, ref: Linkable<State[K]>): this {
+    this.links.set(field, ref);
+    return this;
+  }
+
   async [resolveReferences](): Promise<void> {
-    await resolveRefs(this.state);
+    await this.links.resolveInto(this.state);
   }
 
   [markStored](stored: State): void {

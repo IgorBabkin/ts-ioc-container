@@ -1,29 +1,81 @@
 import { EntityReferenceError } from './errors';
-import { isPlainObject } from './snapshot';
+import { snapshot } from './snapshot';
+
+/** What `link` needs of a `LazyRef`: the record it creates, once. */
+export interface ILazyRef<E extends { readonly id: unknown }> {
+  resolve(): Promise<E>;
+}
 
 /**
- * A record that does not exist yet, standing where its id is wanted — in a
- * foreign-key field of another entity's state. Nothing is written when it is
- * made: when the entity holding it is flushed, the record is created, and the
- * reference in that state is replaced with the created record's id. One that
- * no flushed state holds is never created; one held by several is created once.
+ * What `link` accepts for a field: a `LazyRef` to a record whose id the field
+ * holds, or — for an array field — ids and `LazyRef`s mixed.
+ */
+export type Linkable<V> = [V] extends [readonly (infer Item)[]]
+  ? (Item | ILazyRef<{ readonly id: Item }>)[]
+  : ILazyRef<{ readonly id: NonNullable<V> }>;
+
+/** Fields waiting for the ids of records that do not exist yet. */
+export class Links<T> {
+  private readonly links = new Map<keyof T, unknown>();
+
+  get size(): number {
+    return this.links.size;
+  }
+
+  set<K extends keyof T>(field: K, ref: Linkable<T[K]>): void {
+    this.links.set(field, ref);
+  }
+
+  /** Creates each linked record, one after another, and sets its id on `target`. */
+  async resolveInto(target: T): Promise<void> {
+    for (const [field, ref] of this.links) {
+      target[field] = (await resolveLink(ref)) as T[keyof T];
+    }
+    this.links.clear();
+  }
+}
+
+/**
+ * A record that does not exist yet, to `link` into a field that holds its id.
+ * Nothing is written when it is made: when the entity it is linked into is
+ * flushed, the record is created and the field gets its id. One no flushed
+ * entity links is never created; one linked several times is created once.
  *
  * ```ts
- * post.state.commentId = comments.lazy({ text: 'First!' });
+ * post.link('commentId', comments.lazy({ text: 'First!' }));
  * ```
  */
-export class LazyRef<E extends { readonly id: unknown } = { readonly id: unknown }> {
+export class LazyRef<
+  E extends { readonly id: unknown } = { readonly id: unknown },
+  Value = unknown,
+> implements ILazyRef<E> {
+  private readonly links = new Links<Value>();
+  private readonly load: () => Promise<E>;
   private resolved?: Promise<E>;
   private resolving = false;
 
-  constructor(private readonly load: () => Promise<E>) {}
+  /** `value` is copied now; `create` gets the copy, with every field linked into it set. */
+  constructor(value: Value, create: (value: Value) => Promise<E>) {
+    const copy = snapshot(value);
+    this.load = async () => {
+      await this.links.resolveInto(copy);
+      return create(copy);
+    };
+  }
+
+  /** Sets `field` of the value, when it is created, to the id of another record that does not exist yet. */
+  link<K extends keyof Value>(field: K, ref: Linkable<Value[K]>): this {
+    this.links.set(field, ref);
+    return this;
+  }
 
   /** The record, created on the first call; every later call answers the same one. */
   resolve(): Promise<E> {
-    if (this.resolving)
+    if (this.resolving) {
       throw new EntityReferenceError(
-        'A lazy reference was asked for while it was being created: the references form a cycle',
+        'A lazy reference was asked for while it was being created: the links form a cycle',
       );
+    }
     if (this.resolved === undefined) {
       this.resolving = true;
       this.resolved = this.load().finally(() => {
@@ -34,26 +86,10 @@ export class LazyRef<E extends { readonly id: unknown } = { readonly id: unknown
   }
 }
 
-/** A foreign-key field: the id of a record, or a `LazyRef` to one that does not exist yet. */
-export type Ref<Id> = Id | LazyRef<{ readonly id: Id }>;
-
-type ResolvedValue<V> = V extends LazyRef<infer E> ? E['id'] : V extends (infer Item)[] ? ResolvedValue<Item>[] : V;
-
-/** A state as a repository receives it: every `Ref` field holds an id. */
-export type Resolved<State> = { [K in keyof State]: ResolvedValue<State[K]> };
-
-/**
- * Replaces, in place, every `LazyRef` in `value` — in its fields, and in the
- * arrays and plain objects they hold — with the id of the record it creates,
- * one after another. Answers `value`, a `LazyRef` itself answering its id.
- */
-export async function resolveRefs<T>(value: T): Promise<Resolved<T>> {
-  if (value instanceof LazyRef) return (await value.resolve()).id as Resolved<T>;
-  if (Array.isArray(value)) {
-    for (const [i, item] of value.entries()) value[i] = await resolveRefs(item);
-  } else if (isPlainObject(value)) {
-    const fields: Record<string, unknown> = value;
-    for (const [key, item] of Object.entries(fields)) fields[key] = await resolveRefs(item);
-  }
-  return value as Resolved<T>;
+async function resolveLink(ref: unknown): Promise<unknown> {
+  if (ref instanceof LazyRef) return ((await ref.resolve()) as { readonly id: unknown }).id;
+  if (!Array.isArray(ref)) return ref;
+  const ids: unknown[] = [];
+  for (const item of ref) ids.push(await resolveLink(item));
+  return ids;
 }
