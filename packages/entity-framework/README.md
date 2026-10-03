@@ -132,19 +132,59 @@ class OrderService {
 
 ## Working with entities
 
-| You want to                       | Call                                                                        |
-| --------------------------------- | --------------------------------------------------------------------------- |
-| Read one record                   | `manager.findById(id)` (`undefined` when missing) / `findByIdOrFail(id)`    |
-| Track records read some other way | `manager.trackMany(await manager.repository.findByCustomer('Ada'))`         |
-| Change a record                   | `entity.state.field = value`, or `entity.patch({ ... })` for several fields |
-| Create a record                   | `manager.create({ id, ... })` — written by the next flush                   |
-| Delete a record                   | `manager.remove(entity)` — its id reads as missing from now on              |
-| See what changed                  | `entity.getDiff()`, `entity.hasChanges()`, `manager.hasChanges()`           |
-| Write everything                  | `flushEntityManagers(scope)`, or `manager.flush()` for one repository       |
+| You want to                       | Call                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Read one record                   | `manager.findById(id)` (`undefined` when missing) / `findByIdOrFail(id)`                                           |
+| Track records read some other way | `manager.trackMany(await manager.repository.findByCustomer('Ada'))`                                                |
+| Change a record                   | `entity.state.field = value`, or `entity.patch({ ... })` for several fields                                        |
+| Create a record                   | `manager.create({ id, ... })`, or `await manager.add({ ... })` to have its id reserved — written by the next flush |
+| Delete a record                   | `manager.remove(entity)` — its id reads as missing from now on                                                     |
+| See what changed                  | `entity.getDiff()`, `entity.hasChanges()`, `manager.hasChanges()`                                                  |
+| Write everything                  | `flushEntityManagers(scope)`, or `manager.flush()` for one repository                                              |
 
 State is plain data: primitives, arrays, plain objects and `Date`s are copied
 and compared by value; any other object is kept as it is and compared by
 identity, so assign a new instance to change one.
+
+## Ids from a sequence or a UUID
+
+To let the database side choose ids, reserve them **before** the insert — a
+sequence, or a time-ordered UUID made in the process — so a new record has its
+id the moment it is added and can be referenced before the commit. How ids are
+made is a strategy you register; it is woven into the repository where the
+repository is registered, so neither the repository class nor the entity
+manager has id logic:
+
+```ts
+import { decorate, register, scope, singleton, SingleToken } from 'ts-ioc-container';
+import { type IIdGenerator, preparing, uuidV7Ids, withId } from '@ts-ioc-container/entity-framework';
+
+const IOrderIdsToken = new SingleToken<IIdGenerator<string>>('IOrderIds');
+
+@register(IOrderIdsToken, scope((s) => s.hasTag('application')), singleton())
+class OrderIds implements IIdGenerator<string> {
+  private readonly uuids = uuidV7Ids();
+  next() {
+    return this.uuids.next();
+  }
+}
+
+@register(
+  IOrderRepositoryToken,
+  scope((s) => s.hasTag('application')),
+  decorate(preparing(withId(IOrderIdsToken))),
+  singleton(),
+)
+class OrderRepository implements IRepository<OrderDto, Order> {
+  /* findById, create, update, delete */
+}
+
+const order = await orders.add({ status: 'open', lines: [] }); // order.id is already set
+```
+
+For a database sequence, decorate the generator with `pooled(size)` to fetch a
+block of ids per round trip (hi/lo). Further advice — a tenant, a `createdAt`
+— composes in the same `preparing(...)`, in order.
 
 ## Records keyed by more than their id
 

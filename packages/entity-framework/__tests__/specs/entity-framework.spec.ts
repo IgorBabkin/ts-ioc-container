@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, register, Registration as R, scope, singleton } from 'ts-ioc-container';
+import { Container, decorate, register, Registration as R, scope, singleton, SingleToken } from 'ts-ioc-container';
 
 import {
   Entity,
@@ -10,8 +10,11 @@ import {
   EntityReferenceError,
   flushEntityManagers,
   type IEntity,
+  type IIdGenerator,
   type IRepository,
+  preparing,
   repositoryToken,
+  withId,
 } from '../../lib';
 
 type OrderDto = {
@@ -425,6 +428,108 @@ describe('Spec: entity framework', () => {
       await flushEntityManagers(request);
 
       expect(repository.rows.get('o-1')?.status).toBe('cancelled');
+    });
+  });
+
+  describe('Story: add a record whose id is reserved before it is written', () => {
+    type NoteDto = { id: string; text: string; author?: string };
+
+    const INoteIdsToken = new SingleToken<IIdGenerator<string>>('INoteIds');
+    const IAuthorToken = new SingleToken<string>('IAuthor');
+    const INoteRepositoryToken = repositoryToken<NoteRepository>('INoteRepository');
+
+    // An id generator the way a sequence is one: each call reserves the next id.
+    class NoteIds implements IIdGenerator<string> {
+      private last = 0;
+
+      async next(): Promise<string> {
+        return `n-${++this.last}`;
+      }
+    }
+
+    // A store that writes down every call; how its new records get ids is woven in, not written here.
+    @register(
+      INoteRepositoryToken,
+      scope((s) => s.hasTag('application')),
+      decorate(
+        preparing(withId(INoteIdsToken), (scope) => (note: object) => ({
+          ...note,
+          author: IAuthorToken.resolve(scope),
+        })),
+      ),
+      singleton(),
+    )
+    class NoteRepository implements IRepository<NoteDto> {
+      readonly entityName = 'Note';
+      readonly calls: string[] = [];
+
+      async findById(id: string): Promise<NoteDto | undefined> {
+        this.calls.push(`findById:${id}`);
+        return undefined;
+      }
+
+      async create(note: NoteDto): Promise<NoteDto> {
+        this.calls.push(`create:${note.id}:${note.author}`);
+        return note;
+      }
+
+      async update(stored: NoteDto, diff: Partial<NoteDto>): Promise<NoteDto> {
+        return { ...stored, ...diff };
+      }
+
+      async delete(): Promise<void> {}
+    }
+
+    const app = () =>
+      new Container({ tags: ['application'] })
+        .addRegistration(R.fromClass(NoteIds).bindTo(INoteIdsToken).pipe(singleton()))
+        .addRegistration(R.fromValue('ada').bindTo(IAuthorToken))
+        .addRegistration(R.fromClass(NoteRepository))
+        .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+
+    it('adds a new record with the id its repository reserved, tracked at once and written at the flush', async () => {
+      const request = app().createScope({ tags: ['request'] });
+      const notes = entityManagerToken(INoteRepositoryToken).resolve(request);
+
+      const note = await notes.add({ text: 'Hi' });
+
+      expect([note.id, note.state, note.isNew]).toEqual(['n-1', { id: 'n-1', text: 'Hi', author: 'ada' }, true]);
+      expect(await notes.findById('n-1')).toBe(note);
+      expect(notes.repository.calls).toEqual([]);
+
+      await flushEntityManagers(request);
+
+      expect(notes.repository.calls).toEqual(['create:n-1:ada']);
+    });
+
+    it('lets a record added this way be referenced by its id before the commit', async () => {
+      const request = app().createScope({ tags: ['request'] });
+      const notes = entityManagerToken(INoteRepositoryToken).resolve(request);
+
+      const first = await notes.add({ text: 'First' });
+      const reply = await notes.add({ text: `Re: ${first.id}` });
+
+      expect(reply.state.text).toBe('Re: n-1');
+      expect(reply.id).toBe('n-2');
+    });
+
+    it('leaves the repository itself: its class, methods and fields', () => {
+      const container = app();
+      const request = container.createScope({ tags: ['request'] });
+
+      const repository = INoteRepositoryToken.resolve(request);
+
+      expect(repository).toBeInstanceOf(NoteRepository);
+      expect(repository).toBe(INoteRepositoryToken.resolve(container));
+      expect(entityManagerToken(INoteRepositoryToken).resolve(request).repository).toBe(repository);
+      expect(repository.calls).toEqual([]);
+    });
+
+    it('refuses to add to a repository that cannot prepare a new record', async () => {
+      const { manager } = managerOver();
+
+      await expect(manager.add(order('o-9'))).rejects.toThrow(EntityIdentityError);
+      await expect(manager.add(order('o-9'))).rejects.toThrow(/preparing\(withId/);
     });
   });
 

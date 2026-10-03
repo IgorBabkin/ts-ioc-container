@@ -1,15 +1,29 @@
 import 'reflect-metadata';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { by, Container, inject, register, Registration as R, scope, singleton } from 'ts-ioc-container';
+import {
+  by,
+  Container,
+  decorate,
+  inject,
+  register,
+  Registration as R,
+  scope,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
 
 import {
   Entity,
   EntityManager,
   entityManagerToken,
   flushEntityManagers,
+  type IIdGenerator,
   type IRepository,
+  preparing,
   repositoryToken,
+  uuidV7Ids,
+  withId,
 } from '../../lib';
 
 /**
@@ -128,6 +142,40 @@ describe('README', () => {
     await flushEntityManagers(request);
 
     expect(IOrderRepositoryToken.resolve(app).writes).toEqual(['create o-2', 'update o-3 status', 'delete o-1']);
+  });
+
+  it('Ids from a sequence or a UUID', async () => {
+    const IOrderIdsToken = new SingleToken<IIdGenerator<string>>('IOrderIds');
+    const IUuidOrderRepositoryToken = repositoryToken<UuidOrderRepository>('IUuidOrderRepository');
+
+    @register(IOrderIdsToken, scope((s) => s.hasTag('application')), singleton())
+    class OrderIds implements IIdGenerator<string> {
+      private readonly uuids = uuidV7Ids();
+      next() {
+        return this.uuids.next();
+      }
+    }
+
+    @register(
+      IUuidOrderRepositoryToken,
+      scope((s) => s.hasTag('application')),
+      decorate(preparing(withId(IOrderIdsToken))),
+      singleton(),
+    )
+    class UuidOrderRepository extends OrderRepository {}
+
+    const app = new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(OrderIds))
+      .addRegistration(R.fromClass(UuidOrderRepository))
+      .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+    const request = app.createScope({ tags: ['request'] });
+    const orders = entityManagerToken(IUuidOrderRepositoryToken).resolve(request);
+
+    const order = await orders.add({ status: 'open', lines: [] });
+    expect(order.id).toMatch(/^[0-9a-f-]{36}$/);
+    await flushEntityManagers(request);
+
+    expect(orders.repository.writes).toEqual([`create ${order.id}`]);
   });
 
   it('Linking a record that does not exist yet', async () => {
