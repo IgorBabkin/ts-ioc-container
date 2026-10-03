@@ -1,17 +1,18 @@
 import path from 'node:path';
 import { by, inject, register, SingleToken } from 'ts-ioc-container';
 import { globalConfig } from '../../../domain/GlobalConfig';
-import { TicConfigError } from '../../../exceptions/DomainException';
 import { type IRenderService, IRenderServiceKey } from '../../../services/HandlebarsRenderService';
 import { type IFileSystemService, IFileSystemServiceKey } from '../../../services/NodeFileSystemService';
-import { DEFAULT_EXTENDS, type ResolvedConfig, resolveConfig } from '../BuildConfig';
+import { DEFAULT_EXCLUDE, DEFAULT_EXTENDS, type ResolvedConfig, resolveConfig } from '../BuildConfig';
 import { findPackageRoot } from '../domain/configFiles';
 import { BUNDLE_PROTOCOL, bundleView, GENERATED_HEADER } from '../domain/emit';
-import { toPosix } from '../domain/glob';
-import { findClasses, isSourceFile, listSourceFiles } from '../domain/scan';
+import { globToRegExp, toPosix } from '../domain/glob';
+import { findClasses, isSourceFile } from '../domain/scan';
 import { tokenCollisions } from '../domain/tokenCollisions';
 import { loadTsconfig } from '../domain/tsconfig';
 import { type ITicConfigService, ITicConfigServiceKey, TSCONFIG_FILE } from './TicConfigService';
+
+const DEFAULT_EXCLUDE_GLOBS = DEFAULT_EXCLUDE.map(globToRegExp);
 
 /** What one build does. Paths resolve against the run's working directory. */
 export interface BuildRequest {
@@ -48,8 +49,8 @@ export interface BuildResult {
   config: string;
   output: OutputResult;
   /**
-   * Non-fatal problems found while building, e.g. a `files.exclude` that drops a default
-   * test glob or two selected classes passing the same decorator token.
+   * Non-fatal problems found while building, e.g. two selected classes passing the same
+   * decorator token.
    */
   warnings: string[];
 }
@@ -58,8 +59,7 @@ export interface IBundleBuilder {
   /**
    * Generates the bundle a config describes. Nothing is written unless generation succeeds.
    *
-   * @throws {TicConfigError} when the config or its tsconfig is missing or invalid, or the config has neither `files.paths` nor a tsconfig.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+   * @throws {TicConfigError} when the config or the tsconfig it extends is missing or invalid.
    */
   build(request?: BuildRequest): BuildResult;
 }
@@ -76,8 +76,7 @@ export class BundleBuilder implements IBundleBuilder {
   ) {}
 
   /**
-   * @throws {TicConfigError} when the config or its tsconfig is missing or invalid, or the config has neither `files.paths` nor a tsconfig.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+   * @throws {TicConfigError} when the config or the tsconfig it extends is missing or invalid.
    */
   build({ config, check = false }: BuildRequest = {}): BuildResult {
     const resolved =
@@ -92,44 +91,25 @@ export class BundleBuilder implements IBundleBuilder {
     return {
       config: resolved.file,
       output: { file: output, bundle: resolved.className, status, registrations, content },
-      warnings: [...resolved.warnings, ...warnings],
+      warnings,
     };
   }
 
   /**
-   * @throws {TicConfigError} when the tsconfig is invalid, or the config names no `files.paths` and there is no tsconfig to take files from.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+   * @throws {TicConfigError} when the config or the tsconfig it extends is missing or invalid.
    */
   private generate(config: ResolvedConfig) {
-    const { importPaths: paths, fileNames, rootDir } = loadTsconfig(config.tsconfig, config.importExtension);
-    const output = config.output ?? (rootDir && path.join(rootDir, `${config.name}.bundle.ts`));
-    if (output === undefined) throw new TicConfigError('output: required when there is no tsconfig to extend');
-    const relative = (file: string) => toPosix(path.relative(config.dir, file));
-    const { include, exclude } = config.files;
-    // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
+    const { importPaths: paths, fileNames, rootDir } = loadTsconfig(config);
+    const output = config.output ?? path.join(rootDir, `${config.name}.bundle.ts`);
+    // Tests and node_modules stay out whatever the tsconfig compiles; so does the bundle itself.
     const isExcluded = (file: string) => {
       if (file === output) return true;
-      const filename = relative(file);
-      if (include && !include.some((glob) => glob.test(filename))) return true;
-      return exclude.some((glob) => glob.test(filename));
+      const filename = toPosix(path.relative(config.dir, file));
+      return DEFAULT_EXCLUDE_GLOBS.some((glob) => glob.test(filename));
     };
+    const files = fileNames.filter((file) => isSourceFile(file) && !isExcluded(file));
 
-    const files = new Set<string>();
-    if (config.files.paths) {
-      // `files.paths` override the tsconfig's file set, as a child tsconfig's `include` does.
-      for (const entry of config.files.paths) {
-        const dir = paths.resolveNamespace(entry.path, config.dir);
-        for (const file of listSourceFiles(dir, entry.recursive, isExcluded)) files.add(file);
-      }
-    } else if (fileNames) {
-      for (const file of fileNames) if (isSourceFile(file) && !isExcluded(file)) files.add(file);
-    } else {
-      throw new TicConfigError(
-        `files.paths: required when there is no tsconfig to extend (${config.tsconfig.file} not found)`,
-      );
-    }
-
-    const classes = [...files]
+    const classes = files
       .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
       .flatMap((file) => {
         const text = this.fs.readFile(file);
@@ -143,8 +123,6 @@ export class BundleBuilder implements IBundleBuilder {
       bundleView({
         name: config.className,
         configPath: toPosix(path.relative(path.dirname(output), config.file)),
-        paths: config.files.paths?.map((entry) => entry.path),
-        tsconfigPath: toPosix(path.relative(path.dirname(output), config.tsconfig.file)),
         classes,
       }),
     );

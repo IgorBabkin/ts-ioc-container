@@ -1,7 +1,5 @@
-import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
-import { NamespaceNotFoundError } from '../../../exceptions/DomainException';
 import { toPosix } from './glob';
 
 interface Alias {
@@ -12,9 +10,6 @@ interface Alias {
 
 const SOURCE_EXTENSION = /\.(tsx?|mts|cts)$/;
 
-const isDirectory = (dir: string) => existsSync(dir) && statSync(dir).isDirectory();
-const isRelative = (spec: string) => spec.startsWith('.') || path.isAbsolute(spec);
-
 /** Splits a `paths` pattern at its `*`, if it has one. */
 function splitWildcard(pattern: string): [string, string] | undefined {
   const star = pattern.indexOf('*');
@@ -22,8 +17,8 @@ function splitWildcard(pattern: string): [string, string] | undefined {
 }
 
 /**
- * Import paths as a project's `tsconfig.json` sees them: resolves namespaces
- * written as `paths` aliases to folders, and writes imports back in alias form.
+ * Import paths as a project's `tsconfig.json` sees them: writes imports in the
+ * form of its `paths` aliases where one matches.
  */
 export class ImportPaths {
   /**
@@ -48,24 +43,6 @@ export class ImportPaths {
     readonly extension: string,
   ) {}
 
-  /**
-   * The folder a namespace names: a path relative to `baseDir`, or a `paths` alias.
-   *
-   * @throws {NamespaceNotFoundError} when the namespace is neither an existing folder nor an alias of one.
-   */
-  resolveNamespace(namespace: string, baseDir: string): string {
-    const folder = path.resolve(baseDir, namespace);
-    if (isDirectory(folder)) return folder;
-    if (!isRelative(namespace)) {
-      // `@app` also matches an `@app/*` pattern, naming the alias root itself.
-      const found = [namespace, `${namespace}/`].flatMap((spec) => this.aliasTargets(spec)).find(isDirectory);
-      if (found) return path.normalize(found);
-    }
-    throw new NamespaceNotFoundError(
-      `namespace "${namespace}" is neither a folder relative to ${baseDir} nor a tsconfig paths alias of one`,
-    );
-  }
-
   /** The specifier `fromFile` imports `toFile` by: its most specific alias, else a relative path. */
   specifier(fromFile: string, toFile: string): string {
     const target = toPosix(toFile);
@@ -86,17 +63,6 @@ export class ImportPaths {
       }
     }
     return best;
-  }
-
-  private aliasTargets(spec: string): string[] {
-    return this.aliases.flatMap(({ pattern, targets }) => {
-      const wildcard = splitWildcard(pattern);
-      if (!wildcard) return pattern === spec ? targets : [];
-      const [prefix, suffix] = wildcard;
-      if (!spec.startsWith(prefix) || !spec.endsWith(suffix) || spec.length < prefix.length + suffix.length) return [];
-      const captured = spec.slice(prefix.length, spec.length - suffix.length);
-      return targets.map((target) => target.replace('*', captured));
-    });
   }
 
   /** A longer matched target prefix is a more specific alias; an exact file alias beats every wildcard. */
