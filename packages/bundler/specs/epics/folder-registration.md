@@ -11,47 +11,42 @@ As an application developer, I want to register every class of a folder at once
 so that adding a service means writing the class, not also editing a
 hand-maintained list of `addRegistration(...)` calls.
 
-A folder is addressed the same way an import is: a path relative to the config file (`./src/services`) or a
+A folder is addressed the same way an import is: a path relative to the working directory (`./src/services`) or a
 `tsconfig.json` `paths` alias (`@app/services`).
 
 ## Stories
 
-### Story: Describe the container in a config file
+### Story: Describe the container in a config
 
-As an application developer, I can describe a generated bundle in one JSON
-file so that the build is reproducible and reviewable.
+As an application developer, I can describe a generated bundle in one config
+and hand it to `tic build` so that the build is reproducible and reviewable.
 
 Acceptance criteria:
 
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
-- One config file describes one bundle and is named `<name>.bundle.json`, or
-  `<name>.bundle.yaml` / `<name>.bundle.yml` in YAML — same fields, same
-  schema. One bundle described in two formats fails the build naming both
-  files. Its fields are flat and explicit: `output` (by convention
-  `*.bundle.ts`) and `glob` with its `paths` are required; `name`,
-  `tsconfig`, `importExtension` and `classes` are optional.
+- `tic build <output> (--json <content> | --yaml <content>) [--check]` builds one
+  bundle into `<output>`. The config is content, never a path: `tic` reads no
+  config file and discovers none. `-` reads the content from stdin, so
+  `cat app.bundle.yml | tic build src/di/app.bundle.ts --yaml -` and
+  `tic build src/di/app.bundle.ts --json "$(cat app.bundle.json)"` both work.
+- Exactly one `<output>` and exactly one of `--json` / `--yaml` are required;
+  anything else fails with a usage error. Content that is not valid JSON / YAML
+  fails naming the flag.
+- The config's fields are flat and explicit: `glob` with its `paths` is
+  required; `name`, `tsconfig`, `importExtension` and `className` are optional.
+  `output` is not a field.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
-  letter — and defaults to the config file's stem (`production.bundle.json` →
-  `production`); a config file named otherwise must set it. The generated
-  class is named after it: `ProductionBundle`, `my-app` → `MyAppBundle`.
-- `tic build` works on the package it is invoked in: the nearest folder with a
-  `package.json`, from the working directory up — the project root, or the
-  package in a monorepo; never a workspace root above it.
-- There it builds every `*.bundle.{json,yaml,yml}`, in name order; `--config <path>`
-  (repeatable, relative to the working directory) builds only the named
-  configs.
-- No zero config: a package without a config file fails `tic build` with a
-  hint naming the package — a bundle is never built from `tsconfig.json`
-  alone, and `build()` requires a `config`.
-- Several bundles — `production.bundle.json`, `development.bundle.json`,
-  `test.bundle.json` — are several configs; a bundle one config generated is
-  never registered by another.
-- Every relative path in the config resolves against the config file's
-  directory, not the working directory.
-- An invalid config — including an unknown field, such as a leftover
-  `bundles` list — fails the build with a message naming the config and the
-  offending field; nothing is written for it.
+  letter — and defaults to the output's (`src/di/production.bundle.ts` →
+  `production`); an output named otherwise needs it. The generated class is
+  named after it: `ProductionBundle`, `my-app` → `MyAppBundle`.
+- Several bundles — production, development, test — are several configs and
+  several runs; a bundle one run generated is never registered by another.
+- `<output>` and every relative path in the config resolve against the working
+  directory.
+- An invalid config — including an unknown field, such as a leftover `output`
+  or `bundles` — fails the build with a message naming the output and the
+  offending field; nothing is written.
 
 ### Story: Name every input explicitly
 
@@ -92,7 +87,7 @@ Acceptance criteria:
 
 - Selection runs in two stages: a bundle's `glob` rule — its `paths` and the
   `include` / `exclude` globs — decides by path
-  alone which files are read and parsed; its `classes` rule then picks classes out of
+  alone which files are read and parsed; its `className` rule then picks classes out of
   the parsed files.
 - `glob.include` is a non-empty list of globs; a file is parsed only when it
   matches one of them. Omitted, every source file qualifies.
@@ -100,7 +95,7 @@ Acceptance criteria:
 - `glob.exclude` lists globs of files never read (default: test files,
   `__tests__/`, `node_modules/`) and wins over `include`. Giving only `include`
   keeps the default `exclude`.
-- Globs are relative to the config file and `/`-separated.
+- Globs are relative to the working directory and `/`-separated.
 - A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
   parses tests deliberately. When a non-empty `exclude` omits a default glob,
   the build reports a warning (the escape hatch stays: `[]` warns for nothing).
@@ -114,7 +109,7 @@ only what I mean it to.
 
 Acceptance criteria:
 
-- A bundle's `classes` rule is an object; a class is selected when it is
+- A bundle's `className` rule is an object; a class is selected when it is
   exported, not abstract, and meets every criterion the rule sets. Omitting
   a criterion applies no restriction, except `decorators`.
 - `decorators` defaults to `["register"]`: by default only classes decorated
@@ -133,12 +128,12 @@ Acceptance criteria:
   name and a family by pattern.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
-  registration is last-wins); the warning suggests `classes.exclude`.
+  registration is last-wins); the warning suggests `className.exclude`.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):
   those registrations are scope-gated, not last-wins.
-- An invalid rule — including a string (`"classes": "decorated"`) — fails the
+- An invalid rule — including a string (`"className": "decorated"`) — fails the
   build naming the offending field.
 
 ### Story: Address folders by tsconfig aliases
@@ -149,9 +144,9 @@ code.
 
 Acceptance criteria:
 
-- A path is either a folder relative to the config file (`./src/services`) or
+- A path is either a folder relative to the working directory (`./src/services`) or
   a tsconfig `paths` alias (`@app/services`), resolved through the `paths` of
-  the config's `tsconfig` (default `./tsconfig.json` next to the config file,
+  the config's `tsconfig` (default `./tsconfig.json` in the working directory,
   which may be absent; one named explicitly must exist), including `paths`
   that tsconfig inherits through its own `extends`. The tsconfig contributes
   aliases and module resolution only, never files.

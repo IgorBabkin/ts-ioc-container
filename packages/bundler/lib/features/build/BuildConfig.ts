@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 import { TicConfigError } from '../../exceptions/DomainException';
 import { globToRegExp } from './domain/glob';
@@ -7,11 +8,11 @@ import { globToRegExp } from './domain/glob';
  * Which files a bundle reads and parses: the first, cheap stage of selection,
  * decided by path alone. `paths` are the folders the files come from; within them
  * a file is parsed when it matches one of `include` and none of `exclude`. Globs
- * are relative to the config file and `/`-separated. With a file naming convention
+ * are relative to the working directory and `/`-separated. With a file naming convention
  * (`*.service.ts`), `include` keeps the bundler from reading anything else.
  */
 export interface GlobSelector {
-  /** Folders to scan: relative to the config file (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
+  /** Folders to scan: relative to the working directory (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
   paths: (string | PathConfig)[];
   /** Globs a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
   include?: string[];
@@ -65,32 +66,31 @@ export interface ResolvedClassSelector {
 }
 
 export interface PathConfig {
-  /** A folder relative to the config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
+  /** A folder relative to the working directory (`./src/services`) or a tsconfig `paths` alias (`@app/services`). */
   path: string;
   /** Scan sub-folders too. Default `true`. */
   recursive?: boolean;
 }
 
 /**
- * The shape of `*.bundle.json`: one bundle, described explicitly — the folders it scans
- * and the file it writes. A project that needs several bundles keeps one config file
- * per bundle.
+ * A bundle config: one bundle, described explicitly — the folders it scans and the
+ * classes it registers. It is content, not a file: the caller reads it from wherever it
+ * keeps it and hands it over (`tic build <output> --json '<content>'`, or `build()`).
+ * The file it writes is not part of it either: that is given on every build.
  */
 export interface BundleConfig {
   $schema?: string;
-  /** The generated file, relative to the config file (convention: `*.bundle.ts`). */
-  output: string;
   /**
    * The bundle's name: letters, digits, `-` and `_`, starting with a letter. Default: the
-   * config file's stem (`production.bundle.json` -> `production`); required for a config
-   * file named otherwise. It names the generated class, an `IContainerModule`
-   * (`ProductionBundle`, see {@link toClassName}).
+   * output's (`src/di/production.bundle.ts` -> `production`); required for an output named
+   * otherwise. It names the generated class, an `IContainerModule` (`ProductionBundle`,
+   * see {@link toClassName}).
    */
   name?: string;
   /**
    * The tsconfig whose `paths` aliases `glob.paths` may name and generated imports are
    * written in, and whose `moduleResolution` sets the import extension. It contributes
-   * nothing else: the files scanned are `glob.paths` alone. Relative to the config file.
+   * nothing else: the files scanned are `glob.paths` alone. Relative to the working directory.
    * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
   tsconfig?: string;
@@ -99,11 +99,11 @@ export interface BundleConfig {
   /** Which files are parsed: the folders in `glob.paths`, minus {@link DEFAULT_EXCLUDE} unless `exclude` says otherwise. */
   glob: GlobSelector;
   /** Which classes of a parsed file are registered. Default: every exported class. */
-  classes?: ClassSelector;
+  className?: ClassSelector;
 }
 
 export const DEFAULT_TSCONFIG = './tsconfig.json';
-/** What `classes.decorators` requires when omitted: the library's own `@register`. */
+/** What `className.decorators` requires when omitted: the library's own `@register`. */
 export const DEFAULT_DECORATORS = ['register'];
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
@@ -116,19 +116,17 @@ export const DEFAULT_EXCLUDE = [
 
 /** A {@link BundleConfig} whose defaults are filled in and whose paths are absolute. */
 export interface ResolvedConfig {
-  /** The config file itself. */
-  file: string;
+  /** The folder the config's relative paths resolve against: the working directory. */
   dir: string;
-  output: string;
-  /** The bundle name: `production` for `production.bundle.json`. */
+  /** The bundle name: `production` for `production.bundle.ts`. */
   name: string;
   /** The generated class: `ProductionBundle`. */
-  className: string;
+  bundleClassName: string;
   /** The tsconfig of `paths` aliases; `required` when the config names it, so it must exist. */
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
   glob: ResolvedGlobSelector;
-  classes: ResolvedClassSelector;
+  className: ResolvedClassSelector;
   /** Non-fatal problems found while resolving, e.g. a `glob.exclude` that drops a default test glob. */
   warnings: string[];
 }
@@ -136,7 +134,7 @@ export interface ResolvedConfig {
 const BUNDLE_NAME = /^[A-Za-z][\w-]*$/;
 
 // Each schema carries the message a config author reads, so a failed parse names
-// the field and what it expected: `classes.export: expected "any", "named" or "default"`.
+// the field and what it expected: `className.export: expected "any", "named" or "default"`.
 const expected = (what: string) => ({ error: `expected ${what}` });
 const nonEmptyString = () => z.string(expected('a non-empty string')).min(1, expected('a non-empty string'));
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
@@ -193,7 +191,7 @@ const GLOB_SCHEMA = z
         .array(PATH_SCHEMA, expected('a non-empty array'))
         .min(1, expected('a non-empty array'))
         .describe(
-          'Folders to scan: paths relative to this file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { "path": "...", "recursive": false }.',
+          'Folders to scan: paths relative to the working directory (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { "path": "...", "recursive": false }.',
         ),
       include: nonEmptyStringList()
         .optional()
@@ -209,7 +207,7 @@ const GLOB_SCHEMA = z
     expected('an object'),
   )
   .describe(
-    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to this file. With a file naming convention, `include` keeps every other file unread.',
+    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the working directory. With a file naming convention, `include` keeps every other file unread.',
   );
 
 const CLASSES_SCHEMA = z
@@ -249,20 +247,19 @@ const CLASSES_SCHEMA = z
 export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
   {
     $schema: z.string().optional(),
-    output: nonEmptyString().describe('The bundle file, relative to this file (convention: *.bundle.ts).'),
     name: z
       .string(expected('letters, digits, "-" or "_", starting with a letter'))
       .regex(BUNDLE_NAME, expected('letters, digits, "-" or "_", starting with a letter'))
       .optional()
       .describe(
-        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: this file\'s stem (production.bundle.json → production); required for a config file named otherwise. It names the generated IContainerModule class (ProductionBundle).',
+        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: the output\'s (src/di/production.bundle.ts → production); required for an output named otherwise. It names the generated IContainerModule class (ProductionBundle).',
       ),
     // Optional rather than defaulted: a tsconfig the config names must exist, the default may be absent.
     tsconfig: nonEmptyString()
       .optional()
       .meta({ default: DEFAULT_TSCONFIG })
       .describe(
-        'The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to this file. The default may be absent; a tsconfig named here must exist.',
+        'The tsconfig whose `paths` aliases glob.paths may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.paths alone. Relative to the working directory. The default may be absent; a tsconfig named here must exist.',
       ),
     importExtension: z
       .string(expected('a string'))
@@ -271,14 +268,14 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
         'Extension of generated imports, e.g. ".js". Inferred from the tsconfig: ".js" under node16/nodenext resolution, none otherwise.',
       ),
     glob: GLOB_SCHEMA,
-    classes: CLASSES_SCHEMA.optional(),
+    className: CLASSES_SCHEMA.optional(),
   },
   expected('an object'),
 );
 
 type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
 
-/** `['classes', 'export']` -> `classes.export`, `['glob', 'paths', 0]` -> `glob.paths[0]`; the root is `config`. */
+/** `['className', 'export']` -> `className.export`, `['glob', 'paths', 0]` -> `glob.paths[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -316,7 +313,7 @@ function toGlobSelector(glob: ParsedConfig['glob']): ResolvedGlobSelector {
   };
 }
 
-function toClassSelector(classes: ParsedConfig['classes']): ResolvedClassSelector {
+function toClassSelector(classes: ParsedConfig['className']): ResolvedClassSelector {
   if (classes === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
   const { decorators, glob, exclude, ...rest } = classes;
   return {
@@ -344,22 +341,31 @@ function excludeWarnings(glob: ParsedConfig['glob']): string[] {
   ];
 }
 
-/**
- * A config file is named `<name>.bundle.json`, `<name>.bundle.yaml` or `<name>.bundle.yml`,
- * e.g. `app.bundle.json`, `production.bundle.yaml`. Every format has the same shape.
- */
-export const CONFIG_FILE_SUFFIXES = ['.bundle.json', '.bundle.yaml', '.bundle.yml'];
+/** What a bundle file is named: `<name>.bundle.ts`. */
+export const OUTPUT_FILE_SUFFIX = '.bundle.ts';
 
-/** The config suffix `file` ends with, if any. */
-export const configSuffix = (file: string): string | undefined =>
-  CONFIG_FILE_SUFFIXES.find((suffix) => file.endsWith(suffix));
-
-/** `production.bundle.yaml` -> `production`; `undefined` for any other file name, e.g. `bundle.json`. */
-function configStem(file: string): string | undefined {
-  const base = path.basename(file);
-  const suffix = configSuffix(base);
-  const stem = suffix ? base.slice(0, -suffix.length) : '';
+/** `src/di/production.bundle.ts` -> `production`; `undefined` for an output named otherwise. */
+function outputStem(output: string): string | undefined {
+  const base = path.basename(output);
+  const stem = base.endsWith(OUTPUT_FILE_SUFFIX) ? base.slice(0, -OUTPUT_FILE_SUFFIX.length) : '';
   return BUNDLE_NAME.test(stem) ? stem : undefined;
+}
+
+/** The format of config content: what `--json` and `--yaml` take. */
+export type ConfigFormat = 'json' | 'yaml';
+
+/**
+ * Parses config content in its format. An empty YAML document is `{}`. Reading it from a
+ * file is the caller's job.
+ *
+ * @throws {TicConfigError} when the text is not valid in its format.
+ */
+export function parseConfig(text: string, format: ConfigFormat): unknown {
+  try {
+    return format === 'yaml' ? (parseYaml(text) ?? {}) : JSON.parse(text);
+  } catch (e) {
+    throw new TicConfigError(`--${format} is not valid ${format.toUpperCase()}: ${(e as Error).message}`);
+  }
 }
 
 /** The generated class for a bundle name: `production` -> `ProductionBundle`, `my-app_v2` -> `MyAppV2Bundle`. */
@@ -369,31 +375,27 @@ export function toClassName(name: string): string {
 }
 
 /**
- * Validates parsed `*.bundle.json` content and resolves its paths against `file`'s directory.
+ * Validates parsed config content and resolves its paths against `dir`, the working
+ * directory. Without a `name` the bundle is named after `output`.
  *
  * @throws {TicConfigError} when the content does not match the config shape, or names no bundle; the message names the field.
  */
-export function resolveConfig(content: unknown, file: string): ResolvedConfig {
+export function resolveConfig(content: unknown, { dir, output }: { dir: string; output: string }): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { output, name, tsconfig, importExtension, glob, classes } = result.data;
-  const dir = path.dirname(file);
-  const bundleName = name ?? configStem(file);
+  const { name, tsconfig, importExtension, glob, className } = result.data;
+  const bundleName = name ?? outputStem(output);
   if (bundleName === undefined) {
-    throw new TicConfigError(
-      `name: required when the config file is not named <name>${CONFIG_FILE_SUFFIXES.join(' / ')}`,
-    );
+    throw new TicConfigError(`name: required when the output is not named <name>${OUTPUT_FILE_SUFFIX}`);
   }
   return {
-    file,
     dir,
-    output: path.resolve(dir, output),
     name: bundleName,
-    className: toClassName(bundleName),
+    bundleClassName: toClassName(bundleName),
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG), required: tsconfig !== undefined },
     importExtension,
     glob: toGlobSelector(glob),
-    classes: toClassSelector(classes),
+    className: toClassSelector(className),
     warnings: excludeWarnings(glob),
   };
 }

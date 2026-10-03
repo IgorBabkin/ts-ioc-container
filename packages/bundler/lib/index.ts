@@ -1,5 +1,5 @@
 // Entry points: the composition root and the functions that run it.
-export { build, run, loadConfig, createContainer } from './app';
+export { build, run, createContainer } from './app';
 export { type CliIo, CliIoKey } from './domain/CliIo';
 export { type GlobalConfig, GlobalConfigKey, globalConfig } from './domain/GlobalConfig';
 
@@ -19,7 +19,7 @@ export {
 
 // Feature: build
 export { BuildModule } from './features/build/BuildModule';
-export { BuildController, BUILD_OPTIONS, type BuildCliOptions } from './features/build/BuildController';
+export { BuildController, BUILD_OPTIONS, STDIN, type BuildCliOptions } from './features/build/BuildController';
 export {
   BundleBuilder,
   IBundleBuilderKey,
@@ -31,14 +31,10 @@ export {
   type OutputStatus,
 } from './features/build/services/BundleBuilder';
 export {
-  TicConfigService,
-  ITicConfigServiceKey,
-  type ITicConfigService,
-} from './features/build/services/TicConfigService';
-export {
   resolveConfig,
   BUNDLE_CONFIG_SCHEMA,
-  CONFIG_FILE_SUFFIXES,
+  parseConfig,
+  OUTPUT_FILE_SUFFIX,
   DEFAULT_TSCONFIG,
   DEFAULT_EXCLUDE,
   DEFAULT_DECORATORS,
@@ -51,8 +47,8 @@ export {
   type GlobSelector,
   type ResolvedGlobSelector,
   type ResolvedConfig,
+  type ConfigFormat,
 } from './features/build/BuildConfig';
-export { findConfigFiles, findPackageRoot } from './features/build/domain/configFiles';
 export { ticConfigJsonSchema } from './schema/ticConfigSchema';
 export { ImportPaths } from './features/build/domain/ImportPaths';
 export { loadImportPaths } from './features/build/domain/tsconfig';

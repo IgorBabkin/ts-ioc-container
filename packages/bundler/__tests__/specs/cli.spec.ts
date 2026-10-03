@@ -7,155 +7,144 @@ class Io {
   readonly out: string[] = [];
   readonly err: string[] = [];
 
-  constructor(readonly cwd: string) {}
+  constructor(
+    readonly cwd: string,
+    private readonly input?: string,
+  ) {}
 
   stdout = (line: string) => this.out.push(line);
   stderr = (line: string) => this.err.push(line);
+  get stdin() {
+    const { input } = this;
+    return input === undefined ? undefined : () => input;
+  }
 }
+
+const json = (config: object) => JSON.stringify(config);
+const services = json({ glob: { paths: ['./src/services'] } });
 
 describe('Story: Describe the container in a config file (tic CLI)', () => {
   let project: TempProject;
 
   beforeEach(() => {
-    project = TempProject.create({
-      'app.bundle.json': { output: 'src/di/container.bundle.ts', glob: { paths: ['./src/services'] } },
-      'src/services/Logger.ts': decorated('Logger'),
-      'other/app.bundle.json': { output: 'out.bundle.ts', glob: { paths: ['../src/services'] } },
-    });
+    project = TempProject.create({ 'src/services/Logger.ts': decorated('Logger') });
   });
 
   afterEach(() => project.dispose());
 
-  it('builds every *.bundle.json in the working directory', () => {
-    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', glob: { paths: ['./src'] } });
-    project.write('development.bundle.json', { output: 'src/di/development.bundle.ts', glob: { paths: ['./src'] } });
+  it('builds the bundle named as the first argument from the JSON content passed with --json', () => {
     const io = new Io(project.root);
 
-    expect(run(['build'], io)).toBe(0);
-    expect(io.out).toEqual([
-      'wrote     src/di/container.bundle.ts (1 registration)',
-      'wrote     src/di/development.bundle.ts (1 registration)',
-      'wrote     src/di/production.bundle.ts (1 registration)',
-    ]);
-    expect(project.read('src/di/container.bundle.ts')).toContain('Registration.fromClass(Logger)');
+    expect(run(['build', 'src/di/app.bundle.ts', '--json', services], io)).toBe(0);
+    expect(io.out).toEqual(['wrote     src/di/app.bundle.ts (1 registration)']);
+    expect(project.read('src/di/app.bundle.ts')).toContain('Registration.fromClass(Logger)');
+    expect(project.read('src/di/app.bundle.ts')).toContain('export class AppBundle');
   });
 
-  it('builds *.bundle.yaml and *.bundle.yml configs alongside *.bundle.json, in name order', () => {
-    project.write('production.bundle.yaml', 'output: src/di/production.bundle.ts\nglob:\n  paths: [./src]\n');
-    project.write('development.bundle.yml', 'output: src/di/development.bundle.ts\nglob:\n  paths: [./src]\n');
+  it('takes YAML content with --yaml', () => {
     const io = new Io(project.root);
 
-    expect(run(['build'], io)).toBe(0);
-    expect(io.out).toEqual([
-      'wrote     src/di/container.bundle.ts (1 registration)',
-      'wrote     src/di/development.bundle.ts (1 registration)',
-      'wrote     src/di/production.bundle.ts (1 registration)',
-    ]);
+    expect(run(['build', 'src/di/prod.bundle.ts', '--yaml', 'glob:\n  paths: [./src]\n'], io)).toBe(0);
+    expect(project.read('src/di/prod.bundle.ts')).toContain('export class ProdBundle');
   });
 
-  it('fails when one bundle is described in two formats', () => {
-    project.write('app.bundle.yaml', 'output: src/di/other.bundle.ts\n');
+  it('takes the flags before the output too', () => {
     const io = new Io(project.root);
 
-    expect(run(['build'], io)).toBe(1);
-    expect(io.err.join('\n')).toContain('app.bundle.json and app.bundle.yaml describe the same bundle');
+    expect(run(['build', `--json=${services}`, 'src/di/app.bundle.ts'], io)).toBe(0);
+    expect(io.out).toEqual(['wrote     src/di/app.bundle.ts (1 registration)']);
   });
 
-  it('never registers a bundle another config generated', () => {
-    project.write('production.bundle.json', { output: 'src/di/production.bundle.ts', glob: { paths: ['./src'] } });
+  it.each([
+    ['--json', services],
+    ['--yaml', 'glob: { paths: [./src/services] }'],
+  ])('reads the content from stdin with %s -: cat app.bundle.json | tic build <output> --json -', (flag, input) => {
+    const io = new Io(project.root, input);
+
+    expect(run(['build', 'src/di/app.bundle.ts', flag, '-'], io)).toBe(0);
+    expect(project.read('src/di/app.bundle.ts')).toContain('Registration.fromClass(Logger)');
+  });
+
+  it('fails reading stdin when there is none', () => {
     const io = new Io(project.root);
 
-    run(['build'], io);
-    run(['build'], io);
-
-    expect(project.read('src/di/production.bundle.ts')).not.toMatch(/fromClass\(Bundle\)/);
+    expect(run(['build', 'src/di/app.bundle.ts', '--json', '-'], io)).toBe(1);
+    expect(io.err.join('\n')).toContain('--json -: there is no stdin to read');
   });
 
-  it('builds only the configs passed with --config, reporting paths relative to the working directory', () => {
-    project.write('other/extra.bundle.json', { output: 'extra.bundle.ts', glob: { paths: ['../src/services'] } });
+  it('never reads a file: a path passed as content is not valid JSON', () => {
+    project.write('app.bundle.json', { glob: { paths: ['./src'] } });
     const io = new Io(project.root);
 
-    expect(run(['build', '--config', 'other/app.bundle.json', '-c', 'other/extra.bundle.json'], io)).toBe(0);
-    expect(io.out).toEqual([
-      'wrote     other/out.bundle.ts (1 registration)',
-      'wrote     other/extra.bundle.ts (1 registration)',
-    ]);
+    expect(run(['build', 'src/di/app.bundle.ts', '--json', 'app.bundle.json'], io)).toBe(1);
+    expect(io.err.join('\n')).toContain('src/di/app.bundle.ts: --json is not valid JSON');
   });
 
-  it('never builds from tsconfig.json alone: a package without a *.bundle.json fails', () => {
-    project.write('zero/package.json', { name: 'zero' });
-    project.write('zero/tsconfig.json', { include: ['src'] });
-    project.write('zero/src/Logger.ts', decorated('Logger'));
-    const io = new Io(project.path('zero'));
-
-    expect(run(['build'], io)).toBe(1);
-    expect(io.err.join('\n')).toContain(`no *.bundle.{json,yaml,yml} in ${project.path('zero')}`);
-    expect(existsSync(project.path('zero/src/base.bundle.ts'))).toBe(false);
-  });
-
-  describe('in a monorepo: the package it is invoked in', () => {
-    beforeEach(() => {
-      project.write('repo/package.json', { private: true });
-      project.write('repo/tsconfig.json', { include: ['packages/*/src'] });
-      project.write('repo/packages/a/package.json', { name: 'a' });
-      project.write('repo/packages/a/tsconfig.json', { include: ['src'] });
-      project.write('repo/packages/a/src/index.ts', 'export {};\n');
-      project.write('repo/packages/a/src/services/Logger.ts', decorated('Logger'));
-      project.write('repo/packages/b/package.json', { name: 'b' });
-      project.write('repo/packages/b/src/Mailer.ts', decorated('Mailer'));
-    });
-
-    it("builds the package's *.bundle.json, even when invoked in a sub-folder", () => {
-      project.write('repo/packages/b/app.bundle.json', { output: 'src/app.bundle.ts', glob: { paths: ['./src'] } });
-      const io = new Io(project.path('repo/packages/b/src'));
-
-      expect(run(['build'], io)).toBe(0);
-      expect(io.out).toEqual(['wrote     app.bundle.ts (1 registration)']);
-    });
-
-    it("never falls back to the workspace root's configs", () => {
-      project.write('repo/root.bundle.json', { output: 'root.bundle.ts', glob: { paths: ['./packages'] } });
-      const io = new Io(project.path('repo/packages/b/src'));
-
-      expect(run(['build'], io)).toBe(1);
-      expect(io.err.join('\n')).toContain(`no *.bundle.{json,yaml,yml} in ${project.path('repo/packages/b')};`);
-    });
-  });
-
-  it('fails when the working directory has no *.bundle.json', () => {
-    const io = new Io(project.path('src'));
-
-    expect(run(['build'], io)).toBe(1);
-    expect(io.err.join('\n')).toContain('no *.bundle.{json,yaml,yml} in');
-  });
-
-  it('fails --check with a hint when an output is stale, and passes once it is current', () => {
+  it.each([
+    [['build', '--json', services], 'missing <output>'],
+    [['build', 'a.bundle.ts', 'b.bundle.ts', '--json', services], 'expected one <output>, got a.bundle.ts b.bundle.ts'],
+    [['build', 'src/di/app.bundle.ts'], 'pass the config as exactly one of --json <content> or --yaml <content>'],
+    [['build', 'src/di/app.bundle.ts', '--json', services, '--yaml', 'glob: {}'], 'exactly one of --json'],
+    [['build', 'src/di/app.bundle.ts', '--config', 'app.bundle.json'], "Unknown option '--config'"],
+  ])('rejects %j', (argv, message) => {
     const io = new Io(project.root);
 
-    expect(run(['build', '--check'], io)).toBe(1);
+    expect(run(argv, io)).toBe(1);
+    expect(io.err.join('\n')).toContain(message);
+  });
+
+  it('never builds from tsconfig.json alone', () => {
+    project.write('tsconfig.json', { include: ['src'] });
+    const io = new Io(project.root);
+
+    expect(run(['build', 'src/di/prod.bundle.ts'], io)).toBe(1);
+    expect(existsSync(project.path('src/di/prod.bundle.ts'))).toBe(false);
+  });
+
+  it('requires a name in the config when the output is not named <name>.bundle.ts', () => {
+    const io = new Io(project.root);
+
+    expect(run(['build', 'src/di/container.ts', '--json', services], io)).toBe(1);
+    expect(io.err.join('\n')).toContain('src/di/container.ts: name: required');
+    expect(run(['build', 'src/di/container.ts', '--json', json({ name: 'app', glob: { paths: ['./src'] } })], io)).toBe(
+      0,
+    );
+  });
+
+  it('never registers a bundle another build generated', () => {
+    const io = new Io(project.root);
+
+    run(['build', 'src/di/app.bundle.ts', '--json', services], io);
+    run(['build', 'src/di/prod.bundle.ts', '--json', json({ glob: { paths: ['./src'] } })], io);
+
+    expect(project.read('src/di/prod.bundle.ts')).not.toMatch(/fromClass\(AppBundle\)/);
+  });
+
+  it('fails --check with a hint when the output is stale, and passes once it is current', () => {
+    const io = new Io(project.root);
+
+    expect(run(['build', 'src/di/app.bundle.ts', '--json', services, '--check'], io)).toBe(1);
     expect(io.err.join('\n')).toContain('1 generated bundle is out of date — run `tic build`');
 
-    run(['build'], io);
-    expect(run(['build', '--check'], io)).toBe(0);
+    run(['build', 'src/di/app.bundle.ts', '--json', services], io);
+    expect(run(['build', 'src/di/app.bundle.ts', '--json', services, '--check'], io)).toBe(0);
   });
 
-  it('reports a config error on stderr', () => {
-    project.write('app.bundle.json', { output: '', glob: { paths: ['./src/services'] } });
+  it('reports a config error on stderr, naming the output', () => {
     const io = new Io(project.root);
 
-    expect(run(['build'], io)).toBe(1);
-    expect(io.err).toEqual(['tic: app.bundle.json: output: expected a non-empty string']);
+    expect(
+      run(['build', 'src/di/app.bundle.ts', '--json', json({ output: 'x.ts', glob: { paths: ['./src'] } })], io),
+    ).toBe(1);
+    expect(io.err).toEqual(['tic: src/di/app.bundle.ts: output: unknown field']);
   });
 
   it('prints a warning when a non-empty exclude drops the default test globs', () => {
-    project.write('app.bundle.json', {
-      output: 'src/di/container.bundle.ts',
-      glob: { paths: ['./src/services'], exclude: ['legacy/**'] },
-    });
     const io = new Io(project.root);
+    const config = json({ glob: { paths: ['./src/services'], exclude: ['legacy/**'] } });
 
-    expect(run(['build'], io)).toBe(0);
-    expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: glob.exclude');
+    expect(run(['build', 'src/di/app.bundle.ts', '--json', config], io)).toBe(0);
+    expect(io.err.join('\n')).toContain('tic: warning: src/di/app.bundle.ts: glob.exclude');
     expect(io.err.join('\n')).toContain('**/*.spec.ts');
   });
 
@@ -166,16 +155,18 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     project.write('src/services/B.ts', source('B'));
     const io = new Io(project.root);
 
-    expect(run(['build'], io)).toBe(0);
-    expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: decorator token "Token"');
-    expect(io.err.join('\n')).toContain('Token');
+    expect(run(['build', 'src/di/app.bundle.ts', '--json', services], io)).toBe(0);
+    expect(io.err.join('\n')).toContain('tic: warning: src/di/app.bundle.ts: decorator token "Token"');
   });
 
   it('prints usage for --help and rejects an unknown command', () => {
     const io = new Io(project.root);
 
     expect(run(['--help'], io)).toBe(0);
-    expect(io.out.join('\n')).toContain('ts-ioc-container build [--config <path>]... [--check]');
+    expect(io.out.join('\n')).toContain(
+      'ts-ioc-container build <output> (--json <content> | --yaml <content>) [--check]',
+    );
+    expect(io.out.join('\n')).toContain('cat prod.bundle.yml | tic build src/di/prod.bundle.ts --yaml -');
     expect(io.out.join('\n')).toContain('tic is a shortcut for ts-ioc-container');
     expect(run(['compile'], io)).toBe(1);
     expect(io.err).toContain('tic: unknown command "compile"');

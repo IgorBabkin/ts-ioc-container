@@ -1,6 +1,7 @@
 import { It, Mock, Times } from 'moq.ts';
 import { type IContainer, invoke } from 'ts-ioc-container';
 import {
+  action,
   Application,
   type IErrorHandler,
   MissingCommandError,
@@ -75,9 +76,23 @@ describe('Application', () => {
     expect(greeter.calls).toHaveLength(1);
   });
 
-  it('given an action the controller does not declare when run then it reports UnknownActionError', () => {
+  it('given a word that is not a declared action when run then the default action runs with it as an argument', () => {
     const handler = errorHandler();
-    const scope = container(handler.object(), { greet: new Greeter() });
+    const greeter = new Greeter();
+    const scope = container(handler.object(), { greet: greeter });
+
+    expect(Application.bootstrap(scope.object()).run('greet', 'src/di/app.bundle.ts')).toBe(0);
+    expect(greeter.calls).toHaveLength(1);
+    handler.verify((m) => m.handleError(It.IsAny()), Times.Never());
+  });
+
+  it('given an undeclared action and no default action when run then it reports UnknownActionError', () => {
+    class Waver {
+      @action('wave', invoke)
+      wave(): void {}
+    }
+    const handler = errorHandler();
+    const scope = container(handler.object(), { greet: new Waver() });
 
     Application.bootstrap(scope.object()).run('greet', 'loudly');
 

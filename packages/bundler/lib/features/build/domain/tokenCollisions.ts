@@ -27,7 +27,7 @@ export function tokenCollisions(classes: DiscoveredClass[]): string[] {
       const names = group.map((cls) => cls.className);
       return (
         `decorator token "${token}" is passed by ${names.join(', ')}; ` +
-        `registration is last-wins, exclude one with classes.exclude`
+        `registration is last-wins, exclude one with className.exclude`
       );
     });
 }

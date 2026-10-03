@@ -7,34 +7,34 @@ nothing here runs inside the container, and the core package is not changed by
 it.
 
 - The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
-  same program). One config file describes one bundle: `<name>.bundle.json`, or the same in
-  YAML as `<name>.bundle.yaml` / `.yml` (schema: `tic.schema.json`), flat —
-  `output` and `glob.paths` required; `name`, `tsconfig`, `importExtension`,
-  `classes` optional. There is no zero config: `tic build` works on
-  the package it is invoked in (nearest `package.json` up from the working
-  directory; never a workspace root) and builds every `*.bundle.{json,yaml,yml}` there
-  (or the ones named with repeatable `-c`); a package without one is an error.
-  Each writes one class — `export class AppBundle implements IContainerModule`,
-  applied with `container.useModule(new AppBundle())`. Several bundles (e.g.
-  `production.bundle.json`, `development.bundle.json`) mean several configs.
-  `--check` writes nothing and exits 1 when an output is stale — run it in CI.
+  same program): `tic build <output> (--json <content> | --yaml <content>) [--check]`.
+  The config is **content**, never a path — `tic` reads no config file and
+  discovers none; the caller does: `--json "$(cat app.bundle.json)"` or
+  `cat app.bundle.yml | tic build <output> --yaml -` (`-` reads stdin). One run
+  builds one bundle into `<output>` — `export class AppBundle implements
+IContainerModule`, applied with `container.useModule(new AppBundle())`;
+  several bundles mean several runs. `--check` writes nothing and exits 1 when
+  the output is stale — run it in CI.
+- Config fields (schema: `tic.schema.json`), flat: `glob` with `glob.paths`
+  required; `className`, `name`, `tsconfig`, `importExtension` optional; no
+  `output` (it is the CLI argument). `<output>` and every relative path in the
+  config resolve against the working directory. `name` defaults to the
+  output's (`src/di/prod.bundle.ts` → `prod`) and is required for an output not
+  named `<name>.bundle.ts`; the class is `toClassName(name)` — `ProdBundle`.
 - A config does **not** extend its tsconfig and never takes files from it. The
   `tsconfig` field (default `./tsconfig.json`, may be absent; one named
   explicitly must exist) only supplies `paths` aliases — which `glob.paths` may
   name and generated imports are written in (most specific alias, else a
   relative path) — and the module resolution that sets the import extension.
-  `name` defaults to the config's stem (`production.bundle.json` →
-  `production`) and is required for a config named otherwise; the class is
-  `toClassName(name)` — `ProductionBundle`.
 - Selection has two stages. `glob: { paths, include, exclude }` decides by path
   which files are read and parsed at all. `paths` (required, non-empty) are the
-  folders scanned — relative to the config (`./src/services`) or tsconfig
-  aliases (`@app/services`). A file in them must match one of `include` (default: all)
-  and none of `exclude` (default: test files, `__tests__/`, `node_modules/`; a
-  non-empty list replaces it, and the build warns if it drops a default). Globs
-  are relative to the config. With file naming conventions, `include` is the
-  speed lever — nothing else is read. Files `tic build` generated are never input.
-- `classes: { export, decorators, glob, exclude }`
+  folders scanned — relative to the working directory (`./src/services`) or
+  tsconfig aliases (`@app/services`). A file in them must match one of `include`
+  (default: all) and none of `exclude` (default: test files, `__tests__/`,
+  `node_modules/`; a non-empty list replaces it, and the build warns if it drops
+  a default). With file naming conventions, `include` is the speed lever —
+  nothing else is read. Files `tic build` generated are never input.
+- `className: { export, decorators, glob, exclude }`
   then picks classes of the parsed files; default is every exported,
   non-abstract class decorated with `@register` (`decorators` defaults to
   `["register"]`; `[]` requires none); positive criteria must all hold — `glob` is one glob
@@ -47,17 +47,19 @@ it.
 - Never edit a `*.bundle.ts` by hand — change the classes or the config and
   rerun `tic build`.
 - Unknown config fields are errors, at every level.
-- Programmatic API: `build({ config, cwd, check })` (one config, one output),
-  `findConfigFiles(dir)`, `run(argv, io)`, `loadConfig(file)`; every error the
+- Programmatic API: `build({ output, config, cwd, check })` — `config` is the
+  parsed object, `parseConfig(text, 'json' | 'yaml')` parses text the way the CLI
+  does — and `run(argv, io)` (`io.stdin` backs `-`); every error the
   bundler raises on purpose is a `TicError` with a stable `code`
   (`TicConfigError` = `INVALID_CONFIG`, `NamespaceNotFoundError`, `UsageError`,
   `StaleBundlesError`, …).
 - Internals follow `release-monorepo-semantically` (ADR 0023): `createContainer(io)`
   in `lib/app.ts` is the composition root; `Application` resolves the controller
   registered under the command name (`@register('build')`) and runs its
-  `@onDefault(invoke)` action, which parses its own options with
+  `@onDefault(invoke)` action (a word in the action position that names no
+  declared action is the default action's argument: `tic build <output>`), which parses its own options with
   `@inject(pipe(commandArgs, parseOptions(spec), validate(SCHEMA)))`. Work lives in
-  services behind tokens (`IBundleBuilderKey`, `ITicConfigServiceKey`, …); pure
+  services behind tokens (`IBundleBuilderKey`, …); pure
   logic in `lib/features/build/domain/`. A new command is a controller plus a module.
 - The config schema is `BUNDLE_CONFIG_SCHEMA` (zod); `tic.schema.json` is generated
   from it with `pnpm run generate:schema` — never edit it by hand.

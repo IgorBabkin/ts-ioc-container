@@ -2,7 +2,7 @@ import { type InjectFn, SingleToken } from 'ts-ioc-container';
 
 /** Settings every service shares for one run: the process-level context the CLI was started in. */
 export type GlobalConfig = {
-  /** Directory relative paths (`--config`, `build({ config })`) resolve against. */
+  /** Directory relative paths (`<output>`, the config's paths) resolve against. */
   cwd: string;
 };
 

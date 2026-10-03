@@ -2,10 +2,8 @@ import 'reflect-metadata';
 import { Container, type IContainer } from 'ts-ioc-container';
 import { Application } from './cli/Application';
 import { type CliIo, processIo } from './domain/CliIo';
-import { type ResolvedConfig } from './features/build/BuildConfig';
 import { BuildModule } from './features/build/BuildModule';
 import { type BuildOptions, type BuildResult, IBundleBuilderKey } from './features/build/services/BundleBuilder';
-import { ITicConfigServiceKey } from './features/build/services/TicConfigService';
 import { HelpModule } from './features/help/HelpModule';
 import { CommonModule } from './modules/CommonModule';
 
@@ -40,13 +38,4 @@ export function run(argv: string[], io: CliIo = processIo()): number {
  */
 export function build({ cwd = process.cwd(), ...request }: BuildOptions): BuildResult {
   return withContainer({ ...processIo(), cwd }, (container) => IBundleBuilderKey.resolve(container).build(request));
-}
-
-/**
- * Reads and validates a `*.bundle.json`, `*.bundle.yaml` or `*.bundle.yml`.
- *
- * @throws {TicConfigError} when the file is missing, cannot be parsed, or does not match the config shape.
- */
-export function loadConfig(file: string): ResolvedConfig {
-  return withContainer(processIo(), (container) => ITicConfigServiceKey.resolve(container).load(file));
 }
