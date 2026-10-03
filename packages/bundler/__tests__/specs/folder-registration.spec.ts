@@ -1,4 +1,4 @@
-import { build, loadConfig, TicConfigError } from '../../lib';
+import { build, TicConfigError } from '../../lib';
 import { chmodSync } from 'node:fs';
 import { decorated, TempProject } from '../project';
 
@@ -52,28 +52,12 @@ describe('Folder registration', () => {
       expect(() => buildProject()).toThrow('bundles: unknown field');
     });
 
-    it('accepts and preserves bundle tags from config', () => {
-      project = TempProject.create({
-        'app.bundle.json': module(['./src/services'], { tags: ['test'] }),
-      });
-
-      expect(loadConfig(project.path('app.bundle.json')).tags).toEqual(['test']);
-    });
-
-    it('defaults omitted bundle tags to an empty array', () => {
-      project = TempProject.create({
-        'app.bundle.json': module(['./src/services']),
-      });
-
-      expect(loadConfig(project.path('app.bundle.json')).tags).toEqual([]);
-    });
-
     it.each([
       [[], 'config: expected an object'],
       [module(['./src'], { output: '' }), 'output: expected a non-empty string'],
       [module(['./src'], { name: 'not valid' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { name: '2fa' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
-      [module(['./src'], { tags: [1] }), 'tags: expected an array of strings'],
+      [module(['./src'], { tags: ['production'] }), 'tags: unknown field'],
       [module(['./src'], { extends: '' }), 'extends: expected a non-empty string'],
       [module(['./src'], { include: 'src/**' }), 'include: expected an array of strings'],
       [module(['./src'], { exclude: [1] }), 'exclude: expected an array of strings'],

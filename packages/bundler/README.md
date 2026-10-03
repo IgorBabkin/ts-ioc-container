@@ -100,7 +100,6 @@ The bundler's own fields, at the top level:
 | -------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
 | `output` | `<root>/<name>.bundle.ts`      | The bundle file; `<root>` as in [Zero config](#zero-config)                                                             |
 | `name`   | the config's stem, else `base` | The bundle's name (`production.bundle.json` → `production`): names the default output and the class, `ProductionBundle` |
-| `tags`   | `[]`                           | Tags associated with the bundle                                                                                         |
 
 and under `compilerOptions`:
 

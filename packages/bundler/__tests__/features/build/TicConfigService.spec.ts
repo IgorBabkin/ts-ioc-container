@@ -30,7 +30,6 @@ describe('TicConfigService', () => {
     expect(resolved).toMatchObject({
       name: 'production',
       className: 'ProductionBundle',
-      tags: [],
       tsconfig: { file: '/repo/tsconfig.json', required: false },
       classes: { export: 'any', decorators: ['register'] },
     });

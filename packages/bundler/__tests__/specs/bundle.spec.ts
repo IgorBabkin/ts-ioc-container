@@ -1,7 +1,7 @@
 import path from 'node:path';
 import * as ts from 'typescript';
 import { Container, DependencyNotFoundError, type IContainerModule } from 'ts-ioc-container';
-import { build, findConfigFiles, loadConfig } from '../../lib';
+import { build, findConfigFiles } from '../../lib';
 import { DevBundle } from '../fixtures/app/src/di/dev.bundle';
 import { ProdBundle } from '../fixtures/app/src/di/prod.bundle';
 import { TestBundle } from '../fixtures/app/src/di/test.bundle';
@@ -23,11 +23,6 @@ describe('Story: Generate a bundle: a plain container module class', () => {
       'dev.bundle.yml',
       'prod.bundle.yml',
       'test.bundle.yml',
-    ]);
-    expect(environments.map(([config]) => loadConfig(path.join(fixture, config)).tags)).toEqual([
-      ['production'],
-      ['development'],
-      ['test'],
     ]);
   });
 

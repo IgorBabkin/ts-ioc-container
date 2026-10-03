@@ -10,7 +10,7 @@ it.
   same program). One config file describes one bundle: `<name>.bundle.json`, or the same in
   YAML as `<name>.bundle.yaml` / `.yml` (an empty YAML file = all defaults)
   (schema: `tic.schema.json`), shaped like a tsconfig — `extends`, `include`,
-  `exclude`, `compilerOptions` — plus the bundler's `output`, `name`, `tags` at
+  `exclude`, `compilerOptions` — plus the bundler's `output` and `name` at
   the top level and `compilerOptions.importExtension` / `compilerOptions.classes`;
   all optional. `tic build` works on
   the package it is invoked in (nearest `package.json` up from the working

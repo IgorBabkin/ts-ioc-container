@@ -31,7 +31,7 @@ Acceptance criteria:
   described in two formats fails the build naming both files. It is shaped
   like a tsconfig, every field optional: `extends`, `include`, `exclude` and
   `compilerOptions` as in a tsconfig, plus the bundler's `output` (by
-  convention `*.bundle.ts`), `name` and `tags` at the top level and
+  convention `*.bundle.ts`) and `name` at the top level and
   `importExtension` and `classes` under `compilerOptions`.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →

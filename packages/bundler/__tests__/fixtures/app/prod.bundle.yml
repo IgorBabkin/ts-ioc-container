@@ -5,4 +5,3 @@ exclude:
   - src/**/*.dev.ts
   - src/testing/**
 output: src/di/prod.bundle.ts
-tags: [production]

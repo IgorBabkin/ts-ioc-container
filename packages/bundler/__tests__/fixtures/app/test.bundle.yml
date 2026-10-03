@@ -5,4 +5,3 @@ include:
   - src/services
   - src/testing
 output: src/di/test.bundle.ts
-tags: [test]

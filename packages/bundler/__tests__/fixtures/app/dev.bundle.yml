@@ -4,7 +4,6 @@ extends: ./tsconfig.json
 exclude:
   - src/testing/**
 output: src/di/dev.bundle.ts
-tags: [development]
 compilerOptions:
   classes:
     decorators: [register]

@@ -24,15 +24,6 @@
       "type": "string",
       "pattern": "^[A-Za-z][\\w-]*$"
     },
-    "tags": {
-      "default": [],
-      "description": "Tags associated with the bundle.",
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      }
-    },
     "include": {
       "description": "tsconfig `include`: replaces the extended tsconfig's. Relative to this file.",
       "type": "array",

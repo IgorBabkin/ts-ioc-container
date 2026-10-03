@@ -56,7 +56,7 @@ export interface BundleCompilerOptions {
 /**
  * The shape of `*.bundle.json`: one bundle, written as a tsconfig. `extends`, `include`,
  * `exclude` and `compilerOptions` mean what they mean in a tsconfig, so the files the bundle
- * scans are the files this config would compile; `output`, `name`, `tags` and the bundler's
+ * scans are the files this config would compile; `output`, `name` and the bundler's
  * own compiler options describe the generated module. A project that needs several bundles
  * keeps one config file per bundle.
  */
@@ -74,8 +74,6 @@ export interface BundleConfig {
    * an `IContainerModule` (`ProductionBundle`, see {@link toClassName}).
    */
   name?: string;
-  /** Tags associated with the bundle. */
-  tags?: string[];
   /**
    * The tsconfig this config extends, as a tsconfig's own `extends`. Relative to the config
    * file. Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
@@ -122,7 +120,6 @@ export interface ResolvedConfig {
   name: string;
   /** The generated class: `ProductionBundle`. */
   className: string;
-  tags: string[];
   /** The extended tsconfig; `required` when the config names it, so it must exist. */
   tsconfig: { file: string; required: boolean };
   /** What the config sets on top of {@link tsconfig}. */
@@ -141,7 +138,7 @@ const isNonEmptyString = (value: unknown): value is string => typeof value === '
 
 /**
  * A list of non-empty strings, validated as one value so a bad element is reported at the
- * list (`tags: expected an array of strings`), as the config author wrote it. Its JSON
+ * list (`include: expected an array of strings`), as the config author wrote it. Its JSON
  * Schema shape is attached as metadata, since a custom check has none of its own.
  */
 const strings = (what: string, minItems: number) =>
@@ -244,7 +241,6 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .describe(
         'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: this file\'s stem (production.bundle.json → production), else "base". It names the default output (production.bundle.ts) and the generated IContainerModule class (ProductionBundle).',
       ),
-    tags: stringList().default([]).describe('Tags associated with the bundle.'),
     include: tsconfigGlobs('include'),
     exclude: tsconfigGlobs('exclude'),
     compilerOptions: COMPILER_OPTIONS_SCHEMA.optional(),
@@ -316,7 +312,7 @@ export function toClassName(name: string): string {
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { output, name, tags, extends: tsconfig, include, exclude, compilerOptions = {} } = result.data;
+  const { output, name, extends: tsconfig, include, exclude, compilerOptions = {} } = result.data;
   const { importExtension, classes, ...tsCompilerOptions } = compilerOptions;
   const dir = path.dirname(file);
   const bundleName = name ?? configStem(file) ?? DEFAULT_BUNDLE_NAME;
@@ -326,7 +322,6 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     output: output === undefined ? undefined : path.resolve(dir, output),
     name: bundleName,
     className: toClassName(bundleName),
-    tags,
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_EXTENDS), required: tsconfig !== undefined },
     overrides: { include, exclude, compilerOptions: tsCompilerOptions },
     importExtension,
