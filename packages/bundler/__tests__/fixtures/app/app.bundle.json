@@ -2,15 +2,10 @@
   "$schema": "../../../tic.schema.json",
   "output": "src/di/app.bundle.ts",
   "name": "app",
-  "files": {
-    "paths": [
-      "@app/services",
-      "@app/infra"
-    ]
-  },
-  "classes": {
-    "decorators": [
-      "register"
-    ]
+  "include": ["src/services", "src/infra"],
+  "compilerOptions": {
+    "classes": {
+      "decorators": ["register"]
+    }
   }
 }

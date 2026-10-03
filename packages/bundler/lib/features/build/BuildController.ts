@@ -44,7 +44,6 @@ export class BuildController {
    *
    * @throws {UsageError} when an option is unknown or `--config` has no value.
    * @throws {TicConfigError} when a config or its tsconfig is missing or invalid, or none can be found.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    * @throws {StaleBundlesError} when `--check` finds a bundle that differs from what a build would write.
    */
   @onDefault(invoke)

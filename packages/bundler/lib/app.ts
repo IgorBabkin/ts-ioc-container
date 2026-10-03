@@ -35,8 +35,7 @@ export function run(argv: string[], io: CliIo = processIo()): number {
  * Generates the bundle a config describes — one `tic build` step as a function. Nothing is
  * written unless generation succeeds.
  *
- * @throws {TicConfigError} when the config or its tsconfig is missing or invalid, or the config has neither `files.paths` nor a tsconfig.
- * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+ * @throws {TicConfigError} when the config or the tsconfig it extends is missing or invalid.
  */
 export function build({ cwd = process.cwd(), ...request }: BuildOptions = {}): BuildResult {
   return withContainer({ ...processIo(), cwd }, (container) => IBundleBuilderKey.resolve(container).build(request));

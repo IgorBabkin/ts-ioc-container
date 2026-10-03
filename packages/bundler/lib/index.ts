@@ -46,19 +46,18 @@ export {
   DEFAULT_DECORATORS,
   toClassName,
   type BundleConfig,
-  type PathConfig,
+  type BundleCompilerOptions,
   type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,
-  type FileSelector,
-  type ResolvedFileSelector,
   type ResolvedConfig,
+  type TsconfigOverrides,
 } from './features/build/BuildConfig';
 export { findConfigFiles, findPackageRoot } from './features/build/domain/configFiles';
 export { ticConfigJsonSchema } from './schema/ticConfigSchema';
 export { ImportPaths } from './features/build/domain/ImportPaths';
-export { loadTsconfig, type ExtendedTsconfig } from './features/build/domain/tsconfig';
-export { findClasses, isSourceFile, listSourceFiles, type DiscoveredClass } from './features/build/domain/scan';
+export { loadTsconfig, type CompiledTsconfig } from './features/build/domain/tsconfig';
+export { findClasses, isSourceFile, type DiscoveredClass } from './features/build/domain/scan';
 export {
   emitBundle,
   bundleView,
@@ -93,7 +92,6 @@ export {
 export {
   TicError,
   TicConfigError,
-  NamespaceNotFoundError,
   MissingCommandError,
   UnknownCommandError,
   UnknownActionError,
