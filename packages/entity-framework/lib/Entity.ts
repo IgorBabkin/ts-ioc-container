@@ -1,13 +1,14 @@
 import { EntityIdentityError } from './errors';
 import type { IEntity } from './IRepository';
+import type { Flush } from './Flush';
 import { type Linkable, Links } from './LazyRef';
-import { isEqual, snapshot } from './snapshot';
+import { diff, snapshot } from './snapshot';
 
 /** How `EntityManager` records what a repository stored; not exported from the package, so only a flush moves what an entity diffs against. */
 export const markStored = Symbol('markStored');
 
-/** How `EntityManager` creates the records linked into an entity before writing it; not exported from the package. */
-export const resolveReferences = Symbol('resolveReferences');
+/** How `EntityManager` reads what to write — `state` with its links resolved; not exported from the package. */
+export const resolveLinks = Symbol('resolveLinks');
 
 export interface EntityOptions {
   /** The record does not exist yet: it has nothing stored, and the next flush creates it. */
@@ -69,14 +70,7 @@ export class Entity<State extends IEntity = IEntity> {
    * new entity. A field `state` no longer has is in it as `undefined`.
    */
   getDiff(): Partial<State> {
-    const stored = this.stored;
-    if (stored === undefined) return snapshot({ ...this.state });
-    const keys = new Set([...Object.keys(stored), ...Object.keys(this.state)]) as Set<keyof State>;
-    return snapshot(
-      Object.fromEntries(
-        [...keys].filter((key) => !isEqual(this.state[key], stored[key])).map((key) => [key, this.state[key]]),
-      ) as Partial<State>,
-    );
+    return this.stored === undefined ? snapshot({ ...this.state }) : diff(this.stored, this.state);
   }
 
   /** Whether a flush would write it: new, removed, linked, or with a non-empty diff. */
@@ -103,7 +97,6 @@ export class Entity<State extends IEntity = IEntity> {
     return this;
   }
 
-  /** What the repository stored becomes `state` — the same object, for whoever holds it — and what the diff compares against. */
   /**
    * Sets `field`, when this entity is flushed, to the id of a record that does
    * not exist yet — created then, first. Until the flush `state` keeps what it
@@ -118,11 +111,17 @@ export class Entity<State extends IEntity = IEntity> {
     return this;
   }
 
-  async [resolveReferences](): Promise<void> {
-    await this.links.resolveInto(this.state);
+  /** A copy of `state` with every linked field set to the id its record got in `flush`; `state` is left as it is. */
+  [resolveLinks](flush: Flush): Promise<State> {
+    return this.links.resolve(this.state, flush);
   }
 
+  /**
+   * What the repository stored becomes `state` — the same object, for whoever
+   * holds it — and what the diff compares against; the links it resolved are done.
+   */
   [markStored](stored: State): void {
+    this.links.clear();
     for (const key of Object.keys(this.state)) {
       if (!Object.hasOwn(stored, key)) delete (this.state as Record<string, unknown>)[key];
     }

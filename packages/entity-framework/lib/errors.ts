@@ -5,7 +5,8 @@
 
 /**
  * A record the repository does not have, or one removed earlier in the same
- * unit of work. Code `IOC_ENTITY_NOT_FOUND`.
+ * unit of work. Code `IOC_ENTITY_NOT_FOUND`. `id` is the record's id, `key` its
+ * whole key — the id, then the rest of the key when the record has more.
  *
  * @example
  * try {
@@ -19,19 +20,25 @@ export class EntityNotFoundError extends Error {
   name = 'EntityNotFoundError';
   readonly code = 'IOC_ENTITY_NOT_FOUND';
 
+  readonly key: readonly unknown[];
+
   constructor(
     readonly entityName: string,
     readonly id: unknown,
+    ...rest: unknown[]
   ) {
-    super(`${entityName} ${String(id)} was not found. Use findById to get undefined instead of an error.`);
+    const scope = rest.length > 0 ? ` (${rest.map(String).join(', ')})` : '';
+    super(`${entityName} ${String(id)}${scope} was not found. Use findById to get undefined instead of an error.`);
+    this.key = [id, ...rest];
     Object.setPrototypeOf(this, EntityNotFoundError.prototype);
   }
 }
 
 /**
  * An id used twice in one unit of work, or changed: `create` for an id the
- * manager tracks (or removed), `patch` to another id, or a flush of an entity
- * whose `state.id` was reassigned. Code `IOC_ENTITY_IDENTITY`.
+ * manager tracks (or removed), `patch` to another id, a flush of an entity
+ * whose `state.id` (or the rest of its key) was reassigned, or a read by more
+ * than the id from a repository without `keyOf`. Code `IOC_ENTITY_IDENTITY`.
  */
 export class EntityIdentityError extends Error {
   name = 'EntityIdentityError';

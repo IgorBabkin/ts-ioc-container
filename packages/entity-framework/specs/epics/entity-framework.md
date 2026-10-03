@@ -43,6 +43,24 @@ Acceptance criteria:
 - `findByIdOrFail` fails with `EntityNotFoundError` for an id the repository
   does not have; `findById` answers `undefined`.
 
+### Story: Records keyed by more than their id
+
+As an application developer whose records are keyed by more than their id — a
+tenant's record, say — I want the identity map to tell two records with the same
+id apart, so that one tenant never reads or writes another tenant's record.
+
+Acceptance criteria:
+
+- A repository whose `findById` takes more than the id names the whole key of a
+  record with `keyOf(record)`; the identity map keys entities by it.
+- Reading the same id under two keys answers two entities and reaches the
+  repository twice; reading it again under either key answers that entity.
+- `track`, `create` and `remove` use the same key, so the same id under another
+  key is another record.
+- `findById` with more than the id, on a repository without `keyOf`, fails with
+  `EntityIdentityError` instead of answering whichever record was read first.
+- `flush` refuses an entity whose key was changed, with `EntityIdentityError`.
+
 ### Story: Write a unit of work with one flush
 
 Acceptance criteria:
@@ -57,6 +75,23 @@ Acceptance criteria:
   created and removed in one unit of work writes nothing.
 - `create` refuses an id the manager tracks, or one it removed, with `EntityIdentityError`.
 - `flush` refuses an entity whose `id` was changed, with `EntityIdentityError`.
+
+### Story: Retry a commit that failed
+
+As an application developer who commits inside a database transaction, I want a
+flush that throws to leave the unit of work as it was before it, so that when the
+transaction rolls back I can retry the commit and every write is sent again.
+
+Acceptance criteria:
+
+- When a write fails, every entity keeps its pending changes — those written
+  before the failure included — and a retried flush sends the same writes.
+- A removed entity stays pending removal, and is deleted by the retry.
+- A lazy record created before the failure is not tracked and its link stays
+  pending: the retry creates it again and the field gets the id it answers then.
+- `flushEntityManagers` is all or nothing in memory: when one manager's flush
+  fails, the managers flushed before it keep their pending changes too.
+- After a flush that succeeds, nothing is pending.
 
 ### Story: Link a record that does not exist yet
 

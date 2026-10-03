@@ -286,6 +286,117 @@ describe('Spec: entity framework', () => {
     });
   });
 
+  describe('Story: records keyed by more than their id', () => {
+    type TariffDto = { id: string; tenant: string; price: number };
+
+    // A store keyed by (id, tenant), as a multi-tenant table is.
+    class TariffRepository implements IRepository<TariffDto> {
+      readonly entityName = 'Tariff';
+      readonly calls: string[] = [];
+      readonly rows = new Map<string, TariffDto>([
+        ['t-1@acme', { id: 't-1', tenant: 'acme', price: 10 }],
+        ['t-1@globex', { id: 't-1', tenant: 'globex', price: 20 }],
+      ]);
+
+      keyOf(tariff: TariffDto): [string, string] {
+        return [tariff.id, tariff.tenant];
+      }
+
+      async findById(id: string, tenant: string): Promise<TariffDto | undefined> {
+        this.calls.push(`findById:${id}@${tenant}`);
+        const row = this.rows.get(`${id}@${tenant}`);
+        return row && { ...row };
+      }
+
+      async create(tariff: TariffDto): Promise<TariffDto> {
+        this.calls.push(`create:${tariff.id}@${tariff.tenant}`);
+        return { ...tariff };
+      }
+
+      async update(stored: TariffDto, diff: Partial<TariffDto>): Promise<TariffDto> {
+        this.calls.push(`update:${stored.id}@${stored.tenant}`);
+        return { ...stored, ...diff };
+      }
+
+      async delete(stored: TariffDto): Promise<void> {
+        this.calls.push(`delete:${stored.id}@${stored.tenant}`);
+      }
+    }
+
+    const tariffsOver = () => {
+      const repository = new TariffRepository();
+      return { manager: new EntityManager(repository), repository };
+    };
+
+    it('answers one entity per key, reaching the repository once for each', async () => {
+      const { manager, repository } = tariffsOver();
+
+      const acme = await manager.findByIdOrFail('t-1', 'acme');
+      const globex = await manager.findByIdOrFail('t-1', 'globex');
+
+      expect([acme.state.tenant, globex.state.tenant]).toEqual(['acme', 'globex']);
+      expect(await manager.findById('t-1', 'acme')).toBe(acme);
+      expect(await manager.findById('t-1', 'globex')).toBe(globex);
+      expect(repository.calls).toEqual(['findById:t-1@acme', 'findById:t-1@globex']);
+    });
+
+    it('writes each record under its own key', async () => {
+      const { manager, repository } = tariffsOver();
+      (await manager.findByIdOrFail('t-1', 'acme')).state.price = 11;
+      await manager.findByIdOrFail('t-1', 'globex');
+
+      await manager.flush();
+
+      expect(repository.calls.filter((c) => !c.startsWith('findById'))).toEqual(['update:t-1@acme']);
+    });
+
+    it('tracks, creates and removes by the whole key', async () => {
+      const { manager } = tariffsOver();
+      const acme = manager.track({ id: 't-1', tenant: 'acme', price: 10 });
+
+      const [globex] = manager.trackMany([{ id: 't-1', tenant: 'globex', price: 20 }]);
+      const initech = manager.create({ id: 't-1', tenant: 'initech', price: 30 });
+      manager.remove(acme);
+
+      expect(globex).not.toBe(acme);
+      expect(await manager.findById('t-1', 'acme')).toBeUndefined();
+      expect(await manager.findById('t-1', 'globex')).toBe(globex);
+      expect(await manager.findById('t-1', 'initech')).toBe(initech);
+      expect(() => manager.create({ id: 't-1', tenant: 'globex', price: 1 })).toThrow(EntityIdentityError);
+    });
+
+    it('refuses a read by more than the id when the repository does not say what its key is', async () => {
+      const repository = new TariffRepository();
+      const manager = new EntityManager<IRepository<TariffDto>>({
+        entityName: 'Tariff',
+        findById: repository.findById.bind(repository),
+        create: repository.create.bind(repository),
+        update: repository.update.bind(repository),
+        delete: repository.delete.bind(repository),
+      });
+
+      await expect(manager.findById('t-1', ...(['acme'] as never[]))).rejects.toThrow(/keyOf/);
+      expect(repository.calls).toEqual([]);
+    });
+
+    it('refuses to flush an entity whose key was changed', async () => {
+      const { manager } = tariffsOver();
+      (await manager.findByIdOrFail('t-1', 'acme')).state.tenant = 'globex';
+
+      await expect(manager.flush()).rejects.toThrow(/key of Tariff t-1 was changed/);
+    });
+
+    it('names the whole key of a record that was not found', async () => {
+      const { manager } = tariffsOver();
+
+      await expect(manager.findByIdOrFail('t-9', 'acme')).rejects.toMatchObject({
+        id: 't-9',
+        key: ['t-9', 'acme'],
+        message: expect.stringMatching(/^Tariff t-9 \(acme\) was not found/),
+      });
+    });
+  });
+
   describe('Story: one unit of work per scope', () => {
     const app = () =>
       new Container({ tags: ['application'] })
@@ -314,6 +425,87 @@ describe('Spec: entity framework', () => {
       await flushEntityManagers(request);
 
       expect(repository.rows.get('o-1')?.status).toBe('cancelled');
+    });
+  });
+
+  describe('Story: retry a commit that failed', () => {
+    // A store whose writes to the ids in `failing` throw, as a database does when the transaction aborts.
+    class FlakyOrderRepository extends OrderRepository {
+      readonly failing = new Set<string>();
+
+      override async update(stored: OrderDto, diff: Partial<OrderDto>): Promise<OrderDto> {
+        if (this.failing.has(stored.id)) throw new Error(`cannot update ${stored.id}`);
+        return super.update(stored, diff);
+      }
+    }
+
+    const flakyOver = (...orders: OrderDto[]) => {
+      const repository = new FlakyOrderRepository(...orders);
+      return { manager: new EntityManager(repository), repository };
+    };
+
+    it('keeps every pending change when a write fails, so a retry sends the same writes', async () => {
+      const { manager, repository } = flakyOver(order('o-1'), order('o-2'));
+      const first = await manager.findByIdOrFail('o-1');
+      const second = await manager.findByIdOrFail('o-2');
+      first.cancel();
+      second.cancel();
+      repository.failing.add('o-2');
+
+      await expect(manager.flush()).rejects.toThrow('cannot update o-2');
+      expect([first.hasChanges(), second.hasChanges()]).toEqual([true, true]);
+      expect(first.getStored()?.status).toBe('open');
+
+      repository.failing.clear();
+      repository.calls.length = 0;
+      await manager.flush();
+
+      expect(repository.calls).toEqual(['update:o-1:status', 'update:o-2:status']);
+      expect(manager.hasChanges()).toBe(false);
+    });
+
+    it('keeps a removed entity pending removal, and deletes it on the retry', async () => {
+      const { manager, repository } = flakyOver(order('o-1'), order('o-2'));
+      manager.remove(await manager.findByIdOrFail('o-1'));
+      (await manager.findByIdOrFail('o-2')).cancel();
+      repository.failing.add('o-2');
+
+      await expect(manager.flush()).rejects.toThrow();
+      expect(await manager.findById('o-1')).toBeUndefined();
+
+      repository.failing.clear();
+      repository.calls.length = 0;
+      await manager.flush();
+
+      expect(repository.calls).toEqual(['delete:o-1', 'update:o-2:status']);
+    });
+
+    it('is all or nothing across the managers flushEntityManagers flushes', async () => {
+      const IOtherRepositoryToken = repositoryToken<FlakyOrderRepository>('IOtherRepository');
+      const repository = new FlakyOrderRepository(order('o-1'));
+      const other = new FlakyOrderRepository(order('x-1'));
+      const container = new Container({ tags: ['application'] })
+        .addRegistration(R.fromValue(repository).bindTo(IOrderRepositoryToken))
+        .addRegistration(R.fromValue(other).bindTo(IOtherRepositoryToken))
+        .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
+      const request = container.createScope({ tags: ['request'] });
+      const orders = entityManagerToken(IOrderRepositoryToken).resolve(request);
+      const others = entityManagerToken(IOtherRepositoryToken).resolve(request);
+      (await orders.findByIdOrFail('o-1')).cancel();
+      (await others.findByIdOrFail('x-1')).cancel();
+      other.failing.add('x-1');
+
+      await expect(flushEntityManagers(request)).rejects.toThrow('cannot update x-1');
+      expect(orders.hasChanges()).toBe(true);
+
+      other.failing.clear();
+      await flushEntityManagers(request);
+
+      expect(repository.calls.filter((c) => c.startsWith('update'))).toEqual([
+        'update:o-1:status',
+        'update:o-1:status',
+      ]);
+      expect([orders.hasChanges(), others.hasChanges()]).toEqual([false, false]);
     });
   });
 
@@ -470,6 +662,31 @@ describe('Spec: entity framework', () => {
       await posts.flush();
 
       expect(log[0]).toBe('create c-1 {"text":"Original","authorId":null}');
+    });
+
+    it('creates a linked record again when the flush that created it failed', async () => {
+      const { log, comments, posts } = blog();
+      const comment = comments.lazy({ text: 'Retried', authorId: null });
+      const post = (await posts.findByIdOrFail('p-0')).link('commentId', comment);
+      const update = posts.repository.update.bind(posts.repository);
+      posts.repository.update = async () => {
+        throw new Error('transaction aborted');
+      };
+
+      await expect(posts.flush()).rejects.toThrow('transaction aborted');
+      expect(post.state.commentId).toBeNull();
+      expect(post.hasChanges()).toBe(true);
+
+      posts.repository.update = update;
+      await posts.flush();
+
+      expect(log).toEqual([
+        'create c-1 {"text":"Retried","authorId":null}',
+        'create c-2 {"text":"Retried","authorId":null}',
+        'update p-0 {"commentId":"c-2"}',
+      ]);
+      expect(post.state.commentId).toBe('c-2');
+      expect((await comment.resolve()).id).toBe('c-2');
     });
 
     it('fails with EntityReferenceError when links form a cycle', async () => {

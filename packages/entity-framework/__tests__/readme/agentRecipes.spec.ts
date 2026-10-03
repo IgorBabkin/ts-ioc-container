@@ -122,6 +122,45 @@ describe('AGENTS.md recipes', () => {
     expect(IOrderRepositoryToken.resolve(app).writes).toEqual(['create o-2', 'delete o-1']);
   });
 
+  type TariffDto = { id: string; tenant: string; price: number };
+
+  class TariffRepository implements IRepository<TariffDto> {
+    readonly entityName = 'Tariff';
+    readonly rows = [
+      { id: 't-1', tenant: 'acme', price: 10 },
+      { id: 't-1', tenant: 'globex', price: 20 },
+    ];
+
+    keyOf(tariff: TariffDto) {
+      return [tariff.id, tariff.tenant] as const;
+    }
+
+    async findById(id: string, tenant: string): Promise<TariffDto | undefined> {
+      const row = this.rows.find((r) => r.id === id && r.tenant === tenant);
+      return row && { ...row };
+    }
+
+    async create(tariff: TariffDto): Promise<TariffDto> {
+      return tariff;
+    }
+
+    async update(stored: TariffDto, diff: Partial<TariffDto>): Promise<TariffDto> {
+      return { ...stored, ...diff };
+    }
+
+    async delete(): Promise<void> {}
+  }
+
+  it('A record keyed by more than its id', async () => {
+    const tariffs = new EntityManager(new TariffRepository());
+
+    const acme = await tariffs.findByIdOrFail('t-1', 'acme');
+    const globex = await tariffs.findByIdOrFail('t-1', 'globex');
+
+    expect(globex).not.toBe(acme);
+    expect([acme.state.price, globex.state.price]).toEqual([10, 20]);
+  });
+
   describe('Pitfalls', () => {
     it('EntityManagerArgumentError: IEntityManagerToken resolved on its own, or with a plain SingleToken', () => {
       const request = createApp().createScope({ tags: ['request'] });
@@ -170,6 +209,19 @@ describe('AGENTS.md recipes', () => {
 
       entity.state.price = new Money(2);
       expect(Object.keys(entity.getDiff())).toEqual(['price']);
+    });
+
+    it('EntityIdentityError: read by more than its id from a repository without keyOf', async () => {
+      const repository = new TariffRepository();
+      const tariffs = new EntityManager<IRepository<TariffDto>>({
+        entityName: 'Tariff',
+        findById: repository.findById.bind(repository),
+        create: repository.create.bind(repository),
+        update: repository.update.bind(repository),
+        delete: repository.delete.bind(repository),
+      });
+
+      await expect(tariffs.findById('t-1', ...(['acme'] as never[]))).rejects.toThrow(EntityIdentityError);
     });
 
     it('EntityIdentityError on create: change the tracked entity instead', async () => {
