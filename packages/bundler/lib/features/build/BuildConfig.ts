@@ -7,15 +7,12 @@ import { globToRegExp } from './domain/glob';
 /**
  * Which files a bundle reads and parses: the first, cheap stage of selection,
  * decided by path alone. `paths` are the folders the files come from; within them
- * a file is parsed when it matches one of `include` and none of `exclude`. Globs
- * are relative to the config file and `/`-separated. With a file naming convention
- * (`*.service.ts`), `include` keeps the bundler from reading anything else.
+ * a file is parsed unless it matches one of `exclude`. Globs are relative to the
+ * config file and `/`-separated.
  */
 export interface GlobSelector {
   /** Folders to scan: relative to the config file (`./src/services`), or tsconfig `paths` aliases (`@app/services`). */
   paths: (string | PathConfig)[];
-  /** Glob, or globs, a file must match one of, e.g. `**\/*.service.ts`. Default: every source file. */
-  include?: string | string[];
   /** Glob, or globs, of files never read. Replaces {@link DEFAULT_EXCLUDE} when given. */
   exclude?: string | string[];
 }
@@ -23,7 +20,6 @@ export interface GlobSelector {
 /** A {@link GlobSelector} with its defaults filled in and its globs compiled. */
 export interface ResolvedGlobSelector {
   paths: Required<PathConfig>[];
-  include?: RegExp[];
   exclude: RegExp[];
 }
 
@@ -145,7 +141,7 @@ const isNonEmptyString = (value: unknown): value is string => typeof value === '
 
 /**
  * A list of non-empty strings, validated as one value so a bad element is reported at the
- * list (`include: expected an array of strings`), as the config author wrote it. Its JSON
+ * list (`decorators: expected an array of strings`), as the config author wrote it. Its JSON
  * Schema shape is attached as metadata, since a custom check has none of its own.
  */
 const strings = (what: string, minItems: number) =>
@@ -197,11 +193,6 @@ const GLOB_OBJECT_SCHEMA = z.strictObject(
     paths: PATHS_SCHEMA.describe(
       'Folders to scan: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { "path": "...", "recursive": false }.',
     ),
-    include: globs()
-      .optional()
-      .describe(
-        'Glob, or globs, a file must match one of, e.g. "**/*.service.ts" or ["**/*.service.ts", "**/*.repository.ts"]. Default: every source file.',
-      ),
     exclude: globList('a glob or an array of globs', 0)
       .default(DEFAULT_EXCLUDE)
       .describe(
@@ -214,16 +205,14 @@ const GLOB_OBJECT_SCHEMA = z.strictObject(
 const GLOB_SCHEMA = z
   .union(
     [
-      nonEmptyString().describe(
-        'One folder to scan, with the default include and exclude: shorthand for { "paths": [...] }.',
-      ),
-      PATHS_SCHEMA.describe('Folders to scan, with the default include and exclude: shorthand for { "paths": [...] }.'),
+      nonEmptyString().describe('One folder to scan, with the default exclude: shorthand for { "paths": [...] }.'),
+      PATHS_SCHEMA.describe('Folders to scan, with the default exclude: shorthand for { "paths": [...] }.'),
       GLOB_OBJECT_SCHEMA,
     ],
     expected('a folder, a non-empty array of folders or an object with "paths"'),
   )
   .describe(
-    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the config file. With a file naming convention, `include` keeps every other file unread. A folder, or a list of folders, is shorthand for { "paths": [...] }.',
+    'Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { "paths": [...] }.',
   );
 
 const CLASSES_SCHEMA = z
@@ -333,7 +322,6 @@ function toGlobObject(glob: ParsedConfig['glob']): ParsedGlob {
 function toGlobSelector(glob: ParsedGlob): ResolvedGlobSelector {
   return {
     paths: glob.paths.map((entry) => (typeof entry === 'string' ? { path: entry, recursive: true } : entry)),
-    include: toGlobs(glob.include),
     exclude: toList(glob.exclude).map(globToRegExp),
   };
 }

@@ -88,9 +88,7 @@ registers. Point your editor at the schema:
 
 ```yaml
 # yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
-glob:
-  paths: ['@app/services', ./src/infra]
-  include: ['**/*.service.ts']
+glob: ['@app/services', ./src/infra]
 ```
 
 | Field             | Default                                       | Meaning                                                                                                     |
@@ -159,15 +157,14 @@ A bundle picks its registrations in two stages:
    pass are parsed.
 2. **`className`** — decided per class, on the files stage 1 let through.
 
-Parsing is where the time goes, so when your project names files by convention
-(`user.service.ts`, `user.repository.ts`), say so in `glob.include` and the
-bundler never reads anything else:
+Parsing is where the time goes, so point `glob` at the folders that hold your
+registrations, and `exclude` what they should not contribute:
 
 ```json
 {
   "glob": {
     "paths": ["@app/services"],
-    "include": ["**/*.service.ts", "**/*.repository.ts"]
+    "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**", "**/node_modules/**", "**/legacy/**"]
   },
   "className": { "decorators": ["register"] }
 }
@@ -181,8 +178,8 @@ config file (`./src/services`) or a tsconfig `paths` alias (`@app/services`,
 for a `"@app/*": ["./src/*"]` alias), scanned recursively unless it says
 `{ "path": "...", "recursive": false }`.
 
-When the defaults for `include` and `exclude` are all you need, `glob` can be
-just the folders — a string or a list:
+When the default `exclude` is all you need, `glob` can be just the folders — a
+string or a list, a shortcut for `glob.paths`:
 
 ```yaml
 glob: ./src/services
@@ -192,14 +189,12 @@ glob: ./src/services
 glob: ['@app/services', ./src/infra]
 ```
 
-Within them, a file is parsed when it matches **one of** `include` and **none of**
-`exclude`. Globs are relative to the config file and `/`-separated; `**`
+Within them, a file is parsed unless it matches **one of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
 spans folders.
 
 | Rule      | Default                                   | Meaning                                                                         |
 | --------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
 | `paths`   | — (required)                              | Folders to scan                                                                 |
-| `include` | every source file                         | A glob, or a list of them, a file must match one of, e.g. `"**/*.service.ts"`   |
 | `exclude` | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; replaces the default when given |
 
 A non-empty `exclude` replaces the defaults, so restate the ones you still want:
@@ -220,8 +215,7 @@ A non-empty `exclude` replaces the defaults, so restate the ones you still want:
 
 If it omits a default glob the build warns, since test classes usually carry
 the same `@register` decorators as production ones. `"exclude": []` deliberately
-parses everything, including tests. Giving only `include` keeps the default
-`exclude`, so `**/*.service.ts` still skips `user.service.spec.ts`.
+parses everything, including tests.
 
 ## Selecting classes
 

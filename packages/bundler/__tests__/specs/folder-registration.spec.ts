@@ -81,7 +81,7 @@ describe('Folder registration', () => {
       [{}, 'glob: expected a folder, a non-empty array of folders or an object with "paths"'],
       [module(['./src'], { output: 'src/di/container.bundle.ts' }), 'output: unknown field'],
       [{ glob: {} }, 'glob.paths: expected a non-empty array'],
-      [{ glob: { include: ['**/*.ts'] } }, 'glob.paths: expected a non-empty array'],
+      [{ glob: { exclude: ['**/*.ts'] } }, 'glob.paths: expected a non-empty array'],
       [{ glob: '' }, 'glob: expected a non-empty string'],
       [{ glob: [] }, 'glob: expected a non-empty array'],
       [{ glob: 42 }, 'glob: expected a folder, a non-empty array of folders or an object with "paths"'],
@@ -110,7 +110,7 @@ describe('Folder registration', () => {
     it.each([
       ['a folder', './src/services'],
       ['a list of folders', ['./src/services', { path: './src/infra', recursive: false }]],
-    ])('takes glob as %s, keeping the default include and exclude', (_, glob) => {
+    ])('takes glob as %s, keeping the default exclude', (_, glob) => {
       project = create({
         'app.bundle.json': { glob },
         'src/services/Logger.ts': decorated('Logger'),
@@ -290,7 +290,7 @@ describe('Folder registration', () => {
     });
   });
 
-  describe('Story: Select files by name before parsing', () => {
+  describe('Story: Exclude files by path before parsing', () => {
     const sources = {
       'src/user.service.ts': decorated('UserService'),
       'src/user.repository.ts': decorated('UserRepository'),
@@ -299,18 +299,7 @@ describe('Folder registration', () => {
     };
     const registered = () => [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
 
-    it('parses only files matching one of the include globs', () => {
-      project = create({
-        'app.bundle.json': module(['./src'], { glob: { include: ['**/*.service.ts', '**/*.repository.ts'] } }),
-        ...sources,
-      });
-
-      buildProject();
-
-      expect(registered()).toEqual(['OldService', 'UserRepository', 'UserService']);
-    });
-
-    it('never reads a file outside the include globs', () => {
+    it('never reads an excluded file', () => {
       // A dangling `.ts` symlink fails the build the moment it is read.
       const withBrokenFile = (glob: object) => {
         project = create({ 'app.bundle.json': module(['./src'], { glob }), ...sources });
@@ -320,59 +309,23 @@ describe('Folder registration', () => {
       withBrokenFile({});
       expect(() => buildProject()).toThrow(/ENOENT/);
 
-      withBrokenFile({ include: ['**/*.service.ts'] });
+      withBrokenFile({ exclude: [...DEFAULT_EXCLUDE, 'src/broken.ts'] });
       expect(() => buildProject()).not.toThrow();
     });
 
-    it('drops files matching exclude even when include matches them', () => {
-      project = create({
-        'app.bundle.json': module(['./src'], {
-          glob: { include: ['**/*.service.ts'], exclude: [...DEFAULT_EXCLUDE, 'src/legacy/**'] },
-        }),
-        ...sources,
-      });
-
-      buildProject();
-
-      expect(registered()).toEqual(['UserService']);
-    });
-
-    it('takes a single include glob as a string', () => {
-      project = create({ 'app.bundle.json': module(['./src'], { glob: { include: '**/*.service.ts' } }), ...sources });
-
-      buildProject();
-
-      expect(registered()).toEqual(['OldService', 'UserService']);
-    });
-
     it('takes a single exclude glob as a string, replacing the defaults', () => {
-      project = create({
-        'app.bundle.json': module(['./src'], { glob: { include: '**/*.service.ts', exclude: 'src/legacy/**' } }),
-        ...sources,
-      });
+      project = create({ 'app.bundle.json': module(['./src'], { glob: { exclude: 'src/legacy/**' } }), ...sources });
 
       const { warnings } = buildProject();
 
-      expect(registered()).toEqual(['UserService']);
+      expect(registered()).toEqual(['Helper', 'UserRepository', 'UserService']);
       expect(warnings[0]).toContain('glob.exclude');
-    });
-
-    it('keeps the default excludes when only include is given', () => {
-      project = create({
-        'app.bundle.json': module(['./src'], { glob: { include: ['**/*.service.ts'] } }),
-        'src/user.service.ts': decorated('UserService'),
-        'src/user.service.spec.ts': decorated('UserServiceSpec'),
-      });
-
-      buildProject();
-
-      expect(registered()).toEqual(['UserService']);
     });
 
     it('applies the class selector to the files that were parsed', () => {
       project = create({
         'app.bundle.json': module(['./src'], {
-          glob: { include: ['**/*.service.ts'] },
+          glob: { exclude: [...DEFAULT_EXCLUDE, 'src/helpers.ts'] },
           className: { exclude: 'Old*' },
         }),
         ...sources,
@@ -380,13 +333,11 @@ describe('Folder registration', () => {
 
       buildProject();
 
-      expect(registered()).toEqual(['UserService']);
+      expect(registered()).toEqual(['UserRepository', 'UserService']);
     });
 
     it.each([
-      [{ include: [] }, 'glob.include: expected a glob or a non-empty array of globs'],
-      [{ include: [''] }, 'glob.include: expected a glob or a non-empty array of globs'],
-      [{ include: '' }, 'glob.include: expected a glob or a non-empty array of globs'],
+      [{ include: ['**/*.service.ts'] }, 'glob.include: unknown field'],
       [{ exclude: '' }, 'glob.exclude: expected a glob or an array of globs'],
       [{ exclude: [42] }, 'glob.exclude: expected a glob or an array of globs'],
       [{ only: ['**/*.ts'] }, 'glob.only: unknown field'],

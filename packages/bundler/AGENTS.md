@@ -30,15 +30,14 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   explicitly must exist) only supplies `paths` aliases — which `glob.paths` may
   name and generated imports are written in (most specific alias, else a
   relative path) — and the module resolution that sets the import extension.
-- Selection has two stages. `glob: { paths, include, exclude }` decides by path
+- Selection has two stages. `glob: { paths, exclude }` decides by path
   which files are read and parsed at all (`glob: ./src` or `glob: [./a, ./b]` is
-  shorthand for `{ paths: [...] }`). `paths` (required, non-empty) are the
+  a shortcut for `glob.paths`). `paths` (required, non-empty) are the
   folders scanned — relative to the config file (`./src/services`) or
-  tsconfig aliases (`@app/services`). A file in them must match one of `include`
-  (one glob or a list; default: all) and none of `exclude` (one glob or a list) (default: test files, `__tests__/`,
-  `node_modules/`; a non-empty list replaces it, and the build warns if it drops
-  a default). With file naming conventions, `include` is the speed lever —
-  nothing else is read. Files `tic build` generated are never input.
+  tsconfig aliases (`@app/services`). A file in them is parsed unless it matches one
+  of `exclude` (one glob or a list; default: test files, `__tests__/`,
+  `node_modules/`; a non-empty value replaces it, and the build warns if it drops
+  a default). There is no `include`. Files `tic build` generated are never input.
 - `className: { export, decorators, glob, exclude }`
   then picks classes of the parsed files; default is every exported,
   non-abstract class decorated with `@register` (`decorators` defaults to

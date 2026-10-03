@@ -36,7 +36,7 @@ Acceptance criteria:
   names the config (`<stdin>` for piped text), and nothing is printed then.
 - The config's fields are flat and explicit: `glob` with its `paths` is
   required — a folder (`glob: ./src`) or a list of folders is shorthand for
-  `{ paths: [...] }` with the default `include` / `exclude`; `name`, `tsconfig`, `importExtension` and `className` are optional.
+  `{ paths: [...] }` with the default `exclude`; `name`, `tsconfig`, `importExtension` and `className` are optional.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →
   `production`); piped text, or a file named otherwise, must set it. The
@@ -86,16 +86,14 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- Selection runs in two stages: a bundle's `glob` rule — its `paths` and the
-  `include` / `exclude` globs — decides by path
+- Selection runs in two stages: a bundle's `glob` rule — its `paths` and its
+  `exclude` globs — decides by path
   alone which files are read and parsed; its `className` rule then picks classes out of
   the parsed files.
-- `glob.include` is a glob or a non-empty list of globs; a file is parsed only when it
-  matches one of them. Omitted, every source file qualifies.
-- A file outside `include` is never read.
 - `glob.exclude` is a glob or a list of globs of files never read (default: test files,
-  `__tests__/`, `node_modules/`) and wins over `include`. Giving only `include`
-  keeps the default `exclude`.
+  `__tests__/`, `node_modules/`); every other source file in `paths` is parsed.
+  There is no `include`: it is an unknown field.
+- An excluded file is never read.
 - Globs are relative to the config file and `/`-separated.
 - A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
   parses tests deliberately. When a non-empty `exclude` omits a default glob,

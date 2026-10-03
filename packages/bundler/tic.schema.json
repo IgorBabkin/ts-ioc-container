@@ -28,7 +28,7 @@
         {
           "type": "string",
           "minLength": 1,
-          "description": "One folder to scan, with the default include and exclude: shorthand for { \"paths\": [...] }."
+          "description": "One folder to scan, with the default exclude: shorthand for { \"paths\": [...] }."
         },
         {
           "minItems": 1,
@@ -58,7 +58,7 @@
               }
             ]
           },
-          "description": "Folders to scan, with the default include and exclude: shorthand for { \"paths\": [...] }."
+          "description": "Folders to scan, with the default exclude: shorthand for { \"paths\": [...] }."
         },
         {
           "type": "object",
@@ -93,23 +93,6 @@
               },
               "description": "Folders to scan: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services). Sub-folders are scanned too unless an entry says { \"path\": \"...\", \"recursive\": false }."
             },
-            "include": {
-              "description": "Glob, or globs, a file must match one of, e.g. \"**/*.service.ts\" or [\"**/*.service.ts\", \"**/*.repository.ts\"]. Default: every source file.",
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "minItems": 1
-                }
-              ]
-            },
             "exclude": {
               "default": [
                 "**/*.spec.ts",
@@ -141,7 +124,7 @@
           "additionalProperties": false
         }
       ],
-      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed when it matches one of `include` and none of `exclude`. Globs are relative to the config file. With a file naming convention, `include` keeps every other file unread. A folder, or a list of folders, is shorthand for { \"paths\": [...] }."
+      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `paths` are the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { \"paths\": [...] }."
     },
     "className": {
       "type": "object",
