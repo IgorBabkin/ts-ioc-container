@@ -1,6 +1,6 @@
 {
   "name": "@ts-ioc-container/entity-framework",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A unit of work over plain DTOs for ts-ioc-container: an identity map per repository, snapshot change tracking, and one flush for a scope's changes. No query language, no ORM.",
   "publishConfig": {
     "access": "public",
