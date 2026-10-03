@@ -50,6 +50,13 @@ export interface IRepository<State extends IEntity = IEntity, E extends Entity<S
    */
   keyOf?(record: State): RecordKey<State>;
 
+  /**
+   * Turns a value into a new record — its id reserved, and whatever else a new
+   * record needs — for `EntityManager.add`. Usually woven in where the
+   * repository is registered, rather than written: `decorate(preparing(withId(IOrderIdsToken)))`.
+   */
+  prepare?(value: never): Promise<State>;
+
   /** The record, or `undefined` when there is none. Takes the whole key: what `keyOf` answers, or the id alone. */
   findById(id: State['id'], ...key: never[]): Promise<State | undefined>;
 
@@ -77,6 +84,19 @@ export type EntityOf<TRepository> = TRepository extends IRepository<infer _S, in
 
 /** What the repository's `create` takes — and so what `EntityManager.lazy` takes. */
 export type ValueOf<TRepository> = TRepository extends IRepository<infer _S, infer _E, infer V> ? V : never;
+
+/**
+ * What `EntityManager.add` takes: what the repository's `prepare` takes when its
+ * class declares one, or else the record without its id. A `prepare` woven in
+ * by `preparing` is not declared by the class; to type what it takes, declare it:
+ *
+ * ```ts
+ * declare readonly prepare: (order: NewOrder) => Promise<OrderDto>;
+ * ```
+ */
+export type NewOf<TRepository> = TRepository extends { prepare(value: infer New): Promise<unknown> }
+  ? New
+  : Omit<StateOf<TRepository>, 'id'>;
 
 const REPOSITORY_TAG = 'repository';
 

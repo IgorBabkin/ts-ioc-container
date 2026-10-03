@@ -76,6 +76,35 @@ Acceptance criteria:
 - `create` refuses an id the manager tracks, or one it removed, with `EntityIdentityError`.
 - `flush` refuses an entity whose `id` was changed, with `EntityIdentityError`.
 
+### Story: Add a record whose id is reserved before it is written
+
+As an application developer whose ids come from a database sequence or a
+client-side UUID, I want to add a record without choosing its id, so that it has
+its id from the moment it is added and is written at the commit like any other.
+
+The id is reserved before the insert, never read back from it: the identity map
+needs the key at once, and the record can be referenced by its id before the
+commit. How an id is made is a strategy (`IIdGenerator`), how it is attached to a
+repository is advice woven in by the container (`decorate(preparing(...))`), and
+the entity manager only calls the repository's `prepare`.
+
+Acceptance criteria:
+
+- `add(value)` turns the value into a new record with the repository's
+  `prepare`, then tracks it as `create` does: it writes nothing, answers a new
+  entity with its id, and reads of that id answer it.
+- `add` on a repository without `prepare` fails with `EntityIdentityError`,
+  saying how to give it one.
+- `preparing(...advices)`, applied with the container's `decorate`, gives a
+  repository a `prepare` that runs the advices in order, each resolving what it
+  needs from the scope the repository is resolved in. The repository is still
+  itself: its methods, fields and class are unchanged.
+- `withId(idsToken)` is the advice that sets `id` from the generator registered
+  under `idsToken`.
+- `pooled(size)` decorates a generator of numeric ids so it reaches the inner one
+  once per `size` ids (hi/lo), sharing one refill between concurrent calls.
+- `uuidV7Ids()` makes time-ordered RFC 9562 version 7 UUIDs with no round trip.
+
 ### Story: Retry a commit that failed
 
 As an application developer who commits inside a database transaction, I want a

@@ -13,6 +13,15 @@ type CounterDto = { id: number; value: number };
 
 declare const posts: EntityManager<IRepository<PostDto>>;
 declare const comments: EntityManager<IRepository<CommentDto, Entity<CommentDto>, Omit<CommentDto, 'id'>>>;
+declare class DraftRepository implements IRepository<PostDto> {
+  readonly entityName: string;
+  declare readonly prepare: (draft: { title: string }) => Promise<PostDto>;
+  findById(id: string): Promise<PostDto | undefined>;
+  create(post: PostDto): Promise<PostDto>;
+  update(stored: PostDto, diff: Partial<PostDto>): Promise<PostDto>;
+  delete(stored: PostDto): Promise<void>;
+}
+declare const drafts: EntityManager<DraftRepository>;
 declare const counters: EntityManager<IRepository<CounterDto, Entity<CounterDto>, Omit<CounterDto, 'id'>>>;
 
 describe('compile-time mistakes', () => {
@@ -41,4 +50,11 @@ export async function mistakes(post: Entity<PostDto>): Promise<void> {
   entityManagerToken(new SingleToken<{ name: string }>('INotARepository'));
   // @ts-expect-error findById takes the id type of the repository
   await counters.findById('1');
+
+  await posts.add({ title: 'ok', commentId: null, tagIds: [], views: 0 });
+  // @ts-expect-error add takes the record without its id: the repository reserves it
+  await posts.add({ id: 'p-1', title: 'x', commentId: null, tagIds: [], views: 0 });
+  await drafts.add({ title: 'only what prepare takes' });
+  // @ts-expect-error a declared prepare says what add takes
+  await drafts.add({ title: 'x', commentId: null, tagIds: [], views: 0, extra: true });
 }

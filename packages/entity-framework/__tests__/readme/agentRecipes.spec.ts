@@ -224,6 +224,12 @@ describe('AGENTS.md recipes', () => {
       await expect(tariffs.findById('t-1', ...(['acme'] as never[]))).rejects.toThrow(EntityIdentityError);
     });
 
+    it('EntityIdentityError: records cannot be added to a repository without prepare', async () => {
+      const orders = entityManagerToken(IOrderRepositoryToken).resolve(createApp().createScope({ tags: ['request'] }));
+
+      await expect(orders.add({ status: 'open', lines: [] })).rejects.toThrow(/decorate\(preparing\(withId/);
+    });
+
     it('EntityIdentityError on create: change the tracked entity instead', async () => {
       const orders = entityManagerToken(IOrderRepositoryToken).resolve(createApp().createScope({ tags: ['request'] }));
       await orders.findByIdOrFail('o-1');

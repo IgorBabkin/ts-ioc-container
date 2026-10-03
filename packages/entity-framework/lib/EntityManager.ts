@@ -16,6 +16,7 @@ import {
   type EntityOf,
   type IRepository,
   isRepositoryToken,
+  type NewOf,
   type RecordKey,
   type StateOf,
   type ValueOf,
@@ -133,7 +134,7 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
 
   /** `trackMany` for one record. */
   track(record: StateOf<TRepository>): EntityOf<TRepository> {
-    return (this.entities.get(this.identityOf(record)) ?? this.add(record, {})) as EntityOf<TRepository>;
+    return (this.entities.get(this.identityOf(record)) ?? this.attach(record, {})) as EntityOf<TRepository>;
   }
 
   /**
@@ -153,7 +154,30 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
         : 'is already tracked: change the tracked entity (findByIdOrFail) instead of creating it again';
       throw new EntityIdentityError(`${this.repository.entityName} ${String(record.id)} ${why}`);
     }
-    return this.add(record, { isNew: true }) as EntityOf<TRepository>;
+    return this.attach(record, { isNew: true }) as EntityOf<TRepository>;
+  }
+
+  /**
+   * A record to create on the next `flush`, whose id its repository reserves
+   * now: the value goes through the repository's `prepare`, and the record is
+   * then tracked as `create` tracks it — so it has its id at once, and other
+   * records can hold it before the commit.
+   *
+   * @example
+   * const comment = await comments.add({ text: 'First!' });
+   * post.state.commentId = comment.id;
+   *
+   * @throws {EntityIdentityError} when the repository has no `prepare`, or the id it reserved is tracked already.
+   */
+  async add(value: NewOf<TRepository>): Promise<EntityOf<TRepository>> {
+    const { prepare } = this.repository as { prepare?: (value: unknown) => Promise<StateOf<TRepository>> };
+    if (prepare === undefined) {
+      throw new EntityIdentityError(
+        `${this.repository.entityName} records cannot be added: their repository has no prepare to reserve an id. ` +
+          'Register the repository with decorate(preparing(withId(IMyIdsToken))), or create the record with its id: create({ id, ... }).',
+      );
+    }
+    return this.create(await prepare.call(this.repository, value));
   }
 
   /**
@@ -263,7 +287,7 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
     flush.onCommit(() => entity[markStored](updated));
   }
 
-  private add(record: StateOf<TRepository>, options: EntityOptions): EntityOf<TRepository> {
+  private attach(record: StateOf<TRepository>, options: EntityOptions): EntityOf<TRepository> {
     const EntityType = (this.repository.entityClass ?? Entity) as unknown as EntityClass<
       StateOf<TRepository>,
       EntityOf<TRepository>
