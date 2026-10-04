@@ -40,6 +40,40 @@ use than it needs to be.
 
 ## Decision
 
+### 0. The entity framework works in the context of `ts-ioc-container`
+
+The package is part of the container's ecosystem, not a standalone data layer
+that happens to be injectable. It is designed around the container and builds
+on its concepts rather than repeating them:
+
+- **A unit of work is a container scope.** `UnitOfWork` is a registration with
+  a scope rule (`.when((s) => s.hasTag('request'))`), built with the scope it is
+  resolved in. Its lifetime is that scope's, so the application never creates,
+  passes or disposes a unit of work itself.
+- **Repositories are registrations, addressed by token.** `uow.of(token)` and
+  `references` resolve repositories from the unit of work's scope by any
+  `InjectionToken`. Their lifetimes and visibility (an application-scoped
+  singleton, say) are the container's `scope(...)` / `singleton()`, not the
+  package's.
+- **Injection goes through the container.** `managerOf(token)` is an `InjectFn`
+  for `@inject`, in the same style as `by(...)` (ADR 0019).
+- **Cross-cutting behaviour attaches through container mechanisms.** Id
+  generators are registrations, and `preparing(...)` / `withId(...)` are woven
+  into a repository with the provider pipe `decorate(...)` (ADR 0004). The
+  package has no plugin or interceptor system of its own.
+- **Events and errors follow the core's conventions.** `committed` is the core's
+  `ITypedEvent`: the package emits it, and the application decides what runs.
+  This matches ADR 0016, where the library collects and the caller runs. Errors
+  carry a stable `code`, as ADR 0020 requires.
+- **Only the public API, as a peer.** `ts-ioc-container` is a peer dependency;
+  the package uses its public exports only, and the core gains nothing for it.
+
+The one container-free path is `new EntityManager(repository)`, a unit of work
+over a single repository, for tests and scripts. Everything that spans
+repositories, such as `UnitOfWork`, `references` and `managerOf`, needs a
+container scope. A change that would give the package its own registry,
+scoping, lifecycle or hook mechanism belongs in the core, or is out of scope.
+
 ### 1. `UnitOfWork` owns the managers and the commit
 
 ```ts
@@ -141,8 +175,15 @@ in-flight reads (#238), errors with stable codes.
 - Foreign keys no longer need to be deferrable for records written in one commit,
   and the most intricate part of the package is gone.
 - A composite key is checked by the compiler, at every read.
+- Lifetimes, injection and cross-cutting behaviour work the way they do
+  everywhere else in a `ts-ioc-container` application, so there is nothing
+  package-specific to learn for them, and nothing to keep in sync with the core.
 
 **Negative / trade-offs**
+
+- The package is not usable without `ts-ioc-container`, except for a single
+  `EntityManager`. That is deliberate: the container is what makes a scope a
+  unit of work.
 
 - Breaking, while 0.2.0 is on npm. The package is pre-1.0, so this ships as a
   minor, without the deprecation window of ADR 0020: that policy applies to this
