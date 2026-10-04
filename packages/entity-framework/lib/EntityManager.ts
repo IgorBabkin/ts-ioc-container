@@ -1,118 +1,117 @@
-import {
-  bindTo,
-  byArgs,
-  type IContainer,
-  inject,
-  type InjectionToken,
-  register,
-  SingleToken,
-  singleton,
-} from 'ts-ioc-container';
-
-import { Entity, type EntityClass, type EntityOptions, markStored, resolveLinks } from './Entity';
-import { EntityIdentityError, EntityManagerArgumentError, EntityNotFoundError } from './errors';
+import { type Change, orderChanges } from './changes';
+import { Entity, type EntityClass, type EntityOptions, markStored } from './Entity';
+import { EntityIdentityError, EntityNotFoundError } from './errors';
+import { Flush } from './Flush';
 import {
   type AnyRepository,
   type EntityOf,
   type IRepository,
-  isRepositoryToken,
-  type RecordKey,
+  type KeyOf,
+  type NewOf,
+  type RequireKeyOf,
   type StateOf,
-  type ValueOf,
 } from './IRepository';
-import { Flush } from './Flush';
-import { LazyRef } from './LazyRef';
-import { diff } from './snapshot';
+import { isPlainObject } from './snapshot';
 
-/** What `flushEntityManagers` needs of an entity manager. */
-export interface IEntityManager {
-  /** Writes every pending create, change, and removal through the repository, in the order the entities were first tracked. */
-  flush(): Promise<void>;
-}
+/** How a `UnitOfWork` checks and writes a manager's changes in its own order; not exported from the package. */
+export const checkIdentities = Symbol('checkIdentities');
+export const writeChange = Symbol('writeChange');
+export const trackedAt = Symbol('trackedAt');
 
-/** How `flushEntityManagers` writes several managers in one commit; not exported from the package. */
-export const writeIn = Symbol('writeIn');
-
-/**
- * The token every `EntityManager` is registered under. Do not resolve it on its
- * own: resolve `entityManagerToken(repositoryToken)`, which passes the repository.
- */
-export const IEntityManagerToken = new SingleToken<IEntityManager>('IEntityManager');
-
-function repositoryTokenArg(args: unknown[] = []): InjectionToken<AnyRepository> {
-  const token = args.find(isRepositoryToken);
-  if (token === undefined) throw new EntityManagerArgumentError();
-  return token;
-}
+/** When an entity was first tracked, across every manager — so a unit of work keeps one tracking order. */
+let tracking = 0;
 
 /**
  * The unit of work over one repository: an identity map, so each record is read
- * once and every read of its id answers the same entity, and a `flush` that
- * writes each entity's `getDiff()`, taking what the repository answers as stored.
+ * once and every read of its key answers the same entity, and the changes made
+ * to those entities — written by `flush`, or by the `UnitOfWork` it belongs to.
  * Entities are built with the repository's `entityClass`, so a subclass's own
  * methods are there on everything this answers.
  *
- * Resolved with the repository's token as its argument, and cached per token:
- * `entityManagerToken(IOrderRepositoryToken)` in the same scope always meets
- * the same map. Register it in the scope a unit of work lives in, e.g. one per
- * request — without a scope rule it would be shared by every scope.
+ * Usually answered by a `UnitOfWork` — `uow.of(IOrderRepositoryToken)`, or
+ * injected with `managerOf(IOrderRepositoryToken)` — which commits every
+ * repository's changes together. Built on its own, `new EntityManager(repository)`,
+ * it is a unit of work over that one repository.
  *
  * @example
- * const app = new Container({ tags: ['application'] })
- *   .addRegistration(R.fromClass(OrderRepository))
- *   .addRegistration(R.fromClass(EntityManager).when((s) => s.hasTag('request')));
- *
- * const request = app.createScope({ tags: ['request'] });
- * const orders = entityManagerToken(IOrderRepositoryToken).resolve(request);
+ * const orders = uow.of(IOrderRepositoryToken);
  * const order = await orders.findByIdOrFail('o-1');
  * order.state.status = 'cancelled';
- * await db.transaction(() => flushEntityManagers(request));
- *
- * @throws {EntityManagerArgumentError} when resolved without a token made by `repositoryToken`.
+ * await db.transaction(() => uow.commit());
  */
-@register(bindTo(IEntityManagerToken), singleton(repositoryTokenArg))
-export class EntityManager<TRepository extends AnyRepository = AnyRepository> implements IEntityManager {
+export class EntityManager<TRepository extends AnyRepository = AnyRepository> {
   /** Tracked entities by the identity of their key, in the order they were first tracked. */
   private readonly entities = new Map<string, Entity<StateOf<TRepository>>>();
   private readonly keys = new WeakMap<Entity<StateOf<TRepository>>, string>();
+  private readonly sequence = new WeakMap<Entity<StateOf<TRepository>>, number>();
+  /** Reads still waiting on the repository, by identity, so a concurrent read of the same key shares them. */
+  private readonly reading = new Map<string, Promise<EntityOf<TRepository> | undefined>>();
 
-  constructor(@inject(byArgs(repositoryTokenArg)) readonly repository: TRepository) {}
+  constructor(readonly repository: TRepository & RequireKeyOf<TRepository>) {}
 
   /**
-   * The tracked entity with this id, or one built from the repository's answer
+   * The tracked entity with this key, or one built from the repository's answer
    * and tracked from then on: only the first read of a key in a unit of work
-   * reaches the repository. The arguments after the id are the rest of its key —
-   * what the repository's `keyOf` answers — and go to the repository as given.
+   * reaches the repository, and concurrent reads of it share that one call.
    * `undefined` when there is none, or it was removed.
    *
    * @example
    * const order = await orders.findById('o-1');
-   * const tariff = await tariffs.findById(tariffId, tenantId); // a repository keyed by more than the id
-   *
-   * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
+   * const tariff = await tariffs.findById({ id: tariffId, tenant: tenantId }); // a repository keyed by more than the id
    */
-  async findById(...args: Parameters<TRepository['findById']>): Promise<EntityOf<TRepository> | undefined> {
-    const tracked = this.entities.get(this.identityOfArgs(args));
+  async findById(key: KeyOf<TRepository>): Promise<EntityOf<TRepository> | undefined> {
+    const identity = identityOf(key);
+    const tracked = this.entities.get(identity);
     if (tracked !== undefined) return tracked.isRemoved ? undefined : (tracked as EntityOf<TRepository>);
-    const stored = await (this.repository.findById as (...key: unknown[]) => Promise<StateOf<TRepository> | undefined>)(
-      ...args,
-    );
-    return stored === undefined ? undefined : this.track(stored);
+    const found = await this.read(identity, async () => {
+      const stored = (await this.repository.findById(key)) as StateOf<TRepository> | undefined;
+      return stored === undefined ? undefined : this.track(stored);
+    });
+    return found?.isRemoved ? undefined : found;
   }
 
   /**
    * `findById`, failing when there is nothing to answer.
    *
    * @throws {EntityNotFoundError} when the repository has no such record, or it was removed in this unit of work.
-   * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
    */
-  async findByIdOrFail(...args: Parameters<TRepository['findById']>): Promise<EntityOf<TRepository>> {
-    const found = await this.findById(...args);
-    if (found === undefined) {
-      const [id, ...rest] = args as unknown as RecordKey;
-      throw new EntityNotFoundError(this.repository.entityName, id, ...rest);
-    }
+  async findByIdOrFail(key: KeyOf<TRepository>): Promise<EntityOf<TRepository>> {
+    const found = await this.findById(key);
+    if (found === undefined) throw new EntityNotFoundError(this.repository.entityName, key);
     return found;
+  }
+
+  /**
+   * The entities with these keys: the tracked ones from the identity map, the
+   * rest read in one call to the repository's `findByIds` — or one `findById`
+   * per key when it has none. Answers in the order of `keys`, each key once;
+   * keys with no record, and ones removed in this unit of work, are left out.
+   *
+   * @example
+   * const orders = await manager.findByIds(['o-1', 'o-2']);
+   */
+  async findByIds(keys: KeyOf<TRepository>[]): Promise<EntityOf<TRepository>[]> {
+    const unique = [...new Map(keys.map((key) => [identityOf(key), key])).values()];
+    const { findByIds } = this.repository;
+    if (findByIds !== undefined) {
+      const unread = unique.filter((key) => {
+        const identity = identityOf(key);
+        return !this.entities.has(identity) && !this.reading.has(identity);
+      });
+      if (unread.length > 0) {
+        const batch = (findByIds as (keys: unknown[]) => Promise<StateOf<TRepository>[]>)
+          .call(this.repository, unread)
+          .then((records) => records.forEach((record) => this.track(record)));
+        for (const key of unread) {
+          const identity = identityOf(key);
+          void this.read(identity, () => batch.then(() => this.entities.get(identity) as EntityOf<TRepository>)).catch(
+            () => undefined,
+          );
+        }
+      }
+    }
+    const found = await Promise.all(unique.map((key) => this.findById(key)));
+    return found.filter((entity) => entity !== undefined) as EntityOf<TRepository>[];
   }
 
   /**
@@ -127,54 +126,60 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    */
   trackMany(records: StateOf<TRepository>[]): EntityOf<TRepository>[] {
     return records
-      .filter((record) => !this.entities.get(this.identityOf(record))?.isRemoved)
+      .filter((record) => !this.entities.get(this.identityOfRecord(record))?.isRemoved)
       .map((record) => this.track(record));
   }
 
   /** `trackMany` for one record. */
   track(record: StateOf<TRepository>): EntityOf<TRepository> {
-    return (this.entities.get(this.identityOf(record)) ?? this.add(record, {})) as EntityOf<TRepository>;
+    return (this.entities.get(this.identityOfRecord(record)) ?? this.attach(record, {})) as EntityOf<TRepository>;
   }
 
   /**
-   * A record to create on the next `flush`, tracked from now on, so reads of its
-   * id answer it. Its id is the caller's; for an id the database mints, use `lazy`.
+   * A record to create on the next commit, tracked from now on, so reads of its
+   * key answer it. Its id is the caller's; to have the repository reserve one, use `add`.
    *
    * @example
    * const order = orders.create({ id: 'o-2', status: 'open', lines: [] });
    *
-   * @throws {EntityIdentityError} when the id is tracked already, or was removed in this unit of work.
+   * @throws {EntityIdentityError} when the key is tracked already, or was removed in this unit of work.
    */
   create(record: StateOf<TRepository>): EntityOf<TRepository> {
-    const tracked = this.entities.get(this.identityOf(record));
+    const tracked = this.entities.get(this.identityOfRecord(record));
     if (tracked !== undefined) {
       const why = tracked.isRemoved
         ? 'was removed in this unit of work and cannot be created again in it'
         : 'is already tracked: change the tracked entity (findByIdOrFail) instead of creating it again';
       throw new EntityIdentityError(`${this.repository.entityName} ${String(record.id)} ${why}`);
     }
-    return this.add(record, { isNew: true }) as EntityOf<TRepository>;
+    return this.attach(record, { isNew: true }) as EntityOf<TRepository>;
   }
 
   /**
-   * A record to create only if, and when, an entity it is `link`ed into is
-   * flushed. It is created through the repository — the records linked into
-   * it first — tracked as stored once the flush commits, and the linking field
-   * gets its id. `value` is copied now.
+   * A record to create on the next commit, whose id its repository reserves
+   * now: the value goes through the repository's `prepare`, and the record is
+   * then tracked as `create` tracks it — so it has its id at once, and other
+   * records can hold it before the commit.
    *
-   * ```ts
-   * post.link('commentId', comments.lazy({ text: 'First!' }));
-   * ```
+   * @example
+   * const comment = await comments.add({ text: 'First!' });
+   * post.state.commentId = comment.id;
+   *
+   * @throws {EntityIdentityError} when the repository has no `prepare`, or the id it reserved is tracked already.
    */
-  lazy(value: ValueOf<TRepository>): LazyRef<EntityOf<TRepository>, ValueOf<TRepository>> {
-    return new LazyRef(value, async (created) => {
-      const stored = (await this.repository.create(created)) as StateOf<TRepository>;
-      return { id: stored.id, adopt: () => this.track(stored) };
-    });
+  async add(value: NewOf<TRepository>): Promise<EntityOf<TRepository>> {
+    const { prepare } = this.repository as { prepare?: (value: unknown) => Promise<StateOf<TRepository>> };
+    if (prepare === undefined) {
+      throw new EntityIdentityError(
+        `${this.repository.entityName} records cannot be added: their repository has no prepare to reserve an id. ` +
+          'Register the repository with decorate(preparing(withId(IMyIdsToken))), or create the record with its id: create({ id, ... }).',
+      );
+    }
+    return this.create(await prepare.call(this.repository, value));
   }
 
   /**
-   * Deletes a tracked entity on the next `flush`; from now on its id reads as missing.
+   * Deletes a tracked entity on the next commit; from now on its key reads as missing.
    *
    * @example
    * orders.remove(await orders.findByIdOrFail('o-1'));
@@ -182,168 +187,226 @@ export class EntityManager<TRepository extends AnyRepository = AnyRepository> im
    * @throws {EntityNotFoundError} when the entity is not tracked by this manager.
    */
   remove(entity: Entity<StateOf<TRepository>>): void {
-    if (!this.keys.has(entity)) throw new EntityNotFoundError(this.repository.entityName, entity.id);
+    this.assertTracked(entity);
     entity.remove();
   }
 
-  /** Whether a `flush` would write anything: a new, removed, linked, or changed entity. */
+  /**
+   * Stops tracking an entity: a commit ignores it, and the next read of its key
+   * reaches the repository and answers a new entity. The entity itself is left
+   * as it is.
+   *
+   * @throws {EntityNotFoundError} when the entity is not tracked by this manager.
+   */
+  detach(entity: Entity<StateOf<TRepository>>): void {
+    this.assertTracked(entity);
+    this.untrack(entity);
+  }
+
+  /**
+   * Detaches every entity: the identity map starts over, and nothing is pending.
+   *
+   * @example
+   * for (const chunk of chunks) {
+   *   for (const row of chunk) (await rows.findByIdOrFail(row.id)).patch(row);
+   *   await rows.flush();
+   *   rows.clear(); // keep a long batch's identity map small
+   * }
+   */
+  clear(): void {
+    for (const entity of [...this.entities.values()]) this.untrack(entity);
+  }
+
+  /**
+   * Re-reads a tracked entity by its key — after an optimistic-concurrency
+   * conflict, say. What the repository answers becomes what is stored and
+   * `state` (the same object), and what this unit of work changed in it is
+   * dropped. Answers the entity, or `undefined` when its record is gone, in which
+   * case it is no longer tracked.
+   *
+   * @throws {EntityNotFoundError} when the entity is new — nothing is stored to read — or not tracked by this manager.
+   */
+  async reload(entity: Entity<StateOf<TRepository>>): Promise<EntityOf<TRepository> | undefined> {
+    const stored: StateOf<TRepository> | undefined = entity.getStored();
+    if (!this.keys.has(entity) || stored === undefined) {
+      throw new EntityNotFoundError(this.repository.entityName, entity.id);
+    }
+    const fresh = (await this.repository.findById(this.keyOfRecord(stored))) as StateOf<TRepository> | undefined;
+    if (fresh === undefined) {
+      this.untrack(entity);
+      return undefined;
+    }
+    entity[markStored](fresh);
+    return entity.revert() as EntityOf<TRepository>;
+  }
+
+  /** The tracked entities, in the order they were first tracked — removed ones included. */
+  getTracked(): EntityOf<TRepository>[] {
+    return [...this.entities.values()] as EntityOf<TRepository>[];
+  }
+
+  /** Whether a commit would write anything: a new, removed, or changed entity. */
   hasChanges(): boolean {
     return [...this.entities.values()].some((entity) => entity.hasChanges());
   }
 
   /**
-   * Writes every tracked entity that has changes — creates, updates with only
-   * the changed fields, deletes — in the order they were first tracked, creating
-   * the records linked into each first. Opens no transaction: call it inside one,
-   * usually through `flushEntityManagers(scope)`.
+   * What a commit would write for this repository, in the order the entities
+   * were first tracked: each new entity created, each changed one updated with
+   * its diff, each removed one deleted. Nothing is written. A `UnitOfWork`
+   * orders them, with the other repositories' changes, by references.
    *
-   * Only once every write succeeded does what they answered become what is
-   * stored. When one throws — and the transaction rolls back — nothing changes
-   * in memory: every entity is still pending, and flushing again sends the same writes.
+   * @example
+   * for (const change of orders.getChanges()) audit.log(change.type, change.entity.id);
+   */
+  getChanges(): Change<StateOf<TRepository>, EntityOf<TRepository>>[] {
+    const changes: Change<StateOf<TRepository>, EntityOf<TRepository>>[] = [];
+    const { repository } = this;
+    for (const tracked of this.entities.values()) {
+      const entity = tracked as EntityOf<TRepository>;
+      const stored = entity.getStored() as StateOf<TRepository> | undefined;
+      if (entity.isRemoved) {
+        if (stored !== undefined) changes.push({ type: 'delete', entity, repository, stored });
+      } else if (stored === undefined) {
+        changes.push({ type: 'create', entity, repository, record: entity.getDiff() as StateOf<TRepository> });
+      } else {
+        const diff = entity.getDiff() as Partial<StateOf<TRepository>>;
+        if (Object.keys(diff).length > 0) changes.push({ type: 'update', entity, repository, stored, diff });
+      }
+    }
+    return changes;
+  }
+
+  /**
+   * Writes this repository's changes: creates and updates, then deletes, in the
+   * order the entities were first tracked — `getChanges`. Only once every write
+   * succeeded does what they answered become what is stored; when one throws,
+   * nothing changes in memory and flushing again sends the same writes. Opens no
+   * transaction. Answers the changes it wrote.
+   *
+   * To write several repositories in one commit, ordered by their references,
+   * use `UnitOfWork.commit()`.
    *
    * @throws {EntityIdentityError} when an entity's `state.id`, or the rest of its key, was reassigned.
-   * @throws {EntityReferenceError} when linked lazy records form a cycle.
    */
-  async flush(): Promise<void> {
+  async flush(): Promise<Change<StateOf<TRepository>, EntityOf<TRepository>>[]> {
+    this[checkIdentities]();
+    const changes = orderChanges(this.getChanges() as Change[], () => []) as Change<
+      StateOf<TRepository>,
+      EntityOf<TRepository>
+    >[];
     const flush = new Flush();
-    await this[writeIn](flush);
+    for (const change of changes) await this[writeChange](change, flush);
     flush.commit();
+    return changes;
   }
 
   /**
-   * Writes every tracked entity in `flush`, leaving what changes in memory to its commit.
+   * Refuses entities whose key changed since they were tracked.
    *
    * @throws {EntityIdentityError} when an entity's `state.id`, or the rest of its key, was reassigned.
-   * @throws {EntityReferenceError} when linked lazy records form a cycle.
    */
-  async [writeIn](flush: Flush): Promise<void> {
-    for (const entity of [...this.entities.values()]) {
-      await this.write(entity, flush);
+  [checkIdentities](): void {
+    for (const [identity, entity] of this.entities) {
+      const name = `${this.repository.entityName} ${String(entity.id)}`;
+      if (entity.state.id !== entity.id) {
+        throw new EntityIdentityError(
+          `The id of ${name} was changed to ${String(entity.state.id)}. ` +
+            'An id cannot change: create a new entity and remove this one.',
+        );
+      }
+      const current = this.identityOfRecord(entity.state);
+      if (current !== identity) {
+        throw new EntityIdentityError(
+          `The key of ${name} was changed from ${identity} to ${current}. ` +
+            'A key cannot change: create a new entity and remove this one.',
+        );
+      }
     }
   }
 
-  /**
-   * @throws {EntityIdentityError} when the entity's `state.id`, or the rest of its key, was reassigned.
-   * @throws {EntityReferenceError} when linked lazy records form a cycle.
-   */
-  private async write(entity: Entity<StateOf<TRepository>>, flush: Flush): Promise<void> {
+  /** Writes one change through the repository, leaving what it changes in memory to `flush`'s commit. */
+  async [writeChange](change: Change, flush: Flush): Promise<void> {
+    const entity = change.entity as Entity<StateOf<TRepository>>;
     const repository: IRepository<StateOf<TRepository>> = this.repository;
-    const name = `${repository.entityName} ${String(entity.id)}`;
-    if (entity.state.id !== entity.id) {
-      throw new EntityIdentityError(
-        `The id of ${name} was changed to ${String(entity.state.id)}. ` +
-          'An id cannot change: create a new entity and remove this one.',
-      );
-    }
-    const identity = this.keys.get(entity)!;
-    if (this.identityOf(entity.state) !== identity) {
-      throw new EntityIdentityError(
-        `The key of ${name} was changed from ${identity} to ${this.identityOf(entity.state)}. ` +
-          'A key cannot change: create a new entity and remove this one.',
-      );
-    }
-    const stored = entity.getStored();
-    if (entity.isRemoved) {
-      if (stored !== undefined) await repository.delete(stored);
-      flush.onCommit(() => {
-        this.entities.delete(identity);
-        this.keys.delete(entity);
-      });
-      return;
-    }
-    if (!entity.hasChanges()) return;
-    const state = await entity[resolveLinks](flush);
-    if (stored === undefined) {
-      const created = await repository.create(state);
+    if (change.type === 'create') {
+      const created = await repository.create(change.record as StateOf<TRepository>);
       flush.onCommit(() => entity[markStored](created));
-      return;
+    } else if (change.type === 'update') {
+      const updated = await repository.update(
+        change.stored as StateOf<TRepository>,
+        change.diff as Partial<StateOf<TRepository>>,
+      );
+      flush.onCommit(() => entity[markStored](updated));
+    } else {
+      await repository.delete(change.stored as StateOf<TRepository>);
+      flush.onCommit(() => this.untrack(entity));
     }
-    const changes = diff(stored, state);
-    const updated = Object.keys(changes).length > 0 ? await repository.update(stored, changes) : stored;
-    flush.onCommit(() => entity[markStored](updated));
   }
 
-  private add(record: StateOf<TRepository>, options: EntityOptions): EntityOf<TRepository> {
+  /** When the entity was first tracked, in one sequence shared by every manager. */
+  [trackedAt](entity: Entity<StateOf<TRepository>>): number {
+    return this.sequence.get(entity) ?? 0;
+  }
+
+  /** `load`, shared with every concurrent read of the same identity until it settles. */
+  private read(
+    identity: string,
+    load: () => Promise<EntityOf<TRepository> | undefined>,
+  ): Promise<EntityOf<TRepository> | undefined> {
+    let reading = this.reading.get(identity);
+    if (reading === undefined) {
+      reading = load().finally(() => this.reading.delete(identity));
+      this.reading.set(identity, reading);
+    }
+    return reading;
+  }
+
+  private attach(record: StateOf<TRepository>, options: EntityOptions): EntityOf<TRepository> {
     const EntityType = (this.repository.entityClass ?? Entity) as unknown as EntityClass<
       StateOf<TRepository>,
       EntityOf<TRepository>
     >;
     const entity = new EntityType(record, options);
-    const identity = this.identityOf(record);
+    const identity = this.identityOfRecord(record);
     this.entities.set(identity, entity);
     this.keys.set(entity, identity);
+    this.sequence.set(entity, ++tracking);
     return entity;
   }
 
-  /** The identity-map key of a record: its whole key, as the repository's `keyOf` answers it, or its id. */
-  private identityOf(record: StateOf<TRepository>): string {
-    return identityOfKey(this.repository.keyOf?.(record) ?? [record.id]);
+  /** @throws {EntityNotFoundError} when the entity is not tracked by this manager. */
+  private assertTracked(entity: Entity<StateOf<TRepository>>): void {
+    if (!this.keys.has(entity)) throw new EntityNotFoundError(this.repository.entityName, entity.id);
   }
 
-  /**
-   * The identity-map key `findById` reads by.
-   *
-   * @throws {EntityIdentityError} when read by more than the id from a repository without `keyOf`.
-   */
-  private identityOfArgs(args: unknown[]): string {
-    if (args.length > 1 && this.repository.keyOf === undefined) {
-      throw new EntityIdentityError(
-        `${this.repository.entityName} was read by more than its id, but its repository has no keyOf, so the ` +
-          'identity map cannot tell records with the same id apart. Give the repository keyOf(record), ' +
-          'answering the arguments findById takes: [record.id, ...the rest of the key].',
-      );
-    }
-    return identityOfKey(args as unknown as RecordKey);
+  private untrack(entity: Entity<StateOf<TRepository>>): void {
+    const identity = this.keys.get(entity);
+    if (identity !== undefined && this.entities.get(identity) === entity) this.entities.delete(identity);
+    this.keys.delete(entity);
+  }
+
+  /** A record's key, as `findById` takes it: what the repository's `keyOf` answers, or its id. */
+  private keyOfRecord(record: StateOf<TRepository>): KeyOf<TRepository> {
+    return (this.repository.keyOf?.(record) ?? record.id) as KeyOf<TRepository>;
+  }
+
+  private identityOfRecord(record: StateOf<TRepository>): string {
+    return identityOf(this.keyOfRecord(record));
   }
 }
 
-/** Key parts are primitives, so their JSON tells keys apart — `1` from `'1'` included. */
-function identityOfKey(key: RecordKey): string {
-  return JSON.stringify(key);
+/** A key as a string the identity map can hold: equal keys — objects whatever their field order — give equal strings. */
+function identityOf(key: unknown): string {
+  return JSON.stringify(canonical(key));
 }
 
-/** Whether `value` is an `EntityManager` — how `flushEntityManagers` finds them among a scope's instances. */
-export const isEntityManager = (value: unknown): value is EntityManager => value instanceof EntityManager;
-
-/**
- * The token the `EntityManager` over the repository behind `repositoryToken` is
- * resolved by — one per repository token per scope.
- *
- * @example
- * const orders = entityManagerToken(IOrderRepositoryToken).resolve(requestScope);
- * // or injected:
- * constructor(@inject(by(entityManagerToken(IOrderRepositoryToken))) private readonly orders: EntityManager<OrderRepository>) {}
- */
-export const entityManagerToken = <TRepository extends AnyRepository>(
-  repositoryToken: InjectionToken<TRepository>,
-): InjectionToken<EntityManager<TRepository>> =>
-  IEntityManagerToken.args(repositoryToken) as unknown as InjectionToken<EntityManager<TRepository>>;
-
-/**
- * Flushes every entity manager `scope` built, one after another, in the order
- * they were built — the commit of a unit of work. Run it inside the
- * transaction that should hold the writes; it opens none of its own.
- *
- * All or nothing in memory: when a write fails, no manager — not even one
- * whose writes all succeeded — takes anything as stored, so once the
- * transaction rolls back the whole commit can be retried.
- *
- * @example
- * try {
- *   const response = await route.handle(payload);
- *   await db.transaction(() => flushEntityManagers(requestScope));
- *   return response;
- * } finally {
- *   requestScope.dispose();
- * }
- *
- * @throws {EntityIdentityError} when an entity's `state.id`, or the rest of its key, was reassigned.
- * @throws {EntityReferenceError} when linked lazy records form a cycle.
- */
-export async function flushEntityManagers(scope: IContainer): Promise<void> {
-  const flush = new Flush();
-  for (const manager of scope.getInstances().filter(isEntityManager)) {
-    await manager[writeIn](flush);
-  }
-  flush.commit();
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (!isPlainObject(value)) return value;
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((field) => [field, canonical(value[field])]),
+  );
 }

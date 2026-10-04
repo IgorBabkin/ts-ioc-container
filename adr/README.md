@@ -34,6 +34,7 @@ is left intact so the historical reasoning remains discoverable.
 | 0021 | [Feature flags switch implementations, with a mandatory fallback](0021-feature-flags-with-mandatory-fallback.md) | Accepted |
 | 0022 | [Registration discovery happens at build time, outside the container](0022-build-time-registration-discovery.md) | Proposed |
 | 0023 | [The bundler CLI is built on the container, like `release-monorepo-semantically`](0023-bundler-cli-framework.md) | Proposed |
+| 0024 | [Entity framework: an explicit unit of work, writes ordered by references, typed keys](0024-entity-framework-unit-of-work.md) | Proposed |
 
 ## Adding a new ADR
 
