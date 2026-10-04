@@ -5,8 +5,8 @@
 
 /**
  * A record the repository does not have, or one removed earlier in the same
- * unit of work. Code `IOC_ENTITY_NOT_FOUND`. `id` is the record's id, `key` its
- * whole key — the id, then the rest of the key when the record has more.
+ * unit of work. Code `IOC_ENTITY_NOT_FOUND`. `key` is what it was read by — its
+ * id, or the object key of a repository keyed by more — and `id` the id in it.
  *
  * @example
  * try {
@@ -19,26 +19,33 @@
 export class EntityNotFoundError extends Error {
   name = 'EntityNotFoundError';
   readonly code = 'IOC_ENTITY_NOT_FOUND';
-
-  readonly key: readonly unknown[];
+  readonly id: unknown;
 
   constructor(
     readonly entityName: string,
-    readonly id: unknown,
-    ...rest: unknown[]
+    readonly key: unknown,
   ) {
-    const scope = rest.length > 0 ? ` (${rest.map(String).join(', ')})` : '';
-    super(`${entityName} ${String(id)}${scope} was not found. Use findById to get undefined instead of an error.`);
-    this.key = [id, ...rest];
+    super(`${entityName} ${describeKey(key)} was not found. Use findById to get undefined instead of an error.`);
+    this.id = isKeyObject(key) && 'id' in key ? key.id : key;
     Object.setPrototypeOf(this, EntityNotFoundError.prototype);
   }
 }
 
+const isKeyObject = (key: unknown): key is Record<string, unknown> => typeof key === 'object' && key !== null;
+
+/** `o-1`, or `id=t-1, tenant=acme` for an object key. */
+function describeKey(key: unknown): string {
+  if (!isKeyObject(key)) return String(key);
+  return Object.entries(key)
+    .map(([field, value]) => `${field}=${String(value)}`)
+    .join(', ');
+}
+
 /**
- * An id used twice in one unit of work, or changed: `create` for an id the
- * manager tracks (or removed), `patch` to another id, a flush of an entity
- * whose `state.id` (or the rest of its key) was reassigned, or a read by more
- * than the id from a repository without `keyOf`. Code `IOC_ENTITY_IDENTITY`.
+ * An id used twice in one unit of work, or changed: `create` or `add` for a key
+ * the manager tracks (or removed), `patch` to another id, a flush of an entity
+ * whose `state.id` (or the rest of its key) was reassigned, or `add` on a
+ * repository without `prepare`. Code `IOC_ENTITY_IDENTITY`.
  */
 export class EntityIdentityError extends Error {
   name = 'EntityIdentityError';
@@ -50,7 +57,10 @@ export class EntityIdentityError extends Error {
   }
 }
 
-/** Lazy records linked into each other in a cycle, so none can be created first. Code `IOC_ENTITY_REFERENCE`. */
+/**
+ * Records that reference each other in a cycle — new ones, or deleted ones — so
+ * no order of writes satisfies their foreign keys. Code `IOC_ENTITY_REFERENCE`.
+ */
 export class EntityReferenceError extends Error {
   name = 'EntityReferenceError';
   readonly code = 'IOC_ENTITY_REFERENCE';
@@ -58,23 +68,5 @@ export class EntityReferenceError extends Error {
   constructor(message: string) {
     super(message);
     Object.setPrototypeOf(this, EntityReferenceError.prototype);
-  }
-}
-
-/**
- * An `EntityManager` resolved without a repository token among its arguments:
- * `IEntityManagerToken.resolve(scope)` on its own, or with a token not made by
- * `repositoryToken`. Code `IOC_ENTITY_MANAGER_ARGUMENT`.
- */
-export class EntityManagerArgumentError extends Error {
-  name = 'EntityManagerArgumentError';
-  readonly code = 'IOC_ENTITY_MANAGER_ARGUMENT';
-
-  constructor() {
-    super(
-      'An EntityManager was resolved without a repository token. Resolve it with entityManagerToken(IMyRepositoryToken).resolve(scope), ' +
-        "where IMyRepositoryToken = repositoryToken<MyRepository>('IMyRepository') — a plain SingleToken is not recognised.",
-    );
-    Object.setPrototypeOf(this, EntityManagerArgumentError.prototype);
   }
 }

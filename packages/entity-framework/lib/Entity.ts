@@ -1,14 +1,9 @@
 import { EntityIdentityError } from './errors';
 import type { IEntity } from './IRepository';
-import type { Flush } from './Flush';
-import { type Linkable, Links } from './LazyRef';
 import { diff, snapshot } from './snapshot';
 
 /** How `EntityManager` records what a repository stored; not exported from the package, so only a flush moves what an entity diffs against. */
 export const markStored = Symbol('markStored');
-
-/** How `EntityManager` reads what to write — `state` with its links resolved; not exported from the package. */
-export const resolveLinks = Symbol('resolveLinks');
 
 export interface EntityOptions {
   /** The record does not exist yet: it has nothing stored, and the next flush creates it. */
@@ -36,7 +31,6 @@ export class Entity<State extends IEntity = IEntity> {
   readonly state: State;
   private stored: State | undefined;
   private removed = false;
-  private readonly links = new Links<State>();
   private readonly trackedId: State['id'];
 
   constructor(state: State, { isNew = false }: EntityOptions = {}) {
@@ -73,9 +67,9 @@ export class Entity<State extends IEntity = IEntity> {
     return this.stored === undefined ? snapshot({ ...this.state }) : diff(this.stored, this.state);
   }
 
-  /** Whether a flush would write it: new, removed, linked, or with a non-empty diff. */
+  /** Whether a flush would write it: new, removed, or with a non-empty diff. */
   hasChanges(): boolean {
-    return this.removed || this.isNew || this.links.size > 0 || Object.keys(this.getDiff()).length > 0;
+    return this.removed || this.isNew || Object.keys(this.getDiff()).length > 0;
   }
 
   /**
@@ -98,30 +92,10 @@ export class Entity<State extends IEntity = IEntity> {
   }
 
   /**
-   * Sets `field`, when this entity is flushed, to the id of a record that does
-   * not exist yet — created then, first. Until the flush `state` keeps what it
-   * holds; a later `link` of the same field replaces this one.
-   *
-   * ```ts
-   * post.link('commentId', comments.lazy({ text: 'First!' }));
-   * ```
-   */
-  link<K extends keyof State>(field: K, ref: Linkable<State[K]>): this {
-    this.links.set(field, ref);
-    return this;
-  }
-
-  /** A copy of `state` with every linked field set to the id its record got in `flush`; `state` is left as it is. */
-  [resolveLinks](flush: Flush): Promise<State> {
-    return this.links.resolve(this.state, flush);
-  }
-
-  /**
    * What the repository stored becomes `state` — the same object, for whoever
-   * holds it — and what the diff compares against; the links it resolved are done.
+   * holds it — and what the diff compares against.
    */
   [markStored](stored: State): void {
-    this.links.clear();
     this.replaceState(stored);
     this.stored = snapshot(stored);
   }
@@ -133,16 +107,15 @@ export class Entity<State extends IEntity = IEntity> {
 
   /**
    * Discards what this unit of work changed: `state` goes back to what is
-   * stored — the same object, for whoever holds it — links are dropped and
-   * `remove` is undone, so a flush writes nothing for it. A new entity has
-   * nothing stored, so its `state` is kept; to drop it, `detach` it from its
-   * manager. Answers the entity, so calls chain.
+   * stored — the same object, for whoever holds it — and `remove` is undone,
+   * so a flush writes nothing for it. A new entity has nothing stored, so its
+   * `state` is kept; to drop it, `detach` it from its manager. Answers the
+   * entity, so calls chain.
    *
    * @example
    * if (!order.isValid()) order.revert();
    */
   revert(): this {
-    this.links.clear();
     this.removed = false;
     if (this.stored !== undefined) this.replaceState(this.stored);
     return this;
