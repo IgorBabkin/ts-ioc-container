@@ -1,13 +1,9 @@
 import { EntityIdentityError } from './errors';
 import type { IEntity } from './IRepository';
-import { type Linkable, Links } from './LazyRef';
-import { isEqual, snapshot } from './snapshot';
+import { diff, snapshot } from './snapshot';
 
 /** How `EntityManager` records what a repository stored; not exported from the package, so only a flush moves what an entity diffs against. */
 export const markStored = Symbol('markStored');
-
-/** How `EntityManager` creates the records linked into an entity before writing it; not exported from the package. */
-export const resolveReferences = Symbol('resolveReferences');
 
 export interface EntityOptions {
   /** The record does not exist yet: it has nothing stored, and the next flush creates it. */
@@ -35,7 +31,6 @@ export class Entity<State extends IEntity = IEntity> {
   readonly state: State;
   private stored: State | undefined;
   private removed = false;
-  private readonly links = new Links<State>();
   private readonly trackedId: State['id'];
 
   constructor(state: State, { isNew = false }: EntityOptions = {}) {
@@ -69,19 +64,12 @@ export class Entity<State extends IEntity = IEntity> {
    * new entity. A field `state` no longer has is in it as `undefined`.
    */
   getDiff(): Partial<State> {
-    const stored = this.stored;
-    if (stored === undefined) return snapshot({ ...this.state });
-    const keys = new Set([...Object.keys(stored), ...Object.keys(this.state)]) as Set<keyof State>;
-    return snapshot(
-      Object.fromEntries(
-        [...keys].filter((key) => !isEqual(this.state[key], stored[key])).map((key) => [key, this.state[key]]),
-      ) as Partial<State>,
-    );
+    return this.stored === undefined ? snapshot({ ...this.state }) : diff(this.stored, this.state);
   }
 
-  /** Whether a flush would write it: new, removed, linked, or with a non-empty diff. */
+  /** Whether a flush would write it: new, removed, or with a non-empty diff. */
   hasChanges(): boolean {
-    return this.removed || this.isNew || this.links.size > 0 || Object.keys(this.getDiff()).length > 0;
+    return this.removed || this.isNew || Object.keys(this.getDiff()).length > 0;
   }
 
   /**
@@ -103,36 +91,42 @@ export class Entity<State extends IEntity = IEntity> {
     return this;
   }
 
-  /** What the repository stored becomes `state` — the same object, for whoever holds it — and what the diff compares against. */
   /**
-   * Sets `field`, when this entity is flushed, to the id of a record that does
-   * not exist yet — created then, first. Until the flush `state` keeps what it
-   * holds; a later `link` of the same field replaces this one.
-   *
-   * ```ts
-   * post.link('commentId', comments.lazy({ text: 'First!' }));
-   * ```
+   * What the repository stored becomes `state` — the same object, for whoever
+   * holds it — and what the diff compares against.
    */
-  link<K extends keyof State>(field: K, ref: Linkable<State[K]>): this {
-    this.links.set(field, ref);
-    return this;
-  }
-
-  async [resolveReferences](): Promise<void> {
-    await this.links.resolveInto(this.state);
-  }
-
   [markStored](stored: State): void {
-    for (const key of Object.keys(this.state)) {
-      if (!Object.hasOwn(stored, key)) delete (this.state as Record<string, unknown>)[key];
-    }
-    Object.assign(this.state, snapshot(stored));
+    this.replaceState(stored);
     this.stored = snapshot(stored);
   }
 
   /** Marks the entity for deletion. Prefer `EntityManager.remove`, which also makes its id read as missing. */
   remove(): void {
     this.removed = true;
+  }
+
+  /**
+   * Discards what this unit of work changed: `state` goes back to what is
+   * stored — the same object, for whoever holds it — and `remove` is undone,
+   * so a flush writes nothing for it. A new entity has nothing stored, so its
+   * `state` is kept; to drop it, `detach` it from its manager. Answers the
+   * entity, so calls chain.
+   *
+   * @example
+   * if (!order.isValid()) order.revert();
+   */
+  revert(): this {
+    this.removed = false;
+    if (this.stored !== undefined) this.replaceState(this.stored);
+    return this;
+  }
+
+  /** `state` becomes a copy of `next`, in place: the fields `next` lacks are deleted. */
+  private replaceState(next: State): void {
+    for (const key of Object.keys(this.state)) {
+      if (!Object.hasOwn(next, key)) delete (this.state as Record<string, unknown>)[key];
+    }
+    Object.assign(this.state, snapshot(next));
   }
 }
 

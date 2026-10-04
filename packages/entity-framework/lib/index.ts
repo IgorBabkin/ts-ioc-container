@@ -1,21 +1,17 @@
+export { type Change } from './changes';
 export { Entity, type EntityClass, type EntityOptions } from './Entity';
-export {
-  EntityManager,
-  IEntityManagerToken,
-  type IEntityManager,
-  isEntityManager,
-  entityManagerToken,
-  flushEntityManagers,
-} from './EntityManager';
-export { EntityIdentityError, EntityManagerArgumentError, EntityNotFoundError, EntityReferenceError } from './errors';
+export { EntityManager } from './EntityManager';
+export { EntityIdentityError, EntityNotFoundError, EntityReferenceError } from './errors';
+export { type IIdGenerator, pooled, uuidV7Ids, type UuidV7Options } from './ids';
 export {
   type AnyRepository,
   type EntityOf,
   type IEntity,
   type IRepository,
-  isRepositoryToken,
-  repositoryToken,
+  type KeyOf,
+  type NewOf,
+  type RequireKeyOf,
   type StateOf,
-  type ValueOf,
 } from './IRepository';
-export { type ILazyRef, LazyRef, type Linkable } from './LazyRef';
+export { type Advice, preparing, withId } from './prepare';
+export { IUnitOfWorkToken, managerOf, UnitOfWork } from './UnitOfWork';
