@@ -98,6 +98,28 @@ packages via the `workspaces` field in the root `package.json` (not
 scopes to package `name`s exactly — e.g. `feat(@ts-ioc-container/react): ...`
 or `feat(ts-ioc-container): ...`.
 
+### Superseded release runs
+
+`vcs` runs as its three actions, `vcs commit`, `vcs tag` and `vcs push`, so the
+push step can stand down. A run releases only the commit it built, and only while
+that commit is still `main`'s tip. Merging to `main` while a release is running
+used to fail the release with `git push` rejected (fetch first /
+non-fast-forward): runs 37186436348 and 37186558536 did on 2026-10-04. The
+workflow-level concurrency group queues the newer run instead of cancelling the
+older one, and the older run's push then found `main` had moved.
+
+Now the push step fetches `main` before pushing, and again if the push is
+rejected. If `main` has moved past `github.sha`, the step records
+`superseded=true`, skips publish and release notes, and the run succeeds with a
+"Release superseded" notice. The newer run builds and releases those commits.
+
+Don't "simplify" this back to a single `vcs` step. Don't make the release check
+out `main` instead of `github.sha` either: the build-output artifact is of
+`github.sha`, so the published tarball would miss the newer commits its version
+claims. Nothing is published before the push succeeds, and `vcs push` pushes
+the branch before the tags, so a stood-down run leaves no tag or npm version
+behind.
+
 The tool ships an agent guide at `node_modules/release-monorepo-semantically/llms.txt` (pipeline, release context format, config, and every `[CODE]` error with its fix) — read it before changing the pipeline or debugging a failed release. `.release.json` declares the JSON Schema the tool ships (`$schema`), so editors validate it.
 
 To preview a release locally without mutating anything, run the same steps by
