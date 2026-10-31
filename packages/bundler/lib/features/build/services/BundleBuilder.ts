@@ -40,7 +40,7 @@ export interface BuildResult {
   /** The generated bundle. Nothing is written: saving it is the caller's job (`tic build app.bundle.json > src/di/app.bundle.ts`). */
   content: string;
   /**
-   * Non-fatal problems found while building, e.g. a `glob.exclude` that drops a default
+   * Non-fatal problems found while building, e.g. a `paths.exclude` that drops a default
    * test glob or two selected classes passing the same decorator token.
    */
   warnings: string[];
@@ -93,7 +93,7 @@ export class BundleBuilder implements IBundleBuilder {
   private generate(config: ResolvedConfig) {
     const paths = loadImportPaths(config.tsconfig, config.importExtension);
     const relative = (file: string) => toPosix(path.relative(config.dir, file));
-    const exclude = config.glob.exclude.flatMap((glob) => paths.resolveGlob(glob, config.dir)).map(globToRegExp);
+    const exclude = config.paths.exclude.flatMap((glob) => paths.resolveGlob(glob, config.dir)).map(globToRegExp);
     // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
     const isExcluded = (file: string) => {
       const filename = relative(file);
@@ -101,7 +101,7 @@ export class BundleBuilder implements IBundleBuilder {
     };
 
     const files = new Set<string>();
-    for (const folder of config.glob.glob) {
+    for (const folder of config.paths.include) {
       const dir = paths.resolveNamespace(folder, config.dir);
       for (const file of listSourceFiles(dir, isExcluded)) files.add(file);
     }
@@ -126,7 +126,7 @@ export class BundleBuilder implements IBundleBuilder {
       BUNDLE_PROTOCOL,
       bundleView({
         name: config.bundleClassName,
-        paths: config.glob.glob,
+        paths: config.paths.include,
         classes: classes.map((cls) => ({ ...cls, specifier: cls.specifier! })),
       }),
     );

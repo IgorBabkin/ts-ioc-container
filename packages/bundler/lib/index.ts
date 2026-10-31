@@ -48,8 +48,8 @@ export {
   type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,
-  type GlobSelector,
-  type ResolvedGlobSelector,
+  type PathSelector,
+  type ResolvedPathSelector,
   type ResolvedConfig,
   type ConfigFormat,
 } from './features/build/BuildConfig';

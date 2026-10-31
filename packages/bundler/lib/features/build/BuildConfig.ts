@@ -6,16 +6,16 @@ import { globToRegExp } from './domain/glob';
 
 /**
  * Which files a bundle reads and parses: the first, cheap stage of selection,
- * decided by path alone. `glob` names the folders the files come from; within them
+ * decided by path alone. `include` names the folders the files come from; within them
  * a file is parsed unless it matches one of `exclude`. Globs are relative to the
  * config file and `/`-separated.
  */
-export interface GlobSelector {
+export interface PathSelector {
   /**
    * Folder, or folders, to scan recursively: relative to the config file (`./src/services`),
    * or tsconfig `paths` aliases (`@app/services`).
    */
-  glob: string | string[];
+  include: string | string[];
   /**
    * Glob, or globs, of files never read; one may start with a tsconfig `paths` alias
    * (`@generated/**`, or `@generated` for the whole folder). Replaces {@link DEFAULT_EXCLUDE} when given.
@@ -23,10 +23,10 @@ export interface GlobSelector {
   exclude?: string | string[];
 }
 
-/** A {@link GlobSelector} with its defaults filled in and its globs compiled. */
-export interface ResolvedGlobSelector {
+/** A {@link PathSelector} with its defaults filled in. */
+export interface ResolvedPathSelector {
   /** The folders to scan, as written in the config. */
-  glob: string[];
+  include: string[];
   /** As written in the config: an alias in one is resolved, and the glob compiled, once the tsconfig is loaded. */
   exclude: string[];
 }
@@ -36,7 +36,7 @@ export type ExportKind = 'any' | 'named' | 'default';
 
 /**
  * Which classes of a parsed file are registered: the second stage of selection,
- * run on the files {@link GlobSelector} let through. A class is selected when
+ * run on the files {@link PathSelector} let through. A class is selected when
  * it is exported, not abstract, and meets every criterion set here; an empty
  * rule selects every exported class.
  */
@@ -84,22 +84,22 @@ export interface BundleConfig {
    */
   name?: string;
   /**
-   * The tsconfig whose `paths` aliases `glob.glob` may name and generated imports are
+   * The tsconfig whose `paths` aliases `paths.include` may name and generated imports are
    * written in, and whose `moduleResolution` sets the import extension. It contributes
-   * nothing else: the files scanned are `glob.glob` alone. Relative to the config file.
+   * nothing else: the files scanned are `paths.include` alone. Relative to the config file.
    * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
    */
   tsconfig?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
   /**
-   * Which files are parsed: the folders in `glob.glob`, minus {@link DEFAULT_EXCLUDE} unless
-   * `exclude` says otherwise. A folder or a list of folders is shorthand for `{ glob }`, as on {@link ClassSelector}.
+   * Which files are parsed: the folders in `paths.include`, minus {@link DEFAULT_EXCLUDE} unless
+   * `exclude` says otherwise. Always an object: there is no folder or folder-list shorthand.
    */
-  glob: string | string[] | GlobSelector;
+  paths: PathSelector;
   /**
    * Which classes of a parsed file are registered. Default: every exported class decorated
-   * with `@register`. A glob or a list of globs is shorthand for `{ glob }`, as on `glob`.
+   * with `@register`. A glob or a list of globs is shorthand for `{ glob }`.
    */
   className?: string | string[] | ClassSelector;
 }
@@ -129,9 +129,9 @@ export interface ResolvedConfig {
   /** The tsconfig of `paths` aliases; `required` when the config names it, so it must exist. */
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
-  glob: ResolvedGlobSelector;
+  paths: ResolvedPathSelector;
   className: ResolvedClassSelector;
-  /** Non-fatal problems found while resolving, e.g. a `glob.exclude` that drops a default test glob. */
+  /** Non-fatal problems found while resolving, e.g. a `paths.exclude` that drops a default test glob. */
   warnings: string[];
 }
 
@@ -178,33 +178,24 @@ const toGlobs = (value?: string | string[]): RegExp[] | undefined =>
 
 const FOLDERS_SCHEMA = z.array(nonEmptyString(), expected('a non-empty array')).min(1, expected('a non-empty array'));
 
-const GLOB_OBJECT_SCHEMA = z.strictObject(
-  {
-    glob: z
-      .union([nonEmptyString(), FOLDERS_SCHEMA], expected('a folder or a non-empty array of folders'))
-      .describe(
-        'Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services).',
-      ),
-    exclude: globList('a glob or an array of globs', 0)
-      .default(DEFAULT_EXCLUDE)
-      .describe(
-        'Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.',
-      ),
-  },
-  expected('an object'),
-);
-
-const GLOB_SCHEMA = z
-  .union(
-    [
-      nonEmptyString().describe('One folder to scan, with the default exclude: shorthand for { "glob": [...] }.'),
-      FOLDERS_SCHEMA.describe('Folders to scan, with the default exclude: shorthand for { "glob": [...] }.'),
-      GLOB_OBJECT_SCHEMA,
-    ],
-    expected('a folder, a non-empty array of folders or an object with "glob"'),
+const PATHS_SCHEMA = z
+  .strictObject(
+    {
+      include: z
+        .union([nonEmptyString(), FOLDERS_SCHEMA], expected('a folder or a non-empty array of folders'))
+        .describe(
+          'Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services).',
+        ),
+      exclude: globList('a glob or an array of globs', 0)
+        .default(DEFAULT_EXCLUDE)
+        .describe(
+          'Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.',
+        ),
+    },
+    expected('an object with "include"'),
   )
   .describe(
-    'Which files this bundle reads and parses — decided by path alone, before parsing. `glob` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { "glob": [...] }.',
+    'Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.',
   );
 
 const CLASS_OBJECT_SCHEMA = z.strictObject(
@@ -270,7 +261,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .optional()
       .meta({ default: DEFAULT_TSCONFIG })
       .describe(
-        'The tsconfig whose `paths` aliases glob.glob may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.glob alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.',
+        'The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans paths.include alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.',
       ),
     importExtension: z
       .string(expected('a string'))
@@ -278,7 +269,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .describe(
         'Extension of generated imports, e.g. ".js". Inferred from the tsconfig: ".js" under node16/nodenext resolution, none otherwise.',
       ),
-    glob: GLOB_SCHEMA,
+    paths: PATHS_SCHEMA,
     className: CLASSES_SCHEMA.optional(),
   },
   expected('an object'),
@@ -286,7 +277,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
 
 type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
 
-/** `['className', 'export']` -> `className.export`, `['glob', 'glob', 0]` -> `glob.glob[0]`; the root is `config`. */
+/** `['className', 'export']` -> `className.export`, `['paths', 'include', 0]` -> `paths.include[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -297,7 +288,7 @@ function formatPath(segments: PropertyKey[]): string {
 
 /**
  * A union failure names the union unless the value had the type of one branch: an
- * object path without `path` reports `glob.glob[0].path`, not `glob.glob[0]`.
+ * object path without `path` reports `paths.include[0].path`, not `paths.include[0]`.
  */
 function matchedBranch(issue: z.core.$ZodIssueInvalidUnion): z.core.$ZodIssue[] | undefined {
   const typeMatched = issue.errors.filter((branch) =>
@@ -316,18 +307,12 @@ function formatIssue(issue: z.core.$ZodIssue, prefix: PropertyKey[] = []): strin
 
 const formatIssues = (error: z.ZodError): string => error.issues.flatMap((issue) => formatIssue(issue)).join('; ');
 
-type ParsedGlob = z.output<typeof GLOB_OBJECT_SCHEMA>;
+type ParsedPaths = z.output<typeof PATHS_SCHEMA>;
 
-/** Expands the folder / folder-list shorthand into the object form, with the default exclude. */
-function toGlobObject(glob: ParsedConfig['glob']): ParsedGlob {
-  if (typeof glob === 'string' || Array.isArray(glob)) return { glob, exclude: DEFAULT_EXCLUDE };
-  return glob;
-}
-
-function toGlobSelector(glob: ParsedGlob): ResolvedGlobSelector {
+function toPathSelector(paths: ParsedPaths): ResolvedPathSelector {
   return {
-    glob: toList(glob.glob),
-    exclude: toList(glob.exclude),
+    include: toList(paths.include),
+    exclude: toList(paths.exclude),
   };
 }
 
@@ -348,17 +333,17 @@ function toClassSelector(className: ParsedConfig['className']): ResolvedClassSel
 }
 
 /**
- * Warns when an explicit, non-empty `glob.exclude` omits one of the {@link DEFAULT_EXCLUDE}
+ * Warns when an explicit, non-empty `paths.exclude` omits one of the {@link DEFAULT_EXCLUDE}
  * globs, since that silently drops test files (or `node_modules`) from the scan.
  * An empty `exclude` is a deliberate opt-out and does not warn.
  */
-function excludeWarnings(glob: ParsedGlob): string[] {
-  const exclude = toList(glob.exclude);
+function excludeWarnings(paths: ParsedPaths): string[] {
+  const exclude = toList(paths.exclude);
   if (exclude.length === 0) return [];
   const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
   if (missing.length === 0) return [];
   return [
-    `glob.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
+    `paths.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
       `add them back`,
   ];
 }
@@ -415,7 +400,7 @@ export function toClassName(name: string): string {
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { name, tsconfig, importExtension, glob, className } = result.data;
+  const { name, tsconfig, importExtension, paths, className } = result.data;
   const bundleName = name ?? configStem(file);
   if (bundleName === undefined) {
     throw new TicConfigError(
@@ -425,7 +410,6 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     );
   }
   const dir = path.dirname(file);
-  const globObject = toGlobObject(glob);
   return {
     file,
     dir,
@@ -433,8 +417,8 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     bundleClassName: toClassName(bundleName),
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG), required: tsconfig !== undefined },
     importExtension,
-    glob: toGlobSelector(globObject),
+    paths: toPathSelector(paths),
     className: toClassSelector(className),
-    warnings: excludeWarnings(globObject),
+    warnings: excludeWarnings(paths),
   };
 }

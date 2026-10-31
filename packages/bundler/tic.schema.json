@@ -15,7 +15,7 @@
     },
     "tsconfig": {
       "default": "./tsconfig.json",
-      "description": "The tsconfig whose `paths` aliases glob.glob may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.glob alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.",
+      "description": "The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans paths.include alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.",
       "type": "string",
       "minLength": 1
     },
@@ -23,74 +23,56 @@
       "description": "Extension of generated imports, e.g. \".js\". Inferred from the tsconfig: \".js\" under node16/nodenext resolution, none otherwise.",
       "type": "string"
     },
-    "glob": {
-      "anyOf": [
-        {
-          "type": "string",
-          "minLength": 1,
-          "description": "One folder to scan, with the default exclude: shorthand for { \"glob\": [...] }."
-        },
-        {
-          "minItems": 1,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "description": "Folders to scan, with the default exclude: shorthand for { \"glob\": [...] }."
-        },
-        {
-          "type": "object",
-          "properties": {
-            "glob": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1
-                },
-                {
-                  "minItems": 1,
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              ],
-              "description": "Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services)."
+    "paths": {
+      "type": "object",
+      "properties": {
+        "include": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
             },
-            "exclude": {
-              "default": [
-                "**/*.spec.ts",
-                "**/*.test.ts",
-                "**/*.spec.tsx",
-                "**/*.test.tsx",
-                "**/__tests__/**",
-                "**/node_modules/**"
-              ],
-              "description": "Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.",
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              ]
+            {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
-          },
-          "required": [
-            "glob"
           ],
-          "additionalProperties": false
+          "description": "Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services)."
+        },
+        "exclude": {
+          "default": [
+            "**/*.spec.ts",
+            "**/*.test.ts",
+            "**/*.spec.tsx",
+            "**/*.test.tsx",
+            "**/__tests__/**",
+            "**/node_modules/**"
+          ],
+          "description": "Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
         }
+      },
+      "required": [
+        "include"
       ],
-      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `glob` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { \"glob\": [...] }."
+      "additionalProperties": false,
+      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file."
     },
     "className": {
       "anyOf": [
@@ -174,7 +156,7 @@
     }
   },
   "required": [
-    "glob"
+    "paths"
   ],
   "additionalProperties": false
 }
