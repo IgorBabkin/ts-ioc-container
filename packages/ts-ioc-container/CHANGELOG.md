@@ -1,3 +1,30 @@
+# 76.0.1 (2026-10-31)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    write bundler paths as an object in the README
+    (186493084ec57af4bd8ac39fdefbc214a7ec9620)
+    - **ts-ioc-container:**
+    write bundler YAML lists as - items
+    (211bad35bf4d418d27a1ccdb40ca66a8b8970a9b)
+    - **ts-ioc-container:**
+    mark the bundler schema line optional in a comment
+    (8dcee6586d9fbb873a1ed59cc691a186c3bf9783)
+    - **ts-ioc-container:**
+    restore the schema comment in the bundler config example
+    (3d35fc56eb31568e2a06fb333806e7af948a0d32)
+    - **ts-ioc-container:**
+    drop the schema comment from the bundler config example
+    (de2172f3b9c41bc33dd3ad05cab6d9feb590c90b)
+    - **ts-ioc-container:**
+    document bundler usage, config and tsconfig aliases
+    (18ba17a083cccc55f075b4a73a9f93ff50c25625)
+    - **ts-ioc-container:**
+    mention the bundler in the README
+    (f5f0c621c522e183caf32b083596638e66f9aaba)
+
+
 # 76.0.0 (2026-10-03)
 
   ### 💥 BREAKING CHANGES
@@ -602,6 +629,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 

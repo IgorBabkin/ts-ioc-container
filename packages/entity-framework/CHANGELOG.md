@@ -1,3 +1,13 @@
+# 0.4.0 (2026-10-31)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.0.1
+
+
 # 0.3.0 (2026-10-04)
 
   ### ✨ Features
@@ -42,11 +52,12 @@
     link lazy records with entity.link instead of Ref fields
     (e1a61845828031cca267b1a1b6668c5f28676a72)
     - **@ts-ioc-container/entity-framework:**
-    create referenced records lazily, at the holder&amp;#x27;s flush
+    create referenced records lazily, at the holder&amp;amp;#x27;s flush
     (25d6a83d1b408b4f2ee123bfc02c00d59c591f4d)
     - **@ts-ioc-container/entity-framework:**
     add a unit of work over plain DTOs
     (55cf372427f9d62e3b3145029ff8f73ad0354f77)
+
 
 
 

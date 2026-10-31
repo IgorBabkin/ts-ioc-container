@@ -1,3 +1,31 @@
+# 6.0.0 (2026-10-31)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    paths takes only { include, exclude }
+    (aad45e6bb7834f7c22b137b4c1542f35c7a65df5)
+    - **@ts-ioc-container/bundler:**
+    rename glob to paths, register classes inline
+    (45e87b494c2740d784a2cdd839bb4bff04b6bf69)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    paths takes only { include, exclude }
+    (aad45e6bb7834f7c22b137b4c1542f35c7a65df5)
+    - **@ts-ioc-container/bundler:**
+    rename glob to paths, register classes inline
+    (45e87b494c2740d784a2cdd839bb4bff04b6bf69)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.0.1
+
+
 # 5.1.0 (2026-10-03)
 
   ### ✨ Features
@@ -311,6 +339,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
