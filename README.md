@@ -3355,8 +3355,9 @@ to stdout and writes nothing, so the shell decides where it is saved:
 ```yaml
 # app.bundle.yml
 paths:
-  - '@app/services'
-  - ./src/infra
+  include:
+    - '@app/services'
+    - ./src/infra
 ```
 
 ```shell script
@@ -3402,8 +3403,8 @@ check compares like with like.
 
 #### Basic config
 
-A config (`<name>.bundle.json`, `.yaml` or `.yml`) describes one bundle. Only `paths` is required; an
-unknown field is an error:
+A config (`<name>.bundle.json`, `.yaml` or `.yml`) describes one bundle. Only `paths.include` is required —
+`paths` is always an object, never a bare folder or list — and an unknown field is an error:
 
 ```yaml
 # optional: editor completion and validation (in JSON, set "$schema" to the same path)
@@ -3423,7 +3424,7 @@ className: '*Service' # optional: only classes whose name matches
 
 | Field             | Default                                    | Meaning                                                                                     |
 | ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `paths`           | — (required)                               | Folders to scan: a folder, a list, or `{ include, exclude }`; a list is short for `include` |
+| `paths.include`   | — (required)                               | Folder, or list of folders, to scan                                                         |
 | `paths.exclude`   | test files, `__tests__/`, `node_modules/`  | Globs of files never read                                                                   |
 | `className`       | exported classes with `@register`          | Class-name globs, or `{ export, decorators, glob, exclude }`                                |
 | `name`            | the file's stem (`app.bundle.yml` → `app`) | The bundle's name; the class is `AppBundle`                                                 |

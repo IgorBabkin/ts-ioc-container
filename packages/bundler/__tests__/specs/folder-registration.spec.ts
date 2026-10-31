@@ -78,16 +78,15 @@ describe('Folder registration', () => {
 
     it.each([
       [[], 'config: expected an object'],
-      [{}, 'paths: expected a folder, a non-empty array of folders or an object with "include"'],
+      [{}, 'paths: expected an object with "include"'],
       [module(['./src'], { output: 'src/di/container.bundle.ts' }), 'output: unknown field'],
       [{ paths: {} }, 'paths.include: expected a folder or a non-empty array of folders'],
       [{ paths: { exclude: ['**/*.ts'] } }, 'paths.include: expected a folder or a non-empty array of folders'],
-      [{ paths: '' }, 'paths: expected a non-empty string'],
-      [{ paths: [] }, 'paths: expected a non-empty array'],
-      [{ paths: 42 }, 'paths: expected a folder, a non-empty array of folders or an object with "include"'],
+      [{ paths: './src' }, 'paths: expected an object with "include"'],
+      [{ paths: ['./src'] }, 'paths: expected an object with "include"'],
+      [{ paths: 42 }, 'paths: expected an object with "include"'],
       [{ paths: { include: [] } }, 'paths.include: expected a non-empty array'],
       [{ paths: { include: [{ path: './src' }] } }, 'paths.include[0]: expected a non-empty string'],
-      [{ paths: [{ path: './src', recursive: false }] }, 'paths[0]: expected a non-empty string'],
       [{ paths: { include: 42 } }, 'paths.include: expected a folder or a non-empty array of folders'],
       [module(['./src'], { name: 'not valid' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { name: '2fa' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
@@ -108,14 +107,13 @@ describe('Folder registration', () => {
     });
   });
 
-  describe('Story: Name the scanned folders without an object', () => {
+  describe('Story: Name the scanned folders in paths.include', () => {
     it.each([
       ['a folder', './src/services'],
       ['a list of folders', ['./src/services', './src/infra']],
-      ['an object whose include is a folder', { include: './src/services' }],
-    ])('takes paths as %s, keeping the default exclude', (_, paths) => {
+    ])('takes paths.include as %s, keeping the default exclude', (_, include) => {
       project = create({
-        'app.bundle.json': { paths },
+        'app.bundle.json': { paths: { include } },
         'src/services/Logger.ts': decorated('Logger'),
         'src/services/Logger.spec.ts': decorated('LoggerSpec'),
         'src/infra/Db.ts': decorated('Db'),
@@ -151,9 +149,7 @@ describe('Folder registration', () => {
     it('rejects an empty YAML file: paths must be written out', () => {
       project = create({ 'production.bundle.yaml': '', 'tsconfig.json': { include: ['src'] } });
 
-      expect(() => buildFrom('production.bundle.yaml')).toThrow(
-        'paths: expected a folder, a non-empty array of folders or an object with "include"',
-      );
+      expect(() => buildFrom('production.bundle.yaml')).toThrow('paths: expected an object with "include"');
     });
 
     it.each([

@@ -35,8 +35,8 @@ Acceptance criteria:
 - Warnings and errors go to stderr, never into the bundle on stdout; an error
   names the config (`<stdin>` for piped text), and nothing is printed then.
 - The config's fields are flat and explicit: `paths` with its folders
-  (`paths.include`) is required — a folder (`paths: ./src`) or a list of folders is
-  shorthand for `{ include: ... }` with the default `exclude`; `name`, `tsconfig`, `importExtension` and `className` are optional.
+  (`paths.include`) is required. `paths` is always an object — a folder or a
+  list in its place is an error — and `exclude` keeps its default when left out; `name`, `tsconfig`, `importExtension` and `className` are optional.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →
   `production`); piped text, or a file named otherwise, must set it. The
@@ -132,8 +132,8 @@ Acceptance criteria:
   plain-identifier first argument to a decorator (a same-token heuristic, since
   registration is last-wins); the warning suggests `className.exclude`.
 - `className` can be a glob or a non-empty list of globs: a shortcut for
-  `className.glob` with the default `export` and `decorators`, the same
-  shortcut `paths` has for `paths.include`.
+  `className.glob` with the default `export` and `decorators`. `paths` has no
+  such shortcut.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):

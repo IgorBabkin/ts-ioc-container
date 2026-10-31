@@ -31,10 +31,10 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   name and generated imports are written in (most specific alias, else a
   relative path) — and the module resolution that sets the import extension.
 - Selection has two stages, `paths: { include, exclude }` and
-  `className: { ..., glob, exclude }`, both taking a string or a list as a
-  shortcut for their positive field. `paths` decides by path which files are
-  read and parsed at all (`paths: ./src` / `paths: [./a, ./b]` =
-  `paths.include`). `paths.include` (required: one folder or a
+  `className: { ..., glob, exclude }`. `paths` is always an object (a string
+  or a list in its place is an error); `className` also takes a string or a
+  list as a shortcut for `className.glob`. `paths` decides by path which files
+  are read and parsed at all. `paths.include` (required: one folder or a
   non-empty list) names the folders scanned, always with their sub-folders —
   relative to the config file (`./src/services`) or tsconfig aliases
   (`@app/services`); there is no `{ path, recursive }` form. A file in them is parsed unless it matches one

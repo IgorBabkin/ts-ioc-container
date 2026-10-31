@@ -55,7 +55,7 @@ tic build app.bundle.json | npx prettier --stdin-filepath app.bundle.ts > src/di
 cat dev.bundle.json | tic build | tee src/di/dev.bundle.ts
 
 # a config built on the fly
-printf 'name: app\npaths: "@app/services"\n' | tic build > src/di/app.bundle.ts
+printf 'name: app\npaths:\n  include: "@app/services"\n' | tic build > src/di/app.bundle.ts
 jq '.name = "admin"' app.bundle.json | tic build > src/di/admin.bundle.ts
 
 # CI: is the saved bundle current?
@@ -80,13 +80,16 @@ registers. Point your editor at the schema:
 ```json
 {
   "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
-  "paths": ["@app/services", "./src/infra"]
+  "paths": { "include": ["@app/services", "./src/infra"] }
 }
 ```
 
 ```yaml
 # yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
-paths: ['@app/services', ./src/infra]
+paths:
+  include:
+    - '@app/services'
+    - ./src/infra
 ```
 
 | Field             | Default                                       | Meaning                                                                                                     |
@@ -125,7 +128,9 @@ Each config selects its own files and classes:
 ```yaml
 # prod.bundle.yml: services + adapters, minus dev-only *.dev.ts files
 paths:
-  include: ['@app/services', ./src/infra]
+  include:
+    - '@app/services'
+    - ./src/infra
   exclude:
     - '**/*.dev.ts'
     - '**/*.spec.ts'
@@ -138,7 +143,10 @@ paths:
 
 ```yaml
 # dev.bundle.yml: the *.dev.ts logger replaces the production one, dropped by class name
-paths: ['@app/services', ./src/infra]
+paths:
+  include:
+    - '@app/services'
+    - ./src/infra
 className:
   exclude: JsonLogger
 ```
@@ -173,23 +181,20 @@ registrations, and `exclude` what they should not contribute:
 and the only ones: what your tsconfig compiles plays no part. It is one folder
 or a list, each relative to the config file (`./src/services`) or a tsconfig
 `paths` alias (`@app/services`, for a `"@app/*": ["./src/*"]` alias), and
-always scanned with its sub-folders.
-
-When the default `exclude` is all you need, `paths` itself can be the folders —
-a string or a list is a shortcut for `paths.include`:
+always scanned with its sub-folders. `paths` is always an object — a folder or a
+list in place of it is an error — and `exclude` may be left out to keep the default:
 
 ```yaml
-paths: ./src/services # = paths: { include: ./src/services }
+paths:
+  include: ./src/services # one folder
 ```
 
 ```yaml
-paths: ['@app/services', ./src/infra] # = paths: { include: ['@app/services', ./src/infra] }
-```
-
-```yaml
-paths: # the object form, for a custom exclude
-  include: ['@app/services', ./src/infra]
-  exclude: '**/*.dev.ts'
+paths:
+  include: # or a list
+    - '@app/services'
+    - ./src/infra
+  exclude: '**/*.dev.ts' # a custom exclude
 ```
 
 Within them, a file is parsed unless it matches **one of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
@@ -269,7 +274,7 @@ matches only itself, so one list drops a class by name and a family by pattern:
 
 When the default `export` and `decorators` are all you need, `className`
 itself can be the class-name globs — a string or a list is a shortcut for
-`className.glob`, just as on `paths`:
+`className.glob`:
 
 ```yaml
 className: '*Service' # = className: { glob: '*Service' }
