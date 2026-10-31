@@ -26,16 +26,18 @@ describe('BuildController', () => {
   it('given a config when built then the bundle is written to stdout once, without its trailing newline', () => {
     const { builder, out, controller } = setup(() => result('// bundle\nexport class AppBundle {}\n'));
 
-    controller.build({ config: 'app.bundle.json' });
+    controller.build({ configs: ['app.bundle.json'] });
 
-    builder.verify((m) => m.build(It.Is((request: { config: string }) => request.config === 'app.bundle.json')));
+    builder.verify((m) =>
+      m.build(It.Is((request: { config: string[] }) => request.config.join() === 'app.bundle.json')),
+    );
     out.verify((m) => m.write('// bundle\nexport class AppBundle {}'), Times.Once());
   });
 
   it('given build warnings when built then each is logged under the config, not printed with the bundle', () => {
     const { out, logger, controller } = setup(() => result('// bundle\n', ['paths.exclude omits a glob']));
 
-    controller.build({ config: 'app.bundle.json' });
+    controller.build({ configs: ['app.bundle.json'] });
 
     logger.verify((m) => m.warn('app.bundle.json: paths.exclude omits a glob'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
@@ -46,8 +48,21 @@ describe('BuildController', () => {
       throw new TicConfigError('paths: expected an object');
     });
 
-    expect(() => controller.build({ config: 'app.bundle.json' })).toThrow('app.bundle.json: paths: expected an object');
+    expect(() => controller.build({ configs: ['app.bundle.json'] })).toThrow(
+      'app.bundle.json: paths: expected an object',
+    );
     out.verify((m) => m.write(It.IsAny()), Times.Never());
+  });
+
+  it('given several configs when built then they are built as one, and a warning names them all', () => {
+    const { builder, logger, controller } = setup(() => result('// bundle\n', ['paths.exclude omits a glob']));
+
+    controller.build({ configs: ['common.bundle.yml', 'prod.bundle.yml'] });
+
+    builder.verify((m) =>
+      m.build(It.Is((request: { config: string[] }) => request.config.join() === 'common.bundle.yml,prod.bundle.yml')),
+    );
+    logger.verify((m) => m.warn('common.bundle.yml + prod.bundle.yml: paths.exclude omits a glob'), Times.Once());
   });
 
   it('given - as the config when built then the config text is read from stdin', () => {
@@ -56,7 +71,7 @@ describe('BuildController', () => {
       () => 'name: app\npaths:\n  include: [./src]\n',
     );
 
-    controller.build({ config: '-' });
+    controller.build({ configs: ['-'] });
 
     builder.verify((m) =>
       m.build(It.Is((request: { text?: string }) => request.text === 'name: app\npaths:\n  include: [./src]\n')),
@@ -70,8 +85,8 @@ describe('BuildController', () => {
       () => undefined,
     );
 
-    expect(() => controller.build({ config: '-' })).toThrow(UsageError);
-    expect(() => controller.build({ config: '-' })).toThrow('missing <config>');
+    expect(() => controller.build({ configs: ['-'] })).toThrow(UsageError);
+    expect(() => controller.build({ configs: ['-'] })).toThrow('missing <config>');
   });
 
   it('given a stdin config that fails when built then the error names <stdin>', () => {
@@ -82,6 +97,6 @@ describe('BuildController', () => {
       () => 'paths: {}',
     );
 
-    expect(() => controller.build({ config: '-' })).toThrow('<stdin>: name: required for a config read from stdin');
+    expect(() => controller.build({ configs: ['-'] })).toThrow('<stdin>: name: required for a config read from stdin');
   });
 });

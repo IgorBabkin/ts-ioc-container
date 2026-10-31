@@ -35,7 +35,7 @@ export function run(argv: string[], io: CliIo = processIo()): number {
  * Generates the bundle a config file describes — `tic build` as a function — and returns
  * it; nothing is written.
  *
- * @throws {TicConfigError} when the config file is missing or unreadable, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
+ * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
  * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
  */
 export function build({ cwd = process.cwd(), ...request }: BuildOptions): BuildResult {
@@ -43,10 +43,11 @@ export function build({ cwd = process.cwd(), ...request }: BuildOptions): BuildR
 }
 
 /**
- * Reads and validates a config file: JSON for `.json`, YAML for `.yaml` / `.yml`.
+ * Reads and validates a config file: JSON for `.json`, YAML for `.yaml` / `.yml`. Given several
+ * in one folder, it merges them left to right, as `tic build a.bundle.yml b.bundle.yml` does.
  *
- * @throws {TicConfigError} when the file is missing, has another extension, cannot be parsed, or does not match the config shape.
+ * @throws {TicConfigError} when a file is missing, has another extension, cannot be parsed, or does not match the config shape; when several files are in different folders.
  */
-export function loadConfig(file: string): ResolvedConfig {
-  return withContainer(processIo(), (container) => ITicConfigServiceKey.resolve(container).load(file));
+export function loadConfig(files: string | string[]): ResolvedConfig {
+  return withContainer(processIo(), (container) => ITicConfigServiceKey.resolve(container).load(files));
 }

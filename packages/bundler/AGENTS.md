@@ -7,10 +7,11 @@ nothing here runs inside the container, and the core package is not changed by
 it.
 
 - The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
-  same program): `tic build [<config>]` is a Unix filter. It reads the config
-  file `<config>` (JSON for `.json`, YAML for `.yaml` / `.yml`) — or, without
-  one or with `-`, config text from stdin (parsed as YAML, which covers JSON) —
-  and prints the bundle to **stdout**; it writes nothing. Saving is the shell's
+  same program): `tic build [<config>...]` is a Unix filter. It reads the config
+  file `<config>` (JSON for `.json`, YAML for `.yaml` / `.yml`) — several are
+  merged left to right into one bundle — or, without one or with `-`, config
+  text from stdin (parsed as YAML, which covers JSON; never merged) — and
+  prints the bundle to **stdout**; it writes nothing. Saving is the shell's
   job: `tic build app.bundle.json > src/di/app.bundle.ts`,
   `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`; CI checks with
   `tic build app.bundle.json | diff - src/di/app.bundle.ts`. Warnings and errors
@@ -20,7 +21,7 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
 - Config fields (schema: `tic.schema.json`), flat: `paths` with `paths.include`
-  required; `className`, `name`, `tsconfig`, `importExtension` optional.
+  required; `match`, `name`, `tsconfig`, `importExtension` optional.
   Relative paths resolve against the config file; for piped text, against the
   working directory. `name` defaults to the file's stem (`prod.bundle.json` →
   `prod`) and is required for piped text or a file named otherwise; the class
@@ -31,9 +32,9 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   name and generated imports are written in (most specific alias, else a
   relative path) — and the module resolution that sets the import extension.
 - Selection has two stages, `paths: { include, exclude }` and
-  `className: { ..., glob, exclude }`. `paths` is always an object (a string
-  or a list in its place is an error); `className` also takes a string or a
-  list as a shortcut for `className.glob`. `paths` decides by path which files
+  `match: { ..., glob, exclude }`. `paths` is always an object (a string
+  or a list in its place is an error); `match` also takes a string or a
+  list as a shortcut for `match.glob`. `paths` decides by path which files
   are read and parsed at all. `paths.include` (required: one folder or a
   non-empty list) names the folders scanned, always with their sub-folders —
   relative to the config file (`./src/services`) or tsconfig aliases
@@ -43,8 +44,8 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   catch-all `"*"` aliases are skipped; default: test files, `__tests__/`,
   `node_modules/`; a non-empty value replaces it, and the build warns if it drops
   a default). Files `tic build` generated are never input.
-- `className: { export, decorators, glob, exclude }` (or `className: '*Service'`
-  / `['*Service', '*Repository']` = `className.glob`, default `export` and
+- `match: { export, decorators, glob, exclude }` (or `match: '*Service'`
+  / `['*Service', '*Repository']` = `match.glob`, default `export` and
   `decorators`) then picks classes of the parsed files; default is every exported,
   non-abstract class decorated with `@register` (`decorators` defaults to
   `["register"]`; `[]` requires none); positive criteria must all hold — `glob` is one glob
@@ -54,12 +55,23 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   two selected classes pass the same plain-identifier first decorator argument (a
   same-token heuristic), unless a decorator they share has differing arguments
   (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
+- Several configs merge like webpack-merge (`mergeConfigs`):
+  `tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`.
+  Objects merge field by field; the list fields `paths.include`,
+  `paths.exclude`, `match.glob`, `match.exclude` and `match.decorators`
+  concatenate without duplicates (a later config only adds); any other value
+  set later replaces an earlier one; the `match` shorthand merges as
+  `match.glob`. Each file is validated alone (`BUNDLE_CONFIG_FILE_SCHEMA`:
+  `paths` optional; errors name the file), the merged result as one config
+  (`BUNDLE_CONFIG_SCHEMA`). Defaults apply to the merged config only. The last
+  file names the bundle unless one sets `name`; all must sit in one folder.
 - Never edit a `*.bundle.ts` by hand — change the classes or the config and
   rerun `tic build`.
 - Unknown config fields are errors, at every level.
-- Programmatic API: `build({ config, cwd })` or `build({ text, cwd })` returns
+- Programmatic API: `build({ config, cwd })` (`config`: a file or a list merged
+  left to right) or `build({ text, cwd })` returns
   `{ content, bundle, registrations, warnings }` and writes nothing;
-  `loadConfig(file)`, `run(argv, io)` (`io.stdin` backs piped configs); every error the
+  `loadConfig(file | files)`, `run(argv, io)` (`io.stdin` backs piped configs); every error the
   bundler raises on purpose is a `TicError` with a stable `code`
   (`TicConfigError` = `INVALID_CONFIG`, `NamespaceNotFoundError`, `UsageError`,
   …).
@@ -72,4 +84,5 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   services behind tokens (`IBundleBuilderKey`, `ITicConfigServiceKey`, …); pure
   logic in `lib/features/build/domain/`. A new command is a controller plus a module.
 - The config schema is `BUNDLE_CONFIG_SCHEMA` (zod); `tic.schema.json` is generated
-  from it with `pnpm run generate:schema` — never edit it by hand.
+  from its per-file variant `BUNDLE_CONFIG_FILE_SCHEMA` with `pnpm run generate:schema`
+  — never edit it by hand.

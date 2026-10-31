@@ -58,8 +58,28 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     expect(io.out.join('\n')).toContain('export class ProdBundle');
   });
 
+  it('merges several configs left to right: tic build common.bundle.yml prod.bundle.yml > out.ts', () => {
+    project.write('common.bundle.yml', "paths:\n  include: ['@app/services']\n");
+    project.write('prod.bundle.yml', "importExtension: '.js'\n");
+    const io = new Io(project.root);
+
+    expect(run(['build', 'common.bundle.yml', 'prod.bundle.yml'], io)).toBe(0);
+    expect(io.out.join('\n')).toContain("import { Logger } from '@app/services/Logger.js';");
+    expect(io.out.join('\n')).toContain('export class ProdBundle implements IContainerModule');
+  });
+
+  it('names every merged config in an error', () => {
+    project.write('common.bundle.yml', 'paths: {}\n');
+    const io = new Io(project.root);
+
+    expect(run(['build', 'common.bundle.yml', 'app.bundle.json', 'missing.bundle.yml'], io)).toBe(1);
+    expect(io.err.join('\n')).toContain(
+      'common.bundle.yml + app.bundle.json + missing.bundle.yml: config file not found',
+    );
+  });
+
   it.each([
-    [['build', 'a.bundle.json', 'b.bundle.json'], 'expected one <config>, got a.bundle.json b.bundle.json'],
+    [['build', '-', 'app.bundle.json'], '- reads one config from stdin and cannot be merged with config files'],
     [['build', 'app.bundle.json', '--output', 'x.ts'], "Unknown option '--output'"],
     [['build', 'app.bundle.json', '--check'], "Unknown option '--check'"],
     [['build', 'missing.bundle.json'], 'missing.bundle.json: config file not found'],
@@ -151,7 +171,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     const io = new Io(project.root);
 
     expect(run(['--help'], io)).toBe(0);
-    expect(io.out.join('\n')).toContain('ts-ioc-container build [<config>]');
+    expect(io.out.join('\n')).toContain('ts-ioc-container build [<config>...]');
     expect(io.out.join('\n')).toContain('tic build app.bundle.json > src/di/app.bundle.ts');
     expect(io.out.join('\n')).toContain('tic is a shortcut for ts-ioc-container');
     expect(run(['compile'], io)).toBe(1);

@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **ADR:** [ADR 0022 - Registration discovery happens at build time, outside the container](../../../../adr/0022-build-time-registration-discovery.md)
-- **Public API:** `tic build`, `*.bundle.{json,yaml,yml}`, `build`, `loadConfig`, `findConfigFiles`
+- **Public API:** `tic build`, `*.bundle.{json,yaml,yml}`, `build`, `loadConfig`, `mergeConfigs`, `findConfigFiles`
 - **Executable spec:** `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts`
 
 ## Intent
@@ -36,7 +36,7 @@ Acceptance criteria:
   names the config (`<stdin>` for piped text), and nothing is printed then.
 - The config's fields are flat and explicit: `paths` with its folders
   (`paths.include`) is required. `paths` is always an object — a folder or a
-  list in its place is an error — and `exclude` keeps its default when left out; `name`, `tsconfig`, `importExtension` and `className` are optional.
+  list in its place is an error — and `exclude` keeps its default when left out; `name`, `tsconfig`, `importExtension` and `match` are optional.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →
   `production`); piped text, or a file named otherwise, must set it. The
@@ -44,10 +44,38 @@ Acceptance criteria:
   `MyAppBundle`.
 - Relative paths in a config file resolve against the file; in piped text,
   against the working directory.
-- Several bundles — production, development, test — are several configs and
-  several runs; a saved bundle is never registered by another build.
+- Several bundles — production, development, test — are several runs, each
+  of its own configs; a saved bundle is never registered by another build.
 - An invalid config — including an unknown field, such as a leftover `output`
   or `bundles` — fails the build with a message naming the offending field.
+
+### Story: Merge configs, like webpack-merge
+
+As an application developer with one bundle per environment, I can keep what
+the environments share in one config and what each adds in another, and build
+an environment from both — `tic build common.bundle.yml prod.bundle.yml >
+src/di/prod.bundle.ts` — so that shared settings are written once.
+
+Acceptance criteria:
+
+- `tic build <config>...` merges the configs left to right into one bundle;
+  `build({ config: [...] })` does the same.
+- Objects merge field by field. The list fields — `paths.include`,
+  `paths.exclude`, `match.glob`, `match.exclude`, `match.decorators` —
+  concatenate in order, without duplicates; one folder or glob counts as a list
+  of one. Any other value set by a later config replaces an earlier one. The
+  `match` shorthand merges as `match.glob`.
+- Each config is validated on its own, and an invalid field fails the build
+  naming the file it is in. A config may leave `paths` out; the merged config
+  must have `paths.include`.
+- Defaults apply to the merged config only: it behaves exactly as if it had
+  been written as one config.
+- The bundle is named after the last config unless one sets `name`.
+- Merged configs must sit in one folder, which their relative paths resolve
+  against; configs in different folders fail the build.
+- `-` (stdin) cannot be merged with config files; that is a usage error.
+- The CLI's warnings and errors name every merged config:
+  `common.bundle.yml + prod.bundle.yml: ...`.
 
 ### Story: Name every input explicitly
 
@@ -88,7 +116,7 @@ Acceptance criteria:
 
 - Selection runs in two stages: a bundle's `paths` rule — its folders (`paths.include`) and its
   `exclude` globs — decides by path
-  alone which files are read and parsed; its `className` rule then picks classes out of
+  alone which files are read and parsed; its `match` rule then picks classes out of
   the parsed files.
 - `paths.exclude` is a glob or a list of globs of files never read (default: test files,
   `__tests__/`, `node_modules/`); every other source file in `paths.include` is parsed.
@@ -111,7 +139,7 @@ only what I mean it to.
 
 Acceptance criteria:
 
-- A bundle's `className` rule is an object; a class is selected when it is
+- A bundle's `match` rule is an object; a class is selected when it is
   exported, not abstract, and meets every criterion the rule sets. Omitting
   a criterion applies no restriction, except `decorators`.
 - `decorators` defaults to `["register"]`: by default only classes decorated
@@ -130,15 +158,15 @@ Acceptance criteria:
   name and a family by pattern.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
-  registration is last-wins); the warning suggests `className.exclude`.
-- `className` can be a glob or a non-empty list of globs: a shortcut for
-  `className.glob` with the default `export` and `decorators`. `paths` has no
+  registration is last-wins); the warning suggests `match.exclude`.
+- `match` can be a glob or a non-empty list of globs: a shortcut for
+  `match.glob` with the default `export` and `decorators`. `paths` has no
   such shortcut.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):
   those registrations are scope-gated, not last-wins.
-- An invalid rule — including a string (`"className": "decorated"`) — fails the
+- An invalid rule — including a string (`"match": "decorated"`) — fails the
   build naming the offending field.
 
 ### Story: Address folders by tsconfig aliases

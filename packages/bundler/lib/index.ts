@@ -36,6 +36,8 @@ export {
 export {
   resolveConfig,
   BUNDLE_CONFIG_SCHEMA,
+  BUNDLE_CONFIG_FILE_SCHEMA,
+  mergeConfigs,
   parseConfig,
   CONFIG_FILE_SUFFIXES,
   STDIN,
