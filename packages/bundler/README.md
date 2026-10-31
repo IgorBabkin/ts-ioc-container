@@ -55,7 +55,7 @@ tic build app.bundle.json | npx prettier --stdin-filepath app.bundle.ts > src/di
 cat dev.bundle.json | tic build | tee src/di/dev.bundle.ts
 
 # a config built on the fly
-printf 'name: app\nglob: "@app/services"\n' | tic build > src/di/app.bundle.ts
+printf 'name: app\npaths: "@app/services"\n' | tic build > src/di/app.bundle.ts
 jq '.name = "admin"' app.bundle.json | tic build > src/di/admin.bundle.ts
 
 # CI: is the saved bundle current?
@@ -80,18 +80,18 @@ registers. Point your editor at the schema:
 ```json
 {
   "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
-  "glob": ["@app/services", "./src/infra"]
+  "paths": ["@app/services", "./src/infra"]
 }
 ```
 
 ```yaml
 # yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
-glob: ['@app/services', ./src/infra]
+paths: ['@app/services', ./src/infra]
 ```
 
 | Field             | Default                                       | Meaning                                                                                                     |
 | ----------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `glob`            | — (required)                                  | Which files are parsed — see [Selecting files](#selecting-files)                                            |
+| `paths`           | — (required)                                  | Which files are parsed — see [Selecting files](#selecting-files)                                            |
 | `className`       | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                 |
 | `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise      |
 | `tsconfig`        | `./tsconfig.json`                             | Source of the `paths` aliases every import is written through, and of the import extension — never of files |
@@ -124,8 +124,8 @@ Each config selects its own files and classes:
 
 ```yaml
 # prod.bundle.yml: services + adapters, minus dev-only *.dev.ts files
-glob:
-  glob: ['@app/services', ./src/infra]
+paths:
+  include: ['@app/services', ./src/infra]
   exclude:
     - '**/*.dev.ts'
     - '**/*.spec.ts'
@@ -138,7 +138,7 @@ glob:
 
 ```yaml
 # dev.bundle.yml: the *.dev.ts logger replaces the production one, dropped by class name
-glob: ['@app/services', ./src/infra]
+paths: ['@app/services', ./src/infra]
 className:
   exclude: JsonLogger
 ```
@@ -150,17 +150,17 @@ folder that build scans.
 
 A bundle picks its registrations in two stages:
 
-1. **`glob`** — decided by path alone, before anything is read. Only files that
+1. **`paths`** — decided by path alone, before anything is read. Only files that
    pass are parsed.
 2. **`className`** — decided per class, on the files stage 1 let through.
 
-Parsing is where the time goes, so point `glob` at the folders that hold your
+Parsing is where the time goes, so point `paths` at the folders that hold your
 registrations, and `exclude` what they should not contribute:
 
 ```json
 {
-  "glob": {
-    "glob": "@app/services",
+  "paths": {
+    "include": "@app/services",
     "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**", "**/node_modules/**", "**/legacy/**"]
   },
   "className": { "decorators": ["register"] }
@@ -169,32 +169,31 @@ registrations, and `exclude` what they should not contribute:
 
 ## Selecting files
 
-`glob` takes the same shape as [`className`](#selecting-classes):
-`{ glob, exclude }`. `glob.glob` names the folders a bundle's files come from,
+`paths` is `{ include, exclude }`. `paths.include` names the folders a bundle's files come from,
 and the only ones: what your tsconfig compiles plays no part. It is one folder
 or a list, each relative to the config file (`./src/services`) or a tsconfig
 `paths` alias (`@app/services`, for a `"@app/*": ["./src/*"]` alias), and
 always scanned with its sub-folders.
 
-When the default `exclude` is all you need, `glob` itself can be the folders —
-a string or a list is a shortcut for `glob.glob`:
+When the default `exclude` is all you need, `paths` itself can be the folders —
+a string or a list is a shortcut for `paths.include`:
 
 ```yaml
-glob: ./src/services # = glob: { glob: ./src/services }
+paths: ./src/services # = paths: { include: ./src/services }
 ```
 
 ```yaml
-glob: ['@app/services', ./src/infra] # = glob: { glob: ['@app/services', ./src/infra] }
+paths: ['@app/services', ./src/infra] # = paths: { include: ['@app/services', ./src/infra] }
 ```
 
 ```yaml
-glob: # the object form, for a custom exclude
-  glob: ['@app/services', ./src/infra]
+paths: # the object form, for a custom exclude
+  include: ['@app/services', ./src/infra]
   exclude: '**/*.dev.ts'
 ```
 
 Within them, a file is parsed unless it matches **one of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
-spans folders. Like a folder in `glob.glob`, an exclude glob may start with a
+spans folders. Like a folder in `paths.include`, an exclude glob may start with a
 tsconfig `paths` alias: with `"@generated/*": ["./src/.generated/*"]`,
 `@generated/**` reads `src/.generated/**`, and `@generated` (or `@generated/`)
 drops the whole folder. A catch-all `"*"` alias is never applied, so plain globs
@@ -202,13 +201,13 @@ such as `**/*.spec.ts` keep their meaning.
 
 | Rule      | Default                                   | Meaning                                                                                                          |
 | --------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `glob`    | — (required)                              | Folder, or folders, to scan                                                                                      |
+| `include` | — (required)                              | Folder, or folders, to scan                                                                                      |
 | `exclude` | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; may start with a tsconfig alias; replaces the default when given |
 
 A non-empty `exclude` replaces the defaults, so restate the ones you still want:
 
 ```json
-"glob": {
+"paths": {
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",
@@ -270,7 +269,7 @@ matches only itself, so one list drops a class by name and a family by pattern:
 
 When the default `export` and `decorators` are all you need, `className`
 itself can be the class-name globs — a string or a list is a shortcut for
-`className.glob`, just as on `glob`:
+`className.glob`, just as on `paths`:
 
 ```yaml
 className: '*Service' # = className: { glob: '*Service' }
@@ -304,15 +303,14 @@ The output is plain TypeScript over the public `ts-ioc-container` API:
 // src/di/app.bundle.ts
 // Generated by `tic build`. Do not edit by hand.
 // Paths: @app/services, @app/infra
-import { type IContainer, type IContainerModule, type IRegistration, Registration } from 'ts-ioc-container';
+import { type IContainer, type IContainerModule, Registration } from 'ts-ioc-container';
 import { MemoryLogger } from '@app/infra/logging/MemoryLogger';
 import { Greeter } from '@app/services/Greeter';
 
-export const registrations: IRegistration[] = [Registration.fromClass(MemoryLogger), Registration.fromClass(Greeter)];
-
 export class AppBundle implements IContainerModule {
   applyTo(container: IContainer): void {
-    for (const registration of registrations) container.addRegistration(registration);
+    container.addRegistration(Registration.fromClass(MemoryLogger));
+    container.addRegistration(Registration.fromClass(Greeter));
   }
 }
 ```
@@ -341,5 +339,5 @@ const { content, warnings } = build({ config: 'app.bundle.json' });
 writeFileSync('src/di/app.bundle.ts', content);
 
 // or config text, as `tic build` reads from stdin
-build({ text: 'name: app\nglob:\n  glob: ["@app/services"]\n' });
+build({ text: 'name: app\npaths:\n  include: ["@app/services"]\n' });
 ```

@@ -19,7 +19,7 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
 - Every import in a bundle is written through a tsconfig `paths` alias, so the
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
-- Config fields (schema: `tic.schema.json`), flat: `glob` with `glob.glob`
+- Config fields (schema: `tic.schema.json`), flat: `paths` with `paths.include`
   required; `className`, `name`, `tsconfig`, `importExtension` optional.
   Relative paths resolve against the config file; for piped text, against the
   working directory. `name` defaults to the file's stem (`prod.bundle.json` →
@@ -27,13 +27,14 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   is `toClassName(name)` — `ProdBundle`.
 - A config does **not** extend its tsconfig and never takes files from it. The
   `tsconfig` field (default `./tsconfig.json`, may be absent; one named
-  explicitly must exist) only supplies `paths` aliases — which `glob.glob` may
+  explicitly must exist) only supplies `paths` aliases — which `paths.include` may
   name and generated imports are written in (most specific alias, else a
   relative path) — and the module resolution that sets the import extension.
-- Selection has two stages, both shaped `{ glob, exclude }`, and both taking
-  a string or a list as a shortcut for their `glob`. `glob: { glob, exclude }`
-  decides by path which files are read and parsed at all (`glob: ./src` /
-  `glob: [./a, ./b]` = `glob.glob`). `glob.glob` (required: one folder or a
+- Selection has two stages, `paths: { include, exclude }` and
+  `className: { ..., glob, exclude }`, both taking a string or a list as a
+  shortcut for their positive field. `paths` decides by path which files are
+  read and parsed at all (`paths: ./src` / `paths: [./a, ./b]` =
+  `paths.include`). `paths.include` (required: one folder or a
   non-empty list) names the folders scanned, always with their sub-folders —
   relative to the config file (`./src/services`) or tsconfig aliases
   (`@app/services`); there is no `{ path, recursive }` form. A file in them is parsed unless it matches one
@@ -41,7 +42,7 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   with a tsconfig alias — `@generated/**`, or `@generated` for the whole folder;
   catch-all `"*"` aliases are skipped; default: test files, `__tests__/`,
   `node_modules/`; a non-empty value replaces it, and the build warns if it drops
-  a default). There is no `include`. Files `tic build` generated are never input.
+  a default). Files `tic build` generated are never input.
 - `className: { export, decorators, glob, exclude }` (or `className: '*Service'`
   / `['*Service', '*Repository']` = `className.glob`, default `export` and
   `decorators`) then picks classes of the parsed files; default is every exported,

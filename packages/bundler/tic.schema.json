@@ -15,7 +15,7 @@
     },
     "tsconfig": {
       "default": "./tsconfig.json",
-      "description": "The tsconfig whose `paths` aliases glob.glob may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans glob.glob alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.",
+      "description": "The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans paths.include alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.",
       "type": "string",
       "minLength": 1
     },
@@ -23,12 +23,12 @@
       "description": "Extension of generated imports, e.g. \".js\". Inferred from the tsconfig: \".js\" under node16/nodenext resolution, none otherwise.",
       "type": "string"
     },
-    "glob": {
+    "paths": {
       "anyOf": [
         {
           "type": "string",
           "minLength": 1,
-          "description": "One folder to scan, with the default exclude: shorthand for { \"glob\": [...] }."
+          "description": "One folder to scan, with the default exclude: shorthand for { \"include\": [...] }."
         },
         {
           "minItems": 1,
@@ -37,12 +37,12 @@
             "type": "string",
             "minLength": 1
           },
-          "description": "Folders to scan, with the default exclude: shorthand for { \"glob\": [...] }."
+          "description": "Folders to scan, with the default exclude: shorthand for { \"include\": [...] }."
         },
         {
           "type": "object",
           "properties": {
-            "glob": {
+            "include": {
               "anyOf": [
                 {
                   "type": "string",
@@ -85,12 +85,12 @@
             }
           },
           "required": [
-            "glob"
+            "include"
           ],
           "additionalProperties": false
         }
       ],
-      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `glob` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { \"glob\": [...] }."
+      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file. A folder, or a list of folders, is shorthand for { \"include\": [...] }."
     },
     "className": {
       "anyOf": [
@@ -174,7 +174,7 @@
     }
   },
   "required": [
-    "glob"
+    "paths"
   ],
   "additionalProperties": false
 }

@@ -23,14 +23,15 @@ export interface BundleView {
 /** The protocol a bundle is rendered from. */
 export const BUNDLE_PROTOCOL = 'Bundle.ts.hbs';
 
-const RUNTIME_IMPORTS = ['IContainer', 'IContainerModule', 'IRegistration', 'Registration'];
+const RUNTIME_IMPORTS = ['IContainer', 'IContainerModule', 'Registration'];
 
 /**
  * Prepares the data the bundle protocol renders: unique local names, and one import
  * per file in file order.
  */
 export function bundleView({ name, paths, classes }: EmitInput): BundleView {
-  const taken = new Set([...RUNTIME_IMPORTS, 'registrations', name]);
+  // `container` is the parameter of the generated `applyTo`, which would shadow an import of that name.
+  const taken = new Set([...RUNTIME_IMPORTS, 'container', name]);
   const uniqueName = (wanted: string) => {
     let candidate = wanted;
     for (let n = 2; taken.has(candidate); n++) candidate = `${wanted}_${n}`;
@@ -53,7 +54,7 @@ export function bundleView({ name, paths, classes }: EmitInput): BundleView {
 }
 
 /**
- * Renders the generated bundle — static imports, `registrations`, and the bundle applying them —
+ * Renders the generated bundle — static imports, and the bundle registering each selected class —
  * from its protocol, `protocols/Bundle.ts.hbs`.
  */
 export function emitBundle(input: EmitInput): string {

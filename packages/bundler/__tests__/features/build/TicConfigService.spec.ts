@@ -22,13 +22,13 @@ describe('TicConfigService', () => {
   });
 
   it('given a JSON config that does not parse when loaded then it throws TicConfigError', () => {
-    const service = new TicConfigService(fileSystem('{ glob').object());
+    const service = new TicConfigService(fileSystem('{ paths').object());
 
     expect(() => service.load('/repo/app.bundle.json')).toThrow('not valid JSON');
   });
 
   it('given a YAML config when loaded then paths resolve against it and the name comes from its file', () => {
-    const service = new TicConfigService(fileSystem('glob:\n  glob: [./src]\n').object());
+    const service = new TicConfigService(fileSystem('paths:\n  include: [./src]\n').object());
 
     expect(service.load('/repo/production.bundle.yaml')).toMatchObject({
       file: '/repo/production.bundle.yaml',
@@ -36,7 +36,7 @@ describe('TicConfigService', () => {
       name: 'production',
       bundleClassName: 'ProductionBundle',
       tsconfig: { file: '/repo/tsconfig.json', required: false },
-      glob: { glob: ['./src'] },
+      paths: { include: ['./src'] },
       className: { export: 'any', decorators: ['register'] },
     });
   });
