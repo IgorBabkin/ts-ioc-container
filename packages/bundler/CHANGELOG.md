@@ -1,3 +1,25 @@
+# 7.0.0 (2026-10-31)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    merge configs in one build, rename className to match
+    (4cd818acf8ffada4ed98149e6adff734dfe4d7f7)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    merge configs in one build, rename className to match
+    (4cd818acf8ffada4ed98149e6adff734dfe4d7f7)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.0.2
+
+
 # 6.0.0 (2026-10-31)
 
   ### 💥 BREAKING CHANGES
@@ -339,6 +361,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 

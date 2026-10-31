@@ -1,3 +1,12 @@
+# 76.0.2 (2026-10-31)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    document merged bundler configs and the match field
+    (802f901cbcc4bab369f12bd8a86b02f8bd371f94)
+
+
 # 76.0.1 (2026-10-31)
 
   ### 📝 Other Changes
@@ -629,6 +638,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
