@@ -3401,10 +3401,9 @@ check compares like with like.
 #### Basic config
 
 A config (`<name>.bundle.json`, `.yaml` or `.yml`) describes one bundle. Only `paths` is required; an
-unknown field is an error. Point your editor at the schema to get completion and validation:
+unknown field is an error:
 
 ```yaml
-# yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
 paths:
   include: ['@app/services', ./src/infra] # folders to scan, sub-folders included
   exclude: # replaces the default, so restate the test globs you still want
