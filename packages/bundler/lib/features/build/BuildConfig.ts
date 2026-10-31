@@ -73,6 +73,8 @@ export interface ResolvedClassSelector {
  * A bundle config file: one bundle, described explicitly — the folders it scans and the
  * classes it registers. `tic build <config>` prints the bundle to stdout; where it is
  * saved is the caller's choice (`tic build app.bundle.json > src/di/app.bundle.ts`).
+ * `tic build common.bundle.yml prod.bundle.yml` merges several into one, left to right
+ * (see {@link mergeConfigs}).
  */
 export interface BundleConfig {
   $schema?: string;
@@ -95,17 +97,18 @@ export interface BundleConfig {
   /**
    * Which files are parsed: the folders in `paths.include`, minus {@link DEFAULT_EXCLUDE} unless
    * `exclude` says otherwise. Always an object: there is no folder or folder-list shorthand.
+   * Required — though in a config merged with others, only the merged config must have it.
    */
   paths: PathSelector;
   /**
    * Which classes of a parsed file are registered. Default: every exported class decorated
    * with `@register`. A glob or a list of globs is shorthand for `{ glob }`.
    */
-  className?: string | string[] | ClassSelector;
+  match?: string | string[] | ClassSelector;
 }
 
 export const DEFAULT_TSCONFIG = './tsconfig.json';
-/** What `className.decorators` requires when omitted: the library's own `@register`. */
+/** What `match.decorators` requires when omitted: the library's own `@register`. */
 export const DEFAULT_DECORATORS = ['register'];
 export const DEFAULT_EXCLUDE = [
   '**/*.spec.ts',
@@ -130,7 +133,7 @@ export interface ResolvedConfig {
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
   paths: ResolvedPathSelector;
-  className: ResolvedClassSelector;
+  match: ResolvedClassSelector;
   /** Non-fatal problems found while resolving, e.g. a `paths.exclude` that drops a default test glob. */
   warnings: string[];
 }
@@ -138,7 +141,7 @@ export interface ResolvedConfig {
 const BUNDLE_NAME = /^[A-Za-z][\w-]*$/;
 
 // Each schema carries the message a config author reads, so a failed parse names
-// the field and what it expected: `className.export: expected "any", "named" or "default"`.
+// the field and what it expected: `match.export: expected "any", "named" or "default"`.
 const expected = (what: string) => ({ error: `expected ${what}` });
 const nonEmptyString = () => z.string(expected('a non-empty string')).min(1, expected('a non-empty string'));
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
@@ -178,6 +181,9 @@ const toGlobs = (value?: string | string[]): RegExp[] | undefined =>
 
 const FOLDERS_SCHEMA = z.array(nonEmptyString(), expected('a non-empty array')).min(1, expected('a non-empty array'));
 
+const PATHS_DESCRIPTION =
+  'Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.';
+
 const PATHS_SCHEMA = z
   .strictObject(
     {
@@ -194,9 +200,7 @@ const PATHS_SCHEMA = z
     },
     expected('an object with "include"'),
   )
-  .describe(
-    'Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.',
-  );
+  .describe(PATHS_DESCRIPTION);
 
 const CLASS_OBJECT_SCHEMA = z.strictObject(
   {
@@ -270,14 +274,23 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
         'Extension of generated imports, e.g. ".js". Inferred from the tsconfig: ".js" under node16/nodenext resolution, none otherwise.',
       ),
     paths: PATHS_SCHEMA,
-    className: CLASSES_SCHEMA.optional(),
+    match: CLASSES_SCHEMA.optional(),
   },
   expected('an object'),
 );
 
 type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
 
-/** `['className', 'export']` -> `className.export`, `['paths', 'include', 0]` -> `paths.include[0]`; the root is `config`. */
+/**
+ * One config file among several merged into one bundle: it may leave `paths.include`, or
+ * `paths` altogether, to another — only the merged config must have it. The published
+ * `tic.schema.json` is generated from it, so editors accept a shared config.
+ */
+export const BUNDLE_CONFIG_FILE_SCHEMA = BUNDLE_CONFIG_SCHEMA.extend({
+  paths: PATHS_SCHEMA.partial().optional().describe(`${PATHS_DESCRIPTION} Required in the merged config.`),
+});
+
+/** `['match', 'export']` -> `match.export`, `['paths', 'include', 0]` -> `paths.include[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -316,13 +329,13 @@ function toPathSelector(paths: ParsedPaths): ResolvedPathSelector {
   };
 }
 
-function toClassSelector(className: ParsedConfig['className']): ResolvedClassSelector {
-  if (className === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
+function toClassSelector(match: ParsedConfig['match']): ResolvedClassSelector {
+  if (match === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
   // A glob, or a list of globs, is shorthand for `{ glob }` with the default export and decorators.
-  if (typeof className === 'string' || Array.isArray(className)) {
-    return { export: 'any', decorators: DEFAULT_DECORATORS, glob: toGlobs(className) };
+  if (typeof match === 'string' || Array.isArray(match)) {
+    return { export: 'any', decorators: DEFAULT_DECORATORS, glob: toGlobs(match) };
   }
-  const { decorators, glob, exclude, ...rest } = className;
+  const { decorators, glob, exclude, ...rest } = match;
   return {
     ...rest,
     // `[]` is the explicit opt-out: no decorator required.
@@ -391,6 +404,52 @@ export function toClassName(name: string): string {
   return `${words.map((word) => word[0].toUpperCase() + word.slice(1)).join('')}Bundle`;
 }
 
+/** The fields whose values concatenate when configs merge; every other value is replaced. */
+const LIST_FIELDS = new Set(['paths.include', 'paths.exclude', 'match.decorators', 'match.glob', 'match.exclude']);
+
+type ConfigObject = Record<string, unknown>;
+const isObject = (value: unknown): value is ConfigObject =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+function mergeInto(base: ConfigObject, next: ConfigObject, at = ''): ConfigObject {
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(next)) {
+    const field = `${at}${key}`;
+    const previous = merged[key];
+    if (LIST_FIELDS.has(field)) {
+      merged[key] = [
+        ...new Set([...toList((previous ?? []) as string | string[]), ...toList(value as string | string[])]),
+      ];
+    } else {
+      merged[key] = isObject(previous) && isObject(value) ? mergeInto(previous, value, `${field}.`) : value;
+    }
+  }
+  return merged;
+}
+
+/** The `match` shorthand as the object it stands for, so it merges field by field: `'*Service'` -> `{ glob: '*Service' }`. */
+const expandMatch = ({ match, ...rest }: ConfigObject): ConfigObject =>
+  match === undefined ? rest : { ...rest, match: isObject(match) ? match : { glob: match } };
+
+/**
+ * Merges the contents of several config files into one, left to right, as webpack-merge
+ * does: objects merge field by field, a list field — `paths.include`, `paths.exclude`,
+ * `match.glob`, `match.exclude`, `match.decorators` — concatenates without duplicates
+ * (one glob or folder counting as a list of one), and any other value set by a later file
+ * replaces an earlier one. The `match` shorthand merges as `match.glob`. Each file is
+ * validated alone first, so a shared file may leave out `paths`; defaults apply to the
+ * merged config only, so a `paths.exclude` in any file replaces {@link DEFAULT_EXCLUDE}.
+ *
+ * @throws {TicConfigError} when a file's content does not match the config file shape; the message names the file and the field.
+ */
+export function mergeConfigs(configs: { file: string; content: unknown }[]): unknown {
+  return configs.reduce<ConfigObject>((merged, { file, content }) => {
+    const result = BUNDLE_CONFIG_FILE_SCHEMA.safeParse(content);
+    if (!result.success) throw new TicConfigError(`${path.basename(file)}: ${formatIssues(result.error)}`);
+    return mergeInto(merged, expandMatch(content as ConfigObject));
+  }, {});
+}
+
 /**
  * Validates parsed config content and resolves its paths against `file`'s directory.
  * Without a `name` the bundle is named after the file: `production.bundle.json` -> `production`.
@@ -400,7 +459,7 @@ export function toClassName(name: string): string {
 export function resolveConfig(content: unknown, file: string): ResolvedConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { name, tsconfig, importExtension, paths, className } = result.data;
+  const { name, tsconfig, importExtension, paths, match } = result.data;
   const bundleName = name ?? configStem(file);
   if (bundleName === undefined) {
     throw new TicConfigError(
@@ -418,7 +477,7 @@ export function resolveConfig(content: unknown, file: string): ResolvedConfig {
     tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG), required: tsconfig !== undefined },
     importExtension,
     paths: toPathSelector(paths),
-    className: toClassSelector(className),
+    match: toClassSelector(match),
     warnings: excludeWarnings(paths),
   };
 }

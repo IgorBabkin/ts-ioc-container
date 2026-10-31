@@ -37,7 +37,28 @@ describe('TicConfigService', () => {
       bundleClassName: 'ProductionBundle',
       tsconfig: { file: '/repo/tsconfig.json', required: false },
       paths: { include: ['./src'] },
-      className: { export: 'any', decorators: ['register'] },
+      match: { export: 'any', decorators: ['register'] },
+    });
+  });
+
+  it('given several configs when loaded then they merge left to right and the last one names the bundle', () => {
+    const files: Record<string, string> = {
+      '/repo/common.bundle.yml': "paths:\n  include: ['@app/services']\nmatch: '*Service'\n",
+      '/repo/prod.bundle.yml': "importExtension: '.js'\npaths:\n  include: [./src/infra]\n",
+    };
+    const fs = new Mock<IFileSystemService>()
+      .setup((m) => m.fileExists(It.IsAny()))
+      .callback(({ args: [file] }) => file in files)
+      .setup((m) => m.readFile(It.IsAny()))
+      .callback(({ args: [file] }) => files[file]);
+    const service = new TicConfigService(fs.object());
+
+    expect(service.load(Object.keys(files))).toMatchObject({
+      file: '/repo/prod.bundle.yml',
+      name: 'prod',
+      importExtension: '.js',
+      paths: { include: ['@app/services', './src/infra'] },
+      match: { glob: [/^[^/]*Service$/] },
     });
   });
 });

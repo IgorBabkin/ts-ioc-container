@@ -3419,20 +3419,26 @@ paths:
     - '**/*.test.ts'
     - '**/__tests__/**'
     - '**/node_modules/**'
-className: '*Service' # optional: only classes whose name matches
+match: '*Service' # optional: only classes whose name matches
 ```
 
 | Field             | Default                                    | Meaning                                                                                     |
 | ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | `paths.include`   | — (required)                               | Folder, or list of folders, to scan                                                         |
 | `paths.exclude`   | test files, `__tests__/`, `node_modules/`  | Globs of files never read                                                                   |
-| `className`       | exported classes with `@register`          | Class-name globs, or `{ export, decorators, glob, exclude }`                                |
+| `match`           | exported classes with `@register`          | Class-name globs, or `{ export, decorators, glob, exclude }`                                |
 | `name`            | the file's stem (`app.bundle.yml` → `app`) | The bundle's name; the class is `AppBundle`                                                 |
 | `tsconfig`        | `./tsconfig.json`                          | Where the `paths` aliases come from (see below)                                             |
 | `importExtension` | `.js` under node16/nodenext, else none     | Extension of the generated imports                                                          |
 
-Relative paths resolve against the config file. Need one bundle per environment? Keep one config each
-(`prod.bundle.yml`, `dev.bundle.yml`, …) and build each one.
+Relative paths resolve against the config file. Need one bundle per environment? Keep what they share in
+`common.bundle.yml` and what each adds in `prod.bundle.yml`, `dev.bundle.yml`, …, and merge them like
+webpack-merge — objects field by field, lists (`paths.include`, `paths.exclude`, `match.glob`, …)
+concatenated, any other value replaced by the later config:
+
+```bash
+tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts # exports ProdBundle
+```
 
 #### tsconfig aliases
 

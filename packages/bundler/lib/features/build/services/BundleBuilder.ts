@@ -15,8 +15,11 @@ import { loadImportPaths } from '../domain/tsconfig';
 /** What one build does. Paths resolve against the run's working directory. */
 export type BuildRequest =
   | {
-      /** Path of the config file — `*.json`, `*.yaml` or `*.yml` — relative to the working directory. */
-      config: string;
+      /**
+       * Path of the config file — `*.json`, `*.yaml` or `*.yml` — relative to the working directory;
+       * or of several in one folder, merged left to right into one bundle.
+       */
+      config: string | string[];
     }
   | {
       /**
@@ -32,7 +35,7 @@ export type BuildOptions = BuildRequest & {
 };
 
 export interface BuildResult {
-  /** Absolute path of the config file that was built; `undefined` for config text. */
+  /** Absolute path of the config file that was built — of several merged, the last; `undefined` for config text. */
   config?: string;
   /** Name of the generated class. */
   bundle: string;
@@ -50,7 +53,7 @@ export interface IBundleBuilder {
   /**
    * Generates the bundle a config describes and returns it; nothing is written.
    *
-   * @throws {TicConfigError} when the config file is missing or unreadable, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
+   * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
   build(request: BuildRequest): BuildResult;
@@ -68,14 +71,14 @@ export class BundleBuilder implements IBundleBuilder {
   ) {}
 
   /**
-   * @throws {TicConfigError} when the config file is missing or unreadable, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
+   * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
   build(request: BuildRequest): BuildResult {
     const resolved =
       'text' in request
         ? this.configs.parse(request.text, this.cwd)
-        : this.configs.load(path.resolve(this.cwd, request.config));
+        : this.configs.load([request.config].flat().map((file) => path.resolve(this.cwd, file)));
     const { content, registrations, warnings } = this.generate(resolved);
     return {
       config: 'text' in request ? undefined : resolved.file,
@@ -111,7 +114,7 @@ export class BundleBuilder implements IBundleBuilder {
       .flatMap((file) => {
         const text = this.fs.readFile(file);
         // Another config's bundle can sit in a scanned folder; it is output, never input.
-        return text.startsWith(GENERATED_HEADER) ? [] : findClasses(file, config.className, text);
+        return text.startsWith(GENERATED_HEADER) ? [] : findClasses(file, config.match, text);
       })
       .map((cls) => ({ ...cls, specifier: paths.specifier(cls.file) }));
     const uncovered = [...new Set(classes.filter((cls) => cls.specifier === undefined).map((cls) => cls.file))];
