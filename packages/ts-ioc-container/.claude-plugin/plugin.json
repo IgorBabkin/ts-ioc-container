@@ -1,0 +1,7 @@
+{
+  "name": "ts-ioc-container",
+  "description": "Architect skill for ts-ioc-container: picks the right cookbook pattern (mediator, middleware, action pipeline, error bubbling, retry, unit of work, layer decorators) and applies the library's rules.",
+  "author": { "name": "Igor Babkin" },
+  "homepage": "https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/ts-ioc-container#readme",
+  "license": "ISC"
+}
