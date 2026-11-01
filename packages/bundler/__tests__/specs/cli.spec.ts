@@ -165,9 +165,9 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
     expect(run(['build', 'app.bundle.json'], io)).toBe(0);
     expect(io.err).toEqual([
-      'Clock src/infra/Clock.ts',
-      'Logger src/services/Logger.ts',
-      'Mailer src/services/Mailer.ts',
+      'Clock: src/infra/Clock.ts',
+      'Logger: src/services/Logger.ts',
+      'Mailer: src/services/Mailer.ts',
     ]);
     expect(io.out).toHaveLength(1);
   });

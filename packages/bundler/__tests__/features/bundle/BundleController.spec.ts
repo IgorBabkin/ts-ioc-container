@@ -90,9 +90,9 @@ describe('BundleController', () => {
 
     controller.bundle({ configs: ['app.bundle.json'] });
 
-    logger.verify((m) => m.info('JsonLogger src/infra/JsonLogger.ts'), Times.Once());
-    logger.verify((m) => m.info('Greeter src/services/greeters.ts'), Times.Once());
-    logger.verify((m) => m.info('LoudGreeter src/services/greeters.ts'), Times.Once());
+    logger.verify((m) => m.info('JsonLogger: src/infra/JsonLogger.ts'), Times.Once());
+    logger.verify((m) => m.info('Greeter: src/services/greeters.ts'), Times.Once());
+    logger.verify((m) => m.info('LoudGreeter: src/services/greeters.ts'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
