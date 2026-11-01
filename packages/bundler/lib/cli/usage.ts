@@ -13,7 +13,7 @@ export const USAGE = [
   '  -h, --help      show this help',
   '  -v, --version   show the version',
   '',
-  'The bundle goes to stdout; the files in it and warnings to stderr.',
+  'The bundle goes to stdout; the classes in it (name and file) and warnings to stderr.',
   'Saving it is up to you:',
   '  tic build app.bundle.json > src/di/app.bundle.ts',
   '  tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts   # merged left to right',

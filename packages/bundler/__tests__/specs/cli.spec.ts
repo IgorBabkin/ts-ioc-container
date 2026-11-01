@@ -156,7 +156,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     expect(io.out.join('\n')).not.toContain('warning');
   });
 
-  it('lists each bundled file on stderr, never in the bundle on stdout', () => {
+  it('lists each bundled class and its file on stderr, never in the bundle on stdout', () => {
     project.write('app.bundle.json', { paths: { include: ['@app/services', './src/infra'] } });
     project.write('src/services/Mailer.ts', decorated('Mailer'));
     project.write('src/services/helpers.ts', 'export const noop = () => {};\n');
@@ -164,7 +164,11 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     const io = new Io(project.root);
 
     expect(run(['build', 'app.bundle.json'], io)).toBe(0);
-    expect(io.err).toEqual(['src/infra/Clock.ts', 'src/services/Logger.ts', 'src/services/Mailer.ts']);
+    expect(io.err).toEqual([
+      'Clock: src/infra/Clock.ts',
+      'Logger: src/services/Logger.ts',
+      'Mailer: src/services/Mailer.ts',
+    ]);
     expect(io.out).toHaveLength(1);
   });
 

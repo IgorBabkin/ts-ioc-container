@@ -25,6 +25,7 @@ export {
   IBundleServiceKey,
   type IBundleService,
   type Bundle,
+  type BundledClass,
 } from './features/bundle/services/BundleService';
 export {
   TicConfigService,
