@@ -3509,14 +3509,14 @@ check compares like with like.
 
 #### Basic config
 
-A config (`<name>.bundle.json`, `.yaml` or `.yml`) describes one bundle. Only `paths.include` is required —
-`paths` is always an object, never a bare folder or list — and an unknown field is an error:
+A config (`<name>.bundle.json`, `.yaml` or `.yml`) describes one bundle. Only `paths.include` is required
+(or `paths.tsconfig: true`) — `paths` is always an object, never a bare folder or list — and an unknown field is an error:
 
 ```yaml
 # optional: editor completion and validation (in JSON, set "$schema" to the same path)
 # yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
 paths:
-  include: # folders to scan, sub-folders included
+  include: # folders (sub-folders included), files or globs to scan
     - '@app/services'
     - ./src/infra
   exclude: # replaces the default, so restate the test globs you still want
@@ -3530,7 +3530,8 @@ match: '*Service' # optional: only classes whose name matches
 
 | Field             | Default                                    | Meaning                                                                                     |
 | ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `paths.include`   | — (required)                               | Folder, or list of folders, to scan                                                         |
+| `paths.include`   | — (required unless `paths.tsconfig`)       | Folders, files or globs to scan                                                             |
+| `paths.tsconfig`  | `false`                                    | Also scan the folders the tsconfig `paths` aliases point to                                 |
 | `paths.exclude`   | test files, `__tests__/`, `node_modules/`  | Globs of files never read                                                                   |
 | `match`           | exported classes with `@register`          | Class-name globs, or `{ export, decorators, glob, exclude }`                                |
 | `name`            | the file's stem (`app.bundle.yml` → `app`) | The bundle's name; the class is `AppBundle`                                                 |
