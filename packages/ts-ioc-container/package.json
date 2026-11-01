@@ -1,6 +1,6 @@
 {
   "name": "ts-ioc-container",
-  "version": "76.1.0",
+  "version": "76.1.1",
   "description": "Platform-agnostic TypeScript AOP platform for building system engines and meta-frameworks, on a fast, lightweight DI container: scoped lifecycles, decorators, tokens, hooks, proxies and middleware pipelines, with a living cookbook of executable recipes. Frontend, backend, workers and scripts; zero runtime dependencies.",
   "publishConfig": {
     "access": "public",

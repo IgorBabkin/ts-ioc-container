@@ -1,3 +1,12 @@
+# 76.1.1 (2026-11-01)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    document installing the architect skill from a shell
+    (9c82fffcd90939851ccfe93c7b37d595159e807d)
+
+
 # 76.1.0 (2026-11-01)
 
   ### ✨ Features
@@ -656,6 +665,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
