@@ -13,7 +13,7 @@
 - [AGENTS.md (openapi-to-server)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/openapi-to-server/AGENTS.md): TypeScript server interfaces from OpenAPI 3.0 specs
 - [AGENTS.md (openapi-to-zod)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/openapi-to-zod/AGENTS.md): Zod validation schemas from OpenAPI 3.0 specs
 
-- [Architect skill (Claude Code)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/ts-ioc-container/skills/ts-ioc-container-architect/SKILL.md): picks the cookbook pattern for a task and applies the design rules; `/plugin install ts-ioc-container --marketplace IgorBabkin/ts-ioc-container`
+- [Architect skill (Claude Code)](https://github.com/IgorBabkin/ts-ioc-container/blob/main/packages/ts-ioc-container/skills/ts-ioc-container-architect/SKILL.md): picks the cookbook pattern for a task and applies the design rules; install with `claude plugin marketplace add IgorBabkin/ts-ioc-container` then `claude plugin install ts-ioc-container@ts-ioc-container`
 
 ## Optional
 

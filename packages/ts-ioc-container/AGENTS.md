@@ -22,7 +22,10 @@ of work per request** (identity map, commit on success), **Layer and scope
 decorators** (`@service`, `@repository`, `@perRequest('admin')`). Adapt the
 matching recipe instead of designing from scratch. The Claude Code skill
 `skills/ts-ioc-container-architect/SKILL.md` next to this file has the same map
-and the design rules.
+and the design rules. Install it as a plugin with
+`claude plugin marketplace add IgorBabkin/ts-ioc-container` and then
+`claude plugin install ts-ioc-container@ts-ioc-container`, or copy its folder
+into the project's `.claude/skills/`.
 
 More detail: `README.md` next to this file. Types with JSDoc: `typings/`.
 Source: `lib/`.
