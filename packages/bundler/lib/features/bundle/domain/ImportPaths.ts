@@ -109,7 +109,7 @@ export class ImportPaths {
       if (prefixed && prefix === '') return [];
       if (!spec.startsWith(prefix) || !spec.endsWith(suffix) || spec.length < prefix.length + suffix.length) return [];
       const captured = spec.slice(prefix.length, spec.length - suffix.length);
-      return targets.map((target) => target.replace('*', captured));
+      return targets.map((target) => target.replaceAll('*', captured));
     });
   }
 
@@ -125,6 +125,6 @@ export class ImportPaths {
       return undefined;
     }
     const captured = bare.slice(prefix.length, bare.length - suffix.length);
-    return { spec: `${pattern.replace('*', captured)}${this.extension}`, score: prefix.length };
+    return { spec: `${pattern.replaceAll('*', captured)}${this.extension}`, score: prefix.length };
   }
 }
