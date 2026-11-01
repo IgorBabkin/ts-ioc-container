@@ -187,7 +187,15 @@ The package is built to be used by AI coding agents as well as people:
 - **Architect skill for Claude Code.** `ts-ioc-container-architect` knows the
   cookbook: it picks the right pattern for the task (mediator, action pipeline,
   error bubbling, retry, unit of work, layer decorators) and applies the
-  library's rules. Install it from this repository's plugin marketplace:
+  library's rules. This repository is its plugin marketplace — nothing to
+  publish or sign up for. From a shell:
+
+  ```shell
+  claude plugin marketplace add IgorBabkin/ts-ioc-container
+  claude plugin install ts-ioc-container@ts-ioc-container
+  ```
+
+  or, inside a Claude Code session (2.1.275 or later):
 
   ```shell
   /plugin install ts-ioc-container --marketplace IgorBabkin/ts-ioc-container
