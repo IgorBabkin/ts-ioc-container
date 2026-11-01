@@ -19,7 +19,7 @@ export {
 
 // Feature: build
 export { BuildModule } from './features/bundle/BuildModule';
-export { BundleController, BUILD_OPTIONS, type BuildCliOptions } from './features/bundle/BundleController';
+export { BundleController, BUILD_OPTIONS, isTsconfig, type BuildCliOptions } from './features/bundle/BundleController';
 export {
   BundleService,
   IBundleServiceKey,
@@ -31,6 +31,7 @@ export {
   TicConfigService,
   ITicConfigServiceKey,
   type ITicConfigService,
+  type ProjectSources,
 } from './features/bundle/services/TicConfigService';
 export {
   resolveConfig,
@@ -42,6 +43,7 @@ export {
   STDIN,
   configFormat,
   DEFAULT_TSCONFIG,
+  DEFAULT_BUNDLE_NAME,
   DEFAULT_EXCLUDE,
   DEFAULT_DECORATORS,
   toClassName,
@@ -57,7 +59,14 @@ export {
 export { ticConfigJsonSchema } from './schema/ticConfigSchema';
 export { ImportPaths } from './features/bundle/domain/ImportPaths';
 export { loadImportPaths } from './features/bundle/domain/tsconfig';
-export { findClasses, isSourceFile, listSourceFiles, type DiscoveredClass } from './features/bundle/domain/scan';
+export {
+  findClasses,
+  isSourceFile,
+  listSourceFiles,
+  listIncludedFiles,
+  findFiles,
+  type DiscoveredClass,
+} from './features/bundle/domain/scan';
 export {
   BundleView,
   IBundleViewKey,
@@ -66,7 +75,7 @@ export {
   GENERATED_HEADER,
 } from './features/bundle/services/BundleView';
 export { tokenCollisions } from './features/bundle/domain/tokenCollisions';
-export { globToRegExp } from './features/bundle/domain/glob';
+export { globToRegExp, isGlob, splitGlob } from './features/bundle/domain/glob';
 
 // Feature: help / version
 export { HelpModule } from './features/help/HelpModule';

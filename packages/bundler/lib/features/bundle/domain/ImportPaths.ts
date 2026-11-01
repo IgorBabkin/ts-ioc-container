@@ -15,6 +15,14 @@ const SOURCE_EXTENSION = /\.(tsx?|mts|cts)$/;
 const isDirectory = (dir: string) => existsSync(dir) && statSync(dir).isDirectory();
 const isRelative = (spec: string) => spec.startsWith('.') || path.isAbsolute(spec);
 
+/** Folders and files, deduplicated and sorted, without those inside another folder of the list. */
+export function outermost(paths: string[]): string[] {
+  const sorted = [...new Set(paths)].sort();
+  const inside = (child: string, parent: string) =>
+    child !== parent && isDirectory(parent) && !path.relative(parent, child).startsWith('..');
+  return sorted.filter((entry) => !sorted.some((other) => inside(entry, other)));
+}
+
 /** Splits a `paths` pattern at its `*`, if it has one. */
 function splitWildcard(pattern: string): [string, string] | undefined {
   const star = pattern.indexOf('*');
@@ -77,6 +85,29 @@ export class ImportPaths {
     const targets = [glob, `${glob}/`].map((spec) => this.aliasTargets(spec, true)).find((found) => found.length > 0);
     if (!targets) return [glob];
     return targets.map((target) => toPosix(path.relative(baseDir, target.endsWith('/') ? `${target}**` : target)));
+  }
+
+  /**
+   * The folders and files the `paths` aliases point to, absolute and sorted: what a bundle
+   * built from a tsconfig alone scans. `@app/*` -> `./src/*` points to `src`; an exact alias
+   * (`@utils` -> `./src/utils.ts`) to its source file — one naming a folder imports none of
+   * the files in it. A target that does not exist, lies in `node_modules`, or lies in another
+   * target's folder is left out.
+   */
+  roots(): string[] {
+    const found = this.aliases
+      .flatMap(({ targets }) => targets)
+      .flatMap((target) => {
+        const wildcard = splitWildcard(target);
+        // `/repo/src/*` and `/repo/src/lib-*` point into `/repo/src`.
+        if (wildcard) return [path.resolve(wildcard[0].slice(0, wildcard[0].lastIndexOf('/') + 1))];
+        return SOURCE_EXTENSION.test(target) && existsSync(target) && !isDirectory(target)
+          ? [path.resolve(target)]
+          : [];
+      })
+      .filter((target) => !target.split(path.sep).includes('node_modules'))
+      .filter((target) => existsSync(target));
+    return outermost(found);
   }
 
   /**

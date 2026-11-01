@@ -1,5 +1,6 @@
 import { It, Mock, Times } from 'moq.ts';
 import {
+  BUILD_OPTIONS,
   BundleController,
   type Bundle,
   type BundledClass,
@@ -8,6 +9,7 @@ import {
   type ILogger,
   type IOutputService,
   type ITicConfigService,
+  type ProjectSources,
   type BundleConfig,
   TicConfigError,
   UsageError,
@@ -34,6 +36,8 @@ const setup = (build: () => Bundle, stdin?: () => string | undefined, resolve: (
     .setup((m) => m.load(It.IsAny()))
     .callback(resolve)
     .setup((m) => m.parse(It.IsAny(), It.IsAny()))
+    .callback(resolve)
+    .setup((m) => m.fromProject(It.IsAny()))
     .callback(resolve);
   const bundleService = new Mock<IBundleService>().setup((m) => m.bundle(It.IsAny())).callback(build);
   const out = new Mock<IOutputService>().setup((m) => m.write(It.IsAny())).returns(undefined);
@@ -200,5 +204,66 @@ describe('BundleController', () => {
     );
 
     expect(() => controller.bundle({ configs: ['-'] })).toThrow('<stdin>: name: required for a config read from stdin');
+  });
+
+  it('given paths when built then they are scanned from the working directory, without a tsconfig named', () => {
+    const { configService, controller } = setup(() => result('// bundle\n'));
+
+    controller.bundle({ configs: [], include: ['src/**/*.ts'] });
+
+    configService.verify((m) =>
+      m.fromProject(
+        It.Is<ProjectSources>(
+          ({ dir, tsconfig, include }) =>
+            dir === '/repo' && tsconfig === undefined && include?.join() === 'src/**/*.ts',
+        ),
+      ),
+    );
+  });
+
+  it('given a tsconfig and paths when built then the tsconfig is resolved from the working directory and a failure names both', () => {
+    const { configService, controller } = setup(
+      () => result('// bundle\n'),
+      undefined,
+      failing('namespace "lib" is neither a folder'),
+    );
+
+    expect(() =>
+      controller.bundle({ configs: [], tsconfig: 'config/tsconfig.di.json', include: ['lib/*.ts'] }),
+    ).toThrow('config/tsconfig.di.json + lib/*.ts: namespace "lib" is neither a folder');
+    configService.verify((m) =>
+      m.fromProject(It.Is<ProjectSources>(({ tsconfig }) => tsconfig === '/repo/config/tsconfig.di.json')),
+    );
+  });
+});
+
+describe('BUILD_OPTIONS', () => {
+  const parse = (...positionals: string[]) => BUILD_OPTIONS.safeParse({ positionals });
+
+  it.each([
+    [['app.bundle.json', 'prod.bundle.yml'], { configs: ['app.bundle.json', 'prod.bundle.yml'], include: [] }],
+    [['app.bundle.toml'], { configs: ['app.bundle.toml'], include: [] }],
+    [['-'], { configs: ['-'], include: [] }],
+    [[], { configs: ['-'], include: [] }],
+    [['tsconfig.json'], { configs: [], tsconfig: 'tsconfig.json', include: [] }],
+    [['config/tsconfig.build.json', 'src'], { configs: [], tsconfig: 'config/tsconfig.build.json', include: ['src'] }],
+    [
+      ['src/**/*.ts', 'lib/Clock.ts', '@app/services'],
+      { configs: [], include: ['src/**/*.ts', 'lib/Clock.ts', '@app/services'] },
+    ],
+  ])('given %j when parsed then it sorts them into configs, a tsconfig and paths', (positionals, expected) => {
+    expect(parse(...positionals).data).toEqual(expected);
+  });
+
+  it.each([
+    [['-', 'src'], 'cannot be combined with other arguments'],
+    [['app.bundle.json', 'src/**'], 'config files cannot be combined'],
+    [['app.bundle.json', 'tsconfig.json'], 'config files cannot be combined'],
+    [['tsconfig.json', 'tsconfig.app.json'], 'name one tsconfig, not 2'],
+  ])('given %j when parsed then it fails', (positionals, message) => {
+    const result = parse(...positionals);
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toContain(message);
   });
 });

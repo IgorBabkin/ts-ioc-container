@@ -5,8 +5,9 @@ import { TicConfigError } from '../../../exceptions/DomainException';
 import type { BundleConfig } from '../BuildConfig';
 import { GENERATED_HEADER, type IBundleView, IBundleViewKey } from './BundleView';
 import { globToRegExp, toPosix } from '../domain/glob';
-import { findClasses, listSourceFiles } from '../domain/scan';
+import { findClasses, findFiles, listIncludedFiles } from '../domain/scan';
 import { tokenCollisions } from '../domain/tokenCollisions';
+import { outermost } from '../domain/ImportPaths';
 import { loadImportPaths } from '../domain/tsconfig';
 
 export interface Bundle {
@@ -38,10 +39,37 @@ export interface IBundleService {
   /**
    * Generates the bundle a resolved config describes and returns it; nothing is written.
    *
-   * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+   * @throws {TicConfigError} when the tsconfig is missing or invalid, a paths.tsconfig entry matches no tsconfig, or the tsconfigs it names have no paths alias to scan, or no tsconfig paths alias covers a selected class's file.
+   * @throws {NamespaceNotFoundError} when a path is neither a source file, a folder, a tsconfig paths alias of one nor a glob in one.
    */
   bundle(config: BundleConfig): Bundle;
+}
+
+/**
+ * What a bundle scans: the folders the `paths` aliases of the tsconfigs `paths.tsconfig` names
+ * point to, written relative to the config (`./src`, `../shared`) as the bundle header lists
+ * them; then `paths.include`.
+ *
+ * @throws {TicConfigError} when a `paths.tsconfig` entry matches no file, a tsconfig it names is invalid, or none of them has an alias pointing to a folder or a source file.
+ */
+function scanned(config: BundleConfig): string[] {
+  if (config.paths.tsconfig.length === 0) return config.paths.include;
+  const tsconfigs = config.paths.tsconfig.flatMap((spec) => {
+    const found = findFiles(spec, config.dir);
+    if (found.length === 0) throw new TicConfigError(`paths.tsconfig: no tsconfig matches "${spec}"`);
+    return found;
+  });
+  const roots = outermost(tsconfigs.flatMap((file) => loadImportPaths({ file, required: true }).roots()));
+  if (roots.length === 0) {
+    throw new TicConfigError(
+      `paths.tsconfig: ${tsconfigs.map((file) => toPosix(path.relative(config.dir, file))).join(', ')} has no "paths" alias pointing to a folder or source file to scan`,
+    );
+  }
+  const folders = roots.map((root) => {
+    const relative = toPosix(path.relative(config.dir, root));
+    return relative === '' ? '.' : relative.startsWith('../') ? relative : `./${relative}`;
+  });
+  return [...new Set([...folders, ...config.paths.include])];
 }
 
 export const IBundleServiceKey = new SingleToken<IBundleService>('IBundleService');
@@ -54,8 +82,8 @@ export class BundleService implements IBundleService {
   ) {}
 
   /**
-   * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+   * @throws {TicConfigError} when the tsconfig is missing or invalid, a paths.tsconfig entry matches no tsconfig, or the tsconfigs it names have no paths alias to scan, or no tsconfig paths alias covers a selected class's file.
+   * @throws {NamespaceNotFoundError} when a path is neither a source file, a folder, a tsconfig paths alias of one nor a glob in one.
    */
   bundle(config: BundleConfig): Bundle {
     const paths = loadImportPaths(config.tsconfig, config.importExtension);
@@ -68,9 +96,9 @@ export class BundleService implements IBundleService {
     };
 
     const files = new Set<string>();
-    for (const folder of config.paths.include) {
-      const dir = paths.resolveNamespace(folder, config.dir);
-      for (const file of listSourceFiles(dir, isExcluded)) files.add(file);
+    const include = scanned(config);
+    for (const spec of include) {
+      for (const file of listIncludedFiles(spec, paths, config.dir, isExcluded)) files.add(file);
     }
 
     const classes = [...files]
@@ -91,7 +119,7 @@ export class BundleService implements IBundleService {
 
     const content = this.view.render({
       name: config.bundleClassName,
-      paths: config.paths.include,
+      paths: include,
       classes: classes.map((cls) => ({ ...cls, specifier: cls.specifier! })),
     });
     return {

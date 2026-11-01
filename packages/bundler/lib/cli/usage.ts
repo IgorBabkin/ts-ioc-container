@@ -6,6 +6,10 @@ export const USAGE = [
   '  ts-ioc-container build [<config>...]   print the bundle a config file (.json, .yaml, .yml) describes;',
   '                                        several are merged left to right into one bundle;',
   '                                        without one (or with -), read the config from stdin',
+  '  ts-ioc-container build [<tsconfig>] <path>...',
+  '                                        print AppBundle of the folders, files and globs given,',
+  '                                        imported through the tsconfig aliases (./tsconfig.json)',
+  '  ts-ioc-container build <tsconfig>      print AppBundle of the folders its paths aliases point to',
   '  ts-ioc-container help                  show this help',
   '  ts-ioc-container version               show the version',
   '',
@@ -18,5 +22,7 @@ export const USAGE = [
   '  tic build app.bundle.json > src/di/app.bundle.ts',
   '  tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts   # merged left to right',
   '  cat app.bundle.yml | tic build > src/di/app.bundle.ts     # config from stdin (must set name)',
+  '  tic build tsconfig.json > src/di/app.bundle.ts            # the folders of its paths aliases',
+  "  tic build 'src/**/*.service.ts' > src/di/app.bundle.ts    # quoted, or the shell expands it into files",
   '  tic build app.bundle.json | diff - src/di/app.bundle.ts   # CI: is it current?',
 ].join('\n');

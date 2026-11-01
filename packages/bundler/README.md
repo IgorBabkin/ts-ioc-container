@@ -1,7 +1,7 @@
 # @ts-ioc-container/bundler
 
 **Bundles your dependencies into a single container module.** `tic build` scans
-the folders you name — by path or tsconfig alias — and generates one typed
+the folders, files and globs you name — by path or tsconfig alias — and generates one typed
 bundle that registers every class in them, ready for
 [`ts-ioc-container`](https://www.npmjs.com/package/ts-ioc-container):
 
@@ -15,8 +15,9 @@ TypeScript, generated at build time, so it type-checks, bundles and tree-shakes
 like code you wrote yourself.
 
 Everything is explicit, and `tic build` is a plain Unix filter: a config goes in
-— a file, or text on stdin — and the bundle comes out on stdout. Where it is saved
-is up to your shell, and nothing is inferred from what your tsconfig compiles.
+— a file, text on stdin, or a tsconfig and paths on the command line — and the
+bundle comes out on stdout. Where it is saved is up to your shell, and nothing is
+inferred from what your tsconfig compiles: there is no zero config.
 
 ## Install
 
@@ -34,12 +35,15 @@ below use the shortcut.
 
 ```bash
 tic build [<config>...]
+tic build [<tsconfig>] <path>...
+tic build <tsconfig>
 ```
 
 `tic build` prints the bundle to **stdout** and writes nothing. `<config>` is a
 config file — JSON for `.json`, YAML for `.yaml` / `.yml`. Several are
 [merged](#merging-configs) left to right into one bundle. Without one (or with
-`-`) the config is read from **stdin**. Progress, warnings and errors go to
+`-`) the config is read from **stdin**. Instead of a config file, the command
+line can name [what to scan](#without-a-config-file) itself. Progress, warnings and errors go to
 stderr, so they never end up in the bundle:
 
 ```text
@@ -69,9 +73,29 @@ cat dev.bundle.json | tic build | tee src/di/dev.bundle.ts
 printf 'name: app\npaths:\n  include: "@app/services"\n' | tic build > src/di/app.bundle.ts
 jq '.name = "admin"' app.bundle.json | tic build > src/di/admin.bundle.ts
 
+# no config file: globs (quoted, or the shell expands them), or a tsconfig
+tic build 'src/**/*.service.ts' > src/di/app.bundle.ts
+tic build tsconfig.json > src/di/app.bundle.ts
+
 # CI: is the saved bundle current?
 tic build app.bundle.json | diff - src/di/app.bundle.ts
 ```
+
+### Without a config file
+
+An argument that is not a config file stands for one, named `app` (`AppBundle`):
+
+- **paths** — folders, files or globs, relative to the working directory —
+  are its `paths.include`, imported through the aliases of `./tsconfig.json`:
+  `tic build 'src/**/*.service.ts'` is `{ "name": "app", "paths": { "include": ["src/**/*.service.ts"] } }`.
+  Unquoted, the shell expands a glob into files, which works too.
+- a **tsconfig** (`tsconfig.json`, `tsconfig.*.json`) alone scans the folders
+  its `paths` aliases point to: `tic build tsconfig.json` is
+  `{ "name": "app", "tsconfig": "./tsconfig.json", "paths": { "tsconfig": "./tsconfig.json" } }`.
+  Given with paths, it only supplies the aliases they are imported through.
+
+Config files stand alone: they cannot be combined with a tsconfig or paths on the
+command line.
 
 A bundle can be saved anywhere, because every import in it is written through a
 tsconfig `paths` alias (`import { Greeter } from '@app/services/Greeter'`) —
@@ -219,12 +243,18 @@ registrations, and `exclude` what they should not contribute:
 
 ## Selecting files
 
-`paths` is `{ include, exclude }`. `paths.include` names the folders a bundle's files come from,
-and the only ones: what your tsconfig compiles plays no part. It is one folder
-or a list, each relative to the config file (`./src/services`) or a tsconfig
-`paths` alias (`@app/services`, for a `"@app/*": ["./src/*"]` alias), and
-always scanned with its sub-folders. `paths` is always an object — a folder or a
-list in place of it is an error — and `exclude` may be left out to keep the default:
+`paths` is `{ include, exclude, tsconfig }`. `paths.include` names what a bundle's files come from:
+what your tsconfig compiles plays no part. It is one entry or a list, each
+
+- a folder, relative to the config file (`./src/services`) or a tsconfig `paths`
+  alias (`@app/services`, for a `"@app/*": ["./src/*"]` alias), always scanned
+  with its sub-folders;
+- a source file (`./src/infra/Clock.ts`);
+- or a glob of files (`./src/**/*.service.ts`), whose folder before the first
+  wildcard may be an alias (`@app/**/*.service.ts`).
+
+`paths` is always an object — a folder or a list in place of it is an error —
+and `exclude` may be left out to keep the default:
 
 ```yaml
 paths:
@@ -239,6 +269,31 @@ paths:
   exclude: '**/*.dev.ts' # a custom exclude
 ```
 
+```yaml
+paths:
+  include: ./src/**/*.service.ts # a glob
+```
+
+`paths.tsconfig` names tsconfig files — a path, a glob, or a list of them, relative
+to the config file — and also scans the folders their `paths` aliases point to:
+`"@app/*": ["./src/*"]` scans `./src`, an exact alias its file. Each tsconfig's
+`baseUrl` and `extends` are followed; its `include`, `exclude` and `files` never
+count. `include` adds to them and `exclude` applies to them. Imports are still
+written through the config's own `tsconfig`, which must cover the files found.
+No tsconfig is scanned unless `paths.tsconfig` names it.
+
+```yaml
+paths:
+  tsconfig: ./tsconfig.json # the folders of its aliases
+  include: ./scripts/Seed.ts # and one more file
+```
+
+```yaml
+# a monorepo: the alias folders of every package, imported through the root tsconfig
+paths:
+  tsconfig: ./packages/*/tsconfig.json
+```
+
 Within them, a file is parsed unless it matches **one of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
 spans folders. Like a folder in `paths.include`, an exclude glob may start with a
 tsconfig `paths` alias: with `"@generated/*": ["./src/.generated/*"]`,
@@ -246,10 +301,11 @@ tsconfig `paths` alias: with `"@generated/*": ["./src/.generated/*"]`,
 drops the whole folder. A catch-all `"*"` alias is never applied, so plain globs
 such as `**/*.spec.ts` keep their meaning.
 
-| Rule      | Default                                   | Meaning                                                                                                          |
-| --------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `include` | — (required)                              | Folder, or folders, to scan                                                                                      |
-| `exclude` | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; may start with a tsconfig alias; replaces the default when given |
+| Rule       | Default                                   | Meaning                                                                                                          |
+| ---------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `include`  | — (required unless `tsconfig` is given)   | Folders, files or globs to scan                                                                                  |
+| `tsconfig` | —                                         | Tsconfig paths or globs whose `paths` alias folders are scanned too                                              |
+| `exclude`  | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; may start with a tsconfig alias; replaces the default when given |
 
 A non-empty `exclude` replaces the defaults, so restate the ones you still want:
 
@@ -387,4 +443,8 @@ writeFileSync('src/di/app.bundle.ts', content);
 
 // or config text, as `tic build` reads from stdin
 build({ text: 'name: app\npaths:\n  include: ["@app/services"]\n' });
+
+// or a tsconfig and paths, as `tic build tsconfig.json` / `tic build 'src/**/*.ts'` take them
+build({ tsconfig: 'tsconfig.json' });
+build({ include: ['src/**/*.service.ts'] });
 ```

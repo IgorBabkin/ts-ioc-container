@@ -21,7 +21,9 @@ describe('Folder registration', () => {
   let last: Bundle;
   const buildFrom = (config: string) => (last = build({ config, cwd: project.root }));
   const buildProject = () => buildFrom('app.bundle.json');
+  const buildMerged = (...configs: string[]) => (last = build({ config: configs, cwd: project.root }));
   const generated = () => last.content;
+  const registered = () => [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
 
   describe('Story: Describe the container in a config file', () => {
     it('resolves relative paths against the config file, not the working directory', () => {
@@ -78,16 +80,18 @@ describe('Folder registration', () => {
 
     it.each([
       [[], 'config: expected an object'],
-      [{}, 'paths: expected an object with "include"'],
+      [{}, 'paths: expected an object with "include" or "tsconfig"'],
+      [{ paths: {} }, 'paths.include: required unless paths.tsconfig names a tsconfig to scan'],
+      [{ paths: { exclude: ['**/*.ts'] } }, 'paths.include: required unless paths.tsconfig names a tsconfig to scan'],
+      [{ paths: { tsconfig: [] } }, 'paths.tsconfig: expected a glob or a non-empty array of globs'],
+      [{ paths: { tsconfig: true } }, 'paths.tsconfig: expected a glob or a non-empty array of globs'],
       [module(['./src'], { output: 'src/di/container.bundle.ts' }), 'output: unknown field'],
-      [{ paths: {} }, 'paths.include: expected a folder or a non-empty array of folders'],
-      [{ paths: { exclude: ['**/*.ts'] } }, 'paths.include: expected a folder or a non-empty array of folders'],
-      [{ paths: './src' }, 'paths: expected an object with "include"'],
-      [{ paths: ['./src'] }, 'paths: expected an object with "include"'],
-      [{ paths: 42 }, 'paths: expected an object with "include"'],
+      [{ paths: './src' }, 'paths: expected an object with "include" or "tsconfig"'],
+      [{ paths: ['./src'] }, 'paths: expected an object with "include" or "tsconfig"'],
+      [{ paths: 42 }, 'paths: expected an object with "include" or "tsconfig"'],
       [{ paths: { include: [] } }, 'paths.include: expected a non-empty array'],
       [{ paths: { include: [{ path: './src' }] } }, 'paths.include[0]: expected a non-empty string'],
-      [{ paths: { include: 42 } }, 'paths.include: expected a folder or a non-empty array of folders'],
+      [{ paths: { include: 42 } }, 'paths.include: expected a path or a non-empty array of paths'],
       [module(['./src'], { name: 'not valid' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { name: '2fa' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { tags: ['production'] }), 'tags: unknown field'],
@@ -149,7 +153,9 @@ describe('Folder registration', () => {
     it('rejects an empty YAML file: paths must be written out', () => {
       project = create({ 'production.bundle.yaml': '', 'tsconfig.json': { include: ['src'] } });
 
-      expect(() => buildFrom('production.bundle.yaml')).toThrow('paths: expected an object with "include"');
+      expect(() => buildFrom('production.bundle.yaml')).toThrow(
+        'paths: expected an object with "include" or "tsconfig"',
+      );
     });
 
     it.each([
@@ -198,6 +204,67 @@ describe('Folder registration', () => {
 
       expect(generated()).toContain('Registration.fromClass(Logger)');
       expect(generated()).toContain('Registration.fromClass(Db)');
+    });
+
+    it('registers the classes of a source file named in paths.include, as a shell expanding a glob names it', () => {
+      project = create({
+        'app.bundle.json': module(['./src/services/Logger.ts', './src/infra/Db.ts']),
+        'src/services/Logger.ts': decorated('Logger'),
+        'src/services/Mailer.ts': decorated('Mailer'),
+        'src/infra/Db.ts': decorated('Db'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Db', 'Logger']);
+    });
+
+    it('scans the files a glob in paths.include matches, relative to the config file', () => {
+      project = create({
+        'app.bundle.json': module(['./src/**/*Service.ts', 'src/infra/*.ts']),
+        'src/a/UserService.ts': decorated('UserService'),
+        'src/b/deep/AuthService.ts': decorated('AuthService'),
+        'src/a/Mailer.ts': decorated('Mailer'),
+        'src/infra/Db.ts': decorated('Db'),
+        'src/infra/nested/Cache.ts': decorated('Cache'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['UserService', 'AuthService', 'Db']);
+    });
+
+    it('resolves the folder of a glob before its first wildcard through a tsconfig paths alias', () => {
+      project = create({
+        'app.bundle.json': module(['@app/**/*Service.ts']),
+        'tsconfig.json': { compilerOptions: { paths: { '@app/*': ['./src/*'] } } },
+        'src/services/UserService.ts': decorated('UserService'),
+        'src/services/Mailer.ts': decorated('Mailer'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain("import { UserService } from '@app/services/UserService';");
+      expect(registered()).toEqual(['UserService']);
+    });
+
+    it('still drops the files paths.exclude matches from a file or a glob in paths.include', () => {
+      project = create({
+        'app.bundle.json': module(['./src/**/*.ts', './src/Logger.spec.ts']),
+        'src/Logger.ts': decorated('Logger'),
+        'src/Logger.spec.ts': decorated('LoggerSpec'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Logger']);
+    });
+
+    it('fails naming a file in paths.include that does not exist', () => {
+      project = create({ 'app.bundle.json': module(['./src/Missing.ts']) });
+
+      expect(() => buildProject()).toThrow(NamespaceNotFoundError);
+      expect(() => buildProject()).toThrow('namespace "./src/Missing.ts"');
     });
 
     it('registers exported classes, skipping non-exported and abstract ones', () => {
@@ -590,9 +657,263 @@ describe('Folder registration', () => {
     });
   });
 
-  describe('Story: Name every input explicitly', () => {
-    const registered = () => [...generated().matchAll(/fromClass\((\w+)\)/g)].map(([, name]) => name);
+  describe('Story: Scan the folders of the tsconfig paths aliases, when asked', () => {
+    it.each([
+      [{ paths: { tsconfig: './tsconfig.json' } }],
+      [{ paths: { tsconfig: ['./tsconfig.json'] }, match: { decorators: [] } }],
+    ])('scans the folders the aliases point to when the config %j sets paths.tsconfig', (config) => {
+      project = create({
+        'app.bundle.json': config,
+        'tsconfig.json': {
+          compilerOptions: {
+            paths: {
+              '@app/*': ['./src/*'],
+              '@infra/*': ['./infra/*'],
+              '@clock': ['./lib/Clock.ts'],
+              '@lib': ['./lib'],
+            },
+          },
+        },
+        'src/services/Logger.ts': decorated('Logger'),
+        'infra/Db.ts': decorated('Db'),
+        'lib/Clock.ts': decorated('Clock'),
+        'lib/Other.ts': decorated('Other'),
+        'scripts/Tool.ts': decorated('Tool'),
+      });
 
+      buildProject();
+
+      expect(registered()).toEqual(['Db', 'Clock', 'Logger']);
+      expect(generated()).toContain('// Paths: ./infra, ./lib/Clock.ts, ./src');
+      expect(generated()).toContain("import { Clock } from '@clock';");
+    });
+
+    it('never scans the tsconfig unless paths.tsconfig asks: by default it only supplies aliases', () => {
+      project = create({
+        'app.bundle.json': { tsconfig: './tsconfig.json', paths: { include: ['./lib'] } },
+        'tsconfig.json': { compilerOptions: { paths: { '@/*': ['./*'] } } },
+        'src/Logger.ts': decorated('Logger'),
+        'lib/Db.ts': decorated('Db'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Db']);
+    });
+
+    it('adds paths.include to the alias folders and applies paths.exclude to both', () => {
+      project = create({
+        'app.bundle.json': {
+          paths: {
+            tsconfig: './tsconfig.json',
+            include: ['./lib/Db.ts'],
+            exclude: [...DEFAULT_EXCLUDE, 'src/legacy/**'],
+          },
+        },
+        'tsconfig.json': { compilerOptions: { paths: { '@app/*': ['./src/*'], '@db': ['./lib/Db.ts'] } } },
+        'src/Logger.ts': decorated('Logger'),
+        'src/Logger.spec.ts': decorated('LoggerSpec'),
+        'src/legacy/Old.ts': decorated('Old'),
+        'lib/Db.ts': decorated('Db'),
+        'lib/Other.ts': decorated('Other'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Db', 'Logger']);
+      expect(generated()).toContain('// Paths: ./lib/Db.ts, ./src');
+    });
+
+    it('ignores the include, exclude and files of the tsconfig: only its paths aliases count', () => {
+      project = create({
+        'app.bundle.json': { paths: { tsconfig: './tsconfig.json' } },
+        'tsconfig.json': {
+          compilerOptions: { paths: { '@app/*': ['./src/*'] } },
+          include: ['lib'],
+          exclude: ['src/legacy'],
+          files: ['lib/Extra.ts'],
+        },
+        'src/Logger.ts': decorated('Logger'),
+        'src/legacy/Old.ts': decorated('Old'),
+        'lib/Extra.ts': decorated('Extra'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Logger', 'Old']);
+    });
+
+    it('resolves the aliases of the config tsconfig against its baseUrl, and follows its extends', () => {
+      project = TempProject.create({
+        'config/tsconfig.base.json': { compilerOptions: { baseUrl: '../src', paths: { '@app/*': ['services/*'] } } },
+        'app/tsconfig.json': { extends: '../config/tsconfig.base.json' },
+        'app/app.bundle.json': { paths: { tsconfig: './tsconfig.json' } },
+        'src/services/Logger.ts': decorated('Logger'),
+        'src/infra/Db.ts': decorated('Db'),
+      });
+
+      buildFrom('app/app.bundle.json');
+
+      expect(registered()).toEqual(['Logger']);
+      expect(generated()).toContain('// Paths: ../src/services');
+      expect(generated()).toContain("import { Logger } from '@app/Logger';");
+    });
+
+    it('scans a folder once when one alias points inside another, and skips node_modules and missing targets', () => {
+      project = create({
+        'app.bundle.json': { paths: { tsconfig: './tsconfig.json' } },
+        'tsconfig.json': {
+          compilerOptions: {
+            paths: {
+              '@app/*': ['./src/*'],
+              '@services/*': ['./src/services/*'],
+              '*': ['./node_modules/*', './gone/*'],
+            },
+          },
+        },
+        'src/services/Logger.ts': decorated('Logger'),
+        'node_modules/pkg/Lib.ts': decorated('Lib'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Logger']);
+      expect(generated()).toContain('// Paths: ./src');
+    });
+
+    it('lets merged configs set paths.tsconfig in one and paths.include in another', () => {
+      project = create({
+        'common.bundle.yml': 'paths:\n  tsconfig: ./tsconfig.json\n',
+        'prod.bundle.yml': "paths:\n  include: ['./shared']\n",
+        'tsconfig.json': ROOT_ALIAS,
+        'src/Logger.ts': decorated('Logger'),
+        'shared/Db.ts': decorated('Db'),
+      });
+
+      buildMerged('common.bundle.yml', 'prod.bundle.yml');
+
+      expect(generated()).toContain('// Paths: ., ./shared');
+      expect(registered()).toEqual(['Db', 'Logger']);
+    });
+
+    it('scans the alias folders of every tsconfig a glob matches, imported through the config tsconfig', () => {
+      project = create({
+        'app.bundle.json': { paths: { tsconfig: './packages/*/tsconfig.json' } },
+        'packages/a/tsconfig.json': { compilerOptions: { paths: { '@a/*': ['./src/*'] } } },
+        'packages/b/tsconfig.json': { compilerOptions: { paths: { '@b/*': ['./lib/*'] } } },
+        'packages/c/tsconfig.json': { compilerOptions: {} },
+        'packages/a/src/Logger.ts': decorated('Logger'),
+        'packages/a/scripts/Tool.ts': decorated('Tool'),
+        'packages/b/lib/Db.ts': decorated('Db'),
+      });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Logger', 'Db']);
+      expect(generated()).toContain('// Paths: ./packages/a/src, ./packages/b/lib');
+      // The config's own tsconfig (the root alias `@/*`) writes the imports.
+      expect(generated()).toContain("import { Logger } from '@/packages/a/src/Logger';");
+    });
+
+    it('takes a list of tsconfig paths and globs', () => {
+      project = create({
+        'app.bundle.json': { paths: { tsconfig: ['./tsconfig.app.json', './libs/*/tsconfig.json'] } },
+        'tsconfig.app.json': { compilerOptions: { paths: { '@app/*': ['./src/*'] } } },
+        'libs/db/tsconfig.json': { compilerOptions: { paths: { '@db/*': ['./src/*'] } } },
+        'src/Logger.ts': decorated('Logger'),
+        'libs/db/src/Db.ts': decorated('Db'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain('// Paths: ./libs/db/src, ./src');
+    });
+
+    it.each([
+      [
+        { paths: { tsconfig: './tsconfig.json' } },
+        { 'tsconfig.json': { compilerOptions: {} } },
+        'paths.tsconfig: tsconfig.json has no "paths" alias',
+      ],
+      [{ paths: { tsconfig: './tsconfig.app.json' } }, {}, 'paths.tsconfig: no tsconfig matches "./tsconfig.app.json"'],
+      [
+        { paths: { tsconfig: './packages/*/tsconfig.json' } },
+        {},
+        'paths.tsconfig: no tsconfig matches "./packages/*/tsconfig.json"',
+      ],
+      [{ paths: { tsconfig: './tsconfig.json' } }, { 'tsconfig.json': '{ "compilerOptions": ' }, 'tsconfig.json'],
+    ])('fails when paths.tsconfig has nothing to scan: %j', (config, files, message) => {
+      project = TempProject.create({ 'app.bundle.json': config, ...files, 'src/Logger.ts': decorated('Logger') });
+
+      expect(() => buildProject()).toThrow(TicConfigError);
+      expect(() => buildProject()).toThrow(message);
+    });
+  });
+
+  describe('Story: Build without a config file, from a tsconfig or paths', () => {
+    const buildWith = (request: { tsconfig?: string; include?: string[] }, cwd = project.root) =>
+      (last = build({ ...request, cwd }));
+
+    it('scans the folders the paths aliases of a tsconfig given alone point to, and names the bundle AppBundle', () => {
+      project = create({
+        'config/tsconfig.di.json': { compilerOptions: { paths: { '@app/*': ['../src/*'] } } },
+        'src/services/Logger.ts': decorated('Logger'),
+        'lib/Db.ts': decorated('Db'),
+      });
+
+      buildWith({ tsconfig: 'config/tsconfig.di.json' });
+
+      expect(last.bundle).toBe('AppBundle');
+      expect(registered()).toEqual(['Logger']);
+      expect(generated()).toContain('// Paths: ./src');
+    });
+
+    it('scans only the paths it is given, relative to the working directory, through ./tsconfig.json', () => {
+      project = create({
+        'src/services/UserService.ts': decorated('UserService'),
+        'src/services/Mailer.ts': decorated('Mailer'),
+        'lib/Db.ts': decorated('Db'),
+      });
+
+      buildWith({ include: ['src/services/**/*Service.ts'] });
+
+      expect(registered()).toEqual(['UserService']);
+      expect(generated()).toContain("import { UserService } from '@/src/services/UserService';");
+    });
+
+    it('scans only the paths it is given through the aliases of the tsconfig given with them', () => {
+      project = create({
+        'config/tsconfig.di.json': { compilerOptions: { paths: { '@di/*': ['../src/*'] } } },
+        'src/services/Logger.ts': decorated('Logger'),
+        'src/infra/Db.ts': decorated('Db'),
+      });
+
+      buildWith({ tsconfig: 'config/tsconfig.di.json', include: ['src/services'] });
+
+      expect(registered()).toEqual(['Logger']);
+      expect(generated()).toContain("import { Logger } from '@di/services/Logger';");
+    });
+
+    it('never looks for a tsconfig above the working directory: without one in it, nothing has an alias', () => {
+      project = create({ 'src/services/Logger.ts': decorated('Logger') });
+
+      expect(() => buildWith({ include: ['./services'] }, project.path('src'))).toThrow(
+        'no tsconfig paths alias covers services/Logger.ts',
+      );
+    });
+
+    it.each([
+      [{}, 'nothing to bundle: name a tsconfig or paths to scan'],
+      [{ tsconfig: 'tsconfig.app.json' }, 'tsconfig not found'],
+    ])('fails given %j', (request, message) => {
+      project = create({});
+
+      expect(() => buildWith(request)).toThrow(TicConfigError);
+      expect(() => buildWith(request)).toThrow(message);
+    });
+  });
+
+  describe('Story: Name every input explicitly', () => {
     it('never takes files from the tsconfig: only the paths folders are scanned', () => {
       project = create({
         'app.bundle.json': module(['./lib']),
@@ -774,8 +1095,6 @@ describe('Folder registration', () => {
   });
 
   describe('Story: Merge configs, like webpack-merge', () => {
-    const buildMerged = (...configs: string[]) => (last = build({ config: configs, cwd: project.root }));
-
     it('concatenates paths.include in order, without duplicates, and names the bundle after the last config', () => {
       project = create({
         'common.bundle.yml': "paths:\n  include: ['./src/services']\n",
@@ -859,14 +1178,14 @@ describe('Folder registration', () => {
       expect(result.warnings).toEqual([]);
     });
 
-    it('lets a shared config leave paths out, but the merged config must have paths.include', () => {
+    it('lets a shared config leave paths out, but the merged config must have paths', () => {
       project = create({
         'common.bundle.yml': "match: '*Service'\n",
         'prod.bundle.yml': "importExtension: '.js'\n",
       });
 
       expect(() => buildMerged('common.bundle.yml', 'prod.bundle.yml')).toThrow(
-        'paths: expected an object with "include"',
+        'paths: expected an object with "include" or "tsconfig"',
       );
     });
 
