@@ -39,8 +39,15 @@ tic build [<config>...]
 `tic build` prints the bundle to **stdout** and writes nothing. `<config>` is a
 config file — JSON for `.json`, YAML for `.yaml` / `.yml`. Several are
 [merged](#merging-configs) left to right into one bundle. Without one (or with
-`-`) the config is read from **stdin**. Warnings and errors go to stderr, so
-they never end up in the bundle.
+`-`) the config is read from **stdin**. Progress, warnings and errors go to
+stderr, so they never end up in the bundle:
+
+```text
+Bundling AppBundle...
+  Clock: src/infra/Clock.ts
+  Greeter: src/services/Greeter.ts
+Bundled AppBundle: 2 dependencies from 2 files
+```
 
 ```bash
 # a config file in, the bundle saved by the shell

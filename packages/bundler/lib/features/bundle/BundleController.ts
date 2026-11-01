@@ -28,6 +28,9 @@ export type BuildCliOptions = z.output<typeof BUILD_OPTIONS>;
 
 const buildArgs = parseOptions({}, { positionals: true });
 
+/** `1 file`, `2 files`. */
+const count = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
 /**
  * `tic build [<config>... | -]`: the bundle goes to stdout; several configs are merged left to right
  * into one, and without a config file the config comes from stdin.
@@ -48,9 +51,10 @@ export class BundleController {
    * stdout. Saving it is the shell's job: `tic build app.bundle.json > src/di/app.bundle.ts`,
    * `tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`,
    * `cat app.bundle.yml | tic build > out.ts`.
-   * The classes in the bundle, one per line as its name and its file's path relative to the
-   * working directory (`Clock: src/infra/Clock.ts`), and warnings go to stderr, so they
-   * never end up in the bundle; an error names the configs.
+   * Progress goes to stderr, so it never ends up in the bundle: `Bundling AppBundle...`, then
+   * each class in it, one per line as its name and its file's path relative to the working
+   * directory (`  Clock: src/infra/Clock.ts`), the warnings, and a summary
+   * (`Bundled AppBundle: 3 dependencies from 2 files (1 warning)`). An error names the configs.
    *
    * @throws {UsageError} when an option is unknown, `-` is given with config files, or the config should come from stdin and nothing is piped in.
    * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
@@ -64,13 +68,17 @@ export class BundleController {
       const config = stdin
         ? this.configService.parse(this.stdin(), this.io.cwd)
         : this.configService.load(configs.map((file) => path.resolve(this.io.cwd, file)));
-      const { content, classes, warnings } = this.bundleService.bundle(config);
+      this.logger.info(`Bundling ${config.bundleClassName}...`);
+      const { bundle, content, classes, files, warnings } = this.bundleService.bundle(config);
       for (const { file, className } of classes) {
-        this.logger.info(`${className}: ${toPosix(path.relative(this.io.cwd, file))}`);
+        this.logger.info(`  ${className}: ${toPosix(path.relative(this.io.cwd, file))}`);
       }
       for (const warning of warnings) this.logger.warn(`${label}: ${warning}`);
       // The bundle ends with a newline; the output service adds its own.
       this.output.write(content.replace(/\n$/, ''));
+      const summary = [count(classes.length, 'dependency', 'dependencies'), `from ${count(files.length, 'file')}`];
+      if (warnings.length > 0) summary.push(`(${count(warnings.length, 'warning')})`);
+      this.logger.info(`Bundled ${bundle}: ${summary.join(' ')}`);
     } catch (e) {
       if (e instanceof TicError && !(e instanceof UsageError)) e.message = `${label}: ${e.message}`;
       throw e;

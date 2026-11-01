@@ -14,8 +14,9 @@ it.
   prints the bundle to **stdout**; it writes nothing. Saving is the shell's
   job: `tic build app.bundle.json > src/di/app.bundle.ts`,
   `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`; CI checks with
-  `tic build app.bundle.json | diff - src/di/app.bundle.ts`. Warnings and errors
-  go to stderr. The bundle is `export class AppBundle implements
+  `tic build app.bundle.json | diff - src/di/app.bundle.ts`. Progress (each
+  bundled class as `  Name: path`, then a `Bundled …` summary), warnings and
+  errors go to stderr. The bundle is `export class AppBundle implements
 IContainerModule`, applied with `container.useModule(new AppBundle())`.
 - Every import in a bundle is written through a tsconfig `paths` alias, so the
   bundle works wherever it is saved; a selected class no alias covers fails the

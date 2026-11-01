@@ -75,7 +75,7 @@ describe('BundleController', () => {
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
-  it('given bundled classes when built then each is logged as its name and its path relative to the working directory', () => {
+  it('given bundled classes when built then each is logged, indented, as its name and its path relative to the working directory', () => {
     const { out, logger, controller } = setup(() =>
       result(
         '// bundle\n',
@@ -90,10 +90,49 @@ describe('BundleController', () => {
 
     controller.bundle({ configs: ['app.bundle.json'] });
 
-    logger.verify((m) => m.info('JsonLogger: src/infra/JsonLogger.ts'), Times.Once());
-    logger.verify((m) => m.info('Greeter: src/services/greeters.ts'), Times.Once());
-    logger.verify((m) => m.info('LoudGreeter: src/services/greeters.ts'), Times.Once());
+    logger.verify((m) => m.info('  JsonLogger: src/infra/JsonLogger.ts'), Times.Once());
+    logger.verify((m) => m.info('  Greeter: src/services/greeters.ts'), Times.Once());
+    logger.verify((m) => m.info('  LoudGreeter: src/services/greeters.ts'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
+  });
+
+  it('given a bundle when built then its start is logged before it is bundled and a summary after it is written', () => {
+    const { out, logger, controller } = setup(() =>
+      result(
+        '// bundle\n',
+        [],
+        [
+          { file: '/repo/src/infra/JsonLogger.ts', className: 'JsonLogger' },
+          { file: '/repo/src/services/greeters.ts', className: 'Greeter' },
+          { file: '/repo/src/services/greeters.ts', className: 'LoudGreeter' },
+        ],
+      ),
+    );
+
+    controller.bundle({ configs: ['app.bundle.json'] });
+
+    logger.verify((m) => m.info('Bundling AppBundle...'), Times.Once());
+    logger.verify((m) => m.info('Bundled AppBundle: 3 dependencies from 2 files'), Times.Once());
+    out.verify((m) => m.write('// bundle'), Times.Once());
+  });
+
+  it('given one class and a warning when built then the summary counts them in the singular', () => {
+    const { logger, controller } = setup(() =>
+      result('// bundle\n', ['paths.exclude omits a glob'], [{ file: '/repo/src/Clock.ts', className: 'Clock' }]),
+    );
+
+    controller.bundle({ configs: ['app.bundle.json'] });
+
+    logger.verify((m) => m.info('Bundled AppBundle: 1 dependency from 1 file (1 warning)'), Times.Once());
+  });
+
+  it('given a config that fails to load when built then nothing but the error is reported', () => {
+    const { logger, controller } = setup(() => result('// bundle\n'), undefined, failing('paths: expected an object'));
+
+    expect(() => controller.bundle({ configs: ['app.bundle.json'] })).toThrow(
+      'app.bundle.json: paths: expected an object',
+    );
+    logger.verify((m) => m.info(It.IsAny()), Times.Never());
   });
 
   it('given a config that fails to load when built then the error names the config and nothing is bundled', () => {
