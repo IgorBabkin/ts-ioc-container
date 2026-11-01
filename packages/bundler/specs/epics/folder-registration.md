@@ -75,7 +75,8 @@ Acceptance criteria:
 - Merged configs must sit in one folder, which their relative paths resolve
   against; configs in different folders fail the build.
 - The merged config must name what it scans: `paths.include`, or
-  `paths.tsconfig: true`; any of the merged configs may set either.
+  `paths.tsconfig`; any of the merged configs may set either, and
+  `paths.tsconfig` concatenates like the other list fields.
 - `-` (stdin) cannot be combined with any other argument; that is a usage error.
 - The CLI's warnings and errors name every merged config:
   `common.bundle.yml + prod.bundle.yml: ...`.
@@ -87,8 +88,8 @@ that what it registers never depends on what my tsconfig happens to compile.
 
 Acceptance criteria:
 
-- A bundle scans its `paths.include` and, only when `paths.tsconfig` is `true`,
-  the folders its tsconfig's aliases point to — nothing else. The files its
+- A bundle scans its `paths.include` and, only when `paths.tsconfig` names
+  tsconfigs, the folders their aliases point to — nothing else. The files its
   tsconfig compiles (`include`, `exclude`, `files`) play no part.
 - The generated bundle's header lists the paths it scanned.
 
@@ -105,7 +106,7 @@ Acceptance criteria:
   the files it matches below its folder before the first wildcard, which may be
   a tsconfig alias (`@app/**/*.service.ts`). `paths.exclude` applies to every
   file, whichever entry named it.
-- `paths.include` is required unless `paths.tsconfig` is `true`.
+- `paths.include` is required unless `paths.tsconfig` is given.
 - By default every exported class is registered.
 - Abstract classes, non-exported classes and `.d.ts` files are never
   registered.
@@ -148,9 +149,11 @@ them in `paths.include`.
 
 Acceptance criteria:
 
-- `paths.tsconfig: true` also scans the folders the `paths` aliases of the
-  config's `tsconfig` point to: `"@app/*": ["./src/*"]` scans `./src`, and an
-  exact alias to a source file scans that file. An exact alias to a folder
+- `paths.tsconfig` is a tsconfig path or glob, or a non-empty list of them,
+  relative to the config file (`./tsconfig.json`, `./packages/*/tsconfig.json`).
+  It also scans the folders the `paths` aliases of every tsconfig it matches
+  point to: `"@app/*": ["./src/*"]` scans `./src`, and an exact alias to a
+  source file scans that file. An exact alias to a folder
   imports none of the files in it, so it is not scanned.
 - The aliases are read as TypeScript reads them: relative to `baseUrl`, or to the
   tsconfig that declares them, with `extends` followed. The tsconfig's `include`,
@@ -159,10 +162,12 @@ Acceptance criteria:
   `node_modules` and targets that do not exist are skipped.
 - `paths.include` adds to the alias folders, and `paths.exclude` (default: test
   files, `__tests__/`, `node_modules/`) applies to both.
-- `paths.tsconfig` defaults to `false`: a tsconfig is never scanned unless the
-  config asks. Set, the tsconfig must exist, and one with no alias to scan
-  fails the build naming `paths.tsconfig`. A value other than `true` or `false`
-  is an invalid config.
+- No tsconfig is scanned unless `paths.tsconfig` names it. An entry that
+  matches no file, or tsconfigs with no alias to scan between them, fail the
+  build naming `paths.tsconfig`; a value that is not a glob or a non-empty list
+  of them is an invalid config.
+- Imports are still written through the config's own `tsconfig`: in a monorepo
+  the root tsconfig's aliases must cover the files found through the packages'.
 - The bundle header lists the alias folders, relative to the config, then
   `paths.include`.
 
@@ -182,7 +187,7 @@ Acceptance criteria:
   working directory, imported through the aliases of `./tsconfig.json` there;
   `tic build 'src/**/*.service.ts'` prints `AppBundle`.
 - A tsconfig with paths only supplies their aliases; a tsconfig alone stands for
-  `{ name: app, tsconfig, paths: { tsconfig: true } }`.
+  `{ name: app, tsconfig, paths: { tsconfig } }`.
 - Config files cannot be combined with a tsconfig or paths, and two tsconfigs
   cannot be given; both are usage errors. An error names the tsconfig and the
   paths: `tsconfig.json + lib/**/*.ts: ...`.
@@ -237,8 +242,7 @@ Acceptance criteria:
 - A path is either a folder relative to the config file (`./src/services`) or
   a tsconfig `paths` alias (`@app/services`), resolved through the `paths` of
   the config's `tsconfig` (default `./tsconfig.json` next to the config,
-  which may be absent; one named explicitly, or scanned by `paths.tsconfig`,
-  must exist), including `paths` that tsconfig inherits through its own
+  which may be absent; one named explicitly must exist), including `paths` that tsconfig inherits through its own
   `extends`. The tsconfig contributes aliases and module resolution only — and
   files only through `paths.tsconfig`. No tsconfig is ever looked up above the
   config's folder.

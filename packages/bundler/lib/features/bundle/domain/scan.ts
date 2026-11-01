@@ -37,21 +37,43 @@ const DECLARATION_FILE = /\.d\.[mc]?tsx?$/;
 /** A TypeScript source file the bundler may parse: not a declaration file. */
 export const isSourceFile = (file: string): boolean => SOURCE_FILE.test(file) && !DECLARATION_FILE.test(file);
 
-/** Source files of `dir` and its sub-folders, sorted by path so the generated output is stable across machines. */
-export function listSourceFiles(dir: string, isExcluded: (file: string) => boolean): string[] {
+/** The files of `dir` and its sub-folders, `node_modules` skipped, that `accept` takes, sorted by path. */
+function walkFiles(dir: string, accept: (file: string) => boolean): string[] {
   const files: string[] = [];
   const walk = (current: string) => {
     for (const entry of readdirSync(current, { withFileTypes: true })) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
         if (entry.name !== 'node_modules') walk(full);
-      } else if (isSourceFile(entry.name) && !isExcluded(full)) {
+      } else if (accept(full)) {
         files.push(full);
       }
     }
   };
   walk(dir);
   return files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/** Source files of `dir` and its sub-folders, sorted by path so the generated output is stable across machines. */
+export function listSourceFiles(dir: string, isExcluded: (file: string) => boolean): string[] {
+  return walkFiles(dir, (file) => isSourceFile(path.basename(file)) && !isExcluded(file));
+}
+
+/**
+ * The files a path or a glob names, relative to `baseDir`, sorted: the file itself, or the files a
+ * glob matches below its folder before the first wildcard (`./packages/*\/tsconfig.json`),
+ * `node_modules` skipped. Empty when nothing matches.
+ */
+export function findFiles(spec: string, baseDir: string): string[] {
+  if (!isGlob(spec)) {
+    const file = path.resolve(baseDir, spec);
+    return existsSync(file) && statSync(file).isFile() ? [file] : [];
+  }
+  const { base, pattern } = splitGlob(spec);
+  const dir = path.resolve(baseDir, base);
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) return [];
+  const glob = globToRegExp(pattern);
+  return walkFiles(dir, (file) => glob.test(toPosix(path.relative(dir, file))));
 }
 
 /**

@@ -19,7 +19,7 @@ it.
   `tic build [<tsconfig>] <path>...` scans the folders, files and globs given
   (relative to the working directory; `paths.include`) through the aliases of the
   tsconfig (default `./tsconfig.json`), and `tic build <tsconfig>` alone scans the
-  folders its aliases point to (`paths.tsconfig: true`). A tsconfig is
+  folders its aliases point to (`paths.tsconfig: <tsconfig>`). A tsconfig is
   `tsconfig.json` / `tsconfig.*.json`; a `.json` / `.yaml` / `.yml` or
   `<name>.bundle.*` file is a config; anything else is a path. Config files
   cannot be combined with a tsconfig or paths. Progress (each
@@ -30,21 +30,24 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
 - Config fields (schema: `tic.schema.json`), flat: `paths` with `paths.include`
-  or `paths.tsconfig: true` required; `match`, `name`, `tsconfig`, `importExtension` optional.
+  or `paths.tsconfig` required; `match`, `name`, `tsconfig`, `importExtension` optional.
   Relative paths resolve against the config file; for piped text, against the
   working directory. `name` defaults to the file's stem (`prod.bundle.json` →
   `prod`) and is required for piped text or a file named otherwise; the class
   is `toClassName(name)` — `ProdBundle`.
 - A config does **not** extend its tsconfig and never takes its `include`,
   `exclude` or `files`. The `tsconfig` field (default `./tsconfig.json`, may be
-  absent; one named explicitly, or scanned by `paths.tsconfig`, must exist)
-  supplies `paths` aliases — which `paths.include` may name and generated imports
-  are written in — and the module resolution that sets the import extension.
-  Only `paths.tsconfig: true` (default `false`, so always explicit) turns the
-  aliases into files: it also scans the folders they point to
-  (`"@app/*": ["./src/*"]` → `./src`, an exact alias its source file; `baseUrl` and
-  `extends` followed, `node_modules` and missing targets skipped), with
-  `paths.include` adding to them and `paths.exclude` applying to both.
+  absent; one named explicitly must exist) supplies `paths` aliases — which
+  `paths.include` may name and generated imports are written in — and the module
+  resolution that sets the import extension. Only `paths.tsconfig` (a tsconfig
+  path or glob, or a list, relative to the config — `./packages/*/tsconfig.json`;
+  never on by default) turns aliases into files: it also scans the folders the
+  aliases of every tsconfig it matches point to (`"@app/*": ["./src/*"]` →
+  `./src`, an exact alias its source file; `baseUrl` and `extends` followed,
+  `node_modules` and missing targets skipped), with `paths.include` adding to them
+  and `paths.exclude` applying to both. An entry matching no file fails the build.
+  Imports still go through the config's own `tsconfig`; `paths.tsconfig`
+  concatenates when configs merge.
 - Selection has two stages, `paths: { include, exclude }` and
   `match: { ..., glob, exclude }`. `paths` is always an object (a string
   or a list in its place is an error); `match` also takes a string or a

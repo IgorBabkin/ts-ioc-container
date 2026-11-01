@@ -91,7 +91,7 @@ An argument that is not a config file stands for one, named `app` (`AppBundle`):
   Unquoted, the shell expands a glob into files, which works too.
 - a **tsconfig** (`tsconfig.json`, `tsconfig.*.json`) alone scans the folders
   its `paths` aliases point to: `tic build tsconfig.json` is
-  `{ "name": "app", "tsconfig": "./tsconfig.json", "paths": { "tsconfig": true } }`.
+  `{ "name": "app", "tsconfig": "./tsconfig.json", "paths": { "tsconfig": "./tsconfig.json" } }`.
   Given with paths, it only supplies the aliases they are imported through.
 
 Config files stand alone: they cannot be combined with a tsconfig or paths on the
@@ -128,13 +128,13 @@ paths:
     - ./src/infra
 ```
 
-| Field             | Default                                       | Meaning                                                                                                                          |
-| ----------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `paths`           | — (required)                                  | Which files are parsed — see [Selecting files](#selecting-files). Merged configs need it in one of them                          |
-| `match`           | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                                      |
-| `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise                           |
-| `tsconfig`        | `./tsconfig.json`                             | Source of the `paths` aliases every import is written through, and of the import extension — of files only with `paths.tsconfig` |
-| `importExtension` | `.js` under node16/nodenext, else none        | Extension of generated imports                                                                                                   |
+| Field             | Default                                       | Meaning                                                                                                     |
+| ----------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `paths`           | — (required)                                  | Which files are parsed — see [Selecting files](#selecting-files). Merged configs need it in one of them     |
+| `match`           | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                 |
+| `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise      |
+| `tsconfig`        | `./tsconfig.json`                             | Source of the `paths` aliases every import is written through, and of the import extension — never of files |
+| `importExtension` | `.js` under node16/nodenext, else none        | Extension of generated imports                                                                              |
 
 An unknown field is an error, so a misspelled or removed option never goes
 unnoticed.
@@ -274,16 +274,24 @@ paths:
   include: ./src/**/*.service.ts # a glob
 ```
 
-`paths.tsconfig: true` also scans the folders the config's `tsconfig`
-`paths` aliases point to — `"@app/*": ["./src/*"]` scans `./src`, an exact alias
-its file — following the tsconfig's `baseUrl` and `extends`, but never its
-`include`, `exclude` or `files`. `include` adds to them and `exclude` applies to
-them. It is never on by default: without it, the tsconfig only supplies aliases.
+`paths.tsconfig` names tsconfig files — a path, a glob, or a list of them, relative
+to the config file — and also scans the folders their `paths` aliases point to:
+`"@app/*": ["./src/*"]` scans `./src`, an exact alias its file. Each tsconfig's
+`baseUrl` and `extends` are followed; its `include`, `exclude` and `files` never
+count. `include` adds to them and `exclude` applies to them. Imports are still
+written through the config's own `tsconfig`, which must cover the files found.
+No tsconfig is scanned unless `paths.tsconfig` names it.
 
 ```yaml
 paths:
-  tsconfig: true # the folders of the tsconfig aliases
+  tsconfig: ./tsconfig.json # the folders of its aliases
   include: ./scripts/Seed.ts # and one more file
+```
+
+```yaml
+# a monorepo: the alias folders of every package, imported through the root tsconfig
+paths:
+  tsconfig: ./packages/*/tsconfig.json
 ```
 
 Within them, a file is parsed unless it matches **one of** `exclude`. Globs are relative to the config file and `/`-separated; `**`
@@ -295,8 +303,8 @@ such as `**/*.spec.ts` keep their meaning.
 
 | Rule       | Default                                   | Meaning                                                                                                          |
 | ---------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `include`  | — (required unless `tsconfig` is `true`)  | Folders, files or globs to scan                                                                                  |
-| `tsconfig` | `false`                                   | Also scan the folders the tsconfig `paths` aliases point to                                                      |
+| `include`  | — (required unless `tsconfig` is given)   | Folders, files or globs to scan                                                                                  |
+| `tsconfig` | —                                         | Tsconfig paths or globs whose `paths` alias folders are scanned too                                              |
 | `exclude`  | test files, `__tests__/`, `node_modules/` | A glob, or a list of them, of files never read; may start with a tsconfig alias; replaces the default when given |
 
 A non-empty `exclude` replaces the defaults, so restate the ones you still want:

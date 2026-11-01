@@ -81,9 +81,10 @@ describe('Folder registration', () => {
     it.each([
       [[], 'config: expected an object'],
       [{}, 'paths: expected an object with "include" or "tsconfig"'],
-      [{ paths: {} }, 'paths.include: required unless paths.tsconfig is true'],
-      [{ paths: { tsconfig: false } }, 'paths.include: required unless paths.tsconfig is true'],
-      [{ paths: { exclude: ['**/*.ts'] } }, 'paths.include: required unless paths.tsconfig is true'],
+      [{ paths: {} }, 'paths.include: required unless paths.tsconfig names a tsconfig to scan'],
+      [{ paths: { exclude: ['**/*.ts'] } }, 'paths.include: required unless paths.tsconfig names a tsconfig to scan'],
+      [{ paths: { tsconfig: [] } }, 'paths.tsconfig: expected a glob or a non-empty array of globs'],
+      [{ paths: { tsconfig: true } }, 'paths.tsconfig: expected a glob or a non-empty array of globs'],
       [module(['./src'], { output: 'src/di/container.bundle.ts' }), 'output: unknown field'],
       [{ paths: './src' }, 'paths: expected an object with "include" or "tsconfig"'],
       [{ paths: ['./src'] }, 'paths: expected an object with "include" or "tsconfig"'],
@@ -657,35 +658,35 @@ describe('Folder registration', () => {
   });
 
   describe('Story: Scan the folders of the tsconfig paths aliases, when asked', () => {
-    it.each([[{ paths: { tsconfig: true } }], [{ paths: { tsconfig: true }, match: { decorators: [] } }]])(
-      'scans the folders the aliases point to when the config %j sets paths.tsconfig',
-      (config) => {
-        project = create({
-          'app.bundle.json': config,
-          'tsconfig.json': {
-            compilerOptions: {
-              paths: {
-                '@app/*': ['./src/*'],
-                '@infra/*': ['./infra/*'],
-                '@clock': ['./lib/Clock.ts'],
-                '@lib': ['./lib'],
-              },
+    it.each([
+      [{ paths: { tsconfig: './tsconfig.json' } }],
+      [{ paths: { tsconfig: ['./tsconfig.json'] }, match: { decorators: [] } }],
+    ])('scans the folders the aliases point to when the config %j sets paths.tsconfig', (config) => {
+      project = create({
+        'app.bundle.json': config,
+        'tsconfig.json': {
+          compilerOptions: {
+            paths: {
+              '@app/*': ['./src/*'],
+              '@infra/*': ['./infra/*'],
+              '@clock': ['./lib/Clock.ts'],
+              '@lib': ['./lib'],
             },
           },
-          'src/services/Logger.ts': decorated('Logger'),
-          'infra/Db.ts': decorated('Db'),
-          'lib/Clock.ts': decorated('Clock'),
-          'lib/Other.ts': decorated('Other'),
-          'scripts/Tool.ts': decorated('Tool'),
-        });
+        },
+        'src/services/Logger.ts': decorated('Logger'),
+        'infra/Db.ts': decorated('Db'),
+        'lib/Clock.ts': decorated('Clock'),
+        'lib/Other.ts': decorated('Other'),
+        'scripts/Tool.ts': decorated('Tool'),
+      });
 
-        buildProject();
+      buildProject();
 
-        expect(registered()).toEqual(['Db', 'Clock', 'Logger']);
-        expect(generated()).toContain('// Paths: ./infra, ./lib/Clock.ts, ./src');
-        expect(generated()).toContain("import { Clock } from '@clock';");
-      },
-    );
+      expect(registered()).toEqual(['Db', 'Clock', 'Logger']);
+      expect(generated()).toContain('// Paths: ./infra, ./lib/Clock.ts, ./src');
+      expect(generated()).toContain("import { Clock } from '@clock';");
+    });
 
     it('never scans the tsconfig unless paths.tsconfig asks: by default it only supplies aliases', () => {
       project = create({
@@ -703,7 +704,11 @@ describe('Folder registration', () => {
     it('adds paths.include to the alias folders and applies paths.exclude to both', () => {
       project = create({
         'app.bundle.json': {
-          paths: { tsconfig: true, include: ['./lib/Db.ts'], exclude: [...DEFAULT_EXCLUDE, 'src/legacy/**'] },
+          paths: {
+            tsconfig: './tsconfig.json',
+            include: ['./lib/Db.ts'],
+            exclude: [...DEFAULT_EXCLUDE, 'src/legacy/**'],
+          },
         },
         'tsconfig.json': { compilerOptions: { paths: { '@app/*': ['./src/*'], '@db': ['./lib/Db.ts'] } } },
         'src/Logger.ts': decorated('Logger'),
@@ -721,7 +726,7 @@ describe('Folder registration', () => {
 
     it('ignores the include, exclude and files of the tsconfig: only its paths aliases count', () => {
       project = create({
-        'app.bundle.json': { paths: { tsconfig: true } },
+        'app.bundle.json': { paths: { tsconfig: './tsconfig.json' } },
         'tsconfig.json': {
           compilerOptions: { paths: { '@app/*': ['./src/*'] } },
           include: ['lib'],
@@ -742,7 +747,7 @@ describe('Folder registration', () => {
       project = TempProject.create({
         'config/tsconfig.base.json': { compilerOptions: { baseUrl: '../src', paths: { '@app/*': ['services/*'] } } },
         'app/tsconfig.json': { extends: '../config/tsconfig.base.json' },
-        'app/app.bundle.json': { paths: { tsconfig: true } },
+        'app/app.bundle.json': { paths: { tsconfig: './tsconfig.json' } },
         'src/services/Logger.ts': decorated('Logger'),
         'src/infra/Db.ts': decorated('Db'),
       });
@@ -756,7 +761,7 @@ describe('Folder registration', () => {
 
     it('scans a folder once when one alias points inside another, and skips node_modules and missing targets', () => {
       project = create({
-        'app.bundle.json': { paths: { tsconfig: true } },
+        'app.bundle.json': { paths: { tsconfig: './tsconfig.json' } },
         'tsconfig.json': {
           compilerOptions: {
             paths: {
@@ -778,7 +783,7 @@ describe('Folder registration', () => {
 
     it('lets merged configs set paths.tsconfig in one and paths.include in another', () => {
       project = create({
-        'common.bundle.yml': 'paths:\n  tsconfig: true\n',
+        'common.bundle.yml': 'paths:\n  tsconfig: ./tsconfig.json\n',
         'prod.bundle.yml': "paths:\n  include: ['./shared']\n",
         'tsconfig.json': ROOT_ALIAS,
         'src/Logger.ts': decorated('Logger'),
@@ -791,30 +796,57 @@ describe('Folder registration', () => {
       expect(registered()).toEqual(['Db', 'Logger']);
     });
 
-    it.each([
-      [{ paths: { tsconfig: true } }, { compilerOptions: {} }, 'paths.tsconfig: tsconfig.json has no "paths" alias'],
-      [{ paths: { tsconfig: true }, tsconfig: './tsconfig.app.json' }, { compilerOptions: {} }, 'tsconfig not found'],
-    ])('fails when paths.tsconfig has nothing to scan: %j', (config, tsconfig, message) => {
-      project = TempProject.create({
-        'app.bundle.json': config,
-        ...(tsconfig && { 'tsconfig.json': tsconfig }),
-        'src/Logger.ts': decorated('Logger'),
+    it('scans the alias folders of every tsconfig a glob matches, imported through the config tsconfig', () => {
+      project = create({
+        'app.bundle.json': { paths: { tsconfig: './packages/*/tsconfig.json' } },
+        'packages/a/tsconfig.json': { compilerOptions: { paths: { '@a/*': ['./src/*'] } } },
+        'packages/b/tsconfig.json': { compilerOptions: { paths: { '@b/*': ['./lib/*'] } } },
+        'packages/c/tsconfig.json': { compilerOptions: {} },
+        'packages/a/src/Logger.ts': decorated('Logger'),
+        'packages/a/scripts/Tool.ts': decorated('Tool'),
+        'packages/b/lib/Db.ts': decorated('Db'),
       });
+
+      buildProject();
+
+      expect(registered()).toEqual(['Logger', 'Db']);
+      expect(generated()).toContain('// Paths: ./packages/a/src, ./packages/b/lib');
+      // The config's own tsconfig (the root alias `@/*`) writes the imports.
+      expect(generated()).toContain("import { Logger } from '@/packages/a/src/Logger';");
+    });
+
+    it('takes a list of tsconfig paths and globs', () => {
+      project = create({
+        'app.bundle.json': { paths: { tsconfig: ['./tsconfig.app.json', './libs/*/tsconfig.json'] } },
+        'tsconfig.app.json': { compilerOptions: { paths: { '@app/*': ['./src/*'] } } },
+        'libs/db/tsconfig.json': { compilerOptions: { paths: { '@db/*': ['./src/*'] } } },
+        'src/Logger.ts': decorated('Logger'),
+        'libs/db/src/Db.ts': decorated('Db'),
+      });
+
+      buildProject();
+
+      expect(generated()).toContain('// Paths: ./libs/db/src, ./src');
+    });
+
+    it.each([
+      [
+        { paths: { tsconfig: './tsconfig.json' } },
+        { 'tsconfig.json': { compilerOptions: {} } },
+        'paths.tsconfig: tsconfig.json has no "paths" alias',
+      ],
+      [{ paths: { tsconfig: './tsconfig.app.json' } }, {}, 'paths.tsconfig: no tsconfig matches "./tsconfig.app.json"'],
+      [
+        { paths: { tsconfig: './packages/*/tsconfig.json' } },
+        {},
+        'paths.tsconfig: no tsconfig matches "./packages/*/tsconfig.json"',
+      ],
+      [{ paths: { tsconfig: './tsconfig.json' } }, { 'tsconfig.json': '{ "compilerOptions": ' }, 'tsconfig.json'],
+    ])('fails when paths.tsconfig has nothing to scan: %j', (config, files, message) => {
+      project = TempProject.create({ 'app.bundle.json': config, ...files, 'src/Logger.ts': decorated('Logger') });
 
       expect(() => buildProject()).toThrow(TicConfigError);
       expect(() => buildProject()).toThrow(message);
-    });
-
-    it('fails when paths.tsconfig is set but no tsconfig.json is there to scan', () => {
-      project = TempProject.create({ 'app.bundle.json': { paths: { tsconfig: true } } });
-
-      expect(() => buildProject()).toThrow('tsconfig not found');
-    });
-
-    it('rejects a paths.tsconfig that is not true or false', () => {
-      project = create({ 'app.bundle.json': { paths: { tsconfig: './tsconfig.json' } } });
-
-      expect(() => buildProject()).toThrow('paths.tsconfig: expected true or false');
     });
   });
 

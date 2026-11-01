@@ -15,6 +15,14 @@ const SOURCE_EXTENSION = /\.(tsx?|mts|cts)$/;
 const isDirectory = (dir: string) => existsSync(dir) && statSync(dir).isDirectory();
 const isRelative = (spec: string) => spec.startsWith('.') || path.isAbsolute(spec);
 
+/** Folders and files, deduplicated and sorted, without those inside another folder of the list. */
+export function outermost(paths: string[]): string[] {
+  const sorted = [...new Set(paths)].sort();
+  const inside = (child: string, parent: string) =>
+    child !== parent && isDirectory(parent) && !path.relative(parent, child).startsWith('..');
+  return sorted.filter((entry) => !sorted.some((other) => inside(entry, other)));
+}
+
 /** Splits a `paths` pattern at its `*`, if it has one. */
 function splitWildcard(pattern: string): [string, string] | undefined {
   const star = pattern.indexOf('*');
@@ -99,10 +107,7 @@ export class ImportPaths {
       })
       .filter((target) => !target.split(path.sep).includes('node_modules'))
       .filter((target) => existsSync(target));
-    const roots = [...new Set(found)].sort();
-    const inside = (child: string, parent: string) =>
-      child !== parent && isDirectory(parent) && !path.relative(parent, child).startsWith('..');
-    return roots.filter((root) => !roots.some((other) => inside(root, other)));
+    return outermost(found);
   }
 
   /**

@@ -47,7 +47,7 @@ export interface ITicConfigService {
    * (`AppBundle`), with the default `paths.exclude`. Given `include` — folders, files or globs,
    * as in `paths.include` — it scans them through the aliases of `tsconfig` (default
    * `./tsconfig.json` in `dir`): `{ tsconfig, paths: { include } }`. Given only a tsconfig, it
-   * scans the folders the tsconfig's aliases point to: `{ tsconfig, paths: { tsconfig: true } }`.
+   * scans the folders the tsconfig's aliases point to: `{ tsconfig, paths: { tsconfig } }`.
    *
    * @throws {TicConfigError} when there is neither a tsconfig nor `include`.
    */
@@ -97,7 +97,7 @@ export class TicConfigService implements ITicConfigService {
     const content: BundleConfigFile = {
       name: DEFAULT_BUNDLE_NAME,
       tsconfig,
-      paths: include.length > 0 ? { include } : { tsconfig: true },
+      paths: include.length > 0 ? { include } : { tsconfig },
     };
     // There is no config file: its relative paths resolve against the working directory, as piped text's do.
     return resolveConfig(content, path.join(dir, STDIN));

@@ -15,7 +15,7 @@
     },
     "tsconfig": {
       "default": "./tsconfig.json",
-      "description": "The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files unless paths.tsconfig is true: the bundle scans paths.include alone. Relative to the config file. The default may be absent; a tsconfig named here, or scanned by paths.tsconfig, must exist.",
+      "description": "The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans what paths names (paths.tsconfig may name this tsconfig). Relative to the config file. The default may be absent; a tsconfig named here must exist.",
       "type": "string",
       "minLength": 1
     },
@@ -24,16 +24,28 @@
       "type": "string"
     },
     "paths": {
-      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders, files and globs the files come from, and `tsconfig: true` adds the folders the tsconfig paths aliases point to; of them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.",
+      "description": "Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders, files and globs the files come from, and `tsconfig` adds the folders the paths aliases of the tsconfigs it names point to; of them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.",
       "type": "object",
       "properties": {
         "tsconfig": {
-          "default": false,
-          "description": "Also scan the folders the paths aliases of the config's tsconfig point to (\"@app/*\": [\"./src/*\"] scans ./src), baseUrl and extends followed; its include, exclude and files play no part. include adds to them, exclude applies to them. Default false: the tsconfig only supplies aliases.",
-          "type": "boolean"
+          "description": "Path, or glob, of tsconfig files — or a list of them — whose paths aliases point to folders to scan too: ./tsconfig.json, or ./packages/*/tsconfig.json. \"@app/*\": [\"./src/*\"] scans ./src, baseUrl and extends followed; a tsconfig's include, exclude and files play no part. include adds to them, exclude applies to them. Relative to the config file. Imports are still written through the config's own tsconfig.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          ]
         },
         "include": {
-          "description": "What to scan: folders, sub-folders included, relative to the config file (./src/services) or tsconfig paths aliases (@app/services); source files (./src/Clock.ts); or globs of files (./src/**/*.service.ts, @app/**/*.service.ts). Required unless tsconfig is true.",
+          "description": "What to scan: folders, sub-folders included, relative to the config file (./src/services) or tsconfig paths aliases (@app/services); source files (./src/Clock.ts); or globs of files (./src/**/*.service.ts, @app/**/*.service.ts). Required unless tsconfig is given.",
           "anyOf": [
             {
               "type": "string",

@@ -70,7 +70,7 @@ describe('TicConfigService', () => {
       name: 'app',
       bundleClassName: 'AppBundle',
       tsconfig: { file: '/repo/tsconfig.json', required: false },
-      paths: { tsconfig: false, include: ['src/**/*.ts'] },
+      paths: { tsconfig: [], include: ['src/**/*.ts'] },
     });
   });
 
@@ -79,7 +79,7 @@ describe('TicConfigService', () => {
 
     expect(service.fromProject({ dir: '/repo', tsconfig: '/repo/config/tsconfig.di.json' })).toMatchObject({
       tsconfig: { file: '/repo/config/tsconfig.di.json', required: true },
-      paths: { tsconfig: true, include: [] },
+      paths: { tsconfig: ['/repo/config/tsconfig.di.json'], include: [] },
     });
   });
 

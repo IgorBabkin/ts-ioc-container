@@ -64,6 +64,7 @@ export {
   isSourceFile,
   listSourceFiles,
   listIncludedFiles,
+  findFiles,
   type DiscoveredClass,
 } from './features/bundle/domain/scan';
 export {
