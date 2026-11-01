@@ -14,7 +14,15 @@ it.
   prints the bundle to **stdout**; it writes nothing. Saving is the shell's
   job: `tic build app.bundle.json > src/di/app.bundle.ts`,
   `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`; CI checks with
-  `tic build app.bundle.json | diff - src/di/app.bundle.ts`. Progress (each
+  `tic build app.bundle.json | diff - src/di/app.bundle.ts`. There is no zero
+  config, but an argument that is not a config file stands for one named `app`:
+  `tic build [<tsconfig>] <path>...` scans the folders, files and globs given
+  (relative to the working directory; `paths.include`) through the aliases of the
+  tsconfig (default `./tsconfig.json`), and `tic build <tsconfig>` alone scans the
+  folders its aliases point to (`paths.tsconfig: true`). A tsconfig is
+  `tsconfig.json` / `tsconfig.*.json`; a `.json` / `.yaml` / `.yml` or
+  `<name>.bundle.*` file is a config; anything else is a path. Config files
+  cannot be combined with a tsconfig or paths. Progress (each
   bundled class as `  Name: path`, then a `Bundled …` summary), warnings and
   errors go to stderr. The bundle is `export class AppBundle implements
 IContainerModule`, applied with `container.useModule(new AppBundle())`.
@@ -22,24 +30,31 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
 - Config fields (schema: `tic.schema.json`), flat: `paths` with `paths.include`
-  required; `match`, `name`, `tsconfig`, `importExtension` optional.
+  or `paths.tsconfig: true` required; `match`, `name`, `tsconfig`, `importExtension` optional.
   Relative paths resolve against the config file; for piped text, against the
   working directory. `name` defaults to the file's stem (`prod.bundle.json` →
   `prod`) and is required for piped text or a file named otherwise; the class
   is `toClassName(name)` — `ProdBundle`.
-- A config does **not** extend its tsconfig and never takes files from it. The
-  `tsconfig` field (default `./tsconfig.json`, may be absent; one named
-  explicitly must exist) only supplies `paths` aliases — which `paths.include` may
-  name and generated imports are written in (most specific alias, else a
-  relative path) — and the module resolution that sets the import extension.
+- A config does **not** extend its tsconfig and never takes its `include`,
+  `exclude` or `files`. The `tsconfig` field (default `./tsconfig.json`, may be
+  absent; one named explicitly, or scanned by `paths.tsconfig`, must exist)
+  supplies `paths` aliases — which `paths.include` may name and generated imports
+  are written in — and the module resolution that sets the import extension.
+  Only `paths.tsconfig: true` (default `false`, so always explicit) turns the
+  aliases into files: it also scans the folders they point to
+  (`"@app/*": ["./src/*"]` → `./src`, an exact alias its source file; `baseUrl` and
+  `extends` followed, `node_modules` and missing targets skipped), with
+  `paths.include` adding to them and `paths.exclude` applying to both.
 - Selection has two stages, `paths: { include, exclude }` and
   `match: { ..., glob, exclude }`. `paths` is always an object (a string
   or a list in its place is an error); `match` also takes a string or a
   list as a shortcut for `match.glob`. `paths` decides by path which files
-  are read and parsed at all. `paths.include` (required: one folder or a
-  non-empty list) names the folders scanned, always with their sub-folders —
-  relative to the config file (`./src/services`) or tsconfig aliases
-  (`@app/services`); there is no `{ path, recursive }` form. A file in them is parsed unless it matches one
+  are read and parsed at all. `paths.include` (required unless `paths.tsconfig`:
+  one entry or a non-empty list) names what is scanned — folders, always with
+  their sub-folders, relative to the config file (`./src/services`) or tsconfig
+  aliases (`@app/services`); source files (`./src/Clock.ts`); or globs of files
+  (`./src/**/*.service.ts`, `@app/**/*.service.ts` — the folder before the first
+  wildcard may be an alias); there is no `{ path, recursive }` form. A file in them is parsed unless it matches one
   of `exclude` (one glob or a list, each relative to the config file or starting
   with a tsconfig alias — `@generated/**`, or `@generated` for the whole folder;
   catch-all `"*"` aliases are skipped; default: test files, `__tests__/`,
@@ -70,7 +85,8 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   rerun `tic build`.
 - Unknown config fields are errors, at every level.
 - Programmatic API: `build({ config, cwd })` (`config`: a file or a list merged
-  left to right) or `build({ text, cwd })` returns
+  left to right), `build({ text, cwd })` or `build({ tsconfig, include, cwd })` (as
+  `tic build <tsconfig> <path>...`) returns
   `{ content, bundle, registrations, warnings }` and writes nothing;
   `loadConfig(file | files)`, `run(argv, io)` (`io.stdin` backs piped configs); every error the
   bundler raises on purpose is a `TicError` with a stable `code`

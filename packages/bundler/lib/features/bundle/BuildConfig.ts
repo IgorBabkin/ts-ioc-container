@@ -6,16 +6,26 @@ import { globToRegExp } from './domain/glob';
 
 /**
  * Which files a bundle reads and parses: the first, cheap stage of selection,
- * decided by path alone. `include` names the folders the files come from; within them
- * a file is parsed unless it matches one of `exclude`. Globs are relative to the
- * config file and `/`-separated.
+ * decided by path alone. `include` names the folders, files and globs the files come from,
+ * and `tsconfig: true` adds the folders the tsconfig's `paths` aliases point to; of them a
+ * file is parsed unless it matches one of `exclude`. Globs are relative to the config file
+ * and `/`-separated.
  */
 export interface PathSelector {
   /**
-   * Folder, or folders, to scan recursively: relative to the config file (`./src/services`),
-   * or tsconfig `paths` aliases (`@app/services`).
+   * Also scan the folders the `paths` aliases of the config's `tsconfig` point to:
+   * `"@app/*": ["./src/*"]` scans `./src`, `baseUrl` and `extends` followed; its `include`,
+   * `exclude` and `files` play no part. `include` adds to them and `exclude` applies to them.
+   * Default `false`: the tsconfig only supplies aliases, and is never scanned unless asked.
    */
-  include: string | string[];
+  tsconfig?: boolean;
+  /**
+   * What to scan: folders, with their sub-folders, relative to the config file (`./src/services`)
+   * or tsconfig `paths` aliases (`@app/services`); source files (`./src/Clock.ts`); or globs of
+   * files (`./src/**\/*.service.ts`), whose folder before the first wildcard may be an alias
+   * (`@app/**\/*.service.ts`). Required unless `tsconfig` is `true`.
+   */
+  include?: string | string[];
   /**
    * Glob, or globs, of files never read; one may start with a tsconfig `paths` alias
    * (`@generated/**`, or `@generated` for the whole folder). Replaces {@link DEFAULT_EXCLUDE} when given.
@@ -25,7 +35,9 @@ export interface PathSelector {
 
 /** A {@link PathSelector} with its defaults filled in. */
 export interface ResolvedPathSelector {
-  /** The folders to scan, as written in the config. */
+  /** Whether the folders the tsconfig's `paths` aliases point to are scanned too. */
+  tsconfig: boolean;
+  /** The folders, files and globs to scan, as written in the config; empty when it names none. */
   include: string[];
   /** As written in the config: an alias in one is resolved, and the glob compiled, once the tsconfig is loaded. */
   exclude: string[];
@@ -88,16 +100,18 @@ export interface BundleConfigFile {
   /**
    * The tsconfig whose `paths` aliases `paths.include` may name and generated imports are
    * written in, and whose `moduleResolution` sets the import extension. It contributes
-   * nothing else: the files scanned are `paths.include` alone. Relative to the config file.
-   * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
+   * nothing else — unless `paths.tsconfig` asks for the folders its aliases point to.
+   * Relative to the config file. Default `./tsconfig.json`, which may be absent; a tsconfig
+   * named here, or scanned by `paths.tsconfig`, must exist.
    */
   tsconfig?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
   /**
-   * Which files are parsed: the folders in `paths.include`, minus {@link DEFAULT_EXCLUDE} unless
-   * `exclude` says otherwise. Always an object: there is no folder or folder-list shorthand.
-   * Required — though in a config merged with others, only the merged config must have it.
+   * Which files are parsed: what `paths.include` names, and the tsconfig's alias folders when
+   * `paths.tsconfig` is `true`, minus {@link DEFAULT_EXCLUDE} unless `exclude` says otherwise.
+   * Always an object: there is no folder or folder-list shorthand. Required, with `include` or
+   * `tsconfig: true` — though in a config merged with others, only the merged config must have it.
    */
   paths: PathSelector;
   /**
@@ -108,6 +122,8 @@ export interface BundleConfigFile {
 }
 
 export const DEFAULT_TSCONFIG = './tsconfig.json';
+/** The name of a bundle `tic build` makes of a tsconfig or of paths, without a config file: `AppBundle`. */
+export const DEFAULT_BUNDLE_NAME = 'app';
 /** What `match.decorators` requires when omitted: the library's own `@register`. */
 export const DEFAULT_DECORATORS = ['register'];
 export const DEFAULT_EXCLUDE = [
@@ -129,7 +145,7 @@ export interface BundleConfig {
   name: string;
   /** The generated class: `ProductionBundle`. */
   bundleClassName: string;
-  /** The tsconfig of `paths` aliases; `required` when the config names it, so it must exist. */
+  /** The tsconfig of `paths` aliases; `required` when the config names it or `paths.tsconfig` scans it, so it must exist. */
   tsconfig: { file: string; required: boolean };
   importExtension?: string;
   paths: ResolvedPathSelector;
@@ -179,18 +195,25 @@ const toList = (value: string | string[]): string[] => (Array.isArray(value) ? v
 const toGlobs = (value?: string | string[]): RegExp[] | undefined =>
   value === undefined ? undefined : toList(value).map(globToRegExp);
 
-const FOLDERS_SCHEMA = z.array(nonEmptyString(), expected('a non-empty array')).min(1, expected('a non-empty array'));
+const PATH_LIST_SCHEMA = z.array(nonEmptyString(), expected('a non-empty array')).min(1, expected('a non-empty array'));
 
 const PATHS_DESCRIPTION =
-  'Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.';
+  'Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders, files and globs the files come from, and `tsconfig: true` adds the folders the tsconfig paths aliases point to; of them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.';
 
 const PATHS_SCHEMA = z
   .strictObject(
     {
-      include: z
-        .union([nonEmptyString(), FOLDERS_SCHEMA], expected('a folder or a non-empty array of folders'))
+      tsconfig: z
+        .boolean(expected('true or false'))
+        .default(false)
         .describe(
-          'Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services).',
+          'Also scan the folders the paths aliases of the config\'s tsconfig point to ("@app/*": ["./src/*"] scans ./src), baseUrl and extends followed; its include, exclude and files play no part. include adds to them, exclude applies to them. Default false: the tsconfig only supplies aliases.',
+        ),
+      include: z
+        .union([nonEmptyString(), PATH_LIST_SCHEMA], expected('a path or a non-empty array of paths'))
+        .optional()
+        .describe(
+          'What to scan: folders, sub-folders included, relative to the config file (./src/services) or tsconfig paths aliases (@app/services); source files (./src/Clock.ts); or globs of files (./src/**/*.service.ts, @app/**/*.service.ts). Required unless tsconfig is true.',
         ),
       exclude: globList('a glob or an array of globs', 0)
         .default(DEFAULT_EXCLUDE)
@@ -198,7 +221,7 @@ const PATHS_SCHEMA = z
           'Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.',
         ),
     },
-    expected('an object with "include"'),
+    expected('an object with "include" or "tsconfig"'),
   )
   .describe(PATHS_DESCRIPTION);
 
@@ -265,7 +288,7 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .optional()
       .meta({ default: DEFAULT_TSCONFIG })
       .describe(
-        'The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans paths.include alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.',
+        'The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files unless paths.tsconfig is true: the bundle scans paths.include alone. Relative to the config file. The default may be absent; a tsconfig named here, or scanned by paths.tsconfig, must exist.',
       ),
     importExtension: z
       .string(expected('a string'))
@@ -287,7 +310,7 @@ type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
  * `tic.schema.json` is generated from it, so editors accept a shared config.
  */
 export const BUNDLE_CONFIG_FILE_SCHEMA = BUNDLE_CONFIG_SCHEMA.extend({
-  paths: PATHS_SCHEMA.partial().optional().describe(`${PATHS_DESCRIPTION} Required in the merged config.`),
+  paths: PATHS_SCHEMA.partial().optional().describe(PATHS_DESCRIPTION),
 });
 
 /** `['match', 'export']` -> `match.export`, `['paths', 'include', 0]` -> `paths.include[0]`; the root is `config`. */
@@ -324,7 +347,8 @@ type ParsedPaths = z.output<typeof PATHS_SCHEMA>;
 
 function toPathSelector(paths: ParsedPaths): ResolvedPathSelector {
   return {
-    include: toList(paths.include),
+    tsconfig: paths.tsconfig,
+    include: paths.include === undefined ? [] : toList(paths.include),
     exclude: toList(paths.exclude),
   };
 }
@@ -453,8 +477,9 @@ export function mergeConfigs(configs: { file: string; content: unknown }[]): unk
 /**
  * Validates parsed config content and resolves its paths against `file`'s directory.
  * Without a `name` the bundle is named after the file: `production.bundle.json` -> `production`.
+ * It must name what it scans: `paths.include`, or `paths.tsconfig: true`.
  *
- * @throws {TicConfigError} when the content does not match the config shape, or names no bundle; the message names the field.
+ * @throws {TicConfigError} when the content does not match the config shape, names no bundle, or names nothing to scan; the message names the field.
  */
 export function resolveConfig(content: unknown, file: string): BundleConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
@@ -468,13 +493,19 @@ export function resolveConfig(content: unknown, file: string): BundleConfig {
         : `name: required when the config file is not named <name>${CONFIG_FILE_SUFFIXES.join(' / ')}`,
     );
   }
+  if (paths.include === undefined && !paths.tsconfig) {
+    throw new TicConfigError('paths.include: required unless paths.tsconfig is true');
+  }
   const dir = path.dirname(file);
   return {
     file,
     dir,
     name: bundleName,
     bundleClassName: toClassName(bundleName),
-    tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG), required: tsconfig !== undefined },
+    tsconfig: {
+      file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG),
+      required: tsconfig !== undefined || paths.tsconfig,
+    },
     importExtension,
     paths: toPathSelector(paths),
     match: toClassSelector(match),

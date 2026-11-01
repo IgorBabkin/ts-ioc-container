@@ -12,7 +12,8 @@ so that adding a service means writing the class, not also editing a
 hand-maintained list of `addRegistration(...)` calls.
 
 A folder is addressed the same way an import is: a path relative to the config file (`./src/services`) or a
-`tsconfig.json` `paths` alias (`@app/services`).
+`tsconfig.json` `paths` alias (`@app/services`). A file or a glob of files can be named too, and a bundle can ask
+for the folders its tsconfig's aliases point to — but only by asking: there is no zero config.
 
 ## Stories
 
@@ -73,7 +74,9 @@ Acceptance criteria:
 - The bundle is named after the last config unless one sets `name`.
 - Merged configs must sit in one folder, which their relative paths resolve
   against; configs in different folders fail the build.
-- `-` (stdin) cannot be merged with config files; that is a usage error.
+- The merged config must name what it scans: `paths.include`, or
+  `paths.tsconfig: true`; any of the merged configs may set either.
+- `-` (stdin) cannot be combined with any other argument; that is a usage error.
 - The CLI's warnings and errors name every merged config:
   `common.bundle.yml + prod.bundle.yml: ...`.
 
@@ -84,8 +87,9 @@ that what it registers never depends on what my tsconfig happens to compile.
 
 Acceptance criteria:
 
-- A bundle scans its `paths.include` and nothing else; the files its tsconfig
-  compiles play no part.
+- A bundle scans its `paths.include` and, only when `paths.tsconfig` is `true`,
+  the folders its tsconfig's aliases point to — nothing else. The files its
+  tsconfig compiles (`include`, `exclude`, `files`) play no part.
 - The generated bundle's header lists the paths it scanned.
 
 ### Story: Register the classes of a folder
@@ -95,8 +99,13 @@ its classes become registrations of the generated bundle.
 
 Acceptance criteria:
 
-- `paths.include` is one folder or a non-empty list of them; each is scanned
-  with its sub-folders. There is no non-recursive form.
+- `paths.include` is one entry or a non-empty list of them. A folder is scanned
+  with its sub-folders; there is no non-recursive form. A source file is read
+  alone, as a shell that expands a glob names it. A glob (`*`, `?`, `**`) scans
+  the files it matches below its folder before the first wildcard, which may be
+  a tsconfig alias (`@app/**/*.service.ts`). `paths.exclude` applies to every
+  file, whichever entry named it.
+- `paths.include` is required unless `paths.tsconfig` is `true`.
 - By default every exported class is registered.
 - Abstract classes, non-exported classes and `.d.ts` files are never
   registered.
@@ -130,6 +139,54 @@ Acceptance criteria:
   parses tests deliberately. When a non-empty `exclude` omits a default glob,
   the build reports a warning (the escape hatch stays: `[]` warns for nothing).
 - An invalid rule fails the build naming the offending field.
+
+### Story: Scan the folders of the tsconfig paths aliases, when asked
+
+As an application developer whose tsconfig already maps every source folder to
+an alias, I can tell a bundle to scan those folders, so that I do not repeat
+them in `paths.include`.
+
+Acceptance criteria:
+
+- `paths.tsconfig: true` also scans the folders the `paths` aliases of the
+  config's `tsconfig` point to: `"@app/*": ["./src/*"]` scans `./src`, and an
+  exact alias to a source file scans that file. An exact alias to a folder
+  imports none of the files in it, so it is not scanned.
+- The aliases are read as TypeScript reads them: relative to `baseUrl`, or to the
+  tsconfig that declares them, with `extends` followed. The tsconfig's `include`,
+  `exclude` and `files` play no part.
+- A folder inside another one scanned is scanned once; targets in
+  `node_modules` and targets that do not exist are skipped.
+- `paths.include` adds to the alias folders, and `paths.exclude` (default: test
+  files, `__tests__/`, `node_modules/`) applies to both.
+- `paths.tsconfig` defaults to `false`: a tsconfig is never scanned unless the
+  config asks. Set, the tsconfig must exist, and one with no alias to scan
+  fails the build naming `paths.tsconfig`. A value other than `true` or `false`
+  is an invalid config.
+- The bundle header lists the alias folders, relative to the config, then
+  `paths.include`.
+
+### Story: Build without a config file, from a tsconfig or paths
+
+As an application developer, I can bundle a few folders or a glob straight from
+the command line, without writing a config first.
+
+Acceptance criteria:
+
+- There is no zero config: `tic build` with no argument reads the config from
+  stdin, as before, and fails when nothing is piped in.
+- An argument is a config file when it is `.json`, `.yaml`, `.yml` or named
+  `<name>.bundle.*`; a tsconfig when it is `tsconfig.json` / `tsconfig.*.json`;
+  anything else is a folder, a file or a glob.
+- Paths stand for `{ name: app, paths: { include: [...] } }` relative to the
+  working directory, imported through the aliases of `./tsconfig.json` there;
+  `tic build 'src/**/*.service.ts'` prints `AppBundle`.
+- A tsconfig with paths only supplies their aliases; a tsconfig alone stands for
+  `{ name: app, tsconfig, paths: { tsconfig: true } }`.
+- Config files cannot be combined with a tsconfig or paths, and two tsconfigs
+  cannot be given; both are usage errors. An error names the tsconfig and the
+  paths: `tsconfig.json + lib/**/*.ts: ...`.
+- `build({ tsconfig, include })` does the same as a function.
 
 ### Story: Configure which classes a file contributes
 
@@ -180,9 +237,11 @@ Acceptance criteria:
 - A path is either a folder relative to the config file (`./src/services`) or
   a tsconfig `paths` alias (`@app/services`), resolved through the `paths` of
   the config's `tsconfig` (default `./tsconfig.json` next to the config,
-  which may be absent; one named explicitly must exist), including `paths`
-  that tsconfig inherits through its own `extends`. The tsconfig contributes
-  aliases and module resolution only, never files.
+  which may be absent; one named explicitly, or scanned by `paths.tsconfig`,
+  must exist), including `paths` that tsconfig inherits through its own
+  `extends`. The tsconfig contributes aliases and module resolution only — and
+  files only through `paths.tsconfig`. No tsconfig is ever looked up above the
+  config's folder.
 - A path that is neither an existing folder nor a resolvable alias fails
   the build with a message naming it.
 - Generated imports use the most specific matching alias, and only aliases:
@@ -223,7 +282,7 @@ Acceptance criteria:
 
 ## Notes
 
-Non-goals of this epic: glob patterns as paths, per-path scope or binding
+Non-goals of this epic: zero config (a bundle inferred without a config or arguments), per-path scope or binding
 rules, file or class filtering in code (predicates), and registrations other than classes (`fromValue`, `fromFn`).
 The container itself is unchanged — discovery lives entirely in the bundler
 package (ADR 0022).

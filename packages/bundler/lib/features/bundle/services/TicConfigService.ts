@@ -2,7 +2,26 @@ import path from 'node:path';
 import { by, inject, register, SingleToken } from 'ts-ioc-container';
 import { TicConfigError } from '../../../exceptions/DomainException';
 import { type IFileSystemService, IFileSystemServiceKey } from '../../../services/NodeFileSystemService';
-import { configFormat, mergeConfigs, parseConfig, type BundleConfig, resolveConfig, STDIN } from '../BuildConfig';
+import {
+  configFormat,
+  DEFAULT_BUNDLE_NAME,
+  mergeConfigs,
+  parseConfig,
+  type BundleConfig,
+  type BundleConfigFile,
+  resolveConfig,
+  STDIN,
+} from '../BuildConfig';
+
+/** A bundle described without a config file: by a tsconfig, by `paths.include` entries, or by both. */
+export interface ProjectSources {
+  /** The working directory: what `include` resolves against. */
+  dir: string;
+  /** The tsconfig, absolute. */
+  tsconfig?: string;
+  /** Folders, files or globs to scan, relative to `dir`; without them, the folders of the tsconfig's aliases. */
+  include?: string[];
+}
 
 export interface ITicConfigService {
   /**
@@ -22,6 +41,17 @@ export interface ITicConfigService {
    * @throws {TicConfigError} when the text cannot be parsed, does not match the config shape, or has no `name`.
    */
   parse(text: string, dir: string): BundleConfig;
+
+  /**
+   * The config a bundle without a config file stands for, relative to `dir` and named `app`
+   * (`AppBundle`), with the default `paths.exclude`. Given `include` — folders, files or globs,
+   * as in `paths.include` — it scans them through the aliases of `tsconfig` (default
+   * `./tsconfig.json` in `dir`): `{ tsconfig, paths: { include } }`. Given only a tsconfig, it
+   * scans the folders the tsconfig's aliases point to: `{ tsconfig, paths: { tsconfig: true } }`.
+   *
+   * @throws {TicConfigError} when there is neither a tsconfig nor `include`.
+   */
+  fromProject(sources: ProjectSources): BundleConfig;
 }
 
 export const ITicConfigServiceKey = new SingleToken<ITicConfigService>('ITicConfigService');
@@ -55,6 +85,22 @@ export class TicConfigService implements ITicConfigService {
    */
   parse(text: string, dir: string): BundleConfig {
     return resolveConfig(parseConfig(text, 'yaml'), path.join(dir, STDIN));
+  }
+
+  /**
+   * @throws {TicConfigError} when there is neither a tsconfig nor `include`.
+   */
+  fromProject({ dir, tsconfig, include = [] }: ProjectSources): BundleConfig {
+    if (tsconfig === undefined && include.length === 0) {
+      throw new TicConfigError('nothing to bundle: name a tsconfig or paths to scan');
+    }
+    const content: BundleConfigFile = {
+      name: DEFAULT_BUNDLE_NAME,
+      tsconfig,
+      paths: include.length > 0 ? { include } : { tsconfig: true },
+    };
+    // There is no config file: its relative paths resolve against the working directory, as piped text's do.
+    return resolveConfig(content, path.join(dir, STDIN));
   }
 
   /**

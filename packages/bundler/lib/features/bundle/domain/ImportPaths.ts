@@ -80,6 +80,32 @@ export class ImportPaths {
   }
 
   /**
+   * The folders and files the `paths` aliases point to, absolute and sorted: what a bundle
+   * built from a tsconfig alone scans. `@app/*` -> `./src/*` points to `src`; an exact alias
+   * (`@utils` -> `./src/utils.ts`) to its source file — one naming a folder imports none of
+   * the files in it. A target that does not exist, lies in `node_modules`, or lies in another
+   * target's folder is left out.
+   */
+  roots(): string[] {
+    const found = this.aliases
+      .flatMap(({ targets }) => targets)
+      .flatMap((target) => {
+        const wildcard = splitWildcard(target);
+        // `/repo/src/*` and `/repo/src/lib-*` point into `/repo/src`.
+        if (wildcard) return [path.resolve(wildcard[0].slice(0, wildcard[0].lastIndexOf('/') + 1))];
+        return SOURCE_EXTENSION.test(target) && existsSync(target) && !isDirectory(target)
+          ? [path.resolve(target)]
+          : [];
+      })
+      .filter((target) => !target.split(path.sep).includes('node_modules'))
+      .filter((target) => existsSync(target));
+    const roots = [...new Set(found)].sort();
+    const inside = (child: string, parent: string) =>
+      child !== parent && isDirectory(parent) && !path.relative(parent, child).startsWith('..');
+    return roots.filter((root) => !roots.some((other) => inside(root, other)));
+  }
+
+  /**
    * The specifier `file` is imported by: its most specific `paths` alias. `undefined` when no
    * alias covers it — a bundle is written to stdout, so it has no location a relative import
    * could start from.

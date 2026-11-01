@@ -5,8 +5,9 @@ import { TicConfigError } from '../../../exceptions/DomainException';
 import type { BundleConfig } from '../BuildConfig';
 import { GENERATED_HEADER, type IBundleView, IBundleViewKey } from './BundleView';
 import { globToRegExp, toPosix } from '../domain/glob';
-import { findClasses, listSourceFiles } from '../domain/scan';
+import { findClasses, listIncludedFiles } from '../domain/scan';
 import { tokenCollisions } from '../domain/tokenCollisions';
+import type { ImportPaths } from '../domain/ImportPaths';
 import { loadImportPaths } from '../domain/tsconfig';
 
 export interface Bundle {
@@ -38,10 +39,32 @@ export interface IBundleService {
   /**
    * Generates the bundle a resolved config describes and returns it; nothing is written.
    *
-   * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+   * @throws {TicConfigError} when the tsconfig is missing or invalid, or it has no paths alias to scan under paths.tsconfig, or no tsconfig paths alias covers a selected class's file.
+   * @throws {NamespaceNotFoundError} when a path is neither a source file, a folder, a tsconfig paths alias of one nor a glob in one.
    */
   bundle(config: BundleConfig): Bundle;
+}
+
+/**
+ * What a bundle scans: with `paths.tsconfig`, the folders the tsconfig's `paths` aliases point
+ * to, written relative to the config (`./src`, `../shared`) as the bundle header lists them;
+ * then `paths.include`.
+ *
+ * @throws {TicConfigError} when `paths.tsconfig` is set and no alias of the tsconfig points to a folder or a source file.
+ */
+function scanned(paths: ImportPaths, config: BundleConfig): string[] {
+  if (!config.paths.tsconfig) return config.paths.include;
+  const roots = paths.roots();
+  if (roots.length === 0) {
+    throw new TicConfigError(
+      `paths.tsconfig: ${toPosix(path.relative(config.dir, config.tsconfig.file))} has no "paths" alias pointing to a folder or source file to scan`,
+    );
+  }
+  const folders = roots.map((root) => {
+    const relative = toPosix(path.relative(config.dir, root));
+    return relative === '' ? '.' : relative.startsWith('../') ? relative : `./${relative}`;
+  });
+  return [...new Set([...folders, ...config.paths.include])];
 }
 
 export const IBundleServiceKey = new SingleToken<IBundleService>('IBundleService');
@@ -54,8 +77,8 @@ export class BundleService implements IBundleService {
   ) {}
 
   /**
-   * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
-   * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+   * @throws {TicConfigError} when the tsconfig is missing or invalid, or it has no paths alias to scan under paths.tsconfig, or no tsconfig paths alias covers a selected class's file.
+   * @throws {NamespaceNotFoundError} when a path is neither a source file, a folder, a tsconfig paths alias of one nor a glob in one.
    */
   bundle(config: BundleConfig): Bundle {
     const paths = loadImportPaths(config.tsconfig, config.importExtension);
@@ -68,9 +91,9 @@ export class BundleService implements IBundleService {
     };
 
     const files = new Set<string>();
-    for (const folder of config.paths.include) {
-      const dir = paths.resolveNamespace(folder, config.dir);
-      for (const file of listSourceFiles(dir, isExcluded)) files.add(file);
+    const include = scanned(paths, config);
+    for (const spec of include) {
+      for (const file of listIncludedFiles(spec, paths, config.dir, isExcluded)) files.add(file);
     }
 
     const classes = [...files]
@@ -91,7 +114,7 @@ export class BundleService implements IBundleService {
 
     const content = this.view.render({
       name: config.bundleClassName,
-      paths: config.paths.include,
+      paths: include,
       classes: classes.map((cls) => ({ ...cls, specifier: cls.specifier! })),
     });
     return {

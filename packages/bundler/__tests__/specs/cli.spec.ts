@@ -79,7 +79,12 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it.each([
-    [['build', '-', 'app.bundle.json'], '- reads one config from stdin and cannot be merged with config files'],
+    [['build', '-', 'app.bundle.json'], '- reads one config from stdin and cannot be combined with other arguments'],
+    [['build', '-', 'src'], '- reads one config from stdin and cannot be combined with other arguments'],
+    [['build', 'app.bundle.json', 'src'], 'config files cannot be combined with a tsconfig or paths'],
+    [['build', 'app.bundle.json', 'tsconfig.json'], 'config files cannot be combined with a tsconfig or paths'],
+    [['build', 'tsconfig.json', 'tsconfig.build.json'], 'name one tsconfig, not 2: tsconfig.json, tsconfig.build.json'],
+    [['build', 'src/Missing.ts'], 'namespace "src/Missing.ts"'],
     [['build', 'app.bundle.json', '--output', 'x.ts'], "Unknown option '--output'"],
     [['build', 'app.bundle.json', '--check'], "Unknown option '--check'"],
     [['build', 'missing.bundle.json'], 'missing.bundle.json: config file not found'],
@@ -92,12 +97,54 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     expect(io.err.join('\n')).toContain(message);
   });
 
-  it('never builds from tsconfig.json alone: without a config file or piped config it fails', () => {
+  it('never builds from tsconfig.json alone: without an argument or piped config it fails', () => {
     const io = new Io(project.root);
 
     expect(run(['build'], io)).toBe(1);
     expect(io.out).toEqual([]);
     expect(io.err.join('\n')).toContain('missing <config>: name a config file, or pipe one in');
+  });
+
+  it('builds AppBundle of a tsconfig named alone: tic build tsconfig.json', () => {
+    project.write('tsconfig.build.json', { compilerOptions: { paths: { '@infra/*': ['./src/infra/*'] } } });
+    project.write('src/infra/Clock.ts', decorated('Clock'));
+    const io = new Io(project.root);
+
+    expect(run(['build', 'tsconfig.build.json'], io)).toBe(0);
+    expect(io.out.join('\n')).toContain("import { Clock } from '@infra/Clock';");
+    expect(io.out.join('\n')).not.toContain('Logger');
+  });
+
+  it.each([
+    [['src/services/**/*.ts']],
+    [['@app/**/Logger.ts']],
+    [['src/services']],
+    [['src/services/Logger.ts', 'src/services/Mailer.ts']],
+  ])('builds AppBundle of the folders, files and globs %j it is given, relative to the working directory', (paths) => {
+    project.write('src/services/Mailer.ts', decorated('Mailer'));
+    project.write('src/infra/Clock.ts', decorated('Clock'));
+    const io = new Io(project.root);
+
+    expect(run(['build', ...paths], io)).toBe(0);
+    const bundle = io.out.join('\n');
+    expect(bundle).toContain('export class AppBundle implements IContainerModule');
+    expect(bundle).toContain("import { Logger } from '@app/services/Logger';");
+    expect(bundle).not.toContain('Clock');
+  });
+
+  it('scans the paths it is given through the aliases of a tsconfig named with them', () => {
+    project.write('config/tsconfig.di.json', { compilerOptions: { paths: { '@di/*': ['../src/*'] } } });
+    const io = new Io(project.root);
+
+    expect(run(['build', 'config/tsconfig.di.json', 'src/services/*.ts'], io)).toBe(0);
+    expect(io.out.join('\n')).toContain("import { Logger } from '@di/services/Logger';");
+  });
+
+  it('names the tsconfig and the paths in an error', () => {
+    const io = new Io(project.root);
+
+    expect(run(['build', 'tsconfig.json', 'lib/**/*.ts'], io)).toBe(1);
+    expect(io.err.join('\n')).toContain('tsconfig.json + lib/**/*.ts: namespace "lib"');
   });
 
   it.each([
@@ -191,6 +238,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
     expect(run(['--help'], io)).toBe(0);
     expect(io.out.join('\n')).toContain('ts-ioc-container build [<config>...]');
+    expect(io.out.join('\n')).toContain("tic build 'src/**/*.service.ts'");
     expect(io.out.join('\n')).toContain('tic build app.bundle.json > src/di/app.bundle.ts');
     expect(io.out.join('\n')).toContain('tic is a shortcut for ts-ioc-container');
     expect(run(['compile'], io)).toBe(1);

@@ -1,7 +1,9 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import * as ts from 'typescript';
 import type { ResolvedClassSelector } from '../BuildConfig';
+import { globToRegExp, isGlob, splitGlob, toPosix } from './glob';
+import type { ImportPaths } from './ImportPaths';
 
 /** An exported class the generated bundle registers. */
 export interface DiscoveredClass {
@@ -50,6 +52,30 @@ export function listSourceFiles(dir: string, isExcluded: (file: string) => boole
   };
   walk(dir);
   return files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/**
+ * The source files one `paths.include` entry names, relative to `baseDir`: a folder (or a tsconfig
+ * `paths` alias of one) with its sub-folders; a source file; or a glob, whose folder before
+ * the first wildcard may be an alias (`@app/**\/*.service.ts`). Excluded files are left out.
+ *
+ * @throws {NamespaceNotFoundError} when the entry is neither a source file nor a folder, an alias of one, or a glob in one.
+ */
+export function listIncludedFiles(
+  spec: string,
+  paths: ImportPaths,
+  baseDir: string,
+  isExcluded: (file: string) => boolean,
+): string[] {
+  if (isGlob(spec)) {
+    const { base, pattern } = splitGlob(spec);
+    const dir = paths.resolveNamespace(base, baseDir);
+    const glob = globToRegExp(pattern);
+    return listSourceFiles(dir, isExcluded).filter((file) => glob.test(toPosix(path.relative(dir, file))));
+  }
+  const file = path.resolve(baseDir, spec);
+  if (isSourceFile(file) && existsSync(file) && statSync(file).isFile()) return isExcluded(file) ? [] : [file];
+  return listSourceFiles(paths.resolveNamespace(spec, baseDir), isExcluded);
 }
 
 const hasModifier = (node: ts.Node, kind: ts.SyntaxKind) =>

@@ -61,4 +61,31 @@ describe('TicConfigService', () => {
       match: { glob: [/^[^/]*Service$/] },
     });
   });
+
+  it('given paths and no tsconfig when made into a config then AppBundle scans them from the directory, through ./tsconfig.json', () => {
+    const service = new TicConfigService(fileSystem(undefined).object());
+
+    expect(service.fromProject({ dir: '/repo', include: ['src/**/*.ts'] })).toMatchObject({
+      dir: '/repo',
+      name: 'app',
+      bundleClassName: 'AppBundle',
+      tsconfig: { file: '/repo/tsconfig.json', required: false },
+      paths: { tsconfig: false, include: ['src/**/*.ts'] },
+    });
+  });
+
+  it('given a tsconfig alone when made into a config then it scans the folders of its aliases, so it must exist', () => {
+    const service = new TicConfigService(fileSystem(undefined).object());
+
+    expect(service.fromProject({ dir: '/repo', tsconfig: '/repo/config/tsconfig.di.json' })).toMatchObject({
+      tsconfig: { file: '/repo/config/tsconfig.di.json', required: true },
+      paths: { tsconfig: true, include: [] },
+    });
+  });
+
+  it('given neither a tsconfig nor paths when made into a config then it throws TicConfigError', () => {
+    const service = new TicConfigService(fileSystem(undefined).object());
+
+    expect(() => service.fromProject({ dir: '/repo' })).toThrow('nothing to bundle');
+  });
 });

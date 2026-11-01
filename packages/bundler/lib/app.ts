@@ -25,6 +25,18 @@ export type BundleRequest =
        * against the working directory, and it must set `name`.
        */
       text: string;
+    }
+  | {
+      /**
+       * A tsconfig, relative to the working directory: the bundle imports through its `paths`
+       * aliases and scans the folders they point to, as a config's `tsconfig` field does.
+       */
+      tsconfig?: string;
+      /**
+       * Folders, files or globs to scan besides, relative to the working directory, as in
+       * `paths.include`; required without `tsconfig`, when `./tsconfig.json` supplies the aliases.
+       */
+      include?: string[];
     };
 
 export type BuildOptions = BundleRequest & {
@@ -56,10 +68,11 @@ export function run(argv: string[], io: CliIo = processIo()): number {
 
 /**
  * Generates the bundle a config file describes — `tic build` as a function — and returns
- * it; nothing is written.
+ * it; nothing is written. Given `tsconfig` and `include` instead, the bundle is `AppBundle`,
+ * built as `tic build tsconfig.json 'src/**\/*.ts'` builds it.
  *
- * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
- * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
+ * @throws {TicConfigError} when a config file or tsconfig is missing or unreadable, several configs are in different folders, the config or its tsconfig is invalid, the bundle has no name, there is neither a tsconfig nor paths to scan, or no tsconfig paths alias covers a selected class's file.
+ * @throws {NamespaceNotFoundError} when a path is neither a source file, a folder, a tsconfig paths alias of one nor a glob in one.
  */
 export function build({ cwd = process.cwd(), ...request }: BuildOptions): Bundle {
   return withContainer({ ...processIo(), cwd }, (container) => {
@@ -67,7 +80,13 @@ export function build({ cwd = process.cwd(), ...request }: BuildOptions): Bundle
     const config =
       'text' in request
         ? configService.parse(request.text, cwd)
-        : configService.load([request.config].flat().map((file) => path.resolve(cwd, file)));
+        : 'config' in request
+          ? configService.load([request.config].flat().map((file) => path.resolve(cwd, file)))
+          : configService.fromProject({
+              dir: cwd,
+              tsconfig: request.tsconfig === undefined ? undefined : path.resolve(cwd, request.tsconfig),
+              include: request.include,
+            });
     return IBundleServiceKey.resolve(container).bundle(config);
   });
 }
