@@ -153,10 +153,11 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
     expect(run(['build', 'app.bundle.json'], io)).toBe(0);
     expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: paths.exclude');
+    expect(io.err.at(-1)).toBe('Bundled AppBundle: 1 dependency from 1 file (1 warning)');
     expect(io.out.join('\n')).not.toContain('warning');
   });
 
-  it('lists each bundled class and its file on stderr, never in the bundle on stdout', () => {
+  it('reports progress on stderr — the bundle, each class in it and a summary — never in the bundle on stdout', () => {
     project.write('app.bundle.json', { paths: { include: ['@app/services', './src/infra'] } });
     project.write('src/services/Mailer.ts', decorated('Mailer'));
     project.write('src/services/helpers.ts', 'export const noop = () => {};\n');
@@ -165,9 +166,11 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
     expect(run(['build', 'app.bundle.json'], io)).toBe(0);
     expect(io.err).toEqual([
-      'Clock: src/infra/Clock.ts',
-      'Logger: src/services/Logger.ts',
-      'Mailer: src/services/Mailer.ts',
+      'Bundling AppBundle...',
+      '  Clock: src/infra/Clock.ts',
+      '  Logger: src/services/Logger.ts',
+      '  Mailer: src/services/Mailer.ts',
+      'Bundled AppBundle: 3 dependencies from 3 files',
     ]);
     expect(io.out).toHaveLength(1);
   });
