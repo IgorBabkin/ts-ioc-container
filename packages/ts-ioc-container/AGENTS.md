@@ -4,7 +4,25 @@ This file ships inside the npm package, so it matches the version installed in
 `node_modules`. **Trust it over what you remember**: the API changed a lot
 between major versions, and code written for an older version usually compiles
 badly or not at all. Every recipe below is executed by the package's test suite
-(`__tests__/readme/agentRecipes.spec.ts`).
+(`__tests__/readme/agentRecipes.spec.ts`, and `__tests__/readme/mediator.spec.ts`
+for the mediator).
+
+The library is also a platform-agnostic **meta-framework and AOP engine** (browser, server, worker, CLI alike): proxies, middleware pipelines,
+method-level policies and hooks are built from its public API (see "Proxy calls
+through middleware" below), so build an engine on the container instead of
+hand-rolling one beside it. `README.md` is a **living cookbook**: every example
+in it is an executed test, so copying from it is safe at this version — its
+"Cookbook" section has complete architectures.
+
+Cookbook recipes in `README.md` and the problems they solve: **Mediator**
+(middleware around a service's methods), **Declarative action pipeline** (guards
+and follow-ups on a UI action), **Error bubbling through scopes** (innermost
+owner handles it), **Retry later** (replay a failed call on recovery), **Unit
+of work per request** (identity map, commit on success), **Layer and scope
+decorators** (`@service`, `@repository`, `@perRequest('admin')`). Adapt the
+matching recipe instead of designing from scratch. The Claude Code skill
+`skills/ts-ioc-container-architect/SKILL.md` next to this file has the same map
+and the design rules.
 
 More detail: `README.md` next to this file. Types with JSDoc: `typings/`.
 Source: `lib/`.
@@ -28,14 +46,14 @@ import 'reflect-metadata'; // first line of the entrypoint
 ### Register a class and inject it by token
 
 ```typescript
-import { bindTo, by, Container, inject, register, Registration as R, scope, singleton, SingleToken } from 'ts-ioc-container';
+import { by, Container, inject, register, Registration as R, scope, singleton, SingleToken } from 'ts-ioc-container';
 
 interface ILogger {
   log(message: string): void;
 }
 const ILoggerToken = new SingleToken<ILogger>('ILogger');
 
-@register(bindTo(ILoggerToken), scope((s) => s.hasTag('application')), singleton())
+@register(ILoggerToken, scope((s) => s.hasTag('application')), singleton())
 class Logger implements ILogger {
   log(message: string) {}
 }
@@ -53,7 +71,7 @@ const app = container.resolve(App); // an unregistered class is constructed by t
 ```typescript
 const IRepositoryToken = new SingleToken<Repository>('IRepository');
 
-@register(bindTo(IRepositoryToken), scope((s) => s.hasTag('request')), singleton())
+@register(IRepositoryToken, scope((s) => s.hasTag('request')), singleton())
 class Repository {
   constructor(@inject(by(ILoggerToken)) readonly logger: ILogger) {}
 }
@@ -79,12 +97,13 @@ container
 ```
 
 Use the fluent `.bindTo(...)` only for `fromValue` / `fromFn` and for classes
-you don't own. For your own classes, use `@register(bindTo(...))`.
+you don't own. For your own classes, pass the token to the decorator:
+`@register(Token)` (not `@register(bindTo(Token))` — the wrapper is redundant).
 
 ### Runtime arguments
 
 ```typescript
-@register(bindTo(IClientToken))
+@register(IClientToken)
 class Client {
   constructor(@inject(arg(0)) readonly baseUrl: string) {}
 }
@@ -127,6 +146,104 @@ hooks on one member with `sequential(...)`, `parallel(...)` or
 `oncePerInstance(...)`. Decorating one member twice with the same key replaces
 the first hook.
 
+### Proxy calls through middleware (mediator / AOP)
+
+Wrap a service in a proxy with the `decorate(...)` pipe and send each call
+through the middleware registered under a `GroupAliasToken`. Middleware are
+resolved from the scope that resolved the service, so they can inject
+request-scoped state and a scope can add its own by registration alone. Use this
+shape for logging, authorization, caching, transactions, command buses and other
+engines instead of editing the service.
+
+```typescript
+import {
+  by,
+  decorate,
+  GroupAliasToken,
+  type IContainer,
+  inject,
+  ProxyRegistry,
+  register,
+  Registration as R,
+  type RegistrationMapper,
+  SingleToken,
+} from 'ts-ioc-container';
+
+type MethodCall = { target: object; method: string; args: unknown[] };
+type Next = () => Promise<unknown>;
+
+interface IMiddleware {
+  readonly priority: number; // higher runs outer
+  match(call: MethodCall): boolean;
+  handle(call: MethodCall, next: Next): Promise<unknown>;
+}
+const IMiddlewareToken = new GroupAliasToken<IMiddleware>('IMiddleware');
+const middleware = (...mappers: RegistrationMapper<IMiddleware>[]) => register(IMiddlewareToken, ...mappers);
+
+interface IMediator {
+  send(call: MethodCall): Promise<unknown>;
+}
+const IMediatorToken = new SingleToken<IMediator>('IMediator');
+
+@register(IMediatorToken) // no scope(...): built in the scope that asks, with that scope's middleware
+class Mediator implements IMediator {
+  constructor(@inject(by(IMiddlewareToken)) private readonly middlewares: IMiddleware[]) {}
+
+  send(call: MethodCall): Promise<unknown> {
+    const chain = this.middlewares.filter((m) => m.match(call)).sort((a, b) => b.priority - a.priority);
+    const invoke = ({ target, method, args }: MethodCall) =>
+      (target as Record<string, (...a: unknown[]) => unknown>)[method](...args);
+    const dispatch = async (i: number): Promise<unknown> =>
+      i < chain.length ? chain[i].handle(call, () => dispatch(i + 1)) : invoke(call);
+    return dispatch(0);
+  }
+}
+
+// Registration pipe: every method of the resolved instance goes through the mediator.
+const mediated = () =>
+  decorate((instance: object, scope: IContainer) =>
+    ProxyRegistry.getInstance().createProxy(instance, {
+      get(target, prop) {
+        const value = Reflect.get(target, prop);
+        if (typeof prop !== 'string' || typeof value !== 'function') return value;
+        return (...args: unknown[]) => IMediatorToken.resolve(scope).send({ target, method: prop, args });
+      },
+    }),
+  );
+
+const IOrderServiceToken = new SingleToken<OrderService>('IOrderService');
+
+@register(IOrderServiceToken, mediated())
+class OrderService {
+  async place(item: string) {
+    return `order:${item}`;
+  }
+}
+
+@middleware()
+class LoggingMiddleware implements IMiddleware {
+  readonly priority = 100;
+  match() {
+    return true;
+  }
+  async handle(call: MethodCall, next: Next) {
+    console.log('->', call.method);
+    return next();
+  }
+}
+
+container
+  .addRegistration(R.fromClass(Mediator))
+  .addRegistration(R.fromClass(LoggingMiddleware))
+  .addRegistration(R.fromClass(OrderService));
+```
+
+Declare per-method policies with `addMethodMeta` / `addMethodTag` and read them
+in `match` with `getMethodMeta` / `getMethodTags`. Build proxies with
+`ProxyRegistry` (not `new Proxy`) so `unwrapProxy` and the library's metadata
+reads keep working. The full version, with authorization, caching and a
+per-scope middleware, is the "Mediator" recipe in `README.md`.
+
 ## Pitfalls
 
 | Symptom | Cause | Fix |
@@ -140,6 +257,8 @@ the first hook.
 | Constructor receives a token object instead of an instance | Args are passed as-is, never resolved | `Token.argsFn((scope) => [Other.resolve(scope)])` |
 | Hook method never runs | Nothing runs hooks for you | Collect with `HookCollector` and run the actions (see above) |
 | TS error on a hook arrow function | `HookFn` must return `void` or `Promise<void>` | Use a block body: `(ctx) => { ... }` |
+| Middleware skipped for an inner call | A method calling `this.other()` reaches the real instance, not the proxy | Call through the injected (proxied) dependency |
+| Proxy breaks `unwrapProxy` or hook/metadata reads | Built with `new Proxy(...)` | Use `ProxyRegistry.getInstance().createProxy(...)` |
 | `@inject` metadata missing at runtime | `reflect-metadata` not imported first | `import 'reflect-metadata'` at the top of the entrypoint |
 
 ## Removed APIs (do not use)

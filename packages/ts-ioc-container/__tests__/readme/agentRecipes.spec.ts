@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import {
   arg,
-  bindTo,
   by,
   Container,
   DependencyNotFoundError,
@@ -30,7 +29,7 @@ describe('AGENTS.md recipes', () => {
 
   // Without scope(...) a registration is copied into every child scope, so each
   // request would get its own "singleton"; pin it to the application scope.
-  @register(bindTo(ILoggerToken), scope((s) => s.hasTag('application')), singleton())
+  @register(ILoggerToken, scope((s) => s.hasTag('application')), singleton())
   class Logger implements ILogger {
     readonly messages: string[] = [];
     log(message: string) {
@@ -53,7 +52,7 @@ describe('AGENTS.md recipes', () => {
   it('registers a request-scoped service that depends on an application singleton', () => {
     const IRepositoryToken = new SingleToken<Repository>('IRepository');
 
-    @register(bindTo(IRepositoryToken), scope((s) => s.hasTag('request')), singleton())
+    @register(IRepositoryToken, scope((s) => s.hasTag('request')), singleton())
     class Repository {
       constructor(@inject(by(ILoggerToken)) readonly logger: ILogger) {}
     }
@@ -79,7 +78,7 @@ describe('AGENTS.md recipes', () => {
   it('passes runtime args to a constructor', () => {
     const IClientToken = new SingleToken<Client>('IClient');
 
-    @register(bindTo(IClientToken))
+    @register(IClientToken)
     class Client {
       constructor(@inject(arg(0)) readonly baseUrl: string) {}
     }
@@ -129,7 +128,7 @@ describe('AGENTS.md recipes', () => {
     });
 
     it('copies a registration without scope(...) into every child scope', () => {
-      @register(bindTo('Cache'), singleton())
+      @register('Cache', singleton())
       class Cache {}
 
       const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Cache));
