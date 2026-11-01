@@ -1,4 +1,4 @@
-# TypeScript Dependency Injection Container
+# TypeScript AOP Platform & Dependency Injection Container
 
 ![NPM version:latest](https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square)
 ![npm downloads](https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square)
@@ -6,10 +6,24 @@
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
-`ts-ioc-container` is a fast, lightweight TypeScript dependency injection
-container for applications that need more than basic constructor injection:
-scoped lifecycles, decorators, typed tokens, lazy dependencies, lifecycle hooks,
-provider pipelines, aliases, and custom injector strategies.
+**More than a DI container: an AOP platform for building the engines your systems run on.**
+
+`ts-ioc-container` gives you the building blocks for your own engines and frameworks —
+scopes, typed tokens, hooks and transparent proxies — on top of a fast,
+lightweight dependency injection core. It runs anywhere TypeScript does: in the
+browser, on the server, in workers and in CLI scripts. Use it for large
+enterprise applications, complex services and small automation scripts alike,
+with zero runtime dependencies.
+
+It is two things at once:
+
+- **A meta-framework engine.** Build your own framework from the container's
+  parts — a middleware pipeline, a command bus, a UI action engine, an agent
+  runtime — without forking anything. → [Meta-framework engine](#meta-framework-engine)
+- **A living cookbook.** Every example in this README is a test that runs in CI
+  on every release, and the [Cookbook](#cookbook) collects complete, working
+  architectures. The docs can't drift from the code, so anything you — or your
+  AI coding agent — copy from here works with the version you installed.
 
 ## Advantages
 
@@ -23,10 +37,50 @@ provider pipelines, aliases, and custom injector strategies.
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
 - custom injectors, hooks, and provider behavior
+- a base for your own frameworks and engines — see [Meta-framework engine](#meta-framework-engine)
+- every example is executable, so the docs never lie — see [Cookbook](#cookbook)
+
+## Meta-framework engine
+
+Think of the container as a small kernel for domain-specific frameworks, agent
+runtimes and middleware pipelines. Everything below uses only the public API,
+and each point links to a recipe that runs in CI.
+
+- **Aspect-oriented programming.** `decorate(...)` sees every dependency as it
+  leaves the container, so you can wrap it in a proxy and run cross-cutting
+  concerns — logging, authorization, caching, transactions, metrics — around its
+  methods without touching business code. Proxies made with `ProxyRegistry` stay
+  transparent to the library (`unwrapProxy`, metadata reads, `hasInstance`).
+  → [Mediator recipe](#mediator-proxy-calls-through-middleware)
+- **Middleware pipelines.** A `GroupAliasToken` collects every implementation of
+  an interface from the resolving scope, so "the middleware list" is just a
+  registration: a scope adds or swaps one by `addRegistration`, and a middleware
+  can inject request-scoped state. → [Mediator recipe](#mediator-proxy-calls-through-middleware)
+- **Declarative interfaces.** Method metadata (`addMethodMeta`, `addMethodTag`)
+  lets a method declare its policy (`@requiresRole('admin')`, `@cached()`), and
+  `createComposeClassDecorator` names a whole decorator stack (`@repository(...)`,
+  `@middleware()`) — a vocabulary your team and AI agents can apply without
+  knowing the wiring. → [Composing decorators](#composing-decorators)
+- **Hooks with full context.** `@hook(key, fn)` collects per-member hooks for any
+  key you define; each `IHookContext` carries the instance, the scope it was
+  resolved in, the method name and `resolveArgs()` / `invokeMethod()` — and the
+  runner is yours, so the execution model is too. → [Declarative action pipeline](#declarative-action-pipeline),
+  [Error bubbling through scopes](#error-bubbling-through-scopes)
+- **Isolated scopes with disposal.** `createScope({ tags })` snapshots the
+  matching registrations into a child scope — one per request, job or agent run
+  — and `dispose()` tears it down; subscribe to `container.scopeDisposed` to
+  release resources. → [Unit of work per request](#unit-of-work-per-request),
+  [Scope disposal hooks](#scope-disposal-hooks)
+- **Packaged engines.** An `IContainerModule` bundles an engine's registrations,
+  so consumers turn it on with one `container.useModule(new MyEngineModule())`.
+  → [Module](#module)
+
 ## Content
 
+- [Meta-framework engine](#meta-framework-engine)
 - [Setup](#setup)
 - [Environment support](#environment-support)
+- [AI coding agents](#ai-coding-agents)
 - [Quickstart](#quickstart)
 - [Cheatsheet](#cheatsheet)
 - [Container](#container)
@@ -62,8 +116,16 @@ provider pipelines, aliases, and custom injector strategies.
   - [Construct hooks](#construct-hooks) `onConstructed`
   - [Scope disposal hooks](#scope-disposal-hooks) `scopeDisposed`
   - [Inject Property](#inject-property)
-  - [Inject Method](#inject-method)
-- [Mock](#mock)
+- [Cookbook](#cookbook)
+  - [Mediator: proxy calls through middleware](#mediator-proxy-calls-through-middleware) `decorate` `GroupAliasToken`
+  - [Declarative action pipeline](#declarative-action-pipeline) `@hook` `sequential`
+  - [Error bubbling through scopes](#error-bubbling-through-scopes) `GroupAliasToken` `HookCollector`
+  - [Retry later](#retry-later) `addMethodTag` `decorate`
+  - [Unit of work per request](#unit-of-work-per-request) `singleton(cacheKey)` `byArgs`
+  - [Layer and scope decorators](#layer-and-scope-decorators) `createComposeClassDecorator`
+  - [Per-request scope (Express / Next.js)](#per-request-scope-express--nextjs)
+  - [Frontend widget with a lazy page dependency](#frontend-widget-with-a-lazy-page-dependency)
+  - [Background worker](#background-worker)
 - [Error](#error)
 
 ## Setup
@@ -115,6 +177,31 @@ bundlers tree-shake unused exports.
 > optional peer dependency — install it and import it once at your entrypoint.
 > `SimpleInjector` and `ProxyInjector` do not need it.
 
+## AI coding agents
+
+The package is built to be used by AI coding agents as well as people:
+
+- **`AGENTS.md`** ships in the package (`node_modules/ts-ioc-container/AGENTS.md`):
+  setup, recipes, pitfalls, removed APIs and error codes for the installed
+  version. Point your agent at it.
+- **Architect skill for Claude Code.** `ts-ioc-container-architect` knows the
+  cookbook: it picks the right pattern for the task (mediator, action pipeline,
+  error bubbling, retry, unit of work, layer decorators) and applies the
+  library's rules. Install it from this repository's plugin marketplace:
+
+  ```shell
+  /plugin install ts-ioc-container --marketplace IgorBabkin/ts-ioc-container
+  ```
+
+  or copy the version that ships with your installed package into your project:
+
+  ```shell
+  cp -r node_modules/ts-ioc-container/skills/ts-ioc-container-architect .claude/skills/
+  ```
+
+- **[`llms.txt`](https://github.com/IgorBabkin/ts-ioc-container/blob/main/llms.txt)**
+  indexes the docs for agents that browse.
+
 ## Quickstart
 
 ```typescript
@@ -155,7 +242,7 @@ describe('Quickstart', function () {
 
 ## Cheatsheet
 
-- Register class with key (preferred): `@register(bindTo('Key')) class Service {}` then `container.addRegistration(R.fromClass(Service))`
+- Register class with key (preferred): `@register('Key') class Service {}` (or `@register(Token)`) then `container.addRegistration(R.fromClass(Service))`
 - Register value: `R.fromValue(config).bindTo('Config')`
 - Register factory: `R.fromFn(({ scope }) => createX(scope)).bindTo('X')`
 - Singleton: `@register(singleton())`
@@ -168,11 +255,13 @@ describe('Quickstart', function () {
 - Custom inject function: `@inject(({ scope, args }) => ...)`
 - Map an injected value: `@inject(pipe(by('Key'), sanitize(), validate()))`
 - Property inject: `@hook('onInit', injectProp(by('Key')))`
+- Proxy a dependency through middleware: `@register(Token, decorate((dep, scope) => proxy(dep, scope)))` + a `GroupAliasToken` of middleware — see [Mediator](#mediator-proxy-calls-through-middleware)
 - Name a decorator stack: `const repository = (token) => createComposeClassDecorator(register(token, singleton()), addClassMeta('injection-token', () => token))`
 
 > [!TIP]
-> For classes, prefer the `@register(bindTo('Key'))` decorator over the fluent
-> `R.fromClass(Class).bindTo('Key')` chain. The decorator co-locates the binding
+> For classes, prefer the `@register('Key')` / `@register(Token)` decorator over
+> the fluent `R.fromClass(Class).bindTo('Key')` chain (`@register` accepts a key
+> or token directly; `@register(bindTo(Token))` is redundant). The decorator co-locates the binding
 > with the class and reads consistently with other registration pipes
 > (`scope`, `singleton`, `appendArgsFn`, ...). Use the fluent `bindTo` chain only
 > for `R.fromValue(...)` and `R.fromFn(...)` (which have no class to decorate)
@@ -4044,6 +4133,1560 @@ describe('inject property', () => {
       .forEach((task) => task());
 
     expect(injectedValue).toBe('Hello');
+  });
+});
+
+```
+
+## Cookbook
+
+Complete architectures built on the container. Like every example in this
+README, each recipe is a test file in `__tests__/readme/` that runs in CI on
+every release, so it compiles and passes against the version you install. Found
+a pattern worth sharing? Add a spec there and include it here — that is how the
+cookbook grows.
+
+### Mediator: proxy calls through middleware
+
+A call pipeline built from three container features: `decorate(...)` wraps a
+service in a proxy, a `GroupAliasToken` collects the middleware from the
+resolving scope, and method metadata declares the policies the middleware
+enforce. The service holds business logic only; logging, authorization and
+caching live in middleware that can be added per scope. Change the terminal step
+and the same shape is a command bus, a CQRS query pipeline, an RPC client or an
+action engine for UI controllers.
+
+```typescript
+import 'reflect-metadata';
+import {
+  addMethodMeta,
+  addMethodTag,
+  by,
+  Container,
+  decorate,
+  getMethodMeta,
+  getMethodTags,
+  GroupAliasToken,
+  type IContainer,
+  type IContainerModule,
+  inject,
+  ProxyRegistry,
+  register,
+  Registration as R,
+  type RegistrationMapper,
+  scope,
+  singleton,
+  SingleToken,
+  unwrapProxy,
+} from 'ts-ioc-container';
+
+/**
+ * Mediator - proxy a dependency's calls through a middleware pipeline
+ *
+ * The container already owns the two things a call pipeline needs: the moment a
+ * dependency leaves it (the `decorate(...)` registration pipe) and a way to
+ * collect every implementation of an interface (`GroupAliasToken`). Together
+ * they make a small engine:
+ *
+ * - `mediated()` wraps a registered class in a proxy. Each method call becomes a
+ *   `MethodCall` message handed to the `Mediator` of the scope that resolved it.
+ * - Middleware are ordinary classes registered under `IMiddlewareToken`, resolved
+ *   from that same scope - so a middleware can depend on request state (the
+ *   current user), and a scope can add one without touching any service.
+ * - A middleware decides whether it takes part (`match`) and wraps the rest of
+ *   the chain (`next`): it runs code around it, short-circuits it, or maps its
+ *   error.
+ * - Policies are declared on the methods with method metadata
+ *   (`@requiresRole('admin')`, `@cached()`) and read by the middleware that
+ *   enforces them, so the service body holds business logic only.
+ *
+ * Change the terminal step and the same shape is a command bus, a CQRS query
+ * pipeline, an RPC client, or an action engine for UI controllers.
+ */
+
+// --- The engine ------------------------------------------------------------
+
+type MethodCall = { target: object; method: string; args: unknown[] };
+type Next = () => Promise<unknown>;
+
+interface IMiddleware {
+  /** Higher runs outer: it sees the call first and the result last. */
+  readonly priority: number;
+  match(call: MethodCall): boolean;
+  handle(call: MethodCall, next: Next): Promise<unknown>;
+}
+
+const IMiddlewareToken = new GroupAliasToken<IMiddleware>('IMiddleware');
+const middleware = (...mappers: RegistrationMapper<IMiddleware>[]) => register(IMiddlewareToken, ...mappers);
+
+interface IMediator {
+  send(call: MethodCall): Promise<unknown>;
+}
+
+const IMediatorToken = new SingleToken<IMediator>('IMediator');
+
+// No scope(...): the mediator is built in the scope that asks for it, so the
+// middleware list it receives is that scope's.
+@register(IMediatorToken)
+class Mediator implements IMediator {
+  constructor(@inject(by(IMiddlewareToken)) private readonly middlewares: IMiddleware[]) {}
+
+  send(call: MethodCall): Promise<unknown> {
+    const chain = this.middlewares.filter((m) => m.match(call)).sort((a, b) => b.priority - a.priority);
+    const dispatch = async (i: number): Promise<unknown> =>
+      i < chain.length ? chain[i].handle(call, () => dispatch(i + 1)) : invokeMethod(call);
+    return dispatch(0);
+  }
+}
+
+const invokeMethod = ({ target, method, args }: MethodCall): unknown =>
+  (target as Record<string, (...a: unknown[]) => unknown>)[method](...args);
+
+/**
+ * Routes every method of the resolved instance through the scope's mediator.
+ * `ProxyRegistry` keeps `unwrapProxy` and the library's metadata reads working on
+ * the proxy, and one wrapper per method keeps `service.place === service.place`.
+ */
+const mediated = () =>
+  decorate((instance: object, resolvingScope: IContainer) => {
+    const wrappers = new Map<string, unknown>();
+    return ProxyRegistry.getInstance().createProxy(instance, {
+      get(target, prop) {
+        const value = Reflect.get(target, prop);
+        if (typeof prop !== 'string' || typeof value !== 'function') return value;
+        if (!wrappers.has(prop)) {
+          wrappers.set(prop, (...args: unknown[]) =>
+            IMediatorToken.resolve(resolvingScope).send({ target, method: prop, args }),
+          );
+        }
+        return wrappers.get(prop);
+      },
+    });
+  });
+
+// --- Policies, declared on methods -----------------------------------------
+
+const requiresRole = (role: string) => addMethodMeta('requiresRole', () => role);
+const cached = () => addMethodTag('cached');
+
+// --- Middleware ------------------------------------------------------------
+
+class ForbiddenError extends Error {}
+
+interface ICurrentUser {
+  readonly name: string;
+  readonly roles: string[];
+}
+const ICurrentUserToken = new SingleToken<ICurrentUser>('ICurrentUser');
+
+const IAuditLogToken = new SingleToken<AuditLog>('IAuditLog');
+
+@register(IAuditLogToken, scope((s) => s.hasTag('application')), singleton())
+class AuditLog {
+  readonly entries: string[] = [];
+}
+
+@middleware()
+class LoggingMiddleware implements IMiddleware {
+  readonly priority = 100;
+
+  constructor(@inject(by(IAuditLogToken)) private readonly audit: AuditLog) {}
+
+  match(): boolean {
+    return true;
+  }
+
+  async handle({ target, method }: MethodCall, next: Next): Promise<unknown> {
+    const name = `${target.constructor.name}.${method}`;
+    this.audit.entries.push(`-> ${name}`);
+    try {
+      const result = await next();
+      this.audit.entries.push(`<- ${name}`);
+      return result;
+    } catch (e) {
+      this.audit.entries.push(`x ${name}: ${(e as Error).constructor.name}`);
+      throw e;
+    }
+  }
+}
+
+// Built in each request scope, so it sees that request's user.
+@middleware()
+class AuthorizationMiddleware implements IMiddleware {
+  readonly priority = 50;
+
+  constructor(@inject(by(ICurrentUserToken)) private readonly user: ICurrentUser) {}
+
+  match({ target, method }: MethodCall): boolean {
+    return getMethodMeta('requiresRole', target, method) !== undefined;
+  }
+
+  async handle({ target, method }: MethodCall, next: Next): Promise<unknown> {
+    const role = getMethodMeta('requiresRole', target, method) as string;
+    if (!this.user.roles.includes(role)) throw new ForbiddenError(`${this.user.name} is not ${role}`);
+    return next();
+  }
+}
+
+// One cache for the whole application, shared by every request.
+@middleware(scope((s) => s.hasTag('application')), singleton())
+class CacheMiddleware implements IMiddleware {
+  readonly priority = 10;
+  private readonly cache = new Map<string, unknown>();
+
+  match({ target, method }: MethodCall): boolean {
+    return getMethodTags(target, method).has('cached');
+  }
+
+  async handle({ target, method, args }: MethodCall, next: Next): Promise<unknown> {
+    const key = `${target.constructor.name}.${method}(${JSON.stringify(args)})`;
+    if (!this.cache.has(key)) this.cache.set(key, await next());
+    return this.cache.get(key);
+  }
+}
+
+/** The engine as one module: `container.useModule(new MediatorModule())`. */
+class MediatorModule implements IContainerModule {
+  applyTo(container: IContainer): void {
+    container
+      .addRegistration(R.fromClass(AuditLog))
+      .addRegistration(R.fromClass(Mediator))
+      .addRegistration(R.fromClass(LoggingMiddleware))
+      .addRegistration(R.fromClass(AuthorizationMiddleware))
+      .addRegistration(R.fromClass(CacheMiddleware));
+  }
+}
+
+// --- A service that knows nothing about any of it --------------------------
+
+interface IOrderService {
+  place(item: string): Promise<string>;
+  cancel(orderId: string): Promise<void>;
+  price(item: string): Promise<number>;
+}
+const IOrderServiceToken = new SingleToken<IOrderService>('IOrderService');
+
+@register(IOrderServiceToken, mediated())
+class OrderService implements IOrderService {
+  readonly cancelled: string[] = [];
+  priceLookups = 0;
+
+  async place(item: string): Promise<string> {
+    return `order:${item}`;
+  }
+
+  @requiresRole('admin')
+  async cancel(orderId: string): Promise<void> {
+    this.cancelled.push(orderId);
+  }
+
+  @cached()
+  async price(item: string): Promise<number> {
+    this.priceLookups++;
+    return item.length * 10;
+  }
+}
+
+describe('Mediator: proxy calls through middleware', () => {
+  const createApp = () =>
+    new Container({ tags: ['application'] }).useModule(new MediatorModule()).addRegistration(R.fromClass(OrderService));
+
+  const openRequest = (app: IContainer, user: ICurrentUser) =>
+    app.createScope({ tags: ['request'] }).addRegistration(R.fromValue(user).bindTo(ICurrentUserToken));
+
+  const alice: ICurrentUser = { name: 'alice', roles: ['admin'] };
+  const bob: ICurrentUser = { name: 'bob', roles: [] };
+
+  it('routes a call through the matching middleware and returns its result', async () => {
+    const app = createApp();
+    const orders = IOrderServiceToken.resolve(openRequest(app, bob));
+
+    expect(await orders.place('book')).toBe('order:book');
+    expect(IAuditLogToken.resolve(app).entries).toEqual(['-> OrderService.place', '<- OrderService.place']);
+  });
+
+  it('enforces a method policy with the request-scoped user, short-circuiting the body', async () => {
+    const app = createApp();
+    const asBob = IOrderServiceToken.resolve(openRequest(app, bob));
+    const asAlice = IOrderServiceToken.resolve(openRequest(app, alice));
+
+    await expect(asBob.cancel('o-1')).rejects.toBeInstanceOf(ForbiddenError);
+    await asAlice.cancel('o-2');
+
+    expect((unwrapProxy(asBob) as OrderService).cancelled).toEqual([]);
+    expect((unwrapProxy(asAlice) as OrderService).cancelled).toEqual(['o-2']);
+    expect(IAuditLogToken.resolve(app).entries).toEqual([
+      '-> OrderService.cancel',
+      'x OrderService.cancel: ForbiddenError',
+      '-> OrderService.cancel',
+      '<- OrderService.cancel',
+    ]);
+  });
+
+  it('serves a cached result from an application-wide middleware, across requests', async () => {
+    const app = createApp();
+    const first = IOrderServiceToken.resolve(openRequest(app, bob));
+    const second = IOrderServiceToken.resolve(openRequest(app, alice));
+
+    expect(await first.price('book')).toBe(40);
+    expect(await second.price('book')).toBe(40);
+
+    expect((unwrapProxy(first) as OrderService).priceLookups).toBe(1);
+    expect((unwrapProxy(second) as OrderService).priceLookups).toBe(0);
+  });
+
+  it('lets a scope plug in its own middleware by registration alone', async () => {
+    @middleware()
+    class DryRunMiddleware implements IMiddleware {
+      readonly priority = 0; // innermost: logging and authorization still run
+
+      match(): boolean {
+        return true;
+      }
+
+      async handle(): Promise<unknown> {
+        return 'dry-run';
+      }
+    }
+
+    const app = createApp();
+    const dryRun = openRequest(app, alice).addRegistration(R.fromClass(DryRunMiddleware));
+
+    expect(await IOrderServiceToken.resolve(dryRun).place('book')).toBe('dry-run');
+    expect(await IOrderServiceToken.resolve(openRequest(app, alice)).place('book')).toBe('order:book');
+  });
+
+  it('keeps the proxy transparent: fields, identity of methods, and the real instance', () => {
+    const orders = IOrderServiceToken.resolve(openRequest(createApp(), bob)) as OrderService;
+
+    expect(orders.priceLookups).toBe(0); // non-function members are read straight off the target
+    expect(orders.place).toBe(orders.place); // one wrapper per method
+    expect(orders).toBeInstanceOf(OrderService);
+    expect(unwrapProxy(orders)).not.toBe(orders);
+  });
+});
+
+```
+
+> [!NOTE]
+> Routed methods always return a `Promise`, and a method that calls another
+> through `this` reaches the real instance, so the inner call skips the
+> middleware. Route the inner call through the injected proxy if it needs them.
+
+### Declarative action pipeline
+
+Guards, the body and follow-ups of a UI action as one ordered hook list on the
+method — `@action(requireState(...), confirm('Retire?'), execute(), notify('Retired'))`.
+Each step is a plain `HookFn` that resolves what it needs from the hook's scope;
+a step that throws stops the rest. A `decorate(...)` proxy makes a plain call run
+the whole list.
+
+```typescript
+import 'reflect-metadata';
+import {
+  by,
+  Container,
+  decorate,
+  getHooks,
+  hook,
+  HookCollector,
+  type HookFn,
+  type HookType,
+  type IContainer,
+  inject,
+  type InjectionToken,
+  ProxyRegistry,
+  register,
+  Registration as R,
+  runInOrder,
+  sequential,
+  SingleToken,
+  toTask,
+} from 'ts-ioc-container';
+
+/**
+ * Declarative action pipeline: guards, body, follow-ups
+ *
+ * A UI action is rarely just its body. Before it: is the device online, did the
+ * user confirm? After it: show a toast, refresh a list. Writing those as guard
+ * clauses buries the action; here they are steps in one ordered list on the
+ * method, and `execute()` marks where the body runs:
+ *
+ *   @action(requireState(...), confirm('Retire?'), execute(), notify('Retired'))
+ *
+ * - `action(...steps)` is one application-defined hook key; `sequential(...)`
+ *   runs the steps in order, awaiting any that go async.
+ * - A step is a plain `HookFn`. It resolves what it needs from the hook's own
+ *   scope (`ctx.scope`), so the controller injects none of it.
+ * - A step that throws stops the list: the body and the follow-ups never run.
+ * - The `actions()` registration pipe proxies the controller, so a caller just
+ *   calls `controller.retire(id)` and the whole list runs. Methods without
+ *   `@action` are read straight off the controller.
+ *
+ * Every step is a pure, separately testable function, and the action's own test
+ * covers only what it does once its preconditions hold.
+ */
+
+// --- The engine ------------------------------------------------------------
+
+const action = (...steps: HookType[]) => hook('action', sequential(...steps));
+const actionHooks = new HookCollector({ key: 'action' });
+
+/** The body's position in the list: calls the method with the caller's args. */
+const execute = (): HookFn => (ctx) => {
+  const result = ctx.invokeMethod({ args: ctx.getInitialArgs() });
+  return result instanceof Promise ? result.then(() => undefined) : undefined;
+};
+
+/** Routes every `@action` method through its step list. */
+const actions = () =>
+  decorate((controller: object, s: IContainer) =>
+    ProxyRegistry.getInstance().createProxy(controller, {
+      get(target, prop) {
+        if (typeof prop !== 'string' || !getHooks(target, 'action').has(prop)) return Reflect.get(target, prop);
+        return async (...args: unknown[]) => {
+          const steps = actionHooks.getActions(target, {
+            scope: s,
+            predicate: (method) => method === prop,
+            mapExecutionContext: (ctx) => ctx.setInitialArgs(...args),
+          });
+          await runInOrder(steps.map(toTask));
+        };
+      },
+    }),
+  );
+
+// --- Reusable steps --------------------------------------------------------
+
+class ActionNotAllowedError extends Error {}
+class UserRejectedError extends Error {}
+
+interface IConnection {
+  online: boolean;
+}
+const IConnectionToken = new SingleToken<IConnection>('IConnection');
+
+interface IDialog {
+  confirm(question: string): Promise<boolean>;
+}
+const IDialogToken = new SingleToken<IDialog>('IDialog');
+
+interface INotifications {
+  readonly messages: string[];
+}
+const INotificationsToken = new SingleToken<INotifications>('INotifications');
+
+const requireState =
+  <T>(token: InjectionToken<T>, isAllowed: (dependency: T) => boolean, reason: string): HookFn =>
+  (ctx) => {
+    if (!isAllowed(token.resolve(ctx.scope))) throw new ActionNotAllowedError(reason);
+  };
+
+const confirm =
+  (question: string): HookFn =>
+  async (ctx) => {
+    if (!(await IDialogToken.resolve(ctx.scope).confirm(question))) throw new UserRejectedError(question);
+  };
+
+const notify =
+  (message: string): HookFn =>
+  (ctx) => {
+    INotificationsToken.resolve(ctx.scope).messages.push(message);
+  };
+
+// --- A controller that reads as its behaviour ------------------------------
+
+interface IStationService {
+  retire(stationId: string): Promise<void>;
+}
+const IStationServiceToken = new SingleToken<IStationService>('IStationService');
+
+const IStationsControllerToken = new SingleToken<StationsController>('IStationsController');
+
+@register(IStationsControllerToken, actions())
+class StationsController {
+  constructor(@inject(by(IStationServiceToken)) private readonly stations: IStationService) {}
+
+  @action(
+    requireState(IConnectionToken, (c) => c.online, 'Station is offline.'),
+    confirm('Retire the station?'),
+    execute(),
+    notify('Station retired'),
+  )
+  async retire(stationId: string): Promise<void> {
+    await this.stations.retire(stationId);
+  }
+
+  title(): string {
+    return 'Stations';
+  }
+}
+
+describe('Declarative action pipeline', () => {
+  const setup = ({ online = true, answer = true } = {}) => {
+    const retired: string[] = [];
+    const notifications: INotifications = { messages: [] };
+    const container = new Container({ tags: ['page'] })
+      .addRegistration(R.fromClass(StationsController))
+      .addRegistration(R.fromValue<IConnection>({ online }).bindTo(IConnectionToken))
+      .addRegistration(R.fromValue<IDialog>({ confirm: async () => answer }).bindTo(IDialogToken))
+      .addRegistration(R.fromValue(notifications).bindTo(INotificationsToken))
+      .addRegistration(
+        R.fromValue<IStationService>({ retire: async (id) => void retired.push(id) }).bindTo(IStationServiceToken),
+      );
+    return { controller: IStationsControllerToken.resolve(container), retired, notifications };
+  };
+
+  it('runs guards, the body and follow-ups in declaration order', async () => {
+    const { controller, retired, notifications } = setup();
+
+    await controller.retire('st-1');
+
+    expect(retired).toEqual(['st-1']);
+    expect(notifications.messages).toEqual(['Station retired']);
+  });
+
+  it('stops at a failed guard: no body, no follow-up', async () => {
+    const { controller, retired, notifications } = setup({ online: false });
+
+    await expect(controller.retire('st-1')).rejects.toBeInstanceOf(ActionNotAllowedError);
+    expect(retired).toEqual([]);
+    expect(notifications.messages).toEqual([]);
+  });
+
+  it('awaits an async step, and a declined confirmation aborts the action', async () => {
+    const { controller, retired } = setup({ answer: false });
+
+    await expect(controller.retire('st-1')).rejects.toBeInstanceOf(UserRejectedError);
+    expect(retired).toEqual([]);
+  });
+
+  it('leaves methods without @action untouched', () => {
+    const { controller } = setup();
+
+    expect(controller.title()).toBe('Stations');
+  });
+});
+
+```
+
+### Error bubbling through scopes
+
+An error raised in a widget bubbles like a DOM event: widget controller, then
+page, then application. A `GroupAliasToken` resolved from a scope yields the
+controller of every level, innermost first — that list is the bubbling chain. A
+handler that returns owns the error; one that re-throws passes it outward,
+optionally translated.
+
+```typescript
+import 'reflect-metadata';
+import {
+  by,
+  Container,
+  GroupAliasToken,
+  hasHooks,
+  hook,
+  HookCollector,
+  type HookFn,
+  type IContainer,
+  inject,
+  register,
+  Registration as R,
+  scope,
+  select,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
+
+/**
+ * Error bubbling through scopes
+ *
+ * A frontend opens one scope per level - application, page, widget - and gives
+ * each level a controller. An error raised in a widget then bubbles like a DOM
+ * event: the widget's controller gets first refusal, then the page's, then the
+ * application's. A handler that returns has handled the error; one that
+ * re-throws hands it outward - the same error, or a translated one.
+ *
+ * - `IControllerToken` is a `GroupAliasToken`: resolved from a scope, it yields
+ *   the controller of that scope and of every ancestor, innermost first. That
+ *   list *is* the bubbling chain - no parent pointers to maintain.
+ * - `@onError(...)` is an application-defined hook key; the library only
+ *   collects it, and `BubblingErrorHandler` decides how it runs.
+ * - Each hook runs in the scope that owns its controller, so a handler resolves
+ *   its own dependencies, not the widget's.
+ *
+ * The same chain works for any "innermost owner wins" rule: request handlers,
+ * nested transactions, plugin hosts.
+ */
+
+const IControllerToken = new GroupAliasToken<object>('IController');
+
+const onError = (fn: HookFn) => hook('onError', fn);
+const onErrorHooks = new HookCollector({ key: 'onError' });
+
+/** The hook body: call the decorated method with the error the chain seeded. */
+const handle: HookFn = (ctx) => {
+  ctx.invokeMethod({ args: ctx.getInitialArgs() });
+};
+
+interface IErrorHandler {
+  onError(error: unknown): void;
+}
+const IErrorHandlerToken = new SingleToken<IErrorHandler>('IErrorHandler');
+
+// No scope(...): built in the scope that bubbles, so it sees that scope's chain.
+@register(IErrorHandlerToken)
+class BubblingErrorHandler implements IErrorHandler {
+  constructor(
+    @inject(by(select.scope.current)) private readonly scope: IContainer,
+    @inject(by(IControllerToken)) private readonly controllers: object[],
+  ) {}
+
+  onError(error: unknown): void {
+    let current = error;
+    for (const controller of this.controllers) {
+      if (!hasHooks(controller, 'onError')) continue;
+      try {
+        const actions = onErrorHooks.getActions(controller, {
+          scope: this.ownerOf(controller),
+          mapExecutionContext: (ctx) => ctx.setInitialArgs(current),
+        });
+        for (const { hook: run, context } of actions) run(context);
+        return; // returned: handled here
+      } catch (e) {
+        current = e; // re-thrown: try the next controller out
+      }
+    }
+    throw current; // nobody owns it
+  }
+
+  private ownerOf(instance: object): IContainer {
+    for (let s: IContainer | undefined = this.scope; s; s = s.getParent()) {
+      if (s.hasInstance(instance)) return s;
+    }
+    return this.scope;
+  }
+}
+
+// --- Errors and the controllers that own them ------------------------------
+
+class ValidationError extends Error {}
+class NotFoundError extends Error {}
+class HttpError extends Error {
+  constructor(readonly status: number) {
+    super(`HTTP ${status}`);
+  }
+}
+class SessionExpiredError extends Error {}
+
+const perLevel = (tag: string) => scope((s) => s.hasTag(tag));
+
+@register(IControllerToken, perLevel('widget'), singleton())
+class FormWidgetController {
+  readonly fieldErrors: string[] = [];
+
+  @onError(handle)
+  handleError(error: unknown): void {
+    if (!(error instanceof ValidationError)) throw error;
+    this.fieldErrors.push(error.message);
+  }
+}
+
+@register(IControllerToken, perLevel('page'), singleton())
+class PageController {
+  notFound = false;
+
+  @onError(handle)
+  handleError(error: unknown): void {
+    if (error instanceof NotFoundError) {
+      this.notFound = true;
+      return;
+    }
+    // Translate on the way out: the page knows a 401 means the session is gone.
+    if (error instanceof HttpError && error.status === 401) throw new SessionExpiredError();
+    throw error;
+  }
+}
+
+@register(IControllerToken, perLevel('application'), singleton())
+class AppController {
+  redirectedToLogin = false;
+  readonly unexpected: unknown[] = [];
+
+  // The catch-all: never re-throws.
+  @onError(handle)
+  handleError(error: unknown): void {
+    if (error instanceof SessionExpiredError) this.redirectedToLogin = true;
+    else this.unexpected.push(error);
+  }
+}
+
+describe('Error bubbling through scopes', () => {
+  const createTree = () => {
+    const app = new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(BubblingErrorHandler))
+      .addRegistration(R.fromClass(AppController))
+      .addRegistration(R.fromClass(PageController))
+      .addRegistration(R.fromClass(FormWidgetController));
+    const page = app.createScope({ tags: ['page'] });
+    const widget = page.createScope({ tags: ['widget'] });
+    const [form, pageCtrl, appCtrl] = IControllerToken.resolve(widget) as [
+      FormWidgetController,
+      PageController,
+      AppController,
+    ];
+    return { app, page, widget, form, pageCtrl, appCtrl };
+  };
+
+  it('collects the chain innermost first', () => {
+    const { form, pageCtrl, appCtrl } = createTree();
+
+    expect(form).toBeInstanceOf(FormWidgetController);
+    expect(pageCtrl).toBeInstanceOf(PageController);
+    expect(appCtrl).toBeInstanceOf(AppController);
+  });
+
+  it('stops at the innermost controller that owns the error', () => {
+    const { widget, form, pageCtrl, appCtrl } = createTree();
+
+    IErrorHandlerToken.resolve(widget).onError(new ValidationError('email is required'));
+
+    expect(form.fieldErrors).toEqual(['email is required']);
+    expect(pageCtrl.notFound).toBe(false);
+    expect(appCtrl.unexpected).toEqual([]);
+  });
+
+  it('passes an error the widget does not own up to the page', () => {
+    const { widget, pageCtrl, appCtrl } = createTree();
+
+    IErrorHandlerToken.resolve(widget).onError(new NotFoundError());
+
+    expect(pageCtrl.notFound).toBe(true);
+    expect(appCtrl.unexpected).toEqual([]);
+  });
+
+  it('lets a controller translate the error before passing it on', () => {
+    const { widget, appCtrl } = createTree();
+
+    IErrorHandlerToken.resolve(widget).onError(new HttpError(401));
+
+    expect(appCtrl.redirectedToLogin).toBe(true);
+  });
+
+  it('ends at the application catch-all', () => {
+    const { widget, appCtrl } = createTree();
+    const boom = new Error('boom');
+
+    IErrorHandlerToken.resolve(widget).onError(boom);
+
+    expect(appCtrl.unexpected).toEqual([boom]);
+  });
+
+  it('starts from the scope that raised it: a page error skips widget controllers', () => {
+    const { page, form, pageCtrl } = createTree();
+
+    IErrorHandlerToken.resolve(page).onError(new ValidationError('not mine'));
+
+    expect(form.fieldErrors).toEqual([]);
+    expect(pageCtrl.notFound).toBe(false);
+  });
+});
+
+```
+
+### Retry later
+
+Replay a failed call — same method, same arguments — when the cause goes away
+(the connection is back, the user logged in again) instead of retrying in a
+loop. `@retryable()` is method metadata; a `decorate(...)` proxy files the
+failure with an application-wide queue, and whatever notices the recovery
+replays what its predicate selects.
+
+```typescript
+import 'reflect-metadata';
+import {
+  addMethodTag,
+  by,
+  Container,
+  decorate,
+  getMethodTags,
+  type IContainer,
+  inject,
+  ProxyRegistry,
+  register,
+  Registration as R,
+  scope,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
+
+/**
+ * Retry later: replay failed calls when something recovers
+ *
+ * Retrying in a loop is the wrong tool when the cause is outside your control -
+ * the device is offline, the session expired. The call should wait until the
+ * world recovers and then run again, with the same arguments, without the user
+ * repeating it.
+ *
+ * - `@retryable()` tags a method with method metadata.
+ * - The `retrying()` registration pipe proxies the class. When a tagged method
+ *   fails, the error gets a `retry` callback that calls the method again through
+ *   the proxy, and is filed with the application's `RetryQueue`. The error still
+ *   reaches the caller - filing it is not handling it.
+ * - Whatever notices the recovery - a connection event, a successful login -
+ *   calls `queue.retry(predicate)`. The predicate is the policy: by error class,
+ *   by status code, by anything the error carries.
+ * - Replays are one-shot: a replay that fails again is filed as a fresh error.
+ */
+
+// --- The engine ------------------------------------------------------------
+
+interface IRetryableError extends Error {
+  retry: () => Promise<unknown>;
+}
+const isRetryableError = (error: unknown): error is IRetryableError =>
+  error instanceof Error && typeof (error as Partial<IRetryableError>).retry === 'function';
+
+const IRetryQueueToken = new SingleToken<RetryQueue>('IRetryQueue');
+
+@register(IRetryQueueToken, scope((s) => s.hasTag('application')), singleton())
+class RetryQueue {
+  private errors: IRetryableError[] = [];
+
+  get size(): number {
+    return this.errors.length;
+  }
+
+  file(error: IRetryableError): void {
+    this.errors.push(error);
+  }
+
+  /** Replays and drops every filed error the predicate accepts. */
+  async retry(predicate: (error: IRetryableError) => boolean): Promise<void> {
+    const matched = this.errors.filter(predicate);
+    // Drop before replaying, so a replay that fails again is filed fresh.
+    this.errors = this.errors.filter((e) => !matched.includes(e));
+    await Promise.allSettled(matched.map((e) => e.retry()));
+  }
+}
+
+const retryable = () => addMethodTag('retryable');
+
+const retrying = () =>
+  decorate((instance: object, s: IContainer) => {
+    const proxy: object = ProxyRegistry.getInstance().createProxy(instance, {
+      get(target, prop) {
+        const value = Reflect.get(target, prop);
+        if (typeof prop !== 'string' || !getMethodTags(target, prop).has('retryable')) return value;
+        return async (...args: unknown[]) => {
+          try {
+            return await (value as (...a: unknown[]) => unknown).apply(target, args);
+          } catch (error) {
+            if (error instanceof Error && !isRetryableError(error)) {
+              const retry = () => (proxy as Record<string, (...a: unknown[]) => Promise<unknown>>)[prop](...args);
+              IRetryQueueToken.resolve(s).file(Object.assign(error, { retry }));
+            }
+            throw error;
+          }
+        };
+      },
+    });
+    return proxy;
+  });
+
+// --- The application -------------------------------------------------------
+
+class OfflineError extends Error {}
+
+interface IConnection {
+  online: boolean;
+}
+const IConnectionToken = new SingleToken<IConnection>('IConnection');
+
+const IChargingServiceToken = new SingleToken<ChargingService>('IChargingService');
+
+@register(IChargingServiceToken, retrying())
+class ChargingService {
+  readonly started: string[] = [];
+
+  constructor(@inject(by(IConnectionToken)) private readonly connection: IConnection) {}
+
+  @retryable()
+  async startCharge(stationId: string): Promise<void> {
+    if (!this.connection.online) throw new OfflineError(`cannot reach ${stationId}`);
+    this.started.push(stationId);
+  }
+
+  async stopCharge(stationId: string): Promise<void> {
+    if (!this.connection.online) throw new OfflineError(`cannot reach ${stationId}`);
+  }
+}
+
+describe('Retry later', () => {
+  const setup = () => {
+    const connection: IConnection = { online: false };
+    const app = new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(RetryQueue))
+      .addRegistration(R.fromClass(ChargingService))
+      .addRegistration(R.fromValue(connection).bindTo(IConnectionToken));
+    return { connection, charging: IChargingServiceToken.resolve(app), queue: IRetryQueueToken.resolve(app) };
+  };
+
+  it('files a failed call and replays it, with its arguments, once the cause is gone', async () => {
+    const { connection, charging, queue } = setup();
+
+    await expect(charging.startCharge('st-1')).rejects.toBeInstanceOf(OfflineError); // the caller still sees it
+    expect(queue.size).toBe(1);
+
+    connection.online = true;
+    await queue.retry((e) => e instanceof OfflineError);
+
+    expect(charging.started).toEqual(['st-1']);
+    expect(queue.size).toBe(0);
+  });
+
+  it('files a replay that fails again as a fresh error', async () => {
+    const { charging, queue } = setup();
+    await expect(charging.startCharge('st-1')).rejects.toThrow();
+
+    await queue.retry(() => true); // still offline
+
+    expect(queue.size).toBe(1);
+  });
+
+  it('replays only what the predicate selects', async () => {
+    const { connection, charging, queue } = setup();
+    await expect(charging.startCharge('st-1')).rejects.toThrow();
+    await expect(charging.startCharge('st-2')).rejects.toThrow();
+
+    connection.online = true;
+    await queue.retry((e) => e.message.includes('st-2'));
+
+    expect(charging.started).toEqual(['st-2']);
+    expect(queue.size).toBe(1);
+  });
+
+  it('leaves untagged methods alone', async () => {
+    const { charging, queue } = setup();
+
+    await expect(charging.stopCharge('st-1')).rejects.toBeInstanceOf(OfflineError);
+    expect(queue.size).toBe(0);
+  });
+});
+
+```
+
+### Unit of work per request
+
+A request-scoped identity map per repository, keyed by the repository token
+passed as a runtime arg (`singleton(cacheKey)` + `byArgs(...)`), flushed by an
+`@onCommit` hook inside one transaction once the handler has answered. Services
+only change objects; a failed request writes nothing.
+
+```typescript
+import 'reflect-metadata';
+import {
+  by,
+  byArgs,
+  Container,
+  findArgOrFail,
+  hook,
+  HookCollector,
+  type HookFn,
+  type IContainer,
+  inject,
+  type InjectionToken,
+  isInjectionToken,
+  register,
+  Registration as R,
+  runInOrder,
+  scope,
+  singleton,
+  SingleToken,
+  toTask,
+} from 'ts-ioc-container';
+
+/**
+ * Unit of work per request: identity map + commit on success
+ *
+ * A request reads records, several services change them, and the changes are
+ * written together - in one transaction, only if the request succeeded. Within
+ * the request every read of one id returns the same object, so changes made in
+ * different services land on it and are written once.
+ *
+ * - `EntityManager` is request-scoped and resolved with a repository token as a
+ *   runtime arg: `IEntityManagerToken.args(IUserRepositoryToken)`. That token is
+ *   both what it works over (`byArgs(...)`) and its `singleton(...)` cache key,
+ *   so every service asking for the users' manager in one request meets on the
+ *   same identity map.
+ * - Repository tokens carry a `repository` tag, which is how the manager picks
+ *   its token out of the args.
+ * - `flush()` is an `@onCommit` hook - an application-defined key. The request
+ *   pipeline runs every `@onCommit` hook of the request scope inside one
+ *   transaction once the handler has answered; a handler that throws commits
+ *   nothing. `dispose()` then drops the scope and its identity maps.
+ */
+
+// --- Persistence -----------------------------------------------------------
+
+interface IEntity {
+  id: string;
+}
+
+/** An in-memory database whose transaction rolls back on a throw. */
+class Database {
+  readonly tables = new Map<string, Map<string, IEntity>>();
+  transactions = 0;
+
+  table(name: string): Map<string, IEntity> {
+    if (!this.tables.has(name)) this.tables.set(name, new Map());
+    return this.tables.get(name)!;
+  }
+
+  async transaction(work: () => Promise<void>): Promise<void> {
+    const snapshot = new Map([...this.tables].map(([name, rows]) => [name, new Map(rows)]));
+    try {
+      await work();
+      this.transactions++;
+    } catch (e) {
+      this.tables.clear();
+      for (const [name, rows] of snapshot) this.tables.set(name, rows);
+      throw e;
+    }
+  }
+}
+const IDatabaseToken = new SingleToken<Database>('IDatabase');
+
+interface IRepository<E extends IEntity = IEntity> {
+  readonly saved: string[];
+  findById(id: string): Promise<E | undefined>;
+  save(entity: E): Promise<void>;
+}
+
+const repositoryToken = <E extends IEntity>(key: string) =>
+  new SingleToken<IRepository<E>>(key, { tags: ['repository'] });
+const isRepositoryToken = (value: unknown): value is InjectionToken<IRepository> =>
+  isInjectionToken(value) && value.hasTag('repository');
+
+interface User extends IEntity {
+  name: string;
+  orders: number;
+}
+
+const IUserRepositoryToken = repositoryToken<User>('IUserRepository');
+
+// Returns copies, so only `save` changes the table.
+@register(IUserRepositoryToken, scope((s) => s.hasTag('application')), singleton())
+class UserRepository implements IRepository<User> {
+  readonly saved: string[] = [];
+
+  constructor(@inject(by(IDatabaseToken)) private readonly db: Database) {}
+
+  async findById(id: string): Promise<User | undefined> {
+    const row = this.db.table('users').get(id);
+    return row && ({ ...row } as User);
+  }
+
+  async save(user: User): Promise<void> {
+    this.saved.push(user.id);
+    this.db.table('users').set(user.id, { ...user });
+  }
+}
+
+// --- The unit of work ------------------------------------------------------
+
+const onCommit = (fn: HookFn) => hook('onCommit', fn);
+const onCommitHooks = new HookCollector({ key: 'onCommit' });
+const invoke: HookFn = (ctx) => ctx.invokeMethod() as Promise<void>;
+
+const repositoryTokenOf = findArgOrFail<InjectionToken<IRepository>>(isRepositoryToken);
+
+class EntityNotFoundError extends Error {}
+
+const IEntityManagerToken = new SingleToken<EntityManager>('IEntityManager');
+
+@register(IEntityManagerToken, scope((s) => s.hasTag('request')), singleton(repositoryTokenOf))
+class EntityManager<E extends IEntity = IEntity> {
+  private readonly tracked = new Map<string, E>();
+
+  constructor(@inject(byArgs(repositoryTokenOf)) private readonly repository: IRepository<E>) {}
+
+  async findByIdOrFail(id: string): Promise<E> {
+    const known = this.tracked.get(id);
+    if (known) return known;
+    const entity = await this.repository.findById(id);
+    if (!entity) throw new EntityNotFoundError(id);
+    this.tracked.set(id, entity);
+    return entity;
+  }
+
+  @onCommit(invoke)
+  async flush(): Promise<void> {
+    for (const entity of this.tracked.values()) await this.repository.save(entity);
+  }
+}
+
+/** The manager of one repository, typed by it. */
+const entityManagerOf = <E extends IEntity>(token: SingleToken<IRepository<E>>) =>
+  IEntityManagerToken.args(token) as unknown as SingleToken<EntityManager<E>>;
+
+// --- The request pipeline --------------------------------------------------
+
+const handleRequest = async <T>(app: IContainer, handler: (request: IContainer) => Promise<T>): Promise<T> => {
+  const request = app.createScope({ tags: ['request'] });
+  try {
+    const result = await handler(request);
+    await IDatabaseToken.resolve(request).transaction(async () => {
+      const commits = request.getInstances().flatMap((i) => onCommitHooks.getActions(i, { scope: request }));
+      await runInOrder(commits.map(toTask));
+    });
+    return result;
+  } finally {
+    request.dispose();
+  }
+};
+
+// --- Services that only change objects -------------------------------------
+
+class RenameUser {
+  constructor(@inject(by(entityManagerOf(IUserRepositoryToken))) private readonly users: EntityManager<User>) {}
+
+  async run(id: string, name: string): Promise<void> {
+    (await this.users.findByIdOrFail(id)).name = name;
+  }
+}
+
+class CountOrder {
+  constructor(@inject(by(entityManagerOf(IUserRepositoryToken))) private readonly users: EntityManager<User>) {}
+
+  async run(id: string): Promise<void> {
+    (await this.users.findByIdOrFail(id)).orders++;
+  }
+}
+
+describe('Unit of work per request', () => {
+  const createApp = () => {
+    const db = new Database();
+    db.table('users').set('u-1', { id: 'u-1', name: 'alice', orders: 0 } as User);
+    const app = new Container({ tags: ['application'] })
+      .addRegistration(R.fromValue(db).bindTo(IDatabaseToken))
+      .addRegistration(R.fromClass(UserRepository))
+      .addRegistration(R.fromClass(EntityManager));
+    return { app, db, users: IUserRepositoryToken.resolve(app) };
+  };
+
+  it('shares one identity map per repository per request and writes each entity once', async () => {
+    const { app, db, users } = createApp();
+
+    await handleRequest(app, async (request) => {
+      await request.resolve(RenameUser).run('u-1', 'Alice');
+      await request.resolve(CountOrder).run('u-1');
+      expect(entityManagerOf(IUserRepositoryToken).resolve(request)).toBe(
+        entityManagerOf(IUserRepositoryToken).resolve(request),
+      );
+    });
+
+    expect(db.table('users').get('u-1')).toEqual({ id: 'u-1', name: 'Alice', orders: 1 });
+    expect(users.saved).toEqual(['u-1']); // two changes, one write
+    expect(db.transactions).toBe(1);
+  });
+
+  it('commits nothing when the handler fails', async () => {
+    const { app, db, users } = createApp();
+
+    await expect(
+      handleRequest(app, async (request) => {
+        await request.resolve(RenameUser).run('u-1', 'Mallory');
+        throw new Error('payment declined');
+      }),
+    ).rejects.toThrow('payment declined');
+
+    expect(db.table('users').get('u-1')).toMatchObject({ name: 'alice' });
+    expect(users.saved).toEqual([]);
+  });
+
+  it('gives every request its own identity map', async () => {
+    const { app } = createApp();
+    const seen: EntityManager<User>[] = [];
+
+    await handleRequest(app, async (r) => void seen.push(entityManagerOf(IUserRepositoryToken).resolve(r)));
+    await handleRequest(app, async (r) => void seen.push(entityManagerOf(IUserRepositoryToken).resolve(r)));
+
+    expect(seen[0]).not.toBe(seen[1]);
+  });
+});
+
+```
+
+### Layer and scope decorators
+
+Name your architecture: `@perRequest('admin')`, `@service(Token, singleton())`,
+`@repository(...)`. Scope decorators wrap `scope(...)`; layer decorators add the
+class to a `GroupAliasToken` of its layer, so a whole layer can be listed from
+any scope; `createComposeClassDecorator` names a combination you repeat.
+
+```typescript
+import 'reflect-metadata';
+import {
+  by,
+  Container,
+  createComposeClassDecorator,
+  DependencyNotFoundError,
+  GroupAliasToken,
+  inject,
+  register,
+  Registration as R,
+  type RegistrationMapper,
+  scope,
+  singleton,
+  SingleToken,
+} from 'ts-ioc-container';
+
+/**
+ * Architecture vocabulary: layer and scope decorators
+ *
+ * Give the architecture names, and a class states where it belongs in one line:
+ *
+ *   @perRequest()
+ *   @service(IOrderServiceToken, singleton())
+ *   class OrderService {}
+ *
+ * - Scope decorators (`perApp`, `perRequest`) wrap `scope(...)`. An optional
+ *   name narrows one further to a scope opened with that extra tag:
+ *   `perRequest('admin')` exists only in requests tagged `admin`.
+ * - Layer decorators (`service`, `repository`) wrap `register(...)` and add the
+ *   class to a `GroupAliasToken` of its layer, so the whole layer can be listed
+ *   from any scope - to reset repositories between tests, run health checks, or
+ *   assert an architecture rule. Its own token and lifetime are passed in as
+ *   mappers, so a class never stacks two `@register`s.
+ * - `createComposeClassDecorator` names a combination the codebase repeats.
+ *
+ * The decorators are a vocabulary your team - and your AI coding agent - can
+ * apply without knowing the registration rules behind them.
+ */
+
+// --- The vocabulary --------------------------------------------------------
+
+const perScope =
+  (tag: string) =>
+  (name?: string): ClassDecorator =>
+    register(scope((s) => s.hasTag(tag) && (name === undefined || s.hasTag(name))));
+
+const perApp = perScope('application');
+const perRequest = perScope('request');
+
+interface IResettable {
+  reset(): void;
+}
+
+const IServiceToken = new GroupAliasToken<object>('IService');
+const IRepositoryToken = new GroupAliasToken<IResettable>('IRepository');
+
+const service = (...mappers: RegistrationMapper[]): ClassDecorator => register(IServiceToken, ...mappers);
+const repository = (...mappers: RegistrationMapper[]): ClassDecorator => register(IRepositoryToken, ...mappers);
+
+/** One application-wide repository, in one decorator. */
+const appRepository = (...mappers: RegistrationMapper[]) =>
+  createComposeClassDecorator(perApp(), repository(singleton(), ...mappers));
+
+// --- An application written in it ------------------------------------------
+
+interface Order {
+  id: string;
+  total: number;
+}
+
+const IOrderRepositoryToken = new SingleToken<OrderRepository>('IOrderRepository');
+const ICustomerRepositoryToken = new SingleToken<CustomerRepository>('ICustomerRepository');
+const IOrderServiceToken = new SingleToken<OrderService>('IOrderService');
+const IRefundServiceToken = new SingleToken<RefundService>('IRefundService');
+
+@appRepository(IOrderRepositoryToken)
+class OrderRepository implements IResettable {
+  orders: Order[] = [{ id: 'o-1', total: 30 }];
+
+  reset(): void {
+    this.orders = [];
+  }
+}
+
+@appRepository(ICustomerRepositoryToken)
+class CustomerRepository implements IResettable {
+  customers = ['alice'];
+
+  reset(): void {
+    this.customers = [];
+  }
+}
+
+@perRequest()
+@service(IOrderServiceToken, singleton())
+class OrderService {
+  constructor(@inject(by(IOrderRepositoryToken)) private readonly orders: OrderRepository) {}
+
+  total(): number {
+    return this.orders.orders.reduce((sum, o) => sum + o.total, 0);
+  }
+}
+
+// Only requests opened with the `admin` tag get this one.
+@perRequest('admin')
+@service(IRefundServiceToken, singleton())
+class RefundService {
+  constructor(@inject(by(IOrderRepositoryToken)) private readonly orders: OrderRepository) {}
+
+  refund(orderId: string): void {
+    this.orders.orders = this.orders.orders.filter((o) => o.id !== orderId);
+  }
+}
+
+describe('Layer and scope decorators', () => {
+  const createApp = () =>
+    new Container({ tags: ['application'] })
+      .addRegistration(R.fromClass(OrderRepository))
+      .addRegistration(R.fromClass(CustomerRepository))
+      .addRegistration(R.fromClass(OrderService))
+      .addRegistration(R.fromClass(RefundService));
+
+  it('registers each class in the scope its decorator names', () => {
+    const app = createApp();
+    const request = app.createScope({ tags: ['request'] });
+
+    expect(IOrderServiceToken.resolve(request).total()).toBe(30);
+    expect(() => IOrderServiceToken.resolve(app)).toThrow(DependencyNotFoundError); // not an app-level service
+    expect(IOrderRepositoryToken.resolve(request)).toBe(IOrderRepositoryToken.resolve(app)); // one per app
+  });
+
+  it('narrows a scope decorator by name', () => {
+    const app = createApp();
+    const admin = app.createScope({ tags: ['request', 'admin'] });
+    const regular = app.createScope({ tags: ['request'] });
+
+    IRefundServiceToken.resolve(admin).refund('o-1');
+
+    expect(IOrderServiceToken.resolve(regular).total()).toBe(0);
+    expect(() => IRefundServiceToken.resolve(regular)).toThrow(DependencyNotFoundError);
+  });
+
+  it('lists a whole layer from any scope', () => {
+    const app = createApp();
+    const request = app.createScope({ tags: ['request'] });
+
+    // e.g. between tests: wipe every repository, whatever the feature
+    for (const repo of IRepositoryToken.resolve(request)) repo.reset();
+
+    expect(IOrderRepositoryToken.resolve(app).orders).toEqual([]);
+    expect(ICustomerRepositoryToken.resolve(app).customers).toEqual([]);
+    expect(IServiceToken.resolve(request)).toHaveLength(1); // OrderService; RefundService is admin-only
+  });
+});
+
+```
+
+### Per-request scope (Express / Next.js)
+
+```typescript
+import 'reflect-metadata';
+import { bindTo, Container, register, Registration as R, singleton } from 'ts-ioc-container';
+
+/**
+ * Web Framework Integration - Per-Request Scope
+ *
+ * In Express/Next.js applications, each HTTP request typically gets its own
+ * scope. This ensures request-specific state (logger context, current user,
+ * correlation IDs) is isolated between concurrent requests.
+ *
+ * Scope hierarchy:
+ *   Application (singleton services — live for entire app lifetime)
+ *     └── Request (per-request services — created and disposed per request)
+ */
+
+@register(bindTo('ILogger'), singleton())
+class Logger {
+  readonly messages: string[] = [];
+
+  log(message: string) {
+    this.messages.push(message);
+  }
+}
+
+describe('Express/Next per-request scope', () => {
+  it('should give each request its own Logger instance', () => {
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+
+    // Simulate two concurrent HTTP requests
+    const request1Scope = app.createScope({ tags: ['request'] });
+    const request2Scope = app.createScope({ tags: ['request'] });
+
+    const logger1 = request1Scope.resolve<Logger>('ILogger');
+    const logger2 = request2Scope.resolve<Logger>('ILogger');
+
+    logger1.log('req 1 started');
+    logger2.log('req 2 started');
+
+    // Each request has its own Logger — logs don't leak between requests
+    expect(logger1.messages).toEqual(['req 1 started']);
+    expect(logger2.messages).toEqual(['req 2 started']);
+    expect(logger1).not.toBe(logger2);
+  });
+
+  it('should resolve the same Logger within a single request', () => {
+    const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Logger));
+
+    const requestScope = app.createScope({ tags: ['request'] });
+
+    const logger1 = requestScope.resolve<Logger>('ILogger');
+    const logger2 = requestScope.resolve<Logger>('ILogger');
+
+    // Within one request, singleton is maintained
+    expect(logger1).toBe(logger2);
+  });
+});
+
+```
+
+### Frontend widget with a lazy page dependency
+
+```typescript
+import 'reflect-metadata';
+import { bindTo, Container, inject, register, Registration as R, select, singleton, by } from 'ts-ioc-container';
+
+/**
+ * Frontend Widget - Page Scope with Lazy Dependency
+ *
+ * In frontend applications, feature flags are fetched once per page load
+ * (singleton per page scope) but a widget may not need them on every render.
+ * Lazy injection defers instantiation until the widget actually reads the flags,
+ * avoiding unnecessary work for widgets that never display flag-gated content.
+ *
+ * Scope hierarchy:
+ *   Application
+ *     └── Page (singleton flags fetched once)
+ *           └── Widget (lazy flag access)
+ */
+
+@register(bindTo('FeatureFlags'), singleton())
+class FeatureFlags {
+  load(): Record<string, boolean> {
+    return { newDashboard: true };
+  }
+}
+
+class Widget {
+  constructor(
+    @inject(by(select.token('FeatureFlags').lazy()))
+    public flags: FeatureFlags,
+  ) {}
+}
+
+describe('Frontend widget/page scope with lazy dependency', () => {
+  function createPage() {
+    return new Container({ tags: ['page'] })
+      .addRegistration(R.fromClass(FeatureFlags))
+      .addRegistration(R.fromClass(Widget));
+  }
+
+  it('should not instantiate FeatureFlags until the widget actually accesses it', () => {
+    const page = createPage();
+
+    const widget = page.resolve(Widget);
+
+    // Widget is resolved, but FeatureFlags has not been instantiated yet
+    let instances = Array.from(page.getInstances()).filter((x) => x instanceof FeatureFlags);
+    expect(instances).toHaveLength(0);
+
+    // Accessing any property on the lazy proxy triggers instantiation
+    const _load = widget.flags.load;
+    expect(_load).toBeDefined();
+
+    instances = Array.from(page.getInstances()).filter((x) => x instanceof FeatureFlags);
+    expect(instances).toHaveLength(1);
+  });
+
+  it('should share the same FeatureFlags singleton across widgets on the same page', () => {
+    const page = createPage();
+
+    const widget1 = page.resolve(Widget);
+    const widget2 = page.resolve(Widget);
+
+    // Trigger instantiation through both widgets
+    const _load1 = widget1.flags.load;
+    const _load2 = widget2.flags.load;
+    expect(_load1).toBeDefined();
+    expect(_load2).toBeDefined();
+
+    // Only one FeatureFlags instance was created across the whole page scope
+    const instances = Array.from(page.getInstances()).filter((x) => x instanceof FeatureFlags);
+    expect(instances).toHaveLength(1);
+  });
+});
+
+```
+
+### Background worker
+
+```typescript
+import 'reflect-metadata';
+import { Container, inject, register, Registration as R, singleton, by } from 'ts-ioc-container';
+
+/**
+ * Background Worker - Singleton Client, Transient Jobs
+ *
+ * A queue worker typically needs:
+ * - A single shared QueueClient (expensive to create, holds connections)
+ * - A new JobHandler per job (stateful — holds job-specific data)
+ *
+ * singleton() on QueueClient ensures one shared connection pool.
+ * No singleton on JobHandler gives a fresh instance per resolve.
+ */
+
+@register(singleton())
+class QueueClient {
+  readonly connected = true;
+
+  dequeue(): string {
+    return 'job-payload';
+  }
+}
+
+class JobHandler {
+  readonly result: string;
+
+  constructor(@inject(by('QueueClient')) private queue: QueueClient) {
+    this.result = this.queue.dequeue();
+  }
+}
+
+describe('Background worker', () => {
+  function createWorker() {
+    return new Container({ tags: ['worker'] })
+      .addRegistration(R.fromClass(QueueClient))
+      .addRegistration(R.fromClass(JobHandler));
+  }
+
+  it('should share a single QueueClient across all job handlers', () => {
+    const worker = createWorker();
+
+    const handler1 = worker.resolve(JobHandler);
+    const handler2 = worker.resolve(JobHandler);
+
+    const client1 = worker.resolve<QueueClient>('QueueClient');
+    const client2 = worker.resolve<QueueClient>('QueueClient');
+
+    // QueueClient is a singleton — same connection shared everywhere
+    expect(client1).toBe(client2);
+    expect(client1.connected).toBe(true);
+
+    // JobHandler is transient — fresh instance per job
+    expect(handler1).not.toBe(handler2);
+  });
+
+  it('should inject the shared QueueClient into each JobHandler', () => {
+    const worker = createWorker();
+
+    const handler = worker.resolve(JobHandler);
+
+    expect(handler.result).toBe('job-payload');
   });
 });
 

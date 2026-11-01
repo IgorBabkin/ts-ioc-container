@@ -1,7 +1,7 @@
 {
   "name": "ts-ioc-container",
   "version": "76.0.2",
-  "description": "Fast, lightweight TypeScript dependency injection container with a clean API, scoped lifecycles, decorators, tokens, hooks, lazy injection, customizable providers, and no global container objects.",
+  "description": "Platform-agnostic TypeScript AOP platform for building system engines and meta-frameworks, on a fast, lightweight DI container: scoped lifecycles, decorators, tokens, hooks, proxies and middleware pipelines, with a living cookbook of executable recipes. Frontend, backend, workers and scripts; zero runtime dependencies.",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -49,14 +49,25 @@
     "decorators",
     "lazy-injection",
     "service-container",
-    "inject"
+    "inject",
+    "mediator",
+    "middleware",
+    "aop",
+    "proxy",
+    "meta-framework",
+    "aop-framework",
+    "platform-agnostic",
+    "framework-engine",
+    "cookbook",
+    "ai-ready"
   ],
   "files": [
     "cjm/**/*",
     "esm/**/*",
     "typings/**/*",
     "lib/**/*",
-    "AGENTS.md"
+    "AGENTS.md",
+    "skills/**/*"
   ],
   "repository": {
     "type": "git",

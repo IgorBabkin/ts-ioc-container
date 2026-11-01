@@ -2,7 +2,9 @@
 
 ## Project Structure & Module Organization
 
-Core library code lives in `lib/`, organized by concern: `container/`, `provider/`, `injector/`, `registration/`, `token/`, `hooks/`, and `errors/`. Product-facing behavior specs live in `specs/`; architectural decisions live in `adr/`. Tests live in `__tests__/`: `__tests__/specs/` contains executable acceptance specs, `__tests__/readme/` contains executable documentation examples, and the remaining folders generally mirror the source layout (for example `lib/injector/` maps to `__tests__/injector/`). Supporting scripts are in `scripts/`. Treat `cjm/`, `esm/`, and `typings/` as build outputs, not source files.
+This is a pnpm workspace; the root is a shell and is never published. The core library is `packages/ts-ioc-container/`: source in `lib/` (organized by concern: `container/`, `provider/`, `injector/`, `registration/`, `token/`, `hooks/`, `metadata/`, `errors/`), tests in `__tests__/`, product specs in `specs/`. Its `__tests__/readme/` holds the executable examples and cookbook recipes that `README.md` includes, and `__tests__/specs/` the executable acceptance specs; the remaining test folders mirror `lib/`. Other packages: `packages/react` (React bindings), `packages/bundler` (the `tic` CLI), `packages/openapi-to-server`, `packages/openapi-to-zod`, and the private `packages/scripts` (build and release tooling). Architectural decisions live in `adr/` at the root. Treat `cjm/`, `esm/`, and `typings/` as build outputs, not source files. `CLAUDE.md` has the full architecture notes.
+
+Each published package ships its own consumer `AGENTS.md` (listed in `files`); keep it in sync with the API, and keep its recipes executed by a test (`packages/ts-ioc-container/__tests__/readme/agentRecipes.spec.ts` for the core).
 
 ## Build, Test, and Development Commands
 
@@ -12,9 +14,9 @@ Core library code lives in `lib/`, organized by concern: `container/`, `provider
 - `pnpm run test:spec`: run executable acceptance specs only.
 - `pnpm run test:coverage`: run tests with coverage summary and `lcov`.
 - `pnpm run type-check`: run strict TypeScript checks without emitting files.
-- `pnpm run lint`: lint `lib/`, `__tests__/`, and `scripts/`.
+- `pnpm run lint`: lint every package.
 - `pnpm run format`: format TypeScript files with Prettier.
-- `pnpm exec vitest run __tests__/container/IocContainer.spec.ts`: run a single test file.
+- `pnpm exec vitest run __tests__/readme/mediator.spec.ts`: run a single test file (from the package's own directory).
 
 ## Coding Style & Naming Conventions
 
@@ -30,4 +32,4 @@ Commits follow conventional commits. A release-triggering commit (`feat`, `fix`,
 
 ## Documentation & Generated Files
 
-Do not edit generated outputs directly. Update source files in `lib/`, update behavior specs in `specs/`, and record durable decisions in `docs/adr/`. For README changes edit `.readme.hbs.md` and regenerate with `pnpm run generate:docs`.
+Do not edit generated outputs directly. Update source files in `lib/`, update behavior specs in `specs/`, and record durable decisions in `adr/`. For core README changes edit `packages/ts-ioc-container/.readme.hbs.md` and regenerate with `pnpm run generate:docs`; a new cookbook recipe is a spec in `__tests__/readme/` included from that template.

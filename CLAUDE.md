@@ -418,6 +418,7 @@ Paths below are relative to `packages/ts-ioc-container/` unless stated otherwise
 - **Edit source only**: `lib/` — never `cjm/`, `esm/`, `typings/` (build outputs)
 - **README.md is generated**: edit `.readme.hbs.md`, then run `pnpm run generate:docs`. The root `README.md` (GitHub landing page) is a copy of the core package README, made and staged by the pre-commit hook, which runs its `git add` from the repo root — never add a `git add` to a package script: inside a worktree the hook environment makes git treat the package directory as the repo root
 - **Tests mirror source**: `__tests__/` structure matches `lib/`
+- **Cookbook recipes** are specs in `__tests__/readme/` included from `.readme.hbs.md` under "Cookbook". A new recipe also goes into the pattern table of the architect skill (`skills/ts-ioc-container-architect/SKILL.md`, shipped in the package and exposed as a Claude Code plugin through the root `.claude-plugin/marketplace.json`) and the cookbook list in the package `AGENTS.md`
 - **All public APIs** exported from `lib/index.ts`
 
 ## Test Scope Name Conventions
