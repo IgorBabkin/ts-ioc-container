@@ -75,7 +75,7 @@ describe('BundleController', () => {
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
-  it('given bundled classes when built then each is logged as its path relative to the working directory and its name', () => {
+  it('given bundled classes when built then each is logged as its name and its path relative to the working directory', () => {
     const { out, logger, controller } = setup(() =>
       result(
         '// bundle\n',
@@ -90,9 +90,9 @@ describe('BundleController', () => {
 
     controller.bundle({ configs: ['app.bundle.json'] });
 
-    logger.verify((m) => m.info('src/infra/JsonLogger.ts JsonLogger'), Times.Once());
-    logger.verify((m) => m.info('src/services/greeters.ts Greeter'), Times.Once());
-    logger.verify((m) => m.info('src/services/greeters.ts LoudGreeter'), Times.Once());
+    logger.verify((m) => m.info('JsonLogger src/infra/JsonLogger.ts'), Times.Once());
+    logger.verify((m) => m.info('Greeter src/services/greeters.ts'), Times.Once());
+    logger.verify((m) => m.info('LoudGreeter src/services/greeters.ts'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
