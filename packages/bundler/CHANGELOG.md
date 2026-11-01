@@ -1,3 +1,12 @@
+# 8.2.0 (2026-11-01)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    report the start and a summary of a build
+    (6c1aba96d4e88ecbfbc9723cd5f0eae705b504a4)
+
+
 # 8.1.0 (2026-11-01)
 
   ### ✨ Features
@@ -391,6 +400,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
