@@ -2,6 +2,7 @@ import { It, Mock, Times } from 'moq.ts';
 import {
   BundleController,
   type Bundle,
+  type BundledClass,
   type CliIo,
   type IBundleService,
   type ILogger,
@@ -12,8 +13,15 @@ import {
   UsageError,
 } from '../../../lib';
 
-const result = (content: string, warnings: string[] = [], files: string[] = []) =>
-  ({ bundle: 'AppBundle', registrations: 1, files, content, warnings }) satisfies Bundle;
+const result = (content: string, warnings: string[] = [], classes: BundledClass[] = []) =>
+  ({
+    bundle: 'AppBundle',
+    registrations: 1,
+    files: [...new Set(classes.map((cls) => cls.file))],
+    classes,
+    content,
+    warnings,
+  }) satisfies Bundle;
 
 const resolved = { name: 'app', bundleClassName: 'AppBundle' } as BundleConfig;
 
@@ -67,15 +75,24 @@ describe('BundleController', () => {
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
-  it('given bundled files when built then each path is logged relative to the working directory', () => {
+  it('given bundled classes when built then each is logged as its path relative to the working directory and its name', () => {
     const { out, logger, controller } = setup(() =>
-      result('// bundle\n', [], ['/repo/src/infra/JsonLogger.ts', '/repo/src/services/Greeter.ts']),
+      result(
+        '// bundle\n',
+        [],
+        [
+          { file: '/repo/src/infra/JsonLogger.ts', className: 'JsonLogger' },
+          { file: '/repo/src/services/greeters.ts', className: 'Greeter' },
+          { file: '/repo/src/services/greeters.ts', className: 'LoudGreeter' },
+        ],
+      ),
     );
 
     controller.bundle({ configs: ['app.bundle.json'] });
 
-    logger.verify((m) => m.info('src/infra/JsonLogger.ts'), Times.Once());
-    logger.verify((m) => m.info('src/services/Greeter.ts'), Times.Once());
+    logger.verify((m) => m.info('src/infra/JsonLogger.ts JsonLogger'), Times.Once());
+    logger.verify((m) => m.info('src/services/greeters.ts Greeter'), Times.Once());
+    logger.verify((m) => m.info('src/services/greeters.ts LoudGreeter'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 

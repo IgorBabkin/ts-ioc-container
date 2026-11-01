@@ -15,6 +15,8 @@ export interface Bundle {
   registrations: number;
   /** Absolute paths of the files the bundle imports from, sorted. */
   files: string[];
+  /** The classes the bundle registers, sorted by file and then by declaration order. */
+  classes: BundledClass[];
   /** The generated bundle. Nothing is written: saving it is the caller's job (`tic build app.bundle.json > src/di/app.bundle.ts`). */
   content: string;
   /**
@@ -22,6 +24,14 @@ export interface Bundle {
    * test glob or two selected classes passing the same decorator token.
    */
   warnings: string[];
+}
+
+/** A class the bundle registers. */
+export interface BundledClass {
+  /** Absolute path of the file it is declared in. */
+  file: string;
+  /** The declared class name; an anonymous default export is named after its file. */
+  className: string;
 }
 
 export interface IBundleService {
@@ -88,6 +98,7 @@ export class BundleService implements IBundleService {
       bundle: config.bundleClassName,
       registrations: classes.length,
       files: [...new Set(classes.map((cls) => cls.file))],
+      classes: classes.map(({ file, className }) => ({ file, className })),
       content,
       warnings: [...config.warnings, ...tokenCollisions(classes)],
     };

@@ -48,8 +48,9 @@ export class BundleController {
    * stdout. Saving it is the shell's job: `tic build app.bundle.json > src/di/app.bundle.ts`,
    * `tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`,
    * `cat app.bundle.yml | tic build > out.ts`.
-   * The files in the bundle, one path per line relative to the working directory, and warnings
-   * go to stderr, so they never end up in the bundle; an error names the configs.
+   * The classes in the bundle, one per line as its file's path relative to the working
+   * directory and its name (`src/infra/Clock.ts Clock`), and warnings go to stderr, so they
+   * never end up in the bundle; an error names the configs.
    *
    * @throws {UsageError} when an option is unknown, `-` is given with config files, or the config should come from stdin and nothing is piped in.
    * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
@@ -63,8 +64,10 @@ export class BundleController {
       const config = stdin
         ? this.configService.parse(this.stdin(), this.io.cwd)
         : this.configService.load(configs.map((file) => path.resolve(this.io.cwd, file)));
-      const { content, files, warnings } = this.bundleService.bundle(config);
-      for (const file of files) this.logger.info(toPosix(path.relative(this.io.cwd, file)));
+      const { content, classes, warnings } = this.bundleService.bundle(config);
+      for (const { file, className } of classes) {
+        this.logger.info(`${toPosix(path.relative(this.io.cwd, file))} ${className}`);
+      }
       for (const warning of warnings) this.logger.warn(`${label}: ${warning}`);
       // The bundle ends with a newline; the output service adds its own.
       this.output.write(content.replace(/\n$/, ''));

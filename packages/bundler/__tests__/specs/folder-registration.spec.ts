@@ -803,6 +803,19 @@ describe('Folder registration', () => {
       ]);
     });
 
+    it('returns the bundled classes with their files, in file order', () => {
+      project = create({
+        'app.bundle.yml': "paths:\n  include: ['./src']\n",
+        'src/services/Greeter.ts': decorated('Greeter'),
+        'src/infra/Logger.ts': decorated('Logger'),
+      });
+
+      expect(buildMerged('app.bundle.yml').classes).toEqual([
+        { file: project.path('src/infra/Logger.ts'), className: 'Logger' },
+        { file: project.path('src/services/Greeter.ts'), className: 'Greeter' },
+      ]);
+    });
+
     it('keeps what an earlier config sets, and lets a later one override a value', () => {
       project = create({
         'common.bundle.yml': "importExtension: '.mjs'\npaths:\n  include: ['./src']\n",
