@@ -1,6 +1,6 @@
 # ts-ioc-container
 
-> Platform-agnostic TypeScript meta-framework and AOP engine built on a dependency injection container (frontend, backend, workers, scripts): scoped lifecycles, decorators (`@register`, `@inject`, `@hook`), typed tokens, lazy dependencies, provider pipes, transparent proxies for middleware pipelines and AOP. The README is a living cookbook: every example is an executed test. Plus React bindings in `@ts-ioc-container/react`, the `tic` build-time bundler in `@ts-ioc-container/bundler`, and OpenAPI code generation in `@ts-ioc-container/openapi-to-server` and `@ts-ioc-container/openapi-to-zod`. The API changes between majors: prefer the `AGENTS.md` shipped in the installed package (`node_modules/ts-ioc-container/AGENTS.md`) over memory.
+> Platform-agnostic TypeScript AOP platform for building system engines and meta-frameworks, on a dependency injection container (frontend, backend, workers, scripts): scoped lifecycles, decorators (`@register`, `@inject`, `@hook`), typed tokens, lazy dependencies, provider pipes, transparent proxies for middleware pipelines and AOP. The README is a living cookbook: every example is an executed test. Plus React bindings in `@ts-ioc-container/react`, the `tic` build-time bundler in `@ts-ioc-container/bundler`, and OpenAPI code generation in `@ts-ioc-container/openapi-to-server` and `@ts-ioc-container/openapi-to-zod`. The API changes between majors: prefer the `AGENTS.md` shipped in the installed package (`node_modules/ts-ioc-container/AGENTS.md`) over memory.
 
 ## Docs
 

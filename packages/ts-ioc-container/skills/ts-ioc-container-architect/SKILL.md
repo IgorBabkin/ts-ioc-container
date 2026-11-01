@@ -5,7 +5,7 @@ description: Architect for applications and frameworks built on ts-ioc-container
 
 # ts-ioc-container architect
 
-`ts-ioc-container` is a DI container _and_ a meta-framework engine: scopes,
+`ts-ioc-container` is a DI container _and_ an AOP platform for building system engines: scopes,
 tokens, provider pipes, hooks and transparent proxies are the parts an
 application assembles its own framework from. Your job is to pick the right
 pattern from the cookbook, adapt it, and keep it consistent with the rules

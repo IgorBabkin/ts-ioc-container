@@ -1,4 +1,4 @@
-# TypeScript Meta-Framework, AOP Engine & Dependency Injection Container
+# TypeScript AOP Platform & Dependency Injection Container
 
 ![NPM version:latest](https://img.shields.io/npm/v/ts-ioc-container/latest.svg?style=flat-square)
 ![npm downloads](https://img.shields.io/npm/dt/ts-ioc-container.svg?style=flat-square)
@@ -6,9 +6,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/IgorBabkin/ts-ioc-container/badge.svg?branch=master)](https://coveralls.io/github/IgorBabkin/ts-ioc-container?branch=master)
 ![License](https://img.shields.io/npm/l/ts-ioc-container)
 
-**More than a DI container: a meta-framework and AOP engine for TypeScript.**
+**More than a DI container: an AOP platform for building the engines your systems run on.**
 
-`ts-ioc-container` gives you the building blocks for your own framework —
+`ts-ioc-container` gives you the building blocks for your own engines and frameworks —
 scopes, typed tokens, hooks and transparent proxies — on top of a fast,
 lightweight dependency injection core. It runs anywhere TypeScript does: in the
 browser, on the server, in workers and in CLI scripts. Use it for large

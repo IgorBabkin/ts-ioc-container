@@ -7,7 +7,7 @@ badly or not at all. Every recipe below is executed by the package's test suite
 (`__tests__/readme/agentRecipes.spec.ts`, and `__tests__/readme/mediator.spec.ts`
 for the mediator).
 
-The library is also a platform-agnostic **meta-framework and AOP engine** (browser, server, worker, CLI alike): proxies, middleware pipelines,
+The library is also a platform-agnostic **AOP platform for building system engines** (browser, server, worker, CLI alike): proxies, middleware pipelines,
 method-level policies and hooks are built from its public API (see "Proxy calls
 through middleware" below), so build an engine on the container instead of
 hand-rolling one beside it. `README.md` is a **living cookbook**: every example

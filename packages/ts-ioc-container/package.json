@@ -1,7 +1,7 @@
 {
   "name": "ts-ioc-container",
   "version": "76.0.2",
-  "description": "Platform-agnostic TypeScript meta-framework and AOP engine built on a fast, lightweight DI container: scoped lifecycles, decorators, tokens, hooks, proxies and middleware pipelines, with a living cookbook of executable recipes. Frontend, backend, workers and scripts; zero runtime dependencies.",
+  "description": "Platform-agnostic TypeScript AOP platform for building system engines and meta-frameworks, on a fast, lightweight DI container: scoped lifecycles, decorators, tokens, hooks, proxies and middleware pipelines, with a living cookbook of executable recipes. Frontend, backend, workers and scripts; zero runtime dependencies.",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
