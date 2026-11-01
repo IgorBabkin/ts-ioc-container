@@ -25,6 +25,14 @@ It is two things at once:
   architectures. The docs can't drift from the code, so anything you — or your
   AI coding agent — copy from here works with the version you installed.
 
+**No registration boilerplate.** Build-time auto-discovery takes care of the
+wiring: [`@ts-ioc-container/bundler`](https://www.npmjs.com/package/@ts-ioc-container/bundler)
+analyzes your project's AST during the build, finds the decorated classes and
+generates one registration module for them. You get the developer experience of
+Spring auto-wiring or NestJS auto-discovery with zero discovery overhead at
+startup, full tree-shaking support and no file-system scanning at runtime.
+→ [Bundle a module at build time](#bundle-a-module-at-build-time)
+
 ## Advantages
 
 - fast TypeScript dependency resolution
@@ -36,6 +44,7 @@ It is two things at once:
 - can [inject properties](#inject-property)
 - can inject [lazy dependencies](#lazy)
 - composable provider and registration pipelines
+- build-time auto-discovery of decorated classes, with no runtime scanning — see [Bundle a module at build time](#bundle-a-module-at-build-time)
 - custom injectors, hooks, and provider behavior
 - a base for your own frameworks and engines — see [Meta-framework engine](#meta-framework-engine)
 - every example is executable, so the docs never lie — see [Cookbook](#cookbook)
