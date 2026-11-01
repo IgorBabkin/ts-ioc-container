@@ -1,3 +1,12 @@
+# 76.1.2 (2026-11-01)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    describe build-time auto-discovery in the README intro
+    (c998cb38f2179b78bb7bb7551ca2d15f3c0f214e)
+
+
 # 76.1.1 (2026-11-01)
 
   ### 📝 Other Changes
@@ -665,6 +674,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
