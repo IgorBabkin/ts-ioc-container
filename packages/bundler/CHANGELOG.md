@@ -1,3 +1,13 @@
+# 8.3.0 (2026-11-01)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.1.0
+
+
 # 8.2.0 (2026-11-01)
 
   ### ✨ Features
@@ -400,6 +410,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 

@@ -1,3 +1,21 @@
+# 76.1.0 (2026-11-01)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    ship the ts-ioc-container-architect skill for Claude Code
+    (6697bb19aed57ed7a09bc36b602a87770663c149)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    describe the package as an AOP platform for building system engines
+    (140ce8650d6b5de8b5827c0ab37dece2572beb0c)
+    - **ts-ioc-container:**
+    add an AOP cookbook and meta-framework positioning
+    (862e430c95897958968d13558676706904d05ff5)
+
+
 # 76.0.2 (2026-10-31)
 
   ### 📝 Other Changes
@@ -638,6 +656,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
