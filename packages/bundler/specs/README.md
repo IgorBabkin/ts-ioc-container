@@ -5,6 +5,6 @@ style and traceability conventions of
 [`packages/ts-ioc-container/specs/`](../../ts-ioc-container/specs/README.md)
 apply here unchanged.
 
-| Spec                                                | Acceptance tests                                                                                              | Related ADRs |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------ |
-| [Folder registration](epics/folder-registration.md) | `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts` | ADR 0022     |
+| Spec                                                | Acceptance tests                                                                                                                                | Related ADRs |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| [Folder registration](epics/folder-registration.md) | `__tests__/specs/folder-registration.spec.ts`, `__tests__/specs/bundle.spec.ts`, `__tests__/specs/cli.spec.ts`, `__tests__/specs/smoke.spec.ts` | ADR 0022     |

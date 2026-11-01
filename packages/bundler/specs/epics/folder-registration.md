@@ -221,6 +221,25 @@ Acceptance criteria:
 - The same config always prints the same bundle, so a saved bundle is checked
   with `tic build app.bundle.json | diff - src/di/app.bundle.ts`.
 
+### Story: Smoke-test every bundle
+
+As an application developer, I can prove in a test that each saved bundle is
+a working container, so that a config which leaves out a dependency fails CI,
+not the first request in that environment.
+
+Acceptance criteria:
+
+- `tic build` reads files and decorators only — it never follows `@inject` —
+  so a bundle whose classes need a dependency no included folder provides
+  builds without a warning. A smoke test is where that gap is caught.
+- Applying a bundle to a container whose `registered` event is subscribed
+  first records every key it registers; resolving each of them must not throw.
+- Every environment's bundle passes on its own, since each is a different
+  container: one that passes says nothing about the others.
+- `common.bundle.yml` built alone is not an app: the bundle builds, and the
+  smoke test reports `Greeter` failing on the `ILogger` only an environment
+  config brings.
+
 ## Notes
 
 Non-goals of this epic: glob patterns as paths, per-path scope or binding

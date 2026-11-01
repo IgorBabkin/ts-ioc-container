@@ -374,6 +374,70 @@ Each class keeps its own `@register(...)` config (key, scope, singleton, …);
 an undecorated class is bound by its class name. Discovery is syntactic — no
 type checker runs.
 
+## Smoke-testing the bundles
+
+`tic build` reads files and decorators — it never follows `@inject`. A config
+which leaves out the folder a dependency lives in still builds, without a
+warning, and the app it wires fails on the first resolve that needs it:
+`common.bundle.yml` alone registers `Greeter`, but not the `ILogger` it injects.
+
+Catch that in CI with a smoke test per bundle. Apply the bundle to a container
+whose `registered` event is subscribed first — child scopes copy the listener,
+so it records every key of the whole scope tree — open the scopes your app
+opens, and resolve every recorded key in the scope it landed in:
+
+```ts
+import { Container, type DependencyKey, type IContainer, type IContainerModule } from 'ts-ioc-container';
+import { DevBundle } from '@app/di/dev.bundle';
+import { ProdBundle } from '@app/di/prod.bundle';
+
+function smokeTest(bundle: IContainerModule): string[] {
+  const root = new Container({ tags: ['application'] });
+  const registered: Array<[IContainer, DependencyKey]> = [];
+  root.registered.subscribe((_provider, key, scope) => registered.push([scope, key]));
+
+  root.useModule(bundle);
+  root.createScope({ tags: ['request'] }); // every scope the app opens at runtime
+
+  const failures: string[] = [];
+  for (const [scope, key] of registered) {
+    try {
+      scope.resolve(key);
+    } catch (e) {
+      failures.push(`${String(key)}: ${(e as Error).message}`);
+    }
+  }
+  return failures;
+}
+
+it.each([
+  ['prod', new ProdBundle()],
+  ['dev', new DevBundle()],
+])('the %s bundle resolves every class it registers', (_env, bundle) => {
+  expect(smokeTest(bundle)).toEqual([]);
+});
+```
+
+Test **every** bundle: each environment is a different container, so `prod`
+passing says nothing about `dev`. Together with `bundle:check` (the saved
+bundle is current) it covers the whole pipeline — config → bundle → working
+container.
+
+The test resolves what was registered, so it cannot see:
+
+- a constructor parameter without `@inject` — it is `undefined`, not an error;
+- dependencies behind `lazy()`, until they are used;
+- `container.resolve(...)` calls inside methods;
+- providers that need runtime args, or are hidden on purpose by
+  `scopeAccess(...)` — filter those keys out, or resolve them with test args.
+
+Swap clients of external systems (database, HTTP) for test doubles first — a
+`test.bundle.yml` of doubles is one way — so the test checks the wiring, not
+the network. See
+[Smoke testing](https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/ts-ioc-container#smoke-testing)
+in the `ts-ioc-container` README for the same recipe with request and
+transaction scopes.
+
 ## Programmatic API
 
 `build()` returns the bundle and writes nothing, like the CLI:

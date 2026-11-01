@@ -4082,6 +4082,11 @@ does **not** catch:
 Replace clients of external systems (database, HTTP) with test doubles before
 resolving, so the test checks the wiring, not the network.
 
+With [`@ts-ioc-container/bundler`](#bundle-a-module-at-build-time), run it once
+per generated bundle: `tic build` never follows `@inject`, so a config which
+leaves out a dependency's folder still builds - see
+[Smoke-testing the bundles](https://github.com/IgorBabkin/ts-ioc-container/tree/main/packages/bundler#smoke-testing-the-bundles).
+
 ```typescript
 import 'reflect-metadata';
 import {

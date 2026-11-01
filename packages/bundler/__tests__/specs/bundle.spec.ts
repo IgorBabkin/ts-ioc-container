@@ -28,6 +28,14 @@ describe('Story: Generate a bundle: a plain container module class', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  // The smoke test's negative case: the shared config built on its own.
+  it('common.bundle.yml alone is current too', () => {
+    const result = build({ config: path.join(fixture, 'common.bundle.yml') });
+
+    expect(result.content).toBe(readFileSync(path.join(fixture, 'src/di/common.bundle.ts'), 'utf8'));
+    expect(result.warnings).toEqual([]);
+  });
+
   it('type-checks inside the consumer project, aliases included', () => {
     const { config } = ts.readConfigFile(path.join(fixture, 'tsconfig.json'), ts.sys.readFile);
     const { fileNames, options } = ts.parseJsonConfigFileContent(config, ts.sys, fixture);
