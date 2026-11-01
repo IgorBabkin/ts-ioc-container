@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { by, inject, invoke, pipe, register } from 'ts-ioc-container';
 import { z } from 'zod';
 import { commandArgs, onDefault, parseOptions, validate } from '../../cli';
@@ -6,7 +7,9 @@ import { TicError, UsageError } from '../../exceptions/DomainException';
 import { type ILogger, ILoggerKey } from '../../services/ConsoleLogger';
 import { type IOutputService, IOutputServiceKey } from '../../services/OutputService';
 import { STDIN } from './BuildConfig';
-import { type IBundleBuilder, IBundleBuilderKey } from './services/BundleBuilder';
+import { toPosix } from './domain/glob';
+import { type IBundleService, IBundleServiceKey } from './services/BundleService';
+import { type ITicConfigService, ITicConfigServiceKey } from './services/TicConfigService';
 
 export const BUILD_OPTIONS = z.object({ positionals: z.array(z.string().min(1)) }).transform(({ positionals }, ctx) => {
   if (positionals.length > 1 && positionals.includes(STDIN)) {
@@ -30,10 +33,11 @@ const buildArgs = parseOptions({}, { positionals: true });
  * into one, and without a config file the config comes from stdin.
  */
 @register('build')
-export class BuildController {
+export class BundleController {
   constructor(
     @inject(by(CliIoKey)) private readonly io: CliIo,
-    @inject(by(IBundleBuilderKey)) private readonly builder: IBundleBuilder,
+    @inject(by(ITicConfigServiceKey)) private readonly configService: ITicConfigService,
+    @inject(by(IBundleServiceKey)) private readonly bundleService: IBundleService,
     @inject(by(IOutputServiceKey)) private readonly output: IOutputService,
     @inject(by(ILoggerKey)) private readonly logger: ILogger,
   ) {}
@@ -44,18 +48,23 @@ export class BuildController {
    * stdout. Saving it is the shell's job: `tic build app.bundle.json > src/di/app.bundle.ts`,
    * `tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`,
    * `cat app.bundle.yml | tic build > out.ts`.
-   * Warnings go to stderr, so they never end up in the bundle; an error names the configs.
+   * The files in the bundle, one path per line relative to the working directory, and warnings
+   * go to stderr, so they never end up in the bundle; an error names the configs.
    *
    * @throws {UsageError} when an option is unknown, `-` is given with config files, or the config should come from stdin and nothing is piped in.
    * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
   @onDefault(invoke)
-  build(@inject(pipe(commandArgs, buildArgs, validate(BUILD_OPTIONS))) { configs }: BuildCliOptions): void {
+  bundle(@inject(pipe(commandArgs, buildArgs, validate(BUILD_OPTIONS))) { configs }: BuildCliOptions): void {
     const stdin = configs[0] === STDIN;
     const label = stdin ? '<stdin>' : configs.join(' + ');
     try {
-      const { content, warnings } = this.builder.build(stdin ? { text: this.stdin() } : { config: configs });
+      const config = stdin
+        ? this.configService.parse(this.stdin(), this.io.cwd)
+        : this.configService.load(configs.map((file) => path.resolve(this.io.cwd, file)));
+      const { content, files, warnings } = this.bundleService.bundle(config);
+      for (const file of files) this.logger.info(toPosix(path.relative(this.io.cwd, file)));
       for (const warning of warnings) this.logger.warn(`${label}: ${warning}`);
       // The bundle ends with a newline; the output service adds its own.
       this.output.write(content.replace(/\n$/, ''));

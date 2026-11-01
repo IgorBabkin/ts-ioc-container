@@ -2,7 +2,7 @@ import path from 'node:path';
 import { by, inject, register, SingleToken } from 'ts-ioc-container';
 import { TicConfigError } from '../../../exceptions/DomainException';
 import { type IFileSystemService, IFileSystemServiceKey } from '../../../services/NodeFileSystemService';
-import { configFormat, mergeConfigs, parseConfig, type ResolvedConfig, resolveConfig, STDIN } from '../BuildConfig';
+import { configFormat, mergeConfigs, parseConfig, type BundleConfig, resolveConfig, STDIN } from '../BuildConfig';
 
 export interface ITicConfigService {
   /**
@@ -12,7 +12,7 @@ export interface ITicConfigService {
    *
    * @throws {TicConfigError} when a file is missing, has another extension, cannot be parsed, or does not match the config shape; when several files are in different folders.
    */
-  load(files: string | string[]): ResolvedConfig;
+  load(files: string | string[]): BundleConfig;
 
   /**
    * Validates config text from somewhere other than a file — stdin, say. It is parsed as YAML,
@@ -21,7 +21,7 @@ export interface ITicConfigService {
    *
    * @throws {TicConfigError} when the text cannot be parsed, does not match the config shape, or has no `name`.
    */
-  parse(text: string, dir: string): ResolvedConfig;
+  parse(text: string, dir: string): BundleConfig;
 }
 
 export const ITicConfigServiceKey = new SingleToken<ITicConfigService>('ITicConfigService');
@@ -33,7 +33,7 @@ export class TicConfigService implements ITicConfigService {
   /**
    * @throws {TicConfigError} when a file is missing, has another extension, cannot be parsed, or does not match the config shape; when several files are in different folders.
    */
-  load(files: string | string[]): ResolvedConfig {
+  load(files: string | string[]): BundleConfig {
     if (typeof files === 'string' || files.length === 1) {
       const [file] = [files].flat();
       return resolveConfig(this.read(file), file);
@@ -53,7 +53,7 @@ export class TicConfigService implements ITicConfigService {
   /**
    * @throws {TicConfigError} when the text cannot be parsed, does not match the config shape, or has no `name`.
    */
-  parse(text: string, dir: string): ResolvedConfig {
+  parse(text: string, dir: string): BundleConfig {
     return resolveConfig(parseConfig(text, 'yaml'), path.join(dir, STDIN));
   }
 

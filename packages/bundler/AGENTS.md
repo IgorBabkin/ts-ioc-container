@@ -81,8 +81,8 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   `@onDefault(invoke)` action (a word in the action position that names no
   declared action is the default action's argument: `tic build <config>`), which parses its own options with
   `@inject(pipe(commandArgs, parseOptions(spec), validate(SCHEMA)))`. Work lives in
-  services behind tokens (`IBundleBuilderKey`, `ITicConfigServiceKey`, …); pure
-  logic in `lib/features/build/domain/`. A new command is a controller plus a module.
+  services behind tokens (`IBundleServiceKey`, `ITicConfigServiceKey`, …); pure
+  logic in `lib/features/bundle/domain/`. A new command is a controller plus a module.
 - The config schema is `BUNDLE_CONFIG_SCHEMA` (zod); `tic.schema.json` is generated
   from its per-file variant `BUNDLE_CONFIG_FILE_SCHEMA` with `pnpm run generate:schema`
   — never edit it by hand.

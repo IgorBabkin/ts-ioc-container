@@ -1,13 +1,36 @@
 import 'reflect-metadata';
+import path from 'node:path';
 import { Container, type IContainer } from 'ts-ioc-container';
 import { Application } from './cli/Application';
 import { type CliIo, processIo } from './domain/CliIo';
-import { type ResolvedConfig } from './features/build/BuildConfig';
-import { BuildModule } from './features/build/BuildModule';
-import { ITicConfigServiceKey } from './features/build/services/TicConfigService';
-import { type BuildOptions, type BuildResult, IBundleBuilderKey } from './features/build/services/BundleBuilder';
+import { type BundleConfig } from './features/bundle/BuildConfig';
+import { BuildModule } from './features/bundle/BuildModule';
+import { ITicConfigServiceKey } from './features/bundle/services/TicConfigService';
+import { type Bundle, IBundleServiceKey } from './features/bundle/services/BundleService';
 import { HelpModule } from './features/help/HelpModule';
 import { CommonModule } from './modules/CommonModule';
+
+/** What one build does. Paths resolve against the run's working directory. */
+export type BundleRequest =
+  | {
+      /**
+       * Path of the config file — `*.json`, `*.yaml` or `*.yml` — relative to the working directory;
+       * or of several in one folder, merged left to right into one bundle.
+       */
+      config: string | string[];
+    }
+  | {
+      /**
+       * The config as text, e.g. read from stdin: YAML or JSON. Its relative paths resolve
+       * against the working directory, and it must set `name`.
+       */
+      text: string;
+    };
+
+export type BuildOptions = BundleRequest & {
+  /** Default `process.cwd()`. */
+  cwd?: string;
+};
 
 /** The composition root: one container per run, holding every module of the CLI. */
 export function createContainer(io: CliIo = processIo()): IContainer {
@@ -38,8 +61,15 @@ export function run(argv: string[], io: CliIo = processIo()): number {
  * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
  * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
  */
-export function build({ cwd = process.cwd(), ...request }: BuildOptions): BuildResult {
-  return withContainer({ ...processIo(), cwd }, (container) => IBundleBuilderKey.resolve(container).build(request));
+export function build({ cwd = process.cwd(), ...request }: BuildOptions): Bundle {
+  return withContainer({ ...processIo(), cwd }, (container) => {
+    const configService = ITicConfigServiceKey.resolve(container);
+    const config =
+      'text' in request
+        ? configService.parse(request.text, cwd)
+        : configService.load([request.config].flat().map((file) => path.resolve(cwd, file)));
+    return IBundleServiceKey.resolve(container).bundle(config);
+  });
 }
 
 /**
@@ -48,6 +78,6 @@ export function build({ cwd = process.cwd(), ...request }: BuildOptions): BuildR
  *
  * @throws {TicConfigError} when a file is missing, has another extension, cannot be parsed, or does not match the config shape; when several files are in different folders.
  */
-export function loadConfig(files: string | string[]): ResolvedConfig {
+export function loadConfig(files: string | string[]): BundleConfig {
   return withContainer(processIo(), (container) => ITicConfigServiceKey.resolve(container).load(files));
 }

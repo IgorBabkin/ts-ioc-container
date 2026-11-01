@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BUNDLE_CONFIG_FILE_SCHEMA } from '../features/build/BuildConfig';
+import { BUNDLE_CONFIG_FILE_SCHEMA } from '../features/bundle/BuildConfig';
 
 /**
  * The JSON Schema published as `tic.schema.json`, generated from the zod schema
