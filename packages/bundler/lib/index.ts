@@ -1,5 +1,5 @@
 // Entry points: the composition root and the functions that run it.
-export { build, run, loadConfig, createContainer } from './app';
+export { build, run, loadConfig, createContainer, type BundleRequest, type BuildOptions } from './app';
 export { type CliIo, CliIoKey } from './domain/CliIo';
 export { type GlobalConfig, GlobalConfigKey, globalConfig } from './domain/GlobalConfig';
 
@@ -18,21 +18,19 @@ export {
 } from './cli';
 
 // Feature: build
-export { BuildModule } from './features/build/BuildModule';
-export { BuildController, BUILD_OPTIONS, type BuildCliOptions } from './features/build/BuildController';
+export { BuildModule } from './features/bundle/BuildModule';
+export { BundleController, BUILD_OPTIONS, type BuildCliOptions } from './features/bundle/BundleController';
 export {
-  BundleBuilder,
-  IBundleBuilderKey,
-  type IBundleBuilder,
-  type BuildRequest,
-  type BuildOptions,
-  type BuildResult,
-} from './features/build/services/BundleBuilder';
+  BundleService,
+  IBundleServiceKey,
+  type IBundleService,
+  type Bundle,
+} from './features/bundle/services/BundleService';
 export {
   TicConfigService,
   ITicConfigServiceKey,
   type ITicConfigService,
-} from './features/build/services/TicConfigService';
+} from './features/bundle/services/TicConfigService';
 export {
   resolveConfig,
   BUNDLE_CONFIG_SCHEMA,
@@ -46,29 +44,28 @@ export {
   DEFAULT_EXCLUDE,
   DEFAULT_DECORATORS,
   toClassName,
-  type BundleConfig,
+  type BundleConfigFile,
   type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,
   type PathSelector,
   type ResolvedPathSelector,
-  type ResolvedConfig,
+  type BundleConfig,
   type ConfigFormat,
-} from './features/build/BuildConfig';
+} from './features/bundle/BuildConfig';
 export { ticConfigJsonSchema } from './schema/ticConfigSchema';
-export { ImportPaths } from './features/build/domain/ImportPaths';
-export { loadImportPaths } from './features/build/domain/tsconfig';
-export { findClasses, isSourceFile, listSourceFiles, type DiscoveredClass } from './features/build/domain/scan';
+export { ImportPaths } from './features/bundle/domain/ImportPaths';
+export { loadImportPaths } from './features/bundle/domain/tsconfig';
+export { findClasses, isSourceFile, listSourceFiles, type DiscoveredClass } from './features/bundle/domain/scan';
 export {
-  emitBundle,
-  bundleView,
-  BUNDLE_PROTOCOL,
+  BundleView,
+  IBundleViewKey,
+  type IBundleView,
+  type BundleViewInput,
   GENERATED_HEADER,
-  type EmitInput,
-  type BundleView,
-} from './features/build/domain/emit';
-export { tokenCollisions } from './features/build/domain/tokenCollisions';
-export { globToRegExp } from './features/build/domain/glob';
+} from './features/bundle/services/BundleView';
+export { tokenCollisions } from './features/bundle/domain/tokenCollisions';
+export { globToRegExp } from './features/bundle/domain/glob';
 
 // Feature: help / version
 export { HelpModule } from './features/help/HelpModule';

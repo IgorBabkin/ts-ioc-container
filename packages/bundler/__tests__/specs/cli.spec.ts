@@ -156,6 +156,18 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
     expect(io.out.join('\n')).not.toContain('warning');
   });
 
+  it('lists each bundled file on stderr, never in the bundle on stdout', () => {
+    project.write('app.bundle.json', { paths: { include: ['@app/services', './src/infra'] } });
+    project.write('src/services/Mailer.ts', decorated('Mailer'));
+    project.write('src/services/helpers.ts', 'export const noop = () => {};\n');
+    project.write('src/infra/Clock.ts', decorated('Clock'));
+    const io = new Io(project.root);
+
+    expect(run(['build', 'app.bundle.json'], io)).toBe(0);
+    expect(io.err).toEqual(['src/infra/Clock.ts', 'src/services/Logger.ts', 'src/services/Mailer.ts']);
+    expect(io.out).toHaveLength(1);
+  });
+
   it('prints a warning when two classes pass the same decorator token', () => {
     const source = (name: string) =>
       `import { register } from 'ts-ioc-container';\n@register(Token)\nexport class ${name} {}\n`;

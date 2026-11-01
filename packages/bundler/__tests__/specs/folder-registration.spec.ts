@@ -1,4 +1,4 @@
-import { build, type BuildResult, DEFAULT_EXCLUDE, TicConfigError, NamespaceNotFoundError } from '../../lib';
+import { build, type Bundle, DEFAULT_EXCLUDE, TicConfigError, NamespaceNotFoundError } from '../../lib';
 import { existsSync, symlinkSync } from 'node:fs';
 import { decorated, TempProject } from '../project';
 
@@ -18,7 +18,7 @@ describe('Folder registration', () => {
 
   afterEach(() => project?.dispose());
 
-  let last: BuildResult;
+  let last: Bundle;
   const buildFrom = (config: string) => (last = build({ config, cwd: project.root }));
   const buildProject = () => buildFrom('app.bundle.json');
   const generated = () => last.content;
@@ -40,7 +40,7 @@ describe('Folder registration', () => {
 
       const result = buildProject();
 
-      expect(result).toMatchObject({ bundle: 'AppBundle', registrations: 1, config: project.path('app.bundle.json') });
+      expect(result).toMatchObject({ bundle: 'AppBundle', registrations: 1 });
       expect(result.content).toContain('export class AppBundle implements IContainerModule');
       expect(existsSync(project.path('src/app.bundle.ts'))).toBe(false);
     });
@@ -786,8 +786,21 @@ describe('Folder registration', () => {
 
       const result = buildMerged('common.bundle.yml', 'prod.bundle.yml');
 
-      expect(result).toMatchObject({ bundle: 'ProdBundle', registrations: 2, config: project.path('prod.bundle.yml') });
+      expect(result).toMatchObject({ bundle: 'ProdBundle', registrations: 2 });
       expect(generated()).toContain('// Paths: ./src/services, ./src/infra');
+    });
+
+    it('returns the bundled files once each, even when two paths reach one', () => {
+      project = create({
+        'app.bundle.yml': "paths:\n  include: ['./src', './src/infra']\n",
+        'src/services/Greeter.ts': decorated('Greeter'),
+        'src/infra/Logger.ts': decorated('Logger'),
+      });
+
+      expect(buildMerged('app.bundle.yml').files).toEqual([
+        project.path('src/infra/Logger.ts'),
+        project.path('src/services/Greeter.ts'),
+      ]);
     });
 
     it('keeps what an earlier config sets, and lets a later one override a value', () => {

@@ -76,7 +76,7 @@ export interface ResolvedClassSelector {
  * `tic build common.bundle.yml prod.bundle.yml` merges several into one, left to right
  * (see {@link mergeConfigs}).
  */
-export interface BundleConfig {
+export interface BundleConfigFile {
   $schema?: string;
   /**
    * The bundle's name: letters, digits, `-` and `_`, starting with a letter. Default: the
@@ -119,8 +119,8 @@ export const DEFAULT_EXCLUDE = [
   '**/node_modules/**',
 ];
 
-/** A {@link BundleConfig} whose defaults are filled in and whose paths are absolute. */
-export interface ResolvedConfig {
+/** A {@link BundleConfigFile} whose defaults are filled in and whose paths are absolute. */
+export interface BundleConfig {
   /** The config file itself. */
   file: string;
   /** Its folder: what the config's relative paths resolve against. */
@@ -456,7 +456,7 @@ export function mergeConfigs(configs: { file: string; content: unknown }[]): unk
  *
  * @throws {TicConfigError} when the content does not match the config shape, or names no bundle; the message names the field.
  */
-export function resolveConfig(content: unknown, file: string): ResolvedConfig {
+export function resolveConfig(content: unknown, file: string): BundleConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
   const { name, tsconfig, importExtension, paths, match } = result.data;
