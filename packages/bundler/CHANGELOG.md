@@ -1,3 +1,18 @@
+# 8.1.0 (2026-11-01)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    separate the class name from its file with a colon
+    (ea8cf0965cd0387db68449be833c7d0507cb8c12)
+    - **@ts-ioc-container/bundler:**
+    put the class name first in the bundled-class log
+    (c698ed7bbb6e2ee8ff1ca1e01a8535fb84932a46)
+    - **@ts-ioc-container/bundler:**
+    log each bundled class with its file
+    (ec1994b28a484e146b909c35a94a8eae914654b3)
+
+
 # 8.0.0 (2026-11-01)
 
   ### 💥 BREAKING CHANGES
@@ -376,6 +391,7 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
 
 
 
