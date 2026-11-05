@@ -13,7 +13,7 @@ const module = (
   folders: unknown[],
   { paths, match, ...extra }: { paths?: object; match?: object; [field: string]: unknown } = {},
 ) => ({
-  name: 'app',
+  bundleClassName: 'AppBundle',
   importExtension: '',
   paths: { include: folders, exclude: [], ...paths },
   match: { export: 'any', decorators: ['register'], ...match },
@@ -68,9 +68,10 @@ describe('Folder registration', () => {
 
     it.each([
       [{}, 'export class AppBundle implements IContainerModule'],
-      [{ name: 'services' }, 'export class ServicesBundle implements IContainerModule'],
-      [{ name: 'my-app_v2' }, 'export class MyAppV2Bundle implements IContainerModule'],
-    ])('names the bundle class after the bundle name (%j)', (extra, expected) => {
+      [{ bundleClassName: 'ServicesBundle' }, 'export class ServicesBundle implements IContainerModule'],
+      [{ bundleClassName: 'Container' }, 'export class Container implements IContainerModule'],
+      [{ bundleClassName: 'App_V2' }, 'export class App_V2 implements IContainerModule'],
+    ])('writes bundleClassName as the generated class, adding nothing to it (%j)', (extra, expected) => {
       project = create({
         'app.bundle.json': module(['./src/services'], extra),
         'src/services/Logger.ts': decorated('Logger'),
@@ -99,8 +100,27 @@ describe('Folder registration', () => {
       [{ paths: { include: [] } }, 'paths.include: expected a non-empty array'],
       [{ paths: { include: [{ path: './src' }] } }, 'paths.include[0]: expected a non-empty string'],
       [{ paths: { include: 42 } }, 'paths.include: expected a folder or a non-empty array of folders'],
-      [module(['./src'], { name: 'not valid' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
-      [module(['./src'], { name: '2fa' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
+      [
+        module(['./src'], { bundleClassName: 'Not Valid' }),
+        'bundleClassName: expected a class name: letters, digits or "_", starting with a capital letter',
+      ],
+      [
+        module(['./src'], { bundleClassName: '2fa' }),
+        'bundleClassName: expected a class name: letters, digits or "_", starting with a capital letter',
+      ],
+      [
+        module(['./src'], { bundleClassName: 'app' }),
+        'bundleClassName: expected a class name: letters, digits or "_", starting with a capital letter',
+      ],
+      [
+        module(['./src'], { bundleClassName: 'class' }),
+        'bundleClassName: expected a class name: letters, digits or "_", starting with a capital letter',
+      ],
+      [
+        module(['./src'], { bundleClassName: 'My-App' }),
+        'bundleClassName: expected a class name: letters, digits or "_", starting with a capital letter',
+      ],
+      [module(['./src'], { name: 'app' }), 'name: unknown field'],
       [module(['./src'], { tags: ['production'] }), 'tags: unknown field'],
       [module(['./src'], { tsconfig: './tsconfig.json' }), 'tsconfig: unknown field'],
       [module(['./src'], { extends: './tsconfig.json' }), 'tsconfig.json: compilerOptions: unknown field'],
@@ -138,7 +158,7 @@ describe('Folder registration', () => {
 
   describe('Story: Write the config in YAML', () => {
     const yaml = [
-      'name: services',
+      'bundleClassName: ServicesBundle',
       "importExtension: ''",
       'paths:',
       '  include:',
@@ -610,9 +630,9 @@ describe('Folder registration', () => {
       expect(generated()).toContain('// Paths: ./src/services, @app/infra');
     });
 
-    it('never takes the name from the config file', () => {
+    it('never takes the class name from the config file', () => {
       project = create({
-        'prod.bundle.json': module(['./src'], { name: 'admin' }),
+        'prod.bundle.json': module(['./src'], { bundleClassName: 'AdminBundle' }),
         'src/Logger.ts': decorated('Logger'),
       });
 
@@ -626,7 +646,11 @@ describe('Folder registration', () => {
     });
 
     it.each([
-      ['name', { name: undefined }, 'name: expected letters, digits, "-" or "_", starting with a letter'],
+      [
+        'bundleClassName',
+        { bundleClassName: undefined },
+        'bundleClassName: expected a class name: letters, digits or "_", starting with a capital letter',
+      ],
       ['importExtension', { importExtension: undefined }, 'importExtension: expected a string'],
       ['paths.exclude', { paths: { exclude: undefined } }, 'paths.exclude: expected a glob or an array of globs'],
       ['match.export', { match: { export: undefined } }, 'match.export: expected "any", "named" or "default"'],
@@ -784,7 +808,7 @@ describe('Folder registration', () => {
 
   describe('Story: Merge configs, like webpack-merge', () => {
     const BASE = {
-      name: 'app',
+      bundleClassName: 'AppBundle',
       importExtension: '',
       paths: { exclude: [] },
       match: { export: 'any', decorators: ['register'] },
@@ -793,10 +817,10 @@ describe('Folder registration', () => {
     const buildMerged = (...configs: string[]) =>
       (last = build({ config: ['base.bundle.yml', ...configs], tsconfig: 'tsconfig.json', cwd: project.root }));
 
-    it('concatenates paths.include in order, without duplicates, a later name replacing an earlier one', () => {
+    it('concatenates paths.include in order, without duplicates, a later class name replacing an earlier one', () => {
       project = createMerged({
         'common.bundle.yml': "paths:\n  include: ['./src/services']\n",
-        'prod.bundle.yml': "name: prod\npaths:\n  include: ['./src/services', './src/infra']\n",
+        'prod.bundle.yml': "bundleClassName: ProdBundle\npaths:\n  include: ['./src/services', './src/infra']\n",
         'src/services/Greeter.ts': decorated('Greeter'),
         'src/infra/Logger.ts': decorated('Logger'),
       });
@@ -837,7 +861,7 @@ describe('Folder registration', () => {
       project = createMerged({
         'common.bundle.yml': "importExtension: '.mjs'\npaths:\n  include: ['./src']\n",
         'prod.bundle.yml': "importExtension: '.js'\n",
-        'dev.bundle.yml': 'name: development\n',
+        'dev.bundle.yml': 'bundleClassName: DevelopmentBundle\n',
         'src/Logger.ts': decorated('Logger'),
       });
 
@@ -917,8 +941,9 @@ describe('Folder registration', () => {
 
     it('merges the config on top of the one it extends, as tic build base app would', () => {
       project = create({
-        'base.bundle.yml': module(['./src/services'], { name: 'base', importExtension: '.mjs' }),
-        'app.bundle.yml': "extends: ./base.bundle.yml\nname: app\npaths:\n  include: ['./src/infra']\n",
+        'base.bundle.yml': module(['./src/services'], { bundleClassName: 'BaseBundle', importExtension: '.mjs' }),
+        'app.bundle.yml':
+          "extends: ./base.bundle.yml\nbundleClassName: AppBundle\npaths:\n  include: ['./src/infra']\n",
         ...sources,
       });
 
@@ -943,8 +968,8 @@ describe('Folder registration', () => {
     it('follows a chain of extends, the furthest config merged first', () => {
       project = create({
         'root.bundle.yml': module(['./src/services'], { importExtension: '.root' }),
-        'mid.bundle.yml': "extends: ./root.bundle.yml\nimportExtension: '.mid'\nname: mid\n",
-        'app.bundle.yml': 'extends: ./mid.bundle.yml\nname: leaf\n',
+        'mid.bundle.yml': "extends: ./root.bundle.yml\nimportExtension: '.mid'\nbundleClassName: MidBundle\n",
+        'app.bundle.yml': 'extends: ./mid.bundle.yml\nbundleClassName: LeafBundle\n',
         ...sources,
       });
 
@@ -976,7 +1001,7 @@ describe('Folder registration', () => {
       project = create({
         'base.bundle.yml': module(['./src/services']),
         'a.bundle.yml': "extends: ./base.bundle.yml\nimportExtension: '.a'\n",
-        'b.bundle.yml': 'extends: ./base.bundle.yml\nname: b\n',
+        'b.bundle.yml': 'extends: ./base.bundle.yml\nbundleClassName: BBundle\n',
         ...sources,
       });
 
@@ -989,7 +1014,7 @@ describe('Folder registration', () => {
     it('checks the merged config: a required field may come from either file, but must come', () => {
       project = create({
         'base.bundle.yml': "importExtension: ''\n",
-        'app.bundle.yml': 'extends: ./base.bundle.yml\nname: app\n',
+        'app.bundle.yml': 'extends: ./base.bundle.yml\nbundleClassName: AppBundle\n',
       });
 
       expect(() => buildFrom('app.bundle.yml')).toThrow('paths: expected an object with "include"');

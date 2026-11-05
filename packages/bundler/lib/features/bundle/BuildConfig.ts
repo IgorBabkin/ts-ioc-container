@@ -82,10 +82,10 @@ export interface BundleConfigFile {
    */
   extends?: string;
   /**
-   * The bundle's name: letters, digits, `-` and `_`, starting with a letter. It names the
-   * generated class, an `IContainerModule` (`ProductionBundle`, see {@link toClassName}).
+   * The name of the generated class, an `IContainerModule`, written as given: `ProductionBundle`.
+   * Letters, digits and `_`, starting with a capital letter.
    */
-  name: string;
+  bundleClassName: string;
   /** Extension of generated imports, written as given: `.js` under node16/nodenext resolution, `''` for none. */
   importExtension: string;
   /** Which files are parsed. Always an object: there is no folder or folder-list shorthand. */
@@ -100,8 +100,6 @@ export interface BundleConfig {
   file: string;
   /** Its folder: what the config's relative paths resolve against. */
   dir: string;
-  /** The bundle name. */
-  name: string;
   /** The generated class: `ProductionBundle`. */
   bundleClassName: string;
   importExtension: string;
@@ -109,11 +107,13 @@ export interface BundleConfig {
   match: ResolvedClassSelector;
 }
 
-const BUNDLE_NAME = /^[A-Za-z][\w-]*$/;
+// A capital first letter keeps every TypeScript keyword out.
+const CLASS_NAME = /^[A-Z]\w*$/;
 
 // Each schema carries the message a config author reads, so a failed parse names
 // the field and what it expected: `match.export: expected "any", "named" or "default"`.
 const expected = (what: string) => ({ error: `expected ${what}` });
+const CLASS_NAME_RULE = 'a class name: letters, digits or "_", starting with a capital letter';
 const nonEmptyString = () => z.string(expected('a non-empty string')).min(1, expected('a non-empty string'));
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
 
@@ -204,11 +204,11 @@ const MATCH_DESCRIPTION =
 export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
   {
     $schema: z.string().optional(),
-    name: z
-      .string(expected('letters, digits, "-" or "_", starting with a letter'))
-      .regex(BUNDLE_NAME, expected('letters, digits, "-" or "_", starting with a letter'))
+    bundleClassName: z
+      .string(expected(CLASS_NAME_RULE))
+      .regex(CLASS_NAME, expected(CLASS_NAME_RULE))
       .describe(
-        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. It names the generated IContainerModule class (ProductionBundle).',
+        'The name of the generated IContainerModule class, written as given: ProductionBundle. Letters, digits and "_", starting with a capital letter.',
       ),
     importExtension: z
       .string(expected('a string'))
@@ -310,12 +310,6 @@ export function parseConfig(text: string, format: ConfigFormat): unknown {
   }
 }
 
-/** The generated class for a bundle name: `production` -> `ProductionBundle`, `my-app_v2` -> `MyAppV2Bundle`. */
-export function toClassName(name: string): string {
-  const words = name.split(/[-_]+/).filter(Boolean);
-  return `${words.map((word) => word[0].toUpperCase() + word.slice(1)).join('')}Bundle`;
-}
-
 /** The fields whose values concatenate when configs merge; every other value is replaced. */
 const LIST_FIELDS = new Set(['paths.include', 'paths.exclude', 'match.decorators', 'match.glob', 'match.exclude']);
 
@@ -379,12 +373,11 @@ export function mergeConfigs(configs: { file: string; content: unknown }[]): unk
 export function resolveConfig(content: unknown, file: string): BundleConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { name, importExtension, paths, match } = result.data;
+  const { bundleClassName, importExtension, paths, match } = result.data;
   return {
     file,
     dir: path.dirname(file),
-    name,
-    bundleClassName: toClassName(name),
+    bundleClassName,
     importExtension,
     paths: toPathSelector(paths),
     match: toClassSelector(match),

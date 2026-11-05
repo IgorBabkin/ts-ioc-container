@@ -23,7 +23,7 @@ const result = (content: string, warnings: string[] = [], classes: BundledClass[
     warnings,
   }) satisfies Bundle;
 
-const resolved = { name: 'app', bundleClassName: 'AppBundle' } as BundleConfig;
+const resolved = { bundleClassName: 'AppBundle' } as BundleConfig;
 
 const failing = (message: string) => () => {
   throw new TicConfigError(message);
@@ -172,12 +172,12 @@ describe('BundleController', () => {
   it('given - as the config when built then the config text is read from stdin, against the working directory', () => {
     const { configService, bundleService, out, controller } = setup(
       () => result('// bundle\n'),
-      () => 'name: app\npaths:\n  include: [./src]\n',
+      () => 'bundleClassName: AppBundle\npaths:\n  include: [./src]\n',
     );
 
     controller.bundle({ configs: ['-'], tsconfig: 'tsconfig.json' });
 
-    configService.verify((m) => m.parse('name: app\npaths:\n  include: [./src]\n', '/repo'));
+    configService.verify((m) => m.parse('bundleClassName: AppBundle\npaths:\n  include: [./src]\n', '/repo'));
     bundleService.verify((m) => m.bundle(resolved, '/repo/tsconfig.json'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
@@ -196,11 +196,11 @@ describe('BundleController', () => {
     const { controller } = setup(
       () => result('// bundle\n'),
       () => 'paths: {}',
-      failing('name: required for a config read from stdin'),
+      failing('bundleClassName: expected a class name'),
     );
 
     expect(() => controller.bundle({ configs: ['-'], tsconfig: 'tsconfig.json' })).toThrow(
-      '<stdin>: name: required for a config read from stdin',
+      '<stdin>: bundleClassName: expected a class name',
     );
   });
 });

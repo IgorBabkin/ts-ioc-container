@@ -58,7 +58,7 @@ tic build --tsconfig tsconfig.json prod.bundle.yml > src/di/prod.bundle.ts
 # several configs merged into one bundle, like webpack-merge
 tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts
 
-# the config piped in — it has no file name, so it sets `name` ("name": "dev")
+# the config piped in
 cat dev.bundle.json | tic build --tsconfig tsconfig.json > src/di/dev.bundle.ts
 tic build --tsconfig tsconfig.json < dev.bundle.yml > src/di/dev.bundle.ts
 
@@ -67,7 +67,7 @@ tic build --tsconfig tsconfig.json app.bundle.json | npx prettier --stdin-filepa
 cat dev.bundle.json | tic build --tsconfig tsconfig.json | tee src/di/dev.bundle.ts
 
 # a config built on the fly
-jq '.name = "admin"' app.bundle.json | tic build --tsconfig tsconfig.json > src/di/admin.bundle.ts
+jq '.bundleClassName = "AdminBundle"' app.bundle.json | tic build --tsconfig tsconfig.json > src/di/admin.bundle.ts
 
 # CI: is the saved bundle current?
 tic build --tsconfig tsconfig.json app.bundle.json | diff - src/di/app.bundle.ts
@@ -83,7 +83,7 @@ against the working directory.
 
 ## Configure
 
-A config describes one bundle: its name, the folders it scans and the classes it
+A config describes one bundle: its class, the folders it scans and the classes it
 registers. Nothing is implied: **no field has a default**, so everything the
 build does is written in the config. JSON and YAML are both supported. Point
 your editor at the schema:
@@ -91,7 +91,7 @@ your editor at the schema:
 ```json
 {
   "$schema": "./node_modules/@ts-ioc-container/bundler/tic.schema.json",
-  "name": "app",
+  "bundleClassName": "AppBundle",
   "importExtension": "",
   "paths": {
     "include": ["@app/services", "./src/infra"],
@@ -103,7 +103,7 @@ your editor at the schema:
 
 ```yaml
 # yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
-name: app
+bundleClassName: AppBundle
 importExtension: ''
 paths:
   include:
@@ -118,12 +118,12 @@ match:
     - register
 ```
 
-| Field             | Meaning                                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------------- |
-| `name`            | The bundle's name: names the class, `AppBundle`. Never taken from the file name                         |
-| `importExtension` | Extension of generated imports, written as given: `.js` under node16/nodenext resolution, `""` for none |
-| `paths`           | Which files are parsed — see [Selecting files](#selecting-files)                                        |
-| `match`           | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)             |
+| Field             | Meaning                                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `bundleClassName` | The name of the generated class, written as given: `AppBundle`. Letters, digits and `_`, starting with a capital |
+| `importExtension` | Extension of generated imports, written as given: `.js` under node16/nodenext resolution, `""` for none          |
+| `paths`           | Which files are parsed — see [Selecting files](#selecting-files)                                                 |
+| `match`           | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                      |
 
 All four are required; merged configs need each in one of them. A missing field
 is an error naming it. One more field is optional: [`extends`](#extending-a-config)
@@ -171,7 +171,7 @@ Each environment's config names its bundle and adds its own files and classes:
 
 ```yaml
 # prod.bundle.yml: + the adapters, minus dev-only *.dev.ts files
-name: prod
+bundleClassName: ProdBundle
 paths:
   include:
     - ./src/infra
@@ -181,7 +181,7 @@ paths:
 
 ```yaml
 # dev.bundle.yml: + the adapters; the *.dev.ts logger replaces the production one, dropped by class name
-name: dev
+bundleClassName: DevBundle
 paths:
   include:
     - ./src/infra
@@ -201,7 +201,7 @@ right, the way webpack-merge merges webpack configs:
 - list fields — `paths.include`, `paths.exclude`, `match.glob`, `match.exclude`,
   `match.decorators` — concatenate in order, without duplicates (one folder or
   glob counts as a list of one), so a later config can only add to them;
-- any other value (`name`, `importExtension`, `match.export`) set by a later
+- any other value (`bundleClassName`, `importExtension`, `match.export`) set by a later
   config replaces an earlier one.
 
 Each config is validated on its own — an error names the file it is in — so a
@@ -217,7 +217,7 @@ file on the command line:
 ```yaml
 # prod.bundle.yml
 extends: ./common.bundle.yml
-name: prod
+bundleClassName: ProdBundle
 paths:
   include:
     - ./src/infra

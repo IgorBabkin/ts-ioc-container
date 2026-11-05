@@ -8,10 +8,10 @@
     "$schema": {
       "type": "string"
     },
-    "name": {
+    "bundleClassName": {
       "type": "string",
-      "pattern": "^[A-Za-z][\\w-]*$",
-      "description": "The bundle's name: letters, digits, \"-\" and \"_\", starting with a letter. It names the generated IContainerModule class (ProductionBundle)."
+      "pattern": "^[A-Z]\\w*$",
+      "description": "The name of the generated IContainerModule class, written as given: ProductionBundle. Letters, digits and \"_\", starting with a capital letter."
     },
     "importExtension": {
       "type": "string",

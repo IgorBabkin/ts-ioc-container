@@ -34,15 +34,15 @@ Acceptance criteria:
   Nothing piped in fails with a usage error; more than one `<config>` too.
 - Warnings and errors go to stderr, never into the bundle on stdout; an error
   names the config (`<stdin>` for piped text), and nothing is printed then.
-- The config's fields are flat and explicit, and none has a default: `name`,
+- The config's fields are flat and explicit, and none has a default: `bundleClassName`,
   `importExtension`, `paths.include`, `paths.exclude`, `match.export` and
   `match.decorators` are required, and a missing one fails the build naming it.
   `paths` and `match` are always objects — a folder, a glob or a list in their
   place is an error. A `tsconfig` field is an error: the tsconfig is given to the
   command.
-- `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
-  letter — and is never taken from the file name. The generated class is named
-  after it: `ProductionBundle`, `my-app` → `MyAppBundle`.
+- `bundleClassName` is the name of the generated class, written as given, nothing
+  added: letters, digits and `_`, starting with a capital letter. It is never taken
+  from the file name.
 - Relative paths in a config file resolve against the file; in piped text,
   against the working directory.
 - Several bundles — production, development, test — are several runs, each

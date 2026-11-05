@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../../tic.schema.json
 # Tests: the test doubles; no infrastructure adapters. Merged after common.bundle.yml.
-name: test
+bundleClassName: TestBundle
 paths:
   include:
     - ./src/testing

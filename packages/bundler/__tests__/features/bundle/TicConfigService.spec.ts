@@ -9,7 +9,7 @@ const fileSystem = (content: string | undefined) =>
     .returns(content ?? '');
 
 const YAML =
-  "name: production\nimportExtension: ''\npaths:\n  include: [./src]\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n";
+  "bundleClassName: ProductionBundle\nimportExtension: ''\npaths:\n  include: [./src]\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n";
 
 describe('TicConfigService', () => {
   it('given no config file when loaded then it throws TicConfigError naming the file', () => {
@@ -36,7 +36,6 @@ describe('TicConfigService', () => {
     expect(service.load('/repo/di.yaml')).toMatchObject({
       file: '/repo/di.yaml',
       dir: '/repo',
-      name: 'production',
       bundleClassName: 'ProductionBundle',
       importExtension: '',
       paths: { include: ['./src'], exclude: [] },
@@ -47,8 +46,9 @@ describe('TicConfigService', () => {
   it('given several configs when loaded then they merge left to right', () => {
     const files: Record<string, string> = {
       '/repo/common.bundle.yml':
-        "name: common\nimportExtension: ''\npaths:\n  include: ['@app/services']\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n  glob: '*Service'\n",
-      '/repo/prod.bundle.yml': "name: prod\nimportExtension: '.js'\npaths:\n  include: [./src/infra]\n",
+        "bundleClassName: CommonBundle\nimportExtension: ''\npaths:\n  include: ['@app/services']\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n  glob: '*Service'\n",
+      '/repo/prod.bundle.yml':
+        "bundleClassName: ProdBundle\nimportExtension: '.js'\npaths:\n  include: [./src/infra]\n",
     };
     const fs = new Mock<IFileSystemService>()
       .setup((m) => m.fileExists(It.IsAny()))
@@ -59,7 +59,7 @@ describe('TicConfigService', () => {
 
     expect(service.load(Object.keys(files))).toMatchObject({
       file: '/repo/prod.bundle.yml',
-      name: 'prod',
+      bundleClassName: 'ProdBundle',
       importExtension: '.js',
       paths: { include: ['@app/services', './src/infra'] },
       match: { glob: [/^[^/]*Service$/] },

@@ -22,11 +22,12 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
 - Config fields (schema: `tic.schema.json`), flat, and **none has a default**:
-  `name`, `importExtension`, `paths.include`, `paths.exclude`, `match.export` and
+  `bundleClassName`, `importExtension`, `paths.include`, `paths.exclude`, `match.export` and
   `match.decorators` are required (`match.glob`, `match.exclude` are optional
   filters). JSON and YAML both work. Relative paths resolve against the config
-  file; for piped text, against the working directory. The class is
-  `toClassName(name)` — `prod` → `ProdBundle`; the name never comes from the file.
+  file; for piped text, against the working directory. `bundleClassName` is the
+  generated class, written as given (letters, digits, `_`, a capital first); it never
+  comes from the file.
   `importExtension` is written as given (`""` for none), never inferred.
 - A config does **not** name a tsconfig, and a bundle never takes files from one.
   The required `--tsconfig` option of `tic build` (the `tsconfig` option of

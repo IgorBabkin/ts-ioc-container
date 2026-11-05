@@ -41,7 +41,6 @@ export {
   parseConfig,
   STDIN,
   configFormat,
-  toClassName,
   type BundleConfigFile,
   type ClassSelector,
   type ExportKind,

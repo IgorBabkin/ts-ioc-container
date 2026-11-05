@@ -8,7 +8,7 @@ const BUILD = ['build', '--tsconfig', 'tsconfig.json'];
 
 /** A config implies nothing, so it spells out every field. */
 const config = (include: string[], extra: object = {}) => ({
-  name: 'app',
+  bundleClassName: 'AppBundle',
   importExtension: '',
   paths: { include, exclude: [] },
   match: { export: 'any', decorators: ['register'] },
@@ -16,8 +16,8 @@ const config = (include: string[], extra: object = {}) => ({
 });
 
 /** The same config, written in YAML. */
-const yaml = (include: string, name = 'app') =>
-  `name: ${name}\nimportExtension: ''\npaths:\n  include: ['${include}']\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n`;
+const yaml = (include: string, bundleClassName = 'AppBundle') =>
+  `bundleClassName: ${bundleClassName}\nimportExtension: ''\npaths:\n  include: ['${include}']\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n`;
 
 class Io {
   readonly out: string[] = [];
@@ -67,7 +67,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('reads a YAML config, resolving its paths against the config file', () => {
-    project.write('config/prod.bundle.yml', yaml('../src', 'prod'));
+    project.write('config/prod.bundle.yml', yaml('../src', 'ProdBundle'));
     const io = new Io(project.path('src'));
 
     expect(run(['build', '--tsconfig', '../tsconfig.json', '../config/prod.bundle.yml'], io)).toBe(0);
@@ -75,8 +75,8 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('merges several configs left to right: tic build common.bundle.yml prod.bundle.yml > out.ts', () => {
-    project.write('common.bundle.yml', yaml('@app/services', 'common'));
-    project.write('prod.bundle.yml', "name: prod\nimportExtension: '.js'\n");
+    project.write('common.bundle.yml', yaml('@app/services', 'CommonBundle'));
+    project.write('prod.bundle.yml', "bundleClassName: ProdBundle\nimportExtension: '.js'\n");
     const io = new Io(project.root);
 
     expect(run([...BUILD, 'common.bundle.yml', 'prod.bundle.yml'], io)).toBe(0);
@@ -169,17 +169,19 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('extends a config from a piped one, against the working directory', () => {
-    const io = new Io(project.root, 'extends: ./app.bundle.json\nname: piped\n');
+    const io = new Io(project.root, 'extends: ./app.bundle.json\nbundleClassName: PipedBundle\n');
 
     expect(run(BUILD, io)).toBe(0);
     expect(io.out.join('\n')).toContain('export class PipedBundle implements IContainerModule');
   });
 
-  it('requires a name in a piped config, as in any other', () => {
-    const io = new Io(project.root, JSON.stringify(config(['@app/services'], { name: undefined })));
+  it('requires a class name in a piped config, as in any other', () => {
+    const io = new Io(project.root, JSON.stringify(config(['@app/services'], { bundleClassName: undefined })));
 
     expect(run(BUILD, io)).toBe(1);
-    expect(io.err).toEqual(['tic: <stdin>: name: expected letters, digits, "-" or "_", starting with a letter']);
+    expect(io.err).toEqual([
+      'tic: <stdin>: bundleClassName: expected a class name: letters, digits or "_", starting with a capital letter',
+    ]);
   });
 
   it('reports a config error on stderr, naming the config, and prints nothing', () => {
