@@ -61,7 +61,7 @@ export class BundleService implements IBundleService {
   bundle(config: BundleConfig, tsconfig: string): Bundle {
     const paths = loadImportPaths(tsconfig, config.importExtension);
     const relative = (file: string) => toPosix(path.relative(config.dir, file));
-    const exclude = config.paths.exclude.flatMap((glob) => paths.resolveGlob(glob, config.dir)).map(globToRegExp);
+    const exclude = config.exclude.flatMap((glob) => paths.resolveGlob(glob, config.dir)).map(globToRegExp);
     // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
     const isExcluded = (file: string) => {
       const filename = relative(file);
@@ -69,7 +69,7 @@ export class BundleService implements IBundleService {
     };
 
     const files = new Set<string>();
-    for (const folder of config.paths.include) {
+    for (const folder of config.include) {
       const dir = paths.resolveNamespace(folder, config.dir);
       for (const file of listSourceFiles(dir, isExcluded)) files.add(file);
     }
@@ -92,7 +92,7 @@ export class BundleService implements IBundleService {
 
     const content = this.view.render({
       name: config.bundleClassName,
-      paths: config.paths.include,
+      paths: config.include,
       classes: classes.map((cls) => ({ ...cls, specifier: cls.specifier! })),
     });
     return {

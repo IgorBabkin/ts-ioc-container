@@ -127,10 +127,10 @@ describe('BundleController', () => {
   });
 
   it('given a config that fails to load when built then nothing but the error is reported', () => {
-    const { logger, controller } = setup(() => result('// bundle\n'), undefined, failing('paths: expected an object'));
+    const { logger, controller } = setup(() => result('// bundle\n'), undefined, failing('include: expected a folder'));
 
     expect(() => controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' })).toThrow(
-      'app.bundle.json: paths: expected an object',
+      'app.bundle.json: include: expected a folder',
     );
     logger.verify((m) => m.info(It.IsAny()), Times.Never());
   });
@@ -139,11 +139,11 @@ describe('BundleController', () => {
     const { bundleService, out, controller } = setup(
       () => result('// bundle\n'),
       undefined,
-      failing('paths: expected an object'),
+      failing('include: expected a folder'),
     );
 
     expect(() => controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' })).toThrow(
-      'app.bundle.json: paths: expected an object',
+      'app.bundle.json: include: expected a folder',
     );
     bundleService.verify((m) => m.bundle(It.IsAny(), It.IsAny()), Times.Never());
     out.verify((m) => m.write(It.IsAny()), Times.Never());
@@ -172,12 +172,12 @@ describe('BundleController', () => {
   it('given - as the config when built then the config text is read from stdin, against the working directory', () => {
     const { configService, bundleService, out, controller } = setup(
       () => result('// bundle\n'),
-      () => 'bundleClassName: AppBundle\npaths:\n  include: [./src]\n',
+      () => 'bundleClassName: AppBundle\ninclude: [./src]\n',
     );
 
     controller.bundle({ configs: ['-'], tsconfig: 'tsconfig.json' });
 
-    configService.verify((m) => m.parse('bundleClassName: AppBundle\npaths:\n  include: [./src]\n', '/repo'));
+    configService.verify((m) => m.parse('bundleClassName: AppBundle\ninclude: [./src]\n', '/repo'));
     bundleService.verify((m) => m.bundle(resolved, '/repo/tsconfig.json'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
@@ -195,7 +195,7 @@ describe('BundleController', () => {
   it('given a stdin config that fails when built then the error names <stdin>', () => {
     const { controller } = setup(
       () => result('// bundle\n'),
-      () => 'paths: {}',
+      () => 'include: []',
       failing('bundleClassName: expected a class name'),
     );
 

@@ -10,14 +10,15 @@ const BUILD = ['build', '--tsconfig', 'tsconfig.json'];
 const config = (include: string[], extra: object = {}) => ({
   bundleClassName: 'AppBundle',
   importExtension: '',
-  paths: { include, exclude: [] },
+  include,
+  exclude: [],
   match: { export: 'any', decorators: ['register'] },
   ...extra,
 });
 
 /** The same config, written in YAML. */
 const yaml = (include: string, bundleClassName = 'AppBundle') =>
-  `bundleClassName: ${bundleClassName}\nimportExtension: ''\npaths:\n  include: ['${include}']\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n`;
+  `bundleClassName: ${bundleClassName}\nimportExtension: ''\ninclude: ['${include}']\nexclude: []\nmatch:\n  export: any\n  decorators: [register]\n`;
 
 class Io {
   readonly out: string[] = [];
@@ -85,7 +86,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('names every merged config in an error', () => {
-    project.write('common.bundle.yml', 'paths: {}\n');
+    project.write('common.bundle.yml', "importExtension: ''\n");
     const io = new Io(project.root);
 
     expect(run([...BUILD, 'common.bundle.yml', 'app.bundle.json', 'missing.bundle.yml'], io)).toBe(1);

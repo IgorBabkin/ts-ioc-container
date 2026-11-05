@@ -1,8 +1,7 @@
 # yaml-language-server: $schema=../../../tic.schema.json
 # Production: the infrastructure adapters, minus dev-only *.dev.ts files. Merged after common.bundle.yml.
 bundleClassName: ProdBundle
-paths:
-  include:
-    - ./src/infra
-  exclude:
-    - '**/*.dev.ts'
+include:
+  - ./src/infra
+exclude:
+  - '**/*.dev.ts'

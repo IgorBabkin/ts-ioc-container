@@ -22,7 +22,7 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
 - Config fields (schema: `tic.schema.json`), flat, and **none has a default**:
-  `bundleClassName`, `importExtension`, `paths.include`, `paths.exclude`, `match.export` and
+  `bundleClassName`, `importExtension`, `include`, `exclude`, `match.export` and
   `match.decorators` are required (`match.glob`, `match.exclude` are optional
   filters). JSON and YAML both work. Relative paths resolve against the config
   file; for piped text, against the working directory. `bundleClassName` is the
@@ -32,13 +32,13 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
 - A config does **not** name a tsconfig, and a bundle never takes files from one.
   The required `--tsconfig` option of `tic build` (the `tsconfig` option of
   `build()`; relative to the working directory, must exist, nothing is assumed)
-  only supplies `paths` aliases — which `paths.include` may
+  only supplies `paths` aliases — which `include` may
   name and generated imports are written in (most specific alias, else a
   relative path).
-- Selection has two stages, `paths: { include, exclude }` and
-  `match: { ..., glob, exclude }`. `paths` and `match` are always objects (a string
-  or a list in their place is an error). `paths` decides by path which files
-  are read and parsed at all. `paths.include` (required: one folder or a
+- Selection has two stages, the top-level `include` and `exclude`, then
+  `match: { ..., glob, exclude }`, always an object (a string or a list in its
+  place is an error). `include` and `exclude` decide by path which files are read
+  and parsed at all. `include` (required: one folder or a
   non-empty list) names the folders scanned, always with their sub-folders —
   relative to the config file (`./src/services`) or tsconfig aliases
   (`@app/services`); there is no `{ path, recursive }` form. A file in them is parsed unless it matches one
@@ -58,8 +58,8 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
 - Several configs merge like webpack-merge (`mergeConfigs`):
   `tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`.
-  Objects merge field by field; the list fields `paths.include`,
-  `paths.exclude`, `match.glob`, `match.exclude` and `match.decorators`
+  Objects merge field by field; the list fields `include`,
+  `exclude`, `match.glob`, `match.exclude` and `match.decorators`
   concatenate without duplicates (a later config only adds); any other value
   set later replaces an earlier one. Each file is validated alone
   (`BUNDLE_CONFIG_FILE_SCHEMA`: every field optional; errors name the file), the

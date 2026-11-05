@@ -45,8 +45,6 @@ export {
   type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,
-  type PathSelector,
-  type ResolvedPathSelector,
   type BundleConfig,
   type ConfigFormat,
 } from './features/bundle/BuildConfig';

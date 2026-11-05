@@ -7,7 +7,7 @@ import { BUNDLE_CONFIG_FILE_SCHEMA } from '../features/bundle/BuildConfig';
  * when the committed file is stale.
  */
 export function ticConfigJsonSchema(): Record<string, unknown> {
-  // One file as written: `paths` may be left to another config merged with it.
+  // One file as written: any field may be left to another config merged with it.
   const schema = z.toJSONSchema(BUNDLE_CONFIG_FILE_SCHEMA, {
     io: 'input',
     target: 'draft-7',

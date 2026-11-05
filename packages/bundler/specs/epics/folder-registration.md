@@ -35,10 +35,9 @@ Acceptance criteria:
 - Warnings and errors go to stderr, never into the bundle on stdout; an error
   names the config (`<stdin>` for piped text), and nothing is printed then.
 - The config's fields are flat and explicit, and none has a default: `bundleClassName`,
-  `importExtension`, `paths.include`, `paths.exclude`, `match.export` and
+  `importExtension`, `include`, `exclude`, `match.export` and
   `match.decorators` are required, and a missing one fails the build naming it.
-  `paths` and `match` are always objects — a folder, a glob or a list in their
-  place is an error. A `tsconfig` field is an error: the tsconfig is given to the
+  `match` is always an object — a glob or a list in its place is an error. A `tsconfig` field is an error: the tsconfig is given to the
   command.
 - `bundleClassName` is the name of the generated class, written as given, nothing
   added: letters, digits and `_`, starting with a capital letter. It is never taken
@@ -61,8 +60,8 @@ Acceptance criteria:
 
 - `tic build <config>...` merges the configs left to right into one bundle;
   `build({ config: [...] })` does the same.
-- Objects merge field by field. The list fields — `paths.include`,
-  `paths.exclude`, `match.glob`, `match.exclude`, `match.decorators` —
+- Objects merge field by field. The list fields — `include`,
+  `exclude`, `match.glob`, `match.exclude`, `match.decorators` —
   concatenate in order, without duplicates; one folder or glob counts as a list
   of one. Any other value set by a later config replaces an earlier one.
 - Each config is validated on its own, and an invalid field fails the build
@@ -99,18 +98,18 @@ that what it registers never depends on what my tsconfig happens to compile.
 
 Acceptance criteria:
 
-- A bundle scans its `paths.include` and nothing else; the files its tsconfig
+- A bundle scans its `include` and nothing else; the files its tsconfig
   compiles play no part.
 - The generated bundle's header lists the paths it scanned.
 
 ### Story: Register the classes of a folder
 
-As an application developer, I can list a folder in a bundle's `paths.include` so that
+As an application developer, I can list a folder in a bundle's `include` so that
 its classes become registrations of the generated bundle.
 
 Acceptance criteria:
 
-- `paths.include` is one folder or a non-empty list of them; each is scanned
+- `include` is one folder or a non-empty list of them; each is scanned
   with its sub-folders. There is no non-recursive form.
 - Every exported class that `match` selects is registered.
 - Abstract classes, non-exported classes and `.d.ts` files are never
@@ -129,15 +128,15 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- Selection runs in two stages: a bundle's `paths` rule — its folders (`paths.include`) and its
-  `exclude` globs — decides by path
+- Selection runs in two stages: a bundle's folders (`include`) and its
+  `exclude` globs decide by path
   alone which files are read and parsed; its `match` rule then picks classes out of
   the parsed files.
-- `paths.exclude` is a glob or a list of globs of files never read; every other
-  source file in `paths.include` is parsed, tests included. `[]` excludes nothing.
+- `exclude` is a glob or a list of globs of files never read; every other
+  source file in `include` is parsed, tests included. `[]` excludes nothing.
 - An excluded file is never read.
 - Globs are relative to the config file and `/`-separated. Like a folder in
-  `paths.include`, an exclude glob may start with a tsconfig `paths` alias instead:
+  `include`, an exclude glob may start with a tsconfig `paths` alias instead:
   `@generated/**` reads the folder the alias names, and `@generated` (or
   `@generated/`) drops all of it. An alias with several targets excludes under
   each; a catch-all `"*"` alias is never applied to an exclude glob.

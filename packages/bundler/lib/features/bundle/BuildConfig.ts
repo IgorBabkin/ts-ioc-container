@@ -4,39 +4,12 @@ import { z } from 'zod';
 import { TicConfigError } from '../../exceptions/DomainException';
 import { globToRegExp } from './domain/glob';
 
-/**
- * Which files a bundle reads and parses: the first, cheap stage of selection,
- * decided by path alone. `include` names the folders the files come from; within them
- * a file is parsed unless it matches one of `exclude`. Globs are relative to the
- * config file and `/`-separated.
- */
-export interface PathSelector {
-  /**
-   * Folder, or folders, to scan recursively: relative to the config file (`./src/services`),
-   * or tsconfig `paths` aliases (`@app/services`).
-   */
-  include: string | string[];
-  /**
-   * Glob, or globs, of files never read; one may start with a tsconfig `paths` alias
-   * (`@generated/**`, or `@generated` for the whole folder). `[]` excludes nothing.
-   */
-  exclude: string | string[];
-}
-
-/** A {@link PathSelector} with its values as lists. */
-export interface ResolvedPathSelector {
-  /** The folders to scan, as written in the config. */
-  include: string[];
-  /** As written in the config: an alias in one is resolved, and the glob compiled, once the tsconfig is loaded. */
-  exclude: string[];
-}
-
 /** Which exports of a file count: both kinds, only named exports, or only the default export. */
 export type ExportKind = 'any' | 'named' | 'default';
 
 /**
  * Which classes of a parsed file are registered: the second stage of selection,
- * run on the files {@link PathSelector} let through. A class is selected when
+ * run on the files `include` and `exclude` let through. A class is selected when
  * it is exported, not abstract, and meets every criterion set here.
  */
 export interface ClassSelector {
@@ -88,13 +61,23 @@ export interface BundleConfigFile {
   bundleClassName: string;
   /** Extension of generated imports, written as given: `.js` under node16/nodenext resolution, `''` for none. */
   importExtension: string;
-  /** Which files are parsed. Always an object: there is no folder or folder-list shorthand. */
-  paths: PathSelector;
+  /**
+   * Folder, or folders, to scan recursively: relative to the config file (`./src/services`),
+   * or tsconfig `paths` aliases (`@app/services`). The first, cheap stage of selection, decided
+   * by path alone.
+   */
+  include: string | string[];
+  /**
+   * Glob, or globs, of files never read within `include`: relative to the config file and
+   * `/`-separated, or starting with a tsconfig `paths` alias (`@generated/**`, or `@generated`
+   * for the whole folder). `[]` excludes nothing.
+   */
+  exclude: string | string[];
   /** Which classes of a parsed file are registered. Always an object: there is no glob shorthand. */
   match: ClassSelector;
 }
 
-/** A validated {@link BundleConfigFile} whose paths are located. */
+/** A validated {@link BundleConfigFile}, located at its file. */
 export interface BundleConfig {
   /** The config file itself. */
   file: string;
@@ -103,7 +86,10 @@ export interface BundleConfig {
   /** The generated class: `ProductionBundle`. */
   bundleClassName: string;
   importExtension: string;
-  paths: ResolvedPathSelector;
+  /** The folders to scan, as written in the config. */
+  include: string[];
+  /** As written in the config: an alias in one is resolved, and the glob compiled, once the tsconfig is loaded. */
+  exclude: string[];
   match: ResolvedClassSelector;
 }
 
@@ -152,25 +138,6 @@ const toGlobs = (value?: string | string[]): RegExp[] | undefined =>
 
 const FOLDERS_SCHEMA = z.array(nonEmptyString(), expected('a non-empty array')).min(1, expected('a non-empty array'));
 
-const PATHS_DESCRIPTION =
-  'Which files this bundle reads and parses — decided by path alone, before parsing. `include` names the folders the files come from; within them a file is parsed unless it matches one of `exclude`. Globs are relative to the config file.';
-
-const PATHS_SCHEMA = z
-  .strictObject(
-    {
-      include: z
-        .union([nonEmptyString(), FOLDERS_SCHEMA], expected('a folder or a non-empty array of folders'))
-        .describe(
-          'Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services).',
-        ),
-      exclude: globList('a glob or an array of globs', 0).describe(
-        'Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). [] excludes nothing.',
-      ),
-    },
-    expected('an object with "include"'),
-  )
-  .describe(PATHS_DESCRIPTION);
-
 const CLASS_OBJECT_SCHEMA = z.strictObject(
   {
     export: z
@@ -215,7 +182,14 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .describe(
         'Extension of generated imports, written as given: ".js" under node16/nodenext resolution, "" for none.',
       ),
-    paths: PATHS_SCHEMA,
+    include: z
+      .union([nonEmptyString(), FOLDERS_SCHEMA], expected('a folder or a non-empty array of folders'))
+      .describe(
+        'Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services).',
+      ),
+    exclude: globList('a glob or an array of globs', 0).describe(
+      'Glob, or globs, of files never read within include, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). [] excludes nothing.',
+    ),
     match: CLASS_OBJECT_SCHEMA.describe(MATCH_DESCRIPTION),
   },
   expected('an object'),
@@ -233,11 +207,10 @@ export const BUNDLE_CONFIG_FILE_SCHEMA = BUNDLE_CONFIG_SCHEMA.partial().extend({
     .describe(
       'Path of the config this one builds on, relative to this file and in the same folder. That config is merged first and this one on top of it.',
     ),
-  paths: PATHS_SCHEMA.partial().optional().describe(`${PATHS_DESCRIPTION} Required in the merged config.`),
   match: CLASS_OBJECT_SCHEMA.partial().optional().describe(`${MATCH_DESCRIPTION} Required in the merged config.`),
 });
 
-/** `['match', 'export']` -> `match.export`, `['paths', 'include', 0]` -> `paths.include[0]`; the root is `config`. */
+/** `['match', 'export']` -> `match.export`, `['include', 0]` -> `include[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -248,7 +221,7 @@ function formatPath(segments: PropertyKey[]): string {
 
 /**
  * A union failure names the union unless the value had the type of one branch: an
- * object path without `path` reports `paths.include[0].path`, not `paths.include[0]`.
+ * object path without `path` reports `include[0].path`, not `include[0]`.
  */
 function matchedBranch(issue: z.core.$ZodIssueInvalidUnion): z.core.$ZodIssue[] | undefined {
   const typeMatched = issue.errors.filter((branch) =>
@@ -267,15 +240,7 @@ function formatIssue(issue: z.core.$ZodIssue, prefix: PropertyKey[] = []): strin
 
 const formatIssues = (error: z.ZodError): string => error.issues.flatMap((issue) => formatIssue(issue)).join('; ');
 
-type ParsedPaths = z.output<typeof PATHS_SCHEMA>;
 type ParsedMatch = z.output<typeof CLASS_OBJECT_SCHEMA>;
-
-function toPathSelector(paths: ParsedPaths): ResolvedPathSelector {
-  return {
-    include: toList(paths.include),
-    exclude: toList(paths.exclude),
-  };
-}
 
 function toClassSelector({ decorators, glob, exclude, ...rest }: ParsedMatch): ResolvedClassSelector {
   return {
@@ -311,7 +276,7 @@ export function parseConfig(text: string, format: ConfigFormat): unknown {
 }
 
 /** The fields whose values concatenate when configs merge; every other value is replaced. */
-const LIST_FIELDS = new Set(['paths.include', 'paths.exclude', 'match.decorators', 'match.glob', 'match.exclude']);
+const LIST_FIELDS = new Set(['include', 'exclude', 'match.decorators', 'match.glob', 'match.exclude']);
 
 type ConfigObject = Record<string, unknown>;
 const isObject = (value: unknown): value is ConfigObject =>
@@ -348,7 +313,7 @@ export function extendedFile(content: unknown, file: string): string | undefined
 
 /**
  * Merges the contents of several config files into one, left to right, as webpack-merge
- * does: objects merge field by field, a list field — `paths.include`, `paths.exclude`,
+ * does: objects merge field by field, a list field — `include`, `exclude`,
  * `match.glob`, `match.exclude`, `match.decorators` — concatenates without duplicates
  * (one glob or folder counting as a list of one), and any other value set by a later file
  * replaces an earlier one. Each file is validated alone first, so a shared file may leave any
@@ -373,13 +338,14 @@ export function mergeConfigs(configs: { file: string; content: unknown }[]): unk
 export function resolveConfig(content: unknown, file: string): BundleConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { bundleClassName, importExtension, paths, match } = result.data;
+  const { bundleClassName, importExtension, include, exclude, match } = result.data;
   return {
     file,
     dir: path.dirname(file),
     bundleClassName,
     importExtension,
-    paths: toPathSelector(paths),
+    include: toList(include),
+    exclude: toList(exclude),
     match: toClassSelector(match),
   };
 }

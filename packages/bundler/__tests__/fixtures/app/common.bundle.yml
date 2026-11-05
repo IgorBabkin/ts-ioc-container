@@ -1,10 +1,9 @@
 # yaml-language-server: $schema=../../../tic.schema.json
 # Shared by every environment: `tic build --tsconfig tsconfig.json common.bundle.yml <env>.bundle.yml` merges it with the environment's config.
 importExtension: ''
-paths:
-  include:
-    - '@app/services'
-  exclude: []
+include:
+  - '@app/services'
+exclude: []
 match:
   export: any
   decorators:
