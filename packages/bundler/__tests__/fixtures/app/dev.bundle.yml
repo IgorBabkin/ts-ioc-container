@@ -1,7 +1,6 @@
 # yaml-language-server: $schema=../../../tic.schema.json
 # Development: the *.dev.ts logger replaces the production one, which is dropped by class name. Merged after common.bundle.yml.
-paths:
-  include:
-    - ./src/infra
-match:
-  exclude: JsonLogger
+bundleClassName: DevBundle
+include:
+  - ./src/infra
+matchExclude: JsonLogger

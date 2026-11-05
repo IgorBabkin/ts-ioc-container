@@ -3460,14 +3460,21 @@ to stdout and writes nothing, so the shell decides where it is saved:
 
 ```yaml
 # app.bundle.yml
-paths:
-  include:
-    - '@app/services'
-    - ./src/infra
+bundleClassName: AppBundle
+importExtension: ''
+include:
+  - '@app/services'
+  - ./src/infra
+exclude:
+  - '**/*.spec.ts'
+  - '**/__tests__/**'
+matchExport: any
+matchDecorators:
+  - register
 ```
 
 ```shell script
-tic build app.bundle.yml > src/di/app.bundle.ts
+tic build --tsconfig tsconfig.json app.bundle.yml > src/di/app.bundle.ts
 ```
 
 ```typescript
@@ -3498,8 +3505,8 @@ class, and let CI check that the saved bundle is current:
 ```json
 {
   "scripts": {
-    "bundle": "tic build app.bundle.yml > src/di/app.bundle.ts",
-    "bundle:check": "tic build app.bundle.yml | diff - src/di/app.bundle.ts"
+    "bundle": "tic build --tsconfig tsconfig.json app.bundle.yml > src/di/app.bundle.ts",
+    "bundle:check": "tic build --tsconfig tsconfig.json app.bundle.yml | diff - src/di/app.bundle.ts"
   }
 }
 ```
@@ -3509,42 +3516,51 @@ check compares like with like.
 
 #### Basic config
 
-A config (`<name>.bundle.json`, `.yaml` or `.yml`) describes one bundle. Only `paths.include` is required —
-`paths` is always an object, never a bare folder or list — and an unknown field is an error:
+A config (JSON or YAML) describes one bundle. Nothing is implied: no field has a default, no field
+nests another, and an unknown field is an error:
 
 ```yaml
 # optional: editor completion and validation (in JSON, set "$schema" to the same path)
 # yaml-language-server: $schema=./node_modules/@ts-ioc-container/bundler/tic.schema.json
-paths:
-  include: # folders to scan, sub-folders included
-    - '@app/services'
-    - ./src/infra
-  exclude: # replaces the default, so restate the test globs you still want
-    - '**/*.dev.ts'
-    - '**/*.spec.ts'
-    - '**/*.test.ts'
-    - '**/__tests__/**'
-    - '**/node_modules/**'
-match: '*Service' # optional: only classes whose name matches
+bundleClassName: AppBundle
+importExtension: ''
+include: # folders to scan, sub-folders included
+  - '@app/services'
+  - ./src/infra
+exclude: # only what is listed is left out; [] excludes nothing
+  - '**/*.dev.ts'
+  - '**/*.spec.ts'
+  - '**/*.test.ts'
+  - '**/__tests__/**'
+matchExport: any
+matchDecorators:
+  - register
+matchGlob: '*Service' # optional: only classes whose name matches
 ```
 
-| Field             | Default                                    | Meaning                                                                                     |
-| ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `paths.include`   | — (required)                               | Folder, or list of folders, to scan                                                         |
-| `paths.exclude`   | test files, `__tests__/`, `node_modules/`  | Globs of files never read                                                                   |
-| `match`           | exported classes with `@register`          | Class-name globs, or `{ export, decorators, glob, exclude }`                                |
-| `name`            | the file's stem (`app.bundle.yml` → `app`) | The bundle's name; the class is `AppBundle`                                                 |
-| `tsconfig`        | `./tsconfig.json`                          | Where the `paths` aliases come from (see below)                                             |
-| `importExtension` | `.js` under node16/nodenext, else none     | Extension of the generated imports                                                          |
+| Field              | Meaning                                                                    |
+| ------------------ | -------------------------------------------------------------------------- |
+| `bundleClassName`  | The name of the generated class, written as given                          |
+| `importExtension`  | Extension of the generated imports: `.js` under node16/nodenext, else `''` |
+| `include`    | Folder, or list of folders, to scan                                        |
+| `exclude`    | Globs of files never read                                                  |
+| `matchExport`     | `any`, `named` or `default` — which exports count                          |
+| `matchDecorators` | The class must carry one of these; `[]` requires none                      |
+| `matchGlob`       | Optional: class-name globs, one of which must match                        |
+| `matchExclude`    | Optional: class-name globs, none of which may match                        |
+
+The tsconfig is not part of the config: `tic build --tsconfig <file>` names it, relative to the working directory.
 
 Relative paths resolve against the config file. Need one bundle per environment? Keep what they share in
 `common.bundle.yml` and what each adds in `prod.bundle.yml`, `dev.bundle.yml`, …, and merge them like
-webpack-merge — objects field by field, lists (`paths.include`, `paths.exclude`, `match.glob`, …)
+webpack-merge — lists (`include`, `exclude`, `matchGlob`, …)
 concatenated, any other value replaced by the later config:
 
 ```bash
-tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts # exports ProdBundle
+tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts # exports ProdBundle
 ```
+
+Or name the shared config in `prod.bundle.yml` with `extends: ./common.bundle.yml`, and build that file alone.
 
 #### tsconfig aliases
 
@@ -3560,11 +3576,10 @@ file is saved — so the bundle works wherever you put it. Declare an alias cove
 }
 ```
 
-- A folder in `paths.include` is either relative to the config (`./src/infra`) or an alias
+- A folder in `include` is either relative to the config (`./src/infra`) or an alias
   (`@app/services`); either way, the imports come out as `@app/...`.
 - A selected class that no alias covers fails the build, naming its file — add a `paths` entry for its folder.
-- The tsconfig only supplies aliases and the import extension; it never adds files to the scan. Name another
-  one with `tsconfig: ./tsconfig.app.json`.
+- The tsconfig only supplies aliases; it never adds files to the scan.
 - An exclude glob may start with an alias too: `@generated/**`, or `@generated` for the whole folder.
 - Your app's toolchain must resolve the same aliases at run time (Vite, webpack, Jest, `tsconfig-paths`, …), as
   it already does for any aliased import — `tsc` alone type-checks them but does not rewrite them.

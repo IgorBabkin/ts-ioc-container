@@ -26,22 +26,23 @@ Acceptance criteria:
 
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
-- `tic build <config>` reads the config file — JSON for `.json`, YAML for
+- `tic build --tsconfig <file> <config>` reads the config file — JSON for `.json`, YAML for
   `.yaml` / `.yml`; any other extension fails — and prints the bundle to stdout.
-  It writes no file: `tic build app.bundle.json > src/di/app.bundle.ts`.
+  It writes no file: `tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts`.
 - Without `<config>`, or with `-`, the config is read from stdin as YAML (which
-  covers JSON): `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`.
+  covers JSON): `cat dev.bundle.json | tic build --tsconfig tsconfig.json > src/di/dev.bundle.ts`.
   Nothing piped in fails with a usage error; more than one `<config>` too.
 - Warnings and errors go to stderr, never into the bundle on stdout; an error
   names the config (`<stdin>` for piped text), and nothing is printed then.
-- The config's fields are flat and explicit: `paths` with its folders
-  (`paths.include`) is required. `paths` is always an object — a folder or a
-  list in its place is an error — and `exclude` keeps its default when left out; `name`, `tsconfig`, `importExtension` and `match` are optional.
-- `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
-  letter — and defaults to the config file's stem (`production.bundle.json` →
-  `production`); piped text, or a file named otherwise, must set it. The
-  generated class is named after it: `ProductionBundle`, `my-app` →
-  `MyAppBundle`.
+- The config's fields are flat and explicit, and none has a default: `bundleClassName`,
+  `importExtension`, `include`, `exclude`, `matchExport` and
+  `matchDecorators` are required, and a missing one fails the build naming it.
+  No field nests another: configs merge one level deep, and fields of one concern
+  share a prefix (`matchGlob`). A `tsconfig` field is an error: the tsconfig is given to the
+  command.
+- `bundleClassName` is the name of the generated class, written as given, nothing
+  added: letters, digits and `_`, starting with a capital letter. It is never taken
+  from the file name.
 - Relative paths in a config file resolve against the file; in piped text,
   against the working directory.
 - Several bundles — production, development, test — are several runs, each
@@ -53,29 +54,43 @@ Acceptance criteria:
 
 As an application developer with one bundle per environment, I can keep what
 the environments share in one config and what each adds in another, and build
-an environment from both — `tic build common.bundle.yml prod.bundle.yml >
+an environment from both — `tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml >
 src/di/prod.bundle.ts` — so that shared settings are written once.
 
 Acceptance criteria:
 
 - `tic build <config>...` merges the configs left to right into one bundle;
   `build({ config: [...] })` does the same.
-- Objects merge field by field. The list fields — `paths.include`,
-  `paths.exclude`, `match.glob`, `match.exclude`, `match.decorators` —
+- The list fields — `include`,
+  `exclude`, `matchGlob`, `matchExclude`, `matchDecorators` —
   concatenate in order, without duplicates; one folder or glob counts as a list
-  of one. Any other value set by a later config replaces an earlier one. The
-  `match` shorthand merges as `match.glob`.
+  of one. Any other value set by a later config replaces an earlier one.
 - Each config is validated on its own, and an invalid field fails the build
-  naming the file it is in. A config may leave `paths` out; the merged config
-  must have `paths.include`.
-- Defaults apply to the merged config only: it behaves exactly as if it had
-  been written as one config.
-- The bundle is named after the last config unless one sets `name`.
+  naming the file it is in. A config may leave any field out; the merged config
+  must have them all, and behaves exactly as if it had been written as one config.
 - Merged configs must sit in one folder, which their relative paths resolve
   against; configs in different folders fail the build.
 - `-` (stdin) cannot be merged with config files; that is a usage error.
 - The CLI's warnings and errors name every merged config:
   `common.bundle.yml + prod.bundle.yml: ...`.
+
+### Story: Extend another config
+
+As an application developer, I can name the config a config builds on, so that
+an environment is built from one file and what it shares is still written once.
+
+Acceptance criteria:
+
+- `extends` is optional and takes one path, relative to the config file; in
+  piped text, to the working directory. Anything but a non-empty string fails
+  the build.
+- The extended config is merged first and the extending one on top, exactly as
+  `tic build <extended> <config>` merges them.
+- An extended config may extend another; the furthest is merged first. A cycle
+  fails the build naming it.
+- A file extended more than once in a build counts once.
+- An extended file must exist and sit in the same folder, like any merged config.
+- JSON and YAML configs may extend each other.
 
 ### Story: Name every input explicitly
 
@@ -84,20 +99,20 @@ that what it registers never depends on what my tsconfig happens to compile.
 
 Acceptance criteria:
 
-- A bundle scans its `paths.include` and nothing else; the files its tsconfig
+- A bundle scans its `include` and nothing else; the files its tsconfig
   compiles play no part.
 - The generated bundle's header lists the paths it scanned.
 
 ### Story: Register the classes of a folder
 
-As an application developer, I can list a folder in a bundle's `paths.include` so that
+As an application developer, I can list a folder in a bundle's `include` so that
 its classes become registrations of the generated bundle.
 
 Acceptance criteria:
 
-- `paths.include` is one folder or a non-empty list of them; each is scanned
+- `include` is one folder or a non-empty list of them; each is scanned
   with its sub-folders. There is no non-recursive form.
-- By default every exported class is registered.
+- Every exported class the `match` fields select is registered.
 - Abstract classes, non-exported classes and `.d.ts` files are never
   registered.
 - A class exported by `export { X }`, `export { X as Y }` or `export default` is
@@ -114,21 +129,18 @@ never reads the rest and bundling stays fast as the project grows.
 
 Acceptance criteria:
 
-- Selection runs in two stages: a bundle's `paths` rule — its folders (`paths.include`) and its
-  `exclude` globs — decides by path
-  alone which files are read and parsed; its `match` rule then picks classes out of
+- Selection runs in two stages: a bundle's folders (`include`) and its
+  `exclude` globs decide by path
+  alone which files are read and parsed; its `match` fields then pick classes out of
   the parsed files.
-- `paths.exclude` is a glob or a list of globs of files never read (default: test files,
-  `__tests__/`, `node_modules/`); every other source file in `paths.include` is parsed.
+- `exclude` is a glob or a list of globs of files never read; every other
+  source file in `include` is parsed, tests included. `[]` excludes nothing.
 - An excluded file is never read.
 - Globs are relative to the config file and `/`-separated. Like a folder in
-  `paths.include`, an exclude glob may start with a tsconfig `paths` alias instead:
+  `include`, an exclude glob may start with a tsconfig `paths` alias instead:
   `@generated/**` reads the folder the alias names, and `@generated` (or
   `@generated/`) drops all of it. An alias with several targets excludes under
   each; a catch-all `"*"` alias is never applied to an exclude glob.
-- A non-empty `exclude` replaces the defaults. An explicit `exclude: []` still
-  parses tests deliberately. When a non-empty `exclude` omits a default glob,
-  the build reports a warning (the escape hatch stays: `[]` warns for nothing).
 - An invalid rule fails the build naming the offending field.
 
 ### Story: Configure which classes a file contributes
@@ -139,35 +151,28 @@ only what I mean it to.
 
 Acceptance criteria:
 
-- A bundle's `match` rule is an object; a class is selected when it is
-  exported, not abstract, and meets every criterion the rule sets. Omitting
-  a criterion applies no restriction, except `decorators`.
-- `decorators` defaults to `["register"]`: by default only classes decorated
-  with `@register` are registered. `"decorators": []` requires none.
-- `export` restricts which exports count: `"any"` (default), `"named"` or
+- A class is selected when it is exported, not abstract, and meets every
+  criterion the `match` fields set.
+- `matchExport` is required and restricts which exports count: `"any"`, `"named"` or
   `"default"`.
-- `decorators` requires the class to carry one of the listed decorators,
-  recognised by name — also when imported under another name or reached as a
+- `matchDecorators` is required, and requires the class to carry one of the listed
+  decorators (`[]` requires none), recognised by name — also when imported under another name or reached as a
   member (`@ioc.register(...)`). Composed decorators are listed like any other.
-- `glob` is a glob (`*Service`), or a non-empty list of them, the class name
+- `matchGlob` is a glob (`*Service`), or a non-empty list of them, the class name
   must match one of; for an anonymous default export the name is derived from
   the file name.
-- `exclude` is a glob, or a non-empty list of them, the class name must match
+- `matchExclude` is a glob, or a non-empty list of them, the class name must match
   none of; it applies after every other criterion. A plain class name is a glob
   matching only itself, so `["MockUserRepository", "*Fake"]` drops one class by
   name and a family by pattern.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
-  registration is last-wins); the warning suggests `match.exclude`.
-- `match` can be a glob or a non-empty list of globs: a shortcut for
-  `match.glob` with the default `export` and `decorators`. `paths` has no
-  such shortcut.
+  registration is last-wins); the warning suggests `matchExclude`.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):
   those registrations are scope-gated, not last-wins.
-- An invalid rule — including a string (`"match": "decorated"`) — fails the
-  build naming the offending field.
+- An invalid rule fails the build naming the offending field.
 
 ### Story: Address folders by tsconfig aliases
 
@@ -179,17 +184,19 @@ Acceptance criteria:
 
 - A path is either a folder relative to the config file (`./src/services`) or
   a tsconfig `paths` alias (`@app/services`), resolved through the `paths` of
-  the config's `tsconfig` (default `./tsconfig.json` next to the config,
-  which may be absent; one named explicitly must exist), including `paths`
-  that tsconfig inherits through its own `extends`. The tsconfig contributes
-  aliases and module resolution only, never files.
+  the tsconfig given to `tic build --tsconfig <file>`, including `paths` that
+  tsconfig inherits through its own `extends`. The tsconfig contributes
+  aliases only, never files.
+- `--tsconfig` is required and resolves against the working directory: leaving
+  it out is a usage error, and a tsconfig that does not exist fails the build.
+  None is assumed, not even `./tsconfig.json`.
 - A path that is neither an existing folder nor a resolvable alias fails
   the build with a message naming it.
 - Generated imports use the most specific matching alias, and only aliases:
   the bundle has no known location, so it works wherever it is saved. A
   selected class no alias covers fails the build naming its file.
-- Under `moduleResolution` `node16` / `nodenext` imports carry a `.js`
-  extension; `importExtension` in the config overrides the inferred one.
+- Imports carry `importExtension` as written: `.js` under `moduleResolution`
+  `node16` / `nodenext`, `""` for none. It is never inferred from the tsconfig.
 
 ### Story: Generate a bundle: a plain container module class
 
@@ -219,7 +226,7 @@ catches a forgotten `tic build`.
 Acceptance criteria:
 
 - The same config always prints the same bundle, so a saved bundle is checked
-  with `tic build app.bundle.json | diff - src/di/app.bundle.ts`.
+  with `tic build --tsconfig tsconfig.json app.bundle.json | diff - src/di/app.bundle.ts`.
 
 ## Notes
 
