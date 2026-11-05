@@ -55,8 +55,8 @@ export class BundleController {
   /**
    * Builds the bundle the config file `<config>` describes — several merged left to right
    * into one, or without one (or with `-`), the config piped into stdin — and prints it to
-   * stdout. `--tsconfig`, relative to the working directory, supplies the `paths` aliases and
-   * the import extension; no tsconfig is assumed. Saving the bundle is the shell's job:
+   * stdout. `--tsconfig`, relative to the working directory, supplies the `paths` aliases;
+   * no tsconfig is assumed. Saving the bundle is the shell's job:
    * `tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts`,
    * `tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`,
    * `cat app.bundle.yml | tic build --tsconfig tsconfig.json > out.ts`.
@@ -66,7 +66,7 @@ export class BundleController {
    * (`Bundled AppBundle: 3 dependencies from 2 files (1 warning)`). An error names the configs.
    *
    * @throws {UsageError} when an option is unknown, `--tsconfig` is missing, `-` is given with config files, or the config should come from stdin and nothing is piped in.
-   * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config is invalid, the tsconfig is missing or invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
+   * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, `extends` is invalid or circular, the config is invalid, the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
   @onDefault(invoke)

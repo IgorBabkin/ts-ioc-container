@@ -11,7 +11,7 @@ export const USAGE = [
   '  ts-ioc-container version               show the version',
   '',
   'Options:',
-  '  --tsconfig <file>   build: the tsconfig supplying paths aliases and the import extension (required),',
+  '  --tsconfig <file>   build: the tsconfig supplying paths aliases (required),',
   '                      relative to the working directory',
   '  -h, --help          show this help',
   '  -v, --version       show the version',
@@ -20,6 +20,6 @@ export const USAGE = [
   'Saving it is up to you:',
   '  tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts',
   '  tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts   # merged left to right',
-  '  cat app.bundle.yml | tic build --tsconfig tsconfig.json > src/di/app.bundle.ts     # config from stdin (must set name)',
+  '  cat app.bundle.yml | tic build --tsconfig tsconfig.json > src/di/app.bundle.ts     # config from stdin',
   '  tic build --tsconfig tsconfig.json app.bundle.json | diff - src/di/app.bundle.ts   # CI: is it current?',
 ].join('\n');

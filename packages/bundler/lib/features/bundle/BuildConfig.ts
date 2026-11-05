@@ -18,12 +18,12 @@ export interface PathSelector {
   include: string | string[];
   /**
    * Glob, or globs, of files never read; one may start with a tsconfig `paths` alias
-   * (`@generated/**`, or `@generated` for the whole folder). Replaces {@link DEFAULT_EXCLUDE} when given.
+   * (`@generated/**`, or `@generated` for the whole folder). `[]` excludes nothing.
    */
-  exclude?: string | string[];
+  exclude: string | string[];
 }
 
-/** A {@link PathSelector} with its defaults filled in. */
+/** A {@link PathSelector} with its values as lists. */
 export interface ResolvedPathSelector {
   /** The folders to scan, as written in the config. */
   include: string[];
@@ -37,17 +37,15 @@ export type ExportKind = 'any' | 'named' | 'default';
 /**
  * Which classes of a parsed file are registered: the second stage of selection,
  * run on the files {@link PathSelector} let through. A class is selected when
- * it is exported, not abstract, and meets every criterion set here; an empty
- * rule selects every exported class.
+ * it is exported, not abstract, and meets every criterion set here.
  */
 export interface ClassSelector {
-  /** Default `any`. */
-  export?: ExportKind;
+  export: ExportKind;
   /**
    * The class must carry one of these decorators, recognised by name (`register`, or a
-   * composed one). Default {@link DEFAULT_DECORATORS}; `[]` requires none.
+   * composed one); `[]` requires none.
    */
-  decorators?: string[];
+  decorators: string[];
   /**
    * Globs the class name must match one of, e.g. `*Service` or `["*Service", "*Repository"]`.
    * An anonymous default export is named after its file.
@@ -61,7 +59,7 @@ export interface ClassSelector {
   exclude?: string | string[];
 }
 
-/** A {@link ClassSelector} with its defaults filled in and its globs compiled. */
+/** A {@link ClassSelector} with its globs compiled. */
 export interface ResolvedClassSelector {
   export: ExportKind;
   decorators?: string[];
@@ -70,62 +68,45 @@ export interface ResolvedClassSelector {
 }
 
 /**
- * A bundle config file: one bundle, described explicitly — the folders it scans and the
- * classes it registers. `tic build <config>` prints the bundle to stdout; where it is
- * saved is the caller's choice (`tic build app.bundle.json > src/di/app.bundle.ts`).
- * `tic build common.bundle.yml prod.bundle.yml` merges several into one, left to right
- * (see {@link mergeConfigs}).
+ * A bundle config file: one bundle, described explicitly. Nothing is implied: every field but
+ * `$schema`, `extends`, `match.glob` and `match.exclude` is required — though in a config merged with
+ * others, only the merged config must have it (see {@link mergeConfigs}).
+ * `tic build --tsconfig tsconfig.json <config>` prints the bundle to stdout; where it is saved
+ * is the caller's choice (`tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts`).
  */
 export interface BundleConfigFile {
   $schema?: string;
   /**
-   * The bundle's name: letters, digits, `-` and `_`, starting with a letter. Default: the
-   * config file's stem (`production.bundle.json` -> `production`); required for a config
-   * file named otherwise. It names the generated class, an `IContainerModule`
-   * (`ProductionBundle`, see {@link toClassName}).
+   * Path of the config this one builds on, relative to this file and in the same folder. That
+   * config is merged first and this one on top of it, see {@link mergeConfigs}.
    */
-  name?: string;
-  /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
-  importExtension?: string;
+  extends?: string;
   /**
-   * Which files are parsed: the folders in `paths.include`, minus {@link DEFAULT_EXCLUDE} unless
-   * `exclude` says otherwise. Always an object: there is no folder or folder-list shorthand.
-   * Required — though in a config merged with others, only the merged config must have it.
+   * The bundle's name: letters, digits, `-` and `_`, starting with a letter. It names the
+   * generated class, an `IContainerModule` (`ProductionBundle`, see {@link toClassName}).
    */
+  name: string;
+  /** Extension of generated imports, written as given: `.js` under node16/nodenext resolution, `''` for none. */
+  importExtension: string;
+  /** Which files are parsed. Always an object: there is no folder or folder-list shorthand. */
   paths: PathSelector;
-  /**
-   * Which classes of a parsed file are registered. Default: every exported class decorated
-   * with `@register`. A glob or a list of globs is shorthand for `{ glob }`.
-   */
-  match?: string | string[] | ClassSelector;
+  /** Which classes of a parsed file are registered. Always an object: there is no glob shorthand. */
+  match: ClassSelector;
 }
 
-/** What `match.decorators` requires when omitted: the library's own `@register`. */
-export const DEFAULT_DECORATORS = ['register'];
-export const DEFAULT_EXCLUDE = [
-  '**/*.spec.ts',
-  '**/*.test.ts',
-  '**/*.spec.tsx',
-  '**/*.test.tsx',
-  '**/__tests__/**',
-  '**/node_modules/**',
-];
-
-/** A {@link BundleConfigFile} whose defaults are filled in and whose paths are absolute. */
+/** A validated {@link BundleConfigFile} whose paths are located. */
 export interface BundleConfig {
   /** The config file itself. */
   file: string;
   /** Its folder: what the config's relative paths resolve against. */
   dir: string;
-  /** The bundle name: `production` for `production.bundle.json`. */
+  /** The bundle name. */
   name: string;
   /** The generated class: `ProductionBundle`. */
   bundleClassName: string;
-  importExtension?: string;
+  importExtension: string;
   paths: ResolvedPathSelector;
   match: ResolvedClassSelector;
-  /** Non-fatal problems found while resolving, e.g. a `paths.exclude` that drops a default test glob. */
-  warnings: string[];
 }
 
 const BUNDLE_NAME = /^[A-Za-z][\w-]*$/;
@@ -182,11 +163,9 @@ const PATHS_SCHEMA = z
         .describe(
           'Folder, or folders, to scan, sub-folders included: paths relative to the config file (./src/services) or tsconfig paths aliases (@app/services).',
         ),
-      exclude: globList('a glob or an array of globs', 0)
-        .default(DEFAULT_EXCLUDE)
-        .describe(
-          'Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). Replaces the default when given. A non-empty value that omits a default glob makes `tic build` warn.',
-        ),
+      exclude: globList('a glob or an array of globs', 0).describe(
+        'Glob, or globs, of files never read, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). [] excludes nothing.',
+      ),
     },
     expected('an object with "include"'),
   )
@@ -196,13 +175,10 @@ const CLASS_OBJECT_SCHEMA = z.strictObject(
   {
     export: z
       .enum(['any', 'named', 'default'], expected('"any", "named" or "default"'))
-      .default('any')
       .describe('Which exports count.'),
-    decorators: stringList()
-      .default(DEFAULT_DECORATORS)
-      .describe(
-        'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator). Default ["register"]; [] requires none.',
-      ),
+    decorators: stringList().describe(
+      'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator); [] requires none.',
+    ),
     glob: globs()
       .optional()
       .describe(
@@ -217,23 +193,8 @@ const CLASS_OBJECT_SCHEMA = z.strictObject(
   expected('an object'),
 );
 
-const CLASSES_SCHEMA = z
-  .union(
-    [
-      nonEmptyString().describe(
-        'One class-name glob, with the default export and decorators: shorthand for { "glob": "..." }.',
-      ),
-      z
-        .array(nonEmptyString(), expected('a non-empty array'))
-        .min(1, expected('a non-empty array'))
-        .describe('Class-name globs, with the default export and decorators: shorthand for { "glob": [...] }.'),
-      CLASS_OBJECT_SCHEMA,
-    ],
-    expected('a glob, a non-empty array of globs or an object'),
-  )
-  .describe(
-    'Which classes of a parsed file are registered. A class is selected when it is exported, not abstract, and meets every criterion set here; by default that is every exported class decorated with @register. A glob, or a list of globs, is shorthand for { "glob": ... }.',
-  );
+const MATCH_DESCRIPTION =
+  'Which classes of a parsed file are registered: a class is selected when it is exported, not abstract, and meets every criterion set here.';
 
 /**
  * One `*.bundle.json` / `*.bundle.yaml`. The published `tic.schema.json` is generated
@@ -246,31 +207,34 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
     name: z
       .string(expected('letters, digits, "-" or "_", starting with a letter'))
       .regex(BUNDLE_NAME, expected('letters, digits, "-" or "_", starting with a letter'))
-      .optional()
       .describe(
-        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: the config file\'s stem (production.bundle.json → production); required for a config file named otherwise. It names the generated IContainerModule class (ProductionBundle).',
+        'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. It names the generated IContainerModule class (ProductionBundle).',
       ),
     importExtension: z
       .string(expected('a string'))
-      .optional()
       .describe(
-        'Extension of generated imports, e.g. ".js". Inferred from the tsconfig given to `tic build --tsconfig`: ".js" under node16/nodenext resolution, none otherwise.',
+        'Extension of generated imports, written as given: ".js" under node16/nodenext resolution, "" for none.',
       ),
     paths: PATHS_SCHEMA,
-    match: CLASSES_SCHEMA.optional(),
+    match: CLASS_OBJECT_SCHEMA.describe(MATCH_DESCRIPTION),
   },
   expected('an object'),
 );
 
-type ParsedConfig = z.output<typeof BUNDLE_CONFIG_SCHEMA>;
-
 /**
- * One config file among several merged into one bundle: it may leave `paths.include`, or
- * `paths` altogether, to another — only the merged config must have it. The published
- * `tic.schema.json` is generated from it, so editors accept a shared config.
+ * One config file among several merged into one bundle: it may leave any field to another —
+ * only the merged config must have them all. It alone may set `extends`, which is gone once
+ * configs are merged. The published `tic.schema.json` is generated
+ * from it, so editors accept a shared config.
  */
-export const BUNDLE_CONFIG_FILE_SCHEMA = BUNDLE_CONFIG_SCHEMA.extend({
+export const BUNDLE_CONFIG_FILE_SCHEMA = BUNDLE_CONFIG_SCHEMA.partial().extend({
+  extends: nonEmptyString()
+    .optional()
+    .describe(
+      'Path of the config this one builds on, relative to this file and in the same folder. That config is merged first and this one on top of it.',
+    ),
   paths: PATHS_SCHEMA.partial().optional().describe(`${PATHS_DESCRIPTION} Required in the merged config.`),
+  match: CLASS_OBJECT_SCHEMA.partial().optional().describe(`${MATCH_DESCRIPTION} Required in the merged config.`),
 });
 
 /** `['match', 'export']` -> `match.export`, `['paths', 'include', 0]` -> `paths.include[0]`; the root is `config`. */
@@ -304,6 +268,7 @@ function formatIssue(issue: z.core.$ZodIssue, prefix: PropertyKey[] = []): strin
 const formatIssues = (error: z.ZodError): string => error.issues.flatMap((issue) => formatIssue(issue)).join('; ');
 
 type ParsedPaths = z.output<typeof PATHS_SCHEMA>;
+type ParsedMatch = z.output<typeof CLASS_OBJECT_SCHEMA>;
 
 function toPathSelector(paths: ParsedPaths): ResolvedPathSelector {
   return {
@@ -312,13 +277,7 @@ function toPathSelector(paths: ParsedPaths): ResolvedPathSelector {
   };
 }
 
-function toClassSelector(match: ParsedConfig['match']): ResolvedClassSelector {
-  if (match === undefined) return { export: 'any', decorators: DEFAULT_DECORATORS };
-  // A glob, or a list of globs, is shorthand for `{ glob }` with the default export and decorators.
-  if (typeof match === 'string' || Array.isArray(match)) {
-    return { export: 'any', decorators: DEFAULT_DECORATORS, glob: toGlobs(match) };
-  }
-  const { decorators, glob, exclude, ...rest } = match;
+function toClassSelector({ decorators, glob, exclude, ...rest }: ParsedMatch): ResolvedClassSelector {
   return {
     ...rest,
     // `[]` is the explicit opt-out: no decorator required.
@@ -326,36 +285,6 @@ function toClassSelector(match: ParsedConfig['match']): ResolvedClassSelector {
     glob: toGlobs(glob),
     exclude: toGlobs(exclude),
   };
-}
-
-/**
- * Warns when an explicit, non-empty `paths.exclude` omits one of the {@link DEFAULT_EXCLUDE}
- * globs, since that silently drops test files (or `node_modules`) from the scan.
- * An empty `exclude` is a deliberate opt-out and does not warn.
- */
-function excludeWarnings(paths: ParsedPaths): string[] {
-  const exclude = toList(paths.exclude);
-  if (exclude.length === 0) return [];
-  const missing = DEFAULT_EXCLUDE.filter((glob) => !exclude.includes(glob));
-  if (missing.length === 0) return [];
-  return [
-    `paths.exclude replaces the default excludes and omits ${missing.map((glob) => `"${glob}"`).join(', ')}; ` +
-      `add them back`,
-  ];
-}
-
-/**
- * A config file is named `<name>.bundle.json`, `<name>.bundle.yaml` or `<name>.bundle.yml`
- * by convention, e.g. `app.bundle.json`; any `.json` / `.yaml` / `.yml` file works.
- */
-export const CONFIG_FILE_SUFFIXES = ['.bundle.json', '.bundle.yaml', '.bundle.yml'];
-
-/** `production.bundle.yaml` -> `production`; `undefined` for a file named otherwise, e.g. `di.json`. */
-function configStem(file: string): string | undefined {
-  const base = path.basename(file);
-  const suffix = CONFIG_FILE_SUFFIXES.find((candidate) => base.endsWith(candidate));
-  const stem = suffix ? base.slice(0, -suffix.length) : '';
-  return BUNDLE_NAME.test(stem) ? stem : undefined;
 }
 
 /** What stands for standard input where a config file is expected: `tic build -`. */
@@ -410,18 +339,26 @@ function mergeInto(base: ConfigObject, next: ConfigObject, at = ''): ConfigObjec
   return merged;
 }
 
-/** The `match` shorthand as the object it stands for, so it merges field by field: `'*Service'` -> `{ glob: '*Service' }`. */
-const expandMatch = ({ match, ...rest }: ConfigObject): ConfigObject =>
-  match === undefined ? rest : { ...rest, match: isObject(match) ? match : { glob: match } };
+/**
+ * The absolute path of the config `content` extends, resolved against `file`'s folder;
+ * `undefined` when it extends none.
+ *
+ * @throws {TicConfigError} when `extends` is not a non-empty string.
+ */
+export function extendedFile(content: unknown, file: string): string | undefined {
+  const parent = isObject(content) ? content.extends : undefined;
+  if (parent === undefined) return undefined;
+  if (!isNonEmptyString(parent)) throw new TicConfigError('extends: expected a non-empty string');
+  return path.resolve(path.dirname(file), parent);
+}
 
 /**
  * Merges the contents of several config files into one, left to right, as webpack-merge
  * does: objects merge field by field, a list field — `paths.include`, `paths.exclude`,
  * `match.glob`, `match.exclude`, `match.decorators` — concatenates without duplicates
  * (one glob or folder counting as a list of one), and any other value set by a later file
- * replaces an earlier one. The `match` shorthand merges as `match.glob`. Each file is
- * validated alone first, so a shared file may leave out `paths`; defaults apply to the
- * merged config only, so a `paths.exclude` in any file replaces {@link DEFAULT_EXCLUDE}.
+ * replaces an earlier one. Each file is validated alone first, so a shared file may leave any
+ * field out; the merged config must have them all.
  *
  * @throws {TicConfigError} when a file's content does not match the config file shape; the message names the file and the field.
  */
@@ -429,37 +366,27 @@ export function mergeConfigs(configs: { file: string; content: unknown }[]): unk
   return configs.reduce<ConfigObject>((merged, { file, content }) => {
     const result = BUNDLE_CONFIG_FILE_SCHEMA.safeParse(content);
     if (!result.success) throw new TicConfigError(`${path.basename(file)}: ${formatIssues(result.error)}`);
-    return mergeInto(merged, expandMatch(content as ConfigObject));
+    const { extends: _parent, ...fields } = content as ConfigObject;
+    return mergeInto(merged, fields);
   }, {});
 }
 
 /**
- * Validates parsed config content and resolves its paths against `file`'s directory.
- * Without a `name` the bundle is named after the file: `production.bundle.json` -> `production`.
+ * Validates parsed config content and locates it at `file`, whose directory its relative paths resolve against.
  *
- * @throws {TicConfigError} when the content does not match the config shape, or names no bundle; the message names the field.
+ * @throws {TicConfigError} when the content does not match the config shape; the message names the field.
  */
 export function resolveConfig(content: unknown, file: string): BundleConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
   const { name, importExtension, paths, match } = result.data;
-  const bundleName = name ?? configStem(file);
-  if (bundleName === undefined) {
-    throw new TicConfigError(
-      path.basename(file) === STDIN
-        ? 'name: required for a config read from stdin'
-        : `name: required when the config file is not named <name>${CONFIG_FILE_SUFFIXES.join(' / ')}`,
-    );
-  }
-  const dir = path.dirname(file);
   return {
     file,
-    dir,
-    name: bundleName,
-    bundleClassName: toClassName(bundleName),
+    dir: path.dirname(file),
+    name,
+    bundleClassName: toClassName(name),
     importExtension,
     paths: toPathSelector(paths),
     match: toClassSelector(match),
-    warnings: excludeWarnings(paths),
   };
 }

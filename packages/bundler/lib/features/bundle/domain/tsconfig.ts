@@ -8,13 +8,13 @@ import { ImportPaths } from './ImportPaths';
 const NO_INPUTS = 18003;
 
 /**
- * Reads a bundle's tsconfig, following its own `extends`: its `paths` aliases and the
- * import extension its `moduleResolution` needs; `importExtension` overrides the latter.
- * Nothing else is taken from it — which files it compiles plays no part in a bundle.
+ * Reads a bundle's tsconfig, following its own `extends`, for its `paths` aliases. Nothing else
+ * is taken from it — which files it compiles plays no part in a bundle, and imports are
+ * written with `importExtension` as given.
  *
  * @throws {TicConfigError} when the tsconfig is missing or cannot be parsed.
  */
-export function loadImportPaths(tsconfig: string, importExtension?: string): ImportPaths {
+export function loadImportPaths(tsconfig: string, importExtension: string): ImportPaths {
   if (!existsSync(tsconfig)) throw new TicConfigError(`tsconfig not found: ${tsconfig}`);
 
   const { config, error } = ts.readConfigFile(tsconfig, ts.sys.readFile);

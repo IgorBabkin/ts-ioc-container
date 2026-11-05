@@ -6,6 +6,19 @@ import { decorated, TempProject } from '../project';
 /** `tic build`, with the tsconfig every build must be given. */
 const BUILD = ['build', '--tsconfig', 'tsconfig.json'];
 
+/** A config implies nothing, so it spells out every field. */
+const config = (include: string[], extra: object = {}) => ({
+  name: 'app',
+  importExtension: '',
+  paths: { include, exclude: [] },
+  match: { export: 'any', decorators: ['register'] },
+  ...extra,
+});
+
+/** The same config, written in YAML. */
+const yaml = (include: string, name = 'app') =>
+  `name: ${name}\nimportExtension: ''\npaths:\n  include: ['${include}']\n  exclude: []\nmatch:\n  export: any\n  decorators: [register]\n`;
+
 class Io {
   readonly out: string[] = [];
   readonly err: string[] = [];
@@ -26,7 +39,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   beforeEach(() => {
     project = TempProject.create({
       'tsconfig.json': { compilerOptions: { paths: { '@app/*': ['./src/*'] } } },
-      'app.bundle.json': { paths: { include: ['@app/services'] } },
+      'app.bundle.json': config(['@app/services']),
       'src/services/Logger.ts': decorated('Logger'),
     });
   });
@@ -54,7 +67,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('reads a YAML config, resolving its paths against the config file', () => {
-    project.write('config/prod.bundle.yml', "paths:\n  include: ['../src']\n");
+    project.write('config/prod.bundle.yml', yaml('../src', 'prod'));
     const io = new Io(project.path('src'));
 
     expect(run(['build', '--tsconfig', '../tsconfig.json', '../config/prod.bundle.yml'], io)).toBe(0);
@@ -62,8 +75,8 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('merges several configs left to right: tic build common.bundle.yml prod.bundle.yml > out.ts', () => {
-    project.write('common.bundle.yml', "paths:\n  include: ['@app/services']\n");
-    project.write('prod.bundle.yml', "importExtension: '.js'\n");
+    project.write('common.bundle.yml', yaml('@app/services', 'common'));
+    project.write('prod.bundle.yml', "name: prod\nimportExtension: '.js'\n");
     const io = new Io(project.root);
 
     expect(run([...BUILD, 'common.bundle.yml', 'prod.bundle.yml'], io)).toBe(0);
@@ -113,7 +126,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
 
   it('takes --tsconfig after the config too, relative to the working directory', () => {
     project.write('config/tsconfig.app.json', { compilerOptions: { paths: { '@lib/*': ['../src/*'] } } });
-    project.write('app.bundle.json', { paths: { include: ['@lib/services'] } });
+    project.write('app.bundle.json', config(['@lib/services']));
     const io = new Io(project.root);
 
     expect(run(['build', 'app.bundle.json', '--tsconfig', 'config/tsconfig.app.json'], io)).toBe(0);
@@ -137,9 +150,9 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it.each([
-    [BUILD, "name: app\npaths:\n  include: ['@app/services']\n"],
-    [[...BUILD, '-'], "name: app\npaths:\n  include: ['@app/services']\n"],
-    [BUILD, JSON.stringify({ name: 'app', paths: { include: ['@app/services'] } })],
+    [BUILD, yaml('@app/services')],
+    [[...BUILD, '-'], yaml('@app/services')],
+    [BUILD, JSON.stringify(config(['@app/services']))],
   ])('reads a piped config from stdin with %j: cat app.bundle.yml | tic build > out.ts', (argv, input) => {
     const io = new Io(project.root, input);
 
@@ -149,21 +162,28 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('resolves a piped config against the working directory', () => {
-    const io = new Io(project.path('src'), "name: app\npaths:\n  include: ['./services']\n");
+    const io = new Io(project.path('src'), yaml('./services'));
 
     expect(run(['build', '--tsconfig', '../tsconfig.json'], io)).toBe(0);
     expect(io.out.join('\n')).toContain('Registration.fromClass(Logger)');
   });
 
-  it('requires a name in a piped config: there is no file name to take it from', () => {
-    const io = new Io(project.root, "paths:\n  include: ['@app/services']\n");
+  it('extends a config from a piped one, against the working directory', () => {
+    const io = new Io(project.root, 'extends: ./app.bundle.json\nname: piped\n');
+
+    expect(run(BUILD, io)).toBe(0);
+    expect(io.out.join('\n')).toContain('export class PipedBundle implements IContainerModule');
+  });
+
+  it('requires a name in a piped config, as in any other', () => {
+    const io = new Io(project.root, JSON.stringify(config(['@app/services'], { name: undefined })));
 
     expect(run(BUILD, io)).toBe(1);
-    expect(io.err).toEqual(['tic: <stdin>: name: required for a config read from stdin']);
+    expect(io.err).toEqual(['tic: <stdin>: name: expected letters, digits, "-" or "_", starting with a letter']);
   });
 
   it('reports a config error on stderr, naming the config, and prints nothing', () => {
-    project.write('app.bundle.json', { output: 'x.ts', paths: { include: ['@app/services'] } });
+    project.write('app.bundle.json', config(['@app/services'], { output: 'x.ts' }));
     const io = new Io(project.root);
 
     expect(run([...BUILD, 'app.bundle.json'], io)).toBe(1);
@@ -172,7 +192,7 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('fails when a selected class is not covered by a tsconfig alias', () => {
-    project.write('app.bundle.json', { paths: { include: ['./lib'] } });
+    project.write('app.bundle.json', config(['./lib']));
     project.write('lib/External.ts', decorated('External'));
     const io = new Io(project.root);
 
@@ -181,17 +201,20 @@ describe('Story: Describe the container in a config file (tic CLI)', () => {
   });
 
   it('prints warnings to stderr, never into the bundle on stdout', () => {
-    project.write('app.bundle.json', { paths: { include: ['@app/services'], exclude: ['legacy/**'] } });
+    const source = (name: string) =>
+      `import { register } from 'ts-ioc-container';\n@register(Token)\nexport class ${name} {}\n`;
+    project.write('src/services/A.ts', source('A'));
+    project.write('src/services/B.ts', source('B'));
     const io = new Io(project.root);
 
     expect(run([...BUILD, 'app.bundle.json'], io)).toBe(0);
-    expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: paths.exclude');
-    expect(io.err.at(-1)).toBe('Bundled AppBundle: 1 dependency from 1 file (1 warning)');
+    expect(io.err.join('\n')).toContain('tic: warning: app.bundle.json: decorator token');
+    expect(io.err.at(-1)).toBe('Bundled AppBundle: 3 dependencies from 3 files (1 warning)');
     expect(io.out.join('\n')).not.toContain('warning');
   });
 
   it('reports progress on stderr — the bundle, each class in it and a summary — never in the bundle on stdout', () => {
-    project.write('app.bundle.json', { paths: { include: ['@app/services', './src/infra'] } });
+    project.write('app.bundle.json', config(['@app/services', './src/infra']));
     project.write('src/services/Mailer.ts', decorated('Mailer'));
     project.write('src/services/helpers.ts', 'export const noop = () => {};\n');
     project.write('src/infra/Clock.ts', decorated('Clock'));

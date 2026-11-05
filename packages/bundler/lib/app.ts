@@ -22,13 +22,13 @@ export type BundleRequest =
   | {
       /**
        * The config as text, e.g. read from stdin: YAML or JSON. Its relative paths resolve
-       * against the working directory, and it must set `name`.
+       * against the working directory.
        */
       text: string;
     };
 
 export type BuildOptions = BundleRequest & {
-  /** Path of the tsconfig supplying the `paths` aliases and the import extension, relative to the working directory. */
+  /** Path of the tsconfig supplying the `paths` aliases, relative to the working directory. */
   tsconfig: string;
   /** Default `process.cwd()`. */
   cwd?: string;
@@ -60,7 +60,7 @@ export function run(argv: string[], io: CliIo = processIo()): number {
  * Generates the bundle a config file describes — `tic build` as a function — and returns
  * it; nothing is written.
  *
- * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config is invalid, the tsconfig is missing or invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
+ * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, `extends` is invalid or circular, the config is invalid, the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
  * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
  */
 export function build({ cwd = process.cwd(), tsconfig, ...request }: BuildOptions): Bundle {

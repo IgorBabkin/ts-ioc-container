@@ -20,8 +20,8 @@ export interface Bundle {
   /** The generated bundle. Nothing is written: saving it is the caller's job (`tic build app.bundle.json > src/di/app.bundle.ts`). */
   content: string;
   /**
-   * Non-fatal problems found while building, e.g. a `paths.exclude` that drops a default
-   * test glob or two selected classes passing the same decorator token.
+   * Non-fatal problems found while building, e.g. two selected classes passing the same
+   * decorator token.
    */
   warnings: string[];
 }
@@ -37,7 +37,7 @@ export interface BundledClass {
 export interface IBundleService {
   /**
    * Generates the bundle a resolved config describes and returns it; nothing is written.
-   * `tsconfig` is the absolute path of the tsconfig supplying its aliases and import extension.
+   * `tsconfig` is the absolute path of the tsconfig supplying its aliases.
    *
    * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
@@ -101,7 +101,7 @@ export class BundleService implements IBundleService {
       files: [...new Set(classes.map((cls) => cls.file))],
       classes: classes.map(({ file, className }) => ({ file, className })),
       content,
-      warnings: [...config.warnings, ...tokenCollisions(classes)],
+      warnings: tokenCollisions(classes),
     };
   }
 }

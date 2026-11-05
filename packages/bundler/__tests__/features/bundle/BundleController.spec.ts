@@ -67,11 +67,11 @@ describe('BundleController', () => {
   });
 
   it('given build warnings when built then each is logged under the config, not printed with the bundle', () => {
-    const { out, logger, controller } = setup(() => result('// bundle\n', ['paths.exclude omits a glob']));
+    const { out, logger, controller } = setup(() => result('// bundle\n', ['two classes share a token']));
 
     controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' });
 
-    logger.verify((m) => m.warn('app.bundle.json: paths.exclude omits a glob'), Times.Once());
+    logger.verify((m) => m.warn('app.bundle.json: two classes share a token'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
@@ -118,7 +118,7 @@ describe('BundleController', () => {
 
   it('given one class and a warning when built then the summary counts them in the singular', () => {
     const { logger, controller } = setup(() =>
-      result('// bundle\n', ['paths.exclude omits a glob'], [{ file: '/repo/src/Clock.ts', className: 'Clock' }]),
+      result('// bundle\n', ['two classes share a token'], [{ file: '/repo/src/Clock.ts', className: 'Clock' }]),
     );
 
     controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' });
@@ -159,14 +159,14 @@ describe('BundleController', () => {
   });
 
   it('given several configs when built then they are built as one, and a warning names them all', () => {
-    const { configService, logger, controller } = setup(() => result('// bundle\n', ['paths.exclude omits a glob']));
+    const { configService, logger, controller } = setup(() => result('// bundle\n', ['two classes share a token']));
 
     controller.bundle({ configs: ['common.bundle.yml', 'prod.bundle.yml'], tsconfig: 'tsconfig.json' });
 
     configService.verify((m) =>
       m.load(It.Is((files: string[]) => files.join() === '/repo/common.bundle.yml,/repo/prod.bundle.yml')),
     );
-    logger.verify((m) => m.warn('common.bundle.yml + prod.bundle.yml: paths.exclude omits a glob'), Times.Once());
+    logger.verify((m) => m.warn('common.bundle.yml + prod.bundle.yml: two classes share a token'), Times.Once());
   });
 
   it('given - as the config when built then the config text is read from stdin, against the working directory', () => {

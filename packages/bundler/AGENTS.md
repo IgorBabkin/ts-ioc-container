@@ -21,36 +21,34 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
 - Every import in a bundle is written through a tsconfig `paths` alias, so the
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
-- Config fields (schema: `tic.schema.json`), flat: `paths` with `paths.include`
-  required; `match`, `name`, `importExtension` optional.
-  Relative paths resolve against the config file; for piped text, against the
-  working directory. `name` defaults to the file's stem (`prod.bundle.json` →
-  `prod`) and is required for piped text or a file named otherwise; the class
-  is `toClassName(name)` — `ProdBundle`.
+- Config fields (schema: `tic.schema.json`), flat, and **none has a default**:
+  `name`, `importExtension`, `paths.include`, `paths.exclude`, `match.export` and
+  `match.decorators` are required (`match.glob`, `match.exclude` are optional
+  filters). JSON and YAML both work. Relative paths resolve against the config
+  file; for piped text, against the working directory. The class is
+  `toClassName(name)` — `prod` → `ProdBundle`; the name never comes from the file.
+  `importExtension` is written as given (`""` for none), never inferred.
 - A config does **not** name a tsconfig, and a bundle never takes files from one.
   The required `--tsconfig` option of `tic build` (the `tsconfig` option of
   `build()`; relative to the working directory, must exist, nothing is assumed)
   only supplies `paths` aliases — which `paths.include` may
   name and generated imports are written in (most specific alias, else a
-  relative path) — and the module resolution that sets the import extension.
+  relative path).
 - Selection has two stages, `paths: { include, exclude }` and
-  `match: { ..., glob, exclude }`. `paths` is always an object (a string
-  or a list in its place is an error); `match` also takes a string or a
-  list as a shortcut for `match.glob`. `paths` decides by path which files
+  `match: { ..., glob, exclude }`. `paths` and `match` are always objects (a string
+  or a list in their place is an error). `paths` decides by path which files
   are read and parsed at all. `paths.include` (required: one folder or a
   non-empty list) names the folders scanned, always with their sub-folders —
   relative to the config file (`./src/services`) or tsconfig aliases
   (`@app/services`); there is no `{ path, recursive }` form. A file in them is parsed unless it matches one
   of `exclude` (one glob or a list, each relative to the config file or starting
   with a tsconfig alias — `@generated/**`, or `@generated` for the whole folder;
-  catch-all `"*"` aliases are skipped; default: test files, `__tests__/`,
-  `node_modules/`; a non-empty value replaces it, and the build warns if it drops
-  a default). Files `tic build` generated are never input.
-- `match: { export, decorators, glob, exclude }` (or `match: '*Service'`
-  / `['*Service', '*Repository']` = `match.glob`, default `export` and
-  `decorators`) then picks classes of the parsed files; default is every exported,
-  non-abstract class decorated with `@register` (`decorators` defaults to
-  `["register"]`; `[]` requires none); positive criteria must all hold — `glob` is one glob
+  catch-all `"*"` aliases are skipped; `[]` excludes nothing, so test files are
+  scanned unless listed). `node_modules` folders are never walked, and files
+  `tic build` generated are never input.
+- `match: { export, decorators, glob, exclude }`, always an object, then picks
+  classes of the parsed files: exported, non-abstract classes meeting `export` and
+  `decorators` (`[]` requires none); positive criteria must all hold — `glob` is one glob
   or a list the class name must match one of — and then `exclude` (one glob or a
   list; a plain class name matches only itself) drops classes.
   Decorators match by name, so composed ones must be listed. The build warns when
@@ -62,11 +60,14 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   Objects merge field by field; the list fields `paths.include`,
   `paths.exclude`, `match.glob`, `match.exclude` and `match.decorators`
   concatenate without duplicates (a later config only adds); any other value
-  set later replaces an earlier one; the `match` shorthand merges as
-  `match.glob`. Each file is validated alone (`BUNDLE_CONFIG_FILE_SCHEMA`:
-  `paths` optional; errors name the file), the merged result as one config
-  (`BUNDLE_CONFIG_SCHEMA`). Defaults apply to the merged config only. The last
-  file names the bundle unless one sets `name`; all must sit in one folder.
+  set later replaces an earlier one. Each file is validated alone
+  (`BUNDLE_CONFIG_FILE_SCHEMA`: every field optional; errors name the file), the
+  merged result as one config (`BUNDLE_CONFIG_SCHEMA`). All must sit in
+  one folder.
+- `extends: ./common.bundle.yml` (optional; a path relative to the config file, or to
+  the working directory for piped text) merges that config first and this one on top:
+  the same merge as naming both on the command line, so the files must share a folder.
+  It chains, a cycle fails the build, and a file extended twice counts once.
 - Never edit a `*.bundle.ts` by hand — change the classes or the config and
   rerun `tic build`.
 - Unknown config fields are errors, at every level.
