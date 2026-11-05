@@ -11,21 +11,17 @@ const NO_INPUTS = 18003;
  * Reads a bundle's tsconfig, following its own `extends`: its `paths` aliases and the
  * import extension its `moduleResolution` needs; `importExtension` overrides the latter.
  * Nothing else is taken from it — which files it compiles plays no part in a bundle.
- * An absent tsconfig that was not named explicitly yields no aliases.
  *
- * @throws {TicConfigError} when a required tsconfig is missing or cannot be parsed.
+ * @throws {TicConfigError} when the tsconfig is missing or cannot be parsed.
  */
-export function loadImportPaths(tsconfig: { file: string; required: boolean }, importExtension?: string): ImportPaths {
-  if (!existsSync(tsconfig.file)) {
-    if (tsconfig.required) throw new TicConfigError(`tsconfig not found: ${tsconfig.file}`);
-    return new ImportPaths([], importExtension ?? '');
-  }
+export function loadImportPaths(tsconfig: string, importExtension?: string): ImportPaths {
+  if (!existsSync(tsconfig)) throw new TicConfigError(`tsconfig not found: ${tsconfig}`);
 
-  const { config, error } = ts.readConfigFile(tsconfig.file, ts.sys.readFile);
-  const parsed = ts.parseJsonConfigFileContent(config, ts.sys, path.dirname(tsconfig.file), undefined, tsconfig.file);
+  const { config, error } = ts.readConfigFile(tsconfig, ts.sys.readFile);
+  const parsed = ts.parseJsonConfigFileContent(config, ts.sys, path.dirname(tsconfig), undefined, tsconfig);
   const [fatal] = [error, ...parsed.errors].filter((d): d is ts.Diagnostic => !!d && d.code !== NO_INPUTS);
   if (fatal) {
-    throw new TicConfigError(`${tsconfig.file}: ${ts.flattenDiagnosticMessageText(fatal.messageText, '\n')}`);
+    throw new TicConfigError(`${tsconfig}: ${ts.flattenDiagnosticMessageText(fatal.messageText, '\n')}`);
   }
-  return ImportPaths.fromOptions(parsed.options, tsconfig.file, importExtension);
+  return ImportPaths.fromOptions(parsed.options, tsconfig, importExtension);
 }

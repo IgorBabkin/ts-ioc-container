@@ -26,17 +26,17 @@ Acceptance criteria:
 
 - The CLI installs as `ts-ioc-container`, with `tic` as a shortcut: both
   `bin` entries run the same program.
-- `tic build <config>` reads the config file — JSON for `.json`, YAML for
+- `tic build --tsconfig <file> <config>` reads the config file — JSON for `.json`, YAML for
   `.yaml` / `.yml`; any other extension fails — and prints the bundle to stdout.
-  It writes no file: `tic build app.bundle.json > src/di/app.bundle.ts`.
+  It writes no file: `tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts`.
 - Without `<config>`, or with `-`, the config is read from stdin as YAML (which
-  covers JSON): `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`.
+  covers JSON): `cat dev.bundle.json | tic build --tsconfig tsconfig.json > src/di/dev.bundle.ts`.
   Nothing piped in fails with a usage error; more than one `<config>` too.
 - Warnings and errors go to stderr, never into the bundle on stdout; an error
   names the config (`<stdin>` for piped text), and nothing is printed then.
 - The config's fields are flat and explicit: `paths` with its folders
   (`paths.include`) is required. `paths` is always an object — a folder or a
-  list in its place is an error — and `exclude` keeps its default when left out; `name`, `tsconfig`, `importExtension` and `match` are optional.
+  list in its place is an error — and `exclude` keeps its default when left out; `name`, `importExtension` and `match` are optional. A `tsconfig` field is an error: the tsconfig is given to the command.
 - `name` is the bundle's name — letters, digits, `-` and `_`, starting with a
   letter — and defaults to the config file's stem (`production.bundle.json` →
   `production`); piped text, or a file named otherwise, must set it. The
@@ -53,7 +53,7 @@ Acceptance criteria:
 
 As an application developer with one bundle per environment, I can keep what
 the environments share in one config and what each adds in another, and build
-an environment from both — `tic build common.bundle.yml prod.bundle.yml >
+an environment from both — `tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml >
 src/di/prod.bundle.ts` — so that shared settings are written once.
 
 Acceptance criteria:
@@ -179,10 +179,12 @@ Acceptance criteria:
 
 - A path is either a folder relative to the config file (`./src/services`) or
   a tsconfig `paths` alias (`@app/services`), resolved through the `paths` of
-  the config's `tsconfig` (default `./tsconfig.json` next to the config,
-  which may be absent; one named explicitly must exist), including `paths`
-  that tsconfig inherits through its own `extends`. The tsconfig contributes
+  the tsconfig given to `tic build --tsconfig <file>`, including `paths` that
+  tsconfig inherits through its own `extends`. The tsconfig contributes
   aliases and module resolution only, never files.
+- `--tsconfig` is required and resolves against the working directory: leaving
+  it out is a usage error, and a tsconfig that does not exist fails the build.
+  None is assumed, not even `./tsconfig.json`.
 - A path that is neither an existing folder nor a resolvable alias fails
   the build with a message naming it.
 - Generated imports use the most specific matching alias, and only aliases:
@@ -219,7 +221,7 @@ catches a forgotten `tic build`.
 Acceptance criteria:
 
 - The same config always prints the same bundle, so a saved bundle is checked
-  with `tic build app.bundle.json | diff - src/di/app.bundle.ts`.
+  with `tic build --tsconfig tsconfig.json app.bundle.json | diff - src/di/app.bundle.ts`.
 
 ## Notes
 

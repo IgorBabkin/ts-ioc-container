@@ -35,7 +35,6 @@ describe('TicConfigService', () => {
       dir: '/repo',
       name: 'production',
       bundleClassName: 'ProductionBundle',
-      tsconfig: { file: '/repo/tsconfig.json', required: false },
       paths: { include: ['./src'] },
       match: { export: 'any', decorators: ['register'] },
     });

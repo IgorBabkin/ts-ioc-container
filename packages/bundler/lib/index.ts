@@ -41,7 +41,6 @@ export {
   CONFIG_FILE_SUFFIXES,
   STDIN,
   configFormat,
-  DEFAULT_TSCONFIG,
   DEFAULT_EXCLUDE,
   DEFAULT_DECORATORS,
   toClassName,

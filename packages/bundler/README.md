@@ -33,14 +33,16 @@ below use the shortcut.
 ## Build
 
 ```bash
-tic build [<config>...]
+tic build --tsconfig <file> [<config>...]
 ```
 
 `tic build` prints the bundle to **stdout** and writes nothing. `<config>` is a
 config file — JSON for `.json`, YAML for `.yaml` / `.yml`. Several are
 [merged](#merging-configs) left to right into one bundle. Without one (or with
-`-`) the config is read from **stdin**. Progress, warnings and errors go to
-stderr, so they never end up in the bundle:
+`-`) the config is read from **stdin**. `--tsconfig` is required: it names the
+tsconfig that supplies the `paths` aliases and the import extension, relative
+to the working directory. No tsconfig is assumed, and a missing one is an error.
+Progress, warnings and errors go to stderr, so they never end up in the bundle:
 
 ```text
 Bundling AppBundle...
@@ -51,26 +53,26 @@ Bundled AppBundle: 2 dependencies from 2 files
 
 ```bash
 # a config file in, the bundle saved by the shell
-tic build app.bundle.json > src/di/app.bundle.ts
-tic build prod.bundle.yml > src/di/prod.bundle.ts
+tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts
+tic build --tsconfig tsconfig.json prod.bundle.yml > src/di/prod.bundle.ts
 
 # several configs merged into one bundle, like webpack-merge
-tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts
+tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts
 
 # the config piped in — it has no file name, so it sets `name` ("name": "dev")
-cat dev.bundle.json | tic build > src/di/dev.bundle.ts
-tic build < dev.bundle.yml > src/di/dev.bundle.ts
+cat dev.bundle.json | tic build --tsconfig tsconfig.json > src/di/dev.bundle.ts
+tic build --tsconfig tsconfig.json < dev.bundle.yml > src/di/dev.bundle.ts
 
 # into any command: format it, show it and save it, ...
-tic build app.bundle.json | npx prettier --stdin-filepath app.bundle.ts > src/di/app.bundle.ts
-cat dev.bundle.json | tic build | tee src/di/dev.bundle.ts
+tic build --tsconfig tsconfig.json app.bundle.json | npx prettier --stdin-filepath app.bundle.ts > src/di/app.bundle.ts
+cat dev.bundle.json | tic build --tsconfig tsconfig.json | tee src/di/dev.bundle.ts
 
 # a config built on the fly
-printf 'name: app\npaths:\n  include: "@app/services"\n' | tic build > src/di/app.bundle.ts
-jq '.name = "admin"' app.bundle.json | tic build > src/di/admin.bundle.ts
+printf 'name: app\npaths:\n  include: "@app/services"\n' | tic build --tsconfig tsconfig.json > src/di/app.bundle.ts
+jq '.name = "admin"' app.bundle.json | tic build --tsconfig tsconfig.json > src/di/admin.bundle.ts
 
 # CI: is the saved bundle current?
-tic build app.bundle.json | diff - src/di/app.bundle.ts
+tic build --tsconfig tsconfig.json app.bundle.json | diff - src/di/app.bundle.ts
 ```
 
 A bundle can be saved anywhere, because every import in it is written through a
@@ -104,13 +106,12 @@ paths:
     - ./src/infra
 ```
 
-| Field             | Default                                       | Meaning                                                                                                     |
-| ----------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `paths`           | — (required)                                  | Which files are parsed — see [Selecting files](#selecting-files). Merged configs need it in one of them     |
-| `match`           | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                 |
-| `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise      |
-| `tsconfig`        | `./tsconfig.json`                             | Source of the `paths` aliases every import is written through, and of the import extension — never of files |
-| `importExtension` | `.js` under node16/nodenext, else none        | Extension of generated imports                                                                              |
+| Field             | Default                                       | Meaning                                                                                                 |
+| ----------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `paths`           | — (required)                                  | Which files are parsed — see [Selecting files](#selecting-files). Merged configs need it in one of them |
+| `match`           | exported classes with `@register`             | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)             |
+| `name`            | the config file's (`app.bundle.json` → `app`) | The bundle's name: names the class, `AppBundle`. Required for a piped config or a file named otherwise  |
+| `importExtension` | `.js` under node16/nodenext, else none        | Extension of generated imports                                                                          |
 
 An unknown field is an error, so a misspelled or removed option never goes
 unnoticed.
@@ -122,15 +123,15 @@ one config, what each adds in another, and build each environment from both:
 
 ```bash
 for env in prod dev test; do
-  tic build common.bundle.yml "$env.bundle.yml" > "src/di/$env.bundle.ts"
+  tic build --tsconfig tsconfig.json common.bundle.yml "$env.bundle.yml" > "src/di/$env.bundle.ts"
 done
 ```
 
 ```json
 {
   "scripts": {
-    "bundle": "tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts",
-    "bundle:check": "tic build common.bundle.yml prod.bundle.yml | diff - src/di/prod.bundle.ts"
+    "bundle": "tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts",
+    "bundle:check": "tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml | diff - src/di/prod.bundle.ts"
   }
 }
 ```
@@ -168,20 +169,20 @@ match:
   exclude: JsonLogger
 ```
 
-`tic build common.bundle.yml prod.bundle.yml` then scans `@app/services` and
+`tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml` then scans `@app/services` and
 `./src/infra`, and exports `ProdBundle`.
 
 ### Merging configs
 
-`tic build a.bundle.yml b.bundle.yml c.bundle.yml` merges the configs left to
+`tic build --tsconfig tsconfig.json a.bundle.yml b.bundle.yml c.bundle.yml` merges the configs left to
 right, the way webpack-merge merges webpack configs:
 
 - objects merge field by field;
 - list fields — `paths.include`, `paths.exclude`, `match.glob`, `match.exclude`,
   `match.decorators` — concatenate in order, without duplicates (one folder or
   glob counts as a list of one), so a later config can only add to them;
-- any other value (`name`, `tsconfig`, `importExtension`, `match.export`) set
-  by a later config replaces an earlier one;
+- any other value (`name`, `importExtension`, `match.export`) set by a later
+  config replaces an earlier one;
 - the `match` shorthand merges as `match.glob`.
 
 Each config is validated on its own — an error names the file it is in — so a
@@ -382,9 +383,9 @@ type checker runs.
 import { writeFileSync } from 'node:fs';
 import { build } from '@ts-ioc-container/bundler';
 
-const { content, warnings } = build({ config: 'app.bundle.json' });
+const { content, warnings } = build({ config: 'app.bundle.json', tsconfig: 'tsconfig.json' });
 writeFileSync('src/di/app.bundle.ts', content);
 
 // or config text, as `tic build` reads from stdin
-build({ text: 'name: app\npaths:\n  include: ["@app/services"]\n' });
+build({ text: 'name: app\npaths:\n  include: ["@app/services"]\n', tsconfig: 'tsconfig.json' });
 ```

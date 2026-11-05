@@ -19,18 +19,22 @@ describe('Folder registration', () => {
   afterEach(() => project?.dispose());
 
   let last: Bundle;
-  const buildFrom = (config: string) => (last = build({ config, cwd: project.root }));
+  const buildFrom = (config: string) => (last = build({ config, tsconfig: 'tsconfig.json', cwd: project.root }));
   const buildProject = () => buildFrom('app.bundle.json');
   const generated = () => last.content;
 
   describe('Story: Describe the container in a config file', () => {
     it('resolves relative paths against the config file, not the working directory', () => {
       project = create({
-        'config/app.bundle.json': module(['../src/services'], { tsconfig: '../tsconfig.json' }),
+        'config/app.bundle.json': module(['../src/services']),
         'src/services/Logger.ts': decorated('Logger'),
       });
 
-      last = build({ config: project.path('config/app.bundle.json'), cwd: '/' });
+      last = build({
+        config: project.path('config/app.bundle.json'),
+        tsconfig: project.path('tsconfig.json'),
+        cwd: '/',
+      });
 
       expect(generated()).toContain("import { Logger } from '@/src/services/Logger';");
     });
@@ -91,7 +95,7 @@ describe('Folder registration', () => {
       [module(['./src'], { name: 'not valid' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { name: '2fa' }), 'name: expected letters, digits, "-" or "_", starting with a letter'],
       [module(['./src'], { tags: ['production'] }), 'tags: unknown field'],
-      [module(['./src'], { tsconfig: '' }), 'tsconfig: expected a non-empty string'],
+      [module(['./src'], { tsconfig: './tsconfig.json' }), 'tsconfig: unknown field'],
       [module(['./src'], { extends: './tsconfig.json' }), 'extends: unknown field'],
       [{ glob: ['./src'] }, 'glob: unknown field'],
       [{ namespaces: ['./src'] }, 'namespaces: unknown field'],
@@ -669,39 +673,45 @@ describe('Folder registration', () => {
       );
     });
 
-    it('reads the aliases of the tsconfig named in the config', () => {
+    it('reads the aliases of the tsconfig it is given', () => {
       project = create({
-        'app.bundle.json': module(['@app/services'], { tsconfig: './tsconfig.app.json' }),
+        'app.bundle.json': module(['@app/services']),
         'tsconfig.app.json': tsconfig({ baseUrl: '.', paths: { '@app/*': ['src/*'] } }),
         'src/services/Logger.ts': decorated('Logger'),
       });
 
-      buildProject();
+      last = build({ config: 'app.bundle.json', tsconfig: 'tsconfig.app.json', cwd: project.root });
 
       expect(generated()).toContain("import { Logger } from '@app/services/Logger';");
     });
 
-    it('fails when the tsconfig it explicitly names does not exist', () => {
+    it('resolves the tsconfig against the working directory, not the config file', () => {
       project = create({
-        'app.bundle.json': module(['./src'], { tsconfig: './tsconfig.app.json' }),
+        'config/app.bundle.json': module(['../src']),
         'src/Logger.ts': decorated('Logger'),
       });
 
-      expect(() => buildProject()).toThrow(TicConfigError);
-      expect(() => buildProject()).toThrow(/tsconfig not found: .*tsconfig\.app\.json/);
+      last = build({ config: 'config/app.bundle.json', tsconfig: 'tsconfig.json', cwd: project.root });
+
+      expect(generated()).toContain("import { Logger } from '@/src/Logger';");
     });
 
-    it('needs a tsconfig for its aliases: without one, no class can be imported', () => {
-      project = TempProject.create({ 'app.bundle.json': module(['./src']), 'src/Logger.ts': decorated('Logger') });
+    it('fails when the tsconfig it is given does not exist', () => {
+      project = create({
+        'app.bundle.json': module(['./src']),
+        'src/Logger.ts': decorated('Logger'),
+      });
+      const buildWithMissing = () =>
+        build({ config: 'app.bundle.json', tsconfig: 'tsconfig.app.json', cwd: project.root });
 
-      expect(() => buildProject()).toThrow('no tsconfig paths alias covers src/Logger.ts');
+      expect(buildWithMissing).toThrow(TicConfigError);
+      expect(buildWithMissing).toThrow(/tsconfig not found: .*tsconfig\.app\.json/);
     });
 
-    it('builds an empty bundle without a tsconfig when nothing is selected', () => {
+    it('never falls back to a tsconfig it was not given: a missing one fails even when nothing is selected', () => {
       project = TempProject.create({ 'app.bundle.json': module(['./src']), 'src/helpers.ts': 'export const x = 1;\n' });
 
-      expect(buildProject().registrations).toBe(0);
-      expect(generated()).toContain('applyTo(_container: IContainer): void {');
+      expect(() => buildProject()).toThrow(/tsconfig not found: .*tsconfig\.json/);
     });
 
     it('fails naming a namespace that is neither a folder nor an alias', () => {
@@ -774,7 +784,8 @@ describe('Folder registration', () => {
   });
 
   describe('Story: Merge configs, like webpack-merge', () => {
-    const buildMerged = (...configs: string[]) => (last = build({ config: configs, cwd: project.root }));
+    const buildMerged = (...configs: string[]) =>
+      (last = build({ config: configs, tsconfig: 'tsconfig.json', cwd: project.root }));
 
     it('concatenates paths.include in order, without duplicates, and names the bundle after the last config', () => {
       project = create({

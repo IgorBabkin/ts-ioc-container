@@ -37,11 +37,12 @@ export interface BundledClass {
 export interface IBundleService {
   /**
    * Generates the bundle a resolved config describes and returns it; nothing is written.
+   * `tsconfig` is the absolute path of the tsconfig supplying its aliases and import extension.
    *
    * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
-  bundle(config: BundleConfig): Bundle;
+  bundle(config: BundleConfig, tsconfig: string): Bundle;
 }
 
 export const IBundleServiceKey = new SingleToken<IBundleService>('IBundleService');
@@ -57,8 +58,8 @@ export class BundleService implements IBundleService {
    * @throws {TicConfigError} when the tsconfig is missing or invalid, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
-  bundle(config: BundleConfig): Bundle {
-    const paths = loadImportPaths(config.tsconfig, config.importExtension);
+  bundle(config: BundleConfig, tsconfig: string): Bundle {
+    const paths = loadImportPaths(tsconfig, config.importExtension);
     const relative = (file: string) => toPosix(path.relative(config.dir, file));
     const exclude = config.paths.exclude.flatMap((glob) => paths.resolveGlob(glob, config.dir)).map(globToRegExp);
     // Decided by path alone, before a file is read: this is what keeps unrelated files unparsed.
@@ -85,7 +86,7 @@ export class BundleService implements IBundleService {
     if (uncovered.length > 0) {
       throw new TicConfigError(
         `no tsconfig paths alias covers ${uncovered.map((file) => toPosix(path.relative(config.dir, file))).join(', ')}; ` +
-          `the bundle goes to stdout, so every import is written through an alias — add a "paths" entry to ${toPosix(path.relative(config.dir, config.tsconfig.file))}`,
+          `the bundle goes to stdout, so every import is written through an alias — add a "paths" entry to ${relative(tsconfig)}`,
       );
     }
 

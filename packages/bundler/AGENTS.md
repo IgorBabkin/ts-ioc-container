@@ -7,14 +7,14 @@ nothing here runs inside the container, and the core package is not changed by
 it.
 
 - The CLI is `ts-ioc-container`, with `tic` as a shortcut (both `bin` entries,
-  same program): `tic build [<config>...]` is a Unix filter. It reads the config
+  same program): `tic build --tsconfig <file> [<config>...]` is a Unix filter. It reads the config
   file `<config>` (JSON for `.json`, YAML for `.yaml` / `.yml`) — several are
   merged left to right into one bundle — or, without one or with `-`, config
   text from stdin (parsed as YAML, which covers JSON; never merged) — and
   prints the bundle to **stdout**; it writes nothing. Saving is the shell's
-  job: `tic build app.bundle.json > src/di/app.bundle.ts`,
-  `cat dev.bundle.json | tic build > src/di/dev.bundle.ts`; CI checks with
-  `tic build app.bundle.json | diff - src/di/app.bundle.ts`. Progress (each
+  job: `tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts`,
+  `cat dev.bundle.json | tic build --tsconfig tsconfig.json > src/di/dev.bundle.ts`; CI checks with
+  `tic build --tsconfig tsconfig.json app.bundle.json | diff - src/di/app.bundle.ts`. Progress (each
   bundled class as `  Name: path`, then a `Bundled …` summary), warnings and
   errors go to stderr. The bundle is `export class AppBundle implements
 IContainerModule`, applied with `container.useModule(new AppBundle())`.
@@ -22,14 +22,15 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   bundle works wherever it is saved; a selected class no alias covers fails the
   build naming its file. There are no relative imports.
 - Config fields (schema: `tic.schema.json`), flat: `paths` with `paths.include`
-  required; `match`, `name`, `tsconfig`, `importExtension` optional.
+  required; `match`, `name`, `importExtension` optional.
   Relative paths resolve against the config file; for piped text, against the
   working directory. `name` defaults to the file's stem (`prod.bundle.json` →
   `prod`) and is required for piped text or a file named otherwise; the class
   is `toClassName(name)` — `ProdBundle`.
-- A config does **not** extend its tsconfig and never takes files from it. The
-  `tsconfig` field (default `./tsconfig.json`, may be absent; one named
-  explicitly must exist) only supplies `paths` aliases — which `paths.include` may
+- A config does **not** name a tsconfig, and a bundle never takes files from one.
+  The required `--tsconfig` option of `tic build` (the `tsconfig` option of
+  `build()`; relative to the working directory, must exist, nothing is assumed)
+  only supplies `paths` aliases — which `paths.include` may
   name and generated imports are written in (most specific alias, else a
   relative path) — and the module resolution that sets the import extension.
 - Selection has two stages, `paths: { include, exclude }` and
@@ -57,7 +58,7 @@ IContainerModule`, applied with `container.useModule(new AppBundle())`.
   same-token heuristic), unless a decorator they share has differing arguments
   (scope-gated, e.g. `@perPage('a')` vs `@perPage('b')`).
 - Several configs merge like webpack-merge (`mergeConfigs`):
-  `tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`.
+  `tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`.
   Objects merge field by field; the list fields `paths.include`,
   `paths.exclude`, `match.glob`, `match.exclude` and `match.decorators`
   concatenate without duplicates (a later config only adds); any other value

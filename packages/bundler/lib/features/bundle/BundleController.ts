@@ -11,28 +11,35 @@ import { toPosix } from './domain/glob';
 import { type IBundleService, IBundleServiceKey } from './services/BundleService';
 import { type ITicConfigService, ITicConfigServiceKey } from './services/TicConfigService';
 
-export const BUILD_OPTIONS = z.object({ positionals: z.array(z.string().min(1)) }).transform(({ positionals }, ctx) => {
-  if (positionals.length > 1 && positionals.includes(STDIN)) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['config'],
-      message: `${STDIN} reads one config from stdin and cannot be merged with config files`,
-    });
-    return z.NEVER;
-  }
-  // No <config>, or `-`: the config is read from stdin.
-  return { configs: positionals.length > 0 ? positionals : [STDIN] };
-});
+const MISSING_TSCONFIG = 'missing --tsconfig: name the tsconfig that supplies the paths aliases';
+
+export const BUILD_OPTIONS = z
+  .object({
+    positionals: z.array(z.string().min(1)),
+    tsconfig: z.string({ error: MISSING_TSCONFIG }).min(1, { error: MISSING_TSCONFIG }),
+  })
+  .transform(({ positionals, tsconfig }, ctx) => {
+    if (positionals.length > 1 && positionals.includes(STDIN)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['config'],
+        message: `${STDIN} reads one config from stdin and cannot be merged with config files`,
+      });
+      return z.NEVER;
+    }
+    // No <config>, or `-`: the config is read from stdin.
+    return { configs: positionals.length > 0 ? positionals : [STDIN], tsconfig };
+  });
 
 export type BuildCliOptions = z.output<typeof BUILD_OPTIONS>;
 
-const buildArgs = parseOptions({}, { positionals: true });
+const buildArgs = parseOptions({ tsconfig: { type: 'string' } }, { positionals: true });
 
 /** `1 file`, `2 files`. */
 const count = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /**
- * `tic build [<config>... | -]`: the bundle goes to stdout; several configs are merged left to right
+ * `tic build --tsconfig <file> [<config>... | -]`: the bundle goes to stdout; several configs are merged left to right
  * into one, and without a config file the config comes from stdin.
  */
 @register('build')
@@ -48,20 +55,22 @@ export class BundleController {
   /**
    * Builds the bundle the config file `<config>` describes — several merged left to right
    * into one, or without one (or with `-`), the config piped into stdin — and prints it to
-   * stdout. Saving it is the shell's job: `tic build app.bundle.json > src/di/app.bundle.ts`,
-   * `tic build common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`,
-   * `cat app.bundle.yml | tic build > out.ts`.
+   * stdout. `--tsconfig`, relative to the working directory, supplies the `paths` aliases and
+   * the import extension; no tsconfig is assumed. Saving the bundle is the shell's job:
+   * `tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts`,
+   * `tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml > src/di/prod.bundle.ts`,
+   * `cat app.bundle.yml | tic build --tsconfig tsconfig.json > out.ts`.
    * Progress goes to stderr, so it never ends up in the bundle: `Bundling AppBundle...`, then
    * each class in it, one per line as its name and its file's path relative to the working
    * directory (`  Clock: src/infra/Clock.ts`), the warnings, and a summary
    * (`Bundled AppBundle: 3 dependencies from 2 files (1 warning)`). An error names the configs.
    *
-   * @throws {UsageError} when an option is unknown, `-` is given with config files, or the config should come from stdin and nothing is piped in.
-   * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config or its tsconfig is invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
+   * @throws {UsageError} when an option is unknown, `--tsconfig` is missing, `-` is given with config files, or the config should come from stdin and nothing is piped in.
+   * @throws {TicConfigError} when a config file is missing or unreadable, several are in different folders, the config is invalid, the tsconfig is missing or invalid, the bundle has no name, or no tsconfig paths alias covers a selected class's file.
    * @throws {NamespaceNotFoundError} when a path is neither a folder nor a tsconfig paths alias of one.
    */
   @onDefault(invoke)
-  bundle(@inject(pipe(commandArgs, buildArgs, validate(BUILD_OPTIONS))) { configs }: BuildCliOptions): void {
+  bundle(@inject(pipe(commandArgs, buildArgs, validate(BUILD_OPTIONS))) { configs, tsconfig }: BuildCliOptions): void {
     const stdin = configs[0] === STDIN;
     const label = stdin ? '<stdin>' : configs.join(' + ');
     try {
@@ -69,7 +78,10 @@ export class BundleController {
         ? this.configService.parse(this.stdin(), this.io.cwd)
         : this.configService.load(configs.map((file) => path.resolve(this.io.cwd, file)));
       this.logger.info(`Bundling ${config.bundleClassName}...`);
-      const { bundle, content, classes, files, warnings } = this.bundleService.bundle(config);
+      const { bundle, content, classes, files, warnings } = this.bundleService.bundle(
+        config,
+        path.resolve(this.io.cwd, tsconfig),
+      );
       for (const { file, className } of classes) {
         this.logger.info(`  ${className}: ${toPosix(path.relative(this.io.cwd, file))}`);
       }

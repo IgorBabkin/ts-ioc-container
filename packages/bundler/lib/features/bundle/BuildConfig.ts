@@ -85,13 +85,6 @@ export interface BundleConfigFile {
    * (`ProductionBundle`, see {@link toClassName}).
    */
   name?: string;
-  /**
-   * The tsconfig whose `paths` aliases `paths.include` may name and generated imports are
-   * written in, and whose `moduleResolution` sets the import extension. It contributes
-   * nothing else: the files scanned are `paths.include` alone. Relative to the config file.
-   * Default `./tsconfig.json`, which may be absent; a tsconfig named here must exist.
-   */
-  tsconfig?: string;
   /** Extension of generated imports. Inferred from the tsconfig's `moduleResolution` when omitted. */
   importExtension?: string;
   /**
@@ -107,7 +100,6 @@ export interface BundleConfigFile {
   match?: string | string[] | ClassSelector;
 }
 
-export const DEFAULT_TSCONFIG = './tsconfig.json';
 /** What `match.decorators` requires when omitted: the library's own `@register`. */
 export const DEFAULT_DECORATORS = ['register'];
 export const DEFAULT_EXCLUDE = [
@@ -129,8 +121,6 @@ export interface BundleConfig {
   name: string;
   /** The generated class: `ProductionBundle`. */
   bundleClassName: string;
-  /** The tsconfig of `paths` aliases; `required` when the config names it, so it must exist. */
-  tsconfig: { file: string; required: boolean };
   importExtension?: string;
   paths: ResolvedPathSelector;
   match: ResolvedClassSelector;
@@ -260,18 +250,11 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
       .describe(
         'The bundle\'s name: letters, digits, "-" and "_", starting with a letter. Default: the config file\'s stem (production.bundle.json → production); required for a config file named otherwise. It names the generated IContainerModule class (ProductionBundle).',
       ),
-    // Optional rather than defaulted: a tsconfig the config names must exist, the default may be absent.
-    tsconfig: nonEmptyString()
-      .optional()
-      .meta({ default: DEFAULT_TSCONFIG })
-      .describe(
-        'The tsconfig whose `paths` aliases paths.include may name and generated imports are written in, and whose module resolution sets the import extension. It adds no files: the bundle scans paths.include alone. Relative to the config file. The default may be absent; a tsconfig named here must exist.',
-      ),
     importExtension: z
       .string(expected('a string'))
       .optional()
       .describe(
-        'Extension of generated imports, e.g. ".js". Inferred from the tsconfig: ".js" under node16/nodenext resolution, none otherwise.',
+        'Extension of generated imports, e.g. ".js". Inferred from the tsconfig given to `tic build --tsconfig`: ".js" under node16/nodenext resolution, none otherwise.',
       ),
     paths: PATHS_SCHEMA,
     match: CLASSES_SCHEMA.optional(),
@@ -459,7 +442,7 @@ export function mergeConfigs(configs: { file: string; content: unknown }[]): unk
 export function resolveConfig(content: unknown, file: string): BundleConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { name, tsconfig, importExtension, paths, match } = result.data;
+  const { name, importExtension, paths, match } = result.data;
   const bundleName = name ?? configStem(file);
   if (bundleName === undefined) {
     throw new TicConfigError(
@@ -474,7 +457,6 @@ export function resolveConfig(content: unknown, file: string): BundleConfig {
     dir,
     name: bundleName,
     bundleClassName: toClassName(bundleName),
-    tsconfig: { file: path.resolve(dir, tsconfig ?? DEFAULT_TSCONFIG), required: tsconfig !== undefined },
     importExtension,
     paths: toPathSelector(paths),
     match: toClassSelector(match),
