@@ -108,13 +108,47 @@ jobs:
       - name: Generate changelogs
         run: pnpm exec monorepo-semantic-release changelog --context "$RELEASE_CONTEXT"
 
-      - name: Commit, tag and push
-        run: pnpm exec monorepo-semantic-release vcs --context "$RELEASE_CONTEXT"
+      # `vcs` is split into its three actions so the push can stand down when it
+      # is superseded (next step).
+      - name: Commit release
+        run: pnpm exec monorepo-semantic-release vcs commit --context "$RELEASE_CONTEXT"
+
+      - name: Tag release
+        run: pnpm exec monorepo-semantic-release vcs tag --context "$RELEASE_CONTEXT"
+
+      # A run releases only the commit it built, and only while that commit is
+      # still main's tip. A merge to main while this run was building (or
+      # releasing) queues a newer run; the concurrency group above makes it wait
+      # rather than cancelling this one. That newer run builds and releases these
+      # commits too, so this one stands down: nothing is pushed, published or
+      # announced. Pushing would be rejected (main moved), and publishing would
+      # ship a build of an older commit under a version that claims the newer
+      # ones. `vcs push` pushes the branch before the tags, so a rejected push
+      # leaves no tag behind either.
+      - name: Push release, unless main has moved on
+        id: push
+        run: |
+          superseded() {
+            git fetch --quiet origin main
+            [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]
+          }
+          stand_down() {
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Release superseded::main moved past ${GITHUB_SHA::8} while this run was in progress. The run for $(git rev-parse --short origin/main) releases these commits; nothing was pushed or published here."
+          }
+          if superseded; then stand_down; exit 0; fi
+          if ! pnpm exec monorepo-semantic-release vcs push --context "$RELEASE_CONTEXT"; then
+            # main can still move between the check above and the push.
+            if superseded; then stand_down; exit 0; fi
+            exit 1
+          fi
 
       - name: Publish to npm
+        if: steps.push.outputs.superseded != 'true'
         run: pnpm exec monorepo-semantic-release package-manager publish --context "$RELEASE_CONTEXT"
 
       - name: Create GitHub releases
+        if: steps.push.outputs.superseded != 'true'
         run: pnpm exec monorepo-semantic-release release-notes --context "$RELEASE_CONTEXT"
         env:
           # The step reads GITHUB_TOKEN, not GH_TOKEN — it sets GH_TOKEN itself
