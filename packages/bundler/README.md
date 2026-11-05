@@ -40,7 +40,8 @@ tic build --tsconfig <file> [<config>...]
 config file — JSON for `.json`, YAML for `.yaml` / `.yml`. Several are
 [merged](#merging-configs) left to right into one bundle. Without one (or with
 `-`) the config is read from **stdin**. `--tsconfig` is required: it names the
-tsconfig that supplies the `paths` aliases, relative to the working directory. No tsconfig is assumed, and a missing one is an error.
+tsconfig that supplies the `paths` aliases, relative to the working directory.
+No tsconfig is assumed, and a missing one is an error.
 Progress, warnings and errors go to stderr, so they never end up in the bundle:
 
 ```text
@@ -81,11 +82,28 @@ covers is an error naming its file; add a `paths` entry for its folder.
 Relative paths in a config file resolve against the file; in a piped config,
 against the working directory.
 
+### What the tsconfig is for
+
+The bundler reads one thing from your tsconfig: its `paths` aliases, including
+those it inherits through `extends`. It uses them for exactly two jobs:
+
+1. **Reading the config:** a folder in `include` or a glob in `exclude` may be
+   written as an alias (`@app/services`, `@generated/**`).
+2. **Writing the bundle:** every import in it goes through an alias
+   (`@app/services/Greeter`). This one applies even when `include` and `exclude`
+   use no alias, so each bundled class needs an alias covering its file.
+
+Nothing else is read. The files your tsconfig compiles play no part in the scan,
+and `moduleResolution` does not set the import extension: that is
+`importExtension` in the config.
+
 ## Configure
 
 A config describes one bundle: its class, the folders it scans and the classes it
 registers. Nothing is implied: **no field has a default**, so everything the
-build does is written in the config. JSON and YAML are both supported. Point
+build does is written in the config. It is flat too: no field nests another, so
+configs merge one level deep, and fields of one concern share a prefix
+(`matchGlob`, `matchExclude`). JSON and YAML are both supported. Point
 your editor at the schema:
 
 ```json
@@ -95,7 +113,8 @@ your editor at the schema:
   "importExtension": "",
   "include": ["@app/services", "./src/infra"],
   "exclude": ["**/*.spec.ts", "**/__tests__/**"],
-  "match": { "export": "any", "decorators": ["register"] }
+  "matchExport": "any",
+  "matchDecorators": ["register"]
 }
 ```
 
@@ -109,10 +128,9 @@ include:
 exclude:
   - '**/*.spec.ts'
   - '**/__tests__/**'
-match:
-  export: any
-  decorators:
-    - register
+matchExport: any
+matchDecorators:
+  - register
 ```
 
 | Field             | Meaning                                                                                                          |
@@ -121,11 +139,13 @@ match:
 | `importExtension` | Extension of generated imports, written as given: `.js` under node16/nodenext resolution, `""` for none          |
 | `include`         | Folder, or folders, to scan — see [Selecting files](#selecting-files)                                            |
 | `exclude`         | Globs of files never read — see [Selecting files](#selecting-files)                                              |
-| `match`           | Which classes of a parsed file are registered — see [Selecting classes](#selecting-classes)                      |
+| `matchExport`     | Which exports count — see [Selecting classes](#selecting-classes)                                                |
+| `matchDecorators` | Which decorators a class must carry — see [Selecting classes](#selecting-classes)                                |
 
-All five are required; merged configs need each in one of them. A missing field
-is an error naming it. One more field is optional: [`extends`](#extending-a-config)
-names a config to build on.
+All six are required; merged configs need each in one of them. A missing field
+is an error naming it. Three more are optional: `matchGlob` and `matchExclude`
+narrow the classes further, and [`extends`](#extending-a-config) names a config to
+build on.
 
 An unknown field is an error, so a misspelled or removed option never goes
 unnoticed.
@@ -158,10 +178,9 @@ include:
 exclude:
   - '**/*.spec.ts'
   - '**/__tests__/**'
-match:
-  export: any
-  decorators:
-    - register
+matchExport: any
+matchDecorators:
+  - register
 ```
 
 Each environment's config names its bundle and adds its own files and classes:
@@ -180,8 +199,7 @@ exclude:
 bundleClassName: DevBundle
 include:
   - ./src/infra
-match:
-  exclude: JsonLogger
+matchExclude: JsonLogger
 ```
 
 `tic build --tsconfig tsconfig.json common.bundle.yml prod.bundle.yml` then scans `@app/services` and
@@ -192,11 +210,10 @@ match:
 `tic build --tsconfig tsconfig.json a.bundle.yml b.bundle.yml c.bundle.yml` merges the configs left to
 right, the way webpack-merge merges webpack configs:
 
-- objects merge field by field;
-- list fields — `include`, `exclude`, `match.glob`, `match.exclude`,
-  `match.decorators` — concatenate in order, without duplicates (one folder or
+- list fields — `include`, `exclude`, `matchGlob`, `matchExclude`,
+  `matchDecorators` — concatenate in order, without duplicates (one folder or
   glob counts as a list of one), so a later config can only add to them;
-- any other value (`bundleClassName`, `importExtension`, `match.export`) set by a later
+- any other value (`bundleClassName`, `importExtension`, `matchExport`) set by a later
   config replaces an earlier one.
 
 Each config is validated on its own — an error names the file it is in — so a
@@ -238,7 +255,7 @@ A bundle picks its registrations in two stages:
 
 1. **`include` and `exclude`** — decided by path alone, before anything is read. Only files that
    pass are parsed.
-2. **`match`** — decided per class, on the files stage 1 let through.
+2. **`matchExport`, `matchDecorators`, `matchGlob`, `matchExclude`** — decided per class, on the files stage 1 let through.
 
 Parsing is where the time goes, so point `include` at the folders that hold your
 registrations, and `exclude` what they should not contribute:
@@ -247,7 +264,8 @@ registrations, and `exclude` what they should not contribute:
 {
   "include": "@app/services",
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**", "**/legacy/**"],
-  "match": { "export": "any", "decorators": ["register"] }
+  "matchExport": "any",
+  "matchDecorators": ["register"]
 }
 ```
 
@@ -302,23 +320,21 @@ usually carry the same `@register` decorators as production ones.
 
 ## Selecting classes
 
-`match` is an object picking the classes of a parsed file; a class must be
-exported, not abstract, and meet every criterion that is set:
+The `match` fields pick the classes of a parsed file; a class must be exported,
+not abstract, and meet every criterion that is set:
 
 ```json
-"match": {
-  "export": "named",
-  "decorators": ["register", "repository"],
-  "glob": "*Service"
-}
+"matchExport": "named",
+"matchDecorators": ["register", "repository"],
+"matchGlob": "*Service"
 ```
 
-| Criterion    | Required | Meaning                                                                                                                                                                                           |
-| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `export`     | yes      | `any`, `named` or `default` — which exports count                                                                                                                                                 |
-| `decorators` | yes      | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none                                                                   |
-| `glob`       | no       | A glob, or a list of them, the class name must match one of: `"*Service"`, `["*Service", "*Repository"]`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
-| `exclude`    | no       | A glob, or a list of them, the class name must match **none** of: `"*Mock"`, `["MockDashboardRepository", "*Fake"]`                                                                               |
+| Criterion         | Required | Meaning                                                                                                                                                                                           |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `matchExport`     | yes      | `any`, `named` or `default` — which exports count                                                                                                                                                 |
+| `matchDecorators` | yes      | The class must carry one of these, by name — also renamed imports and `@ioc.register()`; list composed ones. `[]` requires none                                                                   |
+| `matchGlob`       | no       | A glob, or a list of them, the class name must match one of: `"*Service"`, `["*Service", "*Repository"]`; an anonymous default export is named after its file (`user-service.ts` → `UserService`) |
+| `matchExclude`    | no       | A glob, or a list of them, the class name must match **none** of: `"*Mock"`, `["MockDashboardRepository", "*Fake"]`                                                                               |
 
 Abstract and non-exported classes are never registered.
 
@@ -326,19 +342,17 @@ Abstract and non-exported classes are never registered.
 
 When a real implementation and a test-only stand-in are both decorated and both
 bind the same token, registration is last-wins and the stand-in silently wins.
-`match.exclude` drops it right in the config. A plain class name is a glob that
+`matchExclude` drops it right in the config. A plain class name is a glob that
 matches only itself, so one list drops a class by name and a family by pattern:
 
 ```json
-"match": {
-  "export": "any",
-  "decorators": ["repository", "service"],
-  "exclude": ["MockDashboardRepository", "*Fake"]
-}
+"matchExport": "any",
+"matchDecorators": ["repository", "service"],
+"matchExclude": ["MockDashboardRepository", "*Fake"]
 ```
 
-`match.exclude` applies after every other criterion, so it combines with
-`decorators` and `glob` freely.
+`matchExclude` applies after every other criterion, so it combines with
+`matchDecorators` and `matchGlob` freely.
 
 ### Two classes, one token
 
@@ -350,7 +364,7 @@ are not resolved), so it can only be a heuristic:
 ```text
 tic: warning: app.bundle.json: decorator token "IDashboardRepositoryToken" is passed by
 HttpDashboardRepository, MockDashboardRepository; registration is last-wins,
-exclude one with match.exclude
+exclude one with matchExclude
 ```
 
 Classes that are scope-gated are not last-wins, so they do not warn: when the

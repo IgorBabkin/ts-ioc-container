@@ -12,13 +12,14 @@ const config = (include: string[], extra: object = {}) => ({
   importExtension: '',
   include,
   exclude: [],
-  match: { export: 'any', decorators: ['register'] },
+  matchExport: 'any',
+  matchDecorators: ['register'],
   ...extra,
 });
 
 /** The same config, written in YAML. */
 const yaml = (include: string, bundleClassName = 'AppBundle') =>
-  `bundleClassName: ${bundleClassName}\nimportExtension: ''\ninclude: ['${include}']\nexclude: []\nmatch:\n  export: any\n  decorators: [register]\n`;
+  `bundleClassName: ${bundleClassName}\nimportExtension: ''\ninclude: ['${include}']\nexclude: []\nmatchExport: any\nmatchDecorators: [register]\n`;
 
 class Io {
   readonly out: string[] = [];

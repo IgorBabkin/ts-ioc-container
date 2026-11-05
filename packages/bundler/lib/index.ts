@@ -42,7 +42,6 @@ export {
   STDIN,
   configFormat,
   type BundleConfigFile,
-  type ClassSelector,
   type ExportKind,
   type ResolvedClassSelector,
   type BundleConfig,

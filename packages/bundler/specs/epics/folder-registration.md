@@ -35,9 +35,10 @@ Acceptance criteria:
 - Warnings and errors go to stderr, never into the bundle on stdout; an error
   names the config (`<stdin>` for piped text), and nothing is printed then.
 - The config's fields are flat and explicit, and none has a default: `bundleClassName`,
-  `importExtension`, `include`, `exclude`, `match.export` and
-  `match.decorators` are required, and a missing one fails the build naming it.
-  `match` is always an object — a glob or a list in its place is an error. A `tsconfig` field is an error: the tsconfig is given to the
+  `importExtension`, `include`, `exclude`, `matchExport` and
+  `matchDecorators` are required, and a missing one fails the build naming it.
+  No field nests another: configs merge one level deep, and fields of one concern
+  share a prefix (`matchGlob`). A `tsconfig` field is an error: the tsconfig is given to the
   command.
 - `bundleClassName` is the name of the generated class, written as given, nothing
   added: letters, digits and `_`, starting with a capital letter. It is never taken
@@ -60,8 +61,8 @@ Acceptance criteria:
 
 - `tic build <config>...` merges the configs left to right into one bundle;
   `build({ config: [...] })` does the same.
-- Objects merge field by field. The list fields — `include`,
-  `exclude`, `match.glob`, `match.exclude`, `match.decorators` —
+- The list fields — `include`,
+  `exclude`, `matchGlob`, `matchExclude`, `matchDecorators` —
   concatenate in order, without duplicates; one folder or glob counts as a list
   of one. Any other value set by a later config replaces an earlier one.
 - Each config is validated on its own, and an invalid field fails the build
@@ -111,7 +112,7 @@ Acceptance criteria:
 
 - `include` is one folder or a non-empty list of them; each is scanned
   with its sub-folders. There is no non-recursive form.
-- Every exported class that `match` selects is registered.
+- Every exported class the `match` fields select is registered.
 - Abstract classes, non-exported classes and `.d.ts` files are never
   registered.
 - A class exported by `export { X }`, `export { X as Y }` or `export default` is
@@ -130,7 +131,7 @@ Acceptance criteria:
 
 - Selection runs in two stages: a bundle's folders (`include`) and its
   `exclude` globs decide by path
-  alone which files are read and parsed; its `match` rule then picks classes out of
+  alone which files are read and parsed; its `match` fields then pick classes out of
   the parsed files.
 - `exclude` is a glob or a list of globs of files never read; every other
   source file in `include` is parsed, tests included. `[]` excludes nothing.
@@ -150,29 +151,28 @@ only what I mean it to.
 
 Acceptance criteria:
 
-- A bundle's `match` rule is an object; a class is selected when it is
-  exported, not abstract, and meets every criterion the rule sets.
-- `export` is required and restricts which exports count: `"any"`, `"named"` or
+- A class is selected when it is exported, not abstract, and meets every
+  criterion the `match` fields set.
+- `matchExport` is required and restricts which exports count: `"any"`, `"named"` or
   `"default"`.
-- `decorators` is required, and requires the class to carry one of the listed
+- `matchDecorators` is required, and requires the class to carry one of the listed
   decorators (`[]` requires none), recognised by name — also when imported under another name or reached as a
   member (`@ioc.register(...)`). Composed decorators are listed like any other.
-- `glob` is a glob (`*Service`), or a non-empty list of them, the class name
+- `matchGlob` is a glob (`*Service`), or a non-empty list of them, the class name
   must match one of; for an anonymous default export the name is derived from
   the file name.
-- `exclude` is a glob, or a non-empty list of them, the class name must match
+- `matchExclude` is a glob, or a non-empty list of them, the class name must match
   none of; it applies after every other criterion. A plain class name is a glob
   matching only itself, so `["MockUserRepository", "*Fake"]` drops one class by
   name and a family by pattern.
 - The build warns, per bundle, when two selected classes pass the same
   plain-identifier first argument to a decorator (a same-token heuristic, since
-  registration is last-wins); the warning suggests `match.exclude`.
+  registration is last-wins); the warning suggests `matchExclude`.
   Aliased imports are not resolved — the check is syntactic. It does not warn
   when the colliding classes are distinguished by a decorator they share called
   with different arguments (`@perPage('stations')` vs `@perPage('sessions')`):
   those registrations are scope-gated, not last-wins.
-- An invalid rule — including a string or a list in place of `match` — fails the
-  build naming the offending field.
+- An invalid rule fails the build naming the offending field.
 
 ### Story: Address folders by tsconfig aliases
 

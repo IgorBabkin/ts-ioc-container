@@ -8,31 +8,10 @@ import { globToRegExp } from './domain/glob';
 export type ExportKind = 'any' | 'named' | 'default';
 
 /**
- * Which classes of a parsed file are registered: the second stage of selection,
- * run on the files `include` and `exclude` let through. A class is selected when
- * it is exported, not abstract, and meets every criterion set here.
+ * Which classes of a parsed file are registered: the second stage of selection, run on the
+ * files `include` and `exclude` let through. A class is selected when it is exported, not
+ * abstract, and meets every criterion set here. Its globs are compiled.
  */
-export interface ClassSelector {
-  export: ExportKind;
-  /**
-   * The class must carry one of these decorators, recognised by name (`register`, or a
-   * composed one); `[]` requires none.
-   */
-  decorators: string[];
-  /**
-   * Globs the class name must match one of, e.g. `*Service` or `["*Service", "*Repository"]`.
-   * An anonymous default export is named after its file.
-   */
-  glob?: string | string[];
-  /**
-   * Globs the class name must match none of, applied after every other criterion. A plain
-   * name is a glob too, so `["MockUserRepository", "*Fake"]` drops one class by name and a
-   * family by pattern.
-   */
-  exclude?: string | string[];
-}
-
-/** A {@link ClassSelector} with its globs compiled. */
 export interface ResolvedClassSelector {
   export: ExportKind;
   decorators?: string[];
@@ -41,8 +20,9 @@ export interface ResolvedClassSelector {
 }
 
 /**
- * A bundle config file: one bundle, described explicitly. Nothing is implied: every field but
- * `$schema`, `extends`, `match.glob` and `match.exclude` is required — though in a config merged with
+ * A bundle config file: one bundle, described explicitly. It is flat: no field nests another, so
+ * configs merge one level deep, and related fields share a prefix (`matchGlob`) instead. Nothing is implied: every field but
+ * `$schema`, `extends`, `matchGlob` and `matchExclude` is required — though in a config merged with
  * others, only the merged config must have it (see {@link mergeConfigs}).
  * `tic build --tsconfig tsconfig.json <config>` prints the bundle to stdout; where it is saved
  * is the caller's choice (`tic build --tsconfig tsconfig.json app.bundle.json > src/di/app.bundle.ts`).
@@ -73,8 +53,24 @@ export interface BundleConfigFile {
    * for the whole folder). `[]` excludes nothing.
    */
   exclude: string | string[];
-  /** Which classes of a parsed file are registered. Always an object: there is no glob shorthand. */
-  match: ClassSelector;
+  /** Which exports of a parsed file count. */
+  matchExport: ExportKind;
+  /**
+   * The class must carry one of these decorators, recognised by name (`register`, or a
+   * composed one); `[]` requires none.
+   */
+  matchDecorators: string[];
+  /**
+   * Glob, or globs, the class name must match one of, e.g. `*Service` or `["*Service", "*Repository"]`.
+   * An anonymous default export is named after its file.
+   */
+  matchGlob?: string | string[];
+  /**
+   * Glob, or globs, the class name must match none of, applied after every other criterion. A
+   * plain name is a glob too, so `["MockUserRepository", "*Fake"]` drops one class by name and a
+   * family by pattern.
+   */
+  matchExclude?: string | string[];
 }
 
 /** A validated {@link BundleConfigFile}, located at its file. */
@@ -97,7 +93,7 @@ export interface BundleConfig {
 const CLASS_NAME = /^[A-Z]\w*$/;
 
 // Each schema carries the message a config author reads, so a failed parse names
-// the field and what it expected: `match.export: expected "any", "named" or "default"`.
+// the field and what it expected: `matchExport: expected "any", "named" or "default"`.
 const expected = (what: string) => ({ error: `expected ${what}` });
 const CLASS_NAME_RULE = 'a class name: letters, digits or "_", starting with a capital letter';
 const nonEmptyString = () => z.string(expected('a non-empty string')).min(1, expected('a non-empty string'));
@@ -138,31 +134,6 @@ const toGlobs = (value?: string | string[]): RegExp[] | undefined =>
 
 const FOLDERS_SCHEMA = z.array(nonEmptyString(), expected('a non-empty array')).min(1, expected('a non-empty array'));
 
-const CLASS_OBJECT_SCHEMA = z.strictObject(
-  {
-    export: z
-      .enum(['any', 'named', 'default'], expected('"any", "named" or "default"'))
-      .describe('Which exports count.'),
-    decorators: stringList().describe(
-      'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator); [] requires none.',
-    ),
-    glob: globs()
-      .optional()
-      .describe(
-        'Glob, or globs, the class name must match one of, e.g. "*Service" or ["*Service", "*Repository"]. An anonymous default export is named after its file.',
-      ),
-    exclude: globs()
-      .optional()
-      .describe(
-        'Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: ["MockUserRepository", "*Fake"].',
-      ),
-  },
-  expected('an object'),
-);
-
-const MATCH_DESCRIPTION =
-  'Which classes of a parsed file are registered: a class is selected when it is exported, not abstract, and meets every criterion set here.';
-
 /**
  * One `*.bundle.json` / `*.bundle.yaml`. The published `tic.schema.json` is generated
  * from it (`ticConfigJsonSchema`), so the schema editors validate against cannot drift
@@ -190,7 +161,22 @@ export const BUNDLE_CONFIG_SCHEMA = z.strictObject(
     exclude: globList('a glob or an array of globs', 0).describe(
       'Glob, or globs, of files never read within include, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). [] excludes nothing.',
     ),
-    match: CLASS_OBJECT_SCHEMA.describe(MATCH_DESCRIPTION),
+    matchExport: z
+      .enum(['any', 'named', 'default'], expected('"any", "named" or "default"'))
+      .describe('Which exports of a parsed file count.'),
+    matchDecorators: stringList().describe(
+      'The class must carry one of these decorators, recognised by name (e.g. "register", or a composed decorator); [] requires none.',
+    ),
+    matchGlob: globs()
+      .optional()
+      .describe(
+        'Glob, or globs, the class name must match one of, e.g. "*Service" or ["*Service", "*Repository"]. An anonymous default export is named after its file.',
+      ),
+    matchExclude: globs()
+      .optional()
+      .describe(
+        'Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: ["MockUserRepository", "*Fake"].',
+      ),
   },
   expected('an object'),
 );
@@ -207,10 +193,9 @@ export const BUNDLE_CONFIG_FILE_SCHEMA = BUNDLE_CONFIG_SCHEMA.partial().extend({
     .describe(
       'Path of the config this one builds on, relative to this file and in the same folder. That config is merged first and this one on top of it.',
     ),
-  match: CLASS_OBJECT_SCHEMA.partial().optional().describe(`${MATCH_DESCRIPTION} Required in the merged config.`),
 });
 
-/** `['match', 'export']` -> `match.export`, `['include', 0]` -> `include[0]`; the root is `config`. */
+/** `['matchExport']` -> `matchExport`, `['include', 0]` -> `include[0]`; the root is `config`. */
 function formatPath(segments: PropertyKey[]): string {
   const formatted = segments
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : `.${String(segment)}`))
@@ -240,15 +225,18 @@ function formatIssue(issue: z.core.$ZodIssue, prefix: PropertyKey[] = []): strin
 
 const formatIssues = (error: z.ZodError): string => error.issues.flatMap((issue) => formatIssue(issue)).join('; ');
 
-type ParsedMatch = z.output<typeof CLASS_OBJECT_SCHEMA>;
-
-function toClassSelector({ decorators, glob, exclude, ...rest }: ParsedMatch): ResolvedClassSelector {
+function toClassSelector({
+  matchExport,
+  matchDecorators,
+  matchGlob,
+  matchExclude,
+}: z.output<typeof BUNDLE_CONFIG_SCHEMA>): ResolvedClassSelector {
   return {
-    ...rest,
+    export: matchExport,
     // `[]` is the explicit opt-out: no decorator required.
-    decorators: decorators.length > 0 ? decorators : undefined,
-    glob: toGlobs(glob),
-    exclude: toGlobs(exclude),
+    decorators: matchDecorators.length > 0 ? matchDecorators : undefined,
+    glob: toGlobs(matchGlob),
+    exclude: toGlobs(matchExclude),
   };
 }
 
@@ -276,24 +264,18 @@ export function parseConfig(text: string, format: ConfigFormat): unknown {
 }
 
 /** The fields whose values concatenate when configs merge; every other value is replaced. */
-const LIST_FIELDS = new Set(['include', 'exclude', 'match.decorators', 'match.glob', 'match.exclude']);
+const LIST_FIELDS = new Set(['include', 'exclude', 'matchDecorators', 'matchGlob', 'matchExclude']);
 
 type ConfigObject = Record<string, unknown>;
 const isObject = (value: unknown): value is ConfigObject =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-function mergeInto(base: ConfigObject, next: ConfigObject, at = ''): ConfigObject {
+function mergeInto(base: ConfigObject, next: ConfigObject): ConfigObject {
   const merged = { ...base };
-  for (const [key, value] of Object.entries(next)) {
-    const field = `${at}${key}`;
-    const previous = merged[key];
-    if (LIST_FIELDS.has(field)) {
-      merged[key] = [
-        ...new Set([...toList((previous ?? []) as string | string[]), ...toList(value as string | string[])]),
-      ];
-    } else {
-      merged[key] = isObject(previous) && isObject(value) ? mergeInto(previous, value, `${field}.`) : value;
-    }
+  for (const [field, value] of Object.entries(next)) {
+    merged[field] = LIST_FIELDS.has(field)
+      ? [...new Set([...toList((merged[field] ?? []) as string | string[]), ...toList(value as string | string[])])]
+      : value;
   }
   return merged;
 }
@@ -312,12 +294,11 @@ export function extendedFile(content: unknown, file: string): string | undefined
 }
 
 /**
- * Merges the contents of several config files into one, left to right, as webpack-merge
- * does: objects merge field by field, a list field — `include`, `exclude`,
- * `match.glob`, `match.exclude`, `match.decorators` — concatenates without duplicates
- * (one glob or folder counting as a list of one), and any other value set by a later file
- * replaces an earlier one. Each file is validated alone first, so a shared file may leave any
- * field out; the merged config must have them all.
+ * Merges the contents of several config files into one, left to right. The config is flat, so
+ * this is one level deep: a list field — `include`, `exclude`, `matchGlob`, `matchExclude`,
+ * `matchDecorators` — concatenates without duplicates (one glob or folder counting as a list of
+ * one), and any other value set by a later file replaces an earlier one. Each file is validated
+ * alone first, so a shared file may leave any field out; the merged config must have them all.
  *
  * @throws {TicConfigError} when a file's content does not match the config file shape; the message names the file and the field.
  */
@@ -338,7 +319,7 @@ export function mergeConfigs(configs: { file: string; content: unknown }[]): unk
 export function resolveConfig(content: unknown, file: string): BundleConfig {
   const result = BUNDLE_CONFIG_SCHEMA.safeParse(content);
   if (!result.success) throw new TicConfigError(formatIssues(result.error));
-  const { bundleClassName, importExtension, include, exclude, match } = result.data;
+  const { bundleClassName, importExtension, include, exclude } = result.data;
   return {
     file,
     dir: path.dirname(file),
@@ -346,6 +327,6 @@ export function resolveConfig(content: unknown, file: string): BundleConfig {
     importExtension,
     include: toList(include),
     exclude: toList(exclude),
-    match: toClassSelector(match),
+    match: toClassSelector(result.data),
   };
 }

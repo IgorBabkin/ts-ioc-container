@@ -9,7 +9,7 @@ const fileSystem = (content: string | undefined) =>
     .returns(content ?? '');
 
 const YAML =
-  "bundleClassName: ProductionBundle\nimportExtension: ''\ninclude: [./src]\nexclude: []\nmatch:\n  export: any\n  decorators: [register]\n";
+  "bundleClassName: ProductionBundle\nimportExtension: ''\ninclude: [./src]\nexclude: []\nmatchExport: any\nmatchDecorators: [register]\n";
 
 describe('TicConfigService', () => {
   it('given no config file when loaded then it throws TicConfigError naming the file', () => {
@@ -47,7 +47,7 @@ describe('TicConfigService', () => {
   it('given several configs when loaded then they merge left to right', () => {
     const files: Record<string, string> = {
       '/repo/common.bundle.yml':
-        "bundleClassName: CommonBundle\nimportExtension: ''\ninclude: ['@app/services']\nexclude: []\nmatch:\n  export: any\n  decorators: [register]\n  glob: '*Service'\n",
+        "bundleClassName: CommonBundle\nimportExtension: ''\ninclude: ['@app/services']\nexclude: []\nmatchExport: any\nmatchDecorators: [register]\nmatchGlob: '*Service'\n",
       '/repo/prod.bundle.yml': "bundleClassName: ProdBundle\nimportExtension: '.js'\ninclude: [./src/infra]\n",
     };
     const fs = new Mock<IFileSystemService>()

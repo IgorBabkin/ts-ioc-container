@@ -4,7 +4,6 @@ importExtension: ''
 include:
   - '@app/services'
 exclude: []
-match:
-  export: any
-  decorators:
-    - register
+matchExport: any
+matchDecorators:
+  - register

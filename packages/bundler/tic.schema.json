@@ -50,63 +50,56 @@
       ],
       "description": "Glob, or globs, of files never read within include, relative to the config file or starting with a tsconfig paths alias (@generated/**, or @generated for the whole folder). [] excludes nothing."
     },
-    "match": {
-      "description": "Which classes of a parsed file are registered: a class is selected when it is exported, not abstract, and meets every criterion set here. Required in the merged config.",
-      "type": "object",
-      "properties": {
-        "export": {
+    "matchExport": {
+      "type": "string",
+      "enum": [
+        "any",
+        "named",
+        "default"
+      ],
+      "description": "Which exports of a parsed file count."
+    },
+    "matchDecorators": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The class must carry one of these decorators, recognised by name (e.g. \"register\", or a composed decorator); [] requires none."
+    },
+    "matchGlob": {
+      "description": "Glob, or globs, the class name must match one of, e.g. \"*Service\" or [\"*Service\", \"*Repository\"]. An anonymous default export is named after its file.",
+      "anyOf": [
+        {
           "type": "string",
-          "enum": [
-            "any",
-            "named",
-            "default"
-          ],
-          "description": "Which exports count."
+          "minLength": 1
         },
-        "decorators": {
+        {
           "type": "array",
           "items": {
             "type": "string",
             "minLength": 1
           },
-          "description": "The class must carry one of these decorators, recognised by name (e.g. \"register\", or a composed decorator); [] requires none."
-        },
-        "glob": {
-          "description": "Glob, or globs, the class name must match one of, e.g. \"*Service\" or [\"*Service\", \"*Repository\"]. An anonymous default export is named after its file.",
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "minItems": 1
-            }
-          ]
-        },
-        "exclude": {
-          "description": "Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: [\"MockUserRepository\", \"*Fake\"].",
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "minItems": 1
-            }
-          ]
+          "minItems": 1
         }
-      },
-      "additionalProperties": false
+      ]
+    },
+    "matchExclude": {
+      "description": "Glob, or globs, the class name must match none of, applied after every other criterion. A plain name is a glob too: [\"MockUserRepository\", \"*Fake\"].",
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      ]
     },
     "extends": {
       "description": "Path of the config this one builds on, relative to this file and in the same folder. That config is merged first and this one on top of it.",
