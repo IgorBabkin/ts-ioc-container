@@ -1,3 +1,24 @@
+# 76.1.3 (2026-11-05)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    show the flat bundler config in the README
+    (c0683c2faaea29d30f61f65c4e4a7836f2e4142e)
+    - **ts-ioc-container:**
+    show top-level include and exclude in the bundler config
+    (d6ca121d6a6dc6fe15f79d957657ef9fd666bb67)
+    - **ts-ioc-container:**
+    name bundleClassName in the bundler config examples
+    (9098d6c54b456435b6bdf668ebb525ad641a2756)
+    - **ts-ioc-container:**
+    describe the explicit bundler config in the README
+    (bc18379f2f6d2254cab4fcf16744aa676a82068a)
+    - **ts-ioc-container:**
+    pass --tsconfig in the tic build examples
+    (1d173dffa896868a0ffb08db6a72efc9d0195aa8)
+
+
 # 76.1.2 (2026-11-01)
 
   ### 📝 Other Changes
@@ -674,6 +695,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
