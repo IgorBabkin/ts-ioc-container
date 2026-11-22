@@ -1,3 +1,18 @@
+# 77.0.0 (2026-11-22)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    make auto-resolve a module over an alias
+    (27d776fee192e66cbb685178bf1b258da225e450)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    make auto-resolve a module over an alias
+    (27d776fee192e66cbb685178bf1b258da225e450)
+
+
 # 76.1.3 (2026-11-05)
 
   ### 📝 Other Changes
@@ -695,6 +710,7 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
 
 
 
