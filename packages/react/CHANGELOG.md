@@ -1,3 +1,12 @@
+# 4.8.0 (2026-11-22)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/react:**
+    add withScope higher-order component
+    (14c07d919a5b84825fe9aa6a8dfb16f01227ed5c)
+
+
 # 4.7.0 (2026-11-22)
 
   ### 📦 Dependencies
@@ -696,6 +705,7 @@
     - **@ts-ioc-container/react:**
     add React adapter package (#106)
     (51f46c324437fc4416e99c80b6d61735ecef162a)
+
 
 
 
