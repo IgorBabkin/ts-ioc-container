@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { ComponentType, createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { type constructor, type IContainer, InjectionToken } from 'ts-ioc-container';
 
 import { OutOfScopeError } from './OutOfScopeError';
@@ -59,7 +59,24 @@ export function Scope(props: ScopeProps) {
   const parent = useScopeOrFail();
   const [child] = useState(() => parent.createScope({ tags: props.tags }));
 
-  useEffect(() => () => child.dispose(), [child]);
+  useEffect(() => {
+    return () => {
+      child.dispose();
+    };
+  }, [child]);
 
   return <ScopeContext.Provider value={child}>{props.children}</ScopeContext.Provider>;
+}
+
+export function withScope<P extends object>(
+  { tags = [] }: { tags?: string[] },
+  Wrapped: ComponentType<P>,
+): ComponentType<P> {
+  const Scoped = (props: P) => (
+    <Scope tags={tags}>
+      <Wrapped {...props} />
+    </Scope>
+  );
+  Scoped.displayName = `withScope(${Wrapped.displayName ?? Wrapped.name ?? 'Component'})`;
+  return Scoped;
 }
