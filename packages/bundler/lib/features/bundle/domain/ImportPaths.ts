@@ -1,6 +1,6 @@
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { NamespaceNotFoundError } from '../../../exceptions/DomainException';
 import { toPosix } from './glob';
 
@@ -27,20 +27,17 @@ function splitWildcard(pattern: string): [string, string] | undefined {
  */
 export class ImportPaths {
   /**
-   * From a parsed tsconfig's options: its `paths` aliases, and the extension imports need
-   * under its `moduleResolution`; `importExtension` overrides the latter.
+   * From a parsed tsconfig's options: its `paths` aliases. `importExtension` is what imports are written with.
    */
-  static fromOptions(options: ts.CompilerOptions, tsconfigFile: string, importExtension?: string): ImportPaths {
-    const { paths = {}, baseUrl, pathsBasePath, moduleResolution } = options;
+  static fromOptions(options: ts.CompilerOptions, tsconfigFile: string, importExtension: string): ImportPaths {
+    const { paths = {}, baseUrl, pathsBasePath } = options;
     // Without baseUrl, paths resolve against the tsconfig that declared them (which `extends` may make another file).
     const base = baseUrl ?? (typeof pathsBasePath === 'string' ? pathsBasePath : path.dirname(tsconfigFile));
     const aliases = Object.entries(paths).map(([pattern, targets]) => ({
       pattern,
       targets: targets.map((target) => toPosix(path.resolve(base, target))),
     }));
-    const nodeEsm =
-      moduleResolution === ts.ModuleResolutionKind.Node16 || moduleResolution === ts.ModuleResolutionKind.NodeNext;
-    return new ImportPaths(aliases, importExtension ?? (nodeEsm ? '.js' : ''));
+    return new ImportPaths(aliases, importExtension);
   }
 
   constructor(
@@ -109,7 +106,7 @@ export class ImportPaths {
       if (prefixed && prefix === '') return [];
       if (!spec.startsWith(prefix) || !spec.endsWith(suffix) || spec.length < prefix.length + suffix.length) return [];
       const captured = spec.slice(prefix.length, spec.length - suffix.length);
-      return targets.map((target) => target.replace('*', captured));
+      return targets.map((target) => target.replaceAll('*', captured));
     });
   }
 
@@ -125,6 +122,6 @@ export class ImportPaths {
       return undefined;
     }
     const captured = bare.slice(prefix.length, bare.length - suffix.length);
-    return { spec: `${pattern.replace('*', captured)}${this.extension}`, score: prefix.length };
+    return { spec: `${pattern.replaceAll('*', captured)}${this.extension}`, score: prefix.length };
   }
 }

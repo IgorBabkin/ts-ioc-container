@@ -1,3 +1,75 @@
+# 77.0.0 (2026-11-22)
+
+  ### 💥 BREAKING CHANGES
+
+    - **ts-ioc-container:**
+    make auto-resolve a module over an alias
+    (27d776fee192e66cbb685178bf1b258da225e450)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    make auto-resolve a module over an alias
+    (27d776fee192e66cbb685178bf1b258da225e450)
+
+
+# 76.1.3 (2026-11-05)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    show the flat bundler config in the README
+    (c0683c2faaea29d30f61f65c4e4a7836f2e4142e)
+    - **ts-ioc-container:**
+    show top-level include and exclude in the bundler config
+    (d6ca121d6a6dc6fe15f79d957657ef9fd666bb67)
+    - **ts-ioc-container:**
+    name bundleClassName in the bundler config examples
+    (9098d6c54b456435b6bdf668ebb525ad641a2756)
+    - **ts-ioc-container:**
+    describe the explicit bundler config in the README
+    (bc18379f2f6d2254cab4fcf16744aa676a82068a)
+    - **ts-ioc-container:**
+    pass --tsconfig in the tic build examples
+    (1d173dffa896868a0ffb08db6a72efc9d0195aa8)
+
+
+# 76.1.2 (2026-11-01)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    describe build-time auto-discovery in the README intro
+    (c998cb38f2179b78bb7bb7551ca2d15f3c0f214e)
+
+
+# 76.1.1 (2026-11-01)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    document installing the architect skill from a shell
+    (9c82fffcd90939851ccfe93c7b37d595159e807d)
+
+
+# 76.1.0 (2026-11-01)
+
+  ### ✨ Features
+
+    - **ts-ioc-container:**
+    ship the ts-ioc-container-architect skill for Claude Code
+    (6697bb19aed57ed7a09bc36b602a87770663c149)
+
+  ### 📝 Other Changes
+
+    - **ts-ioc-container:**
+    describe the package as an AOP platform for building system engines
+    (140ce8650d6b5de8b5827c0ab37dece2572beb0c)
+    - **ts-ioc-container:**
+    add an AOP cookbook and meta-framework positioning
+    (862e430c95897958968d13558676706904d05ff5)
+
+
 # 76.0.2 (2026-10-31)
 
   ### 📝 Other Changes
@@ -638,6 +710,11 @@
     - **ts-ioc-container:**
     let @register bind directly from an InjectionToken (#124)
     (0e7490cc0d2957536778fcdf274c135ae9a346ab)
+
+
+
+
+
 
 
 

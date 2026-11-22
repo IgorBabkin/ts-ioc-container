@@ -9,4 +9,12 @@ describe('tic.schema.json', () => {
     // Stale? Run `pnpm run generate:schema`.
     expect(ticConfigJsonSchema()).toEqual(committed);
   });
+
+  it('given the config schema when its fields are read then none nests another: configs merge one level deep', () => {
+    const { properties } = ticConfigJsonSchema() as { properties: Record<string, { type?: string }> };
+
+    const nested = Object.entries(properties).filter(([, field]) => field.type === 'object');
+
+    expect(nested).toEqual([]);
+  });
 });

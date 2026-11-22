@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import {
   arg,
-  autoResolve,
   AutoResolveModule,
+  AutoResolveToken,
   bindTo,
   Container,
   type IContainer,
@@ -20,15 +20,17 @@ import {
  * timer, or warm a cache as soon as their scope exists. Nothing resolves them,
  * so lazy resolution would never create them at all.
  *
- * `autoResolve()` marks such a provider as eager, and `AutoResolveModule`
- * resolves every eager provider of a scope right after the scope is created.
+ * Binding a provider to the `AutoResolveToken` alias marks it as eager, and
+ * `AutoResolveModule` resolves that alias group of every scope right after the
+ * scope is created. No flag on the provider or container - just an alias and a
+ * `scopeCreated` subscription.
  */
 
 const auditTrail: string[] = [];
 const openedLogs: string[] = [];
 
 // Started for every request, even though no other class injects it
-@register(bindTo('IRequestAuditor'), scope((s) => s.hasTag('request')), autoResolve(), singleton())
+@register(bindTo('IRequestAuditor'), AutoResolveToken, scope((s) => s.hasTag('request')), singleton())
 class RequestAuditor {
   constructor() {
     auditTrail.push('request started');
@@ -36,7 +38,7 @@ class RequestAuditor {
 }
 
 // Eager too, but parameterized - the args come from whoever triggers eager resolution
-@register(bindTo('IRequestLog'), scope((s) => s.hasTag('request')), autoResolve())
+@register(bindTo('IRequestLog'), AutoResolveToken, scope((s) => s.hasTag('request')))
 class RequestLog {
   constructor(@inject(arg(0)) readonly requestId: string = 'anonymous') {
     openedLogs.push(requestId);
@@ -99,9 +101,9 @@ describe('Auto resolve', function () {
 
     expect(openedLogs).toEqual(['req-42']);
 
-    // ...or pass a per-scope value by calling autoResolve yourself
+    // ...or pass a per-scope value by resolving the group yourself
     const requestScope = createAppContainer().createScope({ tags: ['request'] });
-    requestScope.autoResolve({ args: ['req-43'] });
+    AutoResolveToken.resolve(requestScope, { args: ['req-43'], shallow: true });
 
     expect(openedLogs).toEqual(['req-42', 'anonymous', 'req-43']);
   });

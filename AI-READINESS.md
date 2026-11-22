@@ -29,6 +29,22 @@ Paths are relative to `packages/ts-ioc-container/` unless stated otherwise.
 - [x] Fix `homepage` in both `package.json`s (pointed at the removed docs site)
 - [x] `pnpm run verify:package-contents` passes with the new `files` entries
 
+- [x] Position the core package as a **meta-framework engine** and a **living
+      cookbook** (README intro, `package.json` description/keywords, `llms.txt`,
+      `AGENTS.md`): agents learn to build engines on the container, and that
+      README examples are executed tests they can copy
+- [x] Cookbook section in the README: mediator / middleware pipeline
+      (`__tests__/readme/mediator.spec.ts`), declarative action pipeline, error
+      bubbling through scopes, retry later, unit of work per request, layer and
+      scope decorators (patterns taken from a production frontend and server),
+      per-request scope, frontend widget scope, background worker — each one an
+      included, executed spec
+- [x] `AGENTS.md` teaches `@register(Token)`, not the redundant
+      `@register(bindTo(Token))`; mediator recipe and proxy pitfalls added
+- [x] Root `AGENTS.md` describes the actual workspace layout (was the
+      pre-monorepo single-package layout)
+- [x] Removed dead README table-of-contents anchors (`#inject-method`, `#mock`)
+
 ## Phase 2 — Errors that say how to fix the problem
 
 - [x] Stable `code` on `ContainerError` and every subclass, documented in `AGENTS.md`
@@ -69,4 +85,6 @@ Paths are relative to `packages/ts-ioc-container/` unless stated otherwise.
       (`report.bumps` in `.release.json`, `release-monorepo-semantically` 1.12.1)
 - [ ] Submit the repo to agent doc indexes (Context7-style) — external, maintainer action
 - [ ] Codemods for breaking changes (`npx ts-ioc-container-migrate <from> <to>`)
-- [ ] Optional: Claude Code skill / plugin wrapping `AGENTS.md`
+- [x] Claude Code skill `ts-ioc-container-architect` (`packages/ts-ioc-container/skills/`),
+      shipped in the npm package and installable from the repo's plugin marketplace
+      (`.claude-plugin/marketplace.json`)

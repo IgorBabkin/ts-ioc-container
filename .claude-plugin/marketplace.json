@@ -1,0 +1,14 @@
+{
+  "name": "ts-ioc-container",
+  "owner": {
+    "name": "Igor Babkin"
+  },
+  "description": "Claude Code plugins for ts-ioc-container: an architect skill that knows the cookbook.",
+  "plugins": [
+    {
+      "name": "ts-ioc-container",
+      "source": "./packages/ts-ioc-container",
+      "description": "Architect skill for building applications and frameworks on ts-ioc-container."
+    }
+  ]
+}

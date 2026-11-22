@@ -114,4 +114,44 @@ describe('IContainer', function () {
       expect(root.hasInstance(lazy)).toBe(true);
     });
   });
+
+  describe('resolveByAlias', () => {
+    function createTree() {
+      const root = new Container({ tags: ['root'] })
+        .register('rootPlugin', new Provider(() => 'root'), { aliases: ['plugin'] })
+        .register('sharedPlugin', new Provider(() => 'shared:root'), { aliases: ['plugin'] });
+      const child = root
+        .createScope({ tags: ['child'] })
+        .register('childPlugin', new Provider(() => 'child'), { aliases: ['plugin'] })
+        .register('sharedPlugin', new Provider(() => 'shared:child'), { aliases: ['plugin'] });
+
+      return { root, child };
+    }
+
+    it('should resolve the alias in this scope and its parents by default', () => {
+      const { child } = createTree();
+
+      expect(child.resolveByAlias('plugin')).toEqual(['child', 'shared:child', 'root']);
+    });
+
+    it('should resolve the alias in this scope only when shallow', () => {
+      const { child } = createTree();
+
+      expect(child.resolveByAlias('plugin', { shallow: true })).toEqual(['child', 'shared:child']);
+    });
+
+    it('should return no dependencies when shallow and the alias lives only in a parent', () => {
+      const { root } = createTree();
+      const grandChild = root.createScope({ tags: ['grandChild'] });
+
+      expect(grandChild.resolveByAlias('plugin', { shallow: true })).toEqual([]);
+      expect(grandChild.resolveByAlias('plugin')).toEqual(['root', 'shared:root']);
+    });
+
+    it('should still apply excludedKeys when shallow', () => {
+      const { child } = createTree();
+
+      expect(child.resolveByAlias('plugin', { shallow: true, excludedKeys: ['sharedPlugin'] })).toEqual(['child']);
+    });
+  });
 });

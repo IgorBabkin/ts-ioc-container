@@ -13,7 +13,7 @@ import {
   SingleToken,
 } from 'ts-ioc-container';
 
-import { OutOfScopeError, Scope, ScopeContext, useResolveOrFail, useScope, useScopeOrFail } from '../../lib';
+import { OutOfScopeError, Scope, ScopeContext, useResolveOrFail, useScope, useScopeOrFail, withScope } from '../../lib';
 
 interface IGreeter {
   greet(): string;
@@ -190,6 +190,53 @@ describe('Spec: React adapter', () => {
           ),
         ),
       ).toThrowError(OutOfScopeError);
+    });
+  });
+
+  describe('Story: wrap a component in a scope', () => {
+    it('renders the wrapped component inside a child scope carrying the given tags', () => {
+      const app = createApp();
+      let child: IContainer | undefined;
+      const Probe = ({ label }: { label: string }) => {
+        child = useScopeOrFail();
+        return <span>{label}</span>;
+      };
+      const Scoped = withScope({ tags: ['widget'] }, Probe);
+
+      const view = render(
+        <Root container={app}>
+          <Scoped label="hi" />
+        </Root>,
+      );
+
+      expect(view.getByText('hi')).toBeTruthy();
+      expect(child?.getParent()).toBe(app);
+      expect(child?.hasTag('widget')).toBe(true);
+    });
+
+    it('works without tags and disposes the scope on unmount', () => {
+      const app = createApp();
+      let child: IContainer | undefined;
+      const Probe = () => {
+        child = useScopeOrFail();
+        return null;
+      };
+      const Scoped = withScope({}, Probe);
+
+      const view = render(
+        <Root container={app}>
+          <Scoped />
+        </Root>,
+      );
+      view.unmount();
+
+      expect(child?.isDisposed).toBe(true);
+    });
+
+    it('names the wrapper after the wrapped component', () => {
+      const Named = () => null;
+
+      expect(withScope({}, Named).displayName).toBe('withScope(Named)');
     });
   });
 

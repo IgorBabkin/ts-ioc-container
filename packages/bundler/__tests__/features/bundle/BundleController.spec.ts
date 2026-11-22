@@ -23,7 +23,7 @@ const result = (content: string, warnings: string[] = [], classes: BundledClass[
     warnings,
   }) satisfies Bundle;
 
-const resolved = { name: 'app', bundleClassName: 'AppBundle' } as BundleConfig;
+const resolved = { bundleClassName: 'AppBundle' } as BundleConfig;
 
 const failing = (message: string) => () => {
   throw new TicConfigError(message);
@@ -35,7 +35,7 @@ const setup = (build: () => Bundle, stdin?: () => string | undefined, resolve: (
     .callback(resolve)
     .setup((m) => m.parse(It.IsAny(), It.IsAny()))
     .callback(resolve);
-  const bundleService = new Mock<IBundleService>().setup((m) => m.bundle(It.IsAny())).callback(build);
+  const bundleService = new Mock<IBundleService>().setup((m) => m.bundle(It.IsAny(), It.IsAny())).callback(build);
   const out = new Mock<IOutputService>().setup((m) => m.write(It.IsAny())).returns(undefined);
   const logger = new Mock<ILogger>()
     .setup((m) => m.info(It.IsAny()))
@@ -59,19 +59,19 @@ describe('BundleController', () => {
       result('// bundle\nexport class AppBundle {}\n'),
     );
 
-    controller.bundle({ configs: ['app.bundle.json'] });
+    controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' });
 
     configService.verify((m) => m.load(It.Is((files: string[]) => files.join() === '/repo/app.bundle.json')));
-    bundleService.verify((m) => m.bundle(resolved), Times.Once());
+    bundleService.verify((m) => m.bundle(resolved, '/repo/tsconfig.json'), Times.Once());
     out.verify((m) => m.write('// bundle\nexport class AppBundle {}'), Times.Once());
   });
 
   it('given build warnings when built then each is logged under the config, not printed with the bundle', () => {
-    const { out, logger, controller } = setup(() => result('// bundle\n', ['paths.exclude omits a glob']));
+    const { out, logger, controller } = setup(() => result('// bundle\n', ['two classes share a token']));
 
-    controller.bundle({ configs: ['app.bundle.json'] });
+    controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' });
 
-    logger.verify((m) => m.warn('app.bundle.json: paths.exclude omits a glob'), Times.Once());
+    logger.verify((m) => m.warn('app.bundle.json: two classes share a token'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
@@ -88,7 +88,7 @@ describe('BundleController', () => {
       ),
     );
 
-    controller.bundle({ configs: ['app.bundle.json'] });
+    controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' });
 
     logger.verify((m) => m.info('  JsonLogger: src/infra/JsonLogger.ts'), Times.Once());
     logger.verify((m) => m.info('  Greeter: src/services/greeters.ts'), Times.Once());
@@ -109,7 +109,7 @@ describe('BundleController', () => {
       ),
     );
 
-    controller.bundle({ configs: ['app.bundle.json'] });
+    controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' });
 
     logger.verify((m) => m.info('Bundling AppBundle...'), Times.Once());
     logger.verify((m) => m.info('Bundled AppBundle: 3 dependencies from 2 files'), Times.Once());
@@ -118,19 +118,19 @@ describe('BundleController', () => {
 
   it('given one class and a warning when built then the summary counts them in the singular', () => {
     const { logger, controller } = setup(() =>
-      result('// bundle\n', ['paths.exclude omits a glob'], [{ file: '/repo/src/Clock.ts', className: 'Clock' }]),
+      result('// bundle\n', ['two classes share a token'], [{ file: '/repo/src/Clock.ts', className: 'Clock' }]),
     );
 
-    controller.bundle({ configs: ['app.bundle.json'] });
+    controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' });
 
     logger.verify((m) => m.info('Bundled AppBundle: 1 dependency from 1 file (1 warning)'), Times.Once());
   });
 
   it('given a config that fails to load when built then nothing but the error is reported', () => {
-    const { logger, controller } = setup(() => result('// bundle\n'), undefined, failing('paths: expected an object'));
+    const { logger, controller } = setup(() => result('// bundle\n'), undefined, failing('include: expected a folder'));
 
-    expect(() => controller.bundle({ configs: ['app.bundle.json'] })).toThrow(
-      'app.bundle.json: paths: expected an object',
+    expect(() => controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' })).toThrow(
+      'app.bundle.json: include: expected a folder',
     );
     logger.verify((m) => m.info(It.IsAny()), Times.Never());
   });
@@ -139,46 +139,46 @@ describe('BundleController', () => {
     const { bundleService, out, controller } = setup(
       () => result('// bundle\n'),
       undefined,
-      failing('paths: expected an object'),
+      failing('include: expected a folder'),
     );
 
-    expect(() => controller.bundle({ configs: ['app.bundle.json'] })).toThrow(
-      'app.bundle.json: paths: expected an object',
+    expect(() => controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' })).toThrow(
+      'app.bundle.json: include: expected a folder',
     );
-    bundleService.verify((m) => m.bundle(It.IsAny()), Times.Never());
+    bundleService.verify((m) => m.bundle(It.IsAny(), It.IsAny()), Times.Never());
     out.verify((m) => m.write(It.IsAny()), Times.Never());
   });
 
   it('given a config whose bundle fails when built then the error names the config and nothing is printed', () => {
     const { out, controller } = setup(failing('no tsconfig paths alias covers lib/External.ts'));
 
-    expect(() => controller.bundle({ configs: ['app.bundle.json'] })).toThrow(
+    expect(() => controller.bundle({ configs: ['app.bundle.json'], tsconfig: 'tsconfig.json' })).toThrow(
       'app.bundle.json: no tsconfig paths alias covers lib/External.ts',
     );
     out.verify((m) => m.write(It.IsAny()), Times.Never());
   });
 
   it('given several configs when built then they are built as one, and a warning names them all', () => {
-    const { configService, logger, controller } = setup(() => result('// bundle\n', ['paths.exclude omits a glob']));
+    const { configService, logger, controller } = setup(() => result('// bundle\n', ['two classes share a token']));
 
-    controller.bundle({ configs: ['common.bundle.yml', 'prod.bundle.yml'] });
+    controller.bundle({ configs: ['common.bundle.yml', 'prod.bundle.yml'], tsconfig: 'tsconfig.json' });
 
     configService.verify((m) =>
       m.load(It.Is((files: string[]) => files.join() === '/repo/common.bundle.yml,/repo/prod.bundle.yml')),
     );
-    logger.verify((m) => m.warn('common.bundle.yml + prod.bundle.yml: paths.exclude omits a glob'), Times.Once());
+    logger.verify((m) => m.warn('common.bundle.yml + prod.bundle.yml: two classes share a token'), Times.Once());
   });
 
   it('given - as the config when built then the config text is read from stdin, against the working directory', () => {
     const { configService, bundleService, out, controller } = setup(
       () => result('// bundle\n'),
-      () => 'name: app\npaths:\n  include: [./src]\n',
+      () => 'bundleClassName: AppBundle\ninclude: [./src]\n',
     );
 
-    controller.bundle({ configs: ['-'] });
+    controller.bundle({ configs: ['-'], tsconfig: 'tsconfig.json' });
 
-    configService.verify((m) => m.parse('name: app\npaths:\n  include: [./src]\n', '/repo'));
-    bundleService.verify((m) => m.bundle(resolved), Times.Once());
+    configService.verify((m) => m.parse('bundleClassName: AppBundle\ninclude: [./src]\n', '/repo'));
+    bundleService.verify((m) => m.bundle(resolved, '/repo/tsconfig.json'), Times.Once());
     out.verify((m) => m.write('// bundle'), Times.Once());
   });
 
@@ -188,17 +188,19 @@ describe('BundleController', () => {
       () => undefined,
     );
 
-    expect(() => controller.bundle({ configs: ['-'] })).toThrow(UsageError);
-    expect(() => controller.bundle({ configs: ['-'] })).toThrow('missing <config>');
+    expect(() => controller.bundle({ configs: ['-'], tsconfig: 'tsconfig.json' })).toThrow(UsageError);
+    expect(() => controller.bundle({ configs: ['-'], tsconfig: 'tsconfig.json' })).toThrow('missing <config>');
   });
 
   it('given a stdin config that fails when built then the error names <stdin>', () => {
     const { controller } = setup(
       () => result('// bundle\n'),
-      () => 'paths: {}',
-      failing('name: required for a config read from stdin'),
+      () => 'include: []',
+      failing('bundleClassName: expected a class name'),
     );
 
-    expect(() => controller.bundle({ configs: ['-'] })).toThrow('<stdin>: name: required for a config read from stdin');
+    expect(() => controller.bundle({ configs: ['-'], tsconfig: 'tsconfig.json' })).toThrow(
+      '<stdin>: bundleClassName: expected a class name',
+    );
   });
 });

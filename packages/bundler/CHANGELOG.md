@@ -1,3 +1,98 @@
+# 9.1.0 (2026-11-22)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    77.0.0
+
+
+# 9.0.0 (2026-11-05)
+
+  ### 💥 BREAKING CHANGES
+
+    - **@ts-ioc-container/bundler:**
+    make the config flat with match-prefixed fields
+    (139e5a971ce59e6905605490e1c849fe5a479254)
+    - **@ts-ioc-container/bundler:**
+    move include and exclude to the top of the config
+    (ece69c3bd380060ad7ebd39b166303c5d8d8385c)
+    - **@ts-ioc-container/bundler:**
+    take the whole class name in bundleClassName
+    (0cd698d77c7a185a1042185ec25d0c65bd14c183)
+    - **@ts-ioc-container/bundler:**
+    require every config field and add extends
+    (1b7944ec1395708c1d72b735b78d42cdf40144b5)
+    - **@ts-ioc-container/bundler:**
+    take the tsconfig from a required --tsconfig option
+    (8e6f182b26af93d277cd481800252c384edb9997)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    make the config flat with match-prefixed fields
+    (139e5a971ce59e6905605490e1c849fe5a479254)
+    - **@ts-ioc-container/bundler:**
+    move include and exclude to the top of the config
+    (ece69c3bd380060ad7ebd39b166303c5d8d8385c)
+    - **@ts-ioc-container/bundler:**
+    take the whole class name in bundleClassName
+    (0cd698d77c7a185a1042185ec25d0c65bd14c183)
+    - **@ts-ioc-container/bundler:**
+    require every config field and add extends
+    (1b7944ec1395708c1d72b735b78d42cdf40144b5)
+    - **@ts-ioc-container/bundler:**
+    take the tsconfig from a required --tsconfig option
+    (8e6f182b26af93d277cd481800252c384edb9997)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.1.3
+
+
+# 8.5.0 (2026-11-01)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.1.2
+
+
+# 8.4.0 (2026-11-01)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.1.1
+
+
+# 8.3.0 (2026-11-01)
+
+  ### 📦 Dependencies
+
+    - 📦 update
+    ts-ioc-container
+    to
+    76.1.0
+
+
+# 8.2.0 (2026-11-01)
+
+  ### ✨ Features
+
+    - **@ts-ioc-container/bundler:**
+    report the start and a summary of a build
+    (6c1aba96d4e88ecbfbc9723cd5f0eae705b504a4)
+
+
 # 8.1.0 (2026-11-01)
 
   ### ✨ Features
@@ -391,6 +486,12 @@
     - **ts-ioc-container:**
     add environment-based registration recipe
     (5c110f5e1e1a2c7f0ed467ce73b2e71706611e6b)
+
+
+
+
+
+
 
 
 

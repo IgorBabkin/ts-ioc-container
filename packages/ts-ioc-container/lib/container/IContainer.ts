@@ -1,6 +1,6 @@
 import { type IProvider, ResolveOptions } from '../provider/IProvider';
 import { type IRegistration } from '../registration/IRegistration';
-import { IInjector, type WithArgs } from '../injector/IInjector';
+import { IInjector } from '../injector/IInjector';
 import { type constructor, Instance } from '../utils/basic';
 import { type ITypedEvent } from '../utils/TypedEvent';
 
@@ -16,6 +16,8 @@ export type Tag = string;
 type WithTags = { tags: Tag[] };
 type WithChild = { child: Tagged };
 type WithExcludedKeys = { excludedKeys: DependencyKey[] };
+/** `shallow: true` keeps an alias lookup in the scope it starts from - parent scopes are not searched. */
+export type WithShallow = { shallow: boolean };
 /** Something carrying tags: a scope or a token. */
 export interface Tagged {
   hasTag(tag: Tag): boolean;
@@ -24,8 +26,8 @@ export interface Tagged {
 
 /** Options of `resolve`: runtime `args`, `lazy`, and the invoking `child` scope. */
 export type ResolveOneOptions = ResolveOptions & Partial<WithChild>;
-/** Options of `resolveByAlias`: like {@link ResolveOneOptions}, plus keys to exclude. */
-export type ResolveManyOptions = ResolveOneOptions & Partial<WithExcludedKeys>;
+/** Options of `resolveByAlias`: like {@link ResolveOneOptions}, plus keys to exclude and `shallow`. */
+export type ResolveManyOptions = ResolveOneOptions & Partial<WithExcludedKeys> & Partial<WithShallow>;
 /** Something that resolves a key or a class. */
 export interface Resolvable {
   resolve<T>(key: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
@@ -45,7 +47,6 @@ export interface IContainerModule {
 }
 /** Options of `createScope`: the child scope's `tags`. */
 export type CreateScopeOptions = Partial<WithTags>;
-export type AutoResolveOptions = Partial<WithArgs>;
 export type RegisterOptions = { aliases?: DependencyKey[] };
 
 /**
@@ -112,7 +113,14 @@ export interface IContainer extends Tagged {
    */
   resolve<T>(target: constructor<T> | DependencyKey, options?: ResolveOneOptions): T;
 
-  /** Resolves every accessible dependency registered under `alias`, in this scope and its parents. */
+  /**
+   * Resolves every accessible dependency registered under `alias`, in this scope and its parents -
+   * or in this scope only with `shallow: true`.
+   *
+   * @example
+   * scope.resolveByAlias<IPlugin>('IPlugin');                    // here and in every parent
+   * scope.resolveByAlias<IPlugin>('IPlugin', { shallow: true }); // here only
+   */
   resolveByAlias<T>(alias: DependencyKey, options?: ResolveManyOptions): T[];
 
   /** Resolves one dependency registered under `alias`, looking here first and then in parents. */
@@ -126,9 +134,6 @@ export interface IContainer extends Tagged {
    * const request = app.createScope({ tags: ['request'] });
    */
   createScope(options?: CreateScopeOptions): IContainer;
-
-  /** Resolves every provider marked with `autoResolve()`. */
-  autoResolve(options?: AutoResolveOptions): this;
 
   /** Direct child scopes that are still alive. */
   getScopes(): IContainer[];

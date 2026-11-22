@@ -1,5 +1,4 @@
 import {
-  type AutoResolveOptions,
   type DependencyKey,
   type IContainer,
   type IContainerModule,
@@ -58,13 +57,6 @@ export class EmptyContainer implements IContainer {
    */
   getInjector(): IInjector {
     throw new MethodNotImplementedError('EmptyContainer.getInjector is not implemented');
-  }
-
-  /**
-   * @throws {MethodNotImplementedError} always — the empty container holds no providers to resolve.
-   */
-  autoResolve(options?: AutoResolveOptions): this {
-    throw new MethodNotImplementedError('EmptyContainer.autoResolve is not implemented');
   }
 
   /**

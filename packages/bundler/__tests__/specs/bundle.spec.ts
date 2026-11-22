@@ -19,9 +19,12 @@ const environments: [config: string, bundle: IContainerModule, logged: string][]
 ];
 
 describe('Story: Generate a bundle: a plain container module class', () => {
-  // `tic build common.bundle.yml <env>.bundle.yml > src/di/<env>.bundle.ts` saved each one; a fresh build must match it.
+  // `tic build --tsconfig tsconfig.json common.bundle.yml <env>.bundle.yml > src/di/<env>.bundle.ts` saved each one; a fresh build must match it.
   it.each(environments)('common.bundle.yml + %s is current: a fresh build equals the saved bundle', (file) => {
-    const result = build({ config: [path.join(fixture, 'common.bundle.yml'), path.join(fixture, file)] });
+    const result = build({
+      config: [path.join(fixture, 'common.bundle.yml'), path.join(fixture, file)],
+      tsconfig: path.join(fixture, 'tsconfig.json'),
+    });
     const saved = readFileSync(path.join(fixture, 'src/di', file.replace('.bundle.yml', '.bundle.ts')), 'utf8');
 
     expect(result.content).toBe(saved);

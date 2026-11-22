@@ -1,5 +1,4 @@
 import {
-  type AutoResolveOptions,
   type CreateScopeOptions,
   type DependencyKey,
   type IContainer,
@@ -108,7 +107,7 @@ export class Container implements IContainer {
    */
   resolveByAlias<T>(
     alias: DependencyKey,
-    { args = [], child = this, lazy, excludedKeys = [] }: ResolveManyOptions = {},
+    { args = [], child = this, lazy, excludedKeys = [], shallow }: ResolveManyOptions = {},
   ): T[] {
     this.validateContainer();
 
@@ -121,6 +120,11 @@ export class Container implements IContainer {
       }
       keys.push(key);
       deps.push(provider.resolve({ scope: this, args, lazy }));
+    }
+
+    // A shallow lookup stops here: parent scopes are not searched.
+    if (shallow) {
+      return deps;
     }
 
     const parentDeps = this.parent.resolveByAlias<T>(alias, {
@@ -168,25 +172,6 @@ export class Container implements IContainer {
     this.scopeCreatedEvent.emit(scope);
 
     return scope;
-  }
-
-  /**
-   * Eagerly resolves every provider of this scope which was marked with `autoResolve()`.
-   *
-   * `args` are forwarded to each of those providers, exactly as `resolve` forwards them.
-   *
-   * @throws {ContainerDisposedError} when the container has already been disposed.
-   */
-  autoResolve({ args = [] }: AutoResolveOptions = {}): this {
-    this.validateContainer();
-
-    for (const provider of this.providers.values()) {
-      if (provider.isAutoResolvable() && provider.hasAccess({ invocationScope: this, providerScope: this, args })) {
-        provider.resolve({ scope: this, args });
-      }
-    }
-
-    return this;
   }
 
   /**
