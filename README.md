@@ -106,7 +106,7 @@ and each point links to a recipe that runs in CI.
   - [Proxy](#proxy)
 - [Provider](#provider) `provider`
   - [Singleton](#singleton) `singleton`
-  - [Auto resolve](#auto-resolve) `autoResolve`
+  - [Auto resolve](#auto-resolve) `AutoResolveModule` `AutoResolveToken`
   - [Arguments](#arguments) `appendArgs` `appendArgsFn`
   - [Visibility](#visibility) `visible`
   - [Alias](#alias) `asAlias`
@@ -263,9 +263,9 @@ describe('Quickstart', function () {
 - Register value: `R.fromValue(config).bindTo('Config')`
 - Register factory: `R.fromFn(({ scope }) => createX(scope)).bindTo('X')`
 - Singleton: `@register(singleton())`
-- Eager service: `@register(autoResolve())` + `container.useModule(new AutoResolveModule())`
+- Eager service: `@register(AutoResolveToken)` + `container.useModule(new AutoResolveModule())`
 - Scoped registration: `@register(scope((s) => s.hasTag('request')))`
-- Resolve by alias: `container.resolveByAlias('Alias')`
+- Resolve by alias: `container.resolveByAlias('Alias')` (`{ shallow: true }` for this scope only)
 - Current scope token: `select.scope.current`
 - Lazy token: `select.token('Service').lazy()`
 - Inject decorator: `@inject(by(Token))` / `@inject(by('Key'))` / `@inject(by(Logger))` — the argument is always one `InjectFn`, `by(...)` builds the usual one
@@ -1768,23 +1768,31 @@ Some services are never injected anywhere - they subscribe to a queue, start a
 timer, or warm a cache as soon as their scope exists. Lazy resolution would
 never create them, because nothing asks for them.
 
-- `@register(autoResolve())` marks a provider as eager
+- `@register(AutoResolveToken)` marks a registration as eager - it is an
+  ordinary alias (`GroupAliasToken`), not a flag on the provider
 - `container.useModule(new AutoResolveModule())` enables eager resolution for
-  every scope created afterwards
-- `container.autoResolve()` resolves the eager providers of one container on demand
+  every scope created afterwards: on `scopeCreated` it resolves that scope's
+  `AutoResolveToken` group
+- `AutoResolveToken.resolve(container)` resolves the eager providers of one
+  container on demand
 
-Both accept an optional `AutoResolveOptions` (`{ args?: unknown[] }`) whose `args`
-are forwarded to every eagerly resolved provider, exactly as `resolve` forwards
-them - so they reach `@inject(arg(0))` parameters, `scopeAccess` rules and the
-`singleton()` cache key. `new AutoResolveModule({ args })` applies the same args
-to every created scope; call `scope.autoResolve({ args })` yourself when the
+The module resolves with `shallow: true`, so only the created scope's own
+providers are built - a provider registered in a parent scope is not resolved
+again for every descendant. `shallow` is a general `resolveByAlias` option
+(`scope.resolveByAlias(alias, { shallow: true })`), which `GroupAliasToken`
+passes through.
+
+`new AutoResolveModule({ args })` forwards `args` to every eagerly resolved
+provider, exactly as `resolve` forwards them - so they reach `@inject(arg(0))`
+parameters, `scopeAccess` rules and the `singleton()` cache key. Call
+`AutoResolveToken.resolve(scope, { args, shallow: true })` yourself when the
 value differs per scope.
 
 > [!IMPORTANT]
-> `autoResolve()` on its own does nothing - the container has to opt in with
+> The alias on its own does nothing - the container has to opt in with
 > `AutoResolveModule`. The container the module is applied to is not a created
-> scope, so call `container.autoResolve()` explicitly to eagerly resolve its own
-> providers.
+> scope, so call `AutoResolveToken.resolve(container)` to eagerly resolve its
+> own providers.
 
 Eager resolution goes through the provider unchanged, so `singleton()` still
 returns the eagerly created instance later, and providers which are not
@@ -1795,8 +1803,8 @@ registered in the created scope (`scope(...)`) or deny access to it
 import 'reflect-metadata';
 import {
   arg,
-  autoResolve,
   AutoResolveModule,
+  AutoResolveToken,
   bindTo,
   Container,
   type IContainer,
@@ -1814,15 +1822,17 @@ import {
  * timer, or warm a cache as soon as their scope exists. Nothing resolves them,
  * so lazy resolution would never create them at all.
  *
- * `autoResolve()` marks such a provider as eager, and `AutoResolveModule`
- * resolves every eager provider of a scope right after the scope is created.
+ * Binding a provider to the `AutoResolveToken` alias marks it as eager, and
+ * `AutoResolveModule` resolves that alias group of every scope right after the
+ * scope is created. No flag on the provider or container - just an alias and a
+ * `scopeCreated` subscription.
  */
 
 const auditTrail: string[] = [];
 const openedLogs: string[] = [];
 
 // Started for every request, even though no other class injects it
-@register(bindTo('IRequestAuditor'), scope((s) => s.hasTag('request')), autoResolve(), singleton())
+@register(bindTo('IRequestAuditor'), AutoResolveToken, scope((s) => s.hasTag('request')), singleton())
 class RequestAuditor {
   constructor() {
     auditTrail.push('request started');
@@ -1830,7 +1840,7 @@ class RequestAuditor {
 }
 
 // Eager too, but parameterized - the args come from whoever triggers eager resolution
-@register(bindTo('IRequestLog'), scope((s) => s.hasTag('request')), autoResolve())
+@register(bindTo('IRequestLog'), AutoResolveToken, scope((s) => s.hasTag('request')))
 class RequestLog {
   constructor(@inject(arg(0)) readonly requestId: string = 'anonymous') {
     openedLogs.push(requestId);
@@ -1893,9 +1903,9 @@ describe('Auto resolve', function () {
 
     expect(openedLogs).toEqual(['req-42']);
 
-    // ...or pass a per-scope value by calling autoResolve yourself
+    // ...or pass a per-scope value by resolving the group yourself
     const requestScope = createAppContainer().createScope({ tags: ['request'] });
-    requestScope.autoResolve({ args: ['req-43'] });
+    AutoResolveToken.resolve(requestScope, { args: ['req-43'], shallow: true });
 
     expect(openedLogs).toEqual(['req-42', 'anonymous', 'req-43']);
   });
