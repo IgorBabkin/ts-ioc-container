@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {
-  autoResolve,
   AutoResolveModule,
+  AutoResolveToken,
   bindTo,
   Container,
   type IContainer,
@@ -85,14 +85,14 @@ describe('Spec: container modules', () => {
   it('eagerly instantiates scope services through a module', () => {
     const started: string[] = [];
 
-    @register(autoResolve(), singleton())
+    @register(AutoResolveToken, singleton())
     class Heartbeat {
       constructor() {
         started.push('heartbeat');
       }
     }
 
-    @register(autoResolve(), scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
+    @register(AutoResolveToken, scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
     class AdminConsole {
       constructor() {
         started.push('admin-console');

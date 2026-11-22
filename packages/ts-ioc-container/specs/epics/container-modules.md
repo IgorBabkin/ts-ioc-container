@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **ADR:** [ADR 0007 - Lifecycle hooks via reflect-metadata and opt-in modules](../../docs/adr/0007-lifecycle-hooks.md)
-- **Public API:** `IContainerModule`, `Container.useModule`, `AutoResolveModule`, `Container.autoResolve`
+- **Public API:** `IContainerModule`, `Container.useModule`, `AutoResolveModule`, `AutoResolveToken`
 - **Executable spec:** `__tests__/specs/container-modules.spec.ts`
 
 ## Intent
@@ -60,17 +60,26 @@ Acceptance criteria:
 ### Story: Eagerly instantiate scope services through a module
 
 As an application architect, I can opt into eager resolution through a module so
-that services marked with `autoResolve()` are created as soon as a scope exists.
+that services which work on their own — schedulers, subscribers, warm caches —
+exist as soon as their scope does, without anyone injecting them first.
 
 Acceptance criteria:
 
-- `AutoResolveModule` resolves auto-resolvable providers of every scope created
-  after the module was applied.
+- A service is marked eager by binding it to the `AutoResolveToken` alias
+  (`@register(AutoResolveToken)`); the core has no auto-resolve flag on providers
+  or containers.
+- `AutoResolveModule` resolves the `AutoResolveToken` group of every scope
+  created after the module was applied; without the module the alias changes
+  nothing.
+- Only the created scope's own providers are resolved (`shallow`), so a provider
+  registered in a parent is not resolved again for every descendant scope.
 - Child scopes inherit eager resolution from the scope they were created in.
 - Providers that are not registered in a created scope, or that deny access to
   it, are skipped instead of failing scope creation.
+- Eager creation reuses the provider's own caching, so a singleton provider
+  returns the eagerly created instance for later resolution.
 - The container the module is applied to is not itself a created scope; its own
-  providers are resolved eagerly only by calling `autoResolve()` on it.
+  eager providers are resolved by `AutoResolveToken.resolve(container)`.
 - Eager resolution options are optional; when `args` are supplied they are
   forwarded to every eagerly resolved provider of every created scope.
 

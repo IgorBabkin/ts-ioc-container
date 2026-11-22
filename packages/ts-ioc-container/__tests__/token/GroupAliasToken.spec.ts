@@ -50,6 +50,21 @@ describe('GroupAliasToken', () => {
     expect(token.args('a').resolve(container, { args: ['r'] })).toEqual(['r-a']);
   });
 
+  it('should resolve the group from the given scope only when shallow', () => {
+    const token = new GroupAliasToken<string>('myAlias');
+    const root = new Container({ tags: ['root'] }).addRegistration(
+      Registration.fromValue('root')
+        .bindToKey('rootKey')
+        .bindTo(token)
+        .when((s) => s.hasTag('root')),
+    );
+    const child = root.createScope({ tags: ['child'] });
+    child.addRegistration(Registration.fromValue('child').bindToKey('childKey').bindTo(token));
+
+    expect(token.resolve(child)).toEqual(['child', 'root']);
+    expect(token.resolve(child, { shallow: true })).toEqual(['child']);
+  });
+
   it('should expose the underlying alias via toString()', () => {
     const token = new GroupAliasToken<string>('myAlias');
     expect(token.toString()).toBe('myAlias');

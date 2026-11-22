@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import {
   arg,
-  autoResolve,
   AutoResolveModule,
+  AutoResolveToken,
   Container,
   ContainerDisposedError,
   EmptyContainer,
@@ -16,14 +16,14 @@ import {
   singleton,
 } from '../../lib';
 
-describe('autoResolve', function () {
+describe('AutoResolveModule', function () {
   let constructed: string[] = [];
 
   beforeEach(() => {
     constructed = [];
   });
 
-  @register(autoResolve(), singleton())
+  @register(AutoResolveToken, singleton())
   class Worker {
     constructor() {
       constructed.push('Worker');
@@ -96,7 +96,7 @@ describe('autoResolve', function () {
   });
 
   it('should skip providers which are not registered in the created scope', function () {
-    @register(autoResolve(), scope((s) => s.hasTag('transaction')))
+    @register(AutoResolveToken, scope((s) => s.hasTag('transaction')))
     class TransactionLog {
       constructor() {
         constructed.push('TransactionLog');
@@ -117,7 +117,7 @@ describe('autoResolve', function () {
   });
 
   it('should skip providers which deny access to the created scope', function () {
-    @register(autoResolve(), scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
+    @register(AutoResolveToken, scopeAccess(({ invocationScope }) => invocationScope.hasTag('admin')))
     class AdminPanel {
       constructor() {
         constructed.push('AdminPanel');
@@ -142,23 +142,52 @@ describe('autoResolve', function () {
 
     expect(constructed).toEqual([]);
 
-    expect(app.autoResolve()).toBe(app);
+    AutoResolveToken.resolve(app);
     expect(constructed).toEqual(['Worker']);
   });
 
   it('should not resolve auto-resolvable providers twice on the same scope', function () {
     const requestScope = createApp().createScope({ tags: ['request'] });
 
-    requestScope.autoResolve();
+    AutoResolveToken.resolve(requestScope, { shallow: true });
 
     expect(constructed).toEqual(['Worker']);
+  });
+
+  it('should resolve only the providers of the created scope, not of its parents', function () {
+    @register(AutoResolveToken, scope((s) => s.hasTag('application')))
+    class ApplicationJob {
+      constructor() {
+        constructed.push('ApplicationJob');
+      }
+    }
+
+    const app = new Container({ tags: ['application'] })
+      .useModule(new AutoResolveModule())
+      .addRegistration(R.fromClass(ApplicationJob));
+    AutoResolveToken.resolve(app);
+
+    app.createScope({ tags: ['request'] });
+    app.createScope({ tags: ['request'] });
+
+    // Not a singleton, so a parent lookup would have built one more per created scope
+    expect(constructed).toEqual(['ApplicationJob']);
+  });
+
+  it('should keep the auto-resolved providers resolvable as a group', function () {
+    const requestScope = createApp().createScope({ tags: ['request'] });
+
+    const [worker] = AutoResolveToken.resolve(requestScope);
+
+    expect(worker).toBeInstanceOf(Worker);
+    expect(worker).toBe(requestScope.resolve('Worker'));
   });
 
   it('should throw when the container is disposed', function () {
     const app = createApp();
     app.dispose();
 
-    expect(() => app.autoResolve()).toThrowError(ContainerDisposedError);
+    expect(() => AutoResolveToken.resolve(app)).toThrowError(ContainerDisposedError);
   });
 
   it('should stop auto resolving scopes of a disposed parent', function () {
@@ -170,12 +199,11 @@ describe('autoResolve', function () {
   });
 
   it('should not be supported by an empty container', function () {
-    expect(() => new EmptyContainer().autoResolve()).toThrowError(MethodNotImplementedError);
-    expect(() => new EmptyContainer().scopeCreated).toThrowError(MethodNotImplementedError);
+    expect(() => new AutoResolveModule().applyTo(new EmptyContainer())).toThrowError(MethodNotImplementedError);
   });
 
   describe('args', function () {
-    @register(autoResolve(), singleton())
+    @register(AutoResolveToken, singleton())
     class Reporter {
       constructor(@inject(arg(0)) readonly requestId: string = 'none') {
         constructed.push(`Reporter:${requestId}`);
@@ -185,7 +213,7 @@ describe('autoResolve', function () {
     it('should forward args to eagerly resolved providers', function () {
       const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(Reporter));
 
-      app.autoResolve({ args: ['request-1'] });
+      AutoResolveToken.resolve(app, { args: ['request-1'] });
 
       expect(constructed).toEqual(['Reporter:request-1']);
       expect(app.resolve<Reporter>('Reporter').requestId).toBe('request-1');
@@ -207,7 +235,7 @@ describe('autoResolve', function () {
         .useModule(new AutoResolveModule({}))
         .addRegistration(R.fromClass(Reporter));
 
-      app.autoResolve();
+      AutoResolveToken.resolve(app);
       app.createScope({ tags: ['request'] });
 
       expect(constructed).toEqual(['Reporter:none', 'Reporter:none']);
@@ -217,7 +245,7 @@ describe('autoResolve', function () {
       const seenArgs: unknown[][] = [];
 
       @register(
-        autoResolve(),
+        AutoResolveToken,
         scopeAccess(({ args: accessArgs }) => {
           seenArgs.push(accessArgs);
           return true;
@@ -226,14 +254,15 @@ describe('autoResolve', function () {
       class AuditedReporter {}
 
       new Container({ tags: ['application'] })
+        .useModule(new AutoResolveModule({ args: ['request-1'] }))
         .addRegistration(R.fromClass(AuditedReporter))
-        .autoResolve({ args: ['request-1'] });
+        .createScope({ tags: ['request'] });
 
       expect(seenArgs).toEqual([['request-1']]);
     });
 
     it('should pass args to the singleton cache key', function () {
-      @register(autoResolve(), singleton(([tenant]) => tenant as string))
+      @register(AutoResolveToken, singleton(([tenant]) => tenant as string))
       class TenantCache {
         constructor(@inject(arg(0)) readonly tenant: string) {
           constructed.push(`TenantCache:${tenant}`);
@@ -242,9 +271,9 @@ describe('autoResolve', function () {
 
       const app = new Container({ tags: ['application'] }).addRegistration(R.fromClass(TenantCache));
 
-      app.autoResolve({ args: ['acme'] });
-      app.autoResolve({ args: ['acme'] });
-      app.autoResolve({ args: ['globex'] });
+      AutoResolveToken.resolve(app, { args: ['acme'] });
+      AutoResolveToken.resolve(app, { args: ['acme'] });
+      AutoResolveToken.resolve(app, { args: ['globex'] });
 
       expect(constructed).toEqual(['TenantCache:acme', 'TenantCache:globex']);
     });

@@ -10,11 +10,10 @@ export {
   type ResolveManyOptions,
   type ScopeHook,
   type RegisteredHook,
-  type AutoResolveOptions,
   isDependencyKey,
 } from './container/IContainer';
 export { Container } from './container/Container';
-export { AutoResolveModule } from './container/AutoResolveModule';
+export { AutoResolveModule, AutoResolveToken, type AutoResolveOptions } from './container/AutoResolveModule';
 export { EmptyContainer } from './container/EmptyContainer';
 
 // Injectors
@@ -66,7 +65,6 @@ export {
   scope,
   scopeAccess,
   lazy,
-  autoResolve,
   singleton,
   decorate,
   appendArgs,

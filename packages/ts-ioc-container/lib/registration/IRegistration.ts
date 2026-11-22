@@ -204,12 +204,6 @@ export const scopeAccess = <T>(rule: ScopeAccessRule) => registerPipe<T>((p) => 
 export const lazy = <T>() => registerPipe<T>((p) => p.lazy());
 
 /**
- * Marks the provider for eager resolution when the scope is set up; needs
- * `container.useModule(new AutoResolveModule())`.
- */
-export const autoResolve = <T>() => registerPipe<T>((p) => p.autoResolve());
-
-/**
  * Wraps or replaces the resolved dependency. Order relative to `lazy()` decides
  * whether the proxy or the real instance is decorated.
  *

@@ -1,4 +1,4 @@
-import { type DependencyKey, type IContainer } from '../container/IContainer';
+import { type DependencyKey, type IContainer, type WithShallow } from '../container/IContainer';
 import { BindableToken } from './BindableToken';
 import { type IRegistration } from '../registration/IRegistration';
 import { type ResolveOptions } from '../provider/IProvider';
@@ -14,14 +14,19 @@ import { type ResolveOptions } from '../provider/IProvider';
  * class Auth implements IMiddleware {}
  *
  * IMiddlewareToken.resolve(scope); // IMiddleware[]
+ * IMiddlewareToken.resolve(scope, { shallow: true }); // IMiddleware[] of this scope only
  */
 export class GroupAliasToken<T = any> extends BindableToken<T, T[]> {
   select<R>(fn: (target: T[]) => R[]) {
     return (s: IContainer) => fn(this.resolve(s));
   }
 
-  resolve(s: IContainer, options?: ResolveOptions): T[] {
-    return s.resolveByAlias(this.token, this.toResolveOptions(s, options));
+  /**
+   * @throws {ContainerDisposedError} when `s` has already been disposed.
+   * @throws {DependencyNotFoundError} when a key registered under the alias has no matching provider.
+   */
+  resolve(s: IContainer, { shallow, ...options }: ResolveOptions & Partial<WithShallow> = {}): T[] {
+    return s.resolveByAlias(this.token, { ...this.toResolveOptions(s, options), shallow });
   }
 
   protected bindKey(r: IRegistration<T>) {
